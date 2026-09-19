@@ -386,6 +386,13 @@ Create the spec for the target using /speckit.specify.
 ## Reading contract
 [paste]
 
+Before writing, read
+`~/.config/opencode/skills/epics-manager/best_practices_spec_driven_development.md`
+and write the spec to its standard for AI-friendly specifications: outcome-oriented
+goals, explicit input/output contracts where they apply, a "Not included" section,
+and deterministic IF-THEN business rules, kept lean per the "Specification
+Hierarchy" sizing rather than padded.
+
 Read Settled decisions/Non-obvious facts before writing — reflect them verbatim.
 Preserve the target's user stories and any traceability it defines. Run
 /speckit.specify with the target's intent as the feature description. After it

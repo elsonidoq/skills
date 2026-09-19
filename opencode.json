@@ -4,6 +4,7 @@
     "external_directory": {
       "/tmp/**": "allow",
       "/Users/elsonidoq/.config/opencode/**": "allow",
+      "/Users/elsonidoq/.claude/projects/-Users-elsonidoq-prog-cerca/memory/**": "allow",
       "/private/tmp/**": "allow"
     }
   },

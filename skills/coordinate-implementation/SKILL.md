@@ -68,10 +68,13 @@ will never exist. Record unavailable checks as not run.
 
 Partition unchecked tasks into sequential story batches. Include setup with its
 first consumer when practical; group shared-file work and honor task dependencies.
-**A batch must be homogeneous by model class.** Every task carries a `[sonnet]` or
-`[opus]` tag; a batch may contain only tasks of one class. If a story mixes
-classes, split it into consecutive batches by class, preserving dependency order —
-a batch containing both a sonnet and an opus task is never allowed. Follow the
+**A batch must be homogeneous by model class.** Every **delegated** task carries a
+`[sonnet]` or `[opus]` tag; a batch may contain only tasks of one class. A
+`[coordinator]` task is coordinator-owned and is never delegated — perform it
+directly (like review/partition work) and exclude it from model-class batching. If a
+story mixes classes, split it into consecutive batches by class, preserving
+dependency order — a batch containing both a sonnet and an opus task is never
+allowed. Follow the
 preamble's one-story-at-a-time guidance. Show task IDs, model class, scope and
 dependencies, then proceed. Do not require a fresh approval for routine batching.
 Do not merge research/ADR gates with dependent implementation so tightly that the
@@ -146,6 +149,18 @@ in a batch is checked off, persist completed work and the next task/gates in
 `<spec_dir>/STATE.md` (create when needed); also update root `STATE.md` if it
 already exists and owns project progress.
 
+**Commit each landed batch.** Once a batch's tasks are checked off and validated,
+commit exactly that batch's changes as one commit, following the repo's commit
+conventions. Stage only the files that batch produced — never unrelated worktree
+changes — and never commit secrets, `.env` or `.local/` evidence. If the running
+agent's own instructions forbid committing without an explicit request (for example
+an AGENTS.md/CLAUDE.md "do not commit autonomously" rule), do not commit and do not
+silently skip: ask the user via the `question` tool how to handle commits — commit
+after each batch, commit once at the end, or leave commits to the owner — and
+follow that answer for the rest of the run. Historical permission from a prior
+session is not continuing authorization, and a prior run's answer does not carry
+over to a new run.
+
 The coordinator handles questions using OpenCode's `question` tool with its actual
 schema; the general subagent returns unresolved questions rather than asking the
 user itself. If unavailable, denied or noninteractive, save progress and ask one
@@ -186,7 +201,8 @@ deduplicate, and preserve history. Do not create unrelated document indexes.
 ## Finish
 
 Report what was implemented, task completion, every changed file, checks/results,
-remaining acceptance gates, deferred discoveries and any stale artifacts. State
+commits made or deferred, remaining acceptance gates, deferred discoveries and any
+stale artifacts. State
 separately whether code is complete and whether epic acceptance is verified.
 Give the exact workspace and next task/gate for continuation. Never mark an epic
 implemented just because every agent returned or the manager's artifacts are done.
