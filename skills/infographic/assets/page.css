@@ -1,0 +1,471 @@
+/* The one design. Never model-authored, never per-page.
+ *
+ * Every infographic this skill builds looks the same on purpose: the reader
+ * learns the layout once and then reads content, not chrome. Tokens are defined
+ * once on :root and only their values change in dark mode, so a colour can never
+ * exist in one theme and not the other.
+ *
+ * Two border weights, and the difference matters. --rule is the hairline that
+ * separates rows inside a thing; --edge is the line that says where a thing ends.
+ * A plate drawn with --rule disappears, which is exactly what happened before
+ * --edge existed: in dark mode the cards were a slightly different grey on grey.
+ */
+
+:root {
+  --ink: #16191d;
+  --ink-soft: #4d5460;
+  --paper: #fbfaf8;
+  --card: #ffffff;
+  --rule: #e2e0db;
+  --edge: #cfcbc2;
+  --accent: #2d5f8a;
+  --accent-soft: #eaf1f7;
+  --warn: #8a5a2d;
+  --warn-soft: #f8f1e8;
+  --measure: 44rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8e6e1;
+    --ink-soft: #a2a8b2;
+    --paper: #16181b;
+    --card: #1e2126;
+    --rule: #33373d;
+    --edge: #4a515b;
+    --accent: #8fbadd;
+    --accent-soft: #1f2932;
+    --warn: #d8ac78;
+    --warn-soft: #2c2620;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 3rem 1.25rem 5rem;
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+main { max-width: var(--measure); margin: 0 auto; }
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin: 0 0 1rem;
+}
+
+.lede {
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0 0 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--rule);
+}
+
+/* Every block is wrapped, so the rhythm between blocks is set once here and the
+ * inner elements carry no bottom margin of their own. A heading can no longer be
+ * separated from the thing it heads. */
+section { margin: 0 0 2.5rem; }
+section > :last-child { margin-bottom: 0; }
+
+h2 {
+  font-size: 0.8rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.6rem;
+}
+
+/* The third level: the label on one item inside a list, not a section heading.
+ * Sentence case and full ink, so it reads as a name rather than as shouting. */
+h3 {
+  font-size: 1.02rem;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin: 0 0 0.35rem;
+}
+
+p { margin: 0 0 0.9rem; }
+p:last-child { margin-bottom: 0; }
+
+/* Bold is a colour step as well as a weight one. Inside grey text -- the lede, a
+ * stat's label, a table cell -- weight alone is nearly invisible. */
+strong {
+  font-weight: 660;
+  color: var(--ink);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* A link on one of these pages always opens the source material, never a file in
+ * the knowledge base, so it is worth looking clickable rather than hiding in the
+ * prose. Its text is never bolded or glossed -- being a link is emphasis enough. */
+a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+a:hover { text-decoration-thickness: 2px; }
+
+.sources a { color: var(--accent); }
+
+/* Stats: consecutive stat blocks share one row and wrap on a narrow screen. */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.stat {
+  flex: 1 1 8.5rem;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+}
+
+.stat .value {
+  display: block;
+  font-size: 1.9rem;
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.stat .label {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.stat .note {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* The table is a plate too, so its rows read as belonging to one object rather
+ * than as loose rules floating on the page. */
+.table-wrap {
+  overflow-x: auto;
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.96rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+th {
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-bottom-width: 2px;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+
+ol.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+/* Child selectors throughout. A grouped item nests its own <ul>, and a descendant
+ * selector made every sub-item increment the step counter, so a three-step list
+ * numbered itself 1, 4, 7. */
+ol.steps > li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 0 2.4rem;
+  margin: 0 0 0.9rem;
+}
+
+ol.steps > li:last-child { margin-bottom: 0; }
+
+ol.steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+ul.facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+ul.facts > li {
+  position: relative;
+  padding: 0 0 0 1.1rem;
+  margin: 0 0 0.55rem;
+}
+
+ul.facts > li:last-child { margin-bottom: 0; }
+
+ul.facts > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* An item that carries a label, a line of prose and its own sub-items is a thing,
+ * not a bullet, so it gets a plate. Without one, the sub-items read as siblings of
+ * the item above them and the grouping the model expressed is lost. */
+li.grouped {
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  margin: 0 0 0.6rem;
+}
+
+ul.facts > li.grouped {
+  padding: 0.9rem 1.1rem;
+}
+
+ul.facts > li.grouped::before { display: none; }
+
+ol.steps > li.grouped {
+  padding: 0.9rem 1.1rem 0.9rem 3rem;
+}
+
+ol.steps > li.grouped::before {
+  left: 0.9rem;
+  top: 0.95rem;
+}
+
+li.grouped:last-child { margin-bottom: 0; }
+
+ul.sub {
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+ul.sub > li {
+  position: relative;
+  padding: 0 0 0 1rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+ul.sub > li:last-child { margin-bottom: 0; }
+
+ul.sub > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.68em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink-soft);
+}
+
+blockquote {
+  margin: 0;
+  padding: 1rem 1.2rem;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-left: 3px solid var(--edge);
+  border-radius: 0 10px 10px 0;
+  font-size: 1.12rem;
+  line-height: 1.55;
+}
+
+blockquote .attribution {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+/* A glossed term: dotted underline, tooltip on click. The gloss lives out of the
+ * sentence so the prose can use the field's word without stopping to define it. */
+.gloss {
+  position: relative;
+  display: inline;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: help;
+  border-bottom: 1px dotted currentColor;
+}
+
+.gloss-text {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  width: max-content;
+  max-width: min(20rem, 76vw);
+  padding: 0.6rem 0.75rem;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.gloss[aria-expanded="true"] .gloss-text { visibility: visible; opacity: 1; }
+
+.callout {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--edge);
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 10px 10px 0;
+}
+
+.callout.warn {
+  border-left-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.sources {
+  margin: 3rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.sources h2 { color: var(--ink-soft); }
+
+.sources ul { margin: 0; padding-left: 1.1rem; }
+.sources li { margin: 0 0 0.3rem; }
+
+/* A cited path is a filename, not a term of art: no tint, no chip. */
+.sources code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95em;
+  background: none;
+  padding: 0;
+}
+
+@media (max-width: 30rem) {
+  body { padding: 2rem 1rem 3rem; }
+  h1 { font-size: 1.6rem; }
+  .lede { font-size: 1.08rem; }
+  ul.facts > li.grouped { padding: 0.8rem 0.9rem; }
+  ol.steps > li.grouped { padding: 0.8rem 0.9rem 0.8rem 2.8rem; }
+  ol.steps > li.grouped::before { left: 0.75rem; top: 0.85rem; }
+  th, td { padding: 0.6rem 0.7rem; }
+}
+
+@media print {
+  :root {
+    --paper: #ffffff;
+    --card: #ffffff;
+    --edge: #9a9a9a;
+    --rule: #d4d4d4;
+  }
+
+  body { padding: 0; font-size: 11pt; }
+
+  /* Paper has no scrollbar and no second chance: a plate split across two sheets
+   * loses the grouping it exists to show. */
+  section, .stats, .stat, .table-wrap, .callout, blockquote,
+  li.grouped, ol.steps > li, ul.facts > li { break-inside: avoid; }
+
+  h1, h2, h3 { break-after: avoid; }
+
+  code { background: none; padding: 0; }
+
+  /* Paper cannot be clicked, so a link that does not carry its address is a dead
+   * end -- the same reason a gloss becomes a parenthetical below. */
+  a {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  a::after {
+    content: " (" attr(href) ")";
+    font-weight: 400;
+    font-size: 0.85em;
+    color: #555;
+    word-break: break-all;
+  }
+
+  /* Nothing is clickable on paper, so every gloss becomes a parenthetical
+     rather than silently disappearing. */
+  .gloss-text {
+    position: static;
+    visibility: visible;
+    opacity: 1;
+    display: inline;
+    width: auto;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: none;
+    font-size: 0.9em;
+    color: #444;
+  }
+  .gloss-text::before { content: " ("; }
+  .gloss-text::after { content: ")"; }
+}
