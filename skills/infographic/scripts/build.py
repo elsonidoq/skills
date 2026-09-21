@@ -33,6 +33,7 @@ import re
 import sys
 from datetime import date
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 MINIMUM_SOURCES = 2
 MAX_BLOCKS = 24
@@ -53,6 +54,9 @@ TAGS = re.compile(r"(<[^>]*>)")
 LINK = re.compile(r"\[([^\]\n]+)\]\(([^)\s]+)\)")
 SOURCE_FIELD = re.compile(r"^source:\s*(.+?)\s*$", re.MULTILINE)
 URL_SCHEME = re.compile(r"^https?://", re.IGNORECASE)
+# A file:// link opens a real local file -- e.g. another built page -- rather than
+# web source material. It is verified by a disk read like everything else here.
+FILE_SCHEME = re.compile(r"^file://", re.IGNORECASE)
 
 ITEM_KEYS = ("term", "detail", "items")
 MAX_TERM = 80
@@ -98,6 +102,17 @@ def emphasis_problems(text: str, label: str) -> list[str]:
     return problems
 
 
+def file_url_path(url: str) -> Path | None:
+    """The local path a file:// URL names, or None when it is not a usable local URL."""
+    parsed = urlparse(url)
+    if parsed.scheme.lower() != "file":
+        return None
+    if parsed.netloc not in ("", "localhost"):
+        return None
+    path = unquote(parsed.path)
+    return Path(path) if path else None
+
+
 def document_source(path: Path) -> str | None:
     """The address a document was fetched from, read out of its frontmatter.
 
@@ -117,6 +132,12 @@ def document_source(path: Path) -> str | None:
 
 def link_target_problem(target: str, kb_root: Path) -> str | None:
     """Why this link cannot be built, or None if it opens real source material."""
+    if FILE_SCHEME.match(target):
+        path = file_url_path(target)
+        if path is None or not path.is_file():
+            return (f"{target} does not name a local file that exists -- a file:// "
+                    "link must open a real file on disk")
+        return None
     if URL_SCHEME.match(target):
         return ("a page cannot link a URL directly -- cite the document that holds it, "
                 "and if the knowledge base does not have that article yet, ingest it "
@@ -129,7 +150,7 @@ def link_target_problem(target: str, kb_root: Path) -> str | None:
         return (f"{target} has no source: header, which is what a conclusion looks like "
                 "-- a conclusion is your own reasoning, not source material, so link one "
                 "of the documents it cites")
-    if not URL_SCHEME.match(source):
+    if not (URL_SCHEME.match(source) or FILE_SCHEME.match(source)):
         return (f"{target} records where it came from in words rather than as an address "
                 f"({source[:40]!r}), so there is nothing for the reader to open")
     return None
@@ -367,6 +388,9 @@ class Links:
 
     When the knowledge base does not hold the article, the answer is to ingest it
     and link the document that produces -- not to relax this.
+
+    A ``file://`` target is the deliberate exception: it opens a real local file
+    (for example another built page) and is verified by the same disk read.
     """
 
     def __init__(self, kb_root: Path):
@@ -380,8 +404,11 @@ class Links:
         return self._source[target]
 
     def url_for(self, target: str) -> str | None:
+        if FILE_SCHEME.match(target):
+            path = file_url_path(target)
+            return target if path and path.is_file() else None
         source = self.source_of(target)
-        return source if source and URL_SCHEME.match(source) else None
+        return source if source and (URL_SCHEME.match(source) or FILE_SCHEME.match(source)) else None
 
     def anchor(self, url: str, text: str) -> str:
         """``text`` is already escaped; the href is escaped for an attribute."""

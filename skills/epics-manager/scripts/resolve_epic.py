@@ -40,15 +40,16 @@ def epic_sections(text):
     epics = []
     seen = set()
     for index, (start, title) in enumerate(headings):
-        match = re.match(r"^Epic ([0-9]+)(?=$|\s|[^\w])", title)
+        match = re.match(r"^Epic ([0-9]+)([a-z]?)(?=$|\s|[^\w])", title)
         if not match:
             continue
         number = int(match.group(1))
-        if number in seen:
-            raise ValueError(f"Duplicate Epic {number} headings; resolve before proceeding")
-        seen.add(number)
+        letter = match.group(2)
+        if (number, letter) in seen:
+            raise ValueError(f"Duplicate Epic {number}{letter} headings; resolve before proceeding")
+        seen.add((number, letter))
         end = headings[index + 1][0] - 1 if index + 1 < len(headings) else len(lines)
-        epics.append({"epic_number": number, "epic_heading": "# " + title,
+        epics.append({"epic_number": number, "epic_letter": letter, "epic_heading": "# " + title,
                       "epic_slug": slug(title), "start_line": start, "end_line": end})
     return epics
 
@@ -58,9 +59,12 @@ def select_epic(epics, selector):
         matches = epics if len(epics) == 1 else []
     else:
         normalized = slug(selector)
-        numeric = re.fullmatch(r"(?:epic-)?([0-9]+)", normalized)
+        numeric = re.fullmatch(r"(?:epic-)?([0-9]+)([a-z]?)", normalized)
         if numeric:
-            matches = [item for item in epics if item["epic_number"] == int(numeric[1])]
+            number, letter = int(numeric[1]), numeric[2]
+            matches = [item for item in epics
+                       if item["epic_number"] == number
+                       and item.get("epic_letter", "") == letter]
         elif normalized:
             matches = [item for item in epics
                        if f"-{normalized}-" in f"-{item['epic_slug']}-"]

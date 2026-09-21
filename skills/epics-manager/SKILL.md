@@ -10,7 +10,8 @@ docs/poc/01-recall-audit-and-fix.md` or `/epics-manager docs/poc/epics.md 2`.
 There is no default epic file; the first argument is always required. This
 skill prepares reviewed artifacts; it does not implement the product.
 
-Pipeline (fixed, no per-project variation without an explicit owner decision):
+Pipeline (fixed after constitution initialization, no per-project variation without an
+explicit owner decision):
 
 ```
 brainstorm_gate → [epic_brainstorm → epic_brainstorm_fix] → spec_create (sonnet)
@@ -92,6 +93,55 @@ even inside a multi-epic bundle file.
 Echo the resolved heading back to the user before running the first stage. Re-resolve
 on every resume; never reuse stale line numbers after the file has been edited.
 
+### Constitution initialization
+
+Before bootstrap, ensure the repository has been initialized with SpecKitToolkit. The
+required initialization assets are `.specify/`, every Speckit command file named in the
+table above, `.specify/templates/spec-template.md`, `plan-template.md`,
+`tasks-template.md`, `checklist-template.md`, and `.specify/scripts/bash/common.sh`,
+`check-prerequisites.sh`, and `setup-plan.sh`. If any is missing, tell the user to run
+`specify init .` from the repository root. Do not run it for them. Then wait for the
+user to confirm completion and re-check the assets; if any remain absent, stop and
+report the missing paths.
+
+Check `.specify/memory/constitution.md`. A file is valid only when it exists, contains
+substantive project-specific principles rather than headings or boilerplate alone, and
+contains no unreplaced template markers. Treat `[PROJECT_NAME]`, `[PRINCIPLE_…]`, and
+all unreplaced template markers as a template. A valid constitution skips this section permanently
+and proceeds to Bootstrap.
+
+If the constitution is missing or still a template, conduct a short interview through
+the `question` tool before any Epic stage. Ask only what is needed to establish:
+
+1. The project's purpose, intended users, and primary outcome.
+2. The non-negotiable engineering or product principles that should govern trade-offs.
+3. The delivery, quality, security, privacy, compatibility, or operational constraints
+   that must not be compromised.
+
+Summarize answers as `## Constitution interview` with one concise bullet per answer.
+Then spawn one **sonnet** sub-agent (`task` tool, `subagent_type: "sonnet"`) with the
+following instruction:
+
+```
+Create the project constitution using /speckit.constitution.
+
+Read `.opencode/command/speckit.constitution.md` and follow its command body with the
+Constitution interview below as explicit stage input in place of `$ARGUMENTS`. Write
+only the constitution artifact required by that command; do not create a spec, plan,
+tasks, or edit the Epic.
+
+## Constitution interview
+[paste the coordinator's summarized answers]
+```
+
+When the sub-agent returns, re-read `.specify/memory/constitution.md`. Continue only
+when it passes the validity check; otherwise stop and report that constitution
+initialization did not produce a usable file. Do not repeat the interview or retry the
+sub-agent automatically. Once a usable constitution exists, this initialization never
+runs again for that project. Do not seed it from a specific source file; that coupling
+caused the previous
+   version of this skill to assume `epics_mvp.md` always exists.
+
 ## Bootstrap (run once per state file)
 
 1. Read `AGENTS.md` and the target epic/spec section. Inspect `git status`; preserve
@@ -100,11 +150,9 @@ on every resume; never reuse stale line numbers after the file has been edited.
    isolation is actually warranted).
 2. Verify the command files listed above and `.specify/scripts/bash/common.sh`,
    `check-prerequisites.sh`, `setup-plan.sh` exist.
-3. Check `.specify/memory/constitution.md`. If it is missing or still a template
-   (`[PROJECT_NAME]`, `[PRINCIPLE_…]` placeholders), **stop and tell the user** —
-   run `/speckit.constitution` manually first. This skill does not auto-seed the
-   constitution from any specific source file; that coupling caused the previous
-   version of this skill to assume `epics_mvp.md` always exists.
+3. Confirm `.specify/memory/constitution.md` is valid. Constitution initialization
+   must already have created it when needed; if it is missing or still a template,
+   stop and report that the constitution preflight was not completed.
 4. Do not require `specs/`, `feature.json`, spec, plan, or tasks to exist yet for a
    fresh epic. Do not run product tests as a planning baseline.
 

@@ -179,6 +179,30 @@ class SkillContract(unittest.TestCase):
         self.assertIn("only invoke it for a fresh plan", text)
         self.assertIn("fresh epic", text)
 
+    def test_constitution_bootstrap_initializes_missing_or_template_file(self):
+        text = (SKILL / "SKILL.md").read_text()
+        self.assertIn("### Constitution initialization", text)
+        section = text.partition("### Constitution initialization")[2].split("## Durable state", 1)[0]
+        self.assertIn("specify init .", section)
+        wait_for_confirmation = re.search(r"wait for the\s+user to confirm", section)
+        self.assertIsNotNone(wait_for_confirmation)
+        self.assertIn("missing or still a template", section)
+        self.assertIn("short interview", section)
+        self.assertIn('subagent_type: "sonnet"', section)
+        self.assertIn("/speckit.constitution", section)
+        self.assertIn("re-read `.specify/memory/constitution.md`", section)
+        self.assertIn("all unreplaced template markers", section)
+        self.assertIn("substantive project-specific principles", section)
+        self.assertIn("skips this section permanently", section)
+        self.assertIn("Do not repeat the interview or retry the", section)
+        for template in ("spec-template.md", "plan-template.md", "tasks-template.md",
+                         "checklist-template.md"):
+            self.assertIn(template, section)
+        self.assertEqual(section.count('subagent_type: "sonnet"'), 1)
+        self.assertLess(section.index("If any is missing"), wait_for_confirmation.start())
+        self.assertLess(section.index("skips this section permanently"),
+                        section.index("If the constitution is missing or still a template"))
+
     @unittest.skipUnless(REPO is not None, "run from within a Speckit-initialized repo (.specify/ present)")
     def test_generated_templates_use_dotted_opencode_commands(self):
         for path in (REPO / ".specify/templates/plan-template.md",
@@ -328,6 +352,18 @@ class EpicSelection(unittest.TestCase):
                 self.assertEqual(epic["end_line"], epics[index + 1]["start_line"] - 1)
             else:
                 self.assertEqual(epic["end_line"], len(lines))
+
+    def test_sub_letter_epic_numbers(self):
+        epics = epic_sections("# Epic 1 — Base\nBody\n\n# Epic 1b — Follow-up\nMore\n")
+        self.assertEqual([(item["epic_number"], item["epic_letter"]) for item in epics],
+                         [(1, ""), (1, "b")])
+        self.assertEqual(select_epic(epics, "1")["epic_heading"], "# Epic 1 — Base")
+        self.assertEqual(select_epic(epics, "1b")["epic_heading"], "# Epic 1b — Follow-up")
+        self.assertEqual(select_epic(epics, "epic-1b")["epic_heading"], "# Epic 1b — Follow-up")
+        with self.assertRaises(ValueError):
+            select_epic(epics, "2")
+        with self.assertRaises(ValueError):
+            epic_sections("# Epic 1b — One\n# Epic 1b — Two\n")
 
     def test_aliases_share_identity(self):
         aliases = ["3", "epic-3", "EPIC 3", "matching", "Matching Engine",
