@@ -1,32 +1,28 @@
 # OpenCode Configuration
 
-Global OpenCode configuration, commands, and reusable skills for this machine.
+Portable global OpenCode commands and skills for developing features deliberately across unrelated repositories.
 
-## Layout
+## Repository Invariants
 
-| Path | Purpose |
-| --- | --- |
-| `opencode.jsonc` | Global OpenCode configuration, providers, plugins, and MCP servers. |
-| `AGENTS.md` | Agent-facing operating policy loaded into sessions. |
-| `command/` | Global slash-command prompts. |
-| `skills/` | Reusable global skills. Each skill lives in `<name>/SKILL.md`. |
+- Documentation describes the system as it exists.
+- Memory records only non-obvious, durable guidance.
+- Verified unresolved work has one canonical open-issue record.
+- Features are developed from approved epics and spec-driven artifacts, not improvised in code.
 
-## Portability
+## Development Workflow
 
-Global commands and skills must work across unrelated repositories. They do not encode a project's paths, data,
-branch conventions, deployment state, models, or agents. A reusable dependency such as SpecKit, Railway,
-Supabase, GitHub, or a configured agent must be discovered before use and have an unavailable fallback.
+1. `/create-epic` turns an evidence-backed idea into a scoped epic, or a direct task list when the SpecKit pipeline is not justified.
+2. `epics-manager` resolves material decisions and guides specification, approval, planning, tasks, and cross-artifact review.
+3. `coordinate-implementation` implements the approved tasks in dependency order and verifies acceptance evidence.
+4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
+5. `/finish-session` maintains documentation, open-issue, deployment, and project-memory invariants.
 
-Project-specific policy belongs in that repository's `AGENTS.md`, `CLAUDE.md`, or local `.opencode/` assets.
+## Supporting Workflows
 
-## Session Closeout
+- `/track-open-issue` gives verified unresolved work a durable owner without derailing the current session.
+- `/scientific-method-debugging` observes the running system before forming causal hypotheses.
+- `handoff-prompt` produces concise, self-contained context for a fresh session or delegated agent.
+- `using-git-worktrees` isolates work when the repository and task warrant it.
+- Reusable practices borrowed from Superpowers include `brainstorming` and code-review workflows.
 
-`/finish-session` preserves current documentation, unresolved work, verified deployment prerequisites, and
-trigger-first project memory when those capabilities exist. `/finish-session-jev` adds optional bounded Jev
-triage. `/compact-memory` operates only on an explicitly project-associated memory store.
-
-## Updating Assets
-
-Use `skills/writing-skills/SKILL.md` when creating or materially revising a reusable skill. Keep command and skill
-changes scoped, verify any optional capability they use, and restart OpenCode after changing configuration-time
-assets.
+Global assets must not assume project paths, branches, deployment state, models, or agents. Restart OpenCode after changing this repository's configuration-time assets.
