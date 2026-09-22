@@ -4,14 +4,14 @@ Use Infrastructure as Code for project configuration. Keep one authoring file an
 
 ## Choose the model
 
-TypeScript IaC is generally available. Python and Go authoring are in beta. Preserve an existing `.railway/railway.ts`, `.railway/railway.py`, or `.railway/railway.go`; do not switch languages based on the app's `package.json`, `go.mod`, or framework. With no existing authoring file, `config init` and `config pull` default to TypeScript even for non-TypeScript apps. `config init` and `config pull` have no language flag: the CLI picks the language only from an existing authoring file. To honor an explicit Python/Go preference on a fresh project, create an empty `.railway/railway.py` or `.railway/railway.go` first, then run `config pull` so the import is emitted in that language. `config migrate --lang py|go` emits Python/Go only when translating legacy `railway.json`/`railway.toml`.
+Preserve an existing `.railway/railway.ts`, `.railway/railway.py`, or `.railway/railway.go`; do not switch languages based on the app's `package.json`, `go.mod`, or framework. Before initializing, pulling, or migrating, inspect `railway config --help` and the current [official IaC documentation](https://docs.railway.com/infrastructure-as-code) for supported languages and selection behavior. If the requested language is unavailable, report that capability gap rather than improvising another format.
 
-`railway.json` and `railway.toml` are deprecated. New services cannot opt into Config as Code; existing files stop being read on **2026-12-01**. Do not create them as a fallback. For an existing legacy service, use the migration workflow below; if the user requests a temporary legacy edit, explain the cutoff and keep its current format.
+If `railway.json` or `railway.toml` already exists, inspect the current [Config as Code documentation](https://docs.railway.com/config-as-code) and `railway config migrate --help` before editing or migrating it. Do not create a legacy file as a fallback when no such file exists.
 
 | Model | Scope | Applies when |
 |---|---|---|
 | `.railway/railway.ts`, `.py`, or `.go` | Project/environment: services, databases, buckets, volumes, variables, replicas, domains, and canvas groups | `railway config apply` applies the project plan |
-| Existing `railway.json` / `railway.toml` | One legacy service's build and deploy settings | Read during deployments until the cutoff; overrides dashboard values for that deployment |
+| Existing `railway.json` / `railway.toml` | One service's legacy build and deploy settings | Handle only as documented by the current CLI and Config as Code reference |
 
 ## Infrastructure as Code
 
@@ -25,7 +25,7 @@ Keep exactly one of these files:
 
 `railway config init` and `railway config pull` also create `.railway/README.md`. Railway agent setup installs the shared `use-railway` skill; config commands do not need or create a project-local skill.
 
-Install the matching authoring package in the config's package environment: `npm install railway`, `pip install railway-sdk`, or `go get github.com/railwayapp/railway-go-sdk`. Python/Go imports can generate `.railway/requirements.txt` or `.railway/go.mod`; use those when present. CLI 5.42+ evaluates the graph natively, but still needs the language runtime and SDK to evaluate authoring code. `--runner` is an optional legacy TypeScript runner override, not a prerequisite.
+Install the matching authoring package in the config's package environment as documented for the selected language. Use generated `.railway/requirements.txt`, `.railway/go.mod`, or equivalent dependency files when present. Confirm runtime, SDK, and runner requirements with `railway config --help` and the current official language reference rather than inferring them from another authoring language.
 
 ### Core rules
 
@@ -172,7 +172,7 @@ Ordinary `apply` evaluates a fresh plan. Changes to the environment between plan
 
 ### Apply the reviewed plan in CI
 
-CLI 5.45.1+ can save the evaluated change set and apply that exact artifact:
+If `railway config plan --help` exposes saved plans and `railway config apply --help` exposes applying them, use that capability to apply the reviewed artifact:
 
 ```bash
 railway config plan --out railway-plan.json
@@ -207,7 +207,7 @@ Before applying, confirm:
 
 ## Migrate legacy Config as Code
 
-Use CLI **5.49.1 or newer**: its TypeScript migration and all-language pull fixes preserve `preDeployCommand` as the first-class `preDeploy` field. Earlier TypeScript migration output could silently omit a database migration command.
+Inspect `railway config migrate --help` and the current migration documentation before running migration. Always treat migration output as potentially lossy until it has been compared with the source configuration and reviewed plan.
 
 Start with a dry-run from the repository root:
 
@@ -220,7 +220,7 @@ railway config migrate --lang go
 
 The default emits proposed TypeScript without writing files or clearing remote settings. `--service` selects a service when multiple configs are found; with one file it can name the emitted service. Inspect the discovered paths and service mapping in a monorepo. Single-service migration may emit a named partial rather than claim the whole project; retain that ownership boundary when merging it into existing IaC.
 
-In v5.49.1, Python/Go **migration** emits only build/start commands and the healthcheck path. Manually carry over other intended settings, including pre-deploy commands, replicas, and healthcheck timeouts, before applying the resulting IaC. A successful migration command is not proof of a lossless translation in any language; compare the original files and plan.
+A successful migration command is not proof of a lossless translation. Compare build, start, and pre-deploy commands, health checks and timeouts, replicas, regions, variables, and ownership scope between the original files, generated source, and plan.
 
 For an authorized migration, write the result and clear the discovered services' Railway Config File settings:
 
@@ -238,9 +238,9 @@ Before completing the migration:
 - Run `railway config plan`; inspect unexpected removals or changes, then apply only within the user's authorized scope.
 - Check for remaining legacy files and custom Railway Config File paths so deployments do not retain dual ownership.
 
-For a requested temporary edit to an existing legacy service, retain its format, validate against the [Config as Code reference](https://docs.railway.com/config-as-code/reference), and explain the 2026-12-01 cutoff. Config as Code has deployment-time precedence over dashboard settings; a deployment is needed for edits to take effect. Keep variables and secrets in Railway variables.
+For a requested temporary edit to an existing legacy service, retain its format and validate behavior against the current [Config as Code reference](https://docs.railway.com/config-as-code/reference). Confirm precedence and deployment requirements in current docs before applying. Keep variables and secrets in Railway variables.
 
 ## Validated against
 
 - Docs: [Infrastructure as Code](https://docs.railway.com/infrastructure-as-code), [IaC reference](https://docs.railway.com/infrastructure-as-code/reference), [Config as Code](https://docs.railway.com/config-as-code)
-- CLI source (v5.49.1): [config/mod.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/config/mod.rs), [config/migrate.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/config/migrate.rs), [authoring.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/config/authoring.rs), [eval.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/iac/eval.rs), [saved_plan.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/iac/saved_plan.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

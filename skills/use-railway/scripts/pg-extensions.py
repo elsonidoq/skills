@@ -22,10 +22,35 @@ They cannot be run with piped input - the user must confirm directly.
 import argparse
 import sys
 import json
+import re
 from typing import Tuple, List, Optional, Dict, Any
 from dataclasses import dataclass
 
 from dal import run_psql_query, info, error, confirm_with_user
+
+
+EXTENSION_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,62}$")
+EXTENSION_VERSION = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$")
+
+
+def validate_extension_name(value: str) -> str:
+    """Accept PostgreSQL extension names without SQL metacharacters."""
+    if not EXTENSION_NAME.fullmatch(value):
+        raise ValueError(
+            "extension name must start with a lowercase letter and contain only "
+            "lowercase letters, digits, underscores, or hyphens"
+        )
+    return value
+
+
+def validate_extension_version(value: str) -> str:
+    """Accept package-style extension versions without SQL metacharacters."""
+    if not EXTENSION_VERSION.fullmatch(value):
+        raise ValueError(
+            "extension version must contain only letters, digits, dots, underscores, "
+            "plus signs, or hyphens"
+        )
+    return value
 
 
 @dataclass
@@ -118,6 +143,7 @@ def list_extensions(service: str, json_output: bool = False) -> List[Extension]:
 
 def get_extension_dependencies(service: str, extension: str) -> List[str]:
     """Get dependencies for an extension."""
+    extension = validate_extension_name(extension)
     query = f"""
         SELECT DISTINCT unnest(pev.requires) as dependency
         FROM pg_available_extension_versions pev
@@ -137,6 +163,7 @@ def get_extension_dependencies(service: str, extension: str) -> List[str]:
 
 def get_extension_dependents(service: str, extension: str) -> List[str]:
     """Get extensions that depend on this extension."""
+    extension = validate_extension_name(extension)
     query = f"""
         SELECT e.extname AS dependent_extension
         FROM pg_depend d
@@ -160,6 +187,7 @@ def get_extension_dependents(service: str, extension: str) -> List[str]:
 
 def is_extension_installed(service: str, extension: str) -> Tuple[bool, Optional[str]]:
     """Check if extension is installed, return (installed, version)."""
+    extension = validate_extension_name(extension)
     query = f"SELECT extversion FROM pg_extension WHERE extname = '{extension}'"
     code, output = run_psql_query(service, query)
     if code == 0 and output.strip():
@@ -169,6 +197,7 @@ def is_extension_installed(service: str, extension: str) -> Tuple[bool, Optional
 
 def is_extension_available(service: str, extension: str) -> bool:
     """Check if extension is available in the image."""
+    extension = validate_extension_name(extension)
     query = f"SELECT 1 FROM pg_available_extensions WHERE name = '{extension}'"
     code, output = run_psql_query(service, query)
     return code == 0 and output.strip() == "1"
@@ -176,6 +205,9 @@ def is_extension_available(service: str, extension: str) -> bool:
 
 def install_extension(service: str, extension: str, version: Optional[str] = None) -> bool:
     """Install an extension with CASCADE (auto-install dependencies)."""
+    extension = validate_extension_name(extension)
+    if version is not None:
+        version = validate_extension_version(version)
     # Check if available
     if not is_extension_available(service, extension):
         error(f"Extension '{extension}' is not available in this database image")
@@ -222,6 +254,7 @@ def install_extension(service: str, extension: str, version: Optional[str] = Non
 
 def uninstall_extension(service: str, extension: str) -> bool:
     """Uninstall an extension."""
+    extension = validate_extension_name(extension)
     # Check if installed
     installed, ver = is_extension_installed(service, extension)
     if not installed:
@@ -258,6 +291,7 @@ def uninstall_extension(service: str, extension: str) -> bool:
 
 def extension_info(service: str, extension: str, json_output: bool = False):
     """Show detailed info about an extension."""
+    extension = validate_extension_name(extension)
     # Check availability
     available = is_extension_available(service, extension)
     if not available:

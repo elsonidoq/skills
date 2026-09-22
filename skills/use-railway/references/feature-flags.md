@@ -39,7 +39,7 @@ For targeting rules and rollouts, use the CLI commands below when MCP has no mat
 
 ## CLI defaults, rules, and rollouts
 
-CLI 5.24+ exposes `railway flag` (alias `railway flags`). Use `--scope project:<id>` for explicit targeting; `--project` is not a flag option. On 5.26.2+, omitted scope can come from the project token or linked project.
+If `railway flag --help` exposes the required operation, follow its current scope syntax and pass an explicit owner when supported. Do not assume project flags or linked context are accepted; verify with command help and the current [official feature-flag documentation](https://docs.railway.com/feature-flags).
 
 ```bash
 railway flag list --scope project:<project-id> --json
@@ -88,7 +88,7 @@ Poll interval defaults are suitable for most apps; flags refresh when registry v
 ## Do not confuse with
 
 - **Environment variables** — static per-environment config (`railway variable set`). Use flags when you need typed defaults, targeting, and central registry semantics.
-- **Priority Boarding / account toggles** — internal beta switches on your Railway account, unrelated to project feature flags.
+- **Account capability toggles** — account-level platform access, unrelated to project feature flags. Follow the current dashboard and official documentation.
 - **Platform feature flags** — Railway staff tooling only.
 
 ## Dashboard
@@ -98,4 +98,4 @@ Human-friendly CRUD: open the project → **Settings → Feature Flags**. Worksp
 ## Validated against
 
 - Docs: [Feature flags](https://docs.railway.com/feature-flags), [CLI flags](https://docs.railway.com/cli/flag)
-- CLI source (v5.49.1): [flag.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/flag.rs), [signals.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/controllers/signals.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

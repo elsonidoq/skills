@@ -2,13 +2,13 @@
 
 Sandboxes are ephemeral remote Linux environments attached to a Railway project + environment. Use them when the user asks for a sandbox, a scratch/ephemeral environment, or wants to build or run something remotely without touching deployed services. Sandboxes link at the project level — a linked project and environment (or explicit `--project` / `--environment` flags) is enough; no service link is needed.
 
-## Availability — Priority Boarding required
+## Availability
 
-**Sandboxes must be enabled in Priority Boarding.** If sandbox commands fail with a feature-availability error from the API (the `PROJECT_SANDBOXES` feature is not enabled for the workspace), do not retry — prompt the user to enable Sandboxes through Priority Boarding in the Railway dashboard, then resume once they confirm.
+Inspect `railway sandbox --help` and the current [official sandbox documentation](https://docs.railway.com/sandboxes) before choosing commands. If the API reports that the workspace capability is unavailable, follow the current enablement guidance rather than retrying.
 
 Two non-errors to expect:
 
-- Every sandbox command prints `Warning: Railway sandboxes are experimental and APIs may change or break during testing.` on stderr. This is informational — not a failure.
+- Treat a warning as informational only when the command continues successfully; use its exit status and result to determine failure.
 - Context errors (`No project selected...` / `No environment selected...`) mean missing linking, not missing access: run `railway link` or pass `--project` and `--environment`.
 
 ## Create and connect
@@ -151,7 +151,7 @@ Destroy sandboxes you created for a task once the task is done — idle timeout 
 
 ## Troubleshoot sandboxes
 
-- **Feature-availability error from the API**: Sandboxes aren't enabled for this workspace. Prompt the user to enable Sandboxes through Priority Boarding in the Railway dashboard; don't retry until they confirm.
+- **Feature-availability error from the API**: follow the error's current enablement guidance and the official sandbox documentation. Do not retry until the workspace capability is available.
 - **`No project selected` / `No environment selected`**: run `railway link` or pass `--project` with `--environment`.
 - **`Unknown template ...`**: the recipe isn't in this CLI's local store — rebuild with `railway sandbox template build --name <name> -c '<command>' --wait`, or use a checkpoint if the state was meant to travel between machines.
 - **`Template build failed`**: a step exited non-zero or exceeded its 10-minute limit; fix that step and rebuild.
@@ -164,4 +164,4 @@ Destroy sandboxes you created for a task once the task is done — idle timeout 
 ## Validated against
 
 - Docs: [sandboxes.md](https://docs.railway.com/sandboxes), [sandbox.md](https://docs.railway.com/cli/sandbox), [agents-in-sandboxes.md](https://docs.railway.com/guides/agents-in-sandboxes)
-- CLI source: [sandbox.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/sandbox.rs), [sandbox_exec.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/controllers/sandbox_exec.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

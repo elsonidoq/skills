@@ -2,10 +2,11 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": ["~/.config/opencode/AGENTS.md"],
   "plugin": [
-    "superpowers@git+https://github.com/obra/superpowers.git",
+   // "superpowers@git+https://github.com/obra/superpowers.git",
     "file:///Users/elsonidoq/prog/opencode-claude-bridge/dist/index.js",
     "opencode-claude-memory"
   ],
+  "shell": "/Users/elsonidoq/.local/bin/opencode-bash",
   "provider": {
     "anthropic": {
       "models": {

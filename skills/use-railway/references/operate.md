@@ -106,7 +106,7 @@ Useful filters:
 
 ### DNS query logs
 
-CLI 5.29+ exposes DNS resolution results directly:
+When `railway logs --help` exposes DNS mode, query DNS resolution results directly:
 
 ```bash
 railway logs --service <service> --environment <env> --dns --lines 100 --json
@@ -138,6 +138,8 @@ railway metrics --service <service> --raw --cpu --json
 Metric flags can be combined: `--cpu`, `--memory`, `--network`, `--volume`, and `--http`. Use `--watch` only in an interactive terminal; it opens a live TUI and conflicts with `--json` and `--raw`.
 
 For custom grouping or measurements the CLI doesn't expose, use the GraphQL fallback in [request.md](request.md).
+
+For latency or errors that span several services, or a request a user reported with an `x-railway-trace-id` header, use tracing instead of correlating logs by hand: see [tracing.md](tracing.md).
 
 ## SSH
 
@@ -275,9 +277,9 @@ Always verify after fixing. Don't assume the redeploy succeeded.
 
 ## Troubleshoot common blockers
 
-- **`OAUTH_INSUFFICIENT_GRANT` / resource access denied**: CLI 5.37.4+ distinguishes a live OAuth session without access from an expired login. Check the resource IDs, workspace membership, and integration grant scope; repeating the same login may retain the same insufficient grant. Reauthorize with the necessary access only when the user intends that scope.
-- **Expired or invalid credentials**: follow the CLI's login/token-specific error. Transient refresh failures are not proof that access was revoked. Newer CLI versions refresh long-lived clients too; upgrade an old CLI before repeatedly reinstalling MCP to address stale authentication.
-- **CI log stream failed**: on CLI 5.41+, the command falls back to status polling. Inspect the submitted deployment before retrying; a logging error alone is not a deployment failure.
+- **`OAUTH_INSUFFICIENT_GRANT` / resource access denied**: check resource IDs, workspace membership, and integration grant scope; repeating login may retain the same insufficient grant. Reauthorize only when the user intends the additional scope.
+- **Expired or invalid credentials**: follow the installed CLI's login/token-specific error and current official authentication guidance. A transient refresh failure alone is not proof that access was revoked.
+- **CI log stream failed**: inspect the submitted deployment before retrying. A logging transport error alone is not a deployment failure; use the deployment read capability exposed by the installed CLI or MCP.
 
 - **Unlinked context**: `railway link --project <id-or-name>`
 - **Missing service scope for logs**: pass `--service` and `--environment` explicitly
@@ -289,6 +291,5 @@ Always verify after fixing. Don't assume the redeploy succeeded.
 
 ## Validated against
 
-- Docs: [status.md](https://docs.railway.com/cli/status), [service.md](https://docs.railway.com/cli/service), [logs.md](https://docs.railway.com/cli/logs), [metrics.md](https://docs.railway.com/cli/metrics), [ssh.md](https://docs.railway.com/cli/ssh), [cdn.md](https://docs.railway.com/cli/cdn), [waf.md](https://docs.railway.com/cli/waf), [observability/logs.md](https://docs.railway.com/observability/logs), [observability/metrics.md](https://docs.railway.com/observability/metrics)
-- CLI source: [status.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/status.rs), [service.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/service.rs), [logs.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/logs.rs), [metrics.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/metrics.rs), [ssh/mod.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/ssh/mod.rs), [deployment.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/deployment.rs), [redeploy.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/redeploy.rs), [cdn.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/cdn.rs), [waf.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/waf.rs)
-- Authentication and CI recovery (v5.49.1): [client.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/client.rs), [up.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/up.rs)
+- Docs: [status.md](https://docs.railway.com/cli/status), [service.md](https://docs.railway.com/cli/service), [logs.md](https://docs.railway.com/cli/logs), [metrics.md](https://docs.railway.com/cli/metrics), [ssh.md](https://docs.railway.com/cli/ssh), [cdn.md](https://docs.railway.com/cli/cdn), [waf.md](https://docs.railway.com/cli/waf), [observability/logs.md](https://docs.railway.com/observability/logs), [observability/metrics.md](https://docs.railway.com/observability/metrics), [observability/tracing.md](https://docs.railway.com/observability/tracing)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

@@ -237,9 +237,8 @@ See the DB-specific reference for additional errors to avoid per database type.
 Pass project, environment, and service IDs directly — no `railway link` needed:
 
 ```bash
-# From plugins/railway/skills/use-railway directory:
-# Use the script name from the "Database Type Detection" table above
-python3 scripts/analyze-postgres.py --service <name> --json \
+# Resolve <skill-dir> from the loaded use-railway skill.
+python3 <skill-dir>/scripts/analyze-postgres.py --service <name> --json \
   --project-id <project-id> --environment-id <env-id> --service-id <service-id>
 ```
 
@@ -342,4 +341,4 @@ Railway services auto-scale CPU, RAM, and disk based on actual usage. Users do N
 
 - Docs: [ssh.md](https://docs.railway.com/cli/ssh), [logs.md](https://docs.railway.com/cli/logs), [metrics.md](https://docs.railway.com/cli/metrics), [api docs](https://docs.railway.com/api/llms-docs.md)
 - Local scripts: [analyze-postgres.py](../scripts/analyze-postgres.py), [analyze-mysql.py](../scripts/analyze-mysql.py), [analyze-redis.py](../scripts/analyze-redis.py), [analyze-mongo.py](../scripts/analyze-mongo.py), [dal.py](../scripts/dal.py)
-- API command: [api.rs (v5.49.1)](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/api.rs)
+- For API behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

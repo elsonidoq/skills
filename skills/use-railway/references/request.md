@@ -85,7 +85,7 @@ Community threads are anecdotal. Always pair with official docs when the answer 
 
 ## GraphQL with the CLI
 
-Use `railway api` (CLI 5.28+) for API operations that dedicated commands and MCP tools cannot express. It uses the CLI's configured authentication and supports normal token refresh. Inspect the live schema before guessing fields or input shapes:
+Use `railway api` for operations that dedicated commands and MCP tools cannot express only when `railway api --help` confirms the command is available. Inspect the live schema and current [official API documentation](https://docs.railway.com/api/llms-docs.md) before choosing fields or input shapes:
 
 ```bash
 railway api search projectUpdate --kind mutation
@@ -99,7 +99,7 @@ railway api --file query.graphql --raw-var id=<resource-id> --var enabled=true
 
 `--var` parses JSON values when possible; `--raw-var` keeps strings. Queries can also come from stdin, with variables provided separately. Use `--operation-name` for documents containing multiple operations. Output is JSON by default; `--compact` changes formatting and there is no `--json` flag. HTTP errors and GraphQL `errors` fail the command; do not add `--allow-errors` when deciding whether a mutation succeeded. Query resource state before retrying an uncertain mutation.
 
-For an older CLI that cannot be upgraded, the bundled `scripts/railway-api.sh '<query>' '<variables-json>'` remains a compatibility fallback. The database analysis scripts (`dal.py`, `analyze-postgres.py`) still call this helper directly, so it must stay in the plugin even when agents use `railway api`. It reads `user.token` from `~/.railway/config.json`; it does not implement the CLI's environment-token selection or OAuth refresh. It expects query first and variables second, not a query on stdin, and callers must inspect its response for GraphQL errors. Keep the skill telemetry prefix on `railway api` calls just like other CLI calls.
+If `railway api` is unavailable, the bundled `scripts/railway-api.sh '<query>' '<variables-json>'` is a limited compatibility fallback. The database analysis scripts still call this helper directly. It reads `user.token` from `~/.railway/config.json`; it does not implement the CLI's environment-token selection or OAuth refresh. It expects query first and variables second, not a query on stdin, and callers must inspect its response for GraphQL errors. If neither path is usable, stop and use the current official API documentation rather than inventing a request.
 
 For the full API schema, see: https://docs.railway.com/api/llms-docs.md
 
@@ -267,4 +267,4 @@ railway api \
 ## Validated against
 
 - Docs: [api docs](https://docs.railway.com/api/llms-docs.md), [agents.md](https://docs.railway.com/agents), [community.md](https://docs.railway.com/community), [cli/docs.md](https://docs.railway.com/cli/docs), [templates.md](https://docs.railway.com/cli/templates), [metrics.md](https://docs.railway.com/cli/metrics)
-- CLI source: [api.rs (v5.49.1)](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/api.rs), [client.rs (v5.49.1)](https://github.com/railwayapp/cli/blob/v5.49.1/src/client.rs), [docs.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/docs.rs), [templates.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/templates.rs), [metrics.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/metrics.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

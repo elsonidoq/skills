@@ -1,55 +1,83 @@
 ---
 name: delegating-architectural-planning
-description: Use when an approved architectural spec needs an opus planning agent to create a task-by-task implementation plan with explicit sonnet or opus assignments.
+description: Use when an owner-approved architectural specification needs delegated decomposition into an implementation plan.
 ---
 
 # Delegating Architectural Planning
 
-Use only after the owner explicitly approves a spec and requests a planning exception. The planner owns design-to-task decomposition, not implementation.
+Delegate only after the owner approves the specification and asks for a plan.
+The planner owns design-to-task decomposition, not implementation or product
+scope.
 
-## Required Context
+## Preflight
 
-Before dispatching, give the planner the spec path, `AGENTS.md`, `STATE.md`, constitution, `BUILD.md`, relevant package guidance, and the target plan path. State that the owner requested `writing-plans` despite any superseded-plan warning in project workflow.
+Verify and provide:
 
-## Planner Contract
+- The approved specification and evidence of approval.
+- Repository instructions, governing principles, relevant contracts, and the
+  intended plan location, using paths that exist.
+- Existing architecture decisions and upstream/downstream dependencies.
+- The planner's write scope and prohibited operations.
 
-The planner MUST load `writing-plans` before planning. It may read and write only the approved spec and the new plan artifact. It must not implement, run mutating commands, commit, push, deploy, make external calls, or dispatch agents.
+Inspect the runtime for an allowed delegation tool and configured planning-capable
+agents. Use an owner-selected agent when available; otherwise choose from observed
+capabilities and report the choice. Never invent an agent, model, command, or
+configuration. If delegation is unavailable, state
+`Architectural delegation: UNAVAILABLE` and offer to produce the same plan locally
+with a separate review pass.
 
-The plan must contain ordered tasks with: purpose, exact files/interfaces, dependencies, RED/GREEN verification, safety boundaries, and assigned model.
+If the project uses SpecKit, detect its planning command, template, and supporting
+assets before briefing the planner. Tell the planner how to use only the assets
+actually found. When no planning capability is installed, use the plan contract
+below as the generic fallback.
 
-## Model Assignment
+## Planner Boundary
 
-The dispatch provides ordered `Allowed models`. The first is the default for bounded execution; every task assignment must be one of those models. If omitted, use `sonnet, opus` in that order.
+The planner may read the supplied context and write the approved plan artifact.
+Unless separately authorized, it must not:
 
-Use the highest-capability allowed model only for unresolved cross-cutting architecture, non-obvious security/privacy reasoning, or a material design choice. Split an otherwise large high-capability task into a small design task plus independent default-model implementation tasks whenever possible. Every non-default assignment needs a one-line justification.
+- Implement tasks or modify product code.
+- Change the approved product scope.
+- Run mutating, paid, live, deployment, or release operations.
+- Commit, push, or dispatch additional agents.
 
-## Spec Corrections And Decisions
+The plan must contain:
 
-The planner may correct an unambiguous inconsistency in the approved spec and record the correction in the plan. For a material product, privacy, permission, irreversible, paid-operation, or architectural choice, it must stop and return:
+- Ordered tasks with outcomes and acceptance evidence.
+- Exact files or interfaces when knowable; discovery steps when not.
+- Dependencies, parallel-safety constraints, and integration points.
+- Test-first or equivalent fail-then-pass verification for behavior changes.
+- Security, privacy, migration, rollback, and authorization gates where relevant.
+- A capability requirement for any task needing a specialized agent or tool.
 
-```
+Do not pin models or agent names in the plan. Assign work by observable capability
+such as `routine implementation`, `architecture judgment`, or `security review`.
+The implementation coordinator maps those requirements to agents that actually
+exist at execution time.
+
+## Owner Gates
+
+The planner may correct an unambiguous clerical inconsistency and record it. For a
+material product, architecture, privacy, permission, irreversible, or paid-operation
+choice, it must stop that branch of planning and return:
+
+```text
 NEEDS_OWNER_DECISION
-- Question: ...
-- Why it blocks: ...
-- Affected tasks: ...
-- Recommended option: ...
+Question: ...
+Why it blocks: ...
+Affected tasks: ...
+Options: ...
+Recommendation: ...
 ```
 
-The coordinator resumes the same planner with the owner's answer. Never invent a ruling.
-
-An absent authorization for a future paid test or live run is not a planning blocker: plan the test as an explicit owner-authorization gate and do not execute it. Stop only when the product's runtime policy itself is undefined.
+The coordinator obtains the answer and resumes the same planning context when the
+runtime supports resumption. Never invent a ruling. A future live operation is not
+itself a planning blocker: represent it as an explicit authorization gate unless
+the required runtime policy is undefined.
 
 ## Completion
 
-Return the plan path, task/model table, any spec corrections, and unresolved decisions. Stop after planning and wait for owner approval; never start implementation.
-
-## Common Mistakes
-
-| Mistake | Required behavior |
-| --- | --- |
-| One difficult `opus` task | Split it; use `sonnet` for bounded execution. |
-| Defaulting to `sonnet` despite owner options | Assign only listed models; use the first listed model by default. |
-| Asking the owner interactively | Emit the resumable decision block. |
-| Live call needed to plan | Describe the authorization gate; do not call it. |
-| Treating future call authorization as a spec blocker | Plan it as an owner-authorization gate; do not execute it. |
-| Starting code after a plan | Stop and await explicit approval. |
+Inspect the produced plan against the approved spec and planner boundary. Return
+the plan path, task/dependency summary, capability requirements, corrections, and
+open owner decisions. Stop after planning and wait for owner approval before
+implementation.

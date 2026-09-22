@@ -9,11 +9,10 @@ produce a page that reads badly. There is no escape hatch on purpose -- an
 ``html`` block would put the design back in the model's hands, which is the one
 thing this script exists to prevent.
 
-The page is written to ``<kb-root>/pages/<slug>.html`` and its path is appended to
-``<kb-root>/.outbox/pending``. The bridge reads that file to know what to send;
-nothing is parsed out of the model's reply, so a page either exists on disk or was
-never built. The page's id (content "page_id", default: its slug) is recorded in
-<kb-root>/pages/manifest.json, and rebuilding under the same id deletes the
+The page is written to ``<kb-root>/pages/<slug>.html``. If ``--outbox`` is given,
+its relative page path is appended there for an external delivery bridge. The
+page's id (content "page_id", default: its slug) is recorded in
+``<kb-root>/pages/manifest.json``, and rebuilding under the same id deletes the
 previously built file.
 
 Exit codes
@@ -133,19 +132,17 @@ def document_source(path: Path) -> str | None:
 def link_target_problem(target: str, kb_root: Path) -> str | None:
     """Why this link cannot be built, or None if it opens real source material."""
     if FILE_SCHEME.match(target):
-        path = file_url_path(target)
-        if path is None or not path.is_file():
-            return (f"{target} does not name a local file that exists -- a file:// "
-                    "link must open a real file on disk")
-        return None
+        return ("a page link target must be a relative file inside the knowledge base, "
+                "not a file:// URL")
     if URL_SCHEME.match(target):
         return ("a page cannot link a URL directly -- cite the document that holds it, "
                 "and if the knowledge base does not have that article yet, ingest it "
                 "first and link the document you wrote")
-    if not (kb_root / target).is_file():
-        return (f"{target} is not a file in the knowledge base -- a page can only link "
-                "a document it already holds")
-    source = document_source(kb_root / target)
+    path_problem = source_path_problem(target, kb_root)
+    if path_problem:
+        return (f"{target} {path_problem} -- a page can only link a relative regular "
+                "file contained by the knowledge base")
+    source = document_source((kb_root / target).resolve())
     if source is None:
         return (f"{target} has no source: header, which is what a conclusion looks like "
                 "-- a conclusion is your own reasoning, not source material, so link one "
@@ -165,6 +162,28 @@ def link_problems(text: object, label: str, kb_root: Path) -> list[str]:
         if problem:
             problems.append(f"{label}: {problem}")
     return problems
+
+
+def source_path_problem(source: object, kb_root: Path) -> str | None:
+    """Why a source is not a relative regular file contained by the KB root."""
+    if not isinstance(source, str) or not source.strip():
+        return "must be a non-empty relative file path"
+    relative = Path(source)
+    if relative.is_absolute():
+        return "must be relative to the knowledge-base root"
+
+    root = kb_root.resolve()
+    try:
+        resolved = (root / relative).resolve(strict=True)
+    except OSError:
+        return "is not a regular file on disk"
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        return "resolves outside the knowledge-base root"
+    if not resolved.is_file():
+        return "is not a regular file on disk"
+    return None
 
 
 def emphasize(text: str) -> str:
@@ -523,8 +542,9 @@ def validate(content: dict, kb_root: Path) -> list[str]:
                 problems.append(f"{where} (sources): cites {len(items)} file(s), "
                                 f"needs at least {MINIMUM_SOURCES}")
             for item in items:
-                if not (kb_root / str(item)).exists():
-                    problems.append(f"{where} (sources): {item} is not on disk")
+                problem = source_path_problem(item, kb_root)
+                if problem:
+                    problems.append(f"{where} (sources): {item} {problem}")
     if not sourced:
         problems.append("no sources block -- every page cites the knowledge base "
                         f"it was built from, at least {MINIMUM_SOURCES} files")
@@ -692,7 +712,8 @@ def render(content: dict, css: str, gloss: Glossary, js: str = "",
                        css=css, body=body, script=script)
 
 
-def build(kb_root: Path, content: dict, css: str, js: str = "") -> Path:
+def build(kb_root: Path, content: dict, css: str, js: str = "",
+          outbox: "Path | None" = None) -> Path:
     problems = validate(content, kb_root)
     if problems:
         raise Rejected(problems)
@@ -731,12 +752,10 @@ def build(kb_root: Path, content: dict, css: str, js: str = "") -> Path:
                          "built": date.today().isoformat()}
     write_manifest(pages, manifest)
 
-    # The outbox is the bridge's only channel. It is dot-prefixed and deleted
-    # after delivery, so it never reaches a commit.
-    outbox = kb_root / ".outbox"
-    outbox.mkdir(exist_ok=True)
-    with (outbox / "pending").open("a", encoding="utf-8") as fh:
-        fh.write(f"{page.relative_to(kb_root)}\n")
+    if outbox is not None:
+        outbox.parent.mkdir(parents=True, exist_ok=True)
+        with outbox.open("a", encoding="utf-8") as fh:
+            fh.write(f"{page.relative_to(kb_root)}\n")
     return page
 
 
@@ -744,6 +763,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("kb_root", type=Path)
     ap.add_argument("content", type=Path, help="JSON file: title, lede, blocks")
+    ap.add_argument("--outbox", type=Path,
+                    help="optional bridge queue file receiving the relative page path")
     args = ap.parse_args(argv)
 
     if not args.kb_root.is_dir():
@@ -765,7 +786,7 @@ def main(argv: list[str] | None = None) -> int:
     css = (assets / "page.css").read_text(encoding="utf-8")
     js = (assets / "page.js").read_text(encoding="utf-8")
     try:
-        page = build(args.kb_root, content, css, js)
+        page = build(args.kb_root, content, css, js, args.outbox)
     except Rejected as e:
         print("no page written:", file=sys.stderr)
         for problem in e.problems:

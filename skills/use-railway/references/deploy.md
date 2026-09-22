@@ -37,7 +37,7 @@ Observe `SUCCESS` for the submitted deployment before claiming success. Exit 0 c
 railway up --ci -m "<release summary>"
 ```
 
-`--ci` streams build logs and waits for the deployment verdict; `--json` also enables CI behavior for authenticated deployments. On CLI 5.41+, failed build-log/status WebSocket connections fall back to HTTP status polling in CI mode. A log transport warning alone does not mean the deployment failed; let the verdict arrive or query its ID. Use a bounded process timeout because polling may outlive missing deployments or nonterminal states. `--ci` can exit 0 when no changed files match watch patterns, so report a skipped deployment accurately.
+Inspect `railway up --help` to confirm the current behavior of `--ci`, `--json`, and detached output. A log transport warning alone does not establish the deployment result; query the submitted deployment ID directly. Use a bounded process timeout because polling may outlive missing deployments or nonterminal states, and report skipped deployments accurately.
 
 ### Targeted deploy
 
@@ -222,4 +222,4 @@ railway environment edit --service-config <service> build.watchPatterns '["packa
 ## Validated against
 
 - Docs: [up.md](https://docs.railway.com/cli/up), [deploying.md](https://docs.railway.com/cli/deploying), [deployment.md](https://docs.railway.com/cli/deployment), [redeploy.md](https://docs.railway.com/cli/redeploy), [service.md](https://docs.railway.com/cli/service), [down.md](https://docs.railway.com/cli/down), [railpack.md](https://docs.railway.com/builds/railpack), [monorepo.md](https://docs.railway.com/deployments/monorepo)
-- CLI source: [up.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/up.rs), [deployment.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/deployment.rs), [down.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/down.rs), [redeploy.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/redeploy.rs), [restart.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/restart.rs), [service.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/service.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

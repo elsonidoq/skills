@@ -10,7 +10,7 @@ Use native CLI commands for database recovery, high availability, and connection
 | MySQL | `railway mysql ha`, `history` |
 | Redis | `railway redis ha`, `history` |
 
-Postgres operations arrived in CLI 5.33; MySQL/Redis HA in 5.46. Use **5.47.1 or newer for HA mutations**: that release added the revert and scaling fixes (staged member changes, never deleting the acting primary) and `--remove-orphans`. MySQL/Redis do not expose PITR or PgBouncer commands. Availability and image eligibility also depend on Railway's engine templates; a command existing does not make every custom database image eligible.
+Detect each engine's available command tree with `railway <engine> --help` and its subcommand help before acting. Confirm mutation behavior and engine eligibility in the current [official CLI documentation](https://docs.railway.com/cli) because availability depends on both the installed CLI and Railway's engine templates. If a required command or safety option is absent, do not substitute an inferred mutation; update the CLI or use the documented dashboard flow.
 
 All these command trees accept `--project`, `--environment`, `--service`, and `--json`. Resolve the database service and environment first, especially when the supplied URL points at a replica or proxy. Use explicit IDs for cross-project work:
 
@@ -104,4 +104,4 @@ History is a **local** operation trail, not a complete account audit log. Pair i
 ## Validated against
 
 - Docs: [Postgres CLI](https://docs.railway.com/cli/postgres)
-- CLI source (v5.49.1): [postgres.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/postgres.rs), [mysql.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/mysql.rs), [redis.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/redis.rs), [pitr.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/database/pitr.rs), [ha.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/database/ha.rs), [pool.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/database/pool.rs), [ops_log.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/database/ops_log.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

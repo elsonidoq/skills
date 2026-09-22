@@ -4,7 +4,7 @@ Use `railway ca` / `railway code` to run coding harnesses on persistent Railway 
 
 ## Availability and target
 
-Cloud agents arrived in CLI 5.32; flat lifecycle commands in 5.35 and desktop setup in 5.38. They are experimental and require **Cloud Agents** enabled in [Priority Boarding](https://railway.com/account/feature-flags). A feature-availability error calls for enabling that feature, not repeatedly provisioning VMs or changing project feature flags.
+Check `railway ca --help`, `railway code --help`, and the current [official Cloud Agent documentation](https://docs.railway.com/cli/ca) before choosing a lifecycle or desktop command. If the command reports that the account capability is unavailable, follow the current enablement guidance it provides rather than retrying provisioning or changing project feature flags.
 
 Use explicit project and environment for creation. A directory's `railway link` context takes precedence over the saved default project; a stale link can fall back to the saved default. Verify the target rather than assuming the saved preference wins. Interactive `ca` can run login and continue; noninteractive unauthenticated calls fail instead of waiting on an unattended device code.
 
@@ -56,11 +56,11 @@ A desktop app cannot wake a sleeping agent through the relay: run `railway ca wa
 ## Troubleshoot
 
 - **Wrong project**: inspect the directory link and `ca setup --show`, then use explicit scope.
-- **Access blocked**: check Cloud Agents in Priority Boarding; project feature flags do not enable it.
+- **Access blocked**: inspect the command's error, `railway ca --help`, and the current official Cloud Agent documentation for account enablement. Project feature flags do not imply account capability.
 - **Desktop cannot connect**: confirm the agent is awake, inspect the generated SSH host, and check CLI SSH access before rerunning setup.
 - **Session ended unexpectedly**: inspect `ca list` and reconnect to the existing agent before creating another VM.
 
 ## Validated against
 
 - Docs: [Cloud agent CLI](https://docs.railway.com/cli/ca), [Code CLI](https://docs.railway.com/cli/code)
-- CLI source (v5.49.1): [cloud_agent/mod.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/cloud_agent/mod.rs), [lifecycle.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/cloud_agent/lifecycle.rs), [desktop.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/cloud_agent/desktop.rs), [setup.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/cloud_agent/setup.rs), [access.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/cloud_agent/access.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

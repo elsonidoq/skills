@@ -1,6 +1,6 @@
 # Usage and spending limits
 
-Use `railway usage` (CLI 5.25+) to explain billed resource usage and project/service costs. CLI 5.26+ adds explicit workspace versus Railway Agent spending-limit targets. For live CPU, memory, network, or latency measurements, use [operate.md](operate.md).
+Use `railway usage` to explain billed resource usage and project/service costs when `railway usage --help` confirms the required scope and limit options. Verify semantics against the current [official usage documentation](https://docs.railway.com/cli/usage). If the command or target is unavailable, report that capability gap instead of changing a different spending target. For live CPU, memory, network, or latency measurements, use [operate.md](operate.md).
 
 ## Read usage
 
@@ -49,4 +49,4 @@ railway usage limit remove --workspace <workspace> --yes --json
 ## Validated against
 
 - Docs: [Usage CLI](https://docs.railway.com/cli/usage)
-- CLI source (v5.49.1): [usage.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/usage.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.

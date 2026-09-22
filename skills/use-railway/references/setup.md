@@ -142,7 +142,7 @@ railway connect <database-service> --no-ssh
 
 The local database client must be installed for a shell. By default, `connect` uses a public TCP proxy when one exists and falls back to an SSH tunnel when no public proxy URL is available. Use `--ssh` to force the tunnel path, or `--no-ssh` to require a public TCP proxy.
 
-For TablePlus, DBeaver, pgAdmin, or another GUI, CLI 5.27+ can hold a private tunnel open without starting or requiring a local database CLI:
+For TablePlus, DBeaver, pgAdmin, or another GUI, use private-tunnel mode only when `railway connect --help` documents it for the installed CLI:
 
 ```bash
 railway connect <database-service> --tunnel-only --port 15432 --project <project-id> --environment production
@@ -371,5 +371,4 @@ When creating projects, Railway uses the default workspace unless `--workspace` 
 ## Validated against
 
 - Docs: [cli.md](https://docs.railway.com/cli), [init.md](https://docs.railway.com/cli/init), [add.md](https://docs.railway.com/cli/add), [link.md](https://docs.railway.com/cli/link), [project.md](https://docs.railway.com/cli/project), [service.md](https://docs.railway.com/cli/service), [connect.md](https://docs.railway.com/cli/connect), [templates.md](https://docs.railway.com/cli/templates), [list.md](https://docs.railway.com/cli/list), [whoami.md](https://docs.railway.com/cli/whoami)
-- CLI source: [init.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/init.rs), [add.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/add.rs), [project.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/project.rs), [service.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/service.rs), [connect.rs](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/connect.rs), [templates.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/templates.rs), [list.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/list.rs), [bucket.rs](https://github.com/railwayapp/cli/blob/v5.23.3/src/commands/bucket.rs)
-- API command: [api.rs (v5.49.1)](https://github.com/railwayapp/cli/blob/v5.49.1/src/commands/api.rs)
+- For behavior not covered by docs or `--help`, inspect the source for the installed CLI version.
