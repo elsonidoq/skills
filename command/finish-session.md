@@ -29,10 +29,9 @@ Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the r
 Do not initialize fallback artifacts during discovery. Only initialize a fallback when a verified finding needs that destination and no equivalent local or accessible external owner exists:
 
 - `docs/architecture/` — create the directory only; create a focused document later only when a new durable fact has no existing owner.
-- `docs/open_issues.md` — initialize with an `OI-N` identifier convention and a short entry template for status, problem, evidence, and resumption condition.
 - `docs/deployment_steps.md` — initialize with a lifecycle and a short entry template for status, timing, environments, procedure, verification, and rollback/irreversibility.
 
-Preserve the existing format and identifiers when an artifact already exists. If the canonical owner is external but unavailable, do not silently create a competing local owner. Report `not recorded: canonical owner unavailable` and the action needed from the user; create a local pointer only when repository instructions explicitly allow one.
+Preserve the existing format and identifiers when an artifact already exists.
 
 ## Step 2: Derive Candidate Findings From Attributable Work
 
@@ -49,13 +48,13 @@ Use one canonical owner. A secondary pointer is allowed only when it provides a 
 | Finding | Owner |
 | --- | --- |
 | Current convention, contract, invariant, module shape, API behavior, operational procedure, or user-facing fact | The most specific affected authoritative document; use `docs/architecture/` for architecture facts with no more specific existing owner. |
-| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | The established issue tracker, or `docs/open_issues.md` when it is the local owner. Add only new items; close completed entries without erasing useful history. |
+| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | `/track-open-issue`, which records it in `docs/open_issues.md`. |
 | Verified action required around a future deployment | The established deploy runbook, or `docs/deployment_steps.md` when it is the local owner. |
 | Non-obvious trap, counterintuitive rationale, failed approach, or user rule that would surprise an agent who read the code and docs | The project's memory store. |
 
-If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, create or update an investigation issue with the missing evidence stated.
+If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, treat the verified uncertainty and its missing evidence as an investigation candidate.
 
-Initialize a missing local fallback from Step 1 only now, immediately before recording its first verified finding. A closeout with no finding for a fallback creates nothing.
+For each verified issue candidate, invoke `/track-open-issue` with its verified problem statement, primary evidence, and resumption condition. Do not invoke it for documentation-only facts, deployment prerequisites, memories, unverified non-actionable claims, or when no issue candidate exists. Include its result in the closeout report. If the command is unavailable, report the unavailable tracking capability.
 
 ## Step 4: Deployment Steps, Only When Relevant
 
@@ -91,7 +90,7 @@ State separately whether the session's work is implemented, verified, and deploy
 
 - local artifacts initialized and existing authoritative owners used
 - documents checked and changed, including generated-document status
-- unresolved items added, updated, or closed
+- unresolved items and the result returned by `/track-open-issue`
 - deployment state and prerequisites added, or why none were added
 - memories written or updated and compaction status
 - changed-reference validation
