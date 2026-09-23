@@ -59,10 +59,14 @@ Run the earliest incomplete or invalid stage:
    acceptance criteria, dependencies, and no unresolved direction that would change
    the feature materially. Use a short owner discussion only for genuine product or
    architectural choices.
-3. **Specification:** Produce a spec tied to the source. Keep goals outcome-oriented,
-   make inputs/outputs and deterministic business rules explicit where relevant,
-   include exclusions, and avoid implementation detail unless it is a settled
-   constraint.
+3. **Specification:** Before producing the spec, read the global configuration
+   repository's [`docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md).
+   If it is unavailable, stop and report an incomplete global configuration
+   installation. Apply **Designing AI-Friendly Specifications for Solo Builders**:
+   keep goals outcome-oriented, make inputs/outputs and deterministic business rules
+   explicit where relevant, include exclusions, and avoid implementation detail
+   unless it is a settled constraint. Apply **Epic Sizing: When the Pipeline Earns
+   Its Overhead** before continuing the pipeline.
 4. **Clarification:** After specification, run the detected clarification stage.
    If unavailable, perform a generic ambiguity review against the source, acceptance
    criteria, exclusions, dependencies, and governing principles. Resolve
