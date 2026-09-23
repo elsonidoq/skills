@@ -38,14 +38,14 @@
       "model": "anthropic/claude-sonnet-5"
     },
     "opus": {
-      "description": "Complex analysis, coding and review using Claude Opus 5 through the local Claude bridge.",
+      "description": "Complex analysis, coding and review using Claude Opus 5.5 through OpenRouter.",
       "mode": "subagent",
-      "model": "anthropic/claude-opus-5"
+      "model": "openrouter/anthropic/claude-opus-5.5"
     },
     "fable": {
       "description": "Reasoning and drafting using Claude Fable 5.1 through the local Claude bridge.",
       "mode": "subagent",
-      "model": "anthropic/claude-fable-5-1"
+      "model": "anthropic/claude-fable-5.1"
     },
     "deepseek 4": {
       "description": "Bounded reasoning and coding using DeepSeek V4 Flash 0731 through OpenRouter.",
