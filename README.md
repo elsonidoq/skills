@@ -18,6 +18,12 @@ Portable global OpenCode commands and skills for developing features deliberatel
 5. `/initialize-documentation` establishes documentation owners and an `index.md` for every documentation directory; changed projects first create a documentation epic.
 6. `/finish-session` maintains documentation, open-issue, deployment, and project-memory invariants.
 
+## Use Cases
+
+1. Initialize documentation for a new or existing project with `/initialize-documentation`.
+2. Turn a recorded session into delivery work: `/create-epic` -> `epics-manager` -> `coordinate-implementation` -> `/finish-session`.
+3. Turn a recorded open issue into delivery work: `/create-epic` -> `epics-manager` -> `coordinate-implementation` -> `/finish-session`.
+
 ## Supporting Workflows
 
 - `/track-open-issue` gives verified unresolved work a durable owner without derailing the current session.
