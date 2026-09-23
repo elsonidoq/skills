@@ -32,7 +32,21 @@ Run /initialize-documentation for this project.
 Run /create-epic to create an epic for the documented work in [TODO list file / audio transcription].
 Run epics-manager with the epic at [created epic path].
 Run coordinate-implementation for the approved tasks from [created epic path].
-# If the tasks file has more than 15-20 tasks, run /finish-session after epics-manager and start a separate session before coordinate-implementation.
+Run /finish-session.
+```
+If the tasks file has more than 15-20 tasks, run it is better to run it like this
+
+
+```
+Run /create-epic to create an epic for the documented work in [TODO list file / audio transcription].
+Run epics-manager with the epic at [created epic path].
+Run /finish-session.
+```
+
+and in a fresh session
+
+```
+Run coordinate-implementation for the approved tasks from [created epic path].
 Run /finish-session.
 ```
 
@@ -44,6 +58,8 @@ Run epics-manager with the epic at [created epic path].
 Run coordinate-implementation for the approved tasks from [created epic path].
 Run /finish-session.
 ```
+
+Same thing here about large epics.
 
 ## Supporting Workflows
 
