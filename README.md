@@ -31,8 +31,6 @@ Run /initialize-documentation for this project.
 ```
 Run /create-epic to create an epic for the documented work in [TODO list file / audio transcription].
 Run epics-manager with the epic at [created epic path].
-Run coordinate-implementation for the approved tasks from [created epic path].
-Run /finish-session.
 ```
 
 ### Deliver Open Issues
@@ -40,7 +38,22 @@ Run /finish-session.
 ```
 Run /create-epic to create an epic that addresses open issues OI-1, ..., OI-7 in docs/open_issues.md.
 Run epics-manager with the epic at [created epic path].
+```
+
+### Implement Approved Tasks
+
+For a tasks file with 15-20 or fewer tasks:
+
+```
 Run coordinate-implementation for the approved tasks from [created epic path].
+Run /finish-session.
+```
+
+For a tasks file with more than 15-20 tasks:
+
+```
+Run /finish-session.
+In a separate session, run coordinate-implementation for the approved tasks from [created epic path].
 Run /finish-session.
 ```
 
