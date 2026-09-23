@@ -8,6 +8,23 @@ description: Use when preparing or resuming a feature brief that needs specifica
 Turn an owner-selected brief into reviewed implementation artifacts. This workflow
 prepares work; it does not implement product code.
 
+## Owner Communication
+
+Speak as a technical manager who does not know the project's internal code or
+architecture. Describe decisions in terms of customer or business outcome,
+scope, delivery impact, tradeoffs, risks, and evidence. Do not assume the owner
+recognizes internal components, file paths, implementation jargon, or prior
+technical context. Explain any technical constraint only to the extent needed
+to make the decision, using plain language.
+
+Ask every owner question with the `question` tool, never as prose. Ask only
+when the answer can materially affect product scope, architecture, privacy,
+permissions, irreversible behavior, cost, or a settled requirement. Each tool
+question must state the decision and its practical impact, offer two to four
+concise options when options are known, and mark the recommended option. If
+the tool is unavailable, report that the workflow is blocked on an owner
+decision; do not substitute a prose question or infer an answer.
+
 ## Inputs and Provenance
 
 Require a brief or source artifact and an unambiguous target within it. Resolve the
@@ -21,7 +38,8 @@ epics, a bundle filename, or a custom state directory. Record:
 - Existing spec, plan, tasks, and review artifacts linked to that source.
 
 Re-read source bounds and links whenever resuming. If provenance is ambiguous,
-pause for the owner instead of attaching work to a likely-looking feature.
+use the `question` tool to obtain an unambiguous target instead of attaching work
+to a likely-looking feature.
 
 ## Detect SpecKit
 
@@ -52,12 +70,12 @@ Run the earliest incomplete or invalid stage:
 
 1. **Principles preflight:** Read the project's governing principles if present.
    If a detected SpecKit workflow requires a constitution and it is missing or
-   still template text, ask the owner for the necessary project-specific principles
-   and use the detected constitution capability. If that capability is unavailable,
-   record the blocker; do not invent policy.
+   still template text, use the `question` tool to obtain the necessary
+   project-specific principles and use the detected constitution capability. If
+   that capability is unavailable, record the blocker; do not invent policy.
 2. **Brief readiness:** Confirm the target has an outcome, users, scope, exclusions,
    acceptance criteria, dependencies, and no unresolved direction that would change
-   the feature materially. Use a short owner discussion only for genuine product or
+   the feature materially. Use the `question` tool only for genuine product or
    architectural choices.
 3. **Specification:** Before producing the spec, read the global configuration
    repository's [`docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md).
@@ -72,11 +90,13 @@ Run the earliest incomplete or invalid stage:
 4. **Clarification:** After specification, run the detected clarification stage.
    If unavailable, perform a generic ambiguity review against the source, acceptance
    criteria, exclusions, dependencies, and governing principles. Resolve
-   mechanically answerable gaps; send material choices to the owner.
-5. **Specification approval:** Present the specification and clarification results
-   to the owner. Record explicit specification approval in a project-defined
-   decision or progress artifact, or in the specification when none exists. Do not
-   begin planning without it.
+   mechanically answerable gaps; send material choices to the owner with the
+   `question` tool.
+5. **Specification approval:** Summarize the specification and clarification results
+   in manager-level terms, then use the `question` tool to request approval. Record
+   explicit specification approval in a project-defined decision or progress
+   artifact, or in the specification when none exists. Do not begin planning without
+   it.
 6. **Plan:** Review the spec, fix non-material defects, then produce architecture,
    contracts, sequencing, risks, and verification. Use
    `delegating-architectural-planning` when the approved work calls for delegated
@@ -89,10 +109,11 @@ Run the earliest incomplete or invalid stage:
    contradictions, omissions, dependency order, integration coverage, exclusions,
    and governing principles. Use detected SpecKit analysis when available and
    manually inspect its evidence; otherwise perform the same review directly.
-9. **Overall review approval:** Present the reviewed artifact set and unresolved
-   deferrals to the owner. Record explicit overall review approval in a
-   project-defined decision or progress artifact, or in the reviewed artifacts when
-   none exists. Do not hand off implementation without it.
+9. **Overall review approval:** Summarize the reviewed artifact set and unresolved
+   deferrals in manager-level terms, then use the `question` tool to request
+   approval. Record explicit overall review approval in a project-defined decision
+   or progress artifact, or in the reviewed artifacts when none exists. Do not hand
+   off implementation without it.
 10. **Handoff:** Verify both recorded approvals apply to the current artifacts,
     re-run applicable prerequisite or artifact checks, and pass the reviewed set to
     `coordinate-implementation`.
@@ -100,9 +121,10 @@ Run the earliest incomplete or invalid stage:
 ## Decisions and Corrections
 
 Agents may resolve task organization, filenames, internal naming, and mechanically
-verifiable defects. Ask the owner only when alternatives materially change product
-scope, architecture, privacy, permissions, irreversible behavior, cost, or a settled
-requirement. Apply no speculative answer merely to advance the workflow.
+verifiable defects. Use the `question` tool only when alternatives materially
+change product scope, architecture, privacy, permissions, irreversible behavior,
+cost, or a settled requirement. Apply no speculative answer merely to advance the
+workflow.
 
 Record each owner decision and approval with its stage and affected artifact paths
 in an existing project-defined decision or progress artifact when one is documented.
