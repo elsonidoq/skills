@@ -20,6 +20,14 @@ state, or unrelated files.
    competing document for information that already has an owner.
 4. Never state an unverified code, operational, or historical claim as current
    fact. Do not write credentials, tokens, personal data, or sensitive payloads.
+5. Determine from repository evidence whether the project has a persistent
+   database. If so, require an authoritative database-schema document or
+   documented set of schema documents; an existing authoritative schema
+   document satisfies this requirement even when no convention names it.
+6. Require a documentation-routing guide that names the project's material
+   change categories and the authoritative documentation owner for each. The
+   guide may be a dedicated document or a clearly identified section of an
+   existing authoritative documentation owner.
 
 ## Clean Project: Initialize Documentation Owners
 
@@ -31,9 +39,23 @@ its direct documentation files and use sections where they make the contents
 easier to scan. Inspect code and configuration only as needed to identify those
 owners; do not infer a detailed system description merely to fill a new document.
 
+When the project has a persistent database, its documentation owners must also
+include an authoritative database-schema document or documented set of schema
+documents. The owner must describe the current tables or collections, fields
+and types, keys and relationships, constraints, and indexes where applicable.
+Preserve an existing schema owner and format. If none exists, obtain the
+user's choice alongside the architecture-document location; do not assume a
+fixed filename or documentation layout.
+
+Initialize or preserve the documentation-routing guide. It must identify the
+project-specific changes that require documentation and the authoritative owner
+to update for each. It may reference existing owner documents rather than
+duplicate their content. Start it with only verified categories and owners;
+do not use a generic list as a claim that every category applies to the project.
+
 When no local convention names an equivalent owner, ask the user to choose the
 documentation root, directory-index mechanism, and the locations and formats
-for architecture facts, unresolved work, and deployment steps. Do not assume a
+for architecture facts, database schema, documentation-routing guide, unresolved work, and deployment steps. Do not assume a
 `docs/` layout or create any owner until the user supplies that decision.
 
 Create a missing directory index only in the established or user-selected
@@ -64,20 +86,24 @@ untracked paths, relevant code, configuration, schemas, generated outputs, and
 existing documentation. Require it to return:
 
 1. A verified inventory of current documentation owners and missing or stale
-   documentation work, including the source and minimum safe shell for every
-   missing required owner, with primary `file:line` evidence where possible.
+    documentation work, including the database-schema owner when the project
+    has a persistent database, the documentation-routing guide, the source and
+    minimum safe shell for every missing required owner, with primary
+    `file:line` evidence where possible.
 2. A separation of attributable current changes, likely historical/stale
    material, dead-code candidates, and conclusions that remain uncertain.
 3. Only the material intent questions that can change documentation scope,
-   truth, ownership, or whether work is obsolete.
+   truth, ownership, including database-schema ownership when required, or
+   documentation-routing categories, or whether work is obsolete.
 4. A recommended documentation-epic scope and acceptance criteria, without
    editing files or inventing owner intent.
 
 Use the sub-agent's evidence to ask the user its material questions. Do not
 assume that changed code is live, intentional, or representative of the
 current design. After answers are available, present a documentation plan that
-identifies authoritative owners, additions and corrections, exclusions,
-evidence gaps, and deterministic acceptance criteria. Wait for explicit
+identifies authoritative owners, including database-schema ownership when
+required, the documentation-routing guide, additions and corrections,
+exclusions, evidence gaps, and deterministic acceptance criteria. Wait for explicit
 approval of that plan. Separate missing-owner shells and directory indexes from
 the epic: they establish discoverability only, while substantive current-state
 documentation belongs in the epic. Resolve any unknown shell format with the

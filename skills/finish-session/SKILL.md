@@ -11,8 +11,17 @@ Before applying the closeout workflow, read repository instructions and existing
 documentation indexes only far enough to identify the project's required
 documentation owners and directories. Confirm that each required owner exists
 and every discovered documentation directory has the index mechanism required
-by local convention. If no local convention identifies the required owners or
-directory-index mechanism, report documentation ownership as unavailable.
+by local convention. Locate the project's documentation-routing guide: the
+documented rules that identify which kinds of changes require which
+documentation owners. If no such guide exists, report documentation ownership
+as unavailable. If the project has a persistent database, also confirm
+that an authoritative database-schema document or documented set of schema
+documents exists. An existing authoritative schema document satisfies this
+requirement even when no convention names it. If no local convention or
+existing documentation identifies the required owners or directory-index
+mechanism, report documentation ownership as unavailable. For a database-backed
+project, also report ownership as unavailable when neither identifies its
+database-schema owner.
 
 This is an existence check only: do not audit documentation accuracy, create
 missing files, or modify any target in this step. If documentation ownership is
@@ -28,6 +37,7 @@ documentation owners and indexes exist.
 3. For a deployed project, deploy-time work pending since the last confirmed deploy has one canonical owner.
 4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
 5. The memory index remains usable.
+6. A project with a persistent database has authoritative schema documentation that describes its current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable.
 
 ## Safety Rules
 
@@ -52,7 +62,7 @@ identifiers when an artifact already exists.
 
 Use the actual working tree, relevant commits made during the session when identifiable, code, configuration, schemas, and generated output. Do not rely on the session narrative alone.
 
-Inspect only documents plausibly affected by changed behavior or data. This can include architecture docs, README files, API/reference docs, configuration examples, runbooks, generated docs, and active decision records. Leave accurate text unchanged. Recompute any count changed by attributable work and name its source or generating command. Mark historical records superseded in place rather than rewriting history.
+Inspect only documents plausibly affected by changed behavior or data. This can include architecture docs, database-schema documents, README files, API/reference docs, configuration examples, runbooks, generated docs, and active decision records. For database-backed projects, compare schema documentation with the authoritative migrations, schema definitions, or database introspection available to the repository; update the affected schema document when tables or collections, fields, types, keys, relationships, constraints, or indexes changed. Leave accurate text unchanged. Recompute any count changed by attributable work and name its source or generating command. Mark historical records superseded in place rather than rewriting history.
 
 If the repository declares a targeted, known-safe, bounded generator whose outputs are closeout documentation relevant to the changed area, run it and inspect its diff. Ask before running an expensive or broad generator. Do not run a generator that may modify application code, tests, or generated application assets; report its command as a verification gap instead.
 
@@ -60,9 +70,29 @@ If the repository declares a targeted, known-safe, bounded generator whose outpu
 
 Use one canonical owner. A secondary pointer is allowed only when it provides a distinct warning or makes a dependency discoverable; never duplicate a full narrative. In particular, documentation explains current system behavior while a memory may separately warn how a future action can break it.
 
+First apply the project's documentation-routing guide. It defines its own
+material change categories and their documentation owners; treat it as
+authoritative and do not limit closeout to the examples below. The examples are
+non-exhaustive seed guidance for a repository that has not yet defined more
+specific categories. The filenames illustrate a `docs/architecture/` layout
+only. Preserve an equivalent established owner rather than creating a
+competing document. If the guide identifies a missing owner, report it and
+direct the user to `initialize-documentation` instead of selecting a path
+during closeout.
+
+| Changed area | Required documentation | Example owner |
+| --- | --- | --- |
+| New endpoint or changed API contract | Endpoints, request and response contracts, authentication and error behavior | `docs/architecture/api-conventions.md` |
+| Changed server pattern | Helpers, middleware, and server conventions that other code must follow | `docs/architecture/server-conventions.md` |
+| Changed frontend pattern | Hooks, state patterns, component conventions, or authentication flow | `docs/architecture/frontend-conventions.md` |
+| Changed schema or migration | Current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable | `docs/architecture/db-schema.md` |
+| Changed data shape or query pattern | Domain data shapes, ownership, lifecycle, and query/access patterns | `docs/architecture/data-model.md` |
+| New test pattern or test-file convention | Test structure, fixtures, helpers, and required testing conventions | `docs/architecture/testing-conventions.md` |
+| New import or module pattern | Module boundaries, import/export rules, and dependency-direction conventions | `docs/architecture/index-conventions.md` |
+
 | Finding | Owner |
 | --- | --- |
-| Current convention, contract, invariant, module shape, API behavior, operational procedure, or user-facing fact | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
+| Current convention, contract, invariant, module shape, API behavior, operational procedure, user-facing fact, or database schema | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
 | Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | The project's documented issue register. |
 | Verified action required around a future deployment | The established deploy runbook, or the documented deployment-step owner when it is the local owner. |
 | Non-obvious trap, counterintuitive rationale, failed approach, or user rule that would surprise an agent who read the code and docs | The project's memory store. |

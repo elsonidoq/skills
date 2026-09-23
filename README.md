@@ -5,6 +5,8 @@ Portable global OpenCode skills for developing features deliberately across unre
 ## Repository Invariants
 
 - Documentation describes the system as it exists.
+- Database-backed projects maintain authoritative documentation of their current schema.
+- Each project documents which material changes require which documentation owners.
 - Memory records only non-obvious, durable guidance.
 - Verified unresolved work has one canonical open-issue record.
 - Features are developed from approved epics and spec-driven artifacts, not improvised in code.
