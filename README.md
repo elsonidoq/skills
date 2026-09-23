@@ -29,7 +29,7 @@ Run /initialize-documentation for this project.
 ### Deliver Recorded Session Work
 
 ```
-Run /create-epic to create an epic for the documented work in [session record path].
+Run /create-epic to create an epic for the documented work in [TODO list file / transcription from a stream of conciousness / etc].
 Run epics-manager with the epic at [created epic path].
 Run coordinate-implementation for the approved tasks from [created epic path].
 Run /finish-session.
