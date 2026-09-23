@@ -4,6 +4,26 @@ description: Close a session by preserving current documentation, unresolved wor
 
 You are closing a working session. Preserve durable knowledge without turning closeout into a repository audit.
 
+## Step 0: Documentation Initialization Gate
+
+Before applying the closeout workflow, read repository instructions and existing
+documentation indexes only far enough to identify the project's required
+documentation owners and directories. Confirm that each required owner exists
+and every discovered documentation directory has an `index.md` that lists its
+direct documentation files. When no local convention supplies an equivalent
+owner, require these baseline files:
+
+- `docs/index.md`
+- `docs/architecture/index.md`
+- `docs/open_issues.md`
+- `docs/deployment_steps.md`
+
+This is an existence check only: do not audit documentation accuracy, create
+missing files, or modify any target in this step. If any required owner or
+directory index is missing, report the missing paths or owners, instruct the
+user to run `/initialize-documentation`, and stop. Continue with the remaining
+steps only after all required documentation owners and indexes exist.
+
 ## Core Invariants
 
 1. Affected authoritative documentation describes what is built now.

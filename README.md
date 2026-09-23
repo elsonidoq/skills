@@ -15,7 +15,8 @@ Portable global OpenCode commands and skills for developing features deliberatel
 2. `epics-manager` resolves material decisions and guides specification, approval, planning, tasks, and cross-artifact review.
 3. `coordinate-implementation` implements the approved tasks in dependency order and verifies acceptance evidence.
 4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
-5. `/finish-session` maintains documentation, open-issue, deployment, and project-memory invariants.
+5. `/initialize-documentation` establishes documentation owners and an `index.md` for every documentation directory; changed projects first create a documentation epic.
+6. `/finish-session` maintains documentation, open-issue, deployment, and project-memory invariants.
 
 ## Supporting Workflows
 

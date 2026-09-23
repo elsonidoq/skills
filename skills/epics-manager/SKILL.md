@@ -66,7 +66,9 @@ Run the earliest incomplete or invalid stage:
    keep goals outcome-oriented, make inputs/outputs and deterministic business rules
    explicit where relevant, include exclusions, and avoid implementation detail
    unless it is a settled constraint. Apply **Epic Sizing: When the Pipeline Earns
-   Its Overhead** before continuing the pipeline.
+    Its Overhead** before continuing the pipeline. When the epic records the
+    owner-approved directive `documentation initialization requires an epic`,
+    preserve that documented sizing exception and continue the pipeline.
 4. **Clarification:** After specification, run the detected clarification stage.
    If unavailable, perform a generic ambiguity review against the source, acceptance
    criteria, exclusions, dependencies, and governing principles. Resolve

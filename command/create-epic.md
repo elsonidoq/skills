@@ -63,10 +63,16 @@ State the sizing verdict before writing an epic. Use the full SpecKit pipeline o
 when all three conditions hold: at least eight expected tasks, at least one
 unresolved material design decision, and multiple subsystems.
 
+Exception: when a parent command passes the explicit owner-approved directive
+`documentation initialization requires an epic`, create the documentation epic
+even if the normal sizing conditions are not met. Record the directive and the
+normal sizing verdict in the epic so the exception remains auditable.
+
 If the brief fails a condition, recommend a direct, independently verifiable task
-list. Record the owner's decision in the established decision artifact, or in the
-brief when none exists. With owner approval, create and verify that task list, report
-it as a non-epic outcome, and stop.
+list unless the documentation-initialization exception applies. Record the owner's
+decision in the established decision artifact, or in the brief when none exists.
+With owner approval, create and verify that task list, report it as a non-epic
+outcome, and stop.
 
 For a justified epic, list mechanically obvious work that does not depend on a design
 output as separately scheduled work. Record its exclusion and rationale so later
