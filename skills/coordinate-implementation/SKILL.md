@@ -40,9 +40,18 @@ Treat task dependencies as a directed graph, not checklist order alone.
 6. Execute every batch sequentially; never run implementation batches in parallel.
    Re-evaluate the execution graph after each batch completes.
 
-Before execution, report each batch's task IDs, scope, dependencies, integration
-surface, and verification. Do not ask for routine batching approval when the owner
-already approved implementation.
+Before execution, present the entire execution plan as a Markdown table. Include
+one row per batch with its batch number, task IDs, scope, dependencies, integration
+surface, verification, required model class, and initial status. Do not ask for
+routine batching approval when the owner already approved implementation.
+
+Create an OpenCode `todowrite` list immediately after presenting the table, with
+one item per batch. Mark the first dependency-ready batch `in_progress`, later
+batches `pending`, and blocked batches `pending` with the blocking producer named
+in the item. Update the list after every batch: mark verified batches `completed`,
+mark the next dependency-ready batch `in_progress`, and add, remove, or revise
+batches only when re-evaluating the execution graph requires it. Keep exactly one
+batch `in_progress` while implementation remains.
 
 ## Select Execution Capability
 
@@ -81,6 +90,8 @@ For each task or batch:
    checks before releasing dependents.
 6. Update task completion and decisions in the project's existing artifact format.
    If none exists, update the task list; do not invent a state-file convention.
+7. Update the OpenCode `todowrite` list to reflect the batch's verified outcome and
+   the next dependency-ready batch.
 
 Do not commit, push, deploy, send external messages, run paid services, or perform
 irreversible operations unless the owner requested that operation and repository
