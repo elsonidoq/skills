@@ -11,9 +11,9 @@ Insert the optional triage below after the base workflow derives candidate findi
 
 ## Jev Triage
 
-Load the `jev` skill before using Jev and follow its authentication and data-safety rules. If the skill or CLI is unavailable, authentication is unavailable, or the eligible batch falls outside the bounds below, route every candidate manually and continue the base workflow.
+Load the `jev` skill before using Jev and follow its authentication and data-safety rules. If the skill or CLI is unavailable or authentication is unavailable, route every candidate manually and continue the base workflow.
 
-Use Jev only when there are 4–25 eligible candidate findings already grounded in the attributable diff and primary artifacts. Exclude and manually route any candidate involving security, deployment, credentials, personal data, sensitive payloads, or uncertain evidence. If more than 25 eligible candidates remain, skip Jev rather than selecting a potentially biased subset. Make at most one bulk Jev call.
+Use Jev only when each candidate's routing is a narrow, self-contained typed semantic judgment with explicit alternatives, and the candidate is already grounded in the attributable diff and primary artifacts. Do not use it merely because there are multiple candidates. Exclude and manually route any candidate involving security, deployment, credentials, personal data, sensitive payloads, or uncertain evidence. Submit every eligible candidate together; do not select a subset based on count. Make at most one bulk Jev call.
 
 Give every eligible candidate a stable ID and a compact evidence-backed description containing no sensitive data. Send the descriptions as JSONL through stdin or non-repository scratch data; do not persist the batch in the repository. Use one typed `choice` decision per input line with JSON output, order preserved, and a minimum confidence of `0.80` (for example, `jev pick ... -l --field description --json --min-confidence 0.80`). Define these choices in the prompt:
 

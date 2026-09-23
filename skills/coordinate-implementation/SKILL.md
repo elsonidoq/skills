@@ -31,6 +31,22 @@ and path checks and label the scripted check `UNAVAILABLE`.
 
 Treat task dependencies as a directed graph, not checklist order alone.
 
+## Establish Completion Scope
+
+Default to implementing every incomplete batch produced by the execution graph,
+including batches that become ready after a predecessor completes. Do not stop
+after an intermediate batch, milestone, vertical slice, review point, or a
+delegated agent return merely to report progress or await routine approval.
+
+Only a user-defined partial implementation boundary permits ending before all
+batches are complete. When the user explicitly defines such a boundary, before
+starting implementation call the `question` tool to confirm whether to stop at
+that boundary or implement all incomplete batches. Provide those two choices
+without marking either as recommended. Record the selected scope in the
+execution plan and follow it. A newly discovered material owner gate or an
+unresolvable blocker may still require pausing; report it with the blocked
+batch and missing decision or dependency.
+
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
 3. Build batches of approximately 5-10 ready tasks when they do not conflict on

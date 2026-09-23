@@ -58,6 +58,11 @@
       ],
       "enabled": true,
       "type": "local"
+    },
+    "supabase": {
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp?project_ref=joagpvfxvhaciackaqoj&read_only=true&features=database,docs",
+      "enabled": true
     }
   },
   "model": "openai/gpt-5.6-terra",
