@@ -1,51 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "external_directory": {
-      "/tmp/**": "allow",
-      "/Users/elsonidoq/.config/opencode/**": "allow",
-      "/Users/elsonidoq/.claude/projects/-Users-elsonidoq-prog-cerca/memory/**": "allow",
-      "/private/tmp/**": "allow"
-    }
-  },
-  "model": "openai/gpt-5.6-terra",
   "agent": {
-    "general": { "model": "openai/gpt-5.6-sol" },
-    "explore": { "model": "openai/gpt-5.6-luna" },
-    "luna": {
-      "description": "Low-cost mechanical work: file inventories, searches, identifier checks and command execution using GPT-5.6 Luna.",
-      "mode": "subagent",
-      "model": "openai/gpt-5.6-luna"
-    },
-    "terra": {
-      "description": "Reading, structured extraction and source verification against a precise brief using GPT-5.6 Terra.",
-      "mode": "subagent",
-      "model": "openai/gpt-5.6-terra"
-    },
-    "sol": {
-      "description": "Bounded reasoning, drafting and implementation from a clear brief using GPT-5.6 Sol.",
-      "mode": "subagent",
-      "model": "openai/gpt-5.6-sol"
-    },
     "astra": {
       "description": "Complex reasoning, strategy, synthesis and difficult review using GPT-6 Astra.",
       "mode": "subagent",
       "model": "openai/gpt-6-astra"
-    },
-    "sonnet": {
-      "description": "General reasoning, coding and review using Claude Sonnet 5 through the local Claude bridge.",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-5"
-    },
-    "opus": {
-      "description": "Complex analysis, coding and review using Claude Opus 5.5 through OpenRouter.",
-      "mode": "subagent",
-      "model": "openrouter/anthropic/claude-opus-5.5"
-    },
-    "fable": {
-      "description": "Reasoning and drafting using Claude Fable 5.1 through the local Claude bridge.",
-      "mode": "subagent",
-      "model": "anthropic/claude-fable-5.1"
     },
     "deepseek 4": {
       "description": "Bounded reasoning and coding using DeepSeek V4 Flash 0731 through OpenRouter.",
@@ -56,6 +15,61 @@
       "description": "Bounded reasoning and coding using DeepSeek V4 Flash 0731 through OpenRouter.",
       "mode": "subagent",
       "model": "openrouter/deepseek/deepseek-v4.1-flash"
+    },
+    "explore": {
+      "model": "openai/gpt-5.6-luna"
+    },
+    "fable": {
+      "description": "Reasoning and drafting using Claude Fable 5.1 through the local Claude bridge.",
+      "mode": "subagent",
+      "model": "anthropic/claude-fable-5.1"
+    },
+    "general": {
+      "model": "openai/gpt-5.6-sol"
+    },
+    "luna": {
+      "description": "Low-cost mechanical work: file inventories, searches, identifier checks and command execution using GPT-5.6 Luna.",
+      "mode": "subagent",
+      "model": "openai/gpt-5.6-luna"
+    },
+    "opus": {
+      "description": "Complex analysis, coding and review using Claude Opus 5.5 through OpenRouter.",
+      "mode": "subagent",
+      "model": "openrouter/anthropic/claude-opus-5.5"
+    },
+    "sol": {
+      "description": "Bounded reasoning, drafting and implementation from a clear brief using GPT-5.6 Sol.",
+      "mode": "subagent",
+      "model": "openai/gpt-5.6-sol"
+    },
+    "sonnet": {
+      "description": "General reasoning, coding and review using Claude Sonnet 5 through the local Claude bridge.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-5"
+    },
+    "terra": {
+      "description": "Reading, structured extraction and source verification against a precise brief using GPT-5.6 Terra.",
+      "mode": "subagent",
+      "model": "openai/gpt-5.6-terra"
+    }
+  },
+  "mcp": {
+    "railway": {
+      "command": [
+        "railway",
+        "mcp"
+      ],
+      "enabled": true,
+      "type": "local"
+    }
+  },
+  "model": "openai/gpt-5.6-terra",
+  "permission": {
+    "external_directory": {
+      "/Users/elsonidoq/.claude/projects/-Users-elsonidoq-prog-cerca/memory/**": "allow",
+      "/Users/elsonidoq/.config/opencode/**": "allow",
+      "/private/tmp/**": "allow",
+      "/tmp/**": "allow"
     }
   }
 }
