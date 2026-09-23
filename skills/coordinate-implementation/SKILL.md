@@ -33,8 +33,11 @@ Treat task dependencies as a directed graph, not checklist order alone.
 
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
-3. Group ready tasks only when they do not conflict on files, schemas, migrations,
-   shared runtime state, or acceptance setup, and have the same required model class.
+3. Build batches of approximately 5-10 ready tasks when they do not conflict on
+   files, schemas, migrations, shared runtime state, or acceptance setup, and have
+   the same required model class. Do not create batches of one or two tasks unless
+   a model-class boundary makes a smaller batch unavoidable, such as an
+   `opus-class` task surrounded by `sonnet-class` tasks.
 4. Keep contract producers before consumers and preserve explicit owner gates.
 5. Prefer vertical slices that can be integrated and verified independently.
 6. Execute every batch sequentially; never run implementation batches in parallel.
