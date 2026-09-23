@@ -49,11 +49,17 @@ The plan must contain:
 - Test-first or equivalent fail-then-pass verification for behavior changes.
 - Security, privacy, migration, rollback, and authorization gates where relevant.
 - A capability requirement for any task needing a specialized agent or tool.
+- A `Model class: sonnet-class | opus-class` label and rationale for every
+  implementation task.
 
-Do not pin models or agent names in the plan. Assign work by observable capability
-such as `routine implementation`, `architecture judgment`, or `security review`.
-The implementation coordinator maps those requirements to agents that actually
-exist at execution time.
+Do not pin an exact model or agent name in the plan. Default to `sonnet-class` for
+bounded, well-specified work. Use `opus-class` only when work cannot be safely
+decomposed into bounded, independently verifiable tasks. At most 30% of the complete
+task list may be `opus-class`; if the draft exceeds that limit, return the affected
+task IDs and their rationale as an owner decision. The coordinator must obtain owner
+approval through the `question` tool before finalizing the task list. The
+implementation coordinator asks the owner to map each class to an available model at
+execution time.
 
 ## Owner Gates
 

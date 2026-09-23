@@ -34,9 +34,11 @@ Treat task dependencies as a directed graph, not checklist order alone.
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
 3. Group ready tasks only when they do not conflict on files, schemas, migrations,
-   shared runtime state, or acceptance setup.
+   shared runtime state, or acceptance setup, and have the same required model class.
 4. Keep contract producers before consumers and preserve explicit owner gates.
 5. Prefer vertical slices that can be integrated and verified independently.
+6. Execute every batch sequentially; never run implementation batches in parallel.
+   Re-evaluate the execution graph after each batch completes.
 
 Before execution, report each batch's task IDs, scope, dependencies, integration
 surface, and verification. Do not ask for routine batching approval when the owner
@@ -44,23 +46,28 @@ already approved implementation.
 
 ## Select Execution Capability
 
-Inspect the runtime for available, permitted agents and tools. Match task capability
-requirements from the plan to observed capabilities; never infer a fixed agent or
-model name. Delegation is optional, not proof of completion.
+Inspect the runtime for available, permitted agents and tools. Before executing a
+batch, use the `question` tool to ask the user to select an available model for each
+model class used by incomplete tasks: `sonnet-class` and `opus-class`. Retain those
+selections for the session and match each batch to the model selected for its required
+class. Do not infer a model selection. Delegation is optional, not proof of
+completion.
 
 - Delegate a task or safe batch only when write scope and dependencies are clear.
 - Run conflicting or dependent work sequentially.
-- Parallelize only independent work with isolated write surfaces and an explicit
-  integration point.
-- If delegation is unavailable, implement locally and perform a separate review
-  pass. State `Delegation: UNAVAILABLE`.
-- Resume an agent only when the runtime supports it and retained context materially
-  overlaps; otherwise issue a fresh brief.
+- Run all batches sequentially, including independent batches with isolated write
+  surfaces.
+- If delegation is unavailable, stop before implementation and report
+  `Delegation: UNAVAILABLE` to the user.
+- Resume a previously used agent only when it uses the model selected for the batch,
+  the runtime supports resumption, and its retained context materially overlaps;
+  otherwise issue a fresh brief.
 
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
-allowed files, dependencies, acceptance criteria, baseline failures, exclusions,
-authorization limits, and required return evidence. Ask for changed files, checks,
-incomplete work, and non-obvious handoff context.
+required model class, selected model, allowed files, dependencies, acceptance
+criteria, baseline failures, exclusions, authorization limits, and required return
+evidence. Ask for changed files, checks, incomplete work, and non-obvious handoff
+context.
 
 ## Execute and Integrate
 

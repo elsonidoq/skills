@@ -98,25 +98,51 @@ Run the earliest incomplete or invalid stage:
    artifact, or in the specification when none exists. Do not begin planning without
    it.
 6. **Plan:** Review the spec, fix non-material defects, then produce architecture,
-   contracts, sequencing, risks, and verification. Use
+   contracts, sequencing, risks, verification, and documentation scope. Identify the
+   documentation that must explain each new or modified capability, interface,
+   workflow, configuration, operational procedure, or user-visible behavior. Include
+   one or more documentation tasks in the plan for that scope. Use
    `delegating-architectural-planning` when the approved work calls for delegated
    architectural decomposition.
 7. **Tasks:** Derive dependency-aware, independently verifiable tasks from the plan.
    Each task identifies its outcome, prerequisites, likely files/interfaces,
-   acceptance evidence, and capability needs. Do not encode fixed agent or model
-   names.
+   acceptance evidence, capability needs, `Model class: sonnet-class | opus-class`,
+   and a brief rationale for that class. Default to `sonnet-class` for bounded,
+   well-specified work. Use `opus-class` only when the work cannot be safely
+   decomposed into bounded, independently verifiable tasks. At most 30% of the
+   complete task list may be `opus-class`. When the proposed share exceeds 30%, use
+   the `question` tool to present the affected task IDs, their rationale, and the
+   delivery impact of reducing the share; record explicit owner approval before
+   finalizing the task list. Include one or more documentation tasks that update or
+   create the documentation identified in the plan; their acceptance evidence must
+   confirm the documented material matches the implemented changes.
 8. **Overall review:** Check source -> spec -> plan -> tasks traceability,
    contradictions, omissions, dependency order, integration coverage, exclusions,
-   and governing principles. Use detected SpecKit analysis when available and
-   manually inspect its evidence; otherwise perform the same review directly.
-9. **Overall review approval:** Summarize the reviewed artifact set and unresolved
-   deferrals in manager-level terms, then use the `question` tool to request
-   approval. Record explicit overall review approval in a project-defined decision
-   or progress artifact, or in the reviewed artifacts when none exists. Do not hand
-   off implementation without it.
-10. **Handoff:** Verify both recorded approvals apply to the current artifacts,
-    re-run applicable prerequisite or artifact checks, and pass the reviewed set to
-    `coordinate-implementation`.
+   governing principles, documentation coverage, and the `opus-class` task share.
+   Do not approve a task list exceeding 30% `opus-class` tasks without recorded owner
+   approval. Use detected SpecKit analysis when available and manually inspect its
+   evidence; otherwise perform the same review directly.
+9. **Overall review approval:** Immediately before requesting approval, provide a
+   brief bulleted list that summarizes each completed planning stage and its outcome:
+   specification, clarification, plan, tasks, documentation, and review. State any
+   unresolved deferrals in the relevant bullet. Then use the `question` tool to
+   request approval. Record explicit overall review approval in a project-defined
+   decision or progress artifact, or in the reviewed artifacts when none exists. Do
+   not hand off implementation without it.
+10. **Handoff:** Verify both recorded approvals apply to the current artifacts and
+    re-run applicable prerequisite or artifact checks. Do not load or run
+    `coordinate-implementation` in this session. Instruct the user to run
+    `finish-session` or `finish-session-jev` to close the planning session. Then
+    provide this copyable prompt for a fresh session, replacing each placeholder with
+    the current artifact path:
+
+    ```text
+    Use the coordinate-implementation skill to execute the approved work.
+    Specification: [specification path]
+    Plan: [plan path]
+    Tasks: [tasks path]
+    Source brief: [source brief path]
+    ```
 
 ## Decisions and Corrections
 
@@ -146,8 +172,8 @@ it. On resume:
 ## Ready for Implementation
 
 Report readiness only when the spec, plan, and tasks exist, provenance is clear,
-dependencies are represented, specification approval and overall review approval are
-recorded for the current artifacts, other owner gates are resolved or explicitly
-deferred, and the overall review has evidence. List artifact paths, capability
-checks, checks run, and unavailable behavior. Artifact readiness does not mean
-implementation or feature acceptance is complete.
+dependencies and documentation tasks are represented, specification approval and
+overall review approval are recorded for the current artifacts, other owner gates
+are resolved or explicitly deferred, and the overall review has evidence. List
+artifact paths, capability checks, checks run, and unavailable behavior. Artifact
+readiness does not mean implementation or feature acceptance is complete.

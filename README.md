@@ -15,7 +15,7 @@ Portable global OpenCode skills for developing features deliberately across unre
 
 1. `create-epic` turns an evidence-backed idea into a scoped epic, or a direct task list when the SpecKit pipeline is not justified.
 2. `epics-manager` resolves material decisions and guides specification, approval, planning, tasks, and cross-artifact review.
-3. `coordinate-implementation` implements the approved tasks in dependency order and verifies acceptance evidence.
+3. In a fresh session, `coordinate-implementation` implements the approved tasks in dependency order and verifies acceptance evidence.
 4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
 5. `initialize-documentation` establishes documentation owners and the project's directory indexes; changed projects first create a documentation epic.
 6. `finish-session` maintains documentation, open-issue, deployment, and project-memory invariants.
@@ -33,22 +33,17 @@ Use the initialize-documentation skill for this project.
 ```
 Use the create-epic skill to create an epic for the documented work in [TODO list file / audio transcription].
 Run epics-manager with the epic at [created epic path].
-Run coordinate-implementation for the approved tasks from [created epic path].
-Use the finish-session skill.
-```
-If the tasks file has more than 15-20 tasks, run it is better to run it like this
-
-
-```
-Use the create-epic skill to create an epic for the documented work in [TODO list file / audio transcription].
-Run epics-manager with the epic at [created epic path].
 Use the finish-session skill.
 ```
 
-and in a fresh session
+In a fresh session:
 
 ```
-Run coordinate-implementation for the approved tasks from [created epic path].
+Use the coordinate-implementation skill for the approved work.
+Specification: [specification path from epics-manager handoff]
+Plan: [plan path from epics-manager handoff]
+Tasks: [tasks path from epics-manager handoff]
+Source brief: [source brief path from epics-manager handoff]
 Use the finish-session skill.
 ```
 
@@ -57,11 +52,19 @@ Use the finish-session skill.
 ```
 Use the create-epic skill to create an epic that addresses the selected open issues in this project's documented issue register.
 Run epics-manager with the epic at [created epic path].
-Run coordinate-implementation for the approved tasks from [created epic path].
 Use the finish-session skill.
 ```
 
-Same thing here about large epics.
+In a fresh session:
+
+```
+Use the coordinate-implementation skill for the approved work.
+Specification: [specification path from epics-manager handoff]
+Plan: [plan path from epics-manager handoff]
+Tasks: [tasks path from epics-manager handoff]
+Source brief: [source brief path from epics-manager handoff]
+Use the finish-session skill.
+```
 
 ## Supporting Workflows
 
