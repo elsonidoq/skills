@@ -1,5 +1,6 @@
 ---
-description: Debug a failure using the empirical method - observe the running system before forming fine-grained hypotheses, instead of reasoning about code from memory.
+name: scientific-method-debugging
+description: Use when debugging a failure that requires runtime observation before forming causal hypotheses.
 ---
 
 # Empirical Debugger

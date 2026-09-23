@@ -1,8 +1,11 @@
 ---
-description: Close a session with optional Jev triage for candidate routing, while preserving current documentation, unresolved work, deployment prerequisites, and trigger-first memory.
+name: finish-session-jev
+description: Use when closing a session and optional Jev triage may help route multiple evidence-backed closeout findings.
 ---
 
-Before any closeout action, resolve this command's directory and read its sibling `finish-session.md` (normally `~/.config/opencode/command/finish-session.md`) in full. If the sibling cannot be read, stop and report that the base workflow is unavailable; do not reconstruct it from memory. Follow that complete workflow exactly. The `/finish-session` text here names the workflow but does not invoke or expand another slash command.
+Before any closeout action, resolve this skill's directory and read the installed sibling
+`../finish-session/SKILL.md` in full. If the sibling cannot be read, stop and report that the base workflow is
+unavailable; do not reconstruct it from memory. Follow that complete workflow exactly.
 
 Insert the optional triage below after the base workflow derives candidate findings and before it writes any artifact. All base safety, lightweight-execution, ownership, deployment, memory, validation, and reporting rules remain binding.
 

@@ -1,5 +1,6 @@
 ---
-description: Compact an explicitly project-associated memory store without losing trigger-first gotchas.
+name: compact-memory
+description: Use when an explicitly project-associated memory store exceeds its configured size target and needs a safe compaction.
 ---
 
 You are compacting a project's memory index. The goal is to keep the memory store discoverable and within its
@@ -16,8 +17,8 @@ duplicate, or git-owned records.
 3. Read the project's memory/documentation distinction. If absent, use this rule: documentation describes current
    state; memory contains non-obvious, action-triggered gotchas that would surprise an agent who read the code and
    authoritative documentation.
-4. Discover the configured threshold and index format. If no threshold is configured, accept `$ARGUMENTS` as a
-   target only after stating that it is user-provided; otherwise ask the user for a target. Never invent a line or
+4. Discover the configured threshold and index format. If no threshold is configured, accept a target stated in the
+   user's request only after identifying it as user-provided; otherwise ask the user for a target. Never invent a line or
    byte limit.
 5. Limit all writes to the verified memory store and its existing authoritative documentation owners. Do not edit
    application code, tests, generated application assets, or unrelated documentation.
@@ -79,12 +80,13 @@ lightweight hygiene pass rather than forcing removals.
    `DROP` pass rather than gutting a record until it becomes undiscoverable.
 5. Validate only links and references changed by compaction.
 
-## Phase 4: Independent Audit and Report
+## Phase 4: Audit and Report
 
-Ask a fresh reviewer to inspect the pre-compaction backup and current files. The reviewer checks that every
-removed memory maps to an approved `MIGRATE`, `MERGE`, or `DROP`; preserved gotchas remain actionable; migrated
-facts are accurate; and changed links resolve. Fix actionable findings with the same dirty-target protection, then
-re-check the configured size target.
+If an independent reviewer capability is available, ask a fresh reviewer to inspect the pre-compaction backup and
+current files. Otherwise, perform a separate self-audit and report `independent audit: UNAVAILABLE`. The audit checks
+that every removed memory maps to an approved `MIGRATE`, `MERGE`, or `DROP`; preserved gotchas remain actionable;
+migrated facts are accurate; and changed links resolve. Fix actionable findings with the same dirty-target protection,
+then re-check the configured size target.
 
 Report the verified memory location, configured target, backup path, migrations, merges, drops, kept count, final
 index measurement, stale facts found, changed-link validation, audit findings and fixes, plus anything unavailable

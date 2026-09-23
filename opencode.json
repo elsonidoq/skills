@@ -24,9 +24,6 @@
       "mode": "subagent",
       "model": "anthropic/claude-fable-5.1"
     },
-    "general": {
-      "model": "openai/gpt-5.6-sol"
-    },
     "luna": {
       "description": "Low-cost mechanical work: file inventories, searches, identifier checks and command execution using GPT-5.6 Luna.",
       "mode": "subagent",
@@ -40,7 +37,7 @@
     "sol": {
       "description": "Bounded reasoning, drafting and implementation from a clear brief using GPT-5.6 Sol.",
       "mode": "subagent",
-      "model": "openai/gpt-5.6-sol"
+      "model": "openai/gpt-6-sol"
     },
     "sonnet": {
       "description": "General reasoning, coding and review using Claude Sonnet 5 through the local Claude bridge.",

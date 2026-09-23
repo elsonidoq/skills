@@ -1,5 +1,6 @@
 ---
-description: Initialize a project's documentation owners when clean, or create an evidence-backed documentation epic when existing changes require discovery.
+name: initialize-documentation
+description: Use when a project's documentation owners or directory indexes are missing and need safe initialization.
 ---
 
 # Initialize Documentation
@@ -25,31 +26,21 @@ state, or unrelated files.
 When the project is clean, initialize every documentation owner required by
 its instructions or established local conventions. Discover every directory
 that the project treats as documentation, including nested directories. Each
-such directory must contain an `index.md` that describes every direct
-documentation file in that directory and uses sections where they make the
-contents easier to scan. Inspect code and configuration only as needed to
-identify those owners; do not infer a detailed system description merely to
-fill a new document.
+such directory must use the project's documented index mechanism to describe
+its direct documentation files and use sections where they make the contents
+easier to scan. Inspect code and configuration only as needed to identify those
+owners; do not infer a detailed system description merely to fill a new document.
 
-When no local convention names an equivalent owner, initialize these portable
-fallbacks only if they do not already exist:
+When no local convention names an equivalent owner, ask the user to choose the
+documentation root, directory-index mechanism, and the locations and formats
+for architecture facts, unresolved work, and deployment steps. Do not assume a
+`docs/` layout or create any owner until the user supplies that decision.
 
-1. `docs/index.md`: list the direct documentation files and child documentation
-   directories in `docs/`.
-2. `docs/architecture/index.md`: explain that focused architecture documents
-   record verified current-state facts and link to them as they are added.
-3. `docs/open_issues.md`: add the `OI-N` convention and a concise entry template
-   containing `Status`, `Problem`, `Primary evidence`, and `Resumption condition`.
-4. `docs/deployment_steps.md`: add a lifecycle and short entry template for
-   status, timing, environments, procedure, verification, and
-   rollback/irreversibility.
-
-Create a missing `index.md` in every discovered documentation directory; use
-`index.md`, not a `README.md`, for directory indexes. For every new index, list
-direct files other than `index.md`, using their title, frontmatter description,
-or a verified one-line purpose. Do not claim that a file is current or complete
-solely from its name. Add an entry to a parent index for each direct child
-documentation directory.
+Create a missing directory index only in the established or user-selected
+format. For every new index, list direct documentation files other than the
+index itself, using their title, frontmatter description, or a verified one-line
+purpose. Do not claim that a file is current or complete solely from its name.
+Add an entry to a parent index for each direct child documentation directory.
 
 Create parent directories only when needed for one of these files. Do not
 create a project memory store, an epic directory, a specification, a task list,
@@ -59,7 +50,7 @@ it changed concurrently. Validate only paths, headings, links, and references
 introduced by this command.
 
 Report the initializations, existing owners retained, intentionally absent
-owners, and validation result. Then instruct the user to run `/finish-session`.
+owners, and validation result. Then instruct the user to use the `finish-session` skill.
 
 ## Non-Clean Project: Investigate Before Initializing
 
@@ -92,18 +83,18 @@ the epic: they establish discoverability only, while substantive current-state
 documentation belongs in the epic. Resolve any unknown shell format with the
 user before approval.
 
-After approval, invoke `/create-epic` with the approved plan, verified
+After approval, load and follow the `create-epic` skill with the approved plan, verified
 evidence, and the explicit directive `documentation initialization requires an
-epic`. Do not implement the plan in this command.
+epic`. If it cannot be loaded, report `create epic: UNAVAILABLE` and stop. Do not implement the plan in this workflow.
 
 After the epic is created, re-discover required owners and documentation
-directories, then initialize every missing owner and directory index, including
-baseline fallbacks and any directory introduced by epic creation. Preserve the
-established format and create only an empty or template shell plus required file
-maps; do not add substantive current-state documentation scoped by the epic.
+directories, then initialize every missing owner and directory index selected by
+the user or introduced by epic creation. Preserve the established format and
+create only an empty or template shell plus required file maps; do not add
+substantive current-state documentation scoped by the epic.
 Apply the same dirty-target and concurrent-edit protections as the clean-project
 path.
 
 Report the created epic's path and baseline owners and indexes initialized,
-then instruct the user to run `/finish-session`, followed by `/epics-manager`
-with that epic's path.
+then instruct the user to use the `finish-session` skill, followed by the
+`epics-manager` skill with that epic's path.

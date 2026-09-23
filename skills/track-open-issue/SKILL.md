@@ -1,10 +1,11 @@
 ---
-description: Record a verified unresolved issue in docs/open_issues.md.
+name: track-open-issue
+description: Use when verified unresolved work needs recording in `docs/open_issues.md`.
 ---
 
 # Track Open Issue
 
-Record the issue candidate or source artifact supplied through `$ARGUMENTS` in `docs/open_issues.md`. Do not modify
+Record the issue candidate or source artifact named in the user's request in `docs/open_issues.md`. Do not modify
 product code, tests, generated assets, deployment state, or unrelated artifacts.
 
 ## Inputs and Evidence
@@ -16,7 +17,7 @@ Read every named source artifact. Extract or ask for only the minimum missing in
   needed to resolve it; and
 - a resumption condition: the next action, prerequisite, or observation that makes work resumable.
 
-If `$ARGUMENTS` is absent, unreadable, or insufficient, ask a concise question and do not write anything. Track only
+If the request is absent, unreadable, or insufficient, ask a concise question and do not write anything. Track only
 verified unresolved work. Do not state an unverified claim as fact; record the uncertainty, its known evidence, and the
 evidence required to resolve it. Exclude credentials, tokens, personal data, and sensitive payloads.
 

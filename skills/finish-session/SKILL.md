@@ -1,5 +1,6 @@
 ---
-description: Close a session by preserving current documentation, unresolved work, deployment prerequisites, and trigger-first memory.
+name: finish-session
+description: Use when closing a working session that may need documentation, unresolved-work, deployment, or memory closeout.
 ---
 
 You are closing a working session. Preserve durable knowledge without turning closeout into a repository audit.
@@ -9,20 +10,16 @@ You are closing a working session. Preserve durable knowledge without turning cl
 Before applying the closeout workflow, read repository instructions and existing
 documentation indexes only far enough to identify the project's required
 documentation owners and directories. Confirm that each required owner exists
-and every discovered documentation directory has an `index.md` that lists its
-direct documentation files. When no local convention supplies an equivalent
-owner, require these baseline files:
-
-- `docs/index.md`
-- `docs/architecture/index.md`
-- `docs/open_issues.md`
-- `docs/deployment_steps.md`
+and every discovered documentation directory has the index mechanism required
+by local convention. If no local convention identifies the required owners or
+directory-index mechanism, report documentation ownership as unavailable.
 
 This is an existence check only: do not audit documentation accuracy, create
-missing files, or modify any target in this step. If any required owner or
-directory index is missing, report the missing paths or owners, instruct the
-user to run `/initialize-documentation`, and stop. Continue with the remaining
-steps only after all required documentation owners and indexes exist.
+missing files, or modify any target in this step. If documentation ownership is
+unavailable or any required owner or directory index is missing, report the
+missing paths or owners, instruct the user to use the `initialize-documentation`
+skill, and stop. Continue with the remaining steps only after all required
+documentation owners and indexes exist.
 
 ## Core Invariants
 
@@ -46,12 +43,10 @@ steps only after all required documentation owners and indexes exist.
 
 Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. Prefer an existing authoritative destination for each kind of information. Do not replace an established external tracker or runbook.
 
-Do not initialize fallback artifacts during discovery. Only initialize a fallback when a verified finding needs that destination and no equivalent local or accessible external owner exists:
-
-- `docs/architecture/` — create the directory only; create a focused document later only when a new durable fact has no existing owner.
-- `docs/deployment_steps.md` — initialize with a lifecycle and a short entry template for status, timing, environments, procedure, verification, and rollback/irreversibility.
-
-Preserve the existing format and identifiers when an artifact already exists.
+Do not initialize fallback artifacts during discovery. If a verified finding has
+no equivalent local or accessible external owner, report the missing owner and
+ask the user to choose its location and format. Preserve the existing format and
+identifiers when an artifact already exists.
 
 ## Step 2: Derive Candidate Findings From Attributable Work
 
@@ -67,14 +62,18 @@ Use one canonical owner. A secondary pointer is allowed only when it provides a 
 
 | Finding | Owner |
 | --- | --- |
-| Current convention, contract, invariant, module shape, API behavior, operational procedure, or user-facing fact | The most specific affected authoritative document; use `docs/architecture/` for architecture facts with no more specific existing owner. |
-| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | `/track-open-issue`, which records it in `docs/open_issues.md`. |
-| Verified action required around a future deployment | The established deploy runbook, or `docs/deployment_steps.md` when it is the local owner. |
+| Current convention, contract, invariant, module shape, API behavior, operational procedure, or user-facing fact | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
+| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | The project's documented issue register. |
+| Verified action required around a future deployment | The established deploy runbook, or the documented deployment-step owner when it is the local owner. |
 | Non-obvious trap, counterintuitive rationale, failed approach, or user rule that would surprise an agent who read the code and docs | The project's memory store. |
 
 If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, treat the verified uncertainty and its missing evidence as an investigation candidate.
 
-For each verified issue candidate, invoke `/track-open-issue` with its verified problem statement, primary evidence, and resumption condition. Do not invoke it for documentation-only facts, deployment prerequisites, memories, unverified non-actionable claims, or when no issue candidate exists. Include its result in the closeout report. If the command is unavailable, report the unavailable tracking capability.
+For each verified issue candidate, load and follow the `track-open-issue` skill with its verified problem statement,
+primary evidence, and resumption condition. If that skill cannot be loaded, discover the documented issue register and
+apply the same duplicate, dirty-target, and evidence protections directly; if no register can be verified, report
+`issue tracking: UNAVAILABLE`. Do not track documentation-only facts, deployment prerequisites, memories,
+unverified non-actionable claims, or when no issue candidate exists. Include the result in the closeout report.
 
 ## Step 4: Deployment Steps, Only When Relevant
 
@@ -98,7 +97,12 @@ Apply the repository's memory/documentation distinction from its instructions. I
 
 Discover the memory store and index before writing. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project. A global memory command or similarly named index is not evidence of association. Update a related memory rather than duplicating it. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
 
-After all memory writes, check any threshold or hook explicitly configured for that verified project memory. If no threshold is breached, report `not needed`. If one is breached, never delegate to the current global `/compact-memory`: it is nonportable and may target another project. Invoke a compactor only when its definition is project-local, explicitly targets the discovered project memory, limits writes to that memory store and its declared documentation owners, and has been inspected for dirty-target and concurrent-edit protection. Record its prospective targets' initial content and compare them immediately before invoking it. When no such compactor is available, report `compaction needed` with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
+After all memory writes, check any threshold or hook explicitly configured for that verified project memory. If no
+threshold is breached, report `not needed`. If one is breached, use a compactor only when its definition explicitly
+targets the discovered project memory, limits writes to that memory store and its declared documentation owners, and
+has been inspected for dirty-target and concurrent-edit protection. Record its prospective targets' initial content
+and compare them immediately before invoking it. When no such compactor is available, report `compaction needed`
+with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
 
 ## Step 6: Validate Only What You Changed
 
@@ -110,7 +114,7 @@ State separately whether the session's work is implemented, verified, and deploy
 
 - local artifacts initialized and existing authoritative owners used
 - documents checked and changed, including generated-document status
-- unresolved items and the result returned by `/track-open-issue`
+- unresolved items and the issue-tracking result
 - deployment state and prerequisites added, or why none were added
 - memories written or updated and compaction status
 - changed-reference validation

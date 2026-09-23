@@ -1,21 +1,22 @@
 ---
-description: Turn a verified feature brief into a scoped epic for epics-manager, or an owner-approved direct task list when the SpecKit pipeline is not justified.
+name: create-epic
+description: Use when an evidence-backed feature brief needs an epic or an owner-approved direct task list.
 ---
 
 # Create Epic
 
-Turn `$ARGUMENTS` into an evidence-backed feature epic that the `epics-manager`
+Turn the user's brief or named source artifact into an evidence-backed feature epic that the `epics-manager`
 skill can continue without rediscovering its essential facts. Do not implement
 product code.
 
-If `$ARGUMENTS` is empty, use the question tool to ask for a brief, source path,
+If the request does not identify a brief or source path, use the question tool to ask for one,
 or both. If no question tool is available, ask concisely in prose and wait. Read every
 source artifact it names.
 
 ## Required Reference
 
 Read the global configuration repository's
-[`docs/best_practices_spec_driven_development.md`](../docs/best_practices_spec_driven_development.md)
+[`docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md)
 before assessing the brief. If it is unavailable, stop and report an incomplete
 global configuration installation. Apply **Designing AI-Friendly Specifications for
 Solo Builders** to the epic's requirements and **Epic Sizing: When the Pipeline Earns

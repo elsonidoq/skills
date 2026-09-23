@@ -1,13 +1,14 @@
 ---
-description: Adapt an existing command or skill into this global configuration repository through a portability review and approval gate.
+name: incorporate-skill
+description: Use ONLY when adapting an external command or skill into the installed global OpenCode configuration repository.
 ---
 
-Adapt `$ARGUMENTS` into this global OpenCode configuration repository. This command is proposal-first: do not
+Adapt the source path named in the user's request into the installed global OpenCode configuration repository. This workflow is proposal-first: do not
 copy, edit, delete, stage, commit, or overwrite any asset until the owner explicitly approves the adaptation plan.
 
 ## Step 1: Identify the Source
 
-1. Require one readable path in `$ARGUMENTS`. If it is absent, unreadable, or neither a command Markdown file nor
+1. Require one readable path from the user's request. If it is absent, unreadable, or neither a command Markdown file nor
    a skill directory containing `SKILL.md`, report the problem and stop.
 2. Classify it:
    - **Command:** a Markdown command prompt, normally one `*.md` file.
@@ -42,8 +43,9 @@ claims, credentials or sensitive examples, unsupported frontmatter, and supporti
 Present a concise plan containing:
 
 1. Source path, classification, and proposed destination:
-   - command: `command/<name>.md`
-   - skill: `skills/<name>/SKILL.md`
+   - command: discover the installed command directory and use its `<name>.md` path; if command support or a
+     writable directory is unavailable, recommend converting the prompt to a skill or stop with that limitation.
+   - skill: this repository's `skills/<name>/SKILL.md`
 2. Files to create, change, retain, remove, or move to project-local guidance.
 3. Assumptions found, with the exact capability check and unavailable fallback for each reusable dependency.
 4. The proposed frontmatter and a section-level outline.
@@ -61,6 +63,7 @@ For a skill, ensure the directory name matches frontmatter `name`, the descripti
 states triggers rather than workflow, and supporting files are retained only when necessary. For a command, keep
 the normal path lightweight, make capability checks and expensive work conditional, and state unavailable behavior.
 
-Validate changed paths, frontmatter, local references, and relevant focused tests. Request a fresh review for
-portability, safety, trigger accuracy, and accidental loss of essential guidance. Report the source, destination,
-changes, validations, review findings, and anything intentionally left project-local.
+Validate changed paths, frontmatter, local references, and relevant focused tests. If an independent reviewer
+capability is available, request a fresh review for portability, safety, trigger accuracy, and accidental loss of
+essential guidance. Otherwise, perform a separate self-review and report `independent review: UNAVAILABLE`. Report
+the source, destination, changes, validations, review findings, and anything intentionally left project-local.
