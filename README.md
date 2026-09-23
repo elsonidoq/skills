@@ -20,9 +20,29 @@ Portable global OpenCode commands and skills for developing features deliberatel
 
 ## Use Cases
 
-1. Initialize documentation for a new or existing project with `/initialize-documentation`.
-2. Turn a recorded session into delivery work: `/create-epic` -> `epics-manager` -> `coordinate-implementation` -> `/finish-session`.
-3. Turn a recorded open issue into delivery work: `/create-epic` -> `epics-manager` -> `coordinate-implementation` -> `/finish-session`.
+### Initialize Documentation
+
+```
+Run /initialize-documentation for this project.
+```
+
+### Deliver Recorded Session Work
+
+```
+Run /create-epic to create an epic for the documented work in [session record path].
+Run epics-manager with the epic at [created epic path].
+Run coordinate-implementation for the approved tasks from [created epic path].
+Run /finish-session.
+```
+
+### Deliver Open Issues
+
+```
+Run /create-epic to create an epic that addresses open issues OI-1, ..., OI-7 in docs/open_issues.md.
+Run epics-manager with the epic at [created epic path].
+Run coordinate-implementation for the approved tasks from [created epic path].
+Run /finish-session.
+```
 
 ## Supporting Workflows
 
