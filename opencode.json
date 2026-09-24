@@ -16,9 +16,6 @@
       "mode": "subagent",
       "model": "openrouter/deepseek/deepseek-v4.1-flash"
     },
-    "explore": {
-      "model": "openai/gpt-5.6-luna"
-    },
     "fable": {
       "description": "Reasoning and drafting using Claude Fable 5.1 through the local Claude bridge.",
       "mode": "subagent",
