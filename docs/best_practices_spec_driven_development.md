@@ -60,7 +60,7 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 
 ## Epic Sizing: When the Pipeline Earns Its Overhead
 
-Use the full specification -> clarification -> plan -> tasks -> analysis -> implementation pipeline only when **all three** conditions hold:
+At admission, use the full specification -> clarification -> plan -> tasks -> analysis -> implementation pipeline only when **all three** conditions hold:
 
 1. **At least eight expected tasks:** below this, pipeline overhead usually exceeds coordination value.
 2. **At least one unresolved material design decision:** its answer changes implementation shape, such as an authorization model, data location, shared contract, or algorithm.
@@ -82,3 +82,10 @@ Red flags during epic writing:
 - A dependency on another epic's design output, rather than only its delivered interface, suggests the epics should merge.
 
 Record the sizing verdict and rationale. Human approval is required for the selected pipeline or direct-task-list path when project workflow calls for that gate.
+
+Preserve the recorded admission decision as uncertainty is resolved during readiness,
+clarification, and planning; that progress does not disqualify an admitted epic.
+Reconsider sizing when scope changes substantively, obtain the owner's choice of
+pipeline or direct-task-list path, and record the revised scope and rationale before
+continuing. Do not silently reroute admitted work. Preserve explicit owner-approved
+workflow exceptions, including `documentation initialization requires an epic`.

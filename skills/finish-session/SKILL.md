@@ -33,7 +33,7 @@ documentation owners and indexes exist.
 ## Core Invariants
 
 1. Affected authoritative documentation describes what is built now.
-2. Discovered work deliberately left unresolved has one canonical owner.
+2. Discovered work deliberately left unresolved has one canonical owner: `docs/open_issues.md`.
 3. For a deployed project, deploy-time work pending since the last confirmed deploy has one canonical owner.
 4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
 5. The memory index remains usable.
@@ -51,12 +51,14 @@ documentation owners and indexes exist.
 
 ## Step 1: Discover Existing Owners
 
-Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. Prefer an existing authoritative destination for each kind of information. Do not replace an established external tracker or runbook.
+Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. For unresolved issues, this skill set uses the canonical local register `docs/open_issues.md` and the `track-open-issue` skill. Do not route issues to another local or external tracker or migrate unrelated records. For other information, preserve existing authoritative documentation owners and runbooks.
 
 Do not initialize fallback artifacts during discovery. If a verified finding has
-no equivalent local or accessible external owner, report the missing owner and
-ask the user to choose its location and format. Preserve the existing format and
-identifiers when an artifact already exists.
+no owner, report the missing owner and ask the user to choose its location and
+format, except for unresolved issues whose location is fixed as above. A missing
+issue register may be initialized only for a verified candidate in Step 3 under
+`track-open-issue`, after Step 0's gate is satisfied. Preserve the existing format
+and identifiers when an artifact already exists.
 
 ## Step 2: Derive Candidate Findings From Attributable Work
 
@@ -93,17 +95,20 @@ during closeout.
 | Finding | Owner |
 | --- | --- |
 | Current convention, contract, invariant, module shape, API behavior, operational procedure, user-facing fact, or database schema | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
-| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | The project's documented issue register. |
+| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | `docs/open_issues.md`, through `track-open-issue`. |
 | Verified action required around a future deployment | The established deploy runbook, or the documented deployment-step owner when it is the local owner. |
 | Non-obvious trap, counterintuitive rationale, failed approach, or user rule that would surprise an agent who read the code and docs | The project's memory store. |
 
 If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, treat the verified uncertainty and its missing evidence as an investigation candidate.
 
 For each verified issue candidate, load and follow the `track-open-issue` skill with its verified problem statement,
-primary evidence, and resumption condition. If that skill cannot be loaded, discover the documented issue register and
-apply the same duplicate, dirty-target, and evidence protections directly; if no register can be verified, report
-`issue tracking: UNAVAILABLE`. Do not track documentation-only facts, deployment prerequisites, memories,
-unverified non-actionable claims, or when no issue candidate exists. Include the result in the closeout report.
+primary evidence, and resumption condition. Use only `docs/open_issues.md`; preserve its existing format and
+identifiers and follow the skill's initialization rule when absent. Apply the base workflow's evidence,
+dirty-target, concurrent-edit, and unrelated-target protections to every issue write; do not change unrelated
+entries. If the skill cannot be loaded, report `issue tracking: UNAVAILABLE` and leave the candidate unwritten
+with its evidence and resumption condition in the report. Do not substitute another tracker. Do not track
+documentation-only facts, deployment prerequisites, memories, unverified non-actionable claims, or when no
+issue candidate exists. Include the result in the closeout report.
 
 ## Step 4: Deployment Steps, Only When Relevant
 

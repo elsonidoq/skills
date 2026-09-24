@@ -89,10 +89,14 @@ Run the earliest incomplete or invalid stage:
    installation. Apply **Designing AI-Friendly Specifications for Solo Builders**:
    keep goals outcome-oriented, make inputs/outputs and deterministic business rules
    explicit where relevant, include exclusions, and avoid implementation detail
-   unless it is a settled constraint. Apply **Epic Sizing: When the Pipeline Earns
-    Its Overhead** before continuing the pipeline. When the epic records the
-    owner-approved directive `documentation initialization requires an epic`,
-    preserve that documented sizing exception and continue the pipeline.
+   unless it is a settled constraint. Verify the recorded admission sizing verdict
+   and rationale under **Epic Sizing: When the Pipeline Earns Its Overhead**; if
+   absent, establish them before continuing. Resolving ambiguity during readiness,
+   clarification, or planning does not invalidate admission. A substantive scope
+   change requires the owner's choice through the `question` tool and a recorded
+   sizing/path decision before continuing; do not silently reroute the work.
+   When the epic records the owner-approved directive
+   `documentation initialization requires an epic`, preserve that sizing exception.
 4. **Clarification:** After specification, run the detected clarification stage.
    Resolve mechanically answerable gaps; send material choices to the owner with
    the `question` tool.
@@ -145,11 +149,19 @@ Run the earliest incomplete or invalid stage:
 
     ```text
     Use the coordinate-implementation skill to execute the approved work.
+    Workflow origin: epics-manager
     Specification: [specification path]
     Plan: [plan path]
     Tasks: [tasks path]
     Source brief: [source brief path]
+    Specification approval: [record path and section]
+    Overall review approval: [record path and section]
+    Review evidence and decisions: [record paths and sections]
     ```
+
+    Verify every referenced record is durable and accessible in the target workspace.
+    When approvals or review evidence are embedded in a spec or plan, cite that
+    artifact and section rather than creating a separate record.
 
 ## Decisions and Corrections
 
@@ -161,8 +173,10 @@ workflow.
 
 Record each owner decision and approval with its stage and affected artifact paths
 in an existing project-defined decision or progress artifact when one is documented.
-Otherwise keep it in the affected spec or plan. Do not create a global state schema
-or require a particular progress filename.
+Otherwise keep it in the affected spec or plan. Identify the approved artifact
+versions or content, preserving any existing project revision/evidence convention, so
+a fresh session can detect changes after approval; a bare `approved` label is not
+enough. Do not create a global state schema or require a particular progress filename.
 
 ## State and Resume
 

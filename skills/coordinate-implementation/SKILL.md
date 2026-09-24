@@ -20,12 +20,50 @@ source brief when present. Verify:
 - Task prerequisites and integration points agree with the plan.
 - Existing workspace changes are understood and preserved.
 
+Determine workflow origin from the handoff and linked artifacts. For work produced
+by `epics-manager`, on every fresh session or resume:
+
+- Read the specification-approval and overall-review-approval records, including
+  records stored outside the spec, plan, or tasks, and their linked decisions.
+- Verify specification approval applies to the current specification and overall
+  review approval applies to the current spec, plan, and tasks. Compare their
+  recorded revisions or content evidence with the current artifacts; do not trust
+  an `approved` label or the handoff alone.
+- Inspect the overall review evidence and unresolved owner gates. If approval is
+  missing, stale, or unverifiable, or required review evidence is missing, stop
+  before implementation and return to the earliest affected `epics-manager` gate.
+  Do not replace missing pipeline stages with generic artifacts.
+
+If origin or approval provenance is ambiguous, resolve it before implementation;
+do not assume standalone origin to bypass these gates. For unrelated standalone
+work, verify current owner authorization and applicable project gates without
+imposing the manager's two-gate process or requiring SpecKit-generated artifacts.
+This skill still requires a spec, plan, and tasks; a direct task list alone belongs
+to a separate owner-selected execution path.
+
 If the project uses SpecKit, inspect the available commands and assets for its
 implementation and prerequisite capabilities. Follow only instructions found in
 the current project. If the implementation command is unavailable, report
 `SpecKit implementation: UNAVAILABLE` and execute the reviewed tasks directly from
 their contracts. If a prerequisite checker is unavailable, perform direct artifact
 and path checks and label the scripted check `UNAVAILABLE`.
+
+## Execution Capability Preflight
+
+Before establishing completion scope or executing work, verify that the runtime
+exposes permitted, usable `question`, `todowrite`, and delegation tools. Delegation
+is mandatory for implementation. Check configured agents and their callable model
+bindings, not configuration names alone. If any required capability is unavailable,
+stop before implementation and report `question: UNAVAILABLE`,
+`todowrite: UNAVAILABLE`, or `Delegation: UNAVAILABLE` with the missing requirement.
+Do not substitute prose selection, a simulated todo tool, or local implementation.
+
+For every model class used by incomplete tasks, verify there is at least one usable
+agent/model option. Use `question` to obtain the owner's selection for each class
+before implementation and retain the selected agent/model mapping for the session.
+Offer only observed, permitted options; never infer a selection or silently switch
+models. If no usable mapping exists, report `Agent/model selection: UNAVAILABLE`
+with the affected class and stop before implementation.
 
 ## Build the Execution Graph
 
@@ -51,9 +89,11 @@ batch and missing decision or dependency.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
 3. Build batches of approximately 5-10 ready tasks when they do not conflict on
    files, schemas, migrations, shared runtime state, or acceptance setup, and have
-   the same required model class. Do not create batches of one or two tasks unless
-   a model-class boundary makes a smaller batch unavoidable, such as an
-   `opus-class` task surrounded by `sonnet-class` tasks.
+   the same required model class. Treat 5-10 as a target, not a minimum. Smaller
+   batches, including one or two tasks, are allowed for dependency bottlenecks,
+   conflicting write surfaces, owner gates, model-class boundaries, or the remaining
+   task count. Record the reason; never include unready or conflicting tasks just
+   to reach the target size.
 4. Keep contract producers before consumers and preserve explicit owner gates.
 5. Prefer vertical slices that can be integrated and verified independently.
 6. Execute every batch sequentially; never run implementation batches in parallel.
@@ -74,12 +114,11 @@ batch `in_progress` while implementation remains.
 
 ## Select Execution Capability
 
-Inspect the runtime for available, permitted agents and tools. Before executing a
-batch, use the `question` tool to ask the user to select an available model for each
-model class used by incomplete tasks: `sonnet-class` and `opus-class`. Retain those
-selections for the session and match each batch to the model selected for its required
-class. Do not infer a model selection. Delegation is optional, not proof of
-completion.
+Use the agent/model mappings obtained in preflight for `sonnet-class` and
+`opus-class`, as applicable. Before each batch, confirm its selected mapping remains
+usable. If a new class or replacement mapping is needed, repeat the capability
+check and obtain the selection through `question` before proceeding. Delegation
+is mandatory, but an agent's report is not proof of completion.
 
 - Delegate a task or safe batch only when write scope and dependencies are clear.
 - Run conflicting or dependent work sequentially.

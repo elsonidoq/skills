@@ -8,14 +8,14 @@ Portable global OpenCode skills for developing features deliberately across unre
 - Database-backed projects maintain authoritative documentation of their current schema.
 - Each project documents which material changes require which documentation owners.
 - Memory records only non-obvious, durable guidance.
-- Verified unresolved work has one canonical open-issue record.
-- Features are developed from approved epics and spec-driven artifacts, not improvised in code.
+- Verified unresolved work has one canonical register: `docs/open_issues.md`.
+- Features are developed from approved epics and spec-driven artifacts, or an owner-approved direct task list when the pipeline is not justified.
 
 ## Development Workflow
 
 1. `create-epic` turns an evidence-backed idea into a scoped epic, or a direct task list when the SpecKit pipeline is not justified.
-2. `epics-manager` requires the project's SpecKit toolkit and guides its specification, approval, planning, tasks, and cross-artifact review stages.
-3. In a fresh session, `coordinate-implementation` implements the approved tasks in dependency order and verifies acceptance evidence.
+2. For an epic, `epics-manager` requires the project's SpecKit toolkit and guides its specification, approval, planning, tasks, and cross-artifact review stages. For a direct task list, report its path and the owner-selected next action instead.
+3. In a fresh session, `coordinate-implementation` revalidates the pipeline approvals and implements the approved spec, plan, and tasks in dependency order with mandatory delegation. A direct task list alone does not enter this coordinator.
 4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
 5. `initialize-documentation` establishes documentation owners and the project's directory indexes; changed projects first create a documentation epic.
 6. `finish-session` maintains documentation, open-issue, deployment, and project-memory invariants.
@@ -32,37 +32,47 @@ Use the initialize-documentation skill for this project.
 
 ```
 Use the create-epic skill to create an epic for the documented work in [TODO list file / audio transcription].
-Run epics-manager with the epic at [created epic path].
-Use the finish-session skill.
+If an epic is created, run epics-manager with its path.
+If an owner-approved direct task list is created, report its path and the owner-selected next action, then stop this delivery workflow without invoking epics-manager or coordinate-implementation.
+After epics-manager completes, use the finish-session skill.
 ```
 
-In a fresh session:
+For an epic with an approved epics-manager handoff, in a fresh session:
 
 ```
 Use the coordinate-implementation skill for the approved work.
+Workflow origin: epics-manager
 Specification: [specification path from epics-manager handoff]
 Plan: [plan path from epics-manager handoff]
 Tasks: [tasks path from epics-manager handoff]
 Source brief: [source brief path from epics-manager handoff]
+Specification approval: [record path and section from epics-manager handoff]
+Overall review approval: [record path and section from epics-manager handoff]
+Review evidence and decisions: [record paths and sections from epics-manager handoff]
 Use the finish-session skill.
 ```
 
 ### Deliver Open Issues
 
 ```
-Use the create-epic skill to create an epic that addresses the selected open issues in this project's documented issue register.
-Run epics-manager with the epic at [created epic path].
-Use the finish-session skill.
+Use the create-epic skill to create an epic that addresses the selected open issues in docs/open_issues.md.
+If an epic is created, run epics-manager with its path.
+If an owner-approved direct task list is created, report its path and the owner-selected next action, then stop this delivery workflow without invoking epics-manager or coordinate-implementation.
+After epics-manager completes, use the finish-session skill.
 ```
 
-In a fresh session:
+For an epic with an approved epics-manager handoff, in a fresh session:
 
 ```
 Use the coordinate-implementation skill for the approved work.
+Workflow origin: epics-manager
 Specification: [specification path from epics-manager handoff]
 Plan: [plan path from epics-manager handoff]
 Tasks: [tasks path from epics-manager handoff]
 Source brief: [source brief path from epics-manager handoff]
+Specification approval: [record path and section from epics-manager handoff]
+Overall review approval: [record path and section from epics-manager handoff]
+Review evidence and decisions: [record paths and sections from epics-manager handoff]
 Use the finish-session skill.
 ```
 
