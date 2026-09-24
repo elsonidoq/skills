@@ -29,7 +29,7 @@
     "opus": {
       "description": "Complex analysis, coding and review using Claude Opus 5.5 through OpenRouter.",
       "mode": "subagent",
-      "model": "openrouter/anthropic/claude-opus-5.5"
+      "model": "anthropic/claude-opus-5.5"
     },
     "sol": {
       "description": "Bounded reasoning, drafting and implementation from a clear brief using GPT-5.6 Sol.",
