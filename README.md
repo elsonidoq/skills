@@ -14,7 +14,7 @@ Portable global OpenCode skills for developing features deliberately across unre
 ## Development Workflow
 
 1. `create-epic` turns an evidence-backed idea into a scoped epic, or a direct task list when the SpecKit pipeline is not justified.
-2. `epics-manager` resolves material decisions and guides specification, approval, planning, tasks, and cross-artifact review.
+2. `epics-manager` requires the project's SpecKit toolkit and guides its specification, approval, planning, tasks, and cross-artifact review stages.
 3. In a fresh session, `coordinate-implementation` implements the approved tasks in dependency order and verifies acceptance evidence.
 4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
 5. `initialize-documentation` establishes documentation owners and the project's directory indexes; changed projects first create a documentation epic.

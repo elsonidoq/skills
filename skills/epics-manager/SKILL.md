@@ -1,12 +1,13 @@
 ---
 name: epics-manager
-description: Use when preparing or resuming a feature brief that needs specification, planning, tasking, and review before implementation.
+description: Use when preparing or resuming a feature brief through a project's installed SpecKit specification, planning, tasking, and review workflow before implementation.
 ---
 
 # Epics Manager
 
-Turn an owner-selected brief into reviewed implementation artifacts. This workflow
-prepares work; it does not implement product code.
+Guide an owner-selected brief through the project's installed SpecKit workflow
+to reviewed implementation artifacts. This workflow requires SpecKit, prepares
+work, and does not implement product code.
 
 ## Owner Communication
 
@@ -41,28 +42,32 @@ Re-read source bounds and links whenever resuming. If provenance is ambiguous,
 use the `question` tool to obtain an unambiguous target instead of attaching work
 to a likely-looking feature.
 
-## Detect SpecKit
+## Required SpecKit Capabilities
 
-Before each stage, inspect the project's command registry and files for the
-corresponding SpecKit capability and its instructions, templates, and prerequisite
-scripts. Conventional command names and directory layouts are hints, not contracts.
+Before starting and before each stage, inspect the project's command registry
+and files for the corresponding SpecKit capability and its instructions,
+templates, and prerequisite scripts. Verify the specification, clarification,
+planning, tasks, and analysis stage commands are installed and usable for this
+project. Check the constitution capability when the installed workflow requires
+it. Conventional command names and directory layouts are hints, not contracts.
 Use only commands and assets observed in the current project.
 
 Report capability checks in this form:
 
 ```text
-Capability: constitution | specification | clarification | planning | tasks | analysis | implementation
+Capability: constitution | specification | clarification | planning | tasks | analysis
 Status: AVAILABLE | UNAVAILABLE
 Evidence: [command or path found]
-Fallback: [generic artifact operation, or blocked behavior]
+Blocker: [missing requirement or none]
 ```
 
-When a stage command is available, follow its current instructions and verify its
-outputs. When unavailable, create or update the equivalent Markdown artifact using
-the contracts below. Do not simulate a slash command in a shell, install tooling,
-or initialize/overwrite project assets without owner authorization. Analysis that
-depends on an unavailable project command must be reported as `UNAVAILABLE`; use a
-manual cross-artifact review as the fallback, not as evidence that the command ran.
+If any required capability is unavailable, report `UNAVAILABLE` with the
+missing command or asset and stop the workflow before producing or approving
+downstream artifacts. Do not replace a missing SpecKit stage with generic
+Markdown work, simulate a slash command in a shell, install tooling, or
+initialize/overwrite project assets without owner authorization. Follow each
+detected stage command's current instructions and verify its outputs; the
+requirements below supplement the installed workflow rather than replace it.
 
 ## Workflow
 
@@ -71,13 +76,14 @@ Run the earliest incomplete or invalid stage:
 1. **Principles preflight:** Read the project's governing principles if present.
    If a detected SpecKit workflow requires a constitution and it is missing or
    still template text, use the `question` tool to obtain the necessary
-   project-specific principles and use the detected constitution capability. If
-   that capability is unavailable, record the blocker; do not invent policy.
+   project-specific principles and use the detected constitution capability.
+   If that capability is unavailable, stop; do not invent policy.
 2. **Brief readiness:** Confirm the target has an outcome, users, scope, exclusions,
    acceptance criteria, dependencies, and no unresolved direction that would change
    the feature materially. Use the `question` tool only for genuine product or
    architectural choices.
-3. **Specification:** Before producing the spec, read the global configuration
+3. **Specification:** Run the detected SpecKit specification stage. Before
+   producing the spec, read the global configuration
    repository's [`docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md).
    If it is unavailable, stop and report an incomplete global configuration
    installation. Apply **Designing AI-Friendly Specifications for Solo Builders**:
@@ -88,23 +94,24 @@ Run the earliest incomplete or invalid stage:
     owner-approved directive `documentation initialization requires an epic`,
     preserve that documented sizing exception and continue the pipeline.
 4. **Clarification:** After specification, run the detected clarification stage.
-   If unavailable, perform a generic ambiguity review against the source, acceptance
-   criteria, exclusions, dependencies, and governing principles. Resolve
-   mechanically answerable gaps; send material choices to the owner with the
-   `question` tool.
+   Resolve mechanically answerable gaps; send material choices to the owner with
+   the `question` tool.
 5. **Specification approval:** Summarize the specification and clarification results
    in manager-level terms, then use the `question` tool to request approval. Record
    explicit specification approval in a project-defined decision or progress
    artifact, or in the specification when none exists. Do not begin planning without
    it.
-6. **Plan:** Review the spec, fix non-material defects, then produce architecture,
-   contracts, sequencing, risks, verification, and documentation scope. Identify the
-   documentation that must explain each new or modified capability, interface,
-   workflow, configuration, operational procedure, or user-visible behavior. Include
-   one or more documentation tasks in the plan for that scope. Use
-   `delegating-architectural-planning` when the approved work calls for delegated
-   architectural decomposition.
-7. **Tasks:** Derive dependency-aware, independently verifiable tasks from the plan.
+6. **Plan:** Review the spec, fix non-material defects, then run the detected
+   SpecKit planning stage to produce architecture, contracts, sequencing, risks,
+   verification, and documentation scope. Identify the documentation that must
+   explain each new or modified capability, interface, workflow, configuration,
+   operational procedure, or user-visible behavior. Record that scope in the
+   plan for task generation. When the approved work calls for delegated
+   architectural decomposition, use
+   `delegating-architectural-planning` to run the detected planning stage; do not
+   produce a substitute plan outside it.
+7. **Tasks:** Run the detected SpecKit tasks stage to derive dependency-aware,
+   independently verifiable tasks from the plan.
    Each task identifies its outcome, prerequisites, likely files/interfaces,
    acceptance evidence, capability needs, `Model class: sonnet-class | opus-class`,
    and a brief rationale for that class. Default to `sonnet-class` for bounded,
@@ -120,8 +127,8 @@ Run the earliest incomplete or invalid stage:
    contradictions, omissions, dependency order, integration coverage, exclusions,
    governing principles, documentation coverage, and the `opus-class` task share.
    Do not approve a task list exceeding 30% `opus-class` tasks without recorded owner
-   approval. Use detected SpecKit analysis when available and manually inspect its
-   evidence; otherwise perform the same review directly.
+   approval. Run the detected SpecKit analysis stage and manually inspect its
+   evidence.
 9. **Overall review approval:** Immediately before requesting approval, provide a
    brief bulleted list that summarizes each completed planning stage and its outcome:
    specification, clarification, plan, tasks, documentation, and review. State any
