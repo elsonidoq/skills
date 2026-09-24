@@ -133,13 +133,13 @@ Run the earliest incomplete or invalid stage:
    Do not approve a task list exceeding 30% `opus-class` tasks without recorded owner
    approval. Run the detected SpecKit analysis stage and manually inspect its
    evidence.
-9. **Overall review approval:** Immediately before requesting approval, provide a
-   brief bulleted list that summarizes each completed planning stage and its outcome:
-   specification, clarification, plan, tasks, documentation, and review. State any
-   unresolved deferrals in the relevant bullet. Then use the `question` tool to
-   request approval. Record explicit overall review approval in a project-defined
-   decision or progress artifact, or in the reviewed artifacts when none exists. Do
-   not hand off implementation without it.
+9. **Overall review approval:** Immediately before requesting approval, present a
+   brief bulleted plan summary in manager-level terms: one bullet for the intended
+   outcome and one concise bullet for each plan phase. Include a risk, dependency,
+   exclusion, or deferral only when it materially affects the approval decision. Then
+   use the `question` tool to request approval. Record explicit overall review
+   approval in a project-defined decision or progress artifact, or in the reviewed
+   artifacts when none exists. Do not hand off implementation without it.
 10. **Handoff:** Verify both recorded approvals apply to the current artifacts and
     re-run applicable prerequisite or artifact checks. Do not load or run
     `coordinate-implementation` in this session. Instruct the user to run
