@@ -42,7 +42,43 @@ rejected by 2.0.16 (`configured plugin path must be a directory`).
 Everything that defines the product is unchanged: the same `~/.claude/projects/<project>/memory/`
 paths, the same Markdown + YAML frontmatter, the same `MEMORY.md` index, the same `user` / `feedback`
 / `project` / `reference` taxonomy, the same worktree canonicalisation, and zero migration of
-existing memories. Run `bun run build` before loading it.
+existing memories.
+
+### Fresh clone / setup
+
+`node_modules/` and the build output `dist/` are intentionally **not** tracked, so the plugin must be
+built after a clone. This port usually lives inside the OpenCode config repo
+(`~/.config/opencode/opencode-claude-memory-v2-port`), so cloning that repo already provides the
+source. Requires [Bun](https://bun.sh) (see `.bun-version`; the reference build used Bun 1.3.11).
+
+```bash
+# point this at wherever the port was cloned/vendored
+cd ~/.config/opencode/opencode-claude-memory-v2-port
+
+bun install          # installs @opencode/plugin@2.0.16 + zod
+bun run build        # emits dist/index.js, which the plugin entry points at
+
+# optional sanity checks
+bun run typecheck
+bun test
+```
+
+Then reference the built **directory** in `opencode.json(c)` — the dynamic path is
+`<port-dir>/dist`:
+
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "file:///home/USER/.config/opencode/opencode-claude-memory-v2-port/dist",
+      "options": {}
+    }
+  ]
+}
+```
+
+Restart OpenCode after adding or changing the plugin entry. Confirm it loaded with
+`opencode plugin list` (expected: `opencode-claude-memory  local  .../dist/index.js`).
 
 The integration layer was rewritten because the V2 API differs substantially:
 
