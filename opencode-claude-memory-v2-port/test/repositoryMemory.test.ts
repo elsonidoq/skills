@@ -207,6 +207,24 @@ describe("repository memory through the plugin", () => {
     expect(h.syntheticCalls).toHaveLength(1)
   })
 
+  test("the notice is scoped to this location and does not leak to other sessions", async () => {
+    const worktree = tempGitRepo()
+    const claudeConfigDir = tempDir("ocm-claude-")
+    write(join(claudeConfigDir, "projects", sanitizePath(worktree), "memory"), "existing.md", "central")
+    const h = await makeHarness({ worktree, projectCanonical: worktree, claudeConfigDir })
+
+    // No event location: the plugin resolves the session's own location, which is elsewhere.
+    h.setSessionLocation("ses_other", "/somewhere/else")
+    await h.emit({ type: "session.execution.started", data: { sessionID: "ses_other" } } as never)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(h.syntheticCalls).toHaveLength(0)
+
+    // A session in this project is notified.
+    await h.emit({ type: "session.execution.started", data: { sessionID: "ses_here" } } as never)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(h.syntheticCalls.map((call) => call.sessionID)).toEqual(["ses_here"])
+  })
+
   test("a conflict makes setup fail with a user-visible error", async () => {
     const worktree = tempGitRepo()
     const claudeConfigDir = tempDir("ocm-claude-")

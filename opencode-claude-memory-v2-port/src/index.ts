@@ -65,20 +65,40 @@ export function createMemoryPlugin(env: NodeJS.ProcessEnv = process.env, homeDir
       void extraction.initialize()
 
       const controller = new AbortController()
+      const notifyIfOwnLocation = async (sessionID: string, eventLocation: string | undefined): Promise<void> => {
+        if (notifiedSessions.has(sessionID)) return
+        let belongs = false
+        if (eventLocation) {
+          belongs = resolve(eventLocation) === resolve(directory)
+        } else {
+          // `session.execution.started` does not carry a location, and every plugin instance
+          // subscribes to the same global stream — resolve the session's own location so only the
+          // owning instance notifies (otherwise every open project would spam every session).
+          try {
+            const info = (await ctx.session.get({ sessionID })) as { location?: { directory?: string } }
+            const loc = info.location?.directory
+            belongs = loc !== undefined && resolve(loc) === resolve(directory)
+          } catch {
+            belongs = false
+          }
+        }
+        notifiedSessions.add(sessionID)
+        if (belongs) {
+          void Promise.resolve(ctx.session.synthetic({ sessionID, text: pendingNotice as string })).catch(() => {})
+        }
+      }
+
       void (async () => {
         try {
           for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
             log("debug", "event", { type: event.type })
             // Surface the repository-memory notice once per session, in the transcript rather than
-            // only the server log.
+            // only the server log, and only for sessions in this plugin's location.
             if (event.type === "session.execution.started" && pendingNotice) {
-              const sessionID = event.data.sessionID
-              const location = (event as { location?: { directory?: string } }).location?.directory
-              const sameLocation = !location || resolve(location) === resolve(directory)
-              if (sameLocation && !notifiedSessions.has(sessionID)) {
-                notifiedSessions.add(sessionID)
-                void Promise.resolve(ctx.session.synthetic({ sessionID, text: pendingNotice })).catch(() => {})
-              }
+              await notifyIfOwnLocation(
+                event.data.sessionID,
+                (event as { location?: { directory?: string } }).location?.directory,
+              )
             }
             recall.onEvent(event)
             extraction.onEvent(event)
