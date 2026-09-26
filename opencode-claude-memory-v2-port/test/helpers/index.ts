@@ -199,6 +199,7 @@ export type FakeContext = {
   syntheticCalls: Array<{ sessionID: string; text: string }>
   setMessages(sessionID: string, messages: SessionMessage[]): void
   setSessionLocation(sessionID: string, directory: string): void
+  setSessionGetFailure(sessionID: string, fail: boolean): void
   emit(event: V2Event): Promise<void>
   dispose(): Promise<void>
 }
@@ -245,6 +246,7 @@ export function makeFakeContext(input: {
   const stream = makeEventStream()
   const sessionMessages = new Map<string, SessionMessage[]>()
   const sessionLocations = new Map<string, string>()
+  const sessionGetFailures = new Set<string>()
   const syntheticCalls: Array<{ sessionID: string; text: string }> = []
 
   const ctx = {
@@ -293,6 +295,7 @@ export function makeFakeContext(input: {
         }
       },
       async get({ sessionID }: { sessionID: string }) {
+        if (sessionGetFailures.has(sessionID)) throw new Error("session.get failed")
         return { id: sessionID, location: { directory: sessionLocations.get(sessionID) ?? input.directory } }
       },
     },
@@ -335,6 +338,10 @@ export function makeFakeContext(input: {
     },
     setSessionLocation(sessionID, directory) {
       sessionLocations.set(sessionID, directory)
+    },
+    setSessionGetFailure(sessionID, fail) {
+      if (fail) sessionGetFailures.add(sessionID)
+      else sessionGetFailures.delete(sessionID)
     },
     async emit(event) {
       stream.push(event)
@@ -392,6 +399,7 @@ export type Harness = {
   syntheticCalls: Array<{ sessionID: string; text: string }>
   setSessionMessages(sessionID: string, messages: SessionMessage[]): void
   setSessionLocation(sessionID: string, directory: string): void
+  setSessionGetFailure(sessionID: string, fail: boolean): void
   emit(event: V2Event): Promise<void>
   dispose(): Promise<void>
 }
@@ -433,6 +441,7 @@ export async function makeHarness(input: HarnessInput = {}): Promise<Harness> {
     syntheticCalls: fake.syntheticCalls,
     setSessionMessages: fake.setMessages,
     setSessionLocation: fake.setSessionLocation,
+    setSessionGetFailure: fake.setSessionGetFailure,
     emit: fake.emit,
     async dispose() {
       await cleanup?.()

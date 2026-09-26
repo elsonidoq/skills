@@ -7,7 +7,7 @@ import { MemoryStore } from "./store/MemoryStore.js"
 import { resolveClaudeProjectPaths, resolveMemoryRoot } from "./store/paths.js"
 import { reconcileRepositoryMemory } from "./store/repositoryMemory.js"
 import { buildMemoryToolDefinitions } from "./tools.js"
-import { createLogger } from "./util/log.js"
+import { createLogger, getErrorMessage } from "./util/log.js"
 import { withDeadline } from "./util/timeout.js"
 import { createMemoryHost } from "./v2/host.js"
 
@@ -78,34 +78,42 @@ export function createMemoryPlugin(env: NodeJS.ProcessEnv = process.env, homeDir
           if (oldest !== undefined) notifiedSessions.delete(oldest)
         }
       }
+      const pendingNotifications = new Set<string>()
       const notifyIfOwnLocation = async (sessionID: string, eventLocation: string | undefined): Promise<void> => {
-        if (notifiedSessions.has(sessionID)) return
+        if (notifiedSessions.has(sessionID) || pendingNotifications.has(sessionID)) return
+        pendingNotifications.add(sessionID)
         let belongs = false
         let resolved = false
-        if (eventLocation) {
-          belongs = resolve(eventLocation) === resolve(directory)
-          resolved = true
-        } else {
-          // `session.execution.started` does not carry a location, and every plugin instance
-          // subscribes to the same global stream — resolve the session's own location so only the
-          // owning instance notifies (otherwise every open project would spam every session).
-          try {
+        try {
+          if (eventLocation) {
+            belongs = resolve(eventLocation) === resolve(directory)
+            resolved = true
+          } else {
+            // `session.execution.started` does not carry a location, and every plugin instance
+            // subscribes to the same global stream — resolve the session's own location so only the
+            // owning instance notifies (otherwise every open project would spam every session).
             const info = (await withDeadline("session.get", SESSION_LOOKUP_TIMEOUT_MS, (signal) =>
               ctx.session.get({ sessionID }, { signal }),
             )) as { location?: { directory?: string } }
             const loc = info.location?.directory
             belongs = loc !== undefined && resolve(loc) === resolve(directory)
             resolved = true
-          } catch {
-            // Could not determine ownership (timeout or error): retry on the next event instead of
-            // suppressing the notice for this session forever.
-            resolved = false
           }
+        } catch {
+          // Could not determine ownership (timeout or error): retry on the next event instead of
+          // suppressing the notice for this session forever.
+          resolved = false
         }
+        pendingNotifications.delete(sessionID)
         if (!resolved) return
         rememberNotified(sessionID)
         if (belongs) {
-          void Promise.resolve(ctx.session.synthetic({ sessionID, text: pendingNotice as string })).catch(() => {})
+          void Promise.resolve(ctx.session.synthetic({ sessionID, text: pendingNotice as string })).catch((error) =>
+            log("warn", "repository memory notice could not be delivered", {
+              sessionID,
+              error: getErrorMessage(error),
+            }),
+          )
         }
       }
 
@@ -114,9 +122,11 @@ export function createMemoryPlugin(env: NodeJS.ProcessEnv = process.env, homeDir
           for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
             log("debug", "event", { type: event.type })
             // Surface the repository-memory notice once per session, in the transcript rather than
-            // only the server log, and only for sessions in this plugin's location.
+            // only the server log, and only for sessions in this plugin's location. Fire-and-forget:
+            // the lookup can take up to SESSION_LOOKUP_TIMEOUT_MS and must not stall the shared event
+            // pump that drives recall and extraction.
             if (event.type === "session.execution.started" && pendingNotice) {
-              await notifyIfOwnLocation(
+              void notifyIfOwnLocation(
                 event.data.sessionID,
                 (event as { location?: { directory?: string } }).location?.directory,
               )

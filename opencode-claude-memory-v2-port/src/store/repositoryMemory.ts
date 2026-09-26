@@ -121,8 +121,8 @@ export function conflictMessage(centralDir: string, repoDir: string): string {
   ].join("\n")
 }
 
-export function noticeMessage(centralDir: string, repoDir: string): string {
-  return [
+export function noticeMessage(centralDir: string, repoDir: string, centralIsSymlink = false): string {
+  const lines = [
     "opencode-claude-memory: memories are stored centrally, not in this repository.",
     `  Central memory (non-empty): ${quote(centralDir)}`,
     `  Repository directory (missing): ${quote(repoDir)}`,
@@ -131,7 +131,15 @@ export function noticeMessage(centralDir: string, repoDir: string): string {
     `  mv ${quote(centralDir)} ${quote(repoDir)}`,
     `  ln -s ${quote(repoDir)} ${quote(centralDir)}`,
     "Then restart OpenCode.",
-  ].join("\n")
+  ]
+  if (centralIsSymlink) {
+    lines.splice(
+      4,
+      0,
+      "The central path is itself a symlink: move its target directory, not the link, and remove the link before creating the new one.",
+    )
+  }
+  return lines.join("\n")
 }
 
 function unsupportedMessage(centralDir: string, repoDir: string, error: unknown): string {
@@ -165,6 +173,23 @@ function linkCentral(centralDir: string, repoDir: string): ReconcileResult {
         repoDir,
         new Error("a non-directory entry occupies the central memory path"),
       ),
+    }
+  }
+  // A symlink pointing at a regular file is an unexpected shape: never repoint it silently.
+  if (existing?.isSymbolicLink() && !sameDir(centralDir, repoDir)) {
+    try {
+      if (!statSync(centralDir).isDirectory()) {
+        return {
+          status: "unsupported",
+          message: unsupportedMessage(
+            centralDir,
+            repoDir,
+            new Error("the central path is a symlink to a non-directory"),
+          ),
+        }
+      }
+    } catch {
+      // dangling target: safe to relink
     }
   }
   if (!isDirectory(repoDir)) {
@@ -223,7 +248,7 @@ export function reconcileRepositoryMemory(input: ReconcileInput): ReconcileResul
   // Repository directory does not exist yet. Only the central side holds memories: report and let the
   // user migrate, never move automatically.
   if (isNonEmptyDir(input.centralDir)) {
-    return { status: "notice", message: noticeMessage(input.centralDir, repoDir) }
+    return { status: "notice", message: noticeMessage(input.centralDir, repoDir, central?.isSymbolicLink() === true) }
   }
   ensureDir(repoDir)
   return linkCentral(input.centralDir, repoDir)

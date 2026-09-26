@@ -343,3 +343,45 @@ describe("repositoryMemory option schema", () => {
     }
   })
 })
+
+describe("repositoryMemory round-2 follow-ups", () => {
+  test("a central symlink to a regular file is left untouched", () => {
+    const base = tempDir()
+    const repo = join(base, "repo")
+    write(join(repo, ".claude/memory"), "repo.md", "repo")
+    const target = join(base, "some-file")
+    writeFileSync(target, "file content")
+    const central = join(base, "claude/memory")
+    mkdirSync(dirname(central), { recursive: true })
+    symlinkSync(target, central, "file")
+
+    const result = reconcileRepositoryMemory({
+      enabled: true,
+      dir: ".claude/memory",
+      canonicalRoot: repo,
+      centralDir: central,
+    })
+    expect(result.status).toBe("unsupported")
+    expect(lstatSync(central).isSymbolicLink()).toBe(true)
+    expect(readFileSync(target, "utf-8")).toBe("file content")
+  })
+
+  test("a failed session lookup does not suppress a later notice", async () => {
+    const worktree = tempGitRepo()
+    const claudeConfigDir = tempDir("ocm-claude-")
+    write(join(claudeConfigDir, "projects", sanitizePath(worktree), "memory"), "existing.md", "central")
+    const h = await makeHarness({ worktree, projectCanonical: worktree, claudeConfigDir })
+
+    h.setSessionGetFailure("ses_retry", true)
+    await h.emit({ type: "session.execution.started", data: { sessionID: "ses_retry" } } as never)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(h.syntheticCalls).toHaveLength(0)
+
+    h.setSessionGetFailure("ses_retry", false)
+    await h.emit({ type: "session.execution.started", data: { sessionID: "ses_retry" } } as never)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(h.syntheticCalls.map((call) => call.sessionID)).toEqual(["ses_retry"])
+  })
+})

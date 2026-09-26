@@ -119,7 +119,9 @@ central Claude path with `<canonical repo root>/<dir>`:
 
 Notices must be scoped to the owning location: `session.execution.started` carries no location, so
 resolve the session via `ctx.session.get` before notifying, otherwise every plugin instance spams
-every session. Plugin-private state (`~/.claude/opencode-memory/<key>`) is never linked.
+every session. Do that resolution **off** the shared event pump (fire-and-forget, bounded by
+`SESSION_LOOKUP_TIMEOUT_MS`); awaiting it inline stalls recall/extraction for every session in the
+location. Plugin-private state (`~/.claude/opencode-memory/<key>`) is never linked.
 
 ## Conventions
 
