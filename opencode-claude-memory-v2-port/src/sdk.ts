@@ -6,9 +6,9 @@
 // assembled literally in index.ts. The subpath type imports below are erased at build time.
 import type { Plugin } from "@opencode/plugin"
 import type { SessionContext as SessionContextHookEvent } from "@opencode/plugin/promise/session"
-import type { Result as ToolResult, ToolContext as ToolExecuteContext } from "@opencode/plugin/promise/tool"
+import type { ToolContext as ToolExecuteContext, Result as ToolResult } from "@opencode/plugin/promise/tool"
 
-export type { ToolResult, ToolExecuteContext, SessionContextHookEvent }
+export type { SessionContextHookEvent, ToolExecuteContext, ToolResult }
 
 // The context handed to `setup`.
 export type PluginContext = Parameters<Plugin.Plugin["setup"]>[0]
@@ -83,14 +83,20 @@ export function toChatMessage(message: SessionMessage): ChatMessage {
   const time = base.time
   switch (base.type) {
     case "user":
-      return { info: { id, role: "user", time: time ? { created: time.created } : undefined }, parts: [{ type: "text", text: base.text ?? "" }] }
+      return {
+        info: { id, role: "user", time: time ? { created: time.created } : undefined },
+        parts: [{ type: "text", text: base.text ?? "" }],
+      }
     case "synthetic":
       return {
         info: { id, role: "user", time: time ? { created: time.created } : undefined },
         parts: [{ type: "text", text: base.text ?? "", synthetic: true }],
       }
     case "system":
-      return { info: { id, role: "system", time: time ? { created: time.created } : undefined }, parts: [{ type: "text", text: base.text ?? "" }] }
+      return {
+        info: { id, role: "system", time: time ? { created: time.created } : undefined },
+        parts: [{ type: "text", text: base.text ?? "" }],
+      }
     case "assistant": {
       const parts: MessagePart[] = []
       for (const part of base.content ?? []) {

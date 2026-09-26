@@ -1,7 +1,7 @@
 // Parsing and validation of the model's JSON memory plans. V2 `ctx.generate.text` is tool-less, so
 // extraction and auto-dream ask the model for a JSON plan and the plugin performs the file writes
 // itself (see docs/v2-port-migration.md for why the V1 tool-loop forks are not reproduced).
-import { MEMORY_TYPES, parseMemoryType, type MemoryType } from "../store/frontmatter.js"
+import { MEMORY_TYPES, type MemoryType, parseMemoryType } from "../store/frontmatter.js"
 
 export type MemoryDraft = {
   file_name: string

@@ -1,10 +1,23 @@
 import { homedir } from "node:os"
-import { join } from "node:path"
+import { isAbsolute, join } from "node:path"
 import { z } from "zod"
 
 const MAX_TIMER_DELAY_MS = 2_147_483_647
 
 const timeoutMs = (fallback: number) => z.number().int().positive().max(MAX_TIMER_DELAY_MS).default(fallback)
+
+// A repository-relative directory: not absolute, no empty or `..` segments. Final containment inside
+// the canonical repo root is re-checked at reconcile time (repositoryMemory.ts).
+const repositoryDir = z
+  .string()
+  .min(1)
+  .default(".claude/memory")
+  .refine(
+    (value) =>
+      !isAbsolute(value) &&
+      value.split(/[\\/]/).every((segment) => segment !== "" && segment !== ".." && segment !== "."),
+    { message: "must be a relative path without empty, '.' or '..' segments" },
+  )
 
 // Plugin options come from `opencode.json`: `"plugin": [["opencode-claude-memory", { ... }]]`.
 // The schema is strict at every level so a misspelled key fails at plugin load instead of silently
@@ -36,6 +49,15 @@ export const MemoryOptionsSchema = z
         waitMs: z.number().int().nonnegative().max(MAX_TIMER_DELAY_MS).default(1_500),
         timeoutMs: timeoutMs(30_000),
         maxMemories: z.number().int().positive().max(20).default(5),
+      })
+      .strict()
+      .default({}),
+    // Store memories inside the project repository and expose them to Claude Code through a symlink
+    // at the central Claude path. Enabled by default; see repositoryMemory.ts for the reconcile rules.
+    repositoryMemory: z
+      .object({
+        enabled: z.boolean().default(true),
+        dir: repositoryDir,
       })
       .strict()
       .default({}),

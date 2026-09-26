@@ -132,7 +132,15 @@ export class ExtractionCoordinator {
     this.state = deps.state ?? new ExtractionStateStore(deps.store.stateDir, this.now)
     this.lock = deps.lock ?? new MaintenanceLock(this.state.lockPath, this.now)
     this.autodream = deps.host
-      ? new AutoDream({ store: deps.store, config: deps.config, host: deps.host, state: this.state, log: deps.log, now: this.now, lock: this.lock })
+      ? new AutoDream({
+          store: deps.store,
+          config: deps.config,
+          host: deps.host,
+          state: this.state,
+          log: deps.log,
+          now: this.now,
+          lock: this.lock,
+        })
       : undefined
   }
 
@@ -364,7 +372,10 @@ export class ExtractionCoordinator {
               })
               saved += 1
             } catch (error) {
-              log("warn", "Extracted memory could not be saved", { file: draft.file_name, error: getErrorMessage(error) })
+              log("warn", "Extracted memory could not be saved", {
+                file: draft.file_name,
+                error: getErrorMessage(error),
+              })
             }
           }
           log("info", "Memory extraction completed", { sessionID, saved })

@@ -95,6 +95,59 @@ The integration layer was rewritten because the V2 API differs substantially:
 | Compaction | `session.compaction.ended` clears the surfaced-memory set; memory is re-injected on every request |
 | Cleanup | the function returned from `setup` aborts the event subscription and disposes registrations |
 
+### Repository memory (on by default)
+
+By default the plugin keeps the memories **inside the project repository** and exposes them to Claude
+Code through a symlink at the central path:
+
+```text
+~/.claude/projects/<key>/memory  ──symlink──▶  <canonical repo root>/.claude/memory
+```
+
+So OpenCode and Claude Code both read/write the same Markdown files, but those files live with the
+project (and can be committed or gitignored).
+
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "file:///home/USER/.config/opencode/opencode-claude-memory-v2-port/dist",
+      "options": {
+        "repositoryMemory": { "enabled": true, "dir": ".claude/memory" }
+      }
+    }
+  ]
+}
+```
+
+- `dir` is relative to the **canonical** repository root (worktrees share one directory) and is
+  validated against traversal/symlink escape. Set `enabled: false` to keep the original central-only
+  layout.
+- Reconcile runs once per location, before memory is opened:
+
+| Central (`~/.claude/projects/<key>/memory`) | Repo (`<repo>/<dir>`) | What happens |
+| --- | --- | --- |
+| symlink → repo | exists | nothing (already linked) |
+| non-empty, not → repo | exists | **plugin load error** — both sides hold memories; nothing is mutated |
+| missing or empty | exists | central is replaced with a symlink to the repo |
+| non-empty | missing | memory keeps working centrally; the session shows a notice with migration commands |
+| missing or empty | missing | repo dir is created and central is symlinked to it |
+
+- A conflict is a real plugin load failure (OpenCode shows the exception) so the two copies can never
+  silently diverge. Fix it by merging one side and running the printed `rm -rf … && ln -s …`.
+- The notice case never moves anything automatically; it prints:
+
+  ```bash
+  mkdir -p "$(dirname "<repo>/<dir>")"
+  mv "<central>" "<repo>/<dir>"
+  ln -s "<repo>/<dir>" "<central>"
+  ```
+
+- If the platform refuses symlinks (e.g. Windows without developer mode), the plugin logs it and
+  continues from the central path — it never crashes.
+- Plugin-private state (`~/.claude/opencode-memory/<key>`) stays central and is never linked.
+- If you commit memories, remove `<dir>` from the project's `.gitignore`; otherwise add it.
+
 ### 2.0.16 limitations (documented differences)
 
 - **No per-prompt agent/tools, and plugin tools are Code Mode only.** 2.0.16 exposes plugin tools to

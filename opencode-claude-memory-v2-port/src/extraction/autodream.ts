@@ -23,10 +23,7 @@ export function shouldRunAutodream(state: AutodreamState, gate: AutodreamGate, n
   return state.sessionsSince.length >= gate.minSessions
 }
 
-export function buildMemoryDump(
-  store: Pick<MemoryStore, "list">,
-  maxChars = AUTODREAM_DUMP_MAX_CHARS,
-): string {
+export function buildMemoryDump(store: Pick<MemoryStore, "list">, maxChars = AUTODREAM_DUMP_MAX_CHARS): string {
   const parts: string[] = []
   let total = 0
   for (const entry of store.list({ sort: "name" })) {

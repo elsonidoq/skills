@@ -1,8 +1,8 @@
 import type { Info as ToolInfo } from "@opencode/plugin/promise/tool"
 import type { ExtractionCoordinator } from "./extraction/ExtractionCoordinator.js"
+import type { ToolExecuteContext } from "./sdk.js"
 import { MEMORY_TYPES } from "./store/frontmatter.js"
 import type { MemoryStore, SaveMemoryResult } from "./store/MemoryStore.js"
-import type { ToolExecuteContext } from "./sdk.js"
 
 // Tool result for memory_save. Inside an extraction fork, `savedThisRun` (file names already saved
 // by this fork, in order) is appended as an explicit done-signal so the model does not lose track on
@@ -119,7 +119,11 @@ export function buildMemoryToolDefinitions(
         const savedThisRun = extraction.recordSave(context?.sessionID, outcome.fileName)
         return {
           content: formatMemorySaveResult(outcome, savedThisRun),
-          metadata: { title: memorySaveTitle(args.type, args.name) ?? args.file_name, fileName: outcome.fileName, unchanged: outcome.unchanged },
+          metadata: {
+            title: memorySaveTitle(args.type, args.name) ?? args.file_name,
+            fileName: outcome.fileName,
+            unchanged: outcome.unchanged,
+          },
         }
       },
     },
@@ -127,9 +131,10 @@ export function buildMemoryToolDefinitions(
     {
       name: "memory_delete",
       description: "Delete a memory that is outdated, wrong, or no longer relevant. Also removes it from the index.",
-      input: OBJECT_SCHEMA({ file_name: { type: "string", description: `File name of the memory to delete (${FILE_NAME_HINT})` } }, [
-        "file_name",
-      ]),
+      input: OBJECT_SCHEMA(
+        { file_name: { type: "string", description: `File name of the memory to delete (${FILE_NAME_HINT})` } },
+        ["file_name"],
+      ),
       async execute(input) {
         const args = input as { file_name: string }
         const deleted = store.delete(args.file_name)
@@ -161,9 +166,10 @@ export function buildMemoryToolDefinitions(
       description:
         "Search memories by keyword. Searches across names, descriptions, and content. " +
         "Use this to find relevant memories before answering questions or when the user references past conversations.",
-      input: OBJECT_SCHEMA({ query: { type: "string", description: "Search query — searches across name, description, and content" } }, [
-        "query",
-      ]),
+      input: OBJECT_SCHEMA(
+        { query: { type: "string", description: "Search query — searches across name, description, and content" } },
+        ["query"],
+      ),
       async execute(input) {
         const args = input as { query: string }
         const results = store.search(args.query)
@@ -180,9 +186,10 @@ export function buildMemoryToolDefinitions(
     {
       name: "memory_read",
       description: "Read the full content of a specific memory file.",
-      input: OBJECT_SCHEMA({ file_name: { type: "string", description: `File name of the memory to read (${FILE_NAME_HINT})` } }, [
-        "file_name",
-      ]),
+      input: OBJECT_SCHEMA(
+        { file_name: { type: "string", description: `File name of the memory to read (${FILE_NAME_HINT})` } },
+        ["file_name"],
+      ),
       async execute(input) {
         const args = input as { file_name: string }
         const entry = store.read(args.file_name)

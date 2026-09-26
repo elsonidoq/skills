@@ -5,7 +5,7 @@ import { AutoDream, buildMemoryDump, shouldRunAutodream } from "../src/extractio
 import { MaintenanceLock } from "../src/extraction/lock.js"
 import { parseAutodreamPlan, parseExtractionPlan } from "../src/extraction/plan.js"
 import { ExtractionStateStore } from "../src/extraction/state.js"
-import { MemoryStore } from "../src/store/MemoryStore.js"
+import type { MemoryStore } from "../src/store/MemoryStore.js"
 import {
   cleanupTempDirs,
   makeConfig,
@@ -109,7 +109,8 @@ describe("automatic extraction", () => {
   test("a memory_save by the main agent skips the extraction round", async () => {
     const h = await makeHarness({
       options: { extract: { debounceMs: 0 }, autodream: { enabled: false } },
-      generate: () => JSON.stringify({ memories: [{ file_name: "x", name: "X", description: "d", type: "user", content: "c" }] }),
+      generate: () =>
+        JSON.stringify({ memories: [{ file_name: "x", name: "X", description: "d", type: "user", content: "c" }] }),
     })
     h.setSessionMessages(FACT_SESSION, [v2User("A fact worth remembering for later use.", "u1", 1)])
 
@@ -157,7 +158,9 @@ describe("plan parsing", () => {
   })
 
   test("autodream plan reads upserts and deletes", () => {
-    const plan = parseAutodreamPlan(`{"upserts":[{"file_name":"a","name":"A","type":"feedback","content":"c"}],"deletes":["old.md",""]}`)
+    const plan = parseAutodreamPlan(
+      `{"upserts":[{"file_name":"a","name":"A","type":"feedback","content":"c"}],"deletes":["old.md",""]}`,
+    )
     expect(plan.upserts).toHaveLength(1)
     expect(plan.upserts[0]?.type).toBe("feedback")
     expect(plan.deletes).toEqual(["old.md"])
@@ -165,7 +168,11 @@ describe("plan parsing", () => {
 })
 
 describe("auto-dream consolidation", () => {
-  function makeDream(store: MemoryStore, generate: (prompt: string) => string, overrides: Record<string, unknown> = {}) {
+  function makeDream(
+    store: MemoryStore,
+    generate: (prompt: string) => string,
+    overrides: Record<string, unknown> = {},
+  ) {
     const config = makeConfig(
       { autodream: { enabled: true, minHours: 24, minSessions: 1, ...overrides }, extract: { enabled: true } },
       store.claudeConfigDir,
@@ -177,7 +184,9 @@ describe("auto-dream consolidation", () => {
   }
 
   test("gate requires minHours and minSessions", () => {
-    expect(shouldRunAutodream({ lastConsolidatedAt: 0, sessionsSince: [] }, { minHours: 24, minSessions: 5 }, Date.now())).toBe(false)
+    expect(
+      shouldRunAutodream({ lastConsolidatedAt: 0, sessionsSince: [] }, { minHours: 24, minSessions: 5 }, Date.now()),
+    ).toBe(false)
     expect(
       shouldRunAutodream(
         { lastConsolidatedAt: Date.now() - 25 * 60 * 60 * 1000, sessionsSince: ["a", "b", "c", "d", "e"] },
@@ -189,9 +198,27 @@ describe("auto-dream consolidation", () => {
 
   test("merges duplicates and prunes obsolete memories without corrupting the rest", async () => {
     const store = makeStore()
-    store.save({ fileName: "db_rules", name: "DB Rules", description: "old", type: "feedback", content: "Use a real DB." })
-    store.save({ fileName: "db_tests", name: "DB Tests", description: "old", type: "feedback", content: "Never mock the DB." })
-    store.save({ fileName: "keep", name: "Keep Me", description: "stable", type: "reference", content: "Important long-term info." })
+    store.save({
+      fileName: "db_rules",
+      name: "DB Rules",
+      description: "old",
+      type: "feedback",
+      content: "Use a real DB.",
+    })
+    store.save({
+      fileName: "db_tests",
+      name: "DB Tests",
+      description: "old",
+      type: "feedback",
+      content: "Never mock the DB.",
+    })
+    store.save({
+      fileName: "keep",
+      name: "Keep Me",
+      description: "stable",
+      type: "reference",
+      content: "Important long-term info.",
+    })
 
     const { dream, state } = makeDream(store, () =>
       JSON.stringify({

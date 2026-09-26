@@ -42,7 +42,10 @@ describe("automatic memory context injection", () => {
   })
 
   test("trivial queries do not call the selector", async () => {
-    const h = await makeHarness({ options: { recall: { waitMs: 50 } }, generate: () => selectOnly("database_rules.md") })
+    const h = await makeHarness({
+      options: { recall: { waitMs: 50 } },
+      generate: () => selectOnly("database_rules.md"),
+    })
     await runTool(h.tools, "memory_save", DB_MEMORY)
     const { system } = await runContextHook(h, [contextUser("hi", "m1")])
     expect(system).toContain("## MEMORY.md")
@@ -80,7 +83,10 @@ describe("automatic memory context injection", () => {
   })
 
   test("ignore memory suppresses the index for the rest of the session until resumed", async () => {
-    const h = await makeHarness({ options: { recall: { waitMs: 50 } }, generate: () => selectOnly("database_rules.md") })
+    const h = await makeHarness({
+      options: { recall: { waitMs: 50 } },
+      generate: () => selectOnly("database_rules.md"),
+    })
     await runTool(h.tools, "memory_save", { ...DB_MEMORY, name: "Hidden Memory" })
 
     const ignored = await runContextHook(h, [contextUser("Ignore memory and answer from fresh context only.", "m1")])
@@ -96,7 +102,10 @@ describe("automatic memory context injection", () => {
   })
 
   test("already-surfaced memories are not recalled twice", async () => {
-    const h = await makeHarness({ options: { recall: { waitMs: 200 } }, generate: () => selectOnly("database_rules.md") })
+    const h = await makeHarness({
+      options: { recall: { waitMs: 200 } },
+      generate: () => selectOnly("database_rules.md"),
+    })
     await runTool(h.tools, "memory_save", DB_MEMORY)
 
     const first = await runContextHook(h, [contextUser("How should we test database changes?", "m1")])
@@ -107,7 +116,10 @@ describe("automatic memory context injection", () => {
   })
 
   test("a compaction makes memories eligible for recall again", async () => {
-    const h = await makeHarness({ options: { recall: { waitMs: 200 } }, generate: () => selectOnly("database_rules.md") })
+    const h = await makeHarness({
+      options: { recall: { waitMs: 200 } },
+      generate: () => selectOnly("database_rules.md"),
+    })
     await runTool(h.tools, "memory_save", DB_MEMORY)
 
     const first = await runContextHook(h, [contextUser("How should we test database changes?", "m1")])

@@ -1,17 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { existsSync, readFileSync, readdirSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { MemoryOptionsSchema } from "../src/config.js"
 import plugin, { createMemoryPlugin, MemoryStore, PLUGIN_ID } from "../src/index.js"
 import { ENTRYPOINT_NAME, sanitizePath } from "../src/store/paths.js"
-import {
-  cleanupTempDirs,
-  makeHarness,
-  runTool,
-  tempDir,
-  tempGitRepo,
-  writeRawMemory,
-} from "./helpers/index.js"
+import { cleanupTempDirs, makeHarness, runTool, tempDir, tempGitRepo, writeRawMemory } from "./helpers/index.js"
 
 afterEach(cleanupTempDirs)
 
@@ -116,11 +109,17 @@ describe("Claude Code path compatibility", () => {
     })
 
     const written = readFileSync(join(harness.store.memoryDir, "written_by_opencode.md"), "utf-8")
-    expect(written.startsWith("---\nname: Written By OpenCode\ndescription: saved from the plugin\ntype: project\n---")).toBe(true)
+    expect(
+      written.startsWith("---\nname: Written By OpenCode\ndescription: saved from the plugin\ntype: project\n---"),
+    ).toBe(true)
     const index = readFileSync(join(harness.store.memoryDir, ENTRYPOINT_NAME), "utf-8")
     expect(index).toContain("- [Written By OpenCode](written_by_opencode.md)")
     // Only the two markdown files + the index exist: no database, embeddings or migration artifacts.
-    expect(readdirSync(harness.store.memoryDir).sort()).toEqual(["MEMORY.md", "handwritten.md", "written_by_opencode.md"])
+    expect(readdirSync(harness.store.memoryDir).sort()).toEqual([
+      "MEMORY.md",
+      "handwritten.md",
+      "written_by_opencode.md",
+    ])
   })
 })
 

@@ -4,8 +4,17 @@ import { join } from "node:path"
 import type { Info as ToolInfo } from "@opencode/plugin/promise/tool"
 import { type MemoryConfig, parseConfig } from "../../src/config.js"
 import { createMemoryPlugin } from "../../src/index.js"
-import type { ChatMessage, ContextHookEvent, MessagePart, PluginContext, SessionMessage, V2Event } from "../../src/sdk.js"
+import type {
+  ChatMessage,
+  ContextHookEvent,
+  MessagePart,
+  PluginContext,
+  SessionMessage,
+  V2Event,
+} from "../../src/sdk.js"
+
 export type { SessionMessage } from "../../src/sdk.js"
+
 import { MemoryStore, type SaveMemoryInput } from "../../src/store/MemoryStore.js"
 import type { Logger } from "../../src/util/log.js"
 import type { MemoryHost } from "../../src/v2/host.js"
@@ -135,7 +144,12 @@ export function contextUser(text: string, id?: string): ContextHookEvent["messag
 export function contextAssistant(toolNames: string[] = []): ContextHookEvent["messages"][number] {
   return {
     role: "assistant",
-    content: toolNames.map((name) => ({ type: "tool-result", id: `t_${name}`, name, result: { type: "text", value: "" } })),
+    content: toolNames.map((name) => ({
+      type: "tool-result",
+      id: `t_${name}`,
+      name,
+      result: { type: "text", value: "" },
+    })),
   } as unknown as ContextHookEvent["messages"][number]
 }
 
@@ -182,6 +196,7 @@ export type FakeContext = {
   ctx: PluginContext
   tools: Record<string, ToolInfo>
   contextHooks: Array<(event: ContextHookEvent) => Promise<void> | void>
+  syntheticCalls: Array<{ sessionID: string; text: string }>
   setMessages(sessionID: string, messages: SessionMessage[]): void
   emit(event: V2Event): Promise<void>
   dispose(): Promise<void>
@@ -228,6 +243,7 @@ export function makeFakeContext(input: {
   const contextHooks: Array<(event: ContextHookEvent) => Promise<void> | void> = []
   const stream = makeEventStream()
   const sessionMessages = new Map<string, SessionMessage[]>()
+  const syntheticCalls: Array<{ sessionID: string; text: string }> = []
 
   const ctx = {
     app: { name: "opencode", version: "2.0.16", channel: "test" },
@@ -264,6 +280,16 @@ export function makeFakeContext(input: {
       async context({ sessionID }: { sessionID: string }) {
         return sessionMessages.get(sessionID) ?? []
       },
+      async synthetic({ sessionID, text }: { sessionID: string; text: string }) {
+        syntheticCalls.push({ sessionID, text })
+        return {
+          id: `synthetic_${syntheticCalls.length}`,
+          sessionID,
+          type: "synthetic",
+          text,
+          time: { created: Date.now() },
+        }
+      },
     },
     generate: {
       async text({ prompt }: { prompt: string }) {
@@ -298,6 +324,7 @@ export function makeFakeContext(input: {
     ctx,
     tools,
     contextHooks,
+    syntheticCalls,
     setMessages(sessionID, messages) {
       sessionMessages.set(sessionID, messages)
     },
@@ -354,6 +381,7 @@ export type Harness = {
   claudeConfigDir: string
   worktree: string
   directory: string
+  syntheticCalls: Array<{ sessionID: string; text: string }>
   setSessionMessages(sessionID: string, messages: SessionMessage[]): void
   emit(event: V2Event): Promise<void>
   dispose(): Promise<void>
@@ -393,6 +421,7 @@ export async function makeHarness(input: HarnessInput = {}): Promise<Harness> {
     claudeConfigDir,
     worktree,
     directory,
+    syntheticCalls: fake.syntheticCalls,
     setSessionMessages: fake.setMessages,
     emit: fake.emit,
     async dispose() {
