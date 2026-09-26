@@ -193,6 +193,23 @@ export function findCanonicalGitRoot(startPath: string): string | null {
   return resolveCanonicalRoot(root)
 }
 
+// The single source of truth for the Claude Code-compatible project paths. MemoryStore and the
+// repository-memory reconcile both use it, so the linked central directory can never drift from the
+// one the store reads and writes.
+export type ClaudeProjectPaths = {
+  canonicalRoot: string
+  projectKey: string
+  projectDir: string
+  memoryDir: string
+}
+
+export function resolveClaudeProjectPaths(claudeConfigDir: string, memoryRoot: string): ClaudeProjectPaths {
+  const canonicalRoot = findCanonicalGitRoot(memoryRoot) ?? memoryRoot
+  const projectKey = sanitizePath(canonicalRoot)
+  const projectDir = join(claudeConfigDir, "projects", projectKey)
+  return { canonicalRoot, projectKey, projectDir, memoryDir: join(projectDir, "memory") }
+}
+
 export function isRootPath(path: string): boolean {
   const resolved = resolve(path)
   return resolved === parse(resolved).root

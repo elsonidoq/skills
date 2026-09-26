@@ -4,11 +4,10 @@ import { buildFrontmatter, type MemoryType } from "./frontmatter.js"
 import { buildIndexPointer, indexHasPointer, readIndexFile, removeIndexLine, upsertIndexLine } from "./indexFile.js"
 import {
   ENTRYPOINT_NAME,
-  findCanonicalGitRoot,
   findGitRoot,
   MAX_MEMORY_FILE_BYTES,
+  resolveClaudeProjectPaths,
   resolveMemoryFilePath,
-  sanitizePath,
 } from "./paths.js"
 import { formatMemoryManifest, type MemoryEntry, type MemoryHeader, readMemoryEntry, scanMemoryFiles } from "./scan.js"
 
@@ -52,13 +51,13 @@ export class MemoryStore {
   constructor(memoryRoot: string, options: MemoryStoreOptions) {
     this.memoryRoot = memoryRoot
     this.gitRoot = findGitRoot(memoryRoot)
-    this.canonicalRoot = findCanonicalGitRoot(memoryRoot) ?? memoryRoot
     this.claudeConfigDir = options.claudeConfigDir
-    const projectKey = sanitizePath(this.canonicalRoot)
-    this.projectDir = join(this.claudeConfigDir, "projects", projectKey)
-    this.memoryDir = join(this.projectDir, "memory")
+    const paths = resolveClaudeProjectPaths(this.claudeConfigDir, memoryRoot)
+    this.canonicalRoot = paths.canonicalRoot
+    this.projectDir = paths.projectDir
+    this.memoryDir = paths.memoryDir
     this.entrypoint = join(this.memoryDir, ENTRYPOINT_NAME)
-    this.stateDir = join(this.claudeConfigDir, "opencode-memory", projectKey)
+    this.stateDir = join(this.claudeConfigDir, "opencode-memory", paths.projectKey)
     mkdirSync(this.memoryDir, { recursive: true })
   }
 

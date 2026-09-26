@@ -8,7 +8,7 @@
 // It never deletes or merges a non-empty central directory: either the two places are already linked,
 // or the situation is reported to the user (a hard plugin-load error when both sides hold memories,
 // or a notice with migration commands when only the central side does).
-import { lstatSync, mkdirSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, unlinkSync } from "node:fs"
+import { lstatSync, mkdirSync, readdirSync, realpathSync, rmdirSync, statSync, symlinkSync, unlinkSync } from "node:fs"
 import { dirname, isAbsolute, resolve, sep } from "node:path"
 import { getErrorMessage } from "../util/log.js"
 
@@ -30,12 +30,48 @@ export type ReconcileResult =
   | { status: "notice"; message: string }
   | { status: "conflict"; message: string }
 
-// Resolves `<canonicalRoot>/<dir>`, refusing anything that escapes the canonical root.
+function errorCode(error: unknown): string | undefined {
+  return (error as { code?: string } | undefined)?.code
+}
+
+function canonical(path: string): string | undefined {
+  try {
+    return realpathSync.native(path)
+  } catch {
+    return undefined
+  }
+}
+
+function existsNoFollow(path: string): boolean {
+  try {
+    lstatSync(path)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function isInside(path: string, root: string): boolean {
+  return path === root || path.startsWith(root + sep)
+}
+
+// Resolves `<canonicalRoot>/<dir>`, refusing anything that escapes the canonical root — lexically and
+// through the filesystem. A symlinked parent inside the repo (`<repo>/.claude -> /elsewhere`) would
+// otherwise let memory be created outside the project.
 export function repositoryMemoryDir(canonicalRoot: string, dir: string): string | undefined {
   if (!dir || isAbsolute(dir)) return undefined
   const root = resolve(canonicalRoot)
+  const prefix = root.endsWith(sep) ? root : root + sep
   const target = resolve(root, dir)
-  if (target !== root && !target.startsWith(root + sep)) return undefined
+  if (target !== root && !target.startsWith(prefix)) return undefined
+
+  const realRoot = canonical(root)
+  if (realRoot !== undefined) {
+    let probe = target
+    while (probe !== root && !existsNoFollow(probe)) probe = dirname(probe)
+    const realProbe = canonical(probe)
+    if (realProbe === undefined || !isInside(realProbe, realRoot)) return undefined
+  }
   return target
 }
 
@@ -55,21 +91,19 @@ function isDirectory(path: string): boolean {
   }
 }
 
+// Conservative: a missing path is empty, but an unreadable one counts as non-empty so it is never
+// handed to a destructive operation.
 function isNonEmptyDir(path: string): boolean {
   try {
     if (!statSync(path).isDirectory()) return false
     return readdirSync(path).length > 0
-  } catch {
-    return false
+  } catch (error) {
+    return errorCode(error) !== "ENOENT"
   }
 }
 
 function sameDir(a: string, b: string): boolean {
-  try {
-    return realpathSync(a) === realpathSync(b)
-  } catch {
-    return false
-  }
+  return canonical(a) !== undefined && canonical(a) === canonical(b)
 }
 
 function quote(path: string): string {
@@ -79,10 +113,10 @@ function quote(path: string): string {
 export function conflictMessage(centralDir: string, repoDir: string): string {
   return [
     "opencode-claude-memory: repository memory conflict.",
-    `  Central memory (non-empty): ${centralDir}`,
-    `  Repository directory (non-empty): ${repoDir}`,
+    `  Central memory (non-empty): ${quote(centralDir)}`,
+    `  Repository directory (non-empty): ${quote(repoDir)}`,
     "Both hold memories but are not linked. Refusing to load so the two copies cannot silently diverge.",
-    "Resolve it by hand — merge or delete one side, then link them:",
+    "Merge or withdraw one side by hand, then replace the central directory with a symlink:",
     `  rm -rf ${quote(centralDir)} && ln -s ${quote(repoDir)} ${quote(centralDir)}`,
   ].join("\n")
 }
@@ -90,8 +124,8 @@ export function conflictMessage(centralDir: string, repoDir: string): string {
 export function noticeMessage(centralDir: string, repoDir: string): string {
   return [
     "opencode-claude-memory: memories are stored centrally, not in this repository.",
-    `  Central memory (non-empty): ${centralDir}`,
-    `  Repository directory (missing): ${repoDir}`,
+    `  Central memory (non-empty): ${quote(centralDir)}`,
+    `  Repository directory (missing): ${quote(repoDir)}`,
     "Existing memories keep working from the central path. To move them into the repository:",
     `  mkdir -p "$(dirname ${quote(repoDir)})"`,
     `  mv ${quote(centralDir)} ${quote(repoDir)}`,
@@ -103,8 +137,8 @@ export function noticeMessage(centralDir: string, repoDir: string): string {
 function unsupportedMessage(centralDir: string, repoDir: string, error: unknown): string {
   return [
     "opencode-claude-memory: could not link the repository memory directory; continuing from the central path.",
-    `  Central memory: ${centralDir}`,
-    `  Repository directory: ${repoDir}`,
+    `  Central memory: ${quote(centralDir)}`,
+    `  Repository directory: ${quote(repoDir)}`,
     `  Reason: ${getErrorMessage(error)}`,
     "Set repositoryMemory.enabled=false to silence this, or link the directories manually.",
   ].join("\n")
@@ -114,18 +148,46 @@ function ensureDir(path: string): void {
   try {
     mkdirSync(path, { recursive: true })
   } catch {
-    // best-effort; the MemoryStore constructor will surface a real failure
+    // verified by the caller; the MemoryStore constructor surfaces a real failure
   }
 }
 
-// Removes an empty directory or a symlink at `centralDir` and points it at `repoDir`.
+// Points `centralDir` at `repoDir` after removing an empty directory or an existing symlink at the
+// central path. Removal is atomic (`rmdirSync` only succeeds on an empty directory), so a memory
+// written by another process in the meantime turns into a conflict instead of being deleted.
 function linkCentral(centralDir: string, repoDir: string): ReconcileResult {
+  const existing = lstatOrNull(centralDir)
+  if (existing && !existing.isSymbolicLink() && !existing.isDirectory()) {
+    return {
+      status: "unsupported",
+      message: unsupportedMessage(
+        centralDir,
+        repoDir,
+        new Error("a non-directory entry occupies the central memory path"),
+      ),
+    }
+  }
+  if (!isDirectory(repoDir)) {
+    return {
+      status: "unsupported",
+      message: unsupportedMessage(
+        centralDir,
+        repoDir,
+        new Error("the repository memory directory could not be created"),
+      ),
+    }
+  }
+
   try {
     ensureDir(dirname(centralDir))
-    const existing = lstatOrNull(centralDir)
-    if (existing) {
-      if (existing.isSymbolicLink() || existing.isFile()) unlinkSync(centralDir)
-      else rmSync(centralDir, { recursive: true, force: true })
+    if (existing?.isSymbolicLink()) {
+      unlinkSync(centralDir)
+    } else if (existing?.isDirectory()) {
+      try {
+        rmdirSync(centralDir)
+      } catch {
+        return { status: "conflict", message: conflictMessage(centralDir, repoDir) }
+      }
     }
     symlinkSync(repoDir, centralDir, "dir")
     return { status: "linked" }
@@ -158,7 +220,8 @@ export function reconcileRepositoryMemory(input: ReconcileInput): ReconcileResul
     return linkCentral(input.centralDir, repoDir)
   }
 
-  // Repository directory does not exist yet.
+  // Repository directory does not exist yet. Only the central side holds memories: report and let the
+  // user migrate, never move automatically.
   if (isNonEmptyDir(input.centralDir)) {
     return { status: "notice", message: noticeMessage(input.centralDir, repoDir) }
   }

@@ -1,6 +1,16 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, writeFileSync } from "node:fs"
-import { join } from "node:path"
+import {
+  chmodSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readlinkSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
+import { dirname, join } from "node:path"
+import { MemoryOptionsSchema } from "../src/config.js"
 import { sanitizePath } from "../src/store/paths.js"
 import { reconcileRepositoryMemory, repositoryMemoryDir } from "../src/store/repositoryMemory.js"
 import { cleanupTempDirs, makeHarness, runTool, tempDir, tempGitRepo } from "./helpers/index.js"
@@ -232,5 +242,104 @@ describe("repository memory through the plugin", () => {
     write(join(worktree, ".claude", "memory"), "repo.md", "repo")
 
     await expect(makeHarness({ worktree, projectCanonical: worktree, claudeConfigDir })).rejects.toThrow(/conflict/)
+  })
+})
+
+describe("repositoryMemory hardening (review follow-ups)", () => {
+  test("repositoryMemoryDir handles the filesystem root", () => {
+    expect(repositoryMemoryDir("/", ".claude/memory")).toBe("/.claude/memory")
+  })
+
+  test("repositoryMemoryDir refuses a parent symlink that escapes the repo", () => {
+    const base = tempDir()
+    const repo = join(base, "repo")
+    const outside = join(base, "outside")
+    mkdirSync(repo, { recursive: true })
+    mkdirSync(outside, { recursive: true })
+    symlinkSync(outside, join(repo, ".claude"), "dir")
+    expect(repositoryMemoryDir(repo, ".claude/memory")).toBeUndefined()
+  })
+
+  test("conflicts when central is a symlink to a different non-empty directory", () => {
+    const base = tempDir()
+    const repo = join(base, "repo")
+    write(join(repo, ".claude/memory"), "repo.md", "repo")
+    const elsewhere = join(base, "elsewhere")
+    write(elsewhere, "other.md", "other")
+    const central = join(base, "claude/memory")
+    mkdirSync(dirname(central), { recursive: true })
+    symlinkSync(elsewhere, central, "dir")
+
+    expect(
+      reconcileRepositoryMemory({ enabled: true, dir: ".claude/memory", canonicalRoot: repo, centralDir: central })
+        .status,
+    ).toBe("conflict")
+    expect(existsSync(join(elsewhere, "other.md"))).toBe(true)
+  })
+
+  test("relinks a dangling foreign symlink safely", () => {
+    const base = tempDir()
+    const repo = join(base, "repo")
+    write(join(repo, ".claude/memory"), "repo.md", "repo")
+    const central = join(base, "claude/memory")
+    mkdirSync(dirname(central), { recursive: true })
+    symlinkSync(join(base, "does-not-exist"), central, "dir")
+
+    const result = reconcileRepositoryMemory({
+      enabled: true,
+      dir: ".claude/memory",
+      canonicalRoot: repo,
+      centralDir: central,
+    })
+    expect(result.status).toBe("linked")
+    expect(lstatSync(central).isSymbolicLink()).toBe(true)
+    expect(readlinkSync(central)).toBe(join(repo, ".claude/memory"))
+  })
+
+  test("conflicts when the repo dir exists (even empty) and central is non-empty", () => {
+    const base = tempDir()
+    const repo = join(base, "repo")
+    mkdirSync(join(repo, ".claude/memory"), { recursive: true })
+    const central = join(base, "claude/memory")
+    write(central, "central.md", "central")
+    expect(
+      reconcileRepositoryMemory({ enabled: true, dir: ".claude/memory", canonicalRoot: repo, centralDir: central })
+        .status,
+    ).toBe("conflict")
+  })
+
+  test("a regular file at the central path is never deleted", () => {
+    const base = tempDir()
+    const repo = join(base, "repo")
+    write(join(repo, ".claude/memory"), "repo.md", "repo")
+    const central = join(base, "claude/memory")
+    mkdirSync(dirname(central), { recursive: true })
+    writeFileSync(central, "not a directory")
+
+    const result = reconcileRepositoryMemory({
+      enabled: true,
+      dir: ".claude/memory",
+      canonicalRoot: repo,
+      centralDir: central,
+    })
+    expect(result.status).toBe("unsupported")
+    expect(readFileSync(central, "utf-8")).toBe("not a directory")
+  })
+
+  test("reconciliation never touches plugin-private state", async () => {
+    const h = await makeHarness()
+    expect(existsSync(join(h.claudeConfigDir, "opencode-memory"))).toBe(false)
+  })
+})
+
+describe("repositoryMemory option schema", () => {
+  test("defaults to enabled with .claude/memory", () => {
+    expect(MemoryOptionsSchema.parse({}).repositoryMemory).toEqual({ enabled: true, dir: ".claude/memory" })
+  })
+
+  test("rejects absolute, escaping or empty dir values", () => {
+    for (const dir of ["/abs", "a/../b", "", ".", "a//b"]) {
+      expect(MemoryOptionsSchema.safeParse({ repositoryMemory: { dir } }).success).toBe(false)
+    }
   })
 })

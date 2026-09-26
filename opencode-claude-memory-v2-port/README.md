@@ -146,7 +146,9 @@ project (and can be committed or gitignored).
 - If the platform refuses symlinks (e.g. Windows without developer mode), the plugin logs it and
   continues from the central path — it never crashes.
 - Plugin-private state (`~/.claude/opencode-memory/<key>`) stays central and is never linked.
-- If you commit memories, remove `<dir>` from the project's `.gitignore`; otherwise add it.
+- **The repo copy is the only copy.** `git clean -xfd` on an untracked `<dir>` deletes every memory,
+  and switching to a branch that lacks it changes or removes the memory set. Treat `<dir>` as
+  important project data: track it, or make sure your workflows never clean or switch it away.
 
 ### 2.0.16 limitations (documented differences)
 
