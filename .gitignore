@@ -3,6 +3,8 @@ service.json
 package.json
 package-lock.json
 bun.lock
+opencode.json
+opencode.jsonc
 __pycache__
 *.pyc
 
