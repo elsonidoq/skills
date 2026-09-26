@@ -1,6 +1,6 @@
 ---
 name: finish-session
-description: Use when closing a working session that may need documentation, unresolved-work, deployment, or memory closeout.
+description: Use when closing a working session that may need documentation, unresolved-work, deployment, memory, or temporary current-execution state closeout.
 ---
 
 You are closing a working session. Preserve durable knowledge without turning closeout into a repository audit.
@@ -38,6 +38,7 @@ documentation owners and indexes exist.
 4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
 5. The memory index remains usable.
 6. A project with a persistent database has authoritative schema documentation that describes its current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable.
+7. The project's temporary current-execution state document holds only temporary truth about the current execution and is replaced, not appended; it is never a home for durable facts, completed-work summaries, file inventories, or per-task ledgers.
 
 ## Safety Rules
 
@@ -139,11 +140,19 @@ has been inspected for dirty-target and concurrent-edit protection. Record its p
 and compare them immediately before invoking it. When no such compactor is available, report `compaction needed`
 with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
 
-## Step 6: Validate Only What You Changed
+## Step 6: Update the Temporary Execution State, Only When One Exists
+
+Enter this step only when repository instructions identify a temporary current-execution state document (a common convention is root `STATE.md`); otherwise report `not needed`. Treat the document as temporary only: its current block is rewritten, never appended to.
+
+Rewrite that document's current-execution block so it states, for this session only: the active work stream and its exact next action; the commands actually run and their observed results; current blockers, gates and working-tree/branch state; and the one-line map of durable-fact owners preserved from its header. Record unknown or unverified items as `unknown`; never mark an unrun check as passed.
+
+Do not put durable facts, completed-work summaries, file inventories, per-task ledgers, or session history there: those route to Step 3 owners (documentation, `docs/open_issues.md`, memory) or belong to git. If the document already holds more than its current execution, that surplus is git-owned history — do not migrate it into documentation or memory. Apply the base workflow's dirty-target, concurrent-edit and unrelated-target protections.
+
+## Step 7: Validate Only What You Changed
 
 Check that links, issue references, memory-index entries, and supersession pointers introduced or changed by this closeout resolve. Do not conduct a whole-repository link audit.
 
-## Step 7: Report
+## Step 8: Report
 
 State separately whether the session's work is implemented, verified, and deployable; each positive claim must cite evidence. List:
 
@@ -152,5 +161,6 @@ State separately whether the session's work is implemented, verified, and deploy
 - unresolved items and the issue-tracking result
 - deployment state and prerequisites added, or why none were added
 - memories written or updated and compaction status
+- the temporary execution state document updated, or why it was not
 - changed-reference validation
 - deliberately skipped candidates, uncertain session attribution, and unverifiable claims

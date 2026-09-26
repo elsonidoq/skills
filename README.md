@@ -18,7 +18,7 @@ Portable global OpenCode skills for developing features deliberately across unre
 3. In a fresh session, `coordinate-implementation` revalidates the pipeline approvals and implements the approved spec, plan, and tasks in dependency order with mandatory delegation. A direct task list alone does not enter this coordinator.
 4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
 5. `initialize-documentation` establishes documentation owners and the project's directory indexes; changed projects first create a documentation epic.
-6. `finish-session` maintains documentation, open-issue, deployment, and project-memory invariants.
+6. `finish-session` maintains documentation, open-issue, deployment, project-memory, and temporary-execution-state invariants.
 
 ## Use Cases
 
