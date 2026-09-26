@@ -51,12 +51,17 @@ and path checks and label the scripted check `UNAVAILABLE`.
 ## Execution Capability Preflight
 
 Before establishing completion scope or executing work, verify that the runtime
-exposes permitted, usable `question`, `todowrite`, and delegation tools. Delegation
-is mandatory for implementation. Check configured agents and their callable model
-bindings, not configuration names alone. If any required capability is unavailable,
-stop before implementation and report `question: UNAVAILABLE`,
-`todowrite: UNAVAILABLE`, or `Delegation: UNAVAILABLE` with the missing requirement.
-Do not substitute prose selection, a simulated todo tool, or local implementation.
+exposes permitted, usable `question` and delegation tools. Delegation is mandatory
+for implementation. Check configured agents and their callable model bindings, not
+configuration names alone. If either required capability is unavailable, stop before
+implementation and report `question: UNAVAILABLE` or `Delegation: UNAVAILABLE` with
+the missing requirement. Do not substitute prose selection or local implementation.
+
+Track the execution plan throughout the task. If the host provides a native
+planning or task-tracking facility, use it. Otherwise, maintain the plan as a
+Markdown checklist, updating items as they move through `pending`, `in_progress`,
+and `completed` states. Do not stop execution solely because a dedicated todo tool
+is unavailable.
 
 For every model class used by incomplete tasks, verify there is at least one usable
 agent/model option. Use `question` to obtain the owner's selection for each class
@@ -104,13 +109,13 @@ one row per batch with its batch number, task IDs, scope, dependencies, integrat
 surface, verification, required model class, and initial status. Do not ask for
 routine batching approval when the owner already approved implementation.
 
-Create an OpenCode `todowrite` list immediately after presenting the table, with
-one item per batch. Mark the first dependency-ready batch `in_progress`, later
-batches `pending`, and blocked batches `pending` with the blocking producer named
-in the item. Update the list after every batch: mark verified batches `completed`,
-mark the next dependency-ready batch `in_progress`, and add, remove, or revise
-batches only when re-evaluating the execution graph requires it. Keep exactly one
-batch `in_progress` while implementation remains.
+Immediately after presenting the table, initialize the execution tracker with one
+item per batch. Mark the first dependency-ready batch `in_progress`, later batches
+`pending`, and blocked batches `pending` with the blocking producer named in the
+item. Update it after every batch: mark verified batches `completed`, mark the next
+dependency-ready batch `in_progress`, and add, remove, or revise batches only when
+re-evaluating the execution graph requires it. Keep exactly one batch `in_progress`
+while implementation remains.
 
 ## Select Execution Capability
 
@@ -148,8 +153,8 @@ For each task or batch:
    checks before releasing dependents.
 6. Update task completion and decisions in the project's existing artifact format.
    If none exists, update the task list; do not invent a state-file convention.
-7. Update the OpenCode `todowrite` list to reflect the batch's verified outcome and
-   the next dependency-ready batch.
+7. Update the execution tracker to reflect the batch's verified outcome and the
+   next dependency-ready batch.
 
 Do not commit, push, deploy, send external messages, run paid services, or perform
 irreversible operations unless the owner requested that operation and repository
