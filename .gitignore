@@ -1,6 +1,13 @@
 node_modules
+service.json
 package.json
 package-lock.json
 bun.lock
 __pycache__
 *.pyc
+
+# The ported plugin under opencode-claude-memory-v2-port/ is tracked as source.
+# Track its manifest and lockfile so `bun install && bun run build` reproduces it;
+# node_modules/ and its build output dist/ stay ignored (owned by the port's own .gitignore).
+!opencode-claude-memory-v2-port/package.json
+!opencode-claude-memory-v2-port/bun.lock

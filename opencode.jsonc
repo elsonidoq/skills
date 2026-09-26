@@ -1,10 +1,25 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "instructions": ["~/.config/opencode/AGENTS.md"],
-  "plugin": [
-   // "superpowers@git+https://github.com/obra/superpowers.git",
-    "file:///Users/elsonidoq/prog/opencode-claude-bridge/dist/index.js",
-    "opencode-claude-memory"
+  "plugins": [
+  {
+    "package": "file:///home/dev/.config/opencode/opencode-claude-memory-v2-port/dist",
+    "options": {}
+  },
+
+  "@ex-machina/opencode-anthropic-auth@next",
+
+  {
+    "package": "jev-for-all@0.1.0",
+    "options": {
+      "skills": {
+        "enabled": true
+      },
+      "tools": {
+        "enabled": true
+      }
+    }
+  }
   ],
   "shell": "/Users/elsonidoq/.local/bin/opencode-bash",
   "provider": {
