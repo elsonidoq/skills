@@ -64,6 +64,7 @@
   },
   "model": "openai/gpt-5.6-terra",
   "permission": {
+    "todowrite": "allow",
     "external_directory": {
       "/Users/elsonidoq/.claude/projects/-Users-elsonidoq-prog-cerca/memory/**": "allow",
       "/Users/elsonidoq/.config/opencode/**": "allow",
