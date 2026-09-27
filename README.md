@@ -12,15 +12,17 @@ pi install npm:pi-ask-user@0.15.1
 ```
 
 Or just run the installer once — it checks pi, auto-installs the pinned
-packages, registers the suite skills path in pi's user settings, guards
-against the `use-railway` collision, and lint-checks the suite:
+packages, symlinks every suite skill into `~/.agents/skills` (pi's standard
+scanned location; the repo stays the single source of truth), backs up anything
+in the way, and lint-checks the suite:
 
 ```bash
 scripts/install.sh          # deterministic checks only
-scripts/install.sh --probe  # ... plus one headless pi load test (1 model call)
+scripts/install.sh --probe  # ... plus one headless pi run that asserts the
+                            #     suite skills appear in pi's system prompt
 ```
 
-Run `/reload` inside pi (or start a new session) after installing.
+Start a new pi session (or run `/reload`) after installing.
 
 On each project, run the `install-memory` skill first: it writes the suite contract into the project's instructions (epics, memory, state, docs) and initializes the project memory store.
 

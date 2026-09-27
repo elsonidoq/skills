@@ -3,10 +3,14 @@
 #
 # What it does:
 #   1. Requires pi (auto-installs pinned packages if missing)
-#   2. Makes the suite skills discoverable via the user `skills` setting
-#   3. Sanity-checks collision candidates and optional deps
-#   4. Runs the deterministic suite lint (and, with --probe, one model call
-#      that proves pi loads the suite without warnings)
+#   2. Symlinks every suite skill into ~/.agents/skills (pi's standard scanned
+#      location), backing up anything in the way — no copies, the repo stays
+#      the single source of truth
+#   3. Removes the old user-settings `skills` entry for this suite (kept in
+#      sync with the ~/.agents/skills mechanism, no double registration)
+#   4. Warns when optional deps (jev) are missing
+#   5. Runs the deterministic suite lint; --probe adds a headless pi run that
+#      asserts the suite skills are actually advertised in pi's system prompt
 #
 # Idempotent and safe to re-run. Usage:
 #   scripts/install.sh [--probe]
@@ -21,8 +25,9 @@ SETTINGS="$AGENT_DIR/settings.json"
 REQ_PI="0.87"
 PKG_SUBAGENTS="npm:pi-subagents@0.73.1"
 PKG_ASKUSER="npm:pi-ask-user@0.15.1"
-SKILLS_ENTRY="$SUITE_DIR/skills"
+SKILLS_DIR="$SUITE_DIR/skills"
 AGENTS_SKILLS="$HOME/.agents/skills"
+AGENTS_BACKUPS="$HOME/.agents/backups"
 
 PROBE=0
 case "${1:-}" in
@@ -46,9 +51,6 @@ esac
 
 command -v python3 >/dev/null 2>&1 || fatal "python3 required (suite scripts and this installer use it)"
 
-# Ensure skill discovery is configured before touching anything else.
-mkdir -p "$AGENT_DIR"
-
 # ---- 2. Pinned packages (auto-installed when missing) ----------------------
 installed_pkgs="$(pi list 2>/dev/null)"
 for pkg in "$PKG_SUBAGENTS" "$PKG_ASKUSER"; do
@@ -66,50 +68,77 @@ if [ ! -d "$AGENTS_SKILLS/jev" ]; then
   warn "'jev' skill not found at $AGENTS_SKILLS/jev — finish-session-jev triage will fall back to manual routing"
 fi
 
-# ---- 4. Collision guard ----------------------------------------------------
-for f in "$AGENTS_SKILLS"/*/SKILL.md; do
-  [ -e "$f" ] || continue
-  if grep -q '^name:[[:space:]]*use-railway' "$f" 2>/dev/null; then
-    fatal "skill collision: $f also declares name 'use-railway' — move it out of $AGENTS_SKILLS (e.g. ~/.agents/backups/)"
-  fi
-done
+# ---- 4. Discoverability via ~/.agents/skills -------------------------------
+mkdir -p "$AGENTS_SKILLS" "$AGENTS_BACKUPS"
+[ -d "$SKILLS_DIR" ] || fatal "suite skills directory missing: $SKILLS_DIR"
 
-# ---- 5. Make suite skills discoverable ---------------------------------------
-python3 - "$SETTINGS" "$SKILLS_ENTRY" <<'PY'
-import json, os, sys
-path, entry = sys.argv[1], os.path.abspath(sys.argv[2])
-changed = {}
-if os.path.exists(path):
-    data = json.load(open(path))
-else:
-    data = {}
-skills = data.get("skills")
-if skills is None:
-    data["skills"] = [entry]; changed["skills"] = "added"
-elif entry not in skills:
-    data["skills"] = skills + [entry]; changed["skills"] = "appended"
-for k, v in changed.items():
-    print(f"==> settings: {k} {v}")
-if changed or not os.path.exists(path):
-    tmp = path + ".tmp"
-    with open(tmp, "w") as fh:
-        json.dump(data, fh, indent=2)
-        fh.write("\n")
-    os.replace(tmp, path)
-    print(f"==> wrote {path}")
-else:
-    print(f"==> settings ok: {path}")
+python3 - "$SKILLS_DIR" "$AGENTS_SKILLS" "$AGENTS_BACKUPS" "$SETTINGS" "$AGENT_DIR" <<'PY'
+import json, os, sys, time
+
+skills_dir, agents_skills, backups, settings_path, agent_dir = sys.argv[1:]
+
+suite_skills = []
+for name in sorted(os.listdir(skills_dir)):
+    d = os.path.join(skills_dir, name)
+    if os.path.isfile(os.path.join(d, "SKILL.md")):
+        suite_skills.append((name, os.path.abspath(d)))
+
+linked = backed_up = existing_ok = 0
+for name, src in suite_skills:
+    dst = os.path.join(agents_skills, name)
+    if os.path.islink(dst):
+        if os.path.realpath(dst) == os.path.realpath(src):
+            existing_ok += 1
+            continue
+        # stale/foreign symlink -> back up
+        os.rename(dst, os.path.join(backups, f"{name}.{time.strftime('%Y%m%d%H%M%S')}"))
+        os.symlink(src, dst)
+        print(f"==> replaced symlink: ~/.agents/skills/{name} -> {src}")
+        backed_up += 1
+        continue
+    if os.path.exists(dst) or os.path.islink(dst):
+        os.rename(dst, os.path.join(backups, f"{name}.{time.strftime('%Y%m%d%H%M%S')}"))
+        print(f"==> backed up conflicting entry: ~/.agents/skills/{name}")
+        backed_up += 1
+    if not os.path.exists(dst):
+        os.symlink(src, dst)
+        print(f"==> linked: ~/.agents/skills/{name} -> {src}")
+        linked += 1
+
+# Remove the previous settings-based registration for this suite so pi does
+# not discover the same skills twice (first-wins collision warning).
+entry = os.path.realpath(skills_dir)
+saved = False
+if os.path.exists(settings_path):
+    data = json.load(open(settings_path))
+    skills = data.get("skills") or []
+    kept = [s for s in skills if os.path.realpath(os.path.expanduser(s)) != entry]
+    if len(kept) != len(skills):
+        if kept:
+            data["skills"] = kept
+        else:
+            data.pop("skills", None)
+        tmp = settings_path + ".tmp"
+        with open(tmp, "w") as fh:
+            json.dump(data, fh, indent=2)
+            fh.write("\n")
+        os.replace(tmp, settings_path)
+        print(f"==> settings: removed suite skills entry from {settings_path}")
+        saved = True
+if os.path.isdir(agent_dir) and not saved and not os.path.exists(settings_path):
+    pass  # nothing to clean
+
+print(f"==> suite skills: {len(suite_skills)} total ({linked} linked, {existing_ok} already ok, {backed_up} backed up)")
 PY
-[ -d "$SKILLS_ENTRY" ] || fatal "suite skills directory missing: $SKILLS_ENTRY"
 
-# ---- 6. Static validation -----------------------------------------------------
+# ---- 5. Static validation -----------------------------------------------------
 info "running suite lint"
 "$SUITE_DIR/scripts/check-skills-lint.sh" || fatal "suite lint failed"
 
-# ---- 7. Optional end-to-end probe --------------------------------------------
+# ---- 6. Optional end-to-end probe --------------------------------------------
 if [ "$PROBE" = 1 ]; then
   info "running headless pi probe (one model call)"
   "$SUITE_DIR/scripts/probe-pi-load.sh" || fatal "pi probe failed"
 fi
 
-printf '\n==> Done. Run `/reload` inside pi (or start a new session) so the skills setting is picked up.\n'
+printf '\n==> Done. Start a new pi session (or run `/reload`) so the new skills are picked up.\n'
