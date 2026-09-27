@@ -18,15 +18,20 @@ recognizes internal components, file paths, implementation jargon, or prior
 technical context. Explain any technical constraint only to the extent needed
 to make the decision, using plain language.
 
-Ask every owner question with the `question` tool, never as prose. Ask only
+Ask every owner question with the runtime's `ask_user` question tool, never as prose. Ask only
 when the answer can materially affect product scope, architecture, privacy,
 permissions, irreversible behavior, cost, or a settled requirement. Each tool
 question must state the decision and its practical impact, offer two to four
 concise options when options are known, and mark the recommended option. If
-the tool is unavailable, report that the workflow is blocked on an owner
-decision; do not substitute a prose question or infer an answer.
+no question tool is available, ask one concise question in prose and end your
+turn so the owner can reply; never infer an answer.
 
 ## Inputs and Provenance
+
+Before assessing readiness, load the project memory store per the
+`memory-handling` skill: read the store's index, then any entries whose triggers
+match the target, and treat verified trigger-first gotchas as constraints on
+scope and decisions.
 
 Require a brief or source artifact and an unambiguous target within it. Resolve the
 target from explicit headings, metadata, or owner input without assuming numbered
@@ -39,7 +44,7 @@ epics, a bundle filename, or a custom state directory. Record:
 - Existing spec, plan, tasks, and review artifacts linked to that source.
 
 Re-read source bounds and links whenever resuming. If provenance is ambiguous,
-use the `question` tool to obtain an unambiguous target instead of attaching work
+use the runtime's `ask_user` question tool to obtain an unambiguous target instead of attaching work
 to a likely-looking feature.
 
 ## Required SpecKit Capabilities
@@ -69,18 +74,28 @@ initialize/overwrite project assets without owner authorization. Follow each
 detected stage command's current instructions and verify its outputs; the
 requirements below supplement the installed workflow rather than replace it.
 
+## Required Runtime Capabilities
+
+This suite pins its runtime: the `subagent` delegation tool (package
+`pi-subagents`) and the `ask_user` question tool (package `pi-ask-user`) are
+declared in the global configuration repository's `REQUIREMENTS.md`. Verify the
+tools are registered and usable before relying on them; never invent a tool,
+command, or package. If a required runtime capability is unavailable, report
+`Delegation: UNAVAILABLE` or `question: UNAVAILABLE` with the missing package
+and stop before producing or approving downstream artifacts.
+
 ## Workflow
 
 Run the earliest incomplete or invalid stage:
 
 1. **Principles preflight:** Read the project's governing principles if present.
    If a detected SpecKit workflow requires a constitution and it is missing or
-   still template text, use the `question` tool to obtain the necessary
+   still template text, use the runtime's `ask_user` question tool to obtain the necessary
    project-specific principles and use the detected constitution capability.
    If that capability is unavailable, stop; do not invent policy.
 2. **Brief readiness:** Confirm the target has an outcome, users, scope, exclusions,
    acceptance criteria, dependencies, and no unresolved direction that would change
-   the feature materially. Use the `question` tool only for genuine product or
+   the feature materially. Use the runtime's `ask_user` question tool only for genuine product or
    architectural choices.
 3. **Specification:** Run the detected SpecKit specification stage. Before
    producing the spec, read the global configuration
@@ -93,15 +108,15 @@ Run the earliest incomplete or invalid stage:
    and rationale under **Epic Sizing: When the Pipeline Earns Its Overhead**; if
    absent, establish them before continuing. Resolving ambiguity during readiness,
    clarification, or planning does not invalidate admission. A substantive scope
-   change requires the owner's choice through the `question` tool and a recorded
+   change requires the owner's choice through the runtime's `ask_user` question tool and a recorded
    sizing/path decision before continuing; do not silently reroute the work.
    When the epic records the owner-approved directive
    `documentation initialization requires an epic`, preserve that sizing exception.
 4. **Clarification:** After specification, run the detected clarification stage.
    Resolve mechanically answerable gaps; send material choices to the owner with
-   the `question` tool.
+   the runtime's `ask_user` question tool.
 5. **Specification approval:** Summarize the specification and clarification results
-   in manager-level terms, then use the `question` tool to request approval. Record
+   in manager-level terms, then use the runtime's `ask_user` question tool to request approval. Record
    explicit specification approval in a project-defined decision or progress
    artifact, or in the specification when none exists. Do not begin planning without
    it.
@@ -126,7 +141,7 @@ Run the earliest incomplete or invalid stage:
    well-specified work. Use `opus-class` only when the work cannot be safely
    decomposed into bounded, independently verifiable tasks. At most 30% of the
    complete task list may be `opus-class`. When the proposed share exceeds 30%, use
-   the `question` tool to present the affected task IDs, their rationale, and the
+   the runtime's `ask_user` question tool to present the affected task IDs, their rationale, and the
    delivery impact of reducing the share; record explicit owner approval before
    finalizing the task list. Include one or more documentation tasks that update or
    create the documentation identified in the plan; their acceptance evidence must
@@ -155,7 +170,7 @@ Run the earliest incomplete or invalid stage:
    brief bulleted plan summary in manager-level terms: one bullet for the intended
    outcome and one concise bullet for each plan phase. Include a risk, dependency,
    exclusion, or deferral only when it materially affects the approval decision. Then
-   use the `question` tool to request approval. Record explicit overall review
+   use the runtime's `ask_user` question tool to request approval. Record explicit overall review
    approval in a project-defined decision or progress artifact, or in the reviewed
    artifacts when none exists. Do not hand off implementation without it.
 10. **Handoff:** Verify both recorded approvals apply to the current artifacts and
@@ -184,7 +199,7 @@ Run the earliest incomplete or invalid stage:
 ## Decisions and Corrections
 
 Agents may resolve task organization, filenames, internal naming, and mechanically
-verifiable defects. Use the `question` tool only when alternatives materially
+verifiable defects. Use the runtime's `ask_user` question tool only when alternatives materially
 change product scope, architecture, privacy, permissions, irreversible behavior,
 cost, or a settled requirement. Apply no speculative answer merely to advance the
 workflow.

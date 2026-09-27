@@ -15,7 +15,9 @@ Verify and provide:
 
 - The approved specification and evidence of approval.
 - Repository instructions, governing principles, relevant contracts, and the
-  intended plan location, using paths that exist.
+  intended plan location, using paths that exist. Load the project memory store
+  per the `memory-handling` skill and include verified trigger-first gotchas as
+  constraints for the planner.
 - Existing architecture decisions and upstream/downstream dependencies.
 - The planner's write scope and prohibited operations.
 - The detected SpecKit planning command or skill, its invocation instructions,
@@ -26,7 +28,9 @@ delegated context. If it is missing or cannot be used there, report
 `SpecKit planning: UNAVAILABLE` and stop; do not write a generic plan or
 claim that the planning stage ran.
 
-Inspect the runtime for an allowed delegation tool and configured planning-capable
+Inspect the runtime for an allowed delegation tool (the `subagent` tool from the
+`pi-subagents` package is the suite's pinned delegation mechanism; see the global
+configuration repository's `REQUIREMENTS.md`) and configured planning-capable
 agents. Use an owner-selected agent when available; otherwise choose from observed
 capabilities and report the choice. Never invent an agent, model, command, or
 configuration. If delegation is unavailable, state

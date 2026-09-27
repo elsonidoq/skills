@@ -9,9 +9,10 @@ Turn the user's brief or named source artifact into an evidence-backed feature e
 skill can continue without rediscovering its essential facts. Do not implement
 product code.
 
-If the request does not identify a brief or source path, use the question tool to ask for one,
-or both. If no question tool is available, ask concisely in prose and wait. Read every
-source artifact it names.
+If the request does not identify a brief or source path, use the runtime's question tool
+(the `ask_user` tool when the `pi-ask-user` package is installed) to ask for one, or both.
+If no question tool is available, ask one concise question in prose and end your turn so the
+user can reply. Read every source artifact it names.
 
 ## Required Reference
 
@@ -25,7 +26,10 @@ Its Overhead** to the sizing decision.
 ## Discovery
 
 Read applicable repository instructions and existing epic, specification, task,
-decision, and index artifacts. Discover the project's established epic location,
+decision, and index artifacts. Load the project memory store per the `memory-handling`
+skill before assessing the brief: read the store's index, then any entries whose
+triggers match the brief's subject, and treat non-obvious trigger-first gotchas as
+verified constraints on scope and sizing. Discover the project's established epic location,
 format, numbering, and artifact links; do not assume a path, a filename, a
 constitution filename, or a tracker. If no destination or format can be inferred,
 ask the owner before creating an artifact.
@@ -52,8 +56,9 @@ Separate each decision into one of these categories:
   requirement.
 - **Mechanical:** a consequence that does not need owner choice.
 
-Resolve mechanically answerable gaps. Use the question tool only for material open
-decisions; if unavailable, ask concise prose questions and wait. Provide two to four
+Resolve mechanically answerable gaps. Use the runtime's question tool (the `ask_user`
+tool when available) only for material open decisions; if no question tool is available,
+ask one concise question in prose and end your turn so the owner can reply. Provide two to four
 concrete options, lead with a recommendation, and cite verified evidence for factual
 claims. Preserve the owner's reasoning with each answer. Do not invent a beneficiary;
 ask if it is unclear.

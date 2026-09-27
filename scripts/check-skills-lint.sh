@@ -37,9 +37,16 @@ check_file() {
 
 count=0
 while IFS= read -r f; do
+  # Skip skills whose real path escapes the suite directory (e.g. expert, a
+  # symlink maintained in another repository).
+  real=$(readlink -f "$f" 2>/dev/null || echo "$f")
+  case "$real" in
+    "$SKILLS_DIR"/*) ;;
+    *) echo "SKIP $f (external)"; continue ;;
+  esac
   count=$((count + 1))
   check_file "$f" || fail=$((fail + 1))
-done < <(find "$SKILLS_DIR" -name SKILL.md -type f | sort)
+done < <(find "$SKILLS_DIR" \( -type f -o -type l \) -name SKILL.md | sort)
 
 echo "----"
 echo "$count skills checked, $fail failed"

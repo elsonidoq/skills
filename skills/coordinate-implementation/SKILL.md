@@ -13,7 +13,9 @@ planning artifacts as a substitute for resolving implementation blockers.
 
 Require explicit or unambiguous paths to the spec, plan, and tasks. Read repository
 instructions, governing principles, linked contracts, research, decisions, and the
-source brief when present. Verify:
+source brief when present. Load the project memory store per the `memory-handling`
+skill and read the index plus any entries whose triggers match the planned work;
+treat verified trigger-first gotchas as implementation constraints. Verify:
 
 - The artifacts refer to the same feature and approved scope.
 - Required upstream outputs and accepted decisions exist.
@@ -51,9 +53,12 @@ and path checks and label the scripted check `UNAVAILABLE`.
 ## Execution Capability Preflight
 
 Before establishing completion scope or executing work, verify that the runtime
-exposes permitted, usable `question` and delegation tools. Delegation is mandatory
-for implementation. Check configured agents and their callable model bindings, not
-configuration names alone. If either required capability is unavailable, stop before
+exposes permitted, usable question and delegation tools. The suite pins these to the
+`ask_user` question tool (package `pi-ask-user`) and the `subagent` delegation tool
+(package `pi-subagents`); see the global configuration repository's `REQUIREMENTS.md`.
+Delegation is mandatory for implementation. Check configured agents and their callable
+model bindings (the suite's `subagents.agentOverrides` mapping), not configuration
+names alone. If either required capability is unavailable, stop before
 implementation and report `question: UNAVAILABLE` or `Delegation: UNAVAILABLE` with
 the missing requirement. Do not substitute prose selection or local implementation.
 
@@ -64,7 +69,7 @@ and `completed` states. Do not stop execution solely because a dedicated todo to
 is unavailable.
 
 For every model class used by incomplete tasks, verify there is at least one usable
-agent/model option. Use `question` to obtain the owner's selection for each class
+agent/model option. Use the runtime's `ask_user` question tool to obtain the owner's selection for each class
 before implementation and retain the selected agent/model mapping for the session.
 Offer only observed, permitted options; never infer a selection or silently switch
 models. If no usable mapping exists, report `Agent/model selection: UNAVAILABLE`
@@ -83,7 +88,7 @@ delegated agent return merely to report progress or await routine approval.
 
 Only a user-defined partial implementation boundary permits ending before all
 batches are complete. When the user explicitly defines such a boundary, before
-starting implementation call the `question` tool to confirm whether to stop at
+starting implementation call the runtime's `ask_user` question tool to confirm whether to stop at
 that boundary or implement all incomplete batches. Provide those two choices
 without marking either as recommended. Record the selected scope in the
 execution plan and follow it. A newly discovered material owner gate or an
@@ -95,7 +100,7 @@ batch and missing decision or dependency.
 3. Build batches only from consecutive task entries in the approved list, within
    one user story (or one shared setup/stage segment when tasks have no story).
    Never pull a distant producer forward into a batch: execute intervening
-   prerequisite batches first. Aim for approximately 5-10 tasks only when the
+   prerequisite batches first. Aim for 5-7 tasks only when the
    consecutive tasks do not conflict on files, schemas, migrations, shared
    runtime state, or acceptance setup, and have the same required model class.
    Smaller batches, including one task, are fine at story/stage boundaries,
@@ -129,13 +134,17 @@ while implementation remains.
 Use the agent/model mappings obtained in preflight for `sonnet-class` and
 `opus-class`, as applicable. Before each batch, confirm its selected mapping remains
 usable. If a new class or replacement mapping is needed, repeat the capability
-check and obtain the selection through `question` before proceeding. Delegation
+check and obtain the selection through the runtime's `ask_user` question tool before proceeding. Delegation
 is mandatory, but an agent's report is not proof of completion.
 
 - Delegate a task or safe batch only when write scope and dependencies are clear.
 - Run conflicting or dependent work sequentially.
 - Run all batches sequentially, including independent batches with isolated write
   surfaces.
+- Stay within the delegation runtime's documented spawn budgets: a large epic of
+  many tens of tasks delegates on the order of 20 batches, which is within the
+  pinned runtime's defaults, but verify the per-run and session-wide budgets
+  before starting and stop rather than exceeding them.
 - If delegation is unavailable, stop before implementation and report
   `Delegation: UNAVAILABLE` to the user.
 - Resume a previously used agent only when it uses the model selected for the batch,
@@ -143,12 +152,12 @@ is mandatory, but an agent's report is not proof of completion.
   otherwise issue a fresh brief.
 
 Before dispatching file changes, check which mutation tool the selected agent/model
-actually receives and is permitted to use. In OpenCode V2, supported GPT models
-receive `patch` instead of `edit`/`write`; other models may receive `edit`/`write`
-instead of `patch`. Do not infer a permission failure from a missing tool, or
-prohibit the agent's only viable mutation tool in a brief or smoke test. If the
-tool set is uncertain, verify it with a bounded, safe test before implementation;
-if no permitted mutation tool works, stop and report the observed blocker.
+actually receives and is permitted to use. Pi's core tool set exposes `edit` and
+`write`; some runtimes or models expose only a diff-based `patch` instead. Do not
+infer a permission failure from a missing tool, or prohibit the agent's only viable
+mutation tool in a brief or smoke test. If the tool set is uncertain, verify it with
+a bounded, safe test before implementation; if no permitted mutation tool works,
+stop and report the observed blocker.
 
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 required model class, selected model, allowed files, dependencies, acceptance
@@ -185,7 +194,8 @@ do not require owner escalation.
 ## Review and Acceptance
 
 Review accumulated changes against the spec, plan, tasks, governing principles,
-failure paths, migrations, contracts, and documentation. Derive QA from the selected
+failure paths, migrations, contracts, documentation, and the project memory store
+(per the `memory-handling` skill). Derive QA from the selected
 artifacts and detected project capabilities; never import another project's threat
 model, data, commands, or runtime assumptions.
 
