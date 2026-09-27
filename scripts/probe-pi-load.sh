@@ -4,14 +4,9 @@
 # Usage: scripts/probe-pi-load.sh [model] [skills-dir]
 set -u
 MODEL="${1:-deepseek/deepseek-v4.1-flash}"
-INFIX="${2:-}"
 PROMPT='Reply with exactly: OK'
 tmp=$(mktemp)
 trap 'rm -f "$tmp" "$tmp.err"' EXIT
-
-if [ -n "$INFIX" ]; then
-  if [ -f "$INFIX" ]; then PROMPT="$PROMPT $INFIX"; else PROMPT="$PROMPT $INFIX"; fi
-fi
 
 pi -p --no-session --model "$MODEL" "$PROMPT" >"$tmp" 2>"$tmp.err"
 rc=$?
