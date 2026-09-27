@@ -11,6 +11,17 @@ pi install npm:pi-subagents@0.73.1
 pi install npm:pi-ask-user@0.15.1
 ```
 
+Or just run the installer once — it checks pi, auto-installs the pinned
+packages, registers the suite skills path in pi's user settings, guards
+against the `use-railway` collision, and lint-checks the suite:
+
+```bash
+scripts/install.sh          # deterministic checks only
+scripts/install.sh --probe  # ... plus one headless pi load test (1 model call)
+```
+
+Run `/reload` inside pi (or start a new session) after installing.
+
 On each project, run the `install-memory` skill first: it writes the suite contract into the project's instructions (epics, memory, state, docs) and initializes the project memory store.
 
 ## Repository Invariants
