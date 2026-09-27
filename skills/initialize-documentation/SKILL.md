@@ -64,15 +64,18 @@ index itself, using their title, frontmatter description, or a verified one-line
 purpose. Do not claim that a file is current or complete solely from its name.
 Add an entry to a parent index for each direct child documentation directory.
 
-Create parent directories only when needed for one of these files. Do not
-create a project memory store, an epic directory, a specification, a task list,
-or placeholder architecture facts. Before every edit, record the target's
+Create parent directories only when needed for one of these files. The
+`install-memory` skill owns suite adoption and the project memory store; do not
+create a memory store, an epic directory, a specification, a task list,
+or placeholder architecture facts here. Before every edit, record the target's
 initial state and content, then re-read it immediately before patching; stop if
 it changed concurrently. Validate only paths, headings, links, and references
 introduced by this command.
 
 Report the initializations, existing owners retained, intentionally absent
-owners, and validation result. Then instruct the user to use the `finish-session` skill.
+owners, and validation result. Then instruct the user to adopt the suite with the
+`install-memory` skill when the project has not adopted it yet, and to use the
+`finish-session` skill.
 
 ## Non-Clean Project: Investigate Before Initializing
 
@@ -122,5 +125,6 @@ Apply the same dirty-target and concurrent-edit protections as the clean-project
 path.
 
 Report the created epic's path and baseline owners and indexes initialized,
-then instruct the user to use the `finish-session` skill, followed by the
+then instruct the user to adopt the suite with the `install-memory` skill when the
+project has not adopted it yet, to use the `finish-session` skill, followed by the
 `epics-manager` skill with that epic's path.

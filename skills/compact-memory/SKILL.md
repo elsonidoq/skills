@@ -9,14 +9,15 @@ duplicate, or git-owned records.
 
 ## Preconditions and Scope
 
-1. Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and locate a memory store explicitly
-   associated with the current project. A valid association is a documented path inside the project, or project
-   configuration/instructions naming the store and its index.
+1. Follow the `memory-handling` skill's discovery rule: read repository instructions (`AGENTS.md`, `CLAUDE.md`,
+   or equivalent) and locate a memory store explicitly associated with the current project. A valid association is
+   a documented path inside the project, or project configuration/instructions naming the store and its index;
+   a store named by the `install-memory` contract section is valid.
 2. If no project memory store exists or its association cannot be verified, stop. Report `compaction unavailable:
    no verified project memory store`; do not create a memory store or modify global memory.
-3. Read the project's memory/documentation distinction. If absent, use this rule: documentation describes current
-   state; memory contains non-obvious, action-triggered gotchas that would surprise an agent who read the code and
-   authoritative documentation.
+3. Read the project's memory/documentation distinction. If absent, use the `memory-handling` rule: documentation
+   describes current state; memory contains non-obvious, action-triggered gotchas that would surprise an agent who
+   read the code and authoritative documentation.
 4. Discover the configured threshold and index format. If no threshold is configured, accept a target stated in the
    user's request only after identifying it as user-provided; otherwise ask the user for a target. Never invent a line or
    byte limit.

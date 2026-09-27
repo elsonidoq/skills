@@ -76,11 +76,15 @@ runtime findings and conversation-only rationale that files do not preserve.
 ## Delegation Capability
 
 Before recommending delegation, check that the runtime exposes an allowed
-delegation mechanism and an appropriate configured agent. If available, name the
+delegation mechanism (the `subagent` tool from the suite's pinned `pi-subagents`
+package) and an appropriate configured agent. If available, name the
 observed mechanism and agent class without inventing a model identifier. If
 unavailable, make the prompt suitable for a fresh local session and state
 `Delegation: UNAVAILABLE`; do not imply that a subagent was launched.
 
 Close with the verified workspace, exact next action, and the checks already run.
-Never claim that chat history, an agent task ID, or an uncommitted file will be
-available in another checkout.
+Never claim that chat history, a session record, an agent task ID, or an uncommitted
+file will be available in another checkout. If you record the current session, state
+only observable facts: the current pi session ID (`PI_SESSION_ID`) and session file
+(`PI_SESSION_FILE`) are available to commands run in this session and are not
+portable to another checkout.

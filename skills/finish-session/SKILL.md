@@ -131,7 +131,7 @@ Enter this step only when a verified finding routes to memory or an already-disc
 
 Apply the repository's memory/documentation distinction from its instructions. If none exists, use this rule: documentation explains current state; memory warns a future agent before an action could trigger a non-obvious problem.
 
-Discover the memory store and index before writing. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project. A global memory command or similarly named index is not evidence of association. Update a related memory rather than duplicating it. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
+Discover the memory store and index before writing, following the `memory-handling` skill's discovery rule. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project; a store named by the `install-memory` contract section is valid association. A global memory command, `~/.pi/...` store, or similarly named index is not evidence of association. Update a related memory rather than duplicating it. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
 
 After all memory writes, check any threshold or hook explicitly configured for that verified project memory. If no
 threshold is breached, report `not needed`. If one is breached, use a compactor only when its definition explicitly
