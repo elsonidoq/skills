@@ -110,8 +110,12 @@ Run the earliest incomplete or invalid stage:
    verification, and documentation scope. Identify the documentation that must
    explain each new or modified capability, interface, workflow, configuration,
    operational procedure, or user-visible behavior. Record that scope in the
-   plan for task generation. When the approved work calls for delegated
-   architectural decomposition, use
+   plan for task generation. Require an implementable sequence of stages and
+   user stories: a stage's required producers must be available in an earlier
+   stage or earlier within the same stage. Keep each story's sequential work
+   together; if a later stage would have to produce an earlier task's prerequisite,
+   revise the stage order or producer placement before task generation. When the
+   approved work calls for delegated architectural decomposition, use
    `delegating-architectural-planning` to run the detected planning stage; do not
    produce a substitute plan outside it.
 7. **Tasks:** Run the detected SpecKit tasks stage to derive dependency-aware,
@@ -126,10 +130,24 @@ Run the earliest incomplete or invalid stage:
    delivery impact of reducing the share; record explicit owner approval before
    finalizing the task list. Include one or more documentation tasks that update or
    create the documentation identified in the plan; their acceptance evidence must
-   confirm the documented material matches the implemented changes.
+   confirm the documented material matches the implemented changes. Number tasks
+   in execution order without gaps: every prerequisite must have a smaller task
+   number and appear earlier in the list. Keep each story's tasks in a contiguous
+   segment rather than returning to that story after starting another; shared
+   setup may precede the stories. If that misrepresents the architecture, return
+   to planning and adjust its sequencing; never paper over a forward dependency
+   with a batching exception. Before leaving tasking, run the dependency and
+   story-order check specified in Overall review and correct its findings.
 8. **Overall review:** Check source -> spec -> plan -> tasks traceability,
    contradictions, omissions, dependency order, integration coverage, exclusions,
    governing principles, documentation coverage, and the `opus-class` task share.
+   For a task list with `T`-numbered Markdown entries and explicit `Depends`
+   fields, run `python3 scripts/check-task-order.py /path/to/tasks.md` from this
+   skill's directory when Python 3 is available. Fix every missing, duplicate,
+   out-of-order, or forward prerequisite and noncontiguous story before approval.
+   Check implicit dependencies and stage feasibility manually too; the script
+   cannot infer them. If the script cannot run or the task format differs, do
+   those checks manually and report that scripted validation was unavailable.
    Do not approve a task list exceeding 30% `opus-class` tasks without recorded owner
    approval. Run the detected SpecKit analysis stage and manually inspect its
    evidence.

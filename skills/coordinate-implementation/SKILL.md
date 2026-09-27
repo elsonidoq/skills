@@ -92,17 +92,24 @@ batch and missing decision or dependency.
 
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
-3. Build batches of approximately 5-10 ready tasks when they do not conflict on
-   files, schemas, migrations, shared runtime state, or acceptance setup, and have
-   the same required model class. Treat 5-10 as a target, not a minimum. Smaller
-   batches, including one or two tasks, are allowed for dependency bottlenecks,
-   conflicting write surfaces, owner gates, model-class boundaries, or the remaining
-   task count. Record the reason; never include unready or conflicting tasks just
-   to reach the target size.
+3. Build batches only from consecutive task entries in the approved list, within
+   one user story (or one shared setup/stage segment when tasks have no story).
+   Never pull a distant producer forward into a batch: execute intervening
+   prerequisite batches first. Aim for approximately 5-10 tasks only when the
+   consecutive tasks do not conflict on files, schemas, migrations, shared
+   runtime state, or acceptance setup, and have the same required model class.
+   Smaller batches, including one task, are fine at story/stage boundaries,
+   dependency bottlenecks, owner gates, model-class boundaries, or conflicting
+   write surfaces; record the reason rather than filling a batch with distant work.
 4. Keep contract producers before consumers and preserve explicit owner gates.
 5. Prefer vertical slices that can be integrated and verified independently.
 6. Execute every batch sequentially; never run implementation batches in parallel.
    Re-evaluate the execution graph after each batch completes.
+
+If the approved tasks require a later-numbered task to unblock an earlier one,
+stop before building the batch plan. Do not silently reorder tasks or mix stories
+to make the batch run: return the sequencing defect to the plan/tasks review gate
+for correction and renewed approval as required by the project's workflow.
 
 Before execution, present the entire execution plan as a Markdown table. Include
 one row per batch with its batch number, task IDs, scope, dependencies, integration
@@ -135,11 +142,20 @@ is mandatory, but an agent's report is not proof of completion.
   the runtime supports resumption, and its retained context materially overlaps;
   otherwise issue a fresh brief.
 
+Before dispatching file changes, check which mutation tool the selected agent/model
+actually receives and is permitted to use. In OpenCode V2, supported GPT models
+receive `patch` instead of `edit`/`write`; other models may receive `edit`/`write`
+instead of `patch`. Do not infer a permission failure from a missing tool, or
+prohibit the agent's only viable mutation tool in a brief or smoke test. If the
+tool set is uncertain, verify it with a bounded, safe test before implementation;
+if no permitted mutation tool works, stop and report the observed blocker.
+
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 required model class, selected model, allowed files, dependencies, acceptance
-criteria, baseline failures, exclusions, authorization limits, and required return
-evidence. Ask for changed files, checks, incomplete work, and non-obvious handoff
-context.
+criteria, baseline failures, exclusions, authorization limits, the selected
+agent's verified file-mutation tool when file changes are needed, and required
+return evidence. Ask for changed files, checks, incomplete work, and non-obvious
+handoff context.
 
 ## Execute and Integrate
 
