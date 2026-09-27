@@ -1,9 +1,9 @@
 ---
 name: incorporate-skill
-description: Use ONLY when adapting an external command or skill into the installed global OpenCode configuration repository.
+description: Use when, and only when, adapting an external command or skill into the installed global pi configuration repository.
 ---
 
-Adapt the source path named in the user's request into the installed global OpenCode configuration repository. This workflow is proposal-first: do not
+Adapt the source path named in the user's request into the installed global pi configuration repository. This workflow is proposal-first: do not
 copy, edit, delete, stage, commit, or overwrite any asset until the owner explicitly approves the adaptation plan.
 
 ## Step 1: Identify the Source

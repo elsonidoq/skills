@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository contains global OpenCode configuration, commands, and skills. Keep global assets portable across
+This repository contains global pi configuration, commands, and skills. Keep global assets portable across
 unrelated projects. Project-specific policy belongs in that project's instructions or local skills.
 
 ## Skill Policy
@@ -13,6 +13,8 @@ Automatically use only these global process skills:
 - `using-git-worktrees`
 - `requesting-code-review`
 - `receiving-code-review`
+- In suite-adopting projects, load the project memory store per the `memory-handling`
+  skill before planning or implementing.
 
 Use another skill only when the user explicitly requests it or the task requires a named external capability.
 Global skills may depend on a reusable capability such as SpecKit, Railway, Supabase, GitHub, or a configured
@@ -23,12 +25,15 @@ agent only after verifying it is available and stating an unavailable fallback.
 - Commands and skills must not assume a project name, repository layout, branch, local path, deployed state, or
   configured model or agent.
 - Do not add project-specific workflow, data, or historical rationale to global assets.
-- After changing global configuration, commands, or skills, tell the user to restart OpenCode.
+- After changing global configuration, commands, or skills, tell the user to run
+  `/reload` inside pi.
 
 ## Expensive Subagent Failures
 
 Never relaunch an expensive subagent, including `opus`, after a failure unless the failure cause
-has been inspected and a retry directly addresses that cause. A generic tool abort, cancellation,
+has been inspected and a retry directly addresses that cause. The same rule applies to batches
+delegated through the suite's `subagent` tool: inspect the failed child run before resuming or
+re-dispatching, and never relaunch on an uninspected failure. A generic tool abort, cancellation,
 timeout, or missing error detail is not evidence that retrying will work.
 
 Before any relaunch:

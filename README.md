@@ -1,6 +1,17 @@
-# OpenCode Configuration
+# Pi Configuration
 
-Portable global OpenCode skills for developing features deliberately across unrelated repositories.
+Global pi skill suite for developing features deliberately across unrelated repositories. The suite is not runtime-portable: it binds to pinned pi packages and requires suite adoption per project.
+
+## Prerequisites
+
+See [REQUIREMENTS.md](REQUIREMENTS.md) for the pinned runtime and model-class mapping. Install the pinned packages once:
+
+```bash
+pi install npm:pi-subagents@0.73.1
+pi install npm:pi-ask-user@0.15.1
+```
+
+On each project, run the `install-memory` skill first: it writes the suite contract into the project's instructions (epics, memory, state, docs) and initializes the project memory store.
 
 ## Repository Invariants
 
@@ -84,4 +95,4 @@ Use the finish-session skill.
 - `using-git-worktrees` isolates work when the repository and task warrant it.
 - Reusable practices borrowed from Superpowers include `brainstorming` and code-review workflows.
 
-Global assets must not assume project paths, branches, deployment state, models, or agents. Restart OpenCode after changing this repository's configuration-time assets.
+Global assets must not assume project paths, branches, deployment state, models, or agents. Run `/reload` inside pi after changing this repository's configuration-time assets.
