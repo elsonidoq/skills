@@ -161,7 +161,8 @@ stop and report the observed blocker.
 
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 required model class, selected model, allowed files, dependencies, acceptance
-criteria, baseline failures, exclusions, authorization limits, the selected
+criteria, baseline failures, exclusions, authorization limits, the batch commit
+convention and whether the delegate or the coordinator performs it, the selected
 agent's verified file-mutation tool when file changes are needed, and required
 return evidence. Ask for changed files, checks, incomplete work, and non-obvious
 handoff context.
@@ -180,11 +181,25 @@ For each task or batch:
    If none exists, update the task list; do not invent a state-file convention.
 7. Update the execution tracker to reflect the batch's verified outcome and the
    next dependency-ready batch.
+8. Commit the batch's verified changes as one focused commit before starting the
+   next batch. A per-batch commit is a required workflow step, not an optional
+   integration action.
 
-Do not commit, push, deploy, send external messages, run paid services, or perform
+Prefer a project's documented commit message and commit-workflow convention when one
+exists. Before the first commit, verify the workspace is a version-control repository
+and that committing is permitted. If repository instructions, governing principles,
+or policy forbid or constrain committing (for example, a different message format,
+branch, squash, sign-off, or a deferred-commit review gate), do not silently skip,
+defer, or reshape the commit: call the runtime's `ask_user` question tool, state the
+contradicting directive and the requested per-batch commit, and let the owner decide.
+Record the decision in the execution tracker and apply it consistently to later
+batches. If the workspace has no usable version-control or commit capability, report
+the observed condition and ask the owner whether to proceed without per-batch
+commits. Never omit a batch commit without an explicit owner decision.
+
+Do not push, deploy, send external messages, run paid services, or perform
 irreversible operations unless the owner requested that operation and repository
-policy permits it. A commit is an optional owner-directed integration action, not a
-workflow requirement.
+policy permits it.
 
 Material product, architecture, privacy, permission, cost, or irreversible choices
 remain owner gates. Save verified progress and ask one concise question when a gate
@@ -206,7 +221,8 @@ Fix in-scope failures, re-run affected checks, and leave blocked dependents pend
 
 ## Finish
 
-Return completed and pending tasks, changed files, checks and results, integration
+Return completed and pending tasks, changed files, per-batch commits (or the owner's
+recorded decision to skip or defer them), checks and results, integration
 status, unresolved owner gates, unavailable capabilities, and the next
 dependency-ready action. State separately whether implementation is complete and
 whether feature acceptance is verified. Agent completion and checked boxes alone
