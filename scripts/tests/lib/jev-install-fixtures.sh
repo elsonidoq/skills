@@ -82,6 +82,7 @@ case "${1:-}" in
 	auth)
 		if [ "${2:-}" = test ]; then
 			printf '%s\n' "jev-auth-test" >> "$JEV_FIXTURE_LOG"
+			printf '%s\n' "jev-auth-args:$*" >> "$JEV_FIXTURE_LOG"
 			printf '%s\n' "${FAKE_JEV_AUTH_OUTPUT:-authenticated}"
 			exit "${FAKE_JEV_AUTH_EXIT:-0}"
 		fi

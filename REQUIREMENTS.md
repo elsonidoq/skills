@@ -31,15 +31,16 @@ support beyond the versions below.
 |---|---|---|---|
 | Pi extension API | Pi `0.87.x`, tested with `0.87.1` | `scripts/install.sh --jev-on` requires a `0.87.x` version and verifies the extension registers `jev_rank`, `jev_disposition`, `jev_metrics`, and `/jev-metrics`. | Install Pi `0.87.x` (tested `0.87.1`), then rerun the installer. Manual mode only warns when Pi version wording may drift. |
 | JavaScript runtime | Node.js 22 with ES2022 support | Jev-on requires Node major version 22 or later plus `node:test` and ES2022 private-field support. Node 22 is the documented tested baseline; a later runtime passing this gate is not an expanded compatibility claim. | Install Node.js 22 and rerun `scripts/install.sh --jev-on`. |
-| Jev CLI and authentication | `jev-cli` `0.6.3` response contract; provider-scoped auth tested with `--provider openrouter` | Jev-on accepts only the tested `jev --version` response for `0.6.3`, then runs `jev auth test --provider <provider>` (default `openrouter`; override with `--jev-provider` or `JEV_AUTH_PROVIDER`). The provider-scoped auth check is the only Jev-provider network prerequisite and is run only after explicit opt-in. | Install `jev-cli` `0.6.3`; store the provider key with `jev auth set --provider openrouter` (or your provider); then retry Jev-on. A bare `jev auth test` defaults to `official` and will fail if the key is stored for another provider. |
+| Jev CLI and authentication | `jev-cli` `0.6.3` response contract; provider-scoped auth tested with `--provider openrouter` | Jev-on accepts only the tested `jev --version` response for `0.6.3`, then runs `jev auth test --provider <provider>` (default `openrouter`; override with `--jev-provider` or `JEV_AUTH_PROVIDER`). After tracker verification it atomically persists that provider for runtime `jev run - --provider <provider>` calls. The provider-scoped auth check is the only Jev-provider network prerequisite and is run only after explicit opt-in. | Install `jev-cli` `0.6.3`; store the provider key with `jev auth set --provider openrouter` (or your provider); then retry Jev-on. A bare `jev auth test` defaults to `official` and will fail if the key is stored for another provider. |
 | Project SpecKit append preset | SpecKit `1.0.12` | A requested project requires a live constitution, project scripts, generated Pi command artifacts, an active tracker, and resolver/introspection proof of one core plus one append layer for all four commands. | Initialize or repair the target SpecKit project and Pi integration, install SpecKit `1.0.12`, activate the tracker first, then retry the complete four-command install. |
 
 ### Manual mode
 
 `scripts/install.sh` without `--jev-on` installs the normal suite and deliberately disables the
-tracker and global Jev-on marker. It does not require Jev, Jev authentication, the metrics
-extension, or SpecKit. Missing Jev capability is therefore a manual-routing condition, not an
-installation error, and guarded workflows retain their original manual path.
+tracker and removes both the global Jev-on marker and persisted provider file. It does not require
+Jev, Jev authentication, the metrics extension, or SpecKit. Missing Jev capability is therefore a
+manual-routing condition, not an installation error, and guarded workflows retain their original
+manual path.
 
 ### Jev-on mode
 
@@ -47,7 +48,11 @@ Use `scripts/install.sh --jev-on` only when measured advisory ranking is intende
 tracker, completes all preflight checks, verifies the active tracker, and then enables the exact
 four global seams as one transaction. A failed preflight reports the prerequisite, observed
 status without credential material, a resolution action, and that no optimized seam was enabled.
-An activation failure rolls back the tracker and seam state; partial activation is an error.
+An activation failure rolls back the tracker, seam marker, and provider state; partial activation
+is an error. At runtime the extension provider precedence is: explicit `provider` option, trimmed
+`JEV_AUTH_PROVIDER`, `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/jev-metrics/provider`, then undefined.
+Only `official|vercel|openrouter|custom` are valid. A selected provider produces the exact argv
+`["run", "-", "--provider", "<provider>"]`; undefined preserves `["run", "-"]`.
 
 For a project-local SpecKit installation, the user-facing all-or-none command is:
 

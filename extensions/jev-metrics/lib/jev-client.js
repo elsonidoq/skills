@@ -20,6 +20,8 @@ export const EXIT_FAILURES = Object.freeze({
 	4: Object.freeze({ status: "failed", failureClass: "retryable" }),
 });
 
+export const JEV_PROVIDERS = Object.freeze(["official", "vercel", "openrouter", "custom"]);
+
 export class JevInputError extends TypeError {
 	constructor(message) {
 		super(message);
@@ -146,12 +148,16 @@ export async function runJevRanking(
 		clock,
 		uuid,
 		executable = "jev",
+		provider,
 		signal,
 		onEvent,
 		eventIds,
 		invocationIds,
 	} = {},
 ) {
+	if (provider !== undefined && !JEV_PROVIDERS.includes(provider)) {
+		inputError("provider must be one of official, vercel, openrouter, or custom");
+	}
 	const request = buildJevRequest(input);
 	if (!processAdapter || typeof processAdapter.run !== "function") {
 		throw new TypeError("processAdapter.run is required");
@@ -169,7 +175,8 @@ export async function runJevRanking(
 
 	let terminalInput;
 	try {
-		const processResult = await processAdapter.run(executable, ["run", "-"], {
+		const args = provider === undefined ? ["run", "-"] : ["run", "-", "--provider", provider];
+		const processResult = await processAdapter.run(executable, args, {
 			input: JSON.stringify(request),
 			signal,
 			shell: false,

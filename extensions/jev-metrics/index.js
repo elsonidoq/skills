@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 import { aggregateActiveBranch, COVERAGE, CUSTOM_ENTRY_TYPE } from "./lib/aggregate.js";
 import { appendCloseout, readHistory } from "./lib/csv-store.js";
@@ -61,6 +64,19 @@ function defaultClock() {
 
 function defaultUuid() {
 	return { next: () => randomUUID() };
+}
+
+function resolveJevProvider({ provider, environment, agentDir }) {
+	if (provider !== undefined) return provider;
+	const environmentProvider = environment?.JEV_AUTH_PROVIDER?.trim();
+	if (environmentProvider) return environmentProvider;
+	const resolvedAgentDir = (agentDir ?? environment?.PI_CODING_AGENT_DIR) ||
+		join(environment?.HOME || homedir(), ".pi", "agent");
+	try {
+		return readFileSync(join(resolvedAgentDir, "jev-metrics", "provider"), "utf8").trim() || undefined;
+	} catch {
+		return undefined;
+	}
 }
 
 /** Node child-process adapter used only at the configured `jev run -` boundary. */
@@ -261,6 +277,9 @@ export function createJevMetricsExtension({
 	clock = defaultClock(),
 	uuid = defaultUuid(),
 	executable = "jev",
+	provider,
+	environment = process.env,
+	agentDir,
 	stateHome,
 	fileSystem,
 } = {}) {
@@ -306,6 +325,7 @@ export function createJevMetricsExtension({
 							clock,
 							uuid: branchUniqueUuid(ctx, uuid),
 							executable,
+							provider: resolveJevProvider({ provider, environment, agentDir }),
 							signal,
 							onEvent: async (event) => {
 								pi.appendEntry(CUSTOM_ENTRY_TYPE, event);

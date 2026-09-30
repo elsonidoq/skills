@@ -91,6 +91,25 @@ test("runs only configured executable with argument array run - and request JSON
 	assert.strictEqual(recordedEvents[1], result.terminal);
 });
 
+test("passes a configured provider as the exact Jev 0.6.3 argv suffix", async () => {
+	const deps = dependencies([{ code: 0, stdout: JSON.stringify(fixture.successWithTie) }], {
+		provider: "openrouter",
+	});
+	await runJevRanking(input(), deps);
+	assert.deepEqual(deps.processAdapter.calls[0].args, ["run", "-", "--provider", "openrouter"]);
+});
+
+test("rejects unsupported providers through the input-error path before recording or launching", async () => {
+	const events = [];
+	const deps = dependencies([], {
+		provider: "unsupported",
+		onEvent: async (event) => events.push(event),
+	});
+	await assert.rejects(() => runJevRanking(input(), deps), (error) => error?.reason === "input");
+	assert.equal(deps.processAdapter.calls.length, 0);
+	assert.deepEqual(events, []);
+});
+
 test("normalizes complete answers into stable descending ranks with original-order tie breaks", async () => {
 	const deps = dependencies([{ code: 0, stdout: JSON.stringify(fixture.successWithTie) }]);
 	const { start, terminal } = await runJevRanking(input(), deps);

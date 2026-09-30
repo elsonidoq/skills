@@ -18,6 +18,7 @@ TRACKER_SOURCE="$SUITE_DIR/extensions/jev-metrics"
 TRACKER_ACTIVE="$AGENT_DIR/extensions/jev-metrics"
 JEV_STATE_DIR="$AGENT_DIR/jev-metrics"
 GLOBAL_SEAMS_ACTIVE="$JEV_STATE_DIR/global-seams-enabled"
+PROVIDER_ACTIVE="$JEV_STATE_DIR/provider"
 SPECKIT_INSTALLER="$SUITE_DIR/scripts/install-jev-speckit.sh"
 GLOBAL_SEAMS='scientific-method-debugging
 receiving-code-review
@@ -67,9 +68,11 @@ ACTIVATION_STARTED=0
 INSTALL_COMPLETE=0
 TRACKER_WAS_PRESENT=0
 SEAMS_WERE_PRESENT=0
+PROVIDER_WAS_PRESENT=0
 EXTENSIONS_DIR_WAS_PRESENT=0
 STATE_DIR_WAS_PRESENT=0
 MARKER_TMP=
+PROVIDER_TMP=
 SPECKIT_ACTIVATED=0
 
 rollback_activation() {
@@ -79,8 +82,9 @@ rollback_activation() {
 		"$SPECKIT_INSTALLER" --project "$SPECKIT_PROJECT" --uninstall >/dev/null 2>&1 || rollback_ok=0
 		SPECKIT_ACTIVATED=0
 	fi
-	rm -rf "$TRACKER_ACTIVE" "$GLOBAL_SEAMS_ACTIVE" || rollback_ok=0
+	rm -rf "$TRACKER_ACTIVE" "$GLOBAL_SEAMS_ACTIVE" "$PROVIDER_ACTIVE" || rollback_ok=0
 	[ -z "$MARKER_TMP" ] || rm -f "$MARKER_TMP" || rollback_ok=0
+	[ -z "$PROVIDER_TMP" ] || rm -f "$PROVIDER_TMP" || rollback_ok=0
 	if [ "$TRACKER_WAS_PRESENT" -eq 1 ]; then
 		mkdir -p "$(dirname "$TRACKER_ACTIVE")" || rollback_ok=0
 		cp -a "$STAGE_DIR/rollback/tracker" "$TRACKER_ACTIVE" || rollback_ok=0
@@ -89,14 +93,18 @@ rollback_activation() {
 		mkdir -p "$(dirname "$GLOBAL_SEAMS_ACTIVE")" || rollback_ok=0
 		cp -a "$STAGE_DIR/rollback/global-seams-enabled" "$GLOBAL_SEAMS_ACTIVE" || rollback_ok=0
 	fi
+	if [ "$PROVIDER_WAS_PRESENT" -eq 1 ]; then
+		mkdir -p "$(dirname "$PROVIDER_ACTIVE")" || rollback_ok=0
+		cp -a "$STAGE_DIR/rollback/provider" "$PROVIDER_ACTIVE" || rollback_ok=0
+	fi
 	if [ "$STATE_DIR_WAS_PRESENT" -eq 0 ]; then rmdir "$JEV_STATE_DIR" 2>/dev/null || :; fi
 	if [ "$EXTENSIONS_DIR_WAS_PRESENT" -eq 0 ]; then rmdir "$(dirname "$TRACKER_ACTIVE")" 2>/dev/null || :; fi
 	ACTIVATION_STARTED=0
 	if [ "$rollback_ok" -eq 1 ]; then
-		printf '%s\n' "Rollback: restored pre-activation tracker and seam state." >&2
+		printf '%s\n' "Rollback: restored pre-activation tracker, seam, and provider state." >&2
 		return 0
 	fi
-	printf '%s\n' "Rollback: incomplete; inspect $TRACKER_ACTIVE and $GLOBAL_SEAMS_ACTIVE before retrying." >&2
+	printf '%s\n' "Rollback: incomplete; inspect $TRACKER_ACTIVE, $GLOBAL_SEAMS_ACTIVE, and $PROVIDER_ACTIVE before retrying." >&2
 	return 1
 }
 
@@ -262,7 +270,7 @@ if [ "$JEV_ON" -ne 1 ]; then
 	if [ -L "$TRACKER_ACTIVE" ] && [ "$(readlink -f "$TRACKER_ACTIVE")" = "$(readlink -f "$TRACKER_SOURCE" 2>/dev/null || :)" ]; then
 		rm -f "$TRACKER_ACTIVE"
 	fi
-	rm -f "$GLOBAL_SEAMS_ACTIVE"
+	rm -f "$GLOBAL_SEAMS_ACTIVE" "$PROVIDER_ACTIVE"
 	rmdir "$JEV_STATE_DIR" 2>/dev/null || :
 	info "manual mode: tracker disabled; all four guarded global skills use their manual path"
 else
@@ -340,6 +348,10 @@ else
 		SEAMS_WERE_PRESENT=1
 		cp -a "$GLOBAL_SEAMS_ACTIVE" "$STAGE_DIR/rollback/global-seams-enabled" || fatal "could not capture seam rollback state"
 	fi
+	if [ -e "$PROVIDER_ACTIVE" ] || [ -L "$PROVIDER_ACTIVE" ]; then
+		PROVIDER_WAS_PRESENT=1
+		cp -a "$PROVIDER_ACTIVE" "$STAGE_DIR/rollback/provider" || fatal "could not capture provider rollback state"
+	fi
 	ACTIVATION_STARTED=1
 
 	mkdir -p "$(dirname "$TRACKER_ACTIVE")" || activation_failure "could not create Pi extension directory"
@@ -358,6 +370,16 @@ else
 	info "verified active tracker path and registrations"
 
 	mkdir -p "$JEV_STATE_DIR" || activation_failure "could not create Jev-on state directory"
+	PROVIDER_TMP="$JEV_STATE_DIR/.provider.$$"
+	printf '%s\n' "$JEV_AUTH_PROVIDER" > "$PROVIDER_TMP" || activation_failure "could not stage Jev provider"
+	mv -f "$PROVIDER_TMP" "$PROVIDER_ACTIVE" || activation_failure "could not persist Jev provider"
+	PROVIDER_TMP=
+	info "persisted Jev provider: $JEV_AUTH_PROVIDER"
+
+	if [ "${JEV_INSTALL_FAIL_AFTER_PROVIDER:-0}" = 1 ]; then
+		activation_failure "injected failure after provider persistence"
+	fi
+
 	MARKER_TMP="$JEV_STATE_DIR/.global-seams-enabled.$$"
 	printf '%s\n' "$GLOBAL_SEAMS" > "$MARKER_TMP" || activation_failure "could not stage global seam marker"
 	mv -f "$MARKER_TMP" "$GLOBAL_SEAMS_ACTIVE" || activation_failure "could not activate all four global seams"

@@ -36,6 +36,7 @@ function setup({ plans = [], sessionManager, filesystem, overrides = {} } = {}) 
 		processAdapter,
 		clock: createFakeClock(),
 		uuid: createUuidSource(),
+		environment: {},
 		stateHome: filesystem?.path("state"),
 		...overrides,
 	});
@@ -80,6 +81,52 @@ test("appends invocation start before launch and terminal after a successful fak
 		"invocation_started",
 		"invocation_terminal",
 	]);
+});
+
+test("provider precedence is explicit option, trimmed environment, persisted file, then unset", async (t) => {
+	const filesystem = await createFilesystemFixture();
+	t.after(() => filesystem.cleanup());
+	await filesystem.write("agent/jev-metrics/provider", "custom\n");
+
+	for (const providerCase of [
+		{
+			name: "explicit",
+			overrides: { provider: "official", environment: { JEV_AUTH_PROVIDER: " vercel " }, agentDir: filesystem.path("agent") },
+			expected: ["run", "-", "--provider", "official"],
+		},
+		{
+			name: "trimmed environment",
+			overrides: { environment: { JEV_AUTH_PROVIDER: " vercel " }, agentDir: filesystem.path("agent") },
+			expected: ["run", "-", "--provider", "vercel"],
+		},
+		{
+			name: "persisted file after blank environment",
+			overrides: { environment: { JEV_AUTH_PROVIDER: "  " }, agentDir: filesystem.path("agent") },
+			expected: ["run", "-", "--provider", "custom"],
+		},
+		{
+			name: "unset",
+			overrides: { environment: {}, agentDir: filesystem.path("missing-agent") },
+			expected: ["run", "-"],
+		},
+	]) {
+		const { api, processAdapter } = setup({
+			plans: [{ code: 0, stdout: JSON.stringify(responses.successWithTie) }],
+			overrides: providerCase.overrides,
+		});
+		const result = details(await api.invokeTool("jev_rank", rankInput()));
+		assert.equal(result.status, "succeeded", providerCase.name);
+		assert.deepEqual(processAdapter.calls[0].args, providerCase.expected, providerCase.name);
+	}
+});
+
+test("invalid configured provider uses the existing input-error result before launch", async () => {
+	const { api, manager, processAdapter } = setup({ overrides: { provider: "unsupported" } });
+	const result = details(await api.invokeTool("jev_rank", rankInput()));
+	assert.equal(result.tracked, false);
+	assert.equal(result.failureClass, "input");
+	assert.equal(processAdapter.calls.length, 0);
+	assert.deepEqual(manager.getBranch().map(({ data }) => data.eventType), ["invalid_event"]);
 });
 
 test("current metrics show exact denominators, active identifiers, and coverage boundary", async () => {

@@ -63,15 +63,24 @@ preflight failure it reports the missing or incompatible capability, the observe
 credential material, the corrective action, and that no optimized seam was enabled. Do not use
 Jev-on with credentials, logs, personal data, or sensitive candidate text as ranking input.
 
+After the tracker is verified, the installer atomically persists the selected provider as exactly
+`<provider>\n` at `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/jev-metrics/provider`. The extension
+selects a runtime provider in this order: its explicit `provider` option, trimmed
+`JEV_AUTH_PROVIDER`, that persisted file, then no provider. The valid values are exactly
+`official`, `vercel`, `openrouter`, and `custom`. A configured value invokes Jev with the exact argv
+`["run", "-", "--provider", "<provider>"]`; with no configured value the argv remains
+`["run", "-"]`.
+
 After successful all-four global-seam activation, the installer records the state marker at:
 
 ```text
-$PI_CODING_AGENT_DIR/jev-metrics/global-seams-enabled
+${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/jev-metrics/global-seams-enabled
 ```
 
-The marker is written only after all four global seams activate together. A rollback removes a
-newly activated marker (or restores its pre-activation state), and returning to manual mode removes
-it. This marker is an activation gate, not telemetry.
+The marker is written only after all four global seams activate together. A rollback removes or
+restores both newly activated state files, and returning to manual mode removes both the marker and
+provider file. The marker is an activation gate, and the provider file is runtime configuration;
+neither is telemetry.
 
 ### Optional project-local SpecKit seams
 
