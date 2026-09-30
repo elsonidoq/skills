@@ -36,6 +36,14 @@ evidence required to resolve it. Exclude credentials, tokens, personal data, and
    `Status`, `Problem`, `Primary evidence`, and `Resumption condition`.
 5. Do not close, reopen, reassign, or change unrelated entries.
 
+## Optional Jev-on advisory duplicate ranking
+
+Run the deterministic duplicate search above before considering this optional seam. Use it only when **Jev-on mode** is active, the instrumented tool is available, and that search produced **2 to 50** possible overlaps. Give each possible overlap a stable opaque ID and retain the complete original possible-overlap set outside telemetry; issue content and primary evidence remain in the local register workflow, not telemetry.
+
+Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev. Do not send credentials, secrets, personal data, or unauthorized sensitive payloads. Ask `jev_rank` only to rank likelihood of overlap with the verified new issue. Primary evidence controls create, update, or deduplicate; Jev cannot make that decision, establish an issue fact, or authorize a register edit.
+
+Inspect possible matches yourself and record `jev_disposition` for each reviewed proposal as accepted, overridden, or not used; an undecided proposal remains pending. If Jev-on is absent or `jev_rank` returns no proposals, use the original manual path and compare the complete original possible-overlap set manually. Register format, primary evidence, status, resumption condition, and duplicate search remain required.
+
 ## Validate and Report
 
 Re-read the created or updated entry. Verify its `OI-N` reference resolves, its status, problem, primary evidence,

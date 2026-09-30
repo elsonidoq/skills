@@ -32,6 +32,14 @@ Apply fixes in an order supported by dependencies and risk:
 
 Do not implement speculative infrastructure or compatibility behavior without observable use, a stated requirement, persisted data, or an external consumer.
 
+## Optional Jev-on advisory investigation ranking
+
+Use this optional seam only when **Jev-on mode** is active, the instrumented tool is available, and there are **2 to 50** review comments awaiting investigation. Give each comment a stable opaque ID and retain the complete original review-comment set outside telemetry; all originals remain visible to the main agent.
+
+Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev. Do not send credentials, secrets, personal data, or unauthorized sensitive payloads. Ask `jev_rank` only to rank investigation priority, with ambiguity and high impact increasing priority. Jev cannot reject a finding, classify it, authorize a change, or establish correctness.
+
+Evaluate every original comment from its cited evidence. Inspect cited code and relevant requirements. Every original review comment has a visible disposition. Record `jev_disposition` for every ranked proposal as accepted, overridden, or not used after the main-agent review. If Jev-on is absent or `jev_rank` returns no proposals, use the original manual path and evaluate the complete original review-comment set manually.
+
 ## Implement And Verify
 
 - Reproduce a reported defect when feasible before changing code.

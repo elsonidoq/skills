@@ -1,0 +1,37 @@
+{
+  "skillId": "receiving-code-review",
+  "criterion": "Rank investigation priority; ambiguity and high impact increase priority.",
+  "candidates": [
+    {"candidateId": "review-comment-01", "body": "synthetic review comment one"},
+    {"candidateId": "review-comment-02", "body": "synthetic review comment two"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["review-comment-01", "review-comment-02"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Evaluate the complete original review-comment set manually."
+  },
+  "outcomes": [
+    {"candidateId": "review-comment-01", "disposition": "accepted"},
+    {"candidateId": "review-comment-02", "disposition": "overridden"}
+  ],
+  "agentDuties": [
+    "Evaluate and visibly disposition every original review comment.",
+    "Jev cannot reject a finding; inspect cited code and relevant requirements."
+  ],
+  "finalVerification": "Run the narrow relevant check, then the broader affected checks.",
+  "requiredSkillText": [
+    "Jev-on mode",
+    "jev_rank",
+    "2 to 50",
+    "stable opaque ID",
+    "complete original review-comment set",
+    "jev_disposition",
+    "Jev cannot reject a finding",
+    "Every original review comment has a visible disposition",
+    "Inspect cited code and relevant requirements",
+    "narrow relevant check, then the broader affected checks"
+  ]
+}

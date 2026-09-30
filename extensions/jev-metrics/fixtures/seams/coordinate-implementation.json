@@ -1,0 +1,36 @@
+{
+  "skillId": "coordinate-implementation",
+  "criterion": "Rank diagnostic relevance to the batch's changed integration surface.",
+  "candidates": [
+    {"candidateId": "targeted-test-01", "body": "synthetic targeted test one"},
+    {"candidateId": "targeted-test-02", "body": "synthetic targeted test two"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["targeted-test-01", "targeted-test-02"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Use the already explicit targeted-test list manually."
+  },
+  "outcomes": [
+    {"candidateId": "targeted-test-01", "disposition": "pending"},
+    {"candidateId": "targeted-test-02", "disposition": "not_used"}
+  ],
+  "agentDuties": [
+    "Never invent a test list; rank only an already explicit targeted-test list.",
+    "Select checks when uncertain and preserve dependency sequencing."
+  ],
+  "finalVerification": "Required affected checks, acceptance checks, and final review remain mandatory regardless of rank.",
+  "requiredSkillText": [
+    "Jev-on mode",
+    "jev_rank",
+    "2 to 50",
+    "stable opaque ID",
+    "complete original test list",
+    "jev_disposition",
+    "already explicit targeted-test list",
+    "must not invent a test list",
+    "Required affected checks, acceptance checks, and final review remain mandatory regardless of rank"
+  ]
+}

@@ -201,7 +201,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
 
 ### Tests and Implementation for User Story 2
 
-- [ ] T016 [US2] Add fail-first source-named fixtures and contract assertions for all four global seams in `extensions/jev-metrics/fixtures/seams/` and `extensions/jev-metrics/test/extension.test.js`
+- [X] T016 [US2] Add fail-first source-named fixtures and contract assertions for all four global seams in `extensions/jev-metrics/fixtures/seams/` and `extensions/jev-metrics/test/extension.test.js`
   - **Outcome**: Tests define the approved candidates, criterion, agent duties, fallback, and unchanged verification for `scientific-method-debugging`, `receiving-code-review`, `coordinate-implementation`, and `track-open-issue` before skill edits.
   - **Depends**: T015.
   - **Likely files/interfaces**: `extensions/jev-metrics/fixtures/seams/{scientific-method-debugging,receiving-code-review,coordinate-implementation,track-open-issue}.json`, `extensions/jev-metrics/test/extension.test.js`, `jev_rank`/`jev_disposition`.
@@ -210,7 +210,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: Four fixed contracts can be encoded together without changing runtime architecture.
 
-- [ ] T017 [US2] Add guarded observed-log/test-chunk ranking to `skills/scientific-method-debugging/SKILL.md`
+- [X] T017 [US2] Add guarded observed-log/test-chunk ranking to `skills/scientific-method-debugging/SKILL.md`
   - **Outcome**: The skill ranks only current coarse-scope observed chunks while the main agent forms/tests root-cause hypotheses and retains lower-ranked evidence when needed.
   - **Depends**: T016.
   - **Likely files/interfaces**: `skills/scientific-method-debugging/SKILL.md`; `jev_rank`, `jev_disposition`, manual debugging flow.
@@ -219,7 +219,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This is one isolated semantic seam with settled behavior.
 
-- [ ] T018 [US2] Add guarded review-comment investigation ranking to `skills/receiving-code-review/SKILL.md`
+- [X] T018 [US2] Add guarded review-comment investigation ranking to `skills/receiving-code-review/SKILL.md`
   - **Outcome**: The skill ranks investigation priority but the main agent evaluates and visibly dispositions every original comment and Jev cannot reject a finding.
   - **Depends**: T016.
   - **Likely files/interfaces**: `skills/receiving-code-review/SKILL.md`; `jev_rank`, `jev_disposition`, existing evidence-backed review workflow.
@@ -228,7 +228,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The owner-approved seam has a precise advisory role and unchanged final checks.
 
-- [ ] T019 [US2] Add guarded targeted-test relevance ranking to `skills/coordinate-implementation/SKILL.md`
+- [X] T019 [US2] Add guarded targeted-test relevance ranking to `skills/coordinate-implementation/SKILL.md`
   - **Outcome**: The skill ranks an already explicit test list for diagnostic relevance without suppressing required affected, acceptance, or final-review checks.
   - **Depends**: T016.
   - **Likely files/interfaces**: `skills/coordinate-implementation/SKILL.md`; `jev_rank`, `jev_disposition`, existing dependency and verification gates.
@@ -237,7 +237,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This is a bounded edit to one existing verification workflow.
 
-- [ ] T020 [US2] Add guarded possible-duplicate ranking to `skills/track-open-issue/SKILL.md`
+- [X] T020 [US2] Add guarded possible-duplicate ranking to `skills/track-open-issue/SKILL.md`
   - **Outcome**: The skill ranks deterministically discovered possible overlaps while primary evidence controls create/update/deduplicate decisions.
   - **Depends**: T016.
   - **Likely files/interfaces**: `skills/track-open-issue/SKILL.md`; `jev_rank`, `jev_disposition`, `docs/open_issues.md` search/format contract.
@@ -246,7 +246,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This is an isolated advisory ordering seam with no data-model change.
 
-- [ ] T021 [US2] Verify all four global seam contracts and privacy boundaries with `extensions/jev-metrics/test/extension.test.js`, `extensions/jev-metrics/test/privacy.test.js`, and `scripts/check-skills-lint.sh`
+- [X] T021 [US2] Verify all four global seam contracts and privacy boundaries with `extensions/jev-metrics/test/extension.test.js`, `extensions/jev-metrics/test/privacy.test.js`, and `scripts/check-skills-lint.sh`
   - **Outcome**: User Story 2 is independently proven across all approved global seams with no fifth global seam or `compact-memory` change.
   - **Depends**: T017, T018, T019, T020.
   - **Likely files/interfaces**: Four changed global `SKILL.md` files, four seam fixtures, extension/privacy tests, skill lint.

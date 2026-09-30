@@ -263,3 +263,85 @@ test("closeout appends once and reports already_exported on replay", async (t) =
 	assert.equal(history.storeState, "available");
 	assert.equal(history.rows.length, 1);
 });
+
+const GLOBAL_SEAM_IDS = [
+	"scientific-method-debugging",
+	"receiving-code-review",
+	"coordinate-implementation",
+	"track-open-issue",
+];
+const GLOBAL_SEAM_FIXTURES = await Promise.all(GLOBAL_SEAM_IDS.map(async (skillId) => ({
+	skillId,
+	fixture: JSON.parse(await readFile(new URL(`../fixtures/seams/${skillId}.json`, import.meta.url), "utf8")),
+	skill: await readFile(new URL(`../../../skills/${skillId}/SKILL.md`, import.meta.url), "utf8"),
+})));
+
+function assertFixtureContainsOnlySafeSyntheticContent(fixture) {
+	const serialized = JSON.stringify(fixture.candidates);
+	for (const forbidden of ["credential", "secret", "personal data", "token", "password", "@", "https://"]) {
+		assert.equal(serialized.toLowerCase().includes(forbidden), false, `fixture contains forbidden payload marker: ${forbidden}`);
+	}
+}
+
+test("global seam fixtures name exactly the four approved global skill IDs", () => {
+	assert.deepEqual(GLOBAL_SEAM_FIXTURES.map(({ skillId }) => skillId), GLOBAL_SEAM_IDS);
+	assert.deepEqual([...new Set(GLOBAL_SEAM_FIXTURES.map(({ fixture }) => fixture.skillId))], GLOBAL_SEAM_IDS);
+});
+
+test("global seam fixtures and skill contracts preserve bounded advisory ranking", () => {
+	for (const { skillId, fixture, skill } of GLOBAL_SEAM_FIXTURES) {
+		const candidateIds = fixture.candidates.map(({ candidateId }) => candidateId);
+		assert.equal(fixture.skillId, skillId);
+		assert.ok(fixture.candidates.length >= 2 && fixture.candidates.length <= 50, `${skillId}: bounded candidates`);
+		assert.equal(new Set(candidateIds).size, candidateIds.length, `${skillId}: unique candidate IDs`);
+		for (const candidateId of candidateIds) {
+			assert.match(candidateId, /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/, `${skillId}: opaque candidate ID`);
+		}
+		assert.equal(fixture.originalSetRetained, true, `${skillId}: retains original set`);
+		assert.deepEqual(fixture.successfulProposalCandidateIds, candidateIds, `${skillId}: one success proposal per candidate`);
+		assert.equal(fixture.instrumentedTool, "jev_rank", `${skillId}: only measured tool`);
+		assert.equal(fixture.sensitivePayloadExcluded, true, `${skillId}: sensitive payload excluded`);
+		assertFixtureContainsOnlySafeSyntheticContent(fixture);
+		assert.deepEqual(fixture.fallback.statuses, ["unavailable", "malformed"], `${skillId}: manual fallback states`);
+		assert.equal(fixture.outcomes.length, candidateIds.length, `${skillId}: each candidate has outcome or pending`);
+		for (const outcome of fixture.outcomes) {
+			assert.ok(candidateIds.includes(outcome.candidateId), `${skillId}: outcome belongs to original set`);
+			assert.ok(["accepted", "overridden", "not_used", "pending"].includes(outcome.disposition), `${skillId}: explicit disposition or pending`);
+		}
+		for (const requiredText of fixture.requiredSkillText) {
+			assert.ok(skill.includes(requiredText), `${skillId}: missing required seam instruction: ${requiredText}`);
+		}
+		assert.match(skill, /Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev\./);
+		assert.match(skill, /Do not send credentials, secrets, personal data, or unauthorized sensitive payloads\./);
+		assert.match(skill, /If Jev-on is absent or `jev_rank` returns no proposals, use the original manual path/);
+		assert.ok(skill.includes(fixture.finalVerification), `${skillId}: final verification unchanged`);
+	}
+});
+
+test("each global seam fixture receives one proposal per candidate without persisting candidate bodies", async () => {
+	for (const { skillId, fixture } of GLOBAL_SEAM_FIXTURES) {
+		const stdout = JSON.stringify({
+			answers: Object.fromEntries(fixture.candidates.map((_, index) => [
+				`candidate_${index}`,
+				{ score: fixture.candidates.length - index },
+			])),
+		});
+		const { api, manager, processAdapter } = setup({ plans: [{ code: 0, stdout }] });
+		const result = details(await api.invokeTool("jev_rank", {
+			skillId,
+			criterion: fixture.criterion,
+			candidates: fixture.candidates,
+		}));
+		assert.equal(result.status, "succeeded");
+		assert.deepEqual(result.proposals.map(({ candidateId }) => candidateId), fixture.successfulProposalCandidateIds);
+		assert.deepEqual(processAdapter.calls[0].args, ["run", "-"]);
+		for (const { body } of fixture.candidates) {
+			assert.equal(JSON.stringify(manager.getBranch()).includes(body), false, `${skillId}: candidate body persisted`);
+		}
+	}
+});
+
+test("receiving-code-review visibly dispositions every original review comment", () => {
+	const fixture = GLOBAL_SEAM_FIXTURES.find(({ skillId }) => skillId === "receiving-code-review").fixture;
+	assert.equal(fixture.outcomes.every(({ disposition }) => disposition !== "pending"), true);
+});

@@ -1,0 +1,36 @@
+{
+  "skillId": "track-open-issue",
+  "criterion": "Rank likelihood of overlap with the verified new issue.",
+  "candidates": [
+    {"candidateId": "open-issue-match-01", "body": "synthetic possible overlap one"},
+    {"candidateId": "open-issue-match-02", "body": "synthetic possible overlap two"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["open-issue-match-01", "open-issue-match-02"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Compare deterministically discovered possible overlaps through the original manual path."
+  },
+  "outcomes": [
+    {"candidateId": "open-issue-match-01", "disposition": "accepted"},
+    {"candidateId": "open-issue-match-02", "disposition": "not_used"}
+  ],
+  "agentDuties": [
+    "Run deterministic duplicate search before ranking possible overlaps.",
+    "Use primary evidence to decide create, update, or deduplicate."
+  ],
+  "finalVerification": "Register format, primary evidence, status, resumption condition, and duplicate search remain required.",
+  "requiredSkillText": [
+    "Jev-on mode",
+    "jev_rank",
+    "2 to 50",
+    "stable opaque ID",
+    "complete original possible-overlap set",
+    "jev_disposition",
+    "deterministic duplicate search",
+    "Primary evidence controls create, update, or deduplicate",
+    "Register format, primary evidence, status, resumption condition, and duplicate search remain required"
+  ]
+}

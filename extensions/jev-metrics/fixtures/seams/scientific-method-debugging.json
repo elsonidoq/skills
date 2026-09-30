@@ -1,0 +1,35 @@
+{
+  "skillId": "scientific-method-debugging",
+  "criterion": "Rank observed chunks by relevance to the active observed failure.",
+  "candidates": [
+    {"candidateId": "debug-chunk-01", "body": "synthetic observed test-output chunk one"},
+    {"candidateId": "debug-chunk-02", "body": "synthetic observed log chunk two"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["debug-chunk-01", "debug-chunk-02"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Use the complete observed chunk set through the original manual debugging path."
+  },
+  "outcomes": [
+    {"candidateId": "debug-chunk-01", "disposition": "accepted"},
+    {"candidateId": "debug-chunk-02", "disposition": "pending"}
+  ],
+  "agentDuties": [
+    "Inspect anomalies and form and test root-cause hypotheses.",
+    "Trace evidence upstream and downstream and retain lower-ranked evidence when needed."
+  ],
+  "finalVerification": "Reproduce the failure, establish a failing check, fix one root cause, and rerun affected checks.",
+  "requiredSkillText": [
+    "Jev-on mode",
+    "jev_rank",
+    "2 to 50",
+    "stable opaque IDs",
+    "complete original evidence",
+    "jev_disposition",
+    "manual debugging path",
+    "Reproduce the failure, establish a failing check, fix one root cause, and rerun affected checks"
+  ]
+}
