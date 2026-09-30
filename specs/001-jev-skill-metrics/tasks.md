@@ -50,7 +50,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
 
 **⚠️ CRITICAL**: No user-story phase starts until these invariants pass deterministic tests.
 
-- [ ] T003 Add fail-first event-schema and identifier tests plus synthetic event fixtures in `extensions/jev-metrics/test/events.test.js` and `extensions/jev-metrics/fixtures/events/`
+- [X] T003 Add fail-first event-schema and identifier tests plus synthetic event fixtures in `extensions/jev-metrics/test/events.test.js` and `extensions/jev-metrics/fixtures/events/`
   - **Outcome**: Tests cover every event type, approved skill ID, failure class, disposition kind, unknown schema, forbidden field, and malformed identifier before event construction exists.
   - **Depends**: T001.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/events.test.js`, `extensions/jev-metrics/fixtures/events/*.json`, `specs/001-jev-skill-metrics/contracts/telemetry.schema.json`.
@@ -67,7 +67,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This is specification-to-fixture translation with fixed constraints.
 
-- [ ] T004 Implement validated event creation, stable IDs, and first-valid-write disposition semantics in `extensions/jev-metrics/lib/events.js`
+- [X] T004 Implement validated event creation, stable IDs, and first-valid-write disposition semantics in `extensions/jev-metrics/lib/events.js`
   - **Outcome**: Pure functions construct and validate version-1 invocation starts/terminals, candidate-level proposals, dispositions, and invalid diagnostics without retaining raw candidate content.
   - **Depends**: T003.
   - **Likely files/interfaces**: `extensions/jev-metrics/lib/events.js`, `extensions/jev-metrics/test/events.test.js`, `specs/001-jev-skill-metrics/contracts/telemetry.schema.json`.
@@ -76,7 +76,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: opus-class**
   - **Rationale**: Multiple schema variants and privacy invariants must remain coherent at the authoritative persistence boundary.
 
-- [ ] T005 Add fail-first aggregation, branch reconstruction, replay, conflict, orphan, and counter-arithmetic tests in `extensions/jev-metrics/test/aggregate.test.js`
+- [X] T005 Add fail-first aggregation, branch reconstruction, replay, conflict, orphan, and counter-arithmetic tests in `extensions/jev-metrics/test/aggregate.test.js`
   - **Outcome**: Tests define deterministic totals and per-skill summaries from active-branch entries, including exact SC-001/SC-002 fixtures and invalid-event behavior.
   - **Depends**: T004.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/aggregate.test.js`, `extensions/jev-metrics/fixtures/events/*.json`, event validators from `extensions/jev-metrics/lib/events.js`.
@@ -86,7 +86,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The expected arithmetic is completely specified and can be encoded before implementation.
 
-- [ ] T006 Implement validation, deduplication, active-branch reconstruction, and session/per-skill summaries in `extensions/jev-metrics/lib/aggregate.js`
+- [X] T006 Implement validation, deduplication, active-branch reconstruction, and session/per-skill summaries in `extensions/jev-metrics/lib/aggregate.js`
   - **Outcome**: The pure aggregate core follows the required reconstruction order and derives all denominators without writable counters.
   - **Depends**: T005.
   - **Likely files/interfaces**: `extensions/jev-metrics/lib/aggregate.js`, `extensions/jev-metrics/lib/events.js`, `extensions/jev-metrics/test/aggregate.test.js`.

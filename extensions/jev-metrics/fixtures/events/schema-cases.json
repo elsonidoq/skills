@@ -1,0 +1,99 @@
+{
+  "sessionId": "session-fixture-1",
+  "otherSessionId": "session-fixture-other",
+  "startedAt": "2026-01-01T00:00:00.000Z",
+  "finishedAt": "2026-01-01T00:00:01.000Z",
+  "approvedSkillIds": [
+    "scientific-method-debugging",
+    "receiving-code-review",
+    "coordinate-implementation",
+    "track-open-issue",
+    "speckit-analyze",
+    "speckit-checklist",
+    "speckit-clarify",
+    "speckit-tasks"
+  ],
+  "terminalStatuses": ["succeeded", "unavailable", "failed", "malformed"],
+  "failureClasses": [
+    "cli_missing",
+    "auth",
+    "input",
+    "provider",
+    "retryable",
+    "cancelled",
+    "response_schema"
+  ],
+  "dispositions": ["accepted", "overridden", "not_used"],
+  "invalidOperations": ["rank", "disposition", "closeout"],
+  "invalidReasons": [
+    "duplicate_terminal",
+    "unknown_proposal",
+    "cross_session",
+    "conflicting_disposition",
+    "schema_invalid",
+    "store_missing",
+    "store_unreadable",
+    "store_invalid"
+  ],
+  "candidateIds": ["candidate-1", "candidate_2", "C.3:part"],
+  "malformedCandidateIds": ["", "-leading", "contains space", "candidate/body", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],
+  "fiftyCandidateIds": [
+    "c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09", "c10",
+    "c11", "c12", "c13", "c14", "c15", "c16", "c17", "c18", "c19", "c20",
+    "c21", "c22", "c23", "c24", "c25", "c26", "c27", "c28", "c29", "c30",
+    "c31", "c32", "c33", "c34", "c35", "c36", "c37", "c38", "c39", "c40",
+    "c41", "c42", "c43", "c44", "c45", "c46", "c47", "c48", "c49", "c50"
+  ],
+  "validStart": {
+    "schemaVersion": 1,
+    "eventType": "invocation_started",
+    "eventId": "00000000-0000-4000-8000-000000000001",
+    "invocationId": "00000000-0000-4000-8000-000000000101",
+    "sessionId": "session-fixture-1",
+    "skillId": "receiving-code-review",
+    "startedAt": "2026-01-01T00:00:00.000Z",
+    "candidateIds": ["candidate-1", "candidate_2", "C.3:part"]
+  },
+  "validSuccessTerminal": {
+    "schemaVersion": 1,
+    "eventType": "invocation_terminal",
+    "eventId": "00000000-0000-4000-8000-000000000002",
+    "invocationId": "00000000-0000-4000-8000-000000000101",
+    "sessionId": "session-fixture-1",
+    "finishedAt": "2026-01-01T00:00:01.000Z",
+    "status": "succeeded",
+    "proposals": [
+      {"proposalId": "00000000-0000-4000-8000-000000000101:proposal:candidate-1", "candidateId": "candidate-1", "rank": 1, "score": 9.5, "confidence": 0.9},
+      {"proposalId": "00000000-0000-4000-8000-000000000101:proposal:candidate_2", "candidateId": "candidate_2", "rank": 2, "score": 7},
+      {"proposalId": "00000000-0000-4000-8000-000000000101:proposal:C.3:part", "candidateId": "C.3:part", "rank": 3, "score": -1.25, "confidence": 0}
+    ]
+  },
+  "validDisposition": {
+    "schemaVersion": 1,
+    "eventType": "proposal_disposition",
+    "eventId": "00000000-0000-4000-8000-000000000003",
+    "proposalId": "00000000-0000-4000-8000-000000000101:proposal:candidate-1",
+    "sessionId": "session-fixture-1",
+    "skillId": "receiving-code-review",
+    "disposition": "accepted",
+    "recordedAt": "2026-01-01T00:00:02.000Z"
+  },
+  "validInvalidEvent": {
+    "schemaVersion": 1,
+    "eventType": "invalid_event",
+    "eventId": "00000000-0000-4000-8000-000000000004",
+    "sessionId": "session-fixture-1",
+    "operation": "disposition",
+    "reason": "unknown_proposal",
+    "recordedAt": "2026-01-01T00:00:02.000Z"
+  },
+  "forbiddenFieldNames": [
+    "body", "candidateBody", "criterion", "log", "logs", "prompt", "credentials", "personalData",
+    "rawResponse", "stderr", "endpoint", "providerPayload", "error", "errorText"
+  ],
+  "privacySentinels": [
+    "CANDIDATE_BODY_SENTINEL", "LOG_SENTINEL", "PROMPT_SENTINEL", "CREDENTIAL_SENTINEL",
+    "PERSONAL_DATA_SENTINEL", "RAW_RESPONSE_SENTINEL", "STDERR_SENTINEL", "ENDPOINT_SENTINEL",
+    "PROVIDER_PAYLOAD_SENTINEL"
+  ]
+}

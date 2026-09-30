@@ -1,0 +1,122 @@
+{
+  "customType": "jev-metrics",
+  "sessionId": "session-fixture-1",
+  "leafId": "leaf-active",
+  "events": {
+    "start": {
+      "schemaVersion": 1,
+      "eventType": "invocation_started",
+      "eventId": "10000000-0000-4000-8000-000000000001",
+      "invocationId": "10000000-0000-4000-8000-000000000101",
+      "sessionId": "session-fixture-1",
+      "skillId": "receiving-code-review",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "candidateIds": ["review-1", "review-2", "review-3"]
+    },
+    "terminal": {
+      "schemaVersion": 1,
+      "eventType": "invocation_terminal",
+      "eventId": "10000000-0000-4000-8000-000000000002",
+      "invocationId": "10000000-0000-4000-8000-000000000101",
+      "sessionId": "session-fixture-1",
+      "finishedAt": "2026-01-01T00:00:01.000Z",
+      "status": "succeeded",
+      "proposals": [
+        {"proposalId": "10000000-0000-4000-8000-000000000101:proposal:review-1", "candidateId": "review-1", "rank": 1, "score": 9},
+        {"proposalId": "10000000-0000-4000-8000-000000000101:proposal:review-2", "candidateId": "review-2", "rank": 2, "score": 7, "confidence": 0.8},
+        {"proposalId": "10000000-0000-4000-8000-000000000101:proposal:review-3", "candidateId": "review-3", "rank": 3, "score": 5}
+      ]
+    },
+    "accepted1": {
+      "schemaVersion": 1,
+      "eventType": "proposal_disposition",
+      "eventId": "10000000-0000-4000-8000-000000000003",
+      "proposalId": "10000000-0000-4000-8000-000000000101:proposal:review-1",
+      "sessionId": "session-fixture-1",
+      "skillId": "receiving-code-review",
+      "disposition": "accepted",
+      "recordedAt": "2026-01-01T00:00:02.000Z"
+    },
+    "accepted2": {
+      "schemaVersion": 1,
+      "eventType": "proposal_disposition",
+      "eventId": "10000000-0000-4000-8000-000000000004",
+      "proposalId": "10000000-0000-4000-8000-000000000101:proposal:review-2",
+      "sessionId": "session-fixture-1",
+      "skillId": "receiving-code-review",
+      "disposition": "accepted",
+      "recordedAt": "2026-01-01T00:00:03.000Z"
+    },
+    "overridden": {
+      "schemaVersion": 1,
+      "eventType": "proposal_disposition",
+      "eventId": "10000000-0000-4000-8000-000000000005",
+      "proposalId": "10000000-0000-4000-8000-000000000101:proposal:review-3",
+      "sessionId": "session-fixture-1",
+      "skillId": "receiving-code-review",
+      "disposition": "overridden",
+      "recordedAt": "2026-01-01T00:00:04.000Z"
+    },
+    "conflict": {
+      "schemaVersion": 1,
+      "eventType": "proposal_disposition",
+      "eventId": "10000000-0000-4000-8000-000000000006",
+      "proposalId": "10000000-0000-4000-8000-000000000101:proposal:review-1",
+      "sessionId": "session-fixture-1",
+      "skillId": "receiving-code-review",
+      "disposition": "not_used",
+      "recordedAt": "2026-01-01T00:00:05.000Z"
+    },
+    "invalidDiagnostic": {
+      "schemaVersion": 1,
+      "eventType": "invalid_event",
+      "eventId": "10000000-0000-4000-8000-000000000007",
+      "sessionId": "session-fixture-1",
+      "operation": "disposition",
+      "reason": "conflicting_disposition",
+      "recordedAt": "2026-01-01T00:00:05.000Z"
+    },
+    "orphanStart": {
+      "schemaVersion": 1,
+      "eventType": "invocation_started",
+      "eventId": "10000000-0000-4000-8000-000000000008",
+      "invocationId": "10000000-0000-4000-8000-000000000108",
+      "sessionId": "session-fixture-1",
+      "skillId": "speckit-tasks",
+      "startedAt": "2026-01-01T00:00:06.000Z",
+      "candidateIds": ["task-1", "task-2"]
+    },
+    "abandonedStart": {
+      "schemaVersion": 1,
+      "eventType": "invocation_started",
+      "eventId": "20000000-0000-4000-8000-000000000001",
+      "invocationId": "20000000-0000-4000-8000-000000000101",
+      "sessionId": "session-fixture-1",
+      "skillId": "scientific-method-debugging",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "candidateIds": ["log-1", "log-2"]
+    },
+    "crossSessionStart": {
+      "schemaVersion": 1,
+      "eventType": "invocation_started",
+      "eventId": "30000000-0000-4000-8000-000000000001",
+      "invocationId": "30000000-0000-4000-8000-000000000101",
+      "sessionId": "other-session",
+      "skillId": "speckit-analyze",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "candidateIds": ["finding-1", "finding-2"]
+    }
+  },
+  "unsupportedEvent": {
+    "schemaVersion": 2,
+    "eventType": "invocation_started",
+    "eventId": "40000000-0000-4000-8000-000000000001",
+    "sessionId": "session-fixture-1"
+  },
+  "corruptEvent": {
+    "schemaVersion": 1,
+    "eventType": "invocation_started",
+    "eventId": "not-a-uuid",
+    "sessionId": "session-fixture-1"
+  }
+}
