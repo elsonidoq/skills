@@ -80,9 +80,30 @@ This suite pins its runtime: the `subagent` delegation tool (package
 `pi-subagents`) and the `ask_user` question tool (package `pi-ask-user`) are
 declared in the global configuration repository's `REQUIREMENTS.md`. Verify the
 tools are registered and usable before relying on them; never invent a tool,
-command, or package. If a required runtime capability is unavailable, report
-`Delegation: UNAVAILABLE` or `question: UNAVAILABLE` with the missing package
-and stop before producing or approving downstream artifacts.
+command, agent, model, or package. If a required runtime capability is
+unavailable, report `Delegation: UNAVAILABLE` or `question: UNAVAILABLE` with
+the missing package and stop before producing or approving downstream
+artifacts.
+
+Before task generation, also verify all of these observable capabilities:
+
+- The delegation runtime can dispatch the required third planning-pipeline
+  sub-agent and has a configured Sol planning/task option. Resolve that option
+  from current runtime configuration; do not hard-code a provider or model ID.
+- The detected project-local SpecKit tasks stage, including its instructions,
+  templates, prerequisite scripts, and output path, is usable inside that
+  delegated context.
+- The runtime can preserve and resume that exact delegated context after the
+  main agent validates and corrects the tasks.
+- The detected project-local SpecKit analysis stage and its assets are usable
+  inside the resumed context.
+
+Report an unavailable item as `Task delegation: UNAVAILABLE`, `SpecKit tasks:
+UNAVAILABLE`, `Task-agent resume: UNAVAILABLE`, or `SpecKit analysis:
+UNAVAILABLE`, name the missing evidence, and stop at the plan boundary. If the
+context is created but later cannot be resumed, stop at that point. Never run a
+fresh replacement agent, run either stage locally, simulate a slash command,
+or silently substitute generic Markdown.
 
 ## Workflow
 
@@ -133,47 +154,91 @@ Run the earliest incomplete or invalid stage:
    approved work calls for delegated architectural decomposition, use
    `delegating-architectural-planning` to run the detected planning stage; do not
    produce a substitute plan outside it.
-7. **Tasks:** Run the detected SpecKit tasks stage to derive dependency-aware,
-   independently verifiable tasks from the plan.
-   Each task identifies its outcome, prerequisites, likely files/interfaces,
-   acceptance evidence, capability needs, `Model class: sonnet-class | opus-class`,
-   and a brief rationale for that class. Default to `sonnet-class` for bounded,
-   well-specified work. Use `opus-class` only when the work cannot be safely
-   decomposed into bounded, independently verifiable tasks. At most 30% of the
-   complete task list may be `opus-class`. When the proposed share exceeds 30%, use
-   the runtime's `ask_user` question tool to present the affected task IDs, their rationale, and the
-   delivery impact of reducing the share; record explicit owner approval before
-   finalizing the task list. Include one or more documentation tasks that update or
-   create the documentation identified in the plan; their acceptance evidence must
-   confirm the documented material matches the implemented changes. Number tasks
-   in execution order without gaps: every prerequisite must have a smaller task
-   number and appear earlier in the list. Keep each story's tasks in a contiguous
-   segment rather than returning to that story after starting another; shared
-   setup may precede the stories. If that misrepresents the architecture, return
-   to planning and adjust its sequencing; never paper over a forward dependency
-   with a batching exception. Before leaving tasking, run the dependency and
-   story-order check specified in Overall review and correct its findings.
-8. **Overall review:** Check source -> spec -> plan -> tasks traceability,
-   contradictions, omissions, dependency order, integration coverage, exclusions,
-   governing principles, documentation coverage, and the `opus-class` task share.
-   For a task list with `T`-numbered Markdown entries and explicit `Depends`
-   fields, run `python3 scripts/check-task-order.py /path/to/tasks.md` from this
-   skill's directory when Python 3 is available. Fix every missing, duplicate,
-   out-of-order, or forward prerequisite and noncontiguous story before approval.
-   Check implicit dependencies and stage feasibility manually too; the script
-   cannot infer them. If the script cannot run or the task format differs, do
-   those checks manually and report that scripted validation was unavailable.
-   Do not approve a task list exceeding 30% `opus-class` tasks without recorded owner
-   approval. Run the detected SpecKit analysis stage and manually inspect its
-   evidence.
-9. **Overall review approval:** Immediately before requesting approval, present a
-   brief bulleted plan summary in manager-level terms: one bullet for the intended
-   outcome and one concise bullet for each plan phase. Include a risk, dependency,
-   exclusion, or deferral only when it materially affects the approval decision. Then
-   use the runtime's `ask_user` question tool to request approval. Record explicit overall review
-   approval in a project-defined decision or progress artifact, or in the reviewed
-   artifacts when none exists. Do not hand off implementation without it.
-10. **Handoff:** Verify both recorded approvals apply to the current artifacts and
+7. **Plan approval:** Inspect the plan against the approved specification, correct
+   non-material defects, summarize its delivery phases and material tradeoffs in
+   manager-level terms, and request owner approval with the runtime's `ask_user`
+   question tool. Record approval for the current plan revision. Do not generate
+   tasks from an unapproved or subsequently changed plan.
+8. **Delegated tasks:** After plan approval and the task-delegation capability
+   checks, dispatch the required third planning-pipeline sub-agent using the
+   observed Sol planning/task configuration. Give it the approved specification,
+   plan, project instructions and principles, relevant memory constraints, and
+   the detected project-local tasks-stage instructions and assets. Instruct it to
+   run the installed `/speckit.tasks` capability through its supported runtime
+   interface and write the stage's task artifact; a similarly named command is
+   acceptable only when it is the capability actually detected in that project.
+   Its write scope is limited to task-stage artifacts. It must not implement,
+   change approved scope or architecture, contact the owner, commit, push, or
+   dispatch agents. Preserve the returned context identifier for analysis.
+
+   Require the generated list to contain dependency-aware, independently
+   verifiable tasks. Each task identifies its outcome, prerequisites, likely
+   files/interfaces, acceptance evidence, capability needs, `Model class:
+   sonnet-class | opus-class`, and a brief rationale for that class. Default to
+   `sonnet-class` for bounded, well-specified work. Use `opus-class` only when the
+   work cannot be safely decomposed into bounded, independently verifiable tasks.
+   Include one or more tasks for the documentation scope recorded in the plan;
+   their acceptance evidence must confirm that the documentation matches the
+   implemented changes. Number tasks in execution order without gaps, place every
+   prerequisite earlier with a smaller task number, and keep each story's tasks
+   contiguous after shared setup. The sub-agent returns a material decision as a
+   blocker for the main agent rather than choosing or communicating with the
+   owner.
+9. **Main-agent task validation:** Inspect the actual generated artifact and its
+   provenance; do not accept the sub-agent's summary as evidence. Check source ->
+   spec -> approved plan -> tasks traceability, omissions, contradictions,
+   integration coverage, exclusions, and stage feasibility. Check explicit and
+   implicit dependency order and contiguous story order manually. For a task list
+   with `T`-numbered Markdown entries and explicit `Depends` fields, also run
+   `python3 scripts/check-task-order.py /path/to/tasks.md` from this skill's
+   directory when Python 3 is available. If the script cannot run or the format
+   differs, report scripted validation as unavailable and retain the manual
+   check. Fix every missing, duplicate, out-of-order, forward prerequisite, and
+   noncontiguous story finding. If correct sequencing would contradict the plan,
+   return to planning and obtain fresh approval for the revised plan rather than
+   adding a batching exception.
+
+   Confirm that every planned documentation surface has an implementation-linked
+   documentation task and acceptance evidence. Confirm every task has exactly one
+   allowed model class and a task-specific rationale. Count the complete list:
+   at most 30% may be `opus-class`. If the proposed share exceeds 30%, use the
+   runtime's `ask_user` question tool to present the affected task IDs, rationale,
+   and delivery impact of reducing the share, and record explicit owner approval
+   before finalizing it. The main agent makes all non-material corrections and
+   records them for the resumed context; it sends every material scope,
+   architecture, privacy, permission, irreversible-behavior, cost, or settled-
+   requirement choice to the owner.
+10. **Delegated analysis:** Resume the exact Sol sub-agent context from task
+    generation. Give it the corrected current artifact paths and the main agent's
+    validation record, then instruct it to run the detected project-local
+    `/speckit.analyze` capability through its supported runtime interface. Do not
+    dispatch a fresh agent or accept a generic review as a substitute. The
+    sub-agent may write only outputs required by the installed analysis stage and
+    must return evidence and material blockers to the main agent.
+
+    The main agent then reads the analysis output and manually verifies each
+    finding against the source, specification, approved plan, tasks, governing
+    principles, and repository evidence. It retains judgment over severity,
+    disposition, corrections, and completeness; the analysis result is not an
+    approval. Apply non-material corrections, repeat the applicable task checks,
+    and resume the same context to rerun analysis when those corrections stale its
+    evidence. The main agent alone communicates with the owner and requests or
+    records approvals.
+11. **Overall review:** Using the main-agent task checks and manually inspected
+    analysis evidence, check end-to-end traceability, contradictions, omissions,
+    dependency and story order, integration coverage, exclusions, governing
+    principles, documentation coverage, and model-class rationale/share. Do not
+    approve a task list exceeding 30% `opus-class` tasks without recorded owner
+    approval. Resolve all non-material findings and route material decisions to
+    the owner before continuing.
+12. **Overall review approval:** Immediately before requesting approval, present a
+    brief bulleted plan summary in manager-level terms: one bullet for the intended
+    outcome and one concise bullet for each plan phase. Include a risk, dependency,
+    exclusion, or deferral only when it materially affects the approval decision. Then
+    use the runtime's `ask_user` question tool to request approval. Record explicit overall review
+    approval in a project-defined decision or progress artifact, or in the reviewed
+    artifacts when none exists. Do not hand off implementation without it.
+13. **Handoff:** Verify all recorded approvals apply to the current artifacts and
     re-run applicable prerequisite or artifact checks. Do not load or run
     `coordinate-implementation` in this session. Instruct the user to run
     `finish-session` or `finish-session-jev` to close the planning session. Then
@@ -188,6 +253,7 @@ Run the earliest incomplete or invalid stage:
     Tasks: [tasks path]
     Source brief: [source brief path]
     Specification approval: [record path and section]
+    Plan approval: [record path and section]
     Overall review approval: [record path and section]
     Review evidence and decisions: [record paths and sections]
     ```
@@ -218,16 +284,21 @@ the repository documents one; validate its schema and artifact links before trus
 it. On resume:
 
 1. Verify source and artifact paths still exist.
-2. Verify recorded specification approval and overall review approval apply to the
+2. Verify recorded specification, plan, and overall review approvals apply to the
    current artifact revisions. Missing or stale approval returns to that gate.
 3. Validate stage outputs and integrations rather than trusting a `done` label.
-4. Continue from the earliest stale, missing, or inconsistent artifact.
+4. If task generation completed but analysis did not, verify that the exact Sol
+   task-agent context can still be resumed. If not, report `Task-agent resume:
+   UNAVAILABLE` and stop rather than dispatching a replacement.
+5. Continue from the earliest stale, missing, or inconsistent artifact.
 
 ## Ready for Implementation
 
 Report readiness only when the spec, plan, and tasks exist, provenance is clear,
-dependencies and documentation tasks are represented, specification approval and
-overall review approval are recorded for the current artifacts, other owner gates
-are resolved or explicitly deferred, and the overall review has evidence. List
-artifact paths, capability checks, checks run, and unavailable behavior. Artifact
-readiness does not mean implementation or feature acceptance is complete.
+dependencies and documentation tasks are represented, specification, plan, and
+overall review approvals are recorded for the current artifacts, other owner gates
+are resolved or explicitly deferred, and the main agent has recorded both task
+validation and its manual inspection of current SpecKit analysis evidence. List
+artifact paths, delegated-context evidence, capability checks, checks run, and
+unavailable behavior. Artifact readiness does not mean implementation or feature
+acceptance is complete.

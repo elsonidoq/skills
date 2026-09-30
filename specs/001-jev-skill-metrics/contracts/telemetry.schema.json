@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/jev-metrics/telemetry.schema.json",
+  "title": "Jev metrics custom session entry",
+  "oneOf": [
+    {"$ref": "#/$defs/invocationStarted"},
+    {"$ref": "#/$defs/invocationTerminal"},
+    {"$ref": "#/$defs/proposalDisposition"},
+    {"$ref": "#/$defs/invalidEvent"}
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "candidateId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+    },
+    "skillId": {
+      "enum": [
+        "scientific-method-debugging",
+        "receiving-code-review",
+        "coordinate-implementation",
+        "track-open-issue",
+        "speckit-analyze",
+        "speckit-checklist",
+        "speckit-clarify",
+        "speckit-tasks"
+      ]
+    },
+    "base": {
+      "type": "object",
+      "required": ["schemaVersion", "eventType", "eventId", "sessionId"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "eventType": {"type": "string"},
+        "eventId": {"$ref": "#/$defs/uuid"},
+        "sessionId": {"$ref": "#/$defs/sessionId"}
+      }
+    },
+    "invocationStarted": {
+      "allOf": [
+        {"$ref": "#/$defs/base"},
+        {
+          "type": "object",
+          "required": ["invocationId", "skillId", "startedAt", "candidateIds"],
+          "properties": {
+            "eventType": {"const": "invocation_started"},
+            "invocationId": {"$ref": "#/$defs/uuid"},
+            "skillId": {"$ref": "#/$defs/skillId"},
+            "startedAt": {"$ref": "#/$defs/timestamp"},
+            "candidateIds": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 50,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/candidateId"}
+            }
+          },
+          "unevaluatedProperties": false
+        }
+      ]
+    },
+    "proposal": {
+      "type": "object",
+      "required": ["proposalId", "candidateId", "rank", "score"],
+      "properties": {
+        "proposalId": {"type": "string", "minLength": 1, "maxLength": 384},
+        "candidateId": {"$ref": "#/$defs/candidateId"},
+        "rank": {"type": "integer", "minimum": 1, "maximum": 50},
+        "score": {"type": "number"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": false
+    },
+    "invocationTerminal": {
+      "allOf": [
+        {"$ref": "#/$defs/base"},
+        {
+          "type": "object",
+          "required": ["invocationId", "finishedAt", "status", "proposals"],
+          "properties": {
+            "eventType": {"const": "invocation_terminal"},
+            "invocationId": {"$ref": "#/$defs/uuid"},
+            "finishedAt": {"$ref": "#/$defs/timestamp"},
+            "status": {"enum": ["succeeded", "unavailable", "failed", "malformed"]},
+            "failureClass": {
+              "enum": [
+                "cli_missing",
+                "auth",
+                "input",
+                "provider",
+                "retryable",
+                "cancelled",
+                "response_schema"
+              ]
+            },
+            "proposals": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {"$ref": "#/$defs/proposal"}
+            }
+          },
+          "unevaluatedProperties": false
+        }
+      ]
+    },
+    "proposalDisposition": {
+      "allOf": [
+        {"$ref": "#/$defs/base"},
+        {
+          "type": "object",
+          "required": ["proposalId", "skillId", "disposition", "recordedAt"],
+          "properties": {
+            "eventType": {"const": "proposal_disposition"},
+            "proposalId": {"type": "string", "minLength": 1, "maxLength": 384},
+            "skillId": {"$ref": "#/$defs/skillId"},
+            "disposition": {"enum": ["accepted", "overridden", "not_used"]},
+            "recordedAt": {"$ref": "#/$defs/timestamp"}
+          },
+          "unevaluatedProperties": false
+        }
+      ]
+    },
+    "invalidEvent": {
+      "allOf": [
+        {"$ref": "#/$defs/base"},
+        {
+          "type": "object",
+          "required": ["operation", "reason", "recordedAt"],
+          "properties": {
+            "eventType": {"const": "invalid_event"},
+            "operation": {"enum": ["rank", "disposition", "closeout"]},
+            "reason": {
+              "enum": [
+                "duplicate_terminal",
+                "unknown_proposal",
+                "cross_session",
+                "conflicting_disposition",
+                "schema_invalid",
+                "store_missing",
+                "store_unreadable",
+                "store_invalid"
+              ]
+            },
+            "recordedAt": {"$ref": "#/$defs/timestamp"}
+          },
+          "unevaluatedProperties": false
+        }
+      ]
+    }
+  }
+}
