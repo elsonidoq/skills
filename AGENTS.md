@@ -52,7 +52,7 @@ failure proves that a fresh session is necessary.
 - `pi-subagents`: `0.73.1`
 - `pi-ask-user`: `0.15.1`
 - SpecKit: required before running pipeline stages; not installed in this project.
-- `jev`: optional for `finish-session-jev` (available in this environment).
+- `jev`: optional; `jev-cli` plus provider auth are required only for Jev-on tracking (`scripts/install.sh --jev-on`).
 
 ### Workflow
 

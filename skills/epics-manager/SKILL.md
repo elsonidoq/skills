@@ -243,7 +243,7 @@ Run the earliest incomplete or invalid stage:
 13. **Handoff:** Verify all recorded approvals apply to the current artifacts and
     re-run applicable prerequisite or artifact checks. Do not load or run
     `coordinate-implementation` in this session. Instruct the user to run
-    `finish-session` or `finish-session-jev` to close the planning session. Then
+    `finish-session` to close the planning session. Then
     provide this copyable prompt for a fresh session, replacing each placeholder with
     the current artifact path:
 

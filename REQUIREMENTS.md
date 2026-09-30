@@ -12,7 +12,7 @@ project adopts the suite through the `install-memory` skill before the workflow 
 | pi-subagents | npm:`pi-subagents@0.73.1` | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and `pi install npm:pi-subagents@0.73.1` |
 | pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Ask in prose and end the turn |
 | SpecKit toolkit | installed in the **project** | detected stage commands and assets exist in the target project | Stop at the affected stage with a capability report |
-| jev (optional) | `~/.agents/skills/jev` | `command -v jev` or the skill loads | Manual routing in `finish-session-jev` |
+| jev (optional) | `jev-cli` | `command -v jev` | Jev-on tracking requires `jev-cli` plus provider auth; manual mode needs neither |
 
 All npm pins are exact: pi treats versioned npm specifications as pinned, and `pi update
 --extensions` reconciles the checkout without moving the configured ref.

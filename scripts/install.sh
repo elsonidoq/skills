@@ -196,11 +196,6 @@ for pkg in "$PKG_SUBAGENTS" "$PKG_ASKUSER"; do
 	fi
 done
 
-# ---- 3. Optional dependencies in manual mode ------------------------------
-if [ ! -d "$AGENTS_SKILLS/jev" ]; then
-	warn "'jev' skill not found at $AGENTS_SKILLS/jev — finish-session-jev triage will fall back to manual routing"
-fi
-
 # ---- 4. Discoverability via ~/.agents/skills ------------------------------
 mkdir -p "$AGENTS_SKILLS" "$AGENTS_BACKUPS"
 [ -d "$SKILLS_DIR" ] || fatal "suite skills directory missing: $SKILLS_DIR"
@@ -236,6 +231,21 @@ for name, src in suite_skills:
         print(f"==> linked: ~/.agents/skills/{name} -> {src}")
         linked += 1
 
+# Prune suite-owned symlinks whose skill is no longer shipped, backing each up.
+suite_names = {name for name, _ in suite_skills}
+suite_root = os.path.realpath(skills_dir)
+pruned = 0
+for name in sorted(os.listdir(agents_skills)):
+    dst = os.path.join(agents_skills, name)
+    if name in suite_names or not os.path.islink(dst):
+        continue
+    target = os.path.realpath(dst)
+    if not (target == suite_root or target.startswith(suite_root + os.sep)):
+        continue
+    os.rename(dst, os.path.join(backups, f"{name}.{time.strftime('%Y%m%d%H%M%S')}"))
+    print(f"==> pruned stale suite symlink: ~/.agents/skills/{name}")
+    pruned += 1
+
 entry = os.path.realpath(skills_dir)
 saved = False
 if os.path.exists(settings_path):
@@ -257,7 +267,7 @@ if os.path.exists(settings_path):
 if os.path.isdir(agent_dir) and not saved and not os.path.exists(settings_path):
     pass
 
-print(f"==> suite skills: {len(suite_skills)} total ({linked} linked, {existing_ok} already ok, {backed_up} backed up)")
+print(f"==> suite skills: {len(suite_skills)} total ({linked} linked, {existing_ok} already ok, {backed_up} backed up, {pruned} pruned)")
 PY
 link_status=$?
 [ "$link_status" -eq 0 ] || fatal "suite skill linking failed"

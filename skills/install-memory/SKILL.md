@@ -23,9 +23,9 @@ target until the owner approves the adoption plan.
    before each patch and stop on a concurrent change.
 3. Confirm the suite requirements exist (see the global configuration repository's
    `REQUIREMENTS.md`): pinned `pi-subagents` and `pi-ask-user` packages, an installed
-   SpecKit toolkit when the project will use the pipeline, and `jev` only when Jev
-   triage is wanted in `finish-session-jev`. Report any missing requirement rather than
-   proceeding silently.
+   SpecKit toolkit when the project will use the pipeline, and the `jev` CLI
+   (with provider auth) only when Jev-on tracking is wanted. Report any missing
+   requirement rather than proceeding silently.
 
 ## Step 1: Propose The Adoption Plan
 
