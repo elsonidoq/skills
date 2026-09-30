@@ -60,10 +60,15 @@ SEAMS_WERE_PRESENT=0
 EXTENSIONS_DIR_WAS_PRESENT=0
 STATE_DIR_WAS_PRESENT=0
 MARKER_TMP=
+SPECKIT_ACTIVATED=0
 
 rollback_activation() {
 	[ "$ACTIVATION_STARTED" -eq 1 ] || return 0
 	rollback_ok=1
+	if [ "$SPECKIT_ACTIVATED" -eq 1 ]; then
+		"$SPECKIT_INSTALLER" --project "$SPECKIT_PROJECT" --uninstall >/dev/null 2>&1 || rollback_ok=0
+		SPECKIT_ACTIVATED=0
+	fi
 	rm -rf "$TRACKER_ACTIVE" "$GLOBAL_SEAMS_ACTIVE" || rollback_ok=0
 	[ -z "$MARKER_TMP" ] || rm -f "$MARKER_TMP" || rollback_ok=0
 	if [ "$TRACKER_WAS_PRESENT" -eq 1 ]; then
@@ -349,6 +354,7 @@ else
 
 	if [ -n "$SPECKIT_PROJECT" ]; then
 		"$SPECKIT_INSTALLER" --project "$SPECKIT_PROJECT" || activation_failure "project-local SpecKit all-or-none handoff failed"
+		SPECKIT_ACTIVATED=1
 		info "activated project-local SpecKit seam set: $SPECKIT_PROJECT"
 	fi
 fi

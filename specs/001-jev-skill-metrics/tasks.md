@@ -339,7 +339,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The task seam has a narrow advisory mapping role and no authority to generate or reorder tasks itself.
 
-- [ ] T030 [US3] Implement transactional project-local SpecKit preset staging, reconciliation, introspection, and rollback in `scripts/install-jev-speckit.sh`
+- [X] T030 [US3] Implement transactional project-local SpecKit preset staging, reconciliation, introspection, and rollback in `scripts/install-jev-speckit.sh`
   - **Outcome**: Compatible target projects receive all four project-owned append layers only after tracker and resolver capabilities pass; incompatible targets keep all four disabled.
   - **Depends**: T026, T027, T028, T029.
   - **Likely files/interfaces**: `scripts/install-jev-speckit.sh`, `configs/speckit/presets/jev-seams/`, target `.specify/presets/`, `specify preset resolve`, `specify artifact info`, reconciliation/uninstall commands.
@@ -348,7 +348,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: opus-class**
   - **Rationale**: Resolver capability checks, staged registry mutation, generated integration artifacts, and rollback must remain atomic across a target project.
 
-- [ ] T031 [US3] Run the complete install-mode and four-command SpecKit acceptance slice in `scripts/tests/test-install-jev.sh` and `scripts/tests/test-install-jev-speckit.sh`
+- [X] T031 [US3] Run the complete install-mode and four-command SpecKit acceptance slice in `scripts/tests/test-install-jev.sh` and `scripts/tests/test-install-jev-speckit.sh`
   - **Outcome**: User Story 3 is independently verified before documentation and full-suite closeout.
   - **Depends**: T030.
   - **Likely files/interfaces**: Both installer test scripts, `scripts/install.sh`, `scripts/install-jev-speckit.sh`, preset manifest and command layers.

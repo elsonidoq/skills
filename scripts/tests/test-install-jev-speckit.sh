@@ -24,6 +24,10 @@ new_project() {
 	done
 	PROMPT_SNAPSHOT="$PROJECT/prompt-snapshot"
 	cp -R "$PROJECT/.pi/prompts" "$PROMPT_SNAPSHOT" || return 1
+	PI_CODING_AGENT_DIR="$PROJECT/pi-agent"
+	mkdir -p "$PI_CODING_AGENT_DIR/extensions" || return 1
+	ln -s "$ROOT_DIR/extensions/jev-metrics" "$PI_CODING_AGENT_DIR/extensions/jev-metrics" || return 1
+	export PI_CODING_AGENT_DIR
 }
 
 cleanup_project() {
@@ -38,8 +42,8 @@ run_installer() {
 
 assert_no_preset() {
 	[ ! -e "$PROJECT/.specify/presets/jev-seams" ] || return 1
-	if [ -e "$PROJECT/.specify/presets/registry.json" ]; then
-		[ "$(grep -Fc 'jev-seams' "$PROJECT/.specify/presets/registry.json" || :)" -eq 0 ] || return 1
+	if [ -e "$PROJECT/.specify/presets/.registry" ]; then
+		[ "$(grep -Fc 'jev-seams' "$PROJECT/.specify/presets/.registry" || :)" -eq 0 ] || return 1
 	fi
 }
 
@@ -107,8 +111,22 @@ case_installs_all_or_none_and_reports_composition() (
 	assert_generated_prompts_contain_core_and_append || exit 1
 )
 
+case_missing_tracker_keeps_all_disabled() (
+	new_project || exit 1
+	trap cleanup_project EXIT
+	rm -f "$PI_CODING_AGENT_DIR/extensions/jev-metrics"
+	run_installer
+	[ "$INSTALL_STATUS" -ne 0 ] || exit 1
+	assert_no_preset || exit 1
+	assert_core_prompts_restored || exit 1
+	case "$INSTALL_OUTPUT" in
+		*"SpecKit preflight failed: active tracker"*"Observed:"*"Resolution:"*"No SpecKit Jev seam was enabled."*) : ;;
+		*) printf '%s\n' "$INSTALL_OUTPUT" >&2; exit 1 ;;
+	esac
+)
+
 # T030 must honor these deterministic fault-injection flags before changing any
-# active path.  They make all-or-none and rollback behavior observable without Jev.
+# active path. They make all-or-none and rollback behavior observable without Jev.
 case_subset_activation_is_rejected() (
 	new_project || exit 1
 	trap cleanup_project EXIT
@@ -184,6 +202,7 @@ if [ ! -x "$INSTALLER" ]; then
 fi
 
 run_case "installs all four append layers with resolver and artifact evidence" case_installs_all_or_none_and_reports_composition
+run_case "missing active tracker keeps all four SpecKit seams disabled" case_missing_tracker_keeps_all_disabled
 run_case "rejects a requested subset before changing generated prompts" case_subset_activation_is_rejected
 run_case "incompatible SpecKit resolver leaves all four seams disabled" case_incompatible_resolver_keeps_all_disabled
 run_case "injected activation failure rolls back the preset and core prompts" case_rollback_restores_core_prompts
