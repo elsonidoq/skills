@@ -48,7 +48,7 @@ Get that data first. The right tool depends on the problem:
 
 ## Optional Jev-on advisory chunk ranking
 
-Use this optional seam only after Step 2 has produced the current coarse-scope observations and only when **Jev-on mode** is active and the instrumented tool is available. Form an explicit list of **2 to 50** observed log or test-output chunks with stable opaque IDs. Retain the complete original evidence outside telemetry, including every chunk and its surrounding investigation context.
+Use this optional seam only after Step 2 has produced the current coarse-scope observations and only when **Jev-on mode** is active and the instrumented tool is available. Form an explicit list of **2 to 50** observed log or test-output chunks with stable opaque IDs. Retain the complete original evidence outside telemetry, including every chunk and its surrounding investigation context. Jev-on authentication is provider-scoped: this suite is installed and tested with `jev auth set --provider openrouter` (the installer default; override with `--jev-provider`).
 
 Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev. Do not send credentials, secrets, personal data, or unauthorized sensitive payloads. Ask `jev_rank` only to rank chunk relevance to the active observed failure; it cannot select a root cause, authorize a change, generate a fix, or establish correctness.
 

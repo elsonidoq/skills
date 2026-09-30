@@ -46,7 +46,19 @@ scripts/install.sh --jev-on
 
 This is a hard, all-or-none activation. The installer requires Pi `0.87.x` (tested `0.87.1`), a
 Node 22/ES2022-capable runtime, the local tracker registration harness, `jev-cli` `0.6.3`, and a
-successful `jev auth test`. The auth check is an explicit Jev-on network prerequisite. On any
+successful provider-scoped `jev auth test`. The auth check is an explicit Jev-on network
+prerequisite.
+
+The auth check is provider-scoped, and this suite defaults to the `openrouter` provider:
+
+```bash
+jev auth set --provider openrouter   # store the provider key once
+scripts/install.sh --jev-on          # verifies jev auth test --provider openrouter
+```
+
+Use `--jev-provider official|vercel|openrouter|custom` (or the `JEV_AUTH_PROVIDER` environment
+variable) when a different Jev provider is configured. A bare `jev auth test` defaults to the
+`official` provider, so the installer's provider must match the one the key was stored for. On any
 preflight failure it reports the missing or incompatible capability, the observed status without
 credential material, the corrective action, and that no optimized seam was enabled. Do not use
 Jev-on with credentials, logs, personal data, or sensitive candidate text as ranking input.

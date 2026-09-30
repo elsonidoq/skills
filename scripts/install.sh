@@ -8,6 +8,7 @@ AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 SETTINGS="$AGENT_DIR/settings.json"
 REQ_PI="0.87"
 REQ_JEV="0.6.3"
+JEV_AUTH_PROVIDER="${JEV_AUTH_PROVIDER:-openrouter}"
 PKG_SUBAGENTS="npm:pi-subagents@0.73.1"
 PKG_ASKUSER="npm:pi-ask-user@0.15.1"
 SKILLS_DIR="$SUITE_DIR/skills"
@@ -30,16 +31,21 @@ while [ "$#" -gt 0 ]; do
 	case "$1" in
 		--probe) PROBE=1 ;;
 		--jev-on) JEV_ON=1 ;;
+		--jev-provider)
+			shift
+			[ "$#" -gt 0 ] || { printf '%s\n' "usage: $0 [--probe] [--jev-on [--jev-provider PROVIDER] [--speckit-project DIR]]" >&2; exit 2; }
+			JEV_AUTH_PROVIDER=$1
+			;;
 		--speckit-project)
 			shift
-			[ "$#" -gt 0 ] || { printf '%s\n' "usage: $0 [--probe] [--jev-on [--speckit-project DIR]]" >&2; exit 2; }
+			[ "$#" -gt 0 ] || { printf '%s\n' "usage: $0 [--probe] [--jev-on [--jev-provider PROVIDER] [--speckit-project DIR]]" >&2; exit 2; }
 			SPECKIT_PROJECT=$1
 			;;
 		-h|--help)
-			printf '%s\n' "usage: $0 [--probe] [--jev-on [--speckit-project DIR]]"
+			printf '%s\n' "usage: $0 [--probe] [--jev-on [--jev-provider PROVIDER] [--speckit-project DIR]]"
 			exit 0
 			;;
-		*) printf '%s\n' "usage: $0 [--probe] [--jev-on [--speckit-project DIR]]" >&2; exit 2 ;;
+		*) printf '%s\n' "usage: $0 [--probe] [--jev-on [--jev-provider PROVIDER] [--speckit-project DIR]]" >&2; exit 2 ;;
 	esac
 	shift
 done
@@ -47,6 +53,10 @@ if [ -n "$SPECKIT_PROJECT" ] && [ "$JEV_ON" -ne 1 ]; then
 	printf '%s\n' "ERROR: --speckit-project requires --jev-on" >&2
 	exit 2
 fi
+case "$JEV_AUTH_PROVIDER" in
+	official|vercel|openrouter|custom) : ;;
+	*) printf '%s\n' "ERROR: unsupported --jev-provider '$JEV_AUTH_PROVIDER' (expected official|vercel|openrouter|custom)" >&2; exit 2 ;;
+esac
 
 info() { printf '==> %s\n' "$*"; }
 warn() { printf 'WARN: %s\n' "$*" >&2; }
@@ -301,10 +311,10 @@ else
 	esac
 	info "preflight: compatible $JEV_VERSION"
 
-	jev auth test >"$STAGE_DIR/jev-auth-test.out" 2>&1
+	jev auth test --provider "$JEV_AUTH_PROVIDER" >"$STAGE_DIR/jev-auth-test.out" 2>&1
 	auth_status=$?
-	[ "$auth_status" -eq 0 ] || preflight_failure "Jev authentication" "jev auth test exit $auth_status" "configure the Jev provider credentials and rerun jev auth test"
-	info "preflight: jev auth test succeeded (provider output withheld)"
+	[ "$auth_status" -eq 0 ] || preflight_failure "Jev authentication" "jev auth test --provider $JEV_AUTH_PROVIDER exit $auth_status" "store the $JEV_AUTH_PROVIDER key with 'jev auth set --provider $JEV_AUTH_PROVIDER', then rerun --jev-on"
+	info "preflight: jev auth test --provider $JEV_AUTH_PROVIDER succeeded (provider output withheld)"
 
 	node --test "$SUITE_DIR"/extensions/jev-metrics/test/*.test.js >"$STAGE_DIR/extension-tests.out" 2>&1
 	test_status=$?

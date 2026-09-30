@@ -81,7 +81,7 @@ Treat task dependencies as a directed graph, not checklist order alone.
 
 ## Optional Jev-on advisory targeted-test ranking
 
-Use this optional seam only when **Jev-on mode** is active, the instrumented tool is available, and the current batch already has an explicit targeted-test list containing **2 to 50** items. Give each item a stable opaque ID and retain the complete original test list outside telemetry. Rank only the already explicit targeted-test list; Jev must not invent a test list, select checks on the agent's behalf, change dependency sequencing, or establish verification completeness.
+Use this optional seam only when **Jev-on mode** is active, the instrumented tool is available, and the current batch already has an explicit targeted-test list containing **2 to 50** items. Give each item a stable opaque ID and retain the complete original test list outside telemetry. Rank only the already explicit targeted-test list; Jev must not invent a test list, select checks on the agent's behalf, change dependency sequencing, or establish verification completeness. Jev-on authentication is provider-scoped: this suite is installed and tested with `jev auth set --provider openrouter` (the installer default; override with `--jev-provider`).
 
 Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev. Do not send credentials, secrets, personal data, or unauthorized sensitive payloads. Ask `jev_rank` only to rank diagnostic relevance to the batch's changed integration surface. The main agent selects checks when uncertain and preserves dependency sequencing.
 

@@ -34,7 +34,7 @@ Do not implement speculative infrastructure or compatibility behavior without ob
 
 ## Optional Jev-on advisory investigation ranking
 
-Use this optional seam only when **Jev-on mode** is active, the instrumented tool is available, and there are **2 to 50** review comments awaiting investigation. Give each comment a stable opaque ID and retain the complete original review-comment set outside telemetry; all originals remain visible to the main agent.
+Use this optional seam only when **Jev-on mode** is active, the instrumented tool is available, and there are **2 to 50** review comments awaiting investigation. Give each comment a stable opaque ID and retain the complete original review-comment set outside telemetry; all originals remain visible to the main agent. Jev-on authentication is provider-scoped: this suite is installed and tested with `jev auth set --provider openrouter` (the installer default; override with `--jev-provider`).
 
 Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev. Do not send credentials, secrets, personal data, or unauthorized sensitive payloads. Ask `jev_rank` only to rank investigation priority, with ambiguity and high impact increasing priority. Jev cannot reject a finding, classify it, authorize a change, or establish correctness.
 

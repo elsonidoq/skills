@@ -38,7 +38,7 @@ evidence required to resolve it. Exclude credentials, tokens, personal data, and
 
 ## Optional Jev-on advisory duplicate ranking
 
-Run the deterministic duplicate search above before considering this optional seam. Use it only when **Jev-on mode** is active, the instrumented tool is available, and that search produced **2 to 50** possible overlaps. Give each possible overlap a stable opaque ID and retain the complete original possible-overlap set outside telemetry; issue content and primary evidence remain in the local register workflow, not telemetry.
+Run the deterministic duplicate search above before considering this optional seam. Use it only when **Jev-on mode** is active, the instrumented tool is available, and that search produced **2 to 50** possible overlaps. Give each possible overlap a stable opaque ID and retain the complete original possible-overlap set outside telemetry; issue content and primary evidence remain in the local register workflow, not telemetry. Jev-on authentication is provider-scoped: this suite is installed and tested with `jev auth set --provider openrouter` (the installer default; override with `--jev-provider`).
 
 Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev. Do not send credentials, secrets, personal data, or unauthorized sensitive payloads. Ask `jev_rank` only to rank likelihood of overlap with the verified new issue. Primary evidence controls create, update, or deduplicate; Jev cannot make that decision, establish an issue fact, or authorize a register edit.
 

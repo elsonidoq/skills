@@ -129,7 +129,7 @@ case_auth_failure() (
 	trap jev_fixture_cleanup EXIT
 	jev_fixture_set_jev_auth_result 1 'credential-secret-SHOULD-NOT-LEAK'
 	run_installer --jev-on
-	assert_failure_diagnostic "Jev authentication" "jev auth test exit 1" "configure the Jev provider credentials and rerun jev auth test" || exit 1
+	assert_failure_diagnostic "Jev authentication" "jev auth test --provider openrouter exit 1" "store the openrouter key with 'jev auth set --provider openrouter', then rerun --jev-on" || exit 1
 	assert_not_contains "$INSTALL_OUTPUT" "credential-secret-SHOULD-NOT-LEAK" || exit 1
 	[ "$(grep -Fxc 'jev-auth-test' "$JEV_FIXTURE_LOG")" -eq 1 ] || exit 1
 )
