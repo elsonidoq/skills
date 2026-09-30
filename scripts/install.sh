@@ -240,6 +240,8 @@ if os.path.isdir(agent_dir) and not saved and not os.path.exists(settings_path):
 
 print(f"==> suite skills: {len(suite_skills)} total ({linked} linked, {existing_ok} already ok, {backed_up} backed up)")
 PY
+link_status=$?
+[ "$link_status" -eq 0 ] || fatal "suite skill linking failed"
 
 # ---- 5. Static validation --------------------------------------------------
 info "running suite lint"

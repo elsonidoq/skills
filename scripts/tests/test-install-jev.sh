@@ -70,6 +70,24 @@ case_manual_default() (
 	assert_not_contains "$(cat "$JEV_FIXTURE_LOG")" "jev-auth-test" || exit 1
 )
 
+case_skill_linking_failure_aborts() (
+	fixture_begin || exit 1
+	trap jev_fixture_cleanup EXIT
+	cat > "$JEV_FIXTURE_BIN/python3" <<'EOF'
+#!/bin/sh
+cat >/dev/null
+printf '%s\n' "python-skill-link-failure" >> "$JEV_FIXTURE_LOG"
+exit 1
+EOF
+	chmod 700 "$JEV_FIXTURE_BIN/python3" || exit 1
+	run_installer --jev-on
+	[ "$INSTALL_STATUS" -ne 0 ] || exit 1
+	assert_contains "$INSTALL_OUTPUT" "ERROR: suite skill linking failed" || exit 1
+	assert_no_activation || exit 1
+	grep -Fx "python-skill-link-failure" "$JEV_FIXTURE_LOG" >/dev/null || exit 1
+	assert_not_contains "$(cat "$JEV_FIXTURE_LOG")" "jev-auth-test" || exit 1
+)
+
 case_incompatible_pi() (
 	fixture_begin || exit 1
 	trap jev_fixture_cleanup EXIT
@@ -188,6 +206,7 @@ run_case() {
 }
 
 run_case "manual default needs neither Jev nor tracker" case_manual_default
+run_case "skill-linking failure aborts before Jev-on activation" case_skill_linking_failure_aborts
 run_case "Jev-on rejects incompatible Pi before activation" case_incompatible_pi
 run_case "Jev-on rejects incompatible Node before activation" case_incompatible_node
 run_case "Jev-on rejects tracker load/registration failure before activation" case_tracker_load_failure

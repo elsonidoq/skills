@@ -44,7 +44,6 @@ SPECIFY_DIR="$PROJECT/.specify"
 PRESETS_DIR="$SPECIFY_DIR/presets"
 ACTIVE_PRESET="$PRESETS_DIR/$PRESET_ID"
 PROMPTS_DIR="$PROJECT/.pi/prompts"
-PERSISTENT_BACKUP="$SPECIFY_DIR/.jev-seams-install-backup"
 TRACKER_ACTIVE="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/extensions/jev-metrics"
 STAGE_DIR=
 ACTIVE_ROLLBACK=
@@ -88,33 +87,36 @@ restore_path() {
 
 capture_active_state() {
 	ACTIVE_ROLLBACK="$STAGE_DIR/active-rollback"
-	mkdir -p "$ACTIVE_ROLLBACK/prompts" || return 1
+	mkdir -p "$ACTIVE_ROLLBACK" || return 1
+	# Generated .pi/prompts are deliberately not copied. SpecKit owns their
+	# reconciliation; only the preset registry is snapshotted transactionally.
 	snapshot_path "$PRESETS_DIR" "$ACTIVE_ROLLBACK/presets" || return 1
-	snapshot_path "$PERSISTENT_BACKUP" "$ACTIVE_ROLLBACK/persistent-backup" || return 1
-	local command_id
-	for command_id in "${COMMANDS[@]}"; do
-		snapshot_path "$PROMPTS_DIR/$command_id.md" "$ACTIVE_ROLLBACK/prompts/$command_id.md" || return 1
-	done
+}
+
+reconcile_without_jev() {
+	local target=$1
+	if [ -d "$target/.specify/presets/$PRESET_ID" ] || preset_registered_at "$target"; then
+		(cd "$target" && specify preset remove "$PRESET_ID" >/dev/null 2>&1) || return 1
+	else
+		# Restoring a registry snapshot that predates the preset does not itself
+		# regenerate integration artifacts. Add/remove through SpecKit to force a
+		# supported reconciliation from the remaining layers.
+		(cd "$target" && specify preset add --dev "$PRESET_SOURCE" >/dev/null 2>&1) || return 1
+		(cd "$target" && specify preset remove "$PRESET_ID" >/dev/null 2>&1) || return 1
+	fi
 }
 
 restore_active_state() {
-	local rollback_ok=1 command_id
-	# Ask SpecKit to reconcile away a partially installed layer before restoring
-	# the byte-for-byte pre-activation paths.
-	if [ -d "$ACTIVE_PRESET" ] || preset_registered_at "$PROJECT"; then
-		(cd "$PROJECT" && specify preset remove "$PRESET_ID" >/dev/null 2>&1) || rollback_ok=0
-	fi
+	local rollback_ok=1
 	restore_path "$PRESETS_DIR" "$ACTIVE_ROLLBACK/presets" || rollback_ok=0
-	restore_path "$PERSISTENT_BACKUP" "$ACTIVE_ROLLBACK/persistent-backup" || rollback_ok=0
-	for command_id in "${COMMANDS[@]}"; do
-		restore_path "$PROMPTS_DIR/$command_id.md" "$ACTIVE_ROLLBACK/prompts/$command_id.md" || rollback_ok=0
-	done
+	reconcile_without_jev "$PROJECT" || rollback_ok=0
+	verify_core_composition "$PROJECT" "$STAGE_DIR/rollback-evidence" || rollback_ok=0
 	ACTIVATION_STARTED=0
 	if [ "$rollback_ok" -eq 1 ]; then
-		printf '%s\n' "Rollback: restored the pre-activation SpecKit registry and command artifacts." >&2
+		printf '%s\n' "Rollback: restored the preset registry and reconciled all four commands from remaining layers." >&2
 		return 0
 	fi
-	printf '%s\n' "Rollback: incomplete; inspect $PRESETS_DIR and $PROMPTS_DIR before retrying." >&2
+	printf '%s\n' "Rollback: incomplete; inspect $PRESETS_DIR and SpecKit resolver state before retrying." >&2
 	return 1
 }
 
@@ -143,24 +145,32 @@ check_source_manifest() {
 	PRESET_MANIFEST="$PRESET_SOURCE/preset.yml" python3 - <<'PY'
 import os
 from pathlib import Path
-import yaml
 
 manifest = Path(os.environ["PRESET_MANIFEST"])
-data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+entries = []
+current = None
+for raw_line in manifest.read_text(encoding="utf-8").splitlines():
+    text = raw_line.strip()
+    if text.startswith("- type:"):
+        current = {"type": text.split(":", 1)[1].strip().strip("\"'")}
+        entries.append(current)
+    elif current is not None and ":" in text:
+        key, value = text.split(":", 1)
+        if key in {"name", "file", "strategy"}:
+            current[key] = value.strip().strip("\"'")
+
 expected = {
     "speckit.analyze",
     "speckit.checklist",
     "speckit.clarify",
     "speckit.tasks",
 }
-entries = data.get("provides", {}).get("templates", [])
-actual = {entry.get("name") for entry in entries if isinstance(entry, dict)}
-if actual != expected or len(entries) != 4:
+if len(entries) != 4 or {entry.get("name") for entry in entries} != expected:
     raise SystemExit(1)
 for entry in entries:
     if entry.get("type") != "command" or entry.get("strategy") != "append":
         raise SystemExit(1)
-    path = manifest.parent / str(entry.get("file", ""))
+    path = manifest.parent / entry.get("file", "")
     if not path.is_file():
         raise SystemExit(1)
 PY
@@ -215,29 +225,33 @@ PY
 	done
 }
 
-create_persistent_backup() {
-	[ ! -e "$PERSISTENT_BACKUP" ] || return 0
-	mkdir -p "$PERSISTENT_BACKUP/prompts" || return 1
-	local command_id
+verify_core_composition() {
+	local target=$1 evidence_dir=$2 command_id
+	mkdir -p "$evidence_dir" || return 1
+	[ ! -d "$target/.specify/presets/$PRESET_ID" ] || return 1
+	preset_registered_at "$target" && return 1
 	for command_id in "${COMMANDS[@]}"; do
-		snapshot_path "$PROMPTS_DIR/$command_id.md" "$PERSISTENT_BACKUP/prompts/$command_id.md" || return 1
-	done
-	if [ -d "$ACTIVE_PRESET" ]; then
-		cp -a "$ACTIVE_PRESET" "$PERSISTENT_BACKUP/original-preset" || return 1
-		REGISTRY="$PRESETS_DIR/.registry" python3 - <<'PY' >"$PERSISTENT_BACKUP/original-priority" || return 1
+		(cd "$target" && specify preset resolve "$command_id") >"$evidence_dir/$command_id.resolve" 2>&1 || return 1
+		(cd "$target" && specify artifact info "$command_id" --json) >"$evidence_dir/$command_id.json" 2>"$evidence_dir/$command_id.artifact-error" || return 1
+		RESOLVE_FILE="$evidence_dir/$command_id.resolve" ARTIFACT_FILE="$evidence_dir/$command_id.json" COMMAND_ID="$command_id" TARGET="$target" python3 - <<'PY' || return 1
 import json
 import os
 from pathlib import Path
-path = Path(os.environ["REGISTRY"])
-priority = 10
-if path.is_file():
-    data = json.loads(path.read_text(encoding="utf-8"))
-    row = data.get("presets", {}).get("jev-seams", {})
-    if isinstance(row, dict):
-        priority = int(row.get("priority", 10))
-print(priority)
+
+resolve_text = Path(os.environ["RESOLVE_FILE"]).read_text(encoding="utf-8")
+if "jev-seams" in resolve_text or "[append]" in resolve_text or "core" not in resolve_text:
+    raise SystemExit(1)
+stack = json.loads(Path(os.environ["ARTIFACT_FILE"]).read_text(encoding="utf-8")).get("stack")
+if not isinstance(stack, list) or any(row.get("presetId") == "jev-seams" for row in stack):
+    raise SystemExit(1)
+if not any(row.get("layer") is None and row.get("strategy") == "replace" for row in stack):
+    raise SystemExit(1)
+prompt = Path(os.environ["TARGET"]) / ".pi" / "prompts" / f"{os.environ['COMMAND_ID']}.md"
+text = prompt.read_text(encoding="utf-8")
+if not text.startswith("---\n") or "Optional Jev-on advisory" in text:
+    raise SystemExit(1)
 PY
-	fi
+	done
 }
 
 # Uninstall remains available as the recovery path even if the tracker has
@@ -259,30 +273,17 @@ STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/jev-speckit-install.XXXXXX")" ||
 	preflight_failure "staging" "could not create temporary staging directory" "check temporary-directory permissions"
 
 if [ "$UNINSTALL" -eq 1 ]; then
-	capture_active_state || preflight_failure "rollback snapshot" "could not snapshot current project state" "check project permissions and retry"
+	capture_active_state || preflight_failure "rollback snapshot" "could not snapshot the preset registry" "check project permissions and retry"
 	ACTIVATION_STARTED=1
-	if [ -d "$ACTIVE_PRESET" ] || preset_registered_at "$PROJECT"; then
-		(cd "$PROJECT" && specify preset remove "$PRESET_ID") >"$STAGE_DIR/remove.out" 2>&1 ||
-			activation_failure "specify preset remove failed"
-	fi
-	if [ -d "$ACTIVE_PRESET" ] || preset_registered_at "$PROJECT"; then
-		activation_failure "preset removal left an active registry entry"
-	fi
-	if [ -d "$PERSISTENT_BACKUP/original-preset" ]; then
-		priority="$(cat "$PERSISTENT_BACKUP/original-priority" 2>/dev/null || printf '10')"
-		(cd "$PROJECT" && specify preset add --dev "$PERSISTENT_BACKUP/original-preset" --priority "$priority") >"$STAGE_DIR/restore-original.out" 2>&1 ||
-			activation_failure "could not restore the pre-existing preset"
-	fi
-	if [ -d "$PERSISTENT_BACKUP/prompts" ]; then
-		for command_id in "${COMMANDS[@]}"; do
-			restore_path "$PROMPTS_DIR/$command_id.md" "$PERSISTENT_BACKUP/prompts/$command_id.md" ||
-				activation_failure "could not restore original command artifact $command_id"
-		done
-	fi
-	rm -rf "$PERSISTENT_BACKUP" || activation_failure "could not remove the saved pre-install state"
+	reconcile_without_jev "$PROJECT" || activation_failure "specify preset removal/reconciliation failed"
+	verify_core_composition "$PROJECT" "$STAGE_DIR/uninstall-evidence" ||
+		activation_failure "uninstall did not resolve all four commands without jev-seams"
+	# Remove backup data left by versions of this installer that predated the
+	# resolver-owned rollback contract. Generated prompts are never read from it.
+	rm -rf "$SPECIFY_DIR/.jev-seams-install-backup" || activation_failure "could not remove obsolete installer backup state"
 	ACTIVATION_STARTED=0
 	INSTALL_COMPLETE=1
-	info "removed project-local $PRESET_ID preset and restored the original core composition"
+	info "removed project-local $PRESET_ID preset and reconciled all four commands from remaining layers"
 	exit 0
 fi
 
@@ -313,11 +314,9 @@ if [ "${JEV_SPECKIT_TEST_SUBSET:-0}" = 1 ]; then
 fi
 
 STAGED_PROJECT="$STAGE_DIR/project"
-mkdir -p "$STAGED_PROJECT/.pi" || preflight_failure "staging" "could not stage target integration" "check temporary-directory permissions"
+mkdir -p "$STAGED_PROJECT/.pi/prompts" || preflight_failure "staging" "could not stage target integration" "check temporary-directory permissions"
 cp -a "$SPECIFY_DIR" "$STAGED_PROJECT/.specify" ||
 	preflight_failure "staging" "could not stage .specify" "check target readability and temporary-directory permissions"
-cp -a "$PROMPTS_DIR" "$STAGED_PROJECT/.pi/prompts" ||
-	preflight_failure "staging" "could not stage command artifacts" "check target readability and temporary-directory permissions"
 if [ -d "$STAGED_PROJECT/.specify/presets/$PRESET_ID" ] || preset_registered_at "$STAGED_PROJECT"; then
 	(cd "$STAGED_PROJECT" && specify preset remove "$PRESET_ID") >"$STAGE_DIR/staged-remove.out" 2>&1 ||
 		preflight_failure "preset resolver capability" "could not remove the staged prior preset" "repair the project preset registry"
@@ -328,11 +327,10 @@ verify_composition "$STAGED_PROJECT" "$STAGE_DIR/staged-evidence" ||
 	preflight_failure "preset composition/introspection" "one or more staged commands lacked exact core-plus-one-append evidence" "upgrade SpecKit or repair the target Pi integration"
 info "preflight: staged and verified the exact four-command core-plus-append composition"
 
-# Active transaction. The current registry, generated command artifacts, and
-# persistent uninstall snapshot are restored byte-for-byte on any failure.
-capture_active_state || preflight_failure "rollback snapshot" "could not snapshot current project state" "check project permissions and retry"
+# Active transaction. Only the preset registry is snapshotted; generated
+# command artifacts are always regenerated by SpecKit from remaining layers.
+capture_active_state || preflight_failure "rollback snapshot" "could not snapshot the preset registry" "check project permissions and retry"
 ACTIVATION_STARTED=1
-create_persistent_backup || activation_failure "could not save the pre-install command state"
 if [ -d "$ACTIVE_PRESET" ] || preset_registered_at "$PROJECT"; then
 	(cd "$PROJECT" && specify preset remove "$PRESET_ID") >"$STAGE_DIR/active-remove.out" 2>&1 ||
 		activation_failure "could not remove the prior jev-seams preset"

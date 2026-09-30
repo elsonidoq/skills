@@ -47,8 +47,44 @@ assert_no_preset() {
 	fi
 }
 
-assert_core_prompts_restored() {
+assert_prompts_unchanged() {
 	diff -ru "$PROMPT_SNAPSHOT" "$PROJECT/.pi/prompts"
+}
+
+assert_core_without_jev() {
+	local command_id resolve_output artifact_json core_marker prompt
+	assert_no_preset || return 1
+	for command_id in "${COMMANDS[@]}"; do
+		resolve_output="$(cd "$PROJECT" && specify preset resolve "$command_id" 2>&1)" || return 1
+		case "$resolve_output" in *"jev-seams"*|*"[append]"*) return 1 ;; esac
+		case "$resolve_output" in *"core"*) : ;; *) return 1 ;; esac
+		artifact_json="$(cd "$PROJECT" && specify artifact info "$command_id" --json)" || return 1
+		ARTIFACT_JSON="$artifact_json" python3 - <<'PY' || return 1
+import json
+import os
+stack = json.loads(os.environ["ARTIFACT_JSON"]).get("stack")
+if not isinstance(stack, list):
+    raise SystemExit(1)
+if any(row.get("presetId") == "jev-seams" for row in stack):
+    raise SystemExit(1)
+if not any(row.get("layer") is None and row.get("strategy") == "replace" for row in stack):
+    raise SystemExit(1)
+PY
+		case "$command_id" in
+			speckit.analyze) core_marker="Perform a non-destructive cross-artifact consistency" ;;
+			speckit.checklist) core_marker="Generate a custom checklist for the current feature" ;;
+			speckit.clarify) core_marker="Identify underspecified areas in the current feature spec" ;;
+			speckit.tasks) core_marker="Generate an actionable, dependency-ordered tasks.md" ;;
+		esac
+		prompt="$PROJECT/.pi/prompts/$command_id.md"
+		grep -F "$core_marker" "$prompt" >/dev/null || return 1
+		! grep -F "Optional Jev-on advisory" "$prompt" >/dev/null || return 1
+	done
+}
+
+assert_installer_does_not_write_generated_prompts() {
+	! grep -nE '(snapshot_path|restore_path|cp[[:space:]]+-a).*(PROMPTS_DIR|\.pi/prompts)|(^|[^[:alnum:]_])(sed|perl|awk).*(PROMPTS_DIR|\.pi/prompts)|>[[:space:]]*.*(PROMPTS_DIR|\.pi/prompts)' "$INSTALLER" >/dev/null 2>&1 &&
+		! grep -F 'import yaml' "$INSTALLER" >/dev/null 2>&1
 }
 
 assert_exact_composition() {
@@ -107,6 +143,7 @@ case_installs_all_or_none_and_reports_composition() (
 	[ "$INSTALL_STATUS" -eq 0 ] || { printf '%s\n' "$INSTALL_OUTPUT" >&2; exit 1; }
 	[ -d "$PROJECT/.specify/presets/jev-seams" ] || exit 1
 	assert_preset_source_owns_no_generated_prompts || exit 1
+	assert_installer_does_not_write_generated_prompts || exit 1
 	assert_exact_composition || exit 1
 	assert_generated_prompts_contain_core_and_append || exit 1
 )
@@ -118,7 +155,7 @@ case_missing_tracker_keeps_all_disabled() (
 	run_installer
 	[ "$INSTALL_STATUS" -ne 0 ] || exit 1
 	assert_no_preset || exit 1
-	assert_core_prompts_restored || exit 1
+	assert_prompts_unchanged || exit 1
 	case "$INSTALL_OUTPUT" in
 		*"SpecKit preflight failed: active tracker"*"Observed:"*"Resolution:"*"No SpecKit Jev seam was enabled."*) : ;;
 		*) printf '%s\n' "$INSTALL_OUTPUT" >&2; exit 1 ;;
@@ -136,7 +173,7 @@ case_subset_activation_is_rejected() (
 	unset JEV_SPECKIT_TEST_SUBSET
 	[ "$INSTALL_STATUS" -ne 0 ] || exit 1
 	assert_no_preset || exit 1
-	assert_core_prompts_restored || exit 1
+	assert_prompts_unchanged || exit 1
 )
 
 case_incompatible_resolver_keeps_all_disabled() (
@@ -167,8 +204,7 @@ case_rollback_restores_core_prompts() (
 	run_installer
 	unset JEV_SPECKIT_FAIL_AFTER_PRESET
 	[ "$INSTALL_STATUS" -ne 0 ] || exit 1
-	assert_no_preset || exit 1
-	assert_core_prompts_restored || exit 1
+	assert_core_without_jev || exit 1
 )
 
 case_uninstall_reconciles_original_core_prompts() (
@@ -178,8 +214,7 @@ case_uninstall_reconciles_original_core_prompts() (
 	[ "$INSTALL_STATUS" -eq 0 ] || exit 1
 	run_installer --uninstall
 	[ "$INSTALL_STATUS" -eq 0 ] || { printf '%s\n' "$INSTALL_OUTPUT" >&2; exit 1; }
-	assert_no_preset || exit 1
-	assert_core_prompts_restored || exit 1
+	assert_core_without_jev || exit 1
 )
 
 run_case() {
