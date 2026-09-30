@@ -1,0 +1,35 @@
+{
+  "skillId": "speckit-analyze",
+  "criterion": "Rank likely requirement-task associations and low-risk findings for deeper inspection.",
+  "candidates": [
+    {"candidateId": "analysis-association-01", "body": "synthetic requirement-task association"},
+    {"candidateId": "analysis-finding-01", "body": "synthetic low-risk cross-artifact finding"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["analysis-association-01", "analysis-finding-01"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Use the complete deterministic inventories through the unchanged manual analysis workflow."
+  },
+  "outcomes": [
+    {"candidateId": "analysis-association-01", "disposition": "accepted"},
+    {"candidateId": "analysis-finding-01", "disposition": "pending"}
+  ],
+  "agentDuties": [
+    "Verify all coverage, severity, conflicts, and constitution alignment.",
+    "Do not score constitution conflicts away."
+  ],
+  "finalVerification": "Preserve complete inventories and the command's read-only behavior.",
+  "requiredLayerText": [
+    "Jev-on mode",
+    "2 to 50",
+    "stable opaque IDs",
+    "complete deterministic inventories",
+    "constitution-conflict severity",
+    "jev_disposition",
+    "verifies all coverage, severity, conflicts, and constitution alignment",
+    "Preserve complete inventories and the command's read-only behavior"
+  ]
+}

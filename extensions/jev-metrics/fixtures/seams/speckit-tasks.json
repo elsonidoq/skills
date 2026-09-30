@@ -1,0 +1,34 @@
+{
+  "skillId": "speckit-tasks",
+  "criterion": "Rank likely user-story matches for each named entity or interface contract.",
+  "candidates": [
+    {"candidateId": "tasks-story-match-01", "body": "synthetic entity-to-story candidate"},
+    {"candidateId": "tasks-story-match-02", "body": "synthetic interface-contract-to-story candidate"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["tasks-story-match-01", "tasks-story-match-02"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Use the complete entity and interface-contract inventory through the unchanged manual tasks workflow."
+  },
+  "outcomes": [
+    {"candidateId": "tasks-story-match-01", "disposition": "accepted"},
+    {"candidateId": "tasks-story-match-02", "disposition": "pending"}
+  ],
+  "agentDuties": [
+    "Assign stories, design tasks, order dependencies, and preserve complete coverage.",
+    "Do not generate or reorder tasks automatically."
+  ],
+  "finalVerification": "Complete coverage and valid dependency order remain mandatory.",
+  "requiredLayerText": [
+    "Jev-on mode",
+    "2 to 50",
+    "stable opaque IDs",
+    "complete entity and interface-contract inventory",
+    "jev_disposition",
+    "assigns stories, designs tasks, orders dependencies, and preserves complete coverage",
+    "Complete coverage and valid dependency order remain mandatory"
+  ]
+}

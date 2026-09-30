@@ -1,0 +1,38 @@
+schema_version: "1.0"
+
+preset:
+  id: "jev-seams"
+  name: "Jev Advisory Seams"
+  version: "1.0.0"
+  description: "Bounded, instrumented Jev advisory guidance for four SpecKit core commands"
+
+requires:
+  speckit_version: ">=1.0.12,<1.1.0"
+
+provides:
+  templates:
+    - type: "command"
+      name: "speckit.analyze"
+      file: "commands/speckit.analyze.md"
+      description: "Append bounded Jev analysis ranking guidance"
+      strategy: "append"
+    - type: "command"
+      name: "speckit.checklist"
+      file: "commands/speckit.checklist.md"
+      description: "Append bounded Jev checklist ranking guidance"
+      strategy: "append"
+    - type: "command"
+      name: "speckit.clarify"
+      file: "commands/speckit.clarify.md"
+      description: "Append bounded Jev clarification ranking guidance"
+      strategy: "append"
+    - type: "command"
+      name: "speckit.tasks"
+      file: "commands/speckit.tasks.md"
+      description: "Append bounded Jev task-association ranking guidance"
+      strategy: "append"
+
+tags:
+  - "jev"
+  - "advisory"
+  - "seams"

@@ -285,7 +285,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: opus-class**
   - **Rationale**: Existing installer state, staged resources, opt-in authentication, and rollback must change atomically without harming manual installs.
 
-- [ ] T024 [US3] Add fail-first SpecKit seam and preset install/reconcile/introspection fixtures in `extensions/jev-metrics/fixtures/seams/`, `extensions/jev-metrics/test/extension.test.js`, and `scripts/tests/test-install-jev-speckit.sh`
+- [X] T024 [US3] Add fail-first SpecKit seam and preset install/reconcile/introspection fixtures in `extensions/jev-metrics/fixtures/seams/`, `extensions/jev-metrics/test/extension.test.js`, and `scripts/tests/test-install-jev-speckit.sh`
   - **Outcome**: Four source-named SpecKit fixtures define bounded inputs, retained originals, candidate-level dispositions, manual fallback, privacy, and unchanged main-agent authority before command layers are written; a temporary initialized project also specifies all-or-none installation, generated-prompt nonownership, resolver compatibility failure, introspection evidence, uninstall, and rollback.
   - **Depends**: T023.
   - **Likely files/interfaces**: `extensions/jev-metrics/fixtures/seams/{speckit-analyze,speckit-checklist,speckit-clarify,speckit-tasks}.json`, `extensions/jev-metrics/test/extension.test.js`, `scripts/tests/test-install-jev-speckit.sh`, `scripts/tests/lib/jev-install-fixtures.sh`, fake/fixture `specify preset resolve` and `specify artifact info`, planned preset and installer paths.
@@ -294,7 +294,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The approved semantic seam and distribution contracts are explicit and can be captured before append-layer implementation.
 
-- [ ] T025 [US3] Define the project-installable four-command append preset in `configs/speckit/presets/jev-seams/preset.yml`
+- [X] T025 [US3] Define the project-installable four-command append preset in `configs/speckit/presets/jev-seams/preset.yml`
   - **Outcome**: One portable preset declares exactly `speckit.analyze`, `speckit.checklist`, `speckit.clarify`, and `speckit.tasks` with append composition and no copied core prompt content.
   - **Depends**: T024.
   - **Likely files/interfaces**: `configs/speckit/presets/jev-seams/preset.yml`; SpecKit 1.0.12 preset manifest schema and command-layer paths.
@@ -303,7 +303,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This is a small declarative manifest constrained by the researched resolver contract.
 
-- [ ] T026 [US3] Add bounded association/finding ranking guidance for analysis in `configs/speckit/presets/jev-seams/commands/speckit.analyze.md`
+- [X] T026 [US3] Add bounded association/finding ranking guidance for analysis in `configs/speckit/presets/jev-seams/commands/speckit.analyze.md`
   - **Outcome**: The append layer ranks likely requirement-task associations and low-risk findings from complete inventories without scoring away constitution conflicts or changing read-only behavior.
   - **Depends**: T025.
   - **Likely files/interfaces**: `configs/speckit/presets/jev-seams/commands/speckit.analyze.md`; `jev_rank`, `jev_disposition`, core `speckit.analyze` composition.
@@ -312,7 +312,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: One settled, low-risk append seam can be implemented independently.
 
-- [ ] T027 [US3] Add bounded checklist inclusion/group ranking guidance in `configs/speckit/presets/jev-seams/commands/speckit.checklist.md`
+- [X] T027 [US3] Add bounded checklist inclusion/group ranking guidance in `configs/speckit/presets/jev-seams/commands/speckit.checklist.md`
   - **Outcome**: The append layer ranks inclusion value and near-duplicate groups only after the complete checklist candidate set exists.
   - **Depends**: T025.
   - **Likely files/interfaces**: `configs/speckit/presets/jev-seams/commands/speckit.checklist.md`; `jev_rank`, `jev_disposition`, core `speckit.checklist` composition.
@@ -321,7 +321,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The seam is isolated and completely described by the approved contract.
 
-- [ ] T028 [US3] Add more-than-five ambiguity candidate ranking guidance in `configs/speckit/presets/jev-seams/commands/speckit.clarify.md`
+- [X] T028 [US3] Add more-than-five ambiguity candidate ranking guidance in `configs/speckit/presets/jev-seams/commands/speckit.clarify.md`
   - **Outcome**: The append layer asks Jev to rank explicit ambiguity candidates only when more than five exist while the main agent selects at most five questions and handles all material decisions.
   - **Depends**: T025.
   - **Likely files/interfaces**: `configs/speckit/presets/jev-seams/commands/speckit.clarify.md`; `jev_rank`, `jev_disposition`, core `speckit.clarify` composition.
@@ -330,7 +330,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The trigger and authority boundary are explicit and localized.
 
-- [ ] T029 [US3] Add entity/contract-to-story ranking guidance in `configs/speckit/presets/jev-seams/commands/speckit.tasks.md`
+- [X] T029 [US3] Add entity/contract-to-story ranking guidance in `configs/speckit/presets/jev-seams/commands/speckit.tasks.md`
   - **Outcome**: The append layer ranks likely user-story matches for each named entity or interface contract while the main agent assigns stories, designs tasks, orders dependencies, and preserves complete coverage.
   - **Depends**: T025.
   - **Likely files/interfaces**: `configs/speckit/presets/jev-seams/commands/speckit.tasks.md`; `jev_rank`, `jev_disposition`, core `speckit.tasks` composition.

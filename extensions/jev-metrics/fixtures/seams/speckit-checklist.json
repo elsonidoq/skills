@@ -1,0 +1,36 @@
+{
+  "skillId": "speckit-checklist",
+  "criterion": "Rank checklist inclusion value and likely near-duplicate grouping.",
+  "candidates": [
+    {"candidateId": "checklist-inclusion-01", "body": "synthetic checklist inclusion candidate"},
+    {"candidateId": "checklist-group-01", "body": "synthetic near-duplicate group candidate"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["checklist-inclusion-01", "checklist-group-01"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Use the complete checklist candidate set through the unchanged manual checklist workflow."
+  },
+  "outcomes": [
+    {"candidateId": "checklist-inclusion-01", "disposition": "overridden"},
+    {"candidateId": "checklist-group-01", "disposition": "not_used"}
+  ],
+  "agentDuties": [
+    "Review every exclusion and group.",
+    "Retain required, high-risk, and owner-requested coverage."
+  ],
+  "finalVerification": "Preserve requirement-quality focus and existing file-preservation rules.",
+  "requiredLayerText": [
+    "Jev-on mode",
+    "2 to 50",
+    "stable opaque IDs",
+    "complete checklist candidate set",
+    "after the complete candidate set exists",
+    "jev_disposition",
+    "reviews every exclusion and group",
+    "required, high-risk, and owner-requested coverage",
+    "Preserve requirement-quality focus and existing file-preservation rules"
+  ]
+}

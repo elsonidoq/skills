@@ -345,3 +345,85 @@ test("receiving-code-review visibly dispositions every original review comment",
 	const fixture = GLOBAL_SEAM_FIXTURES.find(({ skillId }) => skillId === "receiving-code-review").fixture;
 	assert.equal(fixture.outcomes.every(({ disposition }) => disposition !== "pending"), true);
 });
+
+const SPECKIT_SEAM_IDS = [
+	"speckit-analyze",
+	"speckit-checklist",
+	"speckit-clarify",
+	"speckit-tasks",
+];
+
+async function loadSpecKitSeams() {
+	return Promise.all(SPECKIT_SEAM_IDS.map(async (skillId) => {
+		const commandName = skillId.replace("speckit-", "speckit.");
+		return {
+			skillId,
+			fixture: JSON.parse(await readFile(new URL(`../fixtures/seams/${skillId}.json`, import.meta.url), "utf8")),
+			layer: await readFile(new URL(`../../../configs/speckit/presets/jev-seams/commands/${commandName}.md`, import.meta.url), "utf8"),
+		};
+	}));
+}
+
+test("SpecKit seam fixtures name exactly the four approved SpecKit skill IDs", async () => {
+	const seams = await loadSpecKitSeams();
+	assert.deepEqual(seams.map(({ skillId }) => skillId), SPECKIT_SEAM_IDS);
+	assert.deepEqual([...new Set(seams.map(({ fixture }) => fixture.skillId))], SPECKIT_SEAM_IDS);
+});
+
+test("SpecKit append layers preserve bounded advisory ranking and core authority", async () => {
+	for (const { skillId, fixture, layer } of await loadSpecKitSeams()) {
+		const candidateIds = fixture.candidates.map(({ candidateId }) => candidateId);
+		assert.equal(fixture.skillId, skillId);
+		assert.ok(fixture.candidates.length >= 2 && fixture.candidates.length <= 50, `${skillId}: bounded candidates`);
+		assert.equal(new Set(candidateIds).size, candidateIds.length, `${skillId}: unique candidate IDs`);
+		for (const candidateId of candidateIds) {
+			assert.match(candidateId, /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/, `${skillId}: opaque candidate ID`);
+		}
+		assert.equal(fixture.originalSetRetained, true, `${skillId}: retains complete original set`);
+		assert.deepEqual(fixture.successfulProposalCandidateIds, candidateIds, `${skillId}: one proposal per successful candidate`);
+		assert.equal(fixture.instrumentedTool, "jev_rank", `${skillId}: instrumented-tool-only use`);
+		assert.equal(fixture.sensitivePayloadExcluded, true, `${skillId}: sensitive payload excluded`);
+		assertFixtureContainsOnlySafeSyntheticContent(fixture);
+		assert.deepEqual(fixture.fallback.statuses, ["unavailable", "malformed"], `${skillId}: manual fallback states`);
+		assert.equal(fixture.outcomes.length, candidateIds.length, `${skillId}: each candidate has a disposition or remains pending`);
+		for (const outcome of fixture.outcomes) {
+			assert.ok(candidateIds.includes(outcome.candidateId), `${skillId}: outcome belongs to original candidate set`);
+			assert.ok(["accepted", "overridden", "not_used", "pending"].includes(outcome.disposition), `${skillId}: valid disposition or pending`);
+		}
+		assert.deepEqual(
+			[...new Set(fixture.outcomes.map(({ candidateId }) => candidateId))].sort(),
+			[...candidateIds].sort(),
+			`${skillId}: exactly one disposition or pending outcome per original candidate`,
+		);
+		for (const requiredText of fixture.requiredLayerText) {
+			assert.ok(layer.includes(requiredText), `${skillId}: missing required append-layer guidance: ${requiredText}`);
+		}
+		assert.match(layer, /Only `jev_rank` is the measured Jev interface; never use raw shell or MCP Jev\./);
+		assert.match(layer, /Do not send credentials, secrets, personal data, or unauthorized sensitive payloads\./);
+		assert.match(layer, /If Jev-on is absent or `jev_rank` returns no proposals, use the unchanged manual workflow\./);
+		assert.ok(layer.includes(fixture.finalVerification), `${skillId}: core final verification remains unchanged`);
+	}
+});
+
+test("each SpecKit seam fixture receives one proposal per candidate without persisting candidate bodies", async () => {
+	for (const { skillId, fixture } of await loadSpecKitSeams()) {
+		const stdout = JSON.stringify({
+			answers: Object.fromEntries(fixture.candidates.map((_, index) => [
+				`candidate_${index}`,
+				{ score: fixture.candidates.length - index },
+			])),
+		});
+		const { api, manager, processAdapter } = setup({ plans: [{ code: 0, stdout }] });
+		const result = details(await api.invokeTool("jev_rank", {
+			skillId,
+			criterion: fixture.criterion,
+			candidates: fixture.candidates,
+		}));
+		assert.equal(result.status, "succeeded");
+		assert.deepEqual(result.proposals.map(({ candidateId }) => candidateId), fixture.successfulProposalCandidateIds);
+		assert.deepEqual(processAdapter.calls[0].args, ["run", "-"]);
+		for (const { body } of fixture.candidates) {
+			assert.equal(JSON.stringify(manager.getBranch()).includes(body), false, `${skillId}: candidate body persisted`);
+		}
+	}
+});

@@ -1,0 +1,44 @@
+{
+  "skillId": "speckit-clarify",
+  "criterion": "Rank the value of asking each explicit ambiguity candidate within the five-question limit.",
+  "candidates": [
+    {"candidateId": "clarify-question-01", "body": "synthetic ambiguity candidate one"},
+    {"candidateId": "clarify-question-02", "body": "synthetic ambiguity candidate two"},
+    {"candidateId": "clarify-question-03", "body": "synthetic ambiguity candidate three"},
+    {"candidateId": "clarify-question-04", "body": "synthetic ambiguity candidate four"},
+    {"candidateId": "clarify-question-05", "body": "synthetic ambiguity candidate five"},
+    {"candidateId": "clarify-question-06", "body": "synthetic ambiguity candidate six"}
+  ],
+  "originalSetRetained": true,
+  "successfulProposalCandidateIds": ["clarify-question-01", "clarify-question-02", "clarify-question-03", "clarify-question-04", "clarify-question-05", "clarify-question-06"],
+  "sensitivePayloadExcluded": true,
+  "instrumentedTool": "jev_rank",
+  "fallback": {
+    "statuses": ["unavailable", "malformed"],
+    "action": "Use the complete ambiguity set through the unchanged manual clarification workflow."
+  },
+  "outcomes": [
+    {"candidateId": "clarify-question-01", "disposition": "accepted"},
+    {"candidateId": "clarify-question-02", "disposition": "accepted"},
+    {"candidateId": "clarify-question-03", "disposition": "pending"},
+    {"candidateId": "clarify-question-04", "disposition": "pending"},
+    {"candidateId": "clarify-question-05", "disposition": "not_used"},
+    {"candidateId": "clarify-question-06", "disposition": "overridden"}
+  ],
+  "agentDuties": [
+    "Select at most five questions.",
+    "Handle every material product, architecture, privacy, permission, cost, security, or irreversible decision."
+  ],
+  "finalVerification": "No more than five questions are asked and each accepted answer is integrated and validated by the core command.",
+  "requiredLayerText": [
+    "Jev-on mode",
+    "more than five",
+    "2 to 50",
+    "stable opaque IDs",
+    "complete ambiguity set",
+    "jev_disposition",
+    "at most five questions",
+    "product, architecture, privacy, permission, cost, security, or irreversible",
+    "No more than five questions are asked and each accepted answer is integrated and validated by the core command"
+  ]
+}
