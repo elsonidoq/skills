@@ -267,7 +267,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
 
 ### Tests and Implementation for User Story 3
 
-- [ ] T022 [US3] Add fail-first manual/Jev-on preflight, activation-order, and rollback fixtures in `scripts/tests/test-install-jev.sh`
+- [X] T022 [US3] Add fail-first manual/Jev-on preflight, activation-order, and rollback fixtures in `scripts/tests/test-install-jev.sh`
   - **Outcome**: Shell tests define default manual behavior and transactional Jev-on behavior for Pi, Node, tracker load/registration, Jev version/auth, deterministic checks, activation failure, and rollback.
   - **Depends**: T021, T002.
   - **Likely files/interfaces**: `scripts/tests/test-install-jev.sh`, `scripts/tests/lib/jev-install-fixtures.sh`, `scripts/install.sh`, fake Pi/Node/Jev executables and temporary active resource paths.
@@ -276,7 +276,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The approved installation matrix is explicit and can be encoded before modifying the installer.
 
-- [ ] T023 [US3] Implement explicit manual/Jev-on staging, preflight, activation, and rollback in `scripts/install.sh`
+- [X] T023 [US3] Implement explicit manual/Jev-on staging, preflight, activation, and rollback in `scripts/install.sh`
   - **Outcome**: Manual remains default; Jev-on verifies all required capabilities before activating the tracker and four global seams, restores prior state on failure, and requires `/reload` after successful configuration changes.
   - **Depends**: T022.
   - **Likely files/interfaces**: `scripts/install.sh`, extension resource path, four global skill paths, `jev --version`, fixed `jev auth test`, extension fake-load harness, optional handoff to `scripts/install-jev-speckit.sh`.
