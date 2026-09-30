@@ -161,11 +161,15 @@ export class FakeSessionManager {
 /** Construct only the ExtensionContext fields used by the metric extension tests. */
 export function createFakeExtensionContext({ sessionManager, cwd, ...context } = {}) {
 	const manager = sessionManager ?? new FakeSessionManager({ cwd });
+	const notifications = [];
 	return {
 		sessionManager: manager,
 		cwd: cwd ?? manager.getCwd(),
 		hasUI: false,
-		ui: {},
+		ui: {
+			notifications,
+			notify: (message, level = "info") => notifications.push({ message, level }),
+		},
 		...context,
 	};
 }
@@ -188,7 +192,8 @@ export class FakeExtensionAPI {
 		this.tools.set(tool.name, tool);
 	}
 
-	registerCommand(command) {
+	registerCommand(name, options) {
+		const command = typeof name === "string" ? { name, ...options } : name;
 		if (!command?.name) throw new TypeError("command registration requires a name");
 		if (this.commands.has(command.name)) throw new Error(`duplicate command: ${command.name}`);
 		this.commands.set(command.name, command);

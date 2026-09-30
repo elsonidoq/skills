@@ -144,7 +144,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: opus-class**
   - **Rationale**: Locking, validation, append durability, and privacy must compose transactionally across filesystem failure modes.
 
-- [ ] T011 [P] [US1] Add fail-first Pi adapter tests for three tools, `/jev-metrics`, serialization, lifecycle reconstruction, and closeout in `extensions/jev-metrics/test/extension.test.js`
+- [X] T011 [P] [US1] Add fail-first Pi adapter tests for three tools, `/jev-metrics`, serialization, lifecycle reconstruction, and closeout in `extensions/jev-metrics/test/extension.test.js`
   - **Outcome**: A fake Pi 0.87.x API specifies registration, custom-entry append timing, current/history/help rendering, active-leaf changes, reload/resume/fork behavior, and one closeout result.
   - **Depends**: T008, T010.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/extension.test.js`, fake Pi/session adapters from T001, `registerTool`, `registerCommand`, `appendEntry`, `getSessionId`, and `getBranch`.
@@ -153,7 +153,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The adapter contract is fully documented and a fake API keeps this task bounded.
 
-- [ ] T012 [P] [US1] Add fail-first end-to-end sentinel and allowlist tests in `extensions/jev-metrics/test/privacy.test.js`
+- [X] T012 [P] [US1] Add fail-first end-to-end sentinel and allowlist tests in `extensions/jev-metrics/test/privacy.test.js`
   - **Outcome**: Synthetic candidate, criterion, log, credential, personal-data, stderr, endpoint, project-path, and raw-response sentinels are proven absent from session entries, metrics text/JSON, diagnostics, and CSV.
   - **Depends**: T008, T010.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/privacy.test.js`, fixtures under `extensions/jev-metrics/fixtures/events/` and `extensions/jev-metrics/fixtures/jev-responses/`, all persisted/rendered extension outputs.
@@ -162,7 +162,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The privacy boundary is enumerated and can be independently tested in a dedicated file.
 
-- [ ] T013 [US1] Implement Pi tool/command registration, serialized event mutation, branch reconstruction, rendering, and closeout orchestration in `extensions/jev-metrics/index.js`
+- [X] T013 [US1] Implement Pi tool/command registration, serialized event mutation, branch reconstruction, rendering, and closeout orchestration in `extensions/jev-metrics/index.js`
   - **Outcome**: `jev_rank`, `jev_disposition`, and `jev_metrics` are model-callable; `/jev-metrics` exposes current/history/help; only owned versioned custom entries on the active branch determine metrics.
   - **Depends**: T011, T012.
   - **Likely files/interfaces**: `extensions/jev-metrics/index.js`, all four `extensions/jev-metrics/lib/*.js` modules, Pi 0.87.x `ExtensionAPI` and `ExtensionContext`.
@@ -171,7 +171,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: opus-class**
   - **Rationale**: This is the integration point for concurrent Pi lifecycle, process, event, aggregate, and filesystem state.
 
-- [ ] T014 [US1] Add deterministic metrics closeout and explicit store-error handling to `skills/finish-session/SKILL.md`
+- [X] T014 [US1] Add deterministic metrics closeout and explicit store-error handling to `skills/finish-session/SKILL.md`
   - **Outcome**: `finish-session` invokes `jev_metrics(action=closeout)` once, accepts only `appended` or `already_exported` as complete, reports `store_error`, and appends even when documentation routing is uninitialized.
   - **Depends**: T013.
   - **Likely files/interfaces**: `skills/finish-session/SKILL.md`; `jev_metrics` closeout contract and existing finish-session ordering.
@@ -180,7 +180,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This is a narrow integration into an established documented workflow.
 
-- [ ] T015 [US1] Run the complete US1 deterministic acceptance slice against `extensions/jev-metrics/test/*.test.js` and `skills/finish-session/SKILL.md`
+- [X] T015 [US1] Run the complete US1 deterministic acceptance slice against `extensions/jev-metrics/test/*.test.js` and `skills/finish-session/SKILL.md`
   - **Outcome**: The metrics MVP is independently verified before any seam or installer activation work proceeds.
   - **Depends**: T014.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/*.test.js`, `extensions/jev-metrics/fixtures/events/`, `extensions/jev-metrics/fixtures/jev-responses/`, `skills/finish-session/SKILL.md`.

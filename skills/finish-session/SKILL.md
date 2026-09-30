@@ -3,164 +3,184 @@ name: finish-session
 description: Use when closing a working session that may need documentation, unresolved-work, deployment, memory, or temporary current-execution state closeout.
 ---
 
-You are closing a working session. Preserve durable knowledge without turning closeout into a repository audit.
+# Finish Session
 
-## Step 0: Documentation Initialization Gate
+Preserve durable knowledge without turning closeout into a repository audit. A closeout is incomplete
+when accepted information that matters to a future agent exists only in the conversation.
 
-Before applying the closeout workflow, read repository instructions and existing
-documentation indexes only far enough to identify the project's required
-documentation owners and directories. Confirm that each required owner exists
-and every discovered documentation directory has the index mechanism required
-by local convention. Locate the project's documentation-routing guide: the
-documented rules that identify which kinds of changes require which
-documentation owners. If no such guide exists, report documentation ownership
-as unavailable. If the project has a persistent database, also confirm
-that an authoritative database-schema document or documented set of schema
-documents exists. An existing authoritative schema document satisfies this
-requirement even when no convention names it. If no local convention or
-existing documentation identifies the required owners or directory-index
-mechanism, report documentation ownership as unavailable. For a database-backed
-project, also report ownership as unavailable when neither identifies its
-database-schema owner.
+## Core invariants
 
-This is an existence check only: do not audit documentation accuracy, create
-missing files, or modify any target in this step. If documentation ownership is
-unavailable or any required owner or directory index is missing, report the
-missing paths or owners, instruct the user to use the `initialize-documentation`
-skill, and stop. Continue with the remaining steps only after all required
-documentation owners and indexes exist.
+1. Current-state documentation has one authoritative owner for each material fact.
+2. Verified unresolved work has one canonical owner: `docs/open_issues.md`.
+3. Memory contains only verified trigger-first gotchas.
+4. A project's documented temporary execution state contains only temporary execution truth.
+5. Every accepted, durable decision, constraint, rationale, user rule, or attributed assertion from
+   the conversation has one persistent canonical owner. It is not left only in the transcript.
+6. Documentation is discoverable: required directory indexes and the documentation-routing guide
+   link future readers and writers to the same owner.
 
-## Core Invariants
+## Safety rules
 
-1. Affected authoritative documentation describes what is built now.
-2. Discovered work deliberately left unresolved has one canonical owner: `docs/open_issues.md`.
-3. For a deployed project, deploy-time work pending since the last confirmed deploy has one canonical owner.
-4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
-5. The memory index remains usable.
-6. A project with a persistent database has authoritative schema documentation that describes its current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable.
-7. The project's temporary current-execution state document holds only temporary truth about the current execution and is replaced, not appended; it is never a home for durable facts, completed-work summaries, file inventories, or per-task ledgers.
+- Start with `git status --short`, `git diff --name-status`, and
+  `git diff --cached --name-status`. Inspect full diffs and relevant untracked paths only when they
+  are attributable to this session. Preserve unrelated and pre-existing work.
+- Before editing, record every target's initial dirty state and content. Do not edit an already-dirty
+  target without explicit owner approval. Re-read it immediately before patching and stop on a
+  concurrent change.
+- Do not discard, stage, commit, or rewrite unrelated work. Do not modify product code, tests,
+  generated application assets, or completed implementation artifacts.
+- Verify claims about current code, configuration, schemas, generated output, or operational state
+  against a primary artifact or configured external source. Do not record an unverified underlying
+  claim as current-system truth.
+- A direct, attributable user statement proves that the user made a decision, rule, constraint,
+  rationale, or assertion; it does not prove an independently verifiable technical or external
+  claim. Preserve the attributed statement with its provenance and verification status instead of
+  promoting or discarding it.
+- Never write credentials, tokens, personal data, or sensitive payloads. Do not execute deployment
+  procedures or invent deployment commands.
+- Git owns changelogs, completed-work summaries, file inventories, and plan/task completion
+  metadata. Do not copy those into durable documentation or memory.
 
-## Safety Rules
+## Step 0: Documentation readiness and preservation gate
 
-- Start with `git status --short`, `git diff --name-status`, and `git diff --cached --name-status`. From those summaries, inspect full diffs and relevant untracked files only for paths attributable to this session; neither diff command includes untracked contents. Treat pre-existing or unattributable changes as out of scope and report the uncertainty.
-- Record each prospective target's initial dirty state and content before editing. Do not edit a target that was already dirty unless the user explicitly approves that overlap. Re-read and compare it with the recorded content immediately before applying a patch; if it changed concurrently, stop and report the conflict.
-- Do not discard, stage, commit, or rewrite unrelated work. Limit edits to closeout documentation, issue or deployment records, and a verified project memory store. Do not modify application code, tests, generated application assets, or completed implementation artifacts.
-- Verify a durable claim against its primary artifact: code, configuration, schema, generator output, or external source explicitly configured by the repository. Never record an unverified claim as current truth.
-- Do not write credentials, tokens, personal data, or sensitive payloads. Use redacted placeholders such as `$SERVICE_TOKEN`.
-- Do not execute deployment procedures. Do not invent deployment commands, rollback steps, or environment state. Record an unknown or verification gap instead.
-- Git owns changelogs, completed-work summaries, file-and-line inventories, and plan/task completion metadata. Do not add them to docs, issues, deployment steps, or memory.
+Read repository instructions and existing indexes only far enough to identify required documentation
+owners, documentation directories, index conventions, the documentation-routing guide, and (when
+applicable) the database-schema owner. This is an existence check, not a documentation audit.
 
-## Step 1: Discover Existing Owners
+If an owner, index, routing guide, or required schema owner is missing, report documentation
+ownership as unavailable and name the missing element. Do not invent it and do not continue broad
+documentation reconciliation. **Still run Steps 1–3 in preservation mode:** use existing owners and
+obtain owner choices for accepted durable conversation candidates. Do not stop merely because an
+owner is missing.
 
-Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. For unresolved issues, this skill set uses the canonical local register `docs/open_issues.md` and the `track-open-issue` skill. Do not route issues to another local or external tracker or migrate unrelated records. For other information, preserve existing authoritative documentation owners and runbooks.
+When missing infrastructure must be initialized, verify that `initialize-documentation` is available.
+Use it after the required owner choices are made. If unavailable, report `documentation initialization:
+UNAVAILABLE` and stop without creating the owner. Never report closeout complete while an accepted
+durable candidate remains only in conversation.
 
-Do not initialize fallback artifacts during discovery. If a verified finding has
-no owner, report the missing owner and ask the user to choose its location and
-format, except for unresolved issues whose location is fixed as above. A missing
-issue register may be initialized only for a verified candidate in Step 3 under
-`track-open-issue`, after Step 0's gate is satisfied. Preserve the existing format
-and identifiers when an artifact already exists.
+## Step 1: Discover existing owners
 
-## Step 2: Derive Candidate Findings From Attributable Work
+Read applicable instructions and indexes. Preserve existing authoritative owners, runbooks, formats,
+and identifiers. This suite uses `docs/open_issues.md` for unresolved issues through
+`track-open-issue`; do not substitute another tracker.
 
-Use the actual working tree, relevant commits made during the session when identifiable, code, configuration, schemas, and generated output. Do not rely on the session narrative alone.
+Do not initialize fallback documents during discovery. Route ownerless candidates using Step 3's
+owner-choice procedure. A missing issue register may be initialized only through `track-open-issue`
+after the Step 0 readiness check passes.
 
-Inspect only documents plausibly affected by changed behavior or data. This can include architecture docs, database-schema documents, README files, API/reference docs, configuration examples, runbooks, generated docs, and active decision records. For database-backed projects, compare schema documentation with the authoritative migrations, schema definitions, or database introspection available to the repository; update the affected schema document when tables or collections, fields, types, keys, relationships, constraints, or indexes changed. Leave accurate text unchanged. Recompute any count changed by attributable work and name its source or generating command. Mark historical records superseded in place rather than rewriting history.
+## Step 2: Derive attributable candidates
 
-If the repository declares a targeted, known-safe, bounded generator whose outputs are closeout documentation relevant to the changed area, run it and inspect its diff. Ask before running an expensive or broad generator. Do not run a generator that may modify application code, tests, or generated application assets; report its command as a verification gap instead.
+Use attributable working-tree changes, commits, code, configuration, schemas, generated outputs, and
+direct attributable user statements. Do not treat agent-authored summaries, inferred intent, or
+session narrative as proof of current-system truth.
 
-## Step 3: Route Each Verified Finding
+### Durable conversation-information pass
 
-Use one canonical owner. A secondary pointer is allowed only when it provides a distinct warning or makes a dependency discoverable; never duplicate a full narrative. In particular, documentation explains current system behavior while a memory may separately warn how a future action can break it.
+Run this pass even if Step 0 found missing infrastructure and even if no attributable file changed.
+Inspect direct user statements for information that:
 
-First apply the project's documentation-routing guide. It defines its own
-material change categories and their documentation owners; treat it as
-authoritative and do not limit closeout to the examples below. The examples are
-non-exhaustive seed guidance for a repository that has not yet defined more
-specific categories. The filenames illustrate a `docs/architecture/` layout
-only. Preserve an equivalent established owner rather than creating a
-competing document. If the guide identifies a missing owner, report it and
-direct the user to `initialize-documentation` instead of selecting a path
-during closeout.
+1. matters to a future agent's decision or action;
+2. is not recoverable from code or authoritative documentation; and
+3. remains useful beyond the current execution.
 
-| Changed area | Required documentation | Example owner |
-| --- | --- | --- |
-| New endpoint or changed API contract | Endpoints, request and response contracts, authentication and error behavior | `docs/architecture/api-conventions.md` |
-| Changed server pattern | Helpers, middleware, and server conventions that other code must follow | `docs/architecture/server-conventions.md` |
-| Changed frontend pattern | Hooks, state patterns, component conventions, or authentication flow | `docs/architecture/frontend-conventions.md` |
-| Changed schema or migration | Current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable | `docs/architecture/db-schema.md` |
-| Changed data shape or query pattern | Domain data shapes, ownership, lifecycle, and query/access patterns | `docs/architecture/data-model.md` |
-| New test pattern or test-file convention | Test structure, fixtures, helpers, and required testing conventions | `docs/architecture/testing-conventions.md` |
-| New import or module pattern | Module boundaries, import/export rules, and dependency-direction conventions | `docs/architecture/index-conventions.md` |
+Consider decisions, constraints, rationale, user rules, and reported external context. Exclude
+transient instructions, social conversation, secrets, personal data, file inventories,
+completed-work summaries, and agent interpretations. Preserve concise meaning, not a transcript.
 
-| Finding | Owner |
+For every candidate, record in working memory: its concise statement; future trigger/use; direct
+source; category; verification status of any underlying claim; proposed or existing owner; and
+status (`pending confirmation`, `accepted`, `stored`, `superseded`, or `rejected`). An explicit,
+clear user decision or constraint is accepted; ask the user when its authority, scope, or durability
+is unclear.
+
+Separately inspect only documentation plausibly affected by verified changed behavior or data. Update
+facts only when primary evidence supports them. Treat unverifiable but actionable uncertainty as an
+investigation candidate, not as current truth.
+
+## Step 3: Route each candidate
+
+Use one canonical owner. A secondary link is allowed only for a distinct warning or discovery aid.
+Apply the documentation-routing guide first.
+
+| Candidate | Canonical owner |
 | --- | --- |
-| Current convention, contract, invariant, module shape, API behavior, operational procedure, user-facing fact, or database schema | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
-| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | `docs/open_issues.md`, through `track-open-issue`. |
-| Verified action required around a future deployment | The established deploy runbook, or the documented deployment-step owner when it is the local owner. |
-| Non-obvious trap, counterintuitive rationale, failed approach, or user rule that would surprise an agent who read the code and docs | The project's memory store. |
+| Current contract, invariant, interface, behavior, procedure, or schema | Most specific established authoritative document |
+| Attributed decision, constraint, rationale, or user rule | Established decision, policy, convention, or subject-specific owner |
+| Verified trigger-first non-obvious trap | Project memory store |
+| Unfixed bug, risk, missing capability, or unresolved investigation | `docs/open_issues.md` via `track-open-issue` |
+| Verified deployment prerequisite | Established deployment/runbook owner |
 
-If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, treat the verified uncertainty and its missing evidence as an investigation candidate.
+### Owner-choice procedure
 
-For each verified issue candidate, load and follow the `track-open-issue` skill with its verified problem statement,
-primary evidence, and resumption condition. Use only `docs/open_issues.md`; preserve its existing format and
-identifiers and follow the skill's initialization rule when absent. Apply the base workflow's evidence,
-dirty-target, concurrent-edit, and unrelated-target protections to every issue write; do not change unrelated
-entries. If the skill cannot be loaded, report `issue tracking: UNAVAILABLE` and leave the candidate unwritten
-with its evidence and resumption condition in the report. Do not substitute another tracker. Do not track
-documentation-only facts, deployment prerequisites, memories, unverified non-actionable claims, or when no
-issue candidate exists. Include the result in the closeout report.
+When no existing owner or reusable schema can hold an accepted durable candidate, propose one
+sensible, reusable design and ask the user to choose it or provide an alternative. Never silently
+select a new location or create a file before approval.
 
-## Step 4: Deployment Steps, Only When Relevant
+The proposal must specify:
 
-Enter this step only when attributable changes have plausible deployment implications or verified evidence of a deploy may change an existing entry's status. Otherwise do not investigate deployment state or inspect its owner; report `not examined: no deployment-relevant evidence in attributable work`.
+- a project-relative, stable, subject-based filename and location;
+- whether an existing document can be extended instead;
+- purpose, scope, intended readers, and reusable entry/document shape;
+- required fields: scope or trigger, decision/rule/fact, rationale, provenance and date,
+  verification status, and supersession status when relevant;
+- directory-index and parent-index entries needed for discovery;
+- the routing-guide category and link that sends future readers **and writers** to the owner; and
+- why the filename and shape accumulate related information over time.
 
-When this step applies, determine deployment state from repository evidence or user-provided session context: `deployed`, `not deployed`, or `unknown`. Do not guess.
+Prefer extending the most specific compatible owner. Never propose a session-, task-, or date-named
+file merely because closeout discovered the fact. This prevents documentation sprawl across sessions.
 
-Only inspect or reconcile the existing deployment owner when attributable changes have concrete deployment implications or verified evidence of a deploy may change an existing entry's status. Do not scan or rewrite the deployment register during an unrelated closeout.
+After explicit approval, initialize missing ownership through `initialize-documentation` when it owns
+the infrastructure, then write the accepted content. Update required indexes and routing links in the
+same closeout, subject to dirty-target protection. Re-read all links to confirm future discovery and
+update routing work.
 
-For any deployment state with such evidence, inspect attributable changes for prerequisites such as schema/data migration, configuration or external-service setup, cache invalidation, data/content regeneration, or release ordering. Record a concrete, verified prerequisite even when deployment state is `not deployed` or `unknown`; make that state and its effect on the entry lifecycle explicit. Do not record speculative future work. Close or archive an existing entry only when confirmed deploy evidence proves it completed. Preserve useful history.
+Record attributed external or technical assertions only as assertions, with their verification status;
+never present them as established current truth without evidence. Track every durable conversation
+candidate to a disposition. If an accepted candidate is blocked by a dirty target, unavailable
+capability, or unresolved owner choice, report closeout incomplete and the exact next action.
 
-Record a verified prerequisite even when part of its procedure is unknown. Each entry states timing, applicable environment, procedure or command with provenance, verification and success condition, and rollback or irreversibility where verified; mark every missing field `unknown`, name the evidence needed, and assign an owner or action to resolve it. Never fill a gap by inference.
+For verified issue candidates, load and follow `track-open-issue` with primary evidence and a
+resumption condition. Do not track documentation facts, memories, deployment prerequisites, or
+non-actionable uncertainty as issues.
 
-For `not deployed` or `unknown`, report the state and any evidence gap. Do not create hypothetical deployment work.
+## Step 4: Deployment, only when relevant
 
-## Step 5: Memory and Compaction, Only When Available
+Enter only when attributable changes have deployment implications or verified deployment evidence can
+change an existing entry. Determine state as `deployed`, `not deployed`, or `unknown`; a direct user
+report is attributed, not independently verified. Record only verified prerequisites with timing,
+applicable environment, provenance, verification, rollback/irreversibility where known, and explicit
+unknowns. Do not create hypothetical deployment work.
 
-Enter this step only when a verified finding routes to memory or an already-discovered project instruction requires a closeout index check. Otherwise report `not needed` without searching for a memory store.
+## Step 5: Memory and compaction
 
-Apply the repository's memory/documentation distinction from its instructions. If none exists, use this rule: documentation explains current state; memory warns a future agent before an action could trigger a non-obvious problem.
+Enter when a verified finding satisfies the project's memory contract or project instructions require
+an index check. Follow `memory-handling` for discovery, retrieval, writing, and re-checking. Do not
+use memory for ordinary documentation facts or decisions. If a suitable memory owner is absent, use
+the owner-choice procedure; do not leave an accepted qualifying candidate only in conversation.
 
-Discover the memory store and index before writing, following the `memory-handling` skill's discovery rule. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project; a store named by the `install-memory` contract section is valid association. A global memory command, `~/.pi/...` store, or similarly named index is not evidence of association. Update a related memory rather than duplicating it. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
+## Step 6: Temporary execution state
 
-After all memory writes, check any threshold or hook explicitly configured for that verified project memory. If no
-threshold is breached, report `not needed`. If one is breached, use a compactor only when its definition explicitly
-targets the discovered project memory, limits writes to that memory store and its declared documentation owners, and
-has been inspected for dirty-target and concurrent-edit protection. Record its prospective targets' initial content
-and compare them immediately before invoking it. When no such compactor is available, report `compaction needed`
-with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
+Only when instructions name a temporary state document, replace its current-execution block with the
+active work, exact next action, commands actually run and results, blockers, and durable-owner map.
+Do not append history or place durable facts there.
 
-## Step 6: Update the Temporary Execution State, Only When One Exists
+## Metrics closeout
 
-Enter this step only when repository instructions identify a temporary current-execution state document (a common convention is root `STATE.md`); otherwise report `not needed`. Treat the document as temporary only: its current block is rewritten, never appended to.
+When the `jev_metrics` tool is available, invoke it exactly once with `action=closeout`. This metrics
+closeout is independent of documentation readiness: run it even when documentation ownership,
+indexes, or routing are unavailable. Treat only `appended` or `already_exported` as complete. Report
+`store_error` explicitly and do not claim metrics closeout succeeded. Never maintain aggregate
+counters in the model or write the metrics CSV directly.
 
-Rewrite that document's current-execution block so it states, for this session only: the active work stream and its exact next action; the commands actually run and their observed results; current blockers, gates and working-tree/branch state; and the one-line map of durable-fact owners preserved from its header. Record unknown or unverified items as `unknown`; never mark an unrun check as passed.
+## Step 7: Validate and report
 
-Do not put durable facts, completed-work summaries, file inventories, per-task ledgers, or session history there: those route to Step 3 owners (documentation, `docs/open_issues.md`, memory) or belong to git. If the document already holds more than its current execution, that surplus is git-owned history — do not migrate it into documentation or memory. Apply the base workflow's dirty-target, concurrent-edit and unrelated-target protections.
+Validate only changed links, index entries, routing links, issue references, and memory-index or
+supersession pointers. Confirm every accepted durable conversation candidate has a discoverable,
+persistent canonical owner.
 
-## Step 7: Validate Only What You Changed
-
-Check that links, issue references, memory-index entries, and supersession pointers introduced or changed by this closeout resolve. Do not conduct a whole-repository link audit.
-
-## Step 8: Report
-
-State separately whether the session's work is implemented, verified, and deployable; each positive claim must cite evidence. List:
-
-- local artifacts initialized and existing authoritative owners used
-- documents checked and changed, including generated-document status
-- unresolved items and the issue-tracking result
-- deployment state and prerequisites added, or why none were added
-- memories written or updated and compaction status
-- the temporary execution state document updated, or why it was not
-- changed-reference validation
-- deliberately skipped candidates, uncertain session attribution, and unverifiable claims
+Report separately whether work is implemented, verified, deployable, and fully closed out. Include:
+existing and initialized owners; changed documents; conversation candidates with attribution,
+disposition, and owners; owner/schema decisions; index and routing updates; issue/deployment/memory
+results; metrics closeout result; deliberately skipped or unverifiable items; and every blocker
+preventing complete closeout.
