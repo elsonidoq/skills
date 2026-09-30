@@ -365,7 +365,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
 
 **Purpose**: Update every remaining planned documentation surface and run the complete deterministic acceptance set without a benchmark, commit, deployment, or live provider call.
 
-- [ ] T032 Update compatibility pins and actionable missing-capability behavior in `REQUIREMENTS.md`
+- [X] T032 Update compatibility pins and actionable missing-capability behavior in `REQUIREMENTS.md`
   - **Outcome**: Requirements document Pi 0.87.x (tested 0.87.1), Node 22/ES2022, `jev-cli` 0.6.3 response behavior/auth preflight, SpecKit 1.0.12 append-preset capability, manual default, and hard Jev-on failure semantics.
   - **Depends**: T031.
   - **Likely files/interfaces**: `REQUIREMENTS.md`, implemented checks in `scripts/install.sh` and `scripts/install-jev-speckit.sh`.
@@ -374,7 +374,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The implementation already settles every documented compatibility statement.
 
-- [ ] T033 Document install modes, `/jev-metrics`, coverage/privacy boundaries, closeout, SpecKit option, rollback, and `/reload` in `README.md`
+- [X] T033 Document install modes, `/jev-metrics`, coverage/privacy boundaries, closeout, SpecKit option, rollback, and `/reload` in `README.md`
   - **Outcome**: Users can choose manual or explicit Jev-on mode, understand counters/denominators and instrumented-only coverage, diagnose missing prerequisites, and know that raw shell/MCP use is untracked.
   - **Depends**: T032.
   - **Likely files/interfaces**: `README.md`, `scripts/install.sh`, `extensions/jev-metrics/index.js`, `skills/finish-session/SKILL.md`, project-local preset installer.
@@ -383,7 +383,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This consolidates settled behavior into the existing user-facing owner.
 
-- [ ] T034 Run all deterministic extension, installer, SpecKit, lint, and prerequisite checks listed in `specs/001-jev-skill-metrics/quickstart.md`
+- [X] T034 Run all deterministic extension, installer, SpecKit, lint, and prerequisite checks listed in `specs/001-jev-skill-metrics/quickstart.md`
   - **Outcome**: The implemented feature has one complete reproducible validation record covering SC-001 through SC-005 and all eight seams.
   - **Depends**: T033.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/*.test.js`, `scripts/tests/test-install-jev.sh`, `scripts/tests/test-install-jev-speckit.sh`, `scripts/check-skills-lint.sh`, `.specify/scripts/bash/check-prerequisites.sh`, `specs/001-jev-skill-metrics/quickstart.md`.
@@ -392,7 +392,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: This task executes the approved quickstart commands rather than introducing new implementation decisions.
 
-- [ ] T035 Perform final allowlist, documentation-conformance, and no-benchmark inspection across `extensions/jev-metrics/`, `scripts/`, `skills/`, `configs/speckit/presets/jev-seams/`, `README.md`, and `REQUIREMENTS.md`
+- [X] T035 Perform final allowlist, documentation-conformance, and no-benchmark inspection across `extensions/jev-metrics/`, `scripts/`, `skills/`, `configs/speckit/presets/jev-seams/`, `README.md`, and `REQUIREMENTS.md`
   - **Outcome**: Final evidence proves exactly eight seams, exactly three tools and one command, no `compact-memory` change, no generated SpecKit prompt ownership, no telemetry/privacy expansion, and no benchmark or token/latency/quality claim.
   - **Depends**: T034.
   - **Likely files/interfaces**: All implemented feature paths plus `specs/001-jev-skill-metrics/spec.md`, `plan.md`, contracts, and documentation scope.

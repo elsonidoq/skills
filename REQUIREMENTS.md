@@ -21,6 +21,46 @@ Keep this table in sync with the dependency statements inside the skills. The
 `install-memory` skill copies the requirement list into a project's `AGENTS.md` when the
 suite is adopted.
 
+## Jev metrics compatibility and installation modes
+
+The Jev metrics feature has a manual default and an explicit, transactional Jev-on mode.
+These are compatibility limits tested by the local installer fixtures, not a statement of
+support beyond the versions below.
+
+| Capability | Tested compatibility | Jev-on preflight | Action when unavailable or incompatible |
+|---|---|---|---|
+| Pi extension API | Pi `0.87.x`, tested with `0.87.1` | `scripts/install.sh --jev-on` requires a `0.87.x` version and verifies the extension registers `jev_rank`, `jev_disposition`, `jev_metrics`, and `/jev-metrics`. | Install Pi `0.87.x` (tested `0.87.1`), then rerun the installer. Manual mode only warns when Pi version wording may drift. |
+| JavaScript runtime | Node.js 22 with ES2022 support | Jev-on requires Node major version 22 or later plus `node:test` and ES2022 private-field support. Node 22 is the documented tested baseline; a later runtime passing this gate is not an expanded compatibility claim. | Install Node.js 22 and rerun `scripts/install.sh --jev-on`. |
+| Jev CLI and authentication | `jev-cli` `0.6.3` response contract | Jev-on accepts only the tested `jev --version` response for `0.6.3`, then runs `jev auth test`. The fixed auth check is the only Jev-provider network prerequisite and is run only after explicit opt-in. | Install `jev-cli` `0.6.3`; configure the provider credentials; run `jev auth test`; then retry Jev-on. |
+| Project SpecKit append preset | SpecKit `1.0.12` | A requested project requires a live constitution, project scripts, generated Pi command artifacts, an active tracker, and resolver/introspection proof of one core plus one append layer for all four commands. | Initialize or repair the target SpecKit project and Pi integration, install SpecKit `1.0.12`, activate the tracker first, then retry the complete four-command install. |
+
+### Manual mode
+
+`scripts/install.sh` without `--jev-on` installs the normal suite and deliberately disables the
+tracker and global Jev-on marker. It does not require Jev, Jev authentication, the metrics
+extension, or SpecKit. Missing Jev capability is therefore a manual-routing condition, not an
+installation error, and guarded workflows retain their original manual path.
+
+### Jev-on mode
+
+Use `scripts/install.sh --jev-on` only when measured advisory ranking is intended. It stages the
+tracker, completes all preflight checks, verifies the active tracker, and then enables the exact
+four global seams as one transaction. A failed preflight reports the prerequisite, observed
+status without credential material, a resolution action, and that no optimized seam was enabled.
+An activation failure rolls back the tracker and seam state; partial activation is an error.
+
+For a project-local SpecKit installation, the user-facing all-or-none command is:
+
+```bash
+scripts/install.sh --jev-on --speckit-project <dir>
+```
+
+The top-level installer invokes the project helper
+`scripts/install-jev-speckit.sh --project DIR [--uninstall]`; the helper has **no** `--jev-on`
+flag. It installs or removes only the complete four-command preset through SpecKit's registry and
+reconciliation support. It never makes direct source edits to generated
+`.pi/prompts/speckit.*.md` files.
+
 ## Model class mapping
 
 The pipeline skills label work with two model classes. The mapping below is the

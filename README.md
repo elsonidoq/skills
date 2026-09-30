@@ -24,6 +24,96 @@ scripts/install.sh --probe  # ... plus one headless pi run that asserts the
 
 Start a new pi session (or run `/reload`) after installing.
 
+## Jev metrics: manual default and explicit Jev-on
+
+### Choose an installation mode
+
+Manual mode is the default and preserves the existing workflows without requiring Jev, Jev
+credentials, the metrics tracker, or SpecKit:
+
+```bash
+scripts/install.sh
+```
+
+Manual mode disables the tracker and the global Jev-on marker, so guarded seams continue with
+their unchanged manual workflow and make no measured-use claim.
+
+Choose Jev-on only when the tracked advisory path is wanted:
+
+```bash
+scripts/install.sh --jev-on
+```
+
+This is a hard, all-or-none activation. The installer requires Pi `0.87.x` (tested `0.87.1`), a
+Node 22/ES2022-capable runtime, the local tracker registration harness, `jev-cli` `0.6.3`, and a
+successful `jev auth test`. The auth check is an explicit Jev-on network prerequisite. On any
+preflight failure it reports the missing or incompatible capability, the observed status without
+credential material, the corrective action, and that no optimized seam was enabled. Do not use
+Jev-on with credentials, logs, personal data, or sensitive candidate text as ranking input.
+
+After successful all-four global-seam activation, the installer records the state marker at:
+
+```text
+$PI_CODING_AGENT_DIR/jev-metrics/global-seams-enabled
+```
+
+The marker is written only after all four global seams activate together. A rollback removes a
+newly activated marker (or restores its pre-activation state), and returning to manual mode removes
+it. This marker is an activation gate, not telemetry.
+
+### Optional project-local SpecKit seams
+
+To install the four SpecKit append layers with Jev-on, use the top-level all-or-none entry point:
+
+```bash
+scripts/install.sh --jev-on --speckit-project <dir>
+```
+
+It hands off to `scripts/install-jev-speckit.sh --project DIR [--uninstall]`. The project-local
+helper has **no** `--jev-on` flag. Its install path requires the already-active tracker and either
+installs all four layers or none; `--uninstall` is the recovery path that removes the project preset
+and restores the saved original core composition. Target projects need SpecKit `1.0.12`, a live
+constitution, project scripts, and Pi command artifacts. Resolver and artifact introspection must show the complete core command plus
+exactly one append layer for each of `speckit.analyze`, `speckit.checklist`, `speckit.clarify`, and
+`speckit.tasks`.
+
+The preset is project-owned and append-only. It does not hand-edit, search/replace, or
+checksum-patch generated `.pi/prompts/speckit.*.md` files. Resolver, reconciliation, or
+introspection failure leaves all four SpecKit seams disabled and rolls back the project state.
+
+Run `/reload` in Pi (or start a new session) after either global configuration activation or a
+manual-mode deactivation so Pi reloads the changed configuration-time assets.
+
+### Metrics, coverage, and closeout
+
+The tracked Pi interfaces are `jev_rank`, `jev_disposition`, and `jev_metrics`; the user command is
+`/jev-metrics`:
+
+```text
+/jev-metrics          # current active-branch totals and per-skill totals
+/jev-metrics history  # validated cross-session closeout rows and store state
+/jev-metrics help     # counters, denominators, coverage, and privacy boundary
+```
+
+`attempts` is the count of tracked invocation starts; `successes` is successful terminals;
+`proposals` is the candidate-level proposals from those successes. `accepted`, `overridden`,
+`not used`, and `pending` are each shown over the proposal denominator. A proposal without a
+recorded disposition remains pending. Metrics are `instrumented-only`: only `jev_rank` calls are
+tracked. Raw shell or MCP Jev use is explicitly untracked and must not be represented as measured
+activity.
+
+`finish-session` invokes `jev_metrics(action=closeout)` once. Closeout is complete only when it
+reports `appended` or `already_exported`; `store_error` must be reported as a failed metrics
+closeout. The local CSV records aggregate identifiers and counters only.
+
+Candidate bodies, criteria, prompts, logs, raw responses, stderr, secrets, credentials, personal
+data, provider endpoints, and project paths are not persisted in session telemetry, metrics output,
+or the closeout CSV. If Jev-on is absent or a tracked ranking returns no proposals, the caller
+retains the complete original evidence and uses the manual workflow.
+
+This feature is not a benchmark. Do not make token, latency, performance, or quality-improvement
+claims from its counters or advisory rankings.
+
 On each project, run the `install-memory` skill first: it writes the suite contract into the project's instructions (epics, memory, state, docs) and initializes the project memory store.
 
 ## Repository Invariants
