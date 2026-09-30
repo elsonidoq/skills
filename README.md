@@ -13,8 +13,8 @@ pi install npm:pi-ask-user@0.15.1
 
 Or just run the installer once — it checks pi, auto-installs the pinned
 packages, symlinks every suite skill into `~/.agents/skills` (pi's standard
-scanned location; the repo stays the single source of truth), backs up anything
-in the way, and lint-checks the suite:
+scanned location) and the spec-driven-development guidance into
+`~/.agents/docs`, backs up anything in the way, and lint-checks the suite:
 
 ```bash
 scripts/install.sh          # deterministic checks only

@@ -4,8 +4,9 @@
 # What it does:
 #   1. Requires pi (auto-installs pinned packages if missing)
 #   2. Symlinks every suite skill into ~/.agents/skills (pi's standard scanned
-#      location), backing up anything in the way — no copies, the repo stays
-#      the single source of truth
+#      location) and the spec-driven-development guidance into ~/.agents/docs,
+#      backing up anything in the way — no copies, the repo stays the single
+#      source of truth
 #   3. Removes the old user-settings `skills` entry for this suite (kept in
 #      sync with the ~/.agents/skills mechanism, no double registration)
 #   4. Warns when optional deps (jev) are missing
@@ -27,7 +28,9 @@ PKG_SUBAGENTS="npm:pi-subagents@0.73.1"
 PKG_ASKUSER="npm:pi-ask-user@0.15.1"
 SKILLS_DIR="$SUITE_DIR/skills"
 AGENTS_SKILLS="$HOME/.agents/skills"
+AGENTS_DOCS="$HOME/.agents/docs"
 AGENTS_BACKUPS="$HOME/.agents/backups"
+SPEC_DRIVEN_GUIDANCE="$SUITE_DIR/docs/best_practices_spec_driven_development.md"
 
 PROBE=0
 case "${1:-}" in
@@ -68,14 +71,15 @@ if [ ! -d "$AGENTS_SKILLS/jev" ]; then
   warn "'jev' skill not found at $AGENTS_SKILLS/jev — finish-session-jev triage will fall back to manual routing"
 fi
 
-# ---- 4. Discoverability via ~/.agents/skills -------------------------------
-mkdir -p "$AGENTS_SKILLS" "$AGENTS_BACKUPS"
+# ---- 4. Discoverability via ~/.agents --------------------------------------
+mkdir -p "$AGENTS_SKILLS" "$AGENTS_DOCS" "$AGENTS_BACKUPS"
 [ -d "$SKILLS_DIR" ] || fatal "suite skills directory missing: $SKILLS_DIR"
+[ -f "$SPEC_DRIVEN_GUIDANCE" ] || fatal "spec-driven guidance missing: $SPEC_DRIVEN_GUIDANCE"
 
-python3 - "$SKILLS_DIR" "$AGENTS_SKILLS" "$AGENTS_BACKUPS" "$SETTINGS" "$AGENT_DIR" <<'PY'
+python3 - "$SKILLS_DIR" "$SPEC_DRIVEN_GUIDANCE" "$AGENTS_SKILLS" "$AGENTS_DOCS" "$AGENTS_BACKUPS" "$SETTINGS" "$AGENT_DIR" <<'PY'
 import json, os, sys, time
 
-skills_dir, agents_skills, backups, settings_path, agent_dir = sys.argv[1:]
+skills_dir, spec_driven_guidance, agents_skills, agents_docs, backups, settings_path, agent_dir = sys.argv[1:]
 
 suite_skills = []
 for name in sorted(os.listdir(skills_dir)):
@@ -129,6 +133,17 @@ if os.path.isdir(agent_dir) and not saved and not os.path.exists(settings_path):
     pass  # nothing to clean
 
 print(f"==> suite skills: {len(suite_skills)} total ({linked} linked, {existing_ok} already ok, {backed_up} backed up)")
+
+doc_name = os.path.basename(spec_driven_guidance)
+doc_dst = os.path.join(agents_docs, doc_name)
+if os.path.islink(doc_dst) and os.path.realpath(doc_dst) == os.path.realpath(spec_driven_guidance):
+    print(f"==> documentation already linked: ~/.agents/docs/{doc_name}")
+else:
+    if os.path.lexists(doc_dst):
+        os.rename(doc_dst, os.path.join(backups, f"{doc_name}.{time.strftime('%Y%m%d%H%M%S')}"))
+        print(f"==> backed up conflicting documentation: ~/.agents/docs/{doc_name}")
+    os.symlink(spec_driven_guidance, doc_dst)
+    print(f"==> linked documentation: ~/.agents/docs/{doc_name} -> {spec_driven_guidance}")
 PY
 
 # ---- 5. Static validation -----------------------------------------------------
