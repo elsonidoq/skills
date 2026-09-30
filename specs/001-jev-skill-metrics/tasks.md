@@ -107,7 +107,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
 
 ### Tests and Implementation for User Story 1
 
-- [ ] T007 [US1] Add fail-first fake-process tests for bounded Jev requests, stable ranking, exit mapping, partial/malformed output, and cancellation in `extensions/jev-metrics/test/jev-client.test.js` and `extensions/jev-metrics/fixtures/jev-responses/`
+- [X] T007 [US1] Add fail-first fake-process tests for bounded Jev requests, stable ranking, exit mapping, partial/malformed output, and cancellation in `extensions/jev-metrics/test/jev-client.test.js` and `extensions/jev-metrics/fixtures/jev-responses/`
   - **Outcome**: The entire `jev run -` boundary is specified without a live provider, including stable descending score order and original-order tie breaks.
   - **Depends**: T006.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/jev-client.test.js`, `extensions/jev-metrics/fixtures/jev-responses/*.json`, fake process adapter from T001, planned `jev-client.js` API.
@@ -116,7 +116,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: Fake inputs and expected status mappings are explicit in the approved research and contracts.
 
-- [ ] T008 [US1] Implement the injectable `jev run -` process boundary and response normalization in `extensions/jev-metrics/lib/jev-client.js`
+- [X] T008 [US1] Implement the injectable `jev run -` process boundary and response normalization in `extensions/jev-metrics/lib/jev-client.js`
   - **Outcome**: One JSON request is written to stdin, one score answer is required per candidate, failures map to stable classes, and successful candidates become complete stably ranked proposals.
   - **Depends**: T007.
   - **Likely files/interfaces**: `extensions/jev-metrics/lib/jev-client.js`, event factories in `extensions/jev-metrics/lib/events.js`, process adapter contract in `extensions/jev-metrics/test/helpers.js`.
@@ -125,7 +125,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: opus-class**
   - **Rationale**: Process lifecycle, event timing, cancellation, and privacy-safe failure normalization are tightly coupled.
 
-- [ ] T009 [US1] Add fail-first CSV rendering, retrieval, lock, idempotency, store-state, permission, and corruption tests in `extensions/jev-metrics/test/csv-store.test.js`
+- [X] T009 [US1] Add fail-first CSV rendering, retrieval, lock, idempotency, store-state, permission, and corruption tests in `extensions/jev-metrics/test/csv-store.test.js`
   - **Outcome**: Tests define one RFC 4180 row per session and explicit `missing`, `unreadable`, and `invalid` history states under a temporary XDG state home.
   - **Depends**: T006.
   - **Likely files/interfaces**: `extensions/jev-metrics/test/csv-store.test.js`, temporary filesystem helpers in `extensions/jev-metrics/test/helpers.js`, `specs/001-jev-skill-metrics/contracts/session-metrics.csv.md`.
@@ -135,7 +135,7 @@ description: "Dependency-ordered implementation tasks for measurable Jev skill a
   - **Model class: sonnet-class**
   - **Rationale**: The storage contract is concrete and can be captured as fixture expectations.
 
-- [ ] T010 [US1] Implement project-partitioned CSV render/read/lock/append behavior in `extensions/jev-metrics/lib/csv-store.js`
+- [X] T010 [US1] Implement project-partitioned CSV render/read/lock/append behavior in `extensions/jev-metrics/lib/csv-store.js`
   - **Outcome**: History is stored at `${XDG_STATE_HOME:-~/.local/state}/pi/jev-metrics/<sha256(canonical-project-root)>.csv`, validated before use, and appended exactly once per Pi session.
   - **Depends**: T009.
   - **Likely files/interfaces**: `extensions/jev-metrics/lib/csv-store.js`, aggregate summary from `extensions/jev-metrics/lib/aggregate.js`, Node `fs`, `path`, `os`, and `crypto` APIs.

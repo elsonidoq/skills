@@ -1,0 +1,56 @@
+{
+  "sessionId": "session-jev-fixture-1",
+  "skillId": "receiving-code-review",
+  "criterion": "Rank comments by investigation priority.",
+  "candidateBounds": [2, 50],
+  "rejectedCandidateCounts": [1, 51],
+  "candidates": [
+    {"candidateId": "review-a", "body": "CANDIDATE_BODY_SENTINEL_ALPHA"},
+    {"candidateId": "review-b", "body": "CANDIDATE_BODY_SENTINEL_BETA"},
+    {"candidateId": "review-c", "body": "CANDIDATE_BODY_SENTINEL_GAMMA"}
+  ],
+  "successWithTie": {
+    "model": "fixture-model",
+    "answers": {
+      "candidate_0": {"score": 7, "confidence": 0.8},
+      "candidate_1": {"score": 9},
+      "candidate_2": {"score": 7, "confidence": 0.5}
+    }
+  },
+  "twoCandidateSuccess": {
+    "answers": {
+      "candidate_0": {"score": 1},
+      "candidate_1": {"score": 0}
+    }
+  },
+  "exitCases": [
+    {"code": 1, "status": "failed", "failureClass": "provider"},
+    {"code": 2, "status": "failed", "failureClass": "input"},
+    {"code": 3, "status": "unavailable", "failureClass": "auth"},
+    {"code": 4, "status": "failed", "failureClass": "retryable"}
+  ],
+  "malformedJson": "{not-json",
+  "invalidResponses": [
+    {
+      "name": "missing answer",
+      "value": {"answers": {"candidate_0": {"score": 3}, "candidate_1": {"score": 2}}}
+    },
+    {
+      "name": "extra answer",
+      "value": {"answers": {"candidate_0": {"score": 3}, "candidate_1": {"score": 2}, "candidate_2": {"score": 1}, "candidate_3": {"score": 0}}}
+    },
+    {
+      "name": "string score",
+      "value": {"answers": {"candidate_0": {"score": "3"}, "candidate_1": {"score": 2}, "candidate_2": {"score": 1}}}
+    },
+    {
+      "name": "string confidence",
+      "value": {"answers": {"candidate_0": {"score": 3, "confidence": "high"}, "candidate_1": {"score": 2}, "candidate_2": {"score": 1}}}
+    },
+    {
+      "name": "non-object answers",
+      "value": {"answers": []}
+    }
+  ],
+  "stderrSentinel": "STDERR_SECRET_SENTINEL https://provider.invalid private-token"
+}
