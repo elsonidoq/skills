@@ -119,10 +119,12 @@ Run the earliest incomplete or invalid stage:
    the feature materially. Use the runtime's `ask_user` question tool only for genuine product or
    architectural choices.
 3. **Specification:** Run the detected SpecKit specification stage. Before
-   producing the spec, read the global configuration
-   repository's [`docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md).
-   If it is unavailable, stop and report an incomplete global configuration
-   installation. Apply **Designing AI-Friendly Specifications for Solo Builders**:
+   producing the spec, read the suite's global best-practices document at
+   `~/.agents/docs/best_practices_spec_driven_development.md` (equivalently
+   `../../docs/best_practices_spec_driven_development.md` relative to this skill's
+   installed directory). This is a global suite asset, not a project file: never
+   look for it in the project repository's `docs/`. If it is unavailable, stop and
+   report an incomplete global configuration installation. Apply **Designing AI-Friendly Specifications for Solo Builders**:
    keep goals outcome-oriented, make inputs/outputs and deterministic business rules
    explicit where relevant, include exclusions, and avoid implementation detail
    unless it is a settled constraint. Verify the recorded admission sizing verdict

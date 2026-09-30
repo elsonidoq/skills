@@ -16,10 +16,12 @@ user can reply. Read every source artifact it names.
 
 ## Required Reference
 
-Read the global configuration repository's
-[`docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md)
-before assessing the brief. If it is unavailable, stop and report an incomplete
-global configuration installation. Apply **Designing AI-Friendly Specifications for
+Read the suite's global best-practices document at
+`~/.agents/docs/best_practices_spec_driven_development.md` (equivalently
+`../../docs/best_practices_spec_driven_development.md` relative to this skill's
+installed directory). This is a global suite asset, not a project file: never look
+for it in the project repository's `docs/`. If it is unavailable, stop and report
+an incomplete global configuration installation. Apply **Designing AI-Friendly Specifications for
 Solo Builders** to the epic's requirements and **Epic Sizing: When the Pipeline Earns
 Its Overhead** to the sizing decision.
 

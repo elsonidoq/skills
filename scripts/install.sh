@@ -14,6 +14,7 @@ PKG_ASKUSER="npm:pi-ask-user@0.15.1"
 SKILLS_DIR="$SUITE_DIR/skills"
 AGENTS_SKILLS="$HOME/.agents/skills"
 AGENTS_BACKUPS="$HOME/.agents/backups"
+AGENTS_DOCS="$HOME/.agents/docs"
 TRACKER_SOURCE="$SUITE_DIR/extensions/jev-metrics"
 TRACKER_ACTIVE="$AGENT_DIR/extensions/jev-metrics"
 JEV_STATE_DIR="$AGENT_DIR/jev-metrics"
@@ -260,6 +261,30 @@ print(f"==> suite skills: {len(suite_skills)} total ({linked} linked, {existing_
 PY
 link_status=$?
 [ "$link_status" -eq 0 ] || fatal "suite skill linking failed"
+
+# ---- 4b. Global suite docs via ~/.agents/docs -----------------------------
+# Skills reference suite-global docs relative to their installed directory
+# (../../docs/...), so those docs must exist under ~/.agents/docs even when the
+# working project has its own docs/ directory.
+mkdir -p "$AGENTS_DOCS"
+for doc in best_practices_spec_driven_development.md pi-settings-sample.md; do
+	src="$SUITE_DIR/docs/$doc"
+	dst="$AGENTS_DOCS/$doc"
+	if [ ! -f "$src" ]; then
+		warn "missing suite doc: $src"
+		continue
+	fi
+	if [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then
+		info "doc ok: ~/.agents/docs/$doc"
+		continue
+	fi
+	if [ -e "$dst" ] || [ -L "$dst" ]; then
+		mv "$dst" "$AGENTS_BACKUPS/${doc}.$(date +%Y%m%d%H%M%S)"
+		info "backed up conflicting doc: ~/.agents/docs/$doc"
+	fi
+	ln -s "$src" "$dst"
+	info "linked: ~/.agents/docs/$doc -> $src"
+done
 
 # ---- 5. Static validation --------------------------------------------------
 info "running suite lint"
