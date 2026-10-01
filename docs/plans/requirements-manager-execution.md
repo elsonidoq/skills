@@ -51,7 +51,7 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 | T010 | completed | Initial mutation checks. | `4045a14427976b669862ebc9ba2503ff15d43a17` |
 | T011 | completed | Integration evidence. | `1a067b02b45747d907619f9f5aebe7643208dd73` |
 
-### T006 verification checkpoint
+### Historical T006 dispatch-era verification checkpoint
 
 - Fresh bounded session selected at the approved sonnet/opus model-class boundary; one task is intentional. Scheduler context metrics are unavailable; no runtime reuse or model-obedience claim is made.
 - Read the approved design/revision-4 tasks, coverage baseline, historical EPIC, protection-baseline coordinator, current coordinator/EPIC/shared task contract, runtime requirements and memory contract. This repository declares no project memory adoption.
@@ -69,18 +69,30 @@ All F1–F11 are valid against inspected source. F4's false negatives were repro
 |---|---|---|---|
 | FR1 | F1–F3, F5–F8, F11: restored EPIC/source/approval/production/fallback contracts with focused checks | sonnet-class / Terra, medium | completed (`29c64edf72211bd7c4398698ee1e7bbfb210f349`) |
 | FR2 | F4/F9 and T003 T001-start gap: operational section/transitions/classes/contradiction checks, real named mutations, routine/custom-tree wiring and validator units | sonnet-class / Terra, medium | completed (`1cbfd24ecf2669af604981575002ebf9c99679c6`) |
-| FR3 | F10: truthful metadata; update coverage/dispositions, record actual task commits/checks and export corrected review packet | sonnet-class / Terra, medium | completed (this commit; SHA recorded in correction packet) |
+| FR3 | F10: truthful metadata; update coverage/dispositions, record actual task commits/checks and export corrected review packet | sonnet-class / Terra, medium | completed (`c50d91368fc91af40fdea34de3336fb0d457caa0`) |
 
-One coherent async/background Terra fix batch ran FR1→FR2→FR3, with separate verified correction-task commits: FR1 `77b501a`, FR2 `d9e0ad5`, and FR3 `c50d91368fc91af40fdea34de3336fb0d457caa0`. Then a fresh async/background Sol reviewer with explicit medium thinking rechecks the final corrected range and findings. No high-thinking launch or resumption of a high-thinking reviewer.
+One coherent async/background Terra fix batch ran FR1→FR2→FR3 with the distinct verified commits: FR1 `29c64edf72211bd7c4398698ee1e7bbfb210f349`, FR2 `1cbfd24ecf2669af604981575002ebf9c99679c6`, and FR3 `c50d91368fc91af40fdea34de3336fb0d457caa0`. Then a fresh async/background Sol reviewer with explicit medium thinking rechecks the final corrected range and findings. No high-thinking launch or resumption of a high-thinking reviewer.
 
-### Second correction dispositions
+### Second recheck and targeted correction dispositions
 
-- **A1 corrected:** section-local operational diagnostics and named in-memory mutations now cover the inspected omissions and contradictions; this is deterministic static coverage, not natural-language completeness or live behavior proof.
-- **A2 corrected:** invalid required constitutions are repaired through the detected capability and verified usable before specification, otherwise stop.
-- **A3 corrected (new owner-authorized routing addition):** fresh small work is explicitly recommended to `requirements-manager`; documentation initialization and admitted/resumed safeguards remain.
-- **A4 corrected:** `plan_create` conditionally composes the architectural-planning helper under EPIC precedence; the historical integration omission is accounted for.
-- **A5 corrected:** this tracker reconciles FR1–FR3 as committed and labels the T006 dispatch-era/provenance paragraph historical.
-- **A6 corrected:** `create-epic` now points to the authoritative sizing section instead of copying conditions; this was a preexisting duplication, not an FR1–FR3 regression.
+The second recheck assessed A1, A4, and A5 as **PARTIAL**; its failed report is preserved at [second final recheck](reviews/requirements-manager-second-final-recheck.md). TF1–TF3 are scoped follow-up corrections, not T012 acceptance.
+
+| Targeted task | Finding / evidence | Status / commit |
+|---|---|---|
+| SR1 | Original routing, constitution, helper, and sizing correction | completed `77b501a356d1c61f1bf2ab6a71b690cef24f8092` |
+| SR2 | Original operational checker/mutation correction | completed `d9e0ad5e40ccd7fbf4f81f748c2a66a0a0210344` |
+| SR3 | Original durable evidence correction | completed `8b14df9bdecc81c69635ff64058f3ab72182e977` |
+| TF1 | A1: RM operational invocation, conditional outputs, and separate eligibility/count mutations | completed `8344516af2b570c22727b08973f373ad02bfb077` |
+| TF2 | A4: one adapter-governed planning pass; no post-adapter recreate | completed `d429afcd434d248abf3efe5cf14371e20dac3855` |
+| TF3 | A5: provenance and evidence reconciliation | completed in this metadata commit; its SHA is recorded only in the final packet to avoid a self-reference |
+
+- **A1 targeted correction:** section-local operational diagnostics and named mutations now cover the reported RM invocation, transition, class/context, and complete-count omissions. This is deterministic static coverage, not natural-language completeness or live behavior proof.
+- **A2 fixed:** invalid required constitutions are repaired through the detected capability and verified usable before specification, otherwise stop.
+- **A3 fixed (new owner-authorized routing addition):** fresh small work is explicitly recommended to `requirements-manager`; documentation initialization and admitted/resumed safeguards remain.
+- **A4 targeted correction:** `plan_create` conditionally composes one manager-governed architectural-planning pass, then inspects its evidence/artifacts without a second plan create.
+- **A5 targeted correction:** FR and SR provenance are distinct, FR3 has an absolute SHA, and the T006 dispatch-era paragraph is explicitly marked historical.
+- **A6 fixed:** `create-epic` points to the authoritative sizing section instead of copying conditions; this was a preexisting duplication, not an FR1–FR3 regression.
+- **T012 remains pending** parent disposition and recheck; no correction task self-certifies acceptance.
 
 ### Correction evidence and dispositions
 
