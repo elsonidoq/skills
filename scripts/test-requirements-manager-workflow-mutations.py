@@ -73,6 +73,7 @@ class WorkflowMutationTests(unittest.TestCase):
         self.assertTrue(any(e.startswith("requirements-operational-brainstorm:") for e in errors), errors)
         self.mutate("bypass brainstorm fix", "epic", "`epic_brainstorm_fix`.", "`spec_create`.", "brainstorm-output-transition:")
         self.mutate("bypass fix to specification", "epic", "context for `spec_create`", "context for `tasks_create`", "brainstorm-fix-output-transition:")
+        self.mutate("restore adapter double-run", "epic", "Only when no adapter is invoked, in one same-session pass", "After that adapter returns, in one same-session pass", "architectural-adapter:")
 
     def test_actual_contradictory_policy_insertions(self):
         self.mutate("mandatory direct plan", "requirements", "## 3. Produce direct tasks", "Direct requirements must have a plan.\n\n## 3. Produce direct tasks", "mandatory-direct-plan:")

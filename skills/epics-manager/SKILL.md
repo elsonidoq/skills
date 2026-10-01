@@ -112,11 +112,15 @@ specification before `plan_create`; missing/stale approval returns here.
 detected planning capability. **Steps:** when the approved work conditionally calls for
 `delegating-architectural-planning`, invoke it as this stage's adapter with an observed
 owner-selected binding, the upstream context-coherent sequencing, shared-context, and brief/handoff
-constraints. This manager retains fixed `opus-class`, mandatory capability stops, and the
-same-session specification review/fix plus plan create/review/fix; those rules supersede the
-helper's standalone local fallback, separate-review, or agent-choice policies. Otherwise, or after
-that adapter returns, in one same-session pass review the specification, correct non-material
-defects, create the plan with the observed SpecKit planning instructions, and review the created plan and correct mechanical/non-material defects before leaving the pass. Cover interfaces,
+constraints. The adapter performs this entire manager-governed same-session pass: review/fix the
+specification, create one plan with the observed capability, then review/fix that produced plan.
+This manager retains fixed `opus-class`, mandatory capability stops, owner gates, and approval
+renewal; those rules supersede the helper's standalone local fallback, separate-review, or
+agent-choice policies. After the adapter returns, inspect its evidence and resulting artifacts;
+do not create the plan again. Only when no adapter is invoked, in one same-session pass review the
+specification, correct non-material defects, create the plan with the observed SpecKit planning
+instructions, and review the created plan and correct mechanical/non-material defects before
+leaving the pass. Cover interfaces,
 sequencing, risks, verification, integration, documentation scope, and coherent consecutive
 same-class work where retained context is useful. Preserve prerequisite order and story
 acceptance boundaries; do not reorder dependencies or pad distant work to fill a future batch.

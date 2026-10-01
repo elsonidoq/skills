@@ -61,6 +61,7 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
     require("brainstorm-fix-application", section(epic, "epic_brainstorm_fix"), "shared decision application", "apply exactly those decisions", "preserve structure, exclusions, and deferrals")
     require("spec-approval", section(epic, "spec_create"), "obtain and durably record explicit approval of the current", "specification before `plan_create`")
     require("plan-transition", section(epic, "plan_create"), "review the created plan", "renew specification approval")
+    require("architectural-adapter", section(epic, "plan_create"), "adapter performs this entire manager-governed same-session pass", "create one plan", "do not create the plan again", "Only when no adapter is invoked")
     require("task-ownership", section(epic, "tasks_create"), "create-only", "task defects belong to `overall_review`", "authorization to\nprepare tasks")
     require("review-approval", section(epic, "overall_review"), "explicit overall-review approval", "outcome and plan-phase briefing", "never apply an unresolved")
     require("stale-recovery", epic, "Resume from the earliest missing, stale, or inconsistent", "return\nto the earliest affected stage")
@@ -98,6 +99,7 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
     for carrier in (texts["tasks"], epic, coordinator):
         reject("automatic-batch-split", carrier, "automatically split at stage headings", "automatically split shared files", "automatically split internal dependencies")
     reject("unsafe-execution", coordinator, "parallel implementation batches are permitted", "foreground delegation is permitted", "regroup dependencies to fill batches", "batch commits replace task commits")
+    reject("architectural-adapter", section(epic, "plan_create"), "after that adapter returns, in one same-session pass", "create the plan again after adapter")
     for legacy in ("OpenCode", "resolve_epic.py", "named historical agents"):
         if legacy in all_text:
             failures.append(f"legacy: forbidden {legacy!r}")

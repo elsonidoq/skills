@@ -62,8 +62,12 @@ class EpicWorkflowContractTests(unittest.TestCase):
         self.assertIn("Do not reopen a valid settled constitution", TEXT)
         self.assertIn("`delegating-architectural-planning`", TEXT)
         self.assertIn("fixed `opus-class`", TEXT)
-        self.assertIn("same-session specification review/fix plus plan create/review/fix", TEXT)
+        self.assertIn("review/fix the\nspecification, create one plan", TEXT)
         self.assertIn("upstream context-coherent sequencing", TEXT)
+        self.assertIn("adapter performs this entire manager-governed same-session pass", TEXT)
+        self.assertIn("create one plan", TEXT)
+        self.assertIn("do not create the plan again", TEXT)
+        self.assertIn("Only when no adapter is invoked", TEXT)
 
 
 if __name__ == "__main__":
