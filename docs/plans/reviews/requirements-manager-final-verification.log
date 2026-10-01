@@ -1,0 +1,186 @@
+$ bash scripts/check-skills-lint.sh
+[exit 0]
+STDOUT:
+OK   /home/dev/projects/skills/skills/brainstorming/SKILL.md
+OK   /home/dev/projects/skills/skills/compact-memory/SKILL.md
+OK   /home/dev/projects/skills/skills/coordinate-implementation/SKILL.md
+OK   /home/dev/projects/skills/skills/create-epic/SKILL.md
+OK   /home/dev/projects/skills/skills/delegating-architectural-planning/SKILL.md
+OK   /home/dev/projects/skills/skills/epic-brainstorming/SKILL.md
+OK   /home/dev/projects/skills/skills/epics-manager/SKILL.md
+OK   /home/dev/projects/skills/skills/finish-session-jev/SKILL.md
+OK   /home/dev/projects/skills/skills/finish-session/SKILL.md
+OK   /home/dev/projects/skills/skills/handoff-prompt/SKILL.md
+OK   /home/dev/projects/skills/skills/incorporate-skill/SKILL.md
+OK   /home/dev/projects/skills/skills/infographic/SKILL.md
+OK   /home/dev/projects/skills/skills/initialize-documentation/SKILL.md
+OK   /home/dev/projects/skills/skills/install-memory/SKILL.md
+OK   /home/dev/projects/skills/skills/memory-handling/SKILL.md
+OK   /home/dev/projects/skills/skills/receiving-code-review/SKILL.md
+OK   /home/dev/projects/skills/skills/requesting-code-review/SKILL.md
+OK   /home/dev/projects/skills/skills/requirements-manager/SKILL.md
+OK   /home/dev/projects/skills/skills/scientific-method-debugging/SKILL.md
+OK   /home/dev/projects/skills/skills/supabase-server/SKILL.md
+OK   /home/dev/projects/skills/skills/task-generation/SKILL.md
+OK   /home/dev/projects/skills/skills/track-open-issue/SKILL.md
+OK   /home/dev/projects/skills/skills/using-git-worktrees/SKILL.md
+OK   /home/dev/projects/skills/skills/writing-skills/SKILL.md
+----
+24 skills checked, 0 failed
+requirements-manager workflow contract: PASS (operational static checks; no model calls)
+STDERR:
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.109s
+
+OK
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+
+OK
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.000s
+
+OK
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+
+OK
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.000s
+
+OK
+
+
+$ python3 scripts/check-requirements-manager-workflow.py
+[exit 0]
+STDOUT:
+requirements-manager workflow contract: PASS (operational static checks; no model calls)
+STDERR:
+
+
+$ python3 scripts/test-requirements-manager-workflow-mutations.py
+[exit 0]
+STDOUT:
+STDERR:
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.098s
+
+OK
+
+
+$ python3 skills/epic-brainstorming/scripts/test_contract.py
+[exit 0]
+STDOUT:
+STDERR:
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK
+
+
+$ python3 skills/epics-manager/scripts/test_workflow_contract.py
+[exit 0]
+STDOUT:
+STDERR:
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+
+OK
+
+
+$ python3 skills/task-generation/scripts/test_contract.py
+[exit 0]
+STDOUT:
+STDERR:
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK
+
+
+$ python3 skills/task-generation/scripts/test_check_task_order.py
+[exit 0]
+STDOUT:
+STDERR:
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.001s
+
+OK
+
+
+$ python3 skills/coordinate-implementation/scripts/test_batching_contract.py
+[exit 0]
+STDOUT:
+STDERR:
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+
+
+$ python3 skills/coordinate-implementation/scripts/test_intake_contract.py
+[exit 0]
+STDOUT:
+STDERR:
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+
+OK
+
+
+$ python3 skills/requirements-manager/scripts/test_contract.py
+[exit 0]
+STDOUT:
+STDERR:
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.000s
+
+OK
+
+
+$ python3 skills/task-generation/scripts/check-task-order.py docs/plans/requirements-manager-tasks.md
+[exit 0]
+STDOUT:
+PASS: numbered tasks have earlier prerequisites and contiguous user stories
+STDERR:
+
+
+$ git diff --check
+[exit 0]
+STDOUT:
+STDERR:
+
+
+$ git status --porcelain
+[exit 0]
+STDOUT:
+STDERR:
+

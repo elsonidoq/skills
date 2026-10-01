@@ -147,7 +147,8 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
 
 ### Independent final review
 
-- [ ] T012 [Semantic review] Obtain one fresh independent review against source/history/protections/coverage.
+- [x] T012 [Semantic review] Obtain one fresh independent review against source/history/protections/coverage.
+  - **Completion evidence**: parent accepted [final targeted recheck](reviews/requirements-manager-targeted-final-recheck.md), READY / OK, against `e21a6b27aed02192aecac739e5ef033e6ce61dcf..b74a5d4262e8e3e6ef31fe3de9c7065293c952cd`; all remaining findings fixed. Fresh independent review followed by scoped same-reviewer rechecks; static/semantic acceptance only, live checks NOT_RUN.
   - **Depends**: T011.
   - **Outcome / write scope**: read-only reviewer; coordinator records findings/dispositions and returns scoped fixes for separate verified commits.
   - **Acceptance evidence**: reviewer did not produce T001–T011 or resume implementation. Inspect full committed diff, original scope/design/history/pre-change files/inventory/tests/review contract. Classify every row/stage preserved/changed/removed-deliberate/absent; report omissions/weakening/diagram-only stages/capability-approval drift/SpecKit-shared boundaries/classes/three-task/context/batching-locality/task-commit/async/no-parallel policies with severity/file:line/impact/correction. Verdict and dispositions; missing independent capability blocks. Static semantic review does not prove model obedience.
@@ -159,4 +160,4 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
 
 Baseline T001; shared primitives T002–T003; EPIC T004; batching criteria T005; coordinator intake T006; lightweight producer T007; routing T008; contract/mutations T009–T010; integration T011; final review T012. Map acceptance rows to actual artifacts/checks. No unrelated product work, duplicate origin-specific graph, parallel implementation, SpecKit replacement, sizing redesign, global state, runtime upgrades or obsolete platform restoration.
 
-Historical preparation-era instruction (superseded by the execution tracker): the owner approved async background execution and a fresh final review. T001–T011 have since completed; final-review corrections are separately tracked in `requirements-manager-execution.md`, and T012 remains pending recheck. Preparation commit `3817425a08fe7c9bdeefed7e6e3322e268bda02e` contains the preceding plan/task reconciliation, not this task revision. Report /reload after skill changes.
+Historical preparation-era instruction (superseded by the execution tracker): the owner approved async background execution and a fresh final review. T001–T011 have since completed; final-review corrections are separately tracked in `requirements-manager-execution.md`, and T012 is now accepted with durable final review evidence. Preparation commit `3817425a08fe7c9bdeefed7e6e3322e268bda02e` contains the preceding plan/task reconciliation, not this task revision. Report /reload after skill changes.

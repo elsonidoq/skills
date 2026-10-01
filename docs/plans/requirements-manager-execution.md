@@ -2,7 +2,7 @@
 
 ## Current state
 
-**OWNER APPROVED EXECUTION: “go ahead”.** T001–T011 and FR1–FR3 are committed; FR3 is `c50d91368fc91af40fdea34de3336fb0d457caa0`. T012 remains pending parent disposition and successful recheck. Completion of initial checks or corrections is not feature acceptance. The following preparation-era statement is historical: earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
+**OWNER APPROVED EXECUTION: “go ahead”.** T001–T012 are complete. FR1–FR3, SR1–SR3, and TF1–TF3 are committed. Parent accepted T012 after the independent targeted recheck returned **READY — Merge verdict: OK** against implementation tip `b74a5d4262e8e3e6ef31fe3de9c7065293c952cd`. Acceptance covers deterministic static verification and independent semantic review, not live workflow/model-obedience proof. The following preparation-era statement is historical: earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
 
 Approved sequence: T001–T005 (Terra), T006 (Sol), T007–T011 (Terra), then T012 (fresh Sol reviewer). Execute only async background delegation, sequentially, with per-task verification/commits and no per-task reviews. The workflow is regenerated against revision 4.
 
@@ -50,6 +50,7 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 | T009 | completed | Routine static workflow checker. | `f7d93a5b28b55990645929228a867aa965b2b629` |
 | T010 | completed | Initial mutation checks. | `4045a14427976b669862ebc9ba2503ff15d43a17` |
 | T011 | completed | Integration evidence. | `1a067b02b45747d907619f9f5aebe7643208dd73` |
+| T012 | accepted | [Independent final recheck](reviews/requirements-manager-targeted-final-recheck.md): READY / OK; parent verified static checks. | Reviewed tip `b74a5d4262e8e3e6ef31fe3de9c7065293c952cd`; acceptance recorded in this documentation closeout. |
 
 ### Historical T006 dispatch-era verification checkpoint
 
@@ -84,7 +85,7 @@ The second recheck assessed A1, A4, and A5 as **PARTIAL**; its failed report is 
 | SR3 | Original durable evidence correction | completed `8b14df9bdecc81c69635ff64058f3ab72182e977` |
 | TF1 | A1: RM operational invocation, conditional outputs, and separate eligibility/count mutations | completed `8344516af2b570c22727b08973f373ad02bfb077` |
 | TF2 | A4: one adapter-governed planning pass; no post-adapter recreate | completed `d429afcd434d248abf3efe5cf14371e20dac3855` |
-| TF3 | A5: provenance and evidence reconciliation | completed in this metadata commit; its SHA is recorded only in the final packet to avoid a self-reference |
+| TF3 | A5: provenance and evidence reconciliation | completed `b74a5d4262e8e3e6ef31fe3de9c7065293c952cd` |
 
 - **A1 targeted correction:** section-local operational diagnostics and named mutations now cover the reported RM invocation, transition, class/context, and complete-count omissions. This is deterministic static coverage, not natural-language completeness or live behavior proof.
 - **A2 fixed:** invalid required constitutions are repaired through the detected capability and verified usable before specification, otherwise stop.
@@ -92,7 +93,15 @@ The second recheck assessed A1, A4, and A5 as **PARTIAL**; its failed report is 
 - **A4 targeted correction:** `plan_create` conditionally composes one manager-governed architectural-planning pass, then inspects its evidence/artifacts without a second plan create.
 - **A5 targeted correction:** FR and SR provenance are distinct, FR3 has an absolute SHA, and the T006 dispatch-era paragraph is explicitly marked historical.
 - **A6 fixed:** `create-epic` points to the authoritative sizing section instead of copying conditions; this was a preexisting duplication, not an FR1–FR3 regression.
-- **T012 remains pending** parent disposition and recheck; no correction task self-certifies acceptance.
+- **T012 accepted by parent:** the [targeted independent recheck](reviews/requirements-manager-targeted-final-recheck.md) found no issues and marked A1/A4/A5 FIXED; A2/A3/A6 remain fixed. The reviewer began fresh, remained independent of implementation, and continued its own review context for scoped correction rechecks.
+
+### Final acceptance evidence and execution limitations
+
+The complete reviewed range is `e21a6b27aed02192aecac739e5ef033e6ce61dcf..b74a5d4262e8e3e6ef31fe3de9c7065293c952cd`. [Command-labelled verification](reviews/requirements-manager-final-verification.log) records routine lint (24 skills), checker, eight mutation methods, all seven focused entry points, task ordering, diff check, and clean status passing. Parent independently reran routine lint/tests, task ordering, diff and clean-status checks against that tip.
+
+Two wrapper failures did not erase committed corrections: an undefined optional output field interrupted the SR workflow before review; later, a resumed writer/report-summary path collision interrupted output saving after TF commits and a passing runtime verification gate. Parent inspected each exact failure and repository state, preserved committed work, and continued review only with JSON-safe metadata and distinct bound output paths. Neither writer was blindly rerun. Failed reviews remain historical evidence, not current acceptance verdicts.
+
+Live dialogue, SpecKit execution, model obedience, scheduler/context/resumption behavior, and installed discovery remain NOT_RUN. No installs, paid probes, pushes, or deployments were performed. Run `/reload` inside pi to load the changed global skills.
 
 ### Correction evidence and dispositions
 
