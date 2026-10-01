@@ -17,7 +17,9 @@ assessing the work. Use the project's established artifact format and locations;
 assume paths or create a state schema. Treat source claims as claims: retain citations and
 mark unverified claims rather than inventing facts.
 
-Use the existing sizing guidance to decide whether the lightweight route fits. If scope
+Use the sizing guidance in [`../../docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md)
+to decide whether the lightweight route fits. If this distributed reference is missing, stop
+with a missing-install report rather than substituting guidance. If scope
 justifies an EPIC, explain the observed sizing evidence and obtain the owner's route
 decision; do not silently reroute. Preserve an explicit documentation-initialization
 exception when the detected workflow requires an EPIC. Resolve mechanically answerable
@@ -54,7 +56,9 @@ brainstorming in its place.
 ## 3. Produce direct tasks
 
 Use the `task-generation` direct adapter to generate tasks from the durable requirement.
-It does not require a plan or SpecKit. Apply its full task contract, explicit dependency
+It does not require a plan or SpecKit. Supply authorization to **prepare** tasks and any
+already-applicable upstream approvals; do not require final requirement/task implementation
+approval before the producer has created the artifact. Apply its full task contract, explicit dependency
 validation, documentation/integration/acceptance coverage, class-share rule, and manual
 traceability review. Organize consecutive same-class work context-coherently without
 reordering prerequisites or padding with distant tasks; retain individual acceptance
@@ -65,6 +69,10 @@ missing plan. Return a task-order or traceability defect to this manager's revie
 never repair a forward dependency by silently reordering approved work.
 
 ## 4. Review and authorize
+
+The approval order is: preserve/resolve the requirement, prepare tasks, review the produced
+requirement-to-task evidence, then approve current requirement, tasks, and implementation
+scope. This clarifies producer authorization without adding a gate.
 
 Review requirement-to-task traceability, complete in-scope coverage, exclusions,
 documentation, integration, acceptance evidence, ordering, implicit dependencies, model

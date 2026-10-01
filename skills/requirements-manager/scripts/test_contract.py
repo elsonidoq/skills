@@ -21,11 +21,14 @@ class RequirementsManagerContractTests(unittest.TestCase):
         self.assertIn("context-coherent", TEXT)
 
     def test_route_approval_and_handoff_are_explicit(self):
-        self.assertIn("existing sizing guidance", TEXT)
+        self.assertIn("best_practices_spec_driven_development.md", TEXT)
+        self.assertIn("missing-install report", TEXT)
         self.assertIn("owner's route", TEXT)
         self.assertIn("explicit current owner approval", TEXT)
         self.assertIn("`coordinate-implementation`", TEXT)
         self.assertIn("coordinator alone selects execution", TEXT)
+        self.assertIn("authorization to **prepare** tasks", TEXT)
+        self.assertIn("approval order is:", TEXT)
 
     def test_capability_stops_and_stale_evidence_are_not_bypassed(self):
         self.assertIn("capability and stop", TEXT)

@@ -11,18 +11,20 @@ create a plan, or execute tasks.
 
 ## Preconditions and adapters
 
-Read repository instructions, the approved source and supporting artifacts, existing task
-format, governing principles, and applicable project memory before tasking. Confirm that
-owner decisions and approval evidence apply to the current content. If a required source,
-approval, or capability is missing, report the missing evidence and stop rather than
-inventing an artifact.
+Read repository instructions, the source and supporting artifacts, existing task format,
+governing principles, and applicable project memory before tasking. Confirm authorization to
+**prepare** tasks and that already-applicable upstream owner decisions and approvals apply to
+the current content. Do not require final task/implementation approval before the producer
+creates the task artifact. If a required source, preparation authorization, applicable upstream
+approval, or capability is missing, report the missing evidence and stop rather than inventing
+an artifact.
 
 Use the adapter matching the producing workflow:
 
 - A SpecKit adapter first verifies the project's observed task-stage command and follows its
   instructions; unavailable required stage capability is a stop.
-- A direct adapter derives tasks from an approved durable requirement/source and does not
-  require a plan or SpecKit.
+- A direct adapter derives tasks from an owner-authorized durable requirement/source and does not
+  require a plan or SpecKit; final approval follows the produced-artifact review.
 
 For either adapter, verify Python 3 before relying on the bundled validator. If unavailable
 or the task format is incompatible, manually inspect explicit dependencies, ordering,

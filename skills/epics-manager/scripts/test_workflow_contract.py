@@ -38,6 +38,21 @@ class EpicWorkflowContractTests(unittest.TestCase):
         self.assertIn("If a required capability is unavailable, stop", TEXT)
         self.assertIn("observed permitted independent reviewer", TEXT)
 
+    def test_restored_source_constitution_and_approval_contracts(self):
+        self.assertIn("best_practices_spec_driven_development.md", TEXT)
+        self.assertIn("missing-install report", TEXT)
+        self.assertIn("template-only content", TEXT)
+        self.assertIn("owner-derived principles", TEXT)
+        self.assertIn("substantive scope change", TEXT)
+        self.assertIn("documentation-initialization exception", TEXT)
+        self.assertIn("settled and non-obvious constraints **verbatim**", TEXT)
+        self.assertIn("prior-stage handoff", TEXT)
+        self.assertIn("never apply an unresolved\nmaterial default", TEXT)
+        self.assertIn("specification and\nclarification summary", TEXT)
+        self.assertIn("outcome and plan-phase briefing", TEXT)
+        self.assertIn("review the created plan", TEXT)
+        self.assertIn("authorization to\nprepare tasks", TEXT)
+
 
 if __name__ == "__main__":
     unittest.main()

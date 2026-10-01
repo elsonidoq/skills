@@ -35,6 +35,8 @@ class EpicBrainstormingContractTests(unittest.TestCase):
     def test_capability_stop_and_portable_binding(self):
         self.assertIn("owner-selected `sonnet-class` binding", self.text)
         self.assertIn("missing capability and stop before downstream production", self.text)
+        self.assertIn("ask in prose and end the turn", self.text)
+        self.assertIn("do not continue downstream or infer an", self.text)
         self.assertNotIn("openai-", self.text)
         self.assertNotIn("anthropic/", self.text)
 

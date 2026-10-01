@@ -10,7 +10,7 @@ project adopts the suite through the `install-memory` skill before the workflow 
 |---|---|---|---|
 | pi coding agent | 0.87.x (tested with 0.87.1) | `pi --version` | Install or update pi |
 | pi-subagents | npm:`pi-subagents@0.73.1` | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and `pi install npm:pi-subagents@0.73.1` |
-| pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Ask in prose and end the turn |
+| pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Where a stage permits prose interaction, ask in prose and end the turn; do not proceed past the owner-answer gate or infer an answer. A manager's explicit mandatory preflight may stop earlier. |
 | SpecKit toolkit | installed in the **project** when using EPIC stages | detected stage commands and assets exist in the target project | Stop at the affected EPIC stage with a capability report; direct requirements-manager tasking does not require it |
 | jev (optional) | `~/.agents/skills/jev` | `command -v jev` or the skill loads | Manual routing in `finish-session-jev` |
 

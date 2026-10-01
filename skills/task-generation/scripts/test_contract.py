@@ -13,6 +13,8 @@ class TaskGenerationContractTests(unittest.TestCase):
         self.assertIn("SpecKit adapter", TEXT)
         self.assertIn("direct adapter", TEXT)
         self.assertIn("does not\n  require a plan or SpecKit", TEXT)
+        self.assertIn("authorization to\n**prepare** tasks", TEXT)
+        self.assertIn("Do not require final task/implementation approval", TEXT)
 
     def test_context_coherence_preserves_dependency_order(self):
         self.assertIn("coherent sequential work", TEXT)

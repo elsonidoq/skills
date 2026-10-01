@@ -14,8 +14,10 @@ Before using this skill, verify that the runtime can ask the owner questions and
 manager can persist the selected source, decisions, deferrals, and handoff according to
 project conventions. Verify a usable owner-selected `sonnet-class` binding before assigning
 gate assessment or decision application. If a required capability is unavailable, report the
-missing capability and stop before downstream production. Do not substitute an unavailable
-interactive dialogue with guessed decisions.
+missing capability and stop before downstream production. When the runtime's permitted fallback
+is prose interaction, ask in prose and end the turn; do not continue downstream or infer an
+answer. A manager's explicit mandatory preflight may instead stop before the question is posed.
+Do not substitute an unavailable interactive dialogue with guessed decisions.
 
 The calling manager supplies a bounded source and the next-stage readiness target. It must
 read applicable repository instructions, principles, source evidence, and any applicable
@@ -51,8 +53,9 @@ on a specific downstream-ready direction. Record each result as:
 Decision: [direction] — [detail]
 ```
 
-Record owner deferrals, including their rationale. A missing question capability is a stop,
-not permission to infer a material decision.
+Record owner deferrals, including their rationale. For a missing question capability, use the
+permitted prose-and-end-turn fallback when available, then stop; otherwise report the stop. It
+is never permission to infer a material decision.
 
 ## 3. Apply decisions
 
