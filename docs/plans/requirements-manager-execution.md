@@ -2,7 +2,7 @@
 
 ## Current state
 
-**OWNER APPROVED EXECUTION: “go ahead”.** T001–T011 were completed in separate commits; final review returned NOT_READY, and FR1–FR2 corrections are now committed with FR3 evidence pending. T012 remains pending parent disposition and successful recheck. Completion of initial checks or corrections is not feature acceptance. The following preparation-era statement is historical: earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
+**OWNER APPROVED EXECUTION: “go ahead”.** T001–T011 and FR1–FR3 are committed; FR3 is `c50d91368fc91af40fdea34de3336fb0d457caa0`. T012 remains pending parent disposition and successful recheck. Completion of initial checks or corrections is not feature acceptance. The following preparation-era statement is historical: earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
 
 Approved sequence: T001–T005 (Terra), T006 (Sol), T007–T011 (Terra), then T012 (fresh Sol reviewer). Execute only async background delegation, sequentially, with per-task verification/commits and no per-task reviews. The workflow is regenerated against revision 4.
 
@@ -71,7 +71,16 @@ All F1–F11 are valid against inspected source. F4's false negatives were repro
 | FR2 | F4/F9 and T003 T001-start gap: operational section/transitions/classes/contradiction checks, real named mutations, routine/custom-tree wiring and validator units | sonnet-class / Terra, medium | completed (`1cbfd24ecf2669af604981575002ebf9c99679c6`) |
 | FR3 | F10: truthful metadata; update coverage/dispositions, record actual task commits/checks and export corrected review packet | sonnet-class / Terra, medium | completed (this commit; SHA recorded in correction packet) |
 
-One coherent async/background Terra fix batch runs FR1→FR2→FR3, with separate verified correction-task commits. Then a fresh async/background Sol reviewer with explicit medium thinking rechecks the final corrected range and findings. No high-thinking launch or resumption of a high-thinking reviewer.
+One coherent async/background Terra fix batch ran FR1→FR2→FR3, with separate verified correction-task commits: FR1 `77b501a`, FR2 `d9e0ad5`, and FR3 `c50d91368fc91af40fdea34de3336fb0d457caa0`. Then a fresh async/background Sol reviewer with explicit medium thinking rechecks the final corrected range and findings. No high-thinking launch or resumption of a high-thinking reviewer.
+
+### Second correction dispositions
+
+- **A1 corrected:** section-local operational diagnostics and named in-memory mutations now cover the inspected omissions and contradictions; this is deterministic static coverage, not natural-language completeness or live behavior proof.
+- **A2 corrected:** invalid required constitutions are repaired through the detected capability and verified usable before specification, otherwise stop.
+- **A3 corrected (new owner-authorized routing addition):** fresh small work is explicitly recommended to `requirements-manager`; documentation initialization and admitted/resumed safeguards remain.
+- **A4 corrected:** `plan_create` conditionally composes the architectural-planning helper under EPIC precedence; the historical integration omission is accounted for.
+- **A5 corrected:** this tracker reconciles FR1–FR3 as committed and labels the T006 dispatch-era/provenance paragraph historical.
+- **A6 corrected:** `create-epic` now points to the authoritative sizing section instead of copying conditions; this was a preexisting duplication, not an FR1–FR3 regression.
 
 ### Correction evidence and dispositions
 

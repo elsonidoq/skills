@@ -1,6 +1,6 @@
 # Requirements Manager source-derived coverage baseline
 
-**Final-review status: corrections committed; T012 recheck pending.** The initial `verified` cells meant initial static checks only and did not resolve the NOT_READY review. FR1 restored B05–B07, B09–B11, B15, B20–B21 and B30 safeguards; FR2 strengthens B17 and B29 operational/static evidence. The rows remain `verified` only for the named deterministic prompt-contract checks, not semantic acceptance or runtime behavior. See the historical [findings](reviews/requirements-manager-final-semantic-review.md), which are preserved unchanged.
+**Final-review status: FR1–FR3 and second corrections are committed; T012 recheck remains pending.** The initial `verified` cells meant initial static checks only and did not resolve the NOT_READY review. Second corrections address A1 (section-local static/mutation coverage), A2 (constitution repair/verification), A3 (new authorized fresh-small routing), A4 (historical helper integration), A5 (truthful tracker state), and A6 (preexisting sizing duplication). The rows remain `verified` only for named deterministic prompt-contract checks, not semantic acceptance, arbitrary natural-language completeness, or runtime behavior. See preserved historical [findings](reviews/requirements-manager-final-semantic-review.md), [Astra review](reviews/requirements-manager-astra-suite-review.md), and [Sol recheck](reviews/requirements-manager-sol-final-recheck.md).
 
 **Derivation order:** This matrix was drafted before replacement-skill text. It derives
 requirements from the owner-approved [design](requirements-manager.md), the revision-4
@@ -79,8 +79,9 @@ removing the protections.
   context-continuity, separate-task-commit policy.
 - Obsolete platform-specific tools/paths, resolver and JSON state schema, named agents,
   provider IDs, and historical speculative defaults are deliberately excluded (B30).
-- No required behavior is currently classified `removed-unaccounted`. Any later source
-  behavior not mapped above is a blocker for T011 rather than silently accepted.
+- A1–A6 dispositions are recorded in the execution tracker. Static predicates are deliberately
+  bounded: they do not establish exhaustive semantic coverage, model obedience, or live workflow
+  success. Any later source behavior not mapped above is a blocker rather than silently accepted.
 
 ## Baseline checks
 
