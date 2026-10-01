@@ -33,13 +33,13 @@ On each project, run the `install-memory` skill first: it writes the suite contr
 - Each project documents which material changes require which documentation owners.
 - Memory records only non-obvious, durable guidance.
 - Verified unresolved work has one canonical register: `docs/open_issues.md`.
-- Features are developed from approved epics and spec-driven artifacts, or an owner-approved direct task list when the pipeline is not justified.
+- Features are developed from approved EPIC/SpecKit artifacts or reviewed requirements-manager tasks when the pipeline is not justified.
 
 ## Development Workflow
 
-1. `create-epic` turns an evidence-backed idea into a scoped epic, or a direct task list when the SpecKit pipeline is not justified.
-2. For an epic, `epics-manager` requires the project's SpecKit toolkit and guides its specification, approval, planning, tasks, and cross-artifact review stages. For a direct task list, report its path and the owner-selected next action instead.
-3. In a fresh session, `coordinate-implementation` revalidates the pipeline approvals and implements the approved spec, plan, and tasks in dependency order with mandatory delegation. A direct task list alone does not enter this coordinator.
+1. `create-epic` turns an evidence-backed idea into a scoped EPIC, or records the owner's approved lightweight route when the SpecKit pipeline is not justified.
+2. For an EPIC, `epics-manager` requires the project's SpecKit toolkit and guides specification, approval, planning, tasks, and cross-artifact review. For a detailed lightweight requirement, `requirements-manager` preserves the requirement, uses shared brainstorming and task-generation contracts, reviews it, and records current approval without creating a specification or plan.
+3. In a fresh session, `coordinate-implementation` revalidates applicable EPIC or requirements-manager approvals and implements approved tasks in dependency order. Up to three bounded tasks may run locally only when selected class and context fit; larger lists use asynchronous, sequential, context-coherent delegation. Verify and commit every task separately, then obtain one independent final review.
 4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
 5. `initialize-documentation` establishes documentation owners and the project's directory indexes; changed projects first create a documentation epic.
 6. `finish-session` maintains documentation, open-issue, deployment, project-memory, and temporary-execution-state invariants.
@@ -55,10 +55,10 @@ Use the initialize-documentation skill for this project.
 ### Deliver Recorded Session Work
 
 ```
-Use the create-epic skill to create an epic for the documented work in [TODO list file / audio transcription].
-If an epic is created, run epics-manager with its path.
-If an owner-approved direct task list is created, report its path and the owner-selected next action, then stop this delivery workflow without invoking epics-manager or coordinate-implementation.
-After epics-manager completes, use the finish-session skill.
+Use create-epic to assess the documented work in [TODO list file / audio transcription].
+If an EPIC is created, run epics-manager with its path.
+If the owner selects the lightweight route, run requirements-manager with the durable requirement/source; then use its approved handoff with coordinate-implementation.
+After the applicable producer completes, use the finish-session skill.
 ```
 
 For an epic with an approved epics-manager handoff, in a fresh session:
@@ -73,16 +73,29 @@ Source brief: [source brief path from epics-manager handoff]
 Specification approval: [record path and section from epics-manager handoff]
 Overall review approval: [record path and section from epics-manager handoff]
 Review evidence and decisions: [record paths and sections from epics-manager handoff]
+Use the finish-session skill.
+```
+
+For a lightweight requirement with an approved requirements-manager handoff, in a fresh session:
+
+```
+Use the coordinate-implementation skill for the approved work.
+Workflow origin: requirements-manager
+Requirement/source: [durable source path and section]
+Tasks: [task path]
+Current owner approval: [record path and content/revision evidence]
+Review evidence and decisions/deferrals: [record paths and sections]
+Applicable supporting artifacts: [paths]
 Use the finish-session skill.
 ```
 
 ### Deliver Open Issues
 
 ```
-Use the create-epic skill to create an epic that addresses the selected open issues in docs/open_issues.md.
-If an epic is created, run epics-manager with its path.
-If an owner-approved direct task list is created, report its path and the owner-selected next action, then stop this delivery workflow without invoking epics-manager or coordinate-implementation.
-After epics-manager completes, use the finish-session skill.
+Use create-epic to assess work addressing selected open issues in docs/open_issues.md.
+If an EPIC is created, run epics-manager with its path.
+If the owner selects the lightweight route, run requirements-manager with the durable requirement/source; then use its approved handoff with coordinate-implementation.
+After the applicable producer completes, use the finish-session skill.
 ```
 
 For an epic with an approved epics-manager handoff, in a fresh session:
@@ -99,6 +112,8 @@ Overall review approval: [record path and section from epics-manager handoff]
 Review evidence and decisions: [record paths and sections from epics-manager handoff]
 Use the finish-session skill.
 ```
+
+For a lightweight requirement with an approved requirements-manager handoff, use the same requirements-manager fields above and then `finish-session`.
 
 ## Supporting Workflows
 

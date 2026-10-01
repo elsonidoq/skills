@@ -33,9 +33,10 @@ Present for approval:
 
 1. The requirements block to record (pinned package versions, SpecKit, jev).
 2. The instructions-file section to add, covering:
-   - **How the suite works:** brief → epic (`create-epic`) → SpecKit pipeline
-     (`epics-manager`) → implementation (`coordinate-implementation`) → closeout
-     (`finish-session`).
+   - **How the suite works:** brief → `create-epic` sizing → EPIC/SpecKit pipeline
+     (`epics-manager`) or lightweight requirement/task review (`requirements-manager`) →
+     implementation (`coordinate-implementation`) → closeout (`finish-session`). The
+     documentation-initialization workflow retains its explicit EPIC exception.
    - **How memory is used:** the store location (default: `<project-root>/memory/`
      with `memory/MEMORY.md` index and entry files; owner may choose another path),
      the `memory-handling` retrieval contract, and the trigger-first rules.

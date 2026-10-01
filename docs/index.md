@@ -2,6 +2,9 @@
 
 ## Project Guidance
 
+- [Requirements Manager](../skills/requirements-manager/SKILL.md): Plan-free, reviewed direct-requirement task production and coordinator handoff.
+- [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
+- [EPIC Brainstorming](../skills/epic-brainstorming/SKILL.md): Shared bounded owner-decision gate and application mechanism.
 - [Best Practices for Spec-Driven Development](best_practices_spec_driven_development.md): Guidance for writing evidence-backed specifications and deciding when an epic pipeline is warranted.
 
 ## Implementation Plans

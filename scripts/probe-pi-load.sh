@@ -7,9 +7,9 @@ set -uo pipefail
 MODEL="${1:-deepseek/deepseek-v4.1-flash}"
 SUITE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-REQUIRED=(epics-manager create-epic coordinate-implementation memory-handling \
-          install-memory finish-session initialize-documentation use-railway \
-          writing-skills track-open-issue)
+REQUIRED=(epics-manager create-epic requirements-manager coordinate-implementation \
+          epic-brainstorming task-generation memory-handling install-memory \
+          finish-session initialize-documentation writing-skills track-open-issue)
 
 tmp=$(mktemp); tmp2=$(mktemp); trap 'rm -f "$tmp" "$tmp2"' EXIT
 

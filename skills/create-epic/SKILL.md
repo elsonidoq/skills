@@ -77,8 +77,10 @@ normal sizing verdict in the epic so the exception remains auditable.
 If the brief fails a condition, recommend a direct, independently verifiable task
 list unless the documentation-initialization exception applies. Record the owner's
 decision in the established decision artifact, or in the brief when none exists.
-With owner approval, create and verify that task list, report it as a non-epic
-outcome, and stop.
+With owner approval, preserve the durable requirement/source and route it to the
+`requirements-manager` skill for shared brainstorming, direct task generation, review, and
+current approval. Do not create a plan or specification. Report that lightweight route and
+its source path; requirements-manager supplies the coordinator handoff after approval.
 
 For a justified epic, list mechanically obvious work that does not depend on a design
 output as separately scheduled work. Record its exclusion and rationale so later
@@ -106,4 +108,5 @@ an exclusion.
 
 State the created artifact path, sizing verdict, verified corrections to the input,
 separately scheduled work, remaining `UNVERIFIED` claims or deferrals, and the next
-`epics-manager` handoff. For a direct task list, report that non-epic result instead.
+`epics-manager` handoff. For the lightweight route, report the durable requirement/source
+and the next `requirements-manager` handoff instead.

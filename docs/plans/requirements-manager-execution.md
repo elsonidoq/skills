@@ -44,6 +44,7 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 | T005 | completed | Replaced isolation-first batching with context-continuity criteria, upstream coherent-work guidance, task commit checkpoints, async-only sequential batches, and focused static scenario contracts. | recorded with T005 change |
 | T006 | completed | Generalized origin-specific authorization/intake, applicable SpecKit only, full-list three-task local/delegated selection and common graph; preserved T005 batching, explicit context/failure safety and fresh final review. Six failing-before/passing-after intake checks plus predecessor contracts/lint/validator passed. | recorded with T006 change |
 | T007 | completed | Added plan-free Requirements Manager with durable requirement evidence, shared gate/direct-task adapters, review/approval stale detection, and origin-marked coordinator handoff. Initial absent-skill check failed; four focused static checks, lint, and diff check passed. | recorded with T007 change |
+| T008 | completed | Routed lightweight requirements through create-epic, requirements-manager, and coordinator; documented EPIC exception, local/delegated policy, task commits, discovery, and handoff fields; added new skills and removed stale probe entry. Lint, shell syntax, static routing/discovery, and diff checks passed without paid probe. | recorded with T008 change |
 
 ### T006 verification checkpoint
 

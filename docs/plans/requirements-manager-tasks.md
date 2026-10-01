@@ -113,7 +113,7 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Model class**: sonnet-class.
   - **Rationale**: bounded adapter following approved shared contracts.
 
-- [ ] T008 [Routing/docs] Align documentation, direct-task routing and discovery.
+- [x] T008 [Routing/docs] Align documentation, direct-task routing and discovery.
   - **Depends**: T001, T004, T005, T006, T007.
   - **Outcome / write scope**: affected README/REQUIREMENTS/index/create-epic/install-memory/initialize-documentation/probe portions; no unrelated cleanup.
   - **Acceptance evidence**: EPIC SpecKit wrappers and lightweight coordinator entry documented; preserve documentation-initialization EPIC exception. Align threshold/context-locality/task commits/class language/async-only/shared prerequisites. Dynamic installer unchanged; probe adds new skills/removes observed stale entries, no paid run. Document validation entry point/installation/discovery/handoff and /reload. Preserve index/coverage entries; links/lint/static discovery pass.
