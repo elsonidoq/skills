@@ -74,13 +74,14 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Rationale**: localized contract/validator extraction.
   - **Execution evidence**: `skills/task-generation/` is the sole validator implementation; expanded units cover ranges/none, self and forward prerequisites, resumed stories, gaps/duplicates/missing fields; no non-historical in-repository caller required a forwarding wrapper.
 
-- [ ] T004 [EPIC workflow] Restore executable EPIC stages, current safety protections and SpecKit wrappers.
+- [x] T004 [EPIC workflow] Restore executable EPIC stages, current safety protections and SpecKit wrappers.
   - **Depends**: T001, T002, T003.
   - **Outcome / write scope**: `skills/epics-manager/SKILL.md` and necessary references/tests.
   - **Acceptance evidence**: operational chain `brainstorm_gate → [epic_brainstorm → epic_brainstorm_fix] → spec_create → plan_create → tasks_create → overall_review → done`; each stage has entry/input/steps/output/approval/resume and applicable class. Gate/fix/spec/tasks sonnet-class; plan opus-class; brainstorm orchestrator-owned; review observed/independent/owner-selected. Shared gate skip/conditional path; same-turn plan spec-review/create/review/fix; create-only tasks, overall review owns corrections. Preserve source/flagged/handoff/deferral/recovery inventory with no speculative material defaults; conditional clarification; approvals as checkpoints, spec approval renewed after changes; sizing/provenance, constitution/capability stops, docs/current-version approval/fresh-session handoff. No diagram-only stages/platform resurrection; lint/tests and inventory check pass.
   - **Capability needs**: edits/history/search/static tests; no simulated SpecKit.
   - **Model class**: sonnet-class.
   - **Rationale**: explicit approved stage and inventory contracts.
+  - **Execution evidence**: operational `skills/epics-manager/SKILL.md` restores the approved chain, shared primitive references, stage ownership, current approvals/resume, SpecKit/capability stops, and independent review; `scripts/test_workflow_contract.py` covers the static contract.
 
 - [ ] T005 [Context-continuity batching] Update shared coordinator batching criteria and upstream plan/task organization to amortize startup and reuse useful context.
   - **Depends**: T003, T004.

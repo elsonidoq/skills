@@ -1,233 +1,134 @@
 ---
 name: epics-manager
-description: Use when preparing or resuming a feature brief through a project's installed SpecKit specification, planning, tasking, and review workflow before implementation.
+description: Use when preparing or resuming a selected feature brief through an installed SpecKit workflow before implementation.
 ---
 
-# Epics Manager
+# EPIC Manager
 
-Guide an owner-selected brief through the project's installed SpecKit workflow
-to reviewed implementation artifacts. This workflow requires SpecKit, prepares
-work, and does not implement product code.
+Guide an owner-selected brief through reviewed SpecKit artifacts. This manager prepares
+work; it does not implement it. It requires the shared `epic-brainstorming` and
+`task-generation` skills: verify they are discoverable before use and stop with a capability
+report if either is unavailable rather than duplicating their behavior.
 
-## Owner Communication
+## Preflight and provenance
 
-Speak as a technical manager who does not know the project's internal code or
-architecture. Describe decisions in terms of customer or business outcome,
-scope, delivery impact, tradeoffs, risks, and evidence. Do not assume the owner
-recognizes internal components, file paths, implementation jargon, or prior
-technical context. Explain any technical constraint only to the extent needed
-to make the decision, using plain language.
+Read repository instructions, the selected bounded brief, its cited sources, governing
+principles, existing artifacts, and applicable project memory when the project declares the
+memory contract. Record the source path/section, settled decisions, acceptance criteria,
+exclusions, dependencies, provenance, and existing artifact/review links. Re-read selected
+bounds and links on resume. Ambiguous provenance is a blocker; obtain owner selection through
+the available question capability rather than attaching a likely source.
 
-Ask every owner question with the runtime's `ask_user` question tool, never as prose. Ask only
-when the answer can materially affect product scope, architecture, privacy,
-permissions, irreversible behavior, cost, or a settled requirement. Each tool
-question must state the decision and its practical impact, offer two to four
-concise options when options are known, and mark the recommended option. If
-no question tool is available, ask one concise question in prose and end your
-turn so the owner can reply; never infer an answer.
+Verify the project's observed SpecKit constitution (when required), specification,
+clarification, planning, tasks, and analysis commands, instructions, templates, and
+prerequisite checks. Report each as `AVAILABLE` or `UNAVAILABLE` with evidence and blocker.
+If a required capability is unavailable, stop at the affected stage; never install, simulate,
+or replace it with generic Markdown. Verify usable question/delegation capabilities and
+owner-selected class bindings before assigning work; missing capabilities stop with an
+explicit report. Do not hard-code a provider, model, agent, path, state schema, or command
+name.
 
-## Inputs and Provenance
+Use existing durable project artifacts for decisions, approvals, deferrals, revisions, and
+handoff. A bare approval label is insufficient: identify the approved current content or
+revision. Resume from the earliest missing, stale, or inconsistent artifact/checkpoint.
 
-Before assessing readiness, load the project memory store per the
-`memory-handling` skill: read the store's index, then any entries whose triggers
-match the target, and treat verified trigger-first gotchas as constraints on
-scope and decisions.
+## Stage sequence
 
-Require a brief or source artifact and an unambiguous target within it. Resolve the
-target from explicit headings, metadata, or owner input without assuming numbered
-epics, a bundle filename, or a custom state directory. Record:
-
-- Source path and selected section.
-- Governing repository instructions and principles.
-- Settled decisions, acceptance criteria, exclusions, dependencies, and cited
-  sources.
-- Existing spec, plan, tasks, and review artifacts linked to that source.
-
-Re-read source bounds and links whenever resuming. If provenance is ambiguous,
-use the runtime's `ask_user` question tool to obtain an unambiguous target instead of attaching work
-to a likely-looking feature.
-
-## Required SpecKit Capabilities
-
-Before starting and before each stage, inspect the project's command registry
-and files for the corresponding SpecKit capability and its instructions,
-templates, and prerequisite scripts. Verify the specification, clarification,
-planning, tasks, and analysis stage commands are installed and usable for this
-project. Check the constitution capability when the installed workflow requires
-it. Conventional command names and directory layouts are hints, not contracts.
-Use only commands and assets observed in the current project.
-
-Report capability checks in this form:
+Run the first incomplete or invalid stage. Approval checks are checkpoints inside this
+sequence, not new create/critique/fix stages:
 
 ```text
-Capability: constitution | specification | clarification | planning | tasks | analysis
-Status: AVAILABLE | UNAVAILABLE
-Evidence: [command or path found]
-Blocker: [missing requirement or none]
+brainstorm_gate
+  → [epic_brainstorm → epic_brainstorm_fix]
+  → spec_create → plan_create → tasks_create → overall_review → done
 ```
 
-If any required capability is unavailable, report `UNAVAILABLE` with the
-missing command or asset and stop the workflow before producing or approving
-downstream artifacts. Do not replace a missing SpecKit stage with generic
-Markdown work, simulate a slash command in a shell, install tooling, or
-initialize/overwrite project assets without owner authorization. Follow each
-detected stage command's current instructions and verify its outputs; the
-requirements below supplement the installed workflow rather than replace it.
+### `brainstorm_gate` — `sonnet-class`
 
-## Required Runtime Capabilities
+**Entry/input:** verified selected brief and preflight evidence. **Steps:** invoke the shared
+`epic-brainstorming` gate on the selected brief section; preserve its exact
+`NO_BRAINSTORM_NEEDED`/`BRAINSTORM_NEEDED` result and evidence. **Output:** a saved next stage:
+skip goes to `spec_create`; needed goes to `epic_brainstorm`. **Approval/resume:** no new owner
+approval on a skip; on resume validate source/decision evidence and re-run the gate if material
+content changed.
 
-This suite pins its runtime: the `subagent` delegation tool (package
-`pi-subagents`) and the `ask_user` question tool (package `pi-ask-user`) are
-declared in the global configuration repository's `REQUIREMENTS.md`. Verify the
-tools are registered and usable before relying on them; never invent a tool,
-command, or package. If a required runtime capability is unavailable, report
-`Delegation: UNAVAILABLE` or `question: UNAVAILABLE` with the missing package
-and stop before producing or approving downstream artifacts.
+### `epic_brainstorm` — orchestrator-owned
 
-## Workflow
+**Entry/input:** saved shared-skill agenda. **Steps:** use the available question capability
+for one material agenda item at a time, as required by `epic-brainstorming`; do not delegate
+owner dialogue. Capture decisions and deferrals. **Output:** durable formatted decisions for
+`epic_brainstorm_fix`. **Approval/resume:** each material owner decision is the approval; if
+answers are incomplete, re-present the saved agenda rather than guessing.
 
-Run the earliest incomplete or invalid stage:
+### `epic_brainstorm_fix` — `sonnet-class`
 
-1. **Principles preflight:** Read the project's governing principles if present.
-   If a detected SpecKit workflow requires a constitution and it is missing or
-   still template text, use the runtime's `ask_user` question tool to obtain the necessary
-   project-specific principles and use the detected constitution capability.
-   If that capability is unavailable, stop; do not invent policy.
-2. **Brief readiness:** Confirm the target has an outcome, users, scope, exclusions,
-   acceptance criteria, dependencies, and no unresolved direction that would change
-   the feature materially. Use the runtime's `ask_user` question tool only for genuine product or
-   architectural choices.
-3. **Specification:** Run the detected SpecKit specification stage. Before
-   producing the spec, read the global configuration
-   repository's [`docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md).
-   If it is unavailable, stop and report an incomplete global configuration
-   installation. Apply **Designing AI-Friendly Specifications for Solo Builders**:
-   keep goals outcome-oriented, make inputs/outputs and deterministic business rules
-   explicit where relevant, include exclusions, and avoid implementation detail
-   unless it is a settled constraint. Verify the recorded admission sizing verdict
-   and rationale under **Epic Sizing: When the Pipeline Earns Its Overhead**; if
-   absent, establish them before continuing. Resolving ambiguity during readiness,
-   clarification, or planning does not invalidate admission. A substantive scope
-   change requires the owner's choice through the runtime's `ask_user` question tool and a recorded
-   sizing/path decision before continuing; do not silently reroute the work.
-   When the epic records the owner-approved directive
-   `documentation initialization requires an epic`, preserve that sizing exception.
-4. **Clarification:** After specification, run the detected clarification stage.
-   Resolve mechanically answerable gaps; send material choices to the owner with
-   the runtime's `ask_user` question tool.
-5. **Specification approval:** Summarize the specification and clarification results
-   in manager-level terms, then use the runtime's `ask_user` question tool to request approval. Record
-   explicit specification approval in a project-defined decision or progress
-   artifact, or in the specification when none exists. Do not begin planning without
-   it.
-6. **Plan:** Review the spec, fix non-material defects, then run the detected
-   SpecKit planning stage to produce architecture, contracts, sequencing, risks,
-   verification, and documentation scope. Identify the documentation that must
-   explain each new or modified capability, interface, workflow, configuration,
-   operational procedure, or user-visible behavior. Record that scope in the
-   plan for task generation. Require an implementable sequence of stages and
-   user stories: a stage's required producers must be available in an earlier
-   stage or earlier within the same stage. Keep each story's sequential work
-   together; if a later stage would have to produce an earlier task's prerequisite,
-   revise the stage order or producer placement before task generation. When the
-   approved work calls for delegated architectural decomposition, use
-   `delegating-architectural-planning` to run the detected planning stage; do not
-   produce a substitute plan outside it.
-7. **Tasks:** Run the detected SpecKit tasks stage to derive dependency-aware,
-   independently verifiable tasks from the plan.
-   Each task identifies its outcome, prerequisites, likely files/interfaces,
-   acceptance evidence, capability needs, `Model class: sonnet-class | opus-class`,
-   and a brief rationale for that class. Default to `sonnet-class` for bounded,
-   well-specified work. Use `opus-class` only when the work cannot be safely
-   decomposed into bounded, independently verifiable tasks. At most 30% of the
-   complete task list may be `opus-class`. When the proposed share exceeds 30%, use
-   the runtime's `ask_user` question tool to present the affected task IDs, their rationale, and the
-   delivery impact of reducing the share; record explicit owner approval before
-   finalizing the task list. Include one or more documentation tasks that update or
-   create the documentation identified in the plan; their acceptance evidence must
-   confirm the documented material matches the implemented changes. Number tasks
-   in execution order without gaps: every prerequisite must have a smaller task
-   number and appear earlier in the list. Keep each story's tasks in a contiguous
-   segment rather than returning to that story after starting another; shared
-   setup may precede the stories. If that misrepresents the architecture, return
-   to planning and adjust its sequencing; never paper over a forward dependency
-   with a batching exception. Before leaving tasking, run the dependency and
-   story-order check specified in Overall review and correct its findings.
-8. **Overall review:** Check source -> spec -> plan -> tasks traceability,
-   contradictions, omissions, dependency order, integration coverage, exclusions,
-   governing principles, documentation coverage, and the `opus-class` task share.
-   For a task list with `T`-numbered Markdown entries and explicit `Depends`
-   fields, run `python3 scripts/check-task-order.py /path/to/tasks.md` from this
-   skill's directory when Python 3 is available. Fix every missing, duplicate,
-   out-of-order, or forward prerequisite and noncontiguous story before approval.
-   Check implicit dependencies and stage feasibility manually too; the script
-   cannot infer them. If the script cannot run or the task format differs, do
-   those checks manually and report that scripted validation was unavailable.
-   Do not approve a task list exceeding 30% `opus-class` tasks without recorded owner
-   approval. Run the detected SpecKit analysis stage and manually inspect its
-   evidence.
-9. **Overall review approval:** Immediately before requesting approval, present a
-   brief bulleted plan summary in manager-level terms: one bullet for the intended
-   outcome and one concise bullet for each plan phase. Include a risk, dependency,
-   exclusion, or deferral only when it materially affects the approval decision. Then
-   use the runtime's `ask_user` question tool to request approval. Record explicit overall review
-   approval in a project-defined decision or progress artifact, or in the reviewed
-   artifacts when none exists. Do not hand off implementation without it.
-10. **Handoff:** Verify both recorded approvals apply to the current artifacts and
-    re-run applicable prerequisite or artifact checks. Do not load or run
-    `coordinate-implementation` in this session. Instruct the user to run
-    `finish-session` or `finish-session-jev` to close the planning session. Then
-    provide this copyable prompt for a fresh session, replacing each placeholder with
-    the current artifact path:
+**Entry/input:** selected bounded brief, saved agenda, and owner decisions. **Steps:** invoke
+shared decision application to apply exactly those decisions inside the selected source;
+preserve structure, exclusions, and deferrals. **Output:** updated brief plus concise handoff
+context for `spec_create`. **Approval/resume:** validate the decision record and bounded edit;
+missing evidence stops rather than reinterpreting the owner.
 
-    ```text
-    Use the coordinate-implementation skill to execute the approved work.
-    Workflow origin: epics-manager
-    Specification: [specification path]
-    Plan: [plan path]
-    Tasks: [tasks path]
-    Source brief: [source brief path]
-    Specification approval: [record path and section]
-    Overall review approval: [record path and section]
-    Review evidence and decisions: [record paths and sections]
-    ```
+### `spec_create` — `sonnet-class`
 
-    Verify every referenced record is durable and accessible in the target workspace.
-    When approvals or review evidence are embedded in a spec or plan, cite that
-    artifact and section rather than creating a separate record.
+**Entry/input:** source/constraints, shared-gate result, and detected specification capability.
+**Steps:** follow the observed SpecKit specification instructions; apply the spec-driven
+reference where installed; reflect settled decisions without re-deriving them. Run optional
+clarification only when requested or required by the detected workflow, resolving mechanical
+gaps directly and sending material choices to the owner. **Output:** verified specification and
+its path. **Approval/resume:** obtain and durably record explicit approval of the current
+specification before `plan_create`; missing/stale approval returns here.
 
-## Decisions and Corrections
+### `plan_create` — `opus-class`
 
-Agents may resolve task organization, filenames, internal naming, and mechanically
-verifiable defects. Use the runtime's `ask_user` question tool only when alternatives materially
-change product scope, architecture, privacy, permissions, irreversible behavior,
-cost, or a settled requirement. Apply no speculative answer merely to advance the
-workflow.
+**Entry/input:** current approved specification, source, and detected planning capability.
+**Steps:** in one same-session pass, review the specification, correct non-material defects,
+and create the plan with the observed SpecKit planning instructions. Cover interfaces,
+sequencing, risks, verification, integration, and documentation scope. Material scope,
+architecture, privacy, permission, irreversible, cost, or settled-requirement choices are owner
+gates; do not use speculative defaults. If review or planning changes approved specification
+content, renew specification approval before leaving this stage. **Output:** verified plan and
+handoff context. **Approval/resume:** retain flagged owner decisions and resume the same
+correction context when supported; otherwise use durable handoff evidence. Do not split this
+into separate spec critique/fix stages.
 
-Record each owner decision and approval with its stage and affected artifact paths
-in an existing project-defined decision or progress artifact when one is documented.
-Otherwise keep it in the affected spec or plan. Identify the approved artifact
-versions or content, preserving any existing project revision/evidence convention, so
-a fresh session can detect changes after approval; a bare `approved` label is not
-enough. Do not create a global state schema or require a particular progress filename.
+### `tasks_create` — `sonnet-class`
 
-## State and Resume
+**Entry/input:** current approved source/specification/plan and detected tasks capability.
+**Steps:** follow the observed SpecKit task command under the shared `task-generation` contract.
+This stage is create-only: create the best task list, including documentation and acceptance
+coverage, but do not self-review or self-correct it. **Output:** verified task list and handoff
+context. **Approval/resume:** task defects belong to `overall_review`; resume validates inputs
+and output rather than trusting a stage label.
 
-Artifacts are the default durable state. Use a project state mechanism only when
-the repository documents one; validate its schema and artifact links before trusting
-it. On resume:
+### `overall_review` — observed independent reviewer
 
-1. Verify source and artifact paths still exist.
-2. Verify recorded specification approval and overall review approval apply to the
-   current artifact revisions. Missing or stale approval returns to that gate.
-3. Validate stage outputs and integrations rather than trusting a `done` label.
-4. Continue from the earliest stale, missing, or inconsistent artifact.
+**Entry/input:** source, current specification, plan, tasks, approvals, and detected analysis
+capability. **Steps:** use an observed permitted independent reviewer selected by the owner;
+follow the detected analysis capability and inspect traceability, exclusions, principles,
+coverage, dependencies, documentation, integration, class share, and approvals. Apply
+mechanical task-level fixes and report them. Flag only material friction/complexity or genuine
+spec deviation with concrete alternatives and a recommended applied default; never flag task
+ordering, grouping, file choice, batch sizing, naming, or internally verifiable fixes. Resolve
+single-option mechanical items directly. **Output:** review evidence, decisions, deferrals,
+corrections, and concise handoff. **Approval/resume:** obtain explicit overall-review approval
+for current artifacts. If review changes the specification or plan materially, renew affected
+approval before handoff. Missing reviewer, review evidence, or current approval stops.
 
-## Ready for Implementation
+### `done`
 
-Report readiness only when the spec, plan, and tasks exist, provenance is clear,
-dependencies and documentation tasks are represented, specification approval and
-overall review approval are recorded for the current artifacts, other owner gates
-are resolved or explicitly deferred, and the overall review has evidence. List
-artifact paths, capability checks, checks run, and unavailable behavior. Artifact
-readiness does not mean implementation or feature acceptance is complete.
+**Entry/input:** current reviewed artifacts and both current approvals. **Steps:** revalidate
+source links, SpecKit prerequisites where applicable, artifact existence, task ordering, and
+approval/content evidence. **Output:** a fresh-session handoff naming source, specification,
+plan, tasks, both approvals, review evidence, decisions, and deferrals for
+`coordinate-implementation`. **Approval/resume:** if any artifact or approval drifted, return
+to the earliest affected stage; readiness is not implementation or feature acceptance.
+
+## Decision and handoff discipline
+
+Use the question capability only for material product or technical choices. Describe owner
+questions in outcome, scope, trade-off, risk, and evidence terms; offer concrete alternatives
+and a recommendation. If the question capability is unavailable, stop at a material gate rather
+than infer an answer. Record decisions, rationale, deferrals, correction outcomes, and concise
+handoff context in established project conventions. Preserve current safety protections and
+source/task authorization without resurrecting obsolete platform tools, paths, rigid state
+files, named bindings, or historical speculative defaults.
