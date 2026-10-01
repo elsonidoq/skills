@@ -47,12 +47,15 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
     for stage, klass in classes.items():
         require(f"stage-class-{stage}", section(epic, stage), f"— `{klass}`")
     require("gate-transition", section(epic, "brainstorm_gate"), "skip goes to `spec_create`; needed goes to `epic_brainstorm`")
+    require("brainstorm-fix-application", section(epic, "epic_brainstorm_fix"), "shared decision application", "apply exactly those decisions", "preserve structure, exclusions, and deferrals")
+    require("spec-approval", section(epic, "spec_create"), "obtain and durably record explicit approval of the current", "specification before `plan_create`")
     require("plan-transition", section(epic, "plan_create"), "review the created plan", "renew specification approval")
     require("task-ownership", section(epic, "tasks_create"), "create-only", "task defects belong to `overall_review`", "authorization to\nprepare tasks")
     require("review-approval", section(epic, "overall_review"), "explicit overall-review approval", "outcome and plan-phase briefing", "never apply an unresolved")
     require("stale-recovery", epic, "Resume from the earliest missing, stale, or inconsistent", "return\nto the earliest affected stage")
     require("reading-handoff", epic, "settled and non-obvious constraints **verbatim**", "cited authorities", "prior-stage handoff", "re-present unanswered owner questions")
-    require("constitution", epic, "template-only content", "owner-derived principles")
+    require("constitution", epic, "template-only content", "owner-derived principles", "apply them through the\ndetected constitution capability", "verify the resulting detected constitution is usable", "repair/verification fails")
+    require("epic-capability-stop", epic, "If a required capability is unavailable, stop at the affected stage", "missing capabilities stop with an explicit report")
     require("reference-sizing", epic, "best_practices_spec_driven_development.md", "missing-install report", "substantive scope change", "documentation-initialization exception")
     require("briefings", section(epic, "spec_create"), "specification and\nclarification summary")
     require("shared-gate", epic, "shared `epic-brainstorming`", "shared `task-generation`")
@@ -69,12 +72,19 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
     require("batching", coordinator, "Internal dependencies, shared files, and phase/story headings do not require", "evidenced model-class changes, owner gates, context limits", "never\n   run implementation batches in parallel", "only asynchronously in the background")
     require("upstream-coherence", texts["tasks"], "coherent sequential work", "do not reorder dependencies or pad")
     require("sessions", coordinator, "observed context\n  headroom is adequate", "Inspect the failed run and tool invocation before retry")
-    require("commit-review", coordinator, "Commit each task's verified changes as one focused commit", "No per-task reviews", "full committed revision range")
+    require("epic-intake", coordinator, "require specification, plan, tasks, both current approvals", "overall review evidence", "required SpecKit stage evidence")
+    require("commit-review", coordinator, "Commit each task's verified changes as one focused commit", "No per-task reviews", "fresh independent\nfinal review", "full committed revision range")
+    require("async-delegation", coordinator, "only asynchronously in the background", "never\n   run implementation batches in parallel")
+    require("eligibility", coordinator, "Up to three bounded implementation tasks may run locally only", "current owner-selected model/class matches each task", "scope is clear", "observed context capacity is adequate")
+    require("delegation-count", coordinator, "More than three implementation tasks require delegation", "including completed tasks", "exclude standalone review tasks")
+    require("upstream-epic-coherence", section(epic, "plan_create"), "coherent consecutive\nsame-class work", "do not reorder dependencies or pad distant work")
 
     all_text = "\n".join(texts.values())
     reject("material-default", all_text, "recommended applied default", "apply an unresolved material default")
-    reject("mandatory-direct-plan", texts["requirements"], "mandatory plan for direct requirements", "direct requirements must have a plan")
-    reject("automatic-batch-split", coordinator, "automatically split at stage headings", "automatically split shared files", "automatically split internal dependencies")
+    for carrier in (texts["requirements"], texts["tasks"], coordinator):
+        reject("mandatory-direct-plan", carrier, "mandatory plan for direct requirements", "direct requirements must have a plan")
+    for carrier in (texts["tasks"], epic, coordinator):
+        reject("automatic-batch-split", carrier, "automatically split at stage headings", "automatically split shared files", "automatically split internal dependencies")
     reject("unsafe-execution", coordinator, "parallel implementation batches are permitted", "foreground delegation is permitted", "regroup dependencies to fill batches", "batch commits replace task commits")
     for legacy in ("OpenCode", "resolve_epic.py", "named historical agents"):
         if legacy in all_text:
