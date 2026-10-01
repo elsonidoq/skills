@@ -105,7 +105,7 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
 
 ### Lightweight delivery and verification
 
-- [ ] T007 [Requirements Manager] Add plan-free orchestration using shared primitives/coordinator.
+- [x] T007 [Requirements Manager] Add plan-free orchestration using shared primitives/coordinator.
   - **Depends**: T002, T003, T005, T006.
   - **Outcome / write scope**: `skills/requirements-manager/SKILL.md` and focused tests.
   - **Acceptance evidence**: detailed prompt/source, project context/evidence/applicable memory; existing sizing guidance and owner route choice; durable requirement/criteria/exclusions/constraints/sources/decisions in existing artifact or task list, no intermediate spec/plan. Shared gate invokes historical brainstorm only when needed; direct tasks use shared standards/context-coherent ordering. Docs scope from requirement/changes; requirement-to-task review and explicit current approval, durable content evidence/stale detection. Handoff source/tasks/review/approval; coordinator alone selects execution. Capability stops/defect routing/lint/tests pass.
