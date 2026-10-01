@@ -1,6 +1,6 @@
 # Requirements Manager source-derived coverage baseline
 
-**Final-review status: NOT_READY, corrections pending.** The initial `verified` cells below mean initial static checks passed, not that semantic acceptance succeeded. The independent review found partially absent safeguards in B05–B07, B09–B11, B15, B20–B21, B29–B30; see [findings](reviews/requirements-manager-final-semantic-review.md). Those rows and the blanket verification claims must be reconciled after corrections. Do not use the initial cells to bypass this review blocker.
+**Final-review status: corrections committed; T012 recheck pending.** The initial `verified` cells meant initial static checks only and did not resolve the NOT_READY review. FR1 restored B05–B07, B09–B11, B15, B20–B21 and B30 safeguards; FR2 strengthens B17 and B29 operational/static evidence. The rows remain `verified` only for the named deterministic prompt-contract checks, not semantic acceptance or runtime behavior. See the historical [findings](reviews/requirements-manager-final-semantic-review.md), which are preserved unchanged.
 
 **Derivation order:** This matrix was drafted before replacement-skill text. It derives
 requirements from the owner-approved [design](requirements-manager.md), the revision-4
@@ -90,11 +90,11 @@ and `git diff --check` passed. These validate the pre-change baseline only.
 
 ## T011 integration evidence
 
-All matrix and capability rows above are **verified** by the static contract, focused unit,
-mutation, routing/discovery, lint, task-order, and diff checks recorded in the execution
-tracker. `verified` here means the required prompt contract is present and deterministic
-checks passed; it does not claim a live model, question tool, delegation, SpecKit, or reviewer
-obeyed it.
+Initial matrix evidence was static and was insufficient for semantic readiness. After FR1–FR2,
+B05–B07, B09–B11, B15, B20–B21, B29–B30 are covered by focused contract checks and the
+operational checker/mutations; B17 also has a T001-first validator unit. `verified` means only
+that the named deterministic prompt-contract checks passed; it does not claim a live model,
+question tool, delegation, SpecKit, or reviewer obeyed it.
 
 | Scenario group | Outcome | Evidence / limitation |
 | --- | --- | --- |

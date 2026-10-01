@@ -2,7 +2,7 @@
 
 ## Current state
 
-**OWNER APPROVED EXECUTION: “go ahead”.** Preparation commits record the approved revision-4 task body and batch grouping before T001. T001–T011 have separate implementation commits and initial static checks, but final review returned NOT_READY with required corrections. T012 remains pending successful disposition/recheck. Scoped review-fix work follows below; completion of initial task checks is not feature acceptance. Earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
+**OWNER APPROVED EXECUTION: “go ahead”.** T001–T011 were completed in separate commits; final review returned NOT_READY, and FR1–FR2 corrections are now committed with FR3 evidence pending. T012 remains pending parent disposition and successful recheck. Completion of initial checks or corrections is not feature acceptance. The following preparation-era statement is historical: earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
 
 Approved sequence: T001–T005 (Terra), T006 (Sol), T007–T011 (Terra), then T012 (fresh Sol reviewer). Execute only async background delegation, sequentially, with per-task verification/commits and no per-task reviews. The workflow is regenerated against revision 4.
 
@@ -39,17 +39,17 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 
 | Task | Status | Evidence | Commit |
 | --- | --- | --- | --- |
-| T001 | completed | Added source-derived requirement matrix, historical inventory, deliberate-change watchlist, and capability/fallback inventory before any replacement skill was read or written. Baseline and post-change suite lint, five validator units, task-order validation, and diff check passed. | recorded with T001 change |
-| T002 | completed | Added portable shared gate, bounded owner dialogue, exact decision application, capability stop, deferral/handoff/resume contract and deterministic static checks. | recorded with T002 change |
-| T003 | completed | Added shared direct/SpecKit adapter contract and centralized the sole task-order validator with expanded units; no proven active caller needed a forwarding wrapper. | recorded with T003 change |
-| T004 | completed | Restored executable EPIC stage sequence with shared primitives, current SpecKit/capability/approval/resume protections, and an observed independent review contract; focused static contract checks added. | recorded with T004 change |
-| T005 | completed | Replaced isolation-first batching with context-continuity criteria, upstream coherent-work guidance, task commit checkpoints, async-only sequential batches, and focused static scenario contracts. | recorded with T005 change |
-| T006 | completed | Generalized origin-specific authorization/intake, applicable SpecKit only, full-list three-task local/delegated selection and common graph; preserved T005 batching, explicit context/failure safety and fresh final review. Six failing-before/passing-after intake checks plus predecessor contracts/lint/validator passed. | recorded with T006 change |
-| T007 | completed | Added plan-free Requirements Manager with durable requirement evidence, shared gate/direct-task adapters, review/approval stale detection, and origin-marked coordinator handoff. Initial absent-skill check failed; four focused static checks, lint, and diff check passed. | recorded with T007 change |
-| T008 | completed | Routed lightweight requirements through create-epic, requirements-manager, and coordinator; documented EPIC exception, local/delegated policy, task commits, discovery, and handoff fields; added new skills and removed stale probe entry. Lint, shell syntax, static routing/discovery, and diff checks passed without paid probe. | recorded with T008 change |
-| T009 | completed | Added one routine deterministic workflow checker for operational EPIC/direct/origin/threshold/batching/session/commit/review contracts and wired it into suite lint. Initial missing-checker invocation failed; checker and routine lint pass without model calls. | recorded with T009 change |
-| T010 | completed | Added five named in-memory mutation tests for stage/order, shared gate/review/capability, direct-route/threshold, batching/delegation, and commit/review/legacy omissions; routine lint now runs them. All pass; static tests do not prove model obedience. | recorded with T010 change |
-| T011 | completed | Ran all focused units (4+2+6+4+3+6+4), operational checker, five mutations, task-order, lint, and diff checks; completed coverage statuses and static scenario limitations. Final review packet exports follow this task commit. | recorded with T011 change |
+| T001 | completed | Source-derived baseline and inventory. | `f807b1c249d179c48cad088055f23d229cb2d9eb` |
+| T002 | completed | Shared gate and bounded owner dialogue. | `7e77966a42de95736b5f689095a7c8d6b3b4ce68` |
+| T003 | completed | Shared adapters and sole validator; FR2 adds the required T001-start unit. | `24f53bb01a1d96748792617f3b8d917c1f67d8d5` |
+| T004 | completed | EPIC workflow; FR1 restores reviewed safeguards. | `f4c2981270587d6aa8849719d88f2a10e5530d1c` |
+| T005 | completed | Context-continuity batching. | `e6ceef97a7d4ab79882d8544406e9cc73d47a8bf` |
+| T006 | completed | Origin-neutral intake and selection. | `be290fc1fd9d4f776912e01d304b120fd4b23165` |
+| T007 | completed | Plan-free requirements producer. | `f9b5ff2f72a070a6df33bbd63b9376c894c63dc0` |
+| T008 | completed | Routing/discovery documentation. | `f718726d94bfc0c4a567d6a13594f127e66d1c73` |
+| T009 | completed | Routine static workflow checker. | `f7d93a5b28b55990645929228a867aa965b2b629` |
+| T010 | completed | Initial mutation checks. | `4045a14427976b669862ebc9ba2503ff15d43a17` |
+| T011 | completed | Integration evidence. | `1a067b02b45747d907619f9f5aebe7643208dd73` |
 
 ### T006 verification checkpoint
 
@@ -67,10 +67,32 @@ All F1–F11 are valid against inspected source. F4's false negatives were repro
 
 | Fix task | Findings / scope | Class | Status |
 |---|---|---|---|
-| FR1 | F1–F3, F5–F8, F11: restore missing EPIC/source/approval/production/fallback contracts with focused checks | sonnet-class / Terra, medium | in_progress |
-| FR2 | F4/F9 and T003 T001-start gap: operational section/transitions/classes/contradiction checks, real named mutations, routine/custom-tree wiring and validator units | sonnet-class / Terra, medium | pending (FR1) |
-| FR3 | F10: truthful metadata; update coverage/dispositions, record actual task commits/checks and export corrected review packet | sonnet-class / Terra, medium | pending (FR2) |
+| FR1 | F1–F3, F5–F8, F11: restored EPIC/source/approval/production/fallback contracts with focused checks | sonnet-class / Terra, medium | completed (`29c64edf72211bd7c4398698ee1e7bbfb210f349`) |
+| FR2 | F4/F9 and T003 T001-start gap: operational section/transitions/classes/contradiction checks, real named mutations, routine/custom-tree wiring and validator units | sonnet-class / Terra, medium | completed (`1cbfd24ecf2669af604981575002ebf9c99679c6`) |
+| FR3 | F10: truthful metadata; update coverage/dispositions, record actual task commits/checks and export corrected review packet | sonnet-class / Terra, medium | completed (this commit; SHA recorded in correction packet) |
 
 One coherent async/background Terra fix batch runs FR1→FR2→FR3, with separate verified correction-task commits. Then a fresh async/background Sol reviewer with explicit medium thinking rechecks the final corrected range and findings. No high-thinking launch or resumption of a high-thinking reviewer.
+
+### Correction evidence and dispositions
+
+| Finding | Disposition | Code/test evidence | Result |
+|---|---|---|---|
+| F1 | corrected | `epics-manager` overall-review rule; `material-default` mutation | PASS static |
+| F2 | corrected | constitution checkpoint; `constitution` mutation | PASS static |
+| F3 | corrected | required reference/sizing rule; `reference-sizing` mutation | PASS static |
+| F4 | corrected | `check-requirements-manager-workflow.py`; stage/block/class/transition mutations | PASS static |
+| F5 | corrected | every-stage brief/handoff rule; `reading-handoff` mutation | PASS static |
+| F6 | corrected | task-generation and requirements producer authorization checks | PASS static |
+| F7 | corrected | plan created-plan review/fix; `plan-transition` mutation | PASS static |
+| F8 | corrected | `REQUIREMENTS.md` and brainstorming prose-end-turn/stop contract | PASS static |
+| F9 | corrected | custom-directory lint mutation test reports explicit SKIP | PASS static |
+| F10 | corrected | current-state/task metadata reconciled in this commit | PASS documentation inspection |
+| F11 | corrected | specification and outcome/phase briefing checks | PASS static |
+| T003 T001-start gap | corrected | `test_lone_t002_is_rejected` | PASS (7 validator units) |
+
+FR1 checks: four focused contract units (5+4+2+4 tests), suite lint, and diff check PASS.
+FR2 checks: operational checker, six named mutation methods, seven validator units, suite lint,
+task-order, and diff check PASS. These static checks do not prove model obedience, live owner
+questions, SpecKit execution, async scheduling, or reviewer independence.
 
 Delegates record changed files, actual checks/results, context limitations and separate task commits; update only assigned completion/evidence fields in task artifact and tracker. Preserve approved definitions and owner decisions. No installer, paid probe, provider/runtime config changes, product work, push or deployment.
