@@ -28,6 +28,9 @@ On each project, run the `install-memory` skill first: it writes the suite contr
 
 ## Repository Invariants
 
+Use the [documentation index and routing guide](docs/index.md) to find the
+canonical owner before reading or updating repository documentation.
+
 - Documentation describes the system as it exists.
 - Database-backed projects maintain authoritative documentation of their current schema.
 - Each project documents which material changes require which documentation owners.
