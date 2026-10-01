@@ -1,37 +1,38 @@
 # Requirements Manager execution tracker
 
-## Authorization and baseline
+## Current state
 
-Owner authorized direct bootstrap implementation after critique/fix and task review; see task artifact revision 3. Current source/task definitions and durable review records are committed in the preparation commit immediately preceding T001. Pre-change protection revision: `fa41d5f3f5aeb7ddfa9963222eff2c0447533059`. The complete implementation review range begins at that preparation commit and ends at the T010 commit (not a working-tree diff).
+**OWNER APPROVED EXECUTION: “go ahead”.** Preparation commits record the approved revision-4 task body and batch grouping before T001. No implementation task is complete at dispatch. Earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
 
-Models: sonnet-class implementation = openai-codex/gpt-5.6-terra; opus-class implementation = openai-codex/gpt-6.1-sol; independent fresh reviewer = openai-codex/gpt-6.1-sol. Chosen by owner. Runtime preflight observed delegate edit/write/bash and reviewer read-only capabilities; git identity and commit capability are available.
+Approved sequence: T001–T005 (Terra), T006 (Sol), T007–T011 (Terra), then T012 (fresh Sol reviewer). Execute only async background delegation, sequentially, with per-task verification/commits and no per-task reviews. The workflow is regenerated against revision 4.
 
-No suite project-memory contract/store is declared in this configuration repository's AGENTS.md; do not fabricate one. Preserve existing project instructions. No SpecKit is required for this explicit direct bootstrap.
+## Authorization, policy, and capabilities
 
-More than three implementation tasks require delegation. Use sequential consecutive class/stage batches, with fresh bounded handoffs where surfaces change or context metrics are unavailable. No hard one-session-per-class cap. Commit each task after actual checks and before next task; no per-task reviews. One fresh independent final review. Only one batch in_progress. On a verified blocker, leave dependents pending and report missing decision/capability; no blind retry.
+- Direct bootstrap is owner-selected; do not fabricate a specification or claim the current coordinator already supports its planned intake. Historical/current protection baseline: `fa41d5f3f5aeb7ddfa9963222eff2c0447533059`.
+- Models chosen by owner: sonnet-class implementation = openai-codex/gpt-5.6-terra; opus-class implementation = openai-codex/gpt-6.1-sol; fresh independent final reviewer = openai-codex/gpt-6.1-sol.
+- All delegation must be async/background. Delegate tools observed: read/edit/write/bash; reviewer is read-only. Git identity and commit capability are available. Refresh capabilities before dispatch as needed, without re-requesting settled selections.
+- More than three implementation tasks require delegation. Batches amortize startup and carry useful context across sequential tasks, including internal dependencies/shared files/phase headings. Task ordering remains fixed. Commit each task after verification, before next task; no per-task reviews. One final independent review.
+- Task count is not context headroom; pause/split/rotate for observed context limits, model changes, owner gates, incompatible scope or external integration blockers. No forced one-session-per-class limit, parallel implementation, blind retry, or silent model switch.
+- No project memory store/adoption contract is declared in this configuration repository's AGENTS.md; do not invent one. SpecKit is not required for this explicit bootstrap.
 
-## Batches
+## Approved implementation batches
 
-| Batch | Task IDs | Scope | Dependencies | Integration surface | Verification | Class | Status |
-|---|---|---|---|---|---|---|---|
-| 1 | T001 | Source-derived coverage baseline | none | coverage/index | citations, diff/lint | sonnet-class | in_progress |
-| 2 | T002–T003 | Shared primitives and validator | T001 | shared skills/tests + observed pointers | focused tests, validator/lint | sonnet-class | pending (T001) |
-| 3 | T004 | Restore EPIC | T001–T003 | EPIC instructions/shared invocations | inventory, stage contracts/lint | sonnet-class | pending (T001–T003) |
-| 4 | T005 | Coordinator | T003–T004 | origin gates + shared execution | intake/threshold/commit/context checks | opus-class | pending (T003–T004) |
-| 5 | T006 | Requirements Manager | T002–T005 | direct producer/handoff | source/tasks/review/capability checks | sonnet-class | pending (T002–T005) |
-| 6 | T007 | Routing/docs/discovery | T001, T004–T006 | docs + affected entry points/probe | lint, links, no-model discovery | sonnet-class | pending (T001, T004–T006) |
-| 7 | T008–T009 | Contract and mutation suite | T004–T006 | routine validation/tests | positive + named negative tests | sonnet-class | pending (T004–T006) |
-| 8 | T010 | Integration evidence | T001, T007–T009 | coverage + introduced integration seams | full static suite/walkthroughs | sonnet-class | pending (T001, T007–T009) |
-| 9 | T011 | Independent final semantic review | T010 | complete committed diff + source inventory | findings/dispositions/coverage | opus-class (fresh reviewer) | pending (T010) |
+| Batch | Task IDs | Context shared within batch | Dependencies | Integration / verification | Class / model | Status |
+|---|---|---|---|---|---|---|
+| 1 | T001–T005 | Historical/current workflow sources; coverage baseline → shared primitives/validator → EPIC restoration → shared batching criteria | None external; internal prerequisites run sequentially | Draft T001 baseline before replacement text; focused tests/lint/inventory; verify and commit each of five tasks | sonnet-class / Terra | in_progress |
+| 2 | T006 | Origin-specific authorization and shared execution contract built by batch 1 | T003–T005 | Intake gates, local/delegated threshold, context/batching/commit checks; one task commit | opus-class / Sol | pending (batch 1) |
+| 3 | T007–T011 | Lightweight producer, routing/docs/discovery, contract tests, mutations and integration evidence | T001–T006 from preceding batches; internal prerequisites run sequentially | Producer/handoff tests, links/lint, operational/named mutation checks, coverage/walkthroughs and full review packet; separate commit for each of five tasks | sonnet-class / Terra | pending (batch 2) |
+
+T001's source-first ordering is an internal checkpoint, not an extra agent launch. Phase headings and shared file writes are not automatic split reasons because these are sequential single-writer batches. Batch 2 has one task because of its model-class boundary. The two five-task batches share coherent context and fit the target batch size, subject to actual scope/context observations during execution.
+
+## Final independent review (not an implementation batch)
+
+T012 runs once after batch 3, in a fresh read-only Sol reviewer session. It reads the complete committed implementation range, exact historical EPIC, pre-change protection files, coverage matrix/inventory and actual checks. Parent records findings/dispositions and completion and commits review evidence; confirmed scoped fixes get separate verified commits. Do not resume an implementation session for review. A clean worktree is not the review input.
 
 ## Baseline verification
 
-Before dispatch: existing validator units PASS (5 tests), current task order PASS, suite lint PASS (21 skills), git diff --check PASS. New workflow/mutation tests do not yet exist; missing behavior is documented in plan/history rather than claimed tested.
+Before the earlier preparation commit: existing validator units PASS (5 tests), task-order PASS, suite lint PASS (21 skills), git diff --check PASS. After revision 4: rerun task-order and diff checks before presenting batches. New workflow/mutation tests and coverage artifact do not yet exist; no runtime behavior is claimed verified.
 
 ## Task evidence and commits
 
-Delegates append each task's changed files, actual checks/outcomes, scope/context limitations and commit evidence here, update the task checkbox, and commit the task changes. Do not alter approved task definitions. No install, paid probe, provider/configuration changes, product work, push, or deployment.
-
-## Final review
-
-Pending. T010 prepares accessible complete committed patch and exact historical/pre-change files outside the repository for read-only reviewer tools. T011 reviewer returns its report; parent records dispositions and completion, commits review evidence, and handles confirmed scoped fixes. A clean working tree is not proof of feature acceptance or complete review.
+Pending. Delegates record changed files, actual checks/results, context limitations and separate task commits; update only assigned completion/evidence fields in task artifact and tracker. Preserve approved definitions and owner decisions. No installer, paid probe, provider/runtime config changes, product work, push or deployment.
