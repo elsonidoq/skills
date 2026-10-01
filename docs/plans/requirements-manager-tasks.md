@@ -56,13 +56,14 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
 
 ### Shared workflow foundation
 
-- [ ] T002 [Shared brainstorming] Extract one discoverable historical EPIC brainstorming primitive.
+- [x] T002 [Shared brainstorming] Extract one discoverable historical EPIC brainstorming primitive.
   - **Depends**: T001.
   - **Outcome / write scope**: `skills/epic-brainstorming/SKILL.md` plus focused adjacent deterministic tests.
   - **Acceptance evidence**: NO_BRAINSTORM_NEEDED/BRAINSTORM_NEEDED gate; skip bounded/mechanical ambiguity; maximum three agenda items/options; orchestrator owns material questions one at a time; exact approved decision application to bounded source; deferrals/handoff/resume/capability stops. Both managers must invoke the same behavior, not fork or substitute generic brainstorming. Valid frontmatter/references, focused tests/lint pass.
   - **Capability needs**: editing, Python/static lint; no live calls/config changes.
   - **Model class**: sonnet-class.
   - **Rationale**: bounded historical extraction governed by baseline.
+  - **Execution evidence**: `skills/epic-brainstorming/SKILL.md` and `scripts/test_contract.py`; focused static contract tests and suite lint passed; manager integration is verified by T004/T007 and their operational checks.
 
 - [ ] T003 [Shared task generation] Extract common task semantics and centralize validator/tests.
   - **Depends**: T001, T002.
