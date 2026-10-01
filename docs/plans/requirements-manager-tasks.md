@@ -129,7 +129,7 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Model class**: sonnet-class.
   - **Rationale**: mechanical explicit-contract enforcement.
 
-- [ ] T010 [Mutations] Prove omissions/contradictions fail named checks on in-memory copies.
+- [x] T010 [Mutations] Prove omissions/contradictions fail named checks on in-memory copies.
   - **Depends**: T009.
   - **Outcome / write scope**: test fixtures/mutation helpers only; no repository source mutation during tests.
   - **Acceptance evidence**: named failures deleting operational body/class with diagram intact; reversing operational order/transitions; removing gate transitions/shared invocation/create-only/plan review-fix/owner approval-renewal-staleness/capability stops; reinstating mandatory direct plan; changing threshold/removing class-context suitability; reintroducing automatic heading/shared-file/internal-dependency batch splits or removing upstream coherence guidance; permitting dependency regrouping/parallel or non-background delegation; removing per-task commits/independent review; legacy reintroduction. Specific diagnostic, not arbitrary failure, required. Routine validation runs all; static limits stated.

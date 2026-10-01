@@ -51,6 +51,7 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
     require("origin-intake", "coordinator", "For `requirements-manager` origin",
             "No specification, plan, or SpecKit prerequisite is required", "Ambiguous origin is a blocker")
     require("threshold", "coordinator", "Up to three bounded implementation tasks may run locally",
+            "current owner-selected model/class matches each task", "observed context capacity is adequate",
             "More than three implementation tasks require delegation", "including completed tasks",
             "exclude standalone review tasks", "Retain the recorded strategy on resume")
     require("context-batching", "coordinator", "Internal dependencies, shared files, and phase/story headings do not require",
@@ -60,6 +61,10 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
     require("sessions", "coordinator", "observed context\n  headroom is adequate", "Inspect the failed run and tool invocation before retry")
     require("commit-review", "coordinator", "Commit each task's verified changes as one focused commit",
             "No per-task reviews", "full committed revision range")
+    for key, text in texts.items():
+        for legacy in ("OpenCode", "resolve_epic.py", "named historical agents"):
+            if legacy in text:
+                failures.append(f"legacy: forbidden {legacy!r} in {key}")
     return failures
 
 

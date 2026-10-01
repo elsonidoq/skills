@@ -51,6 +51,8 @@ done < <(find "$SKILLS_DIR" \( -type f -o -type l \) -name SKILL.md | sort)
 echo "----"
 echo "$count skills checked, $fail failed"
 if [ "$fail" -eq 0 ]; then
-  python3 "$(cd "$(dirname "$0")" && pwd)/check-requirements-manager-workflow.py" || fail=$((fail + 1))
+  scripts_dir="$(cd "$(dirname "$0")" && pwd)"
+  python3 "$scripts_dir/check-requirements-manager-workflow.py" || fail=$((fail + 1))
+  python3 "$scripts_dir/test-requirements-manager-workflow-mutations.py" || fail=$((fail + 1))
 fi
 [ "$fail" -eq 0 ]

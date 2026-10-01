@@ -46,6 +46,7 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 | T007 | completed | Added plan-free Requirements Manager with durable requirement evidence, shared gate/direct-task adapters, review/approval stale detection, and origin-marked coordinator handoff. Initial absent-skill check failed; four focused static checks, lint, and diff check passed. | recorded with T007 change |
 | T008 | completed | Routed lightweight requirements through create-epic, requirements-manager, and coordinator; documented EPIC exception, local/delegated policy, task commits, discovery, and handoff fields; added new skills and removed stale probe entry. Lint, shell syntax, static routing/discovery, and diff checks passed without paid probe. | recorded with T008 change |
 | T009 | completed | Added one routine deterministic workflow checker for operational EPIC/direct/origin/threshold/batching/session/commit/review contracts and wired it into suite lint. Initial missing-checker invocation failed; checker and routine lint pass without model calls. | recorded with T009 change |
+| T010 | completed | Added five named in-memory mutation tests for stage/order, shared gate/review/capability, direct-route/threshold, batching/delegation, and commit/review/legacy omissions; routine lint now runs them. All pass; static tests do not prove model obedience. | recorded with T010 change |
 
 ### T006 verification checkpoint
 
