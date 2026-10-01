@@ -1,6 +1,6 @@
 ---
 name: coordinate-implementation
-description: Use when implementing an approved feature from reviewed specification, plan, and task artifacts.
+description: Use when implementing or resuming approved work from a reviewed task list and its authorized source artifacts.
 ---
 
 # Coordinate Implementation
@@ -11,19 +11,30 @@ planning artifacts as a substitute for resolving implementation blockers.
 
 ## Load and Verify
 
-Require explicit or unambiguous paths to the spec, plan, and tasks. Read repository
-instructions, governing principles, linked contracts, research, decisions, and the
-source brief when present. Load the project memory store per the `memory-handling`
-skill and read the index plus any entries whose triggers match the planned work;
-treat verified trigger-first gotchas as implementation constraints. Verify:
+Require explicit or unambiguous paths to the approved requirement/source, tasks,
+applicable source/supporting artifacts, and durable authorization/review evidence.
+Read repository instructions, governing principles, linked contracts, research,
+decisions, and source constraints. In projects declaring the memory contract, verify
+`memory-handling` is discoverable and load the project memory store, index, and
+trigger-matching entries; missing required memory capability stops with a report.
+Treat verified trigger-first gotchas as implementation constraints. Verify:
 
-- The artifacts refer to the same feature and approved scope.
-- Required upstream outputs and accepted decisions exist.
-- Task prerequisites and integration points agree with the plan.
+- The source, tasks, and supporting artifacts refer to the same approved scope.
+- Required upstream outputs, accepted decisions, and current authorization exist.
+- Task prerequisites and integration points agree with applicable source contracts.
 - Existing workspace changes are understood and preserved.
 
+On every fresh session or resume, compare current source/task/supporting content or
+revisions with durable approval evidence, including linked records outside the
+artifacts. A chat-only approval or an `approved` label is not a fresh-session proof.
+Missing review evidence, unresolved material owner gates, or approval that is
+missing, stale, or unverifiable stops implementation at the earliest affected
+producing workflow gate. Never repair provenance by inventing artifacts.
+
 Determine workflow origin from the handoff and linked artifacts. For work produced
-by `epics-manager`, on every fresh session or resume:
+by `epics-manager`, require specification, plan, tasks, both current approvals,
+source provenance, overall review evidence, and required SpecKit stage evidence.
+On every fresh session or resume:
 
 - Read the specification-approval and overall-review-approval records, including
   records stored outside the spec, plan, or tasks, and their linked decisions.
@@ -36,31 +47,41 @@ by `epics-manager`, on every fresh session or resume:
   before implementation and return to the earliest affected `epics-manager` gate.
   Do not replace missing pipeline stages with generic artifacts.
 
-If origin or approval provenance is ambiguous, resolve it before implementation;
-do not assume standalone origin to bypass these gates. For unrelated standalone
-work, verify current owner authorization and applicable project gates without
-imposing the manager's two-gate process or requiring SpecKit-generated artifacts.
-This skill still requires a spec, plan, and tasks; a direct task list alone belongs
-to a separate owner-selected execution path.
+For `requirements-manager` origin, require durable requirement/source, tasks, review evidence,
+and explicit current owner approval of the requirement/tasks and implementation scope.
+Verify traceability, constraints, exclusions, decisions/deferrals, and approved content
+or revision evidence. No specification, plan, or SpecKit prerequisite is required;
+do not fabricate placeholders. Missing/stale evidence returns to that manager's
+requirement/task review and approval gate.
 
-If the project uses SpecKit, inspect the available commands and assets for its
-implementation and prerequisite capabilities. Follow only instructions found in
-the current project. If the implementation command is unavailable, report
+For other documented origins, verify the identified producer, durable source/task
+review and current owner authorization, plus applicable project gates. Do not impose
+EPIC's two approvals on unrelated work or waive a documented producer's safeguards.
+Ambiguous origin is a blocker; resolve it before implementation, never assume
+standalone origin to bypass gates.
+
+Run SpecKit implementation/prerequisite instructions only when applicable to the
+selected origin and artifacts. Installation alone does not make SpecKit applicable
+to direct requirement/tasks. When applicable, inspect available commands and assets
+and follow only instructions found in the current project. If the implementation
+command is unavailable, report
 `SpecKit implementation: UNAVAILABLE` and execute the reviewed tasks directly from
 their contracts. If a prerequisite checker is unavailable, perform direct artifact
 and path checks and label the scripted check `UNAVAILABLE`.
 
 ## Execution Capability Preflight
 
-Before establishing completion scope or executing work, verify that the runtime
-exposes permitted, usable question and delegation tools. The suite pins these to the
-`ask_user` question tool (package `pi-ask-user`) and the `subagent` delegation tool
-(package `pi-subagents`); see the global configuration repository's `REQUIREMENTS.md`.
-Delegation is mandatory for implementation. Check configured agents and their callable
-model bindings (the suite's `subagents.agentOverrides` mapping), not configuration
-names alone. If either required capability is unavailable, stop before
-implementation and report `question: UNAVAILABLE` or `Delegation: UNAVAILABLE` with
-the missing requirement. Do not substitute prose selection or local implementation.
+Before establishing completion scope or executing work, verify permitted, usable
+question capability and owner-selected model/class bindings, including the current
+agent for eligible local execution. Check callable bindings, not configuration names
+alone. The suite declares question/delegation runtime requirements in the global
+configuration repository's `REQUIREMENTS.md`; verify their availability rather than
+assuming installation. Missing required question capability reports
+`question: UNAVAILABLE` and stops; do not substitute inferred owner selection.
+Verify async/background delegation and its runtime budgets before any delegated work,
+and a usable fresh independent reviewer before implementation. Missing required
+delegation or reviewer capability stops with `Delegation: UNAVAILABLE` or
+`Independent review: UNAVAILABLE`. No unauthorized local fallback is permitted.
 
 Track the execution plan throughout the task. If the host provides a native
 planning or task-tracking facility, use it. Otherwise, maintain the plan as a
@@ -68,16 +89,34 @@ Markdown checklist, updating items as they move through `pending`, `in_progress`
 and `completed` states. Do not stop execution solely because a dedicated todo tool
 is unavailable.
 
-For every model class used by incomplete tasks, verify there is at least one usable
-agent/model option. Use the runtime's `ask_user` question tool to obtain the owner's selection for each class
-before implementation and retain the selected agent/model mapping for the session.
-Offer only observed, permitted options; never infer a selection or silently switch
-models. If no usable mapping exists, report `Agent/model selection: UNAVAILABLE`
-with the affected class and stop before implementation.
+For every model class used by incomplete tasks, verify at least one usable local or
+delegated agent/model option. Use the question capability to obtain the owner's
+selection for each class and independent review before implementation. Retain valid
+recorded selections on resume; do not re-request settled choices. Offer only observed,
+permitted options; never silently switch models or downgrade task classes. If no usable
+mapping exists, report `Agent/model selection: UNAVAILABLE` with the class and stop.
 
-## Build the Execution Graph
+## Select Execution Strategy
 
-Treat task dependencies as a directed graph, not checklist order alone.
+Count the complete approved implementation task list, including completed tasks;
+exclude standalone review tasks. Select by this count, not origin, plan presence, or remaining task count:
+
+- Up to three bounded implementation tasks may run locally only when the
+  current owner-selected model/class matches each task, scope is clear, and
+  observed context capacity is adequate. For a different class, broader isolation,
+  or excessive context, delegate the affected task or segment using the shared
+  batching rules below. Do not change the current model to force local eligibility.
+- More than three implementation tasks require delegation through the same
+  consecutive homogeneous sequential batching machinery, including one-task batches
+  where justified. The 5–7 target below is guidance, never a threshold or quota.
+
+Record the complete count, chosen local/delegated strategy, class selections,
+context evidence/limitations, and any delegated segments in the tracker before work.
+Retain the recorded strategy on resume unless approved scope changes or an observed
+safety/context constraint requires a recorded revision and renewed gates as applicable.
+Completing tasks alone never changes delegated execution to local. If context cannot
+be observed sufficiently to establish local suitability, delegate; if required
+delegation is unavailable, stop rather than weakening eligibility.
 
 ## Establish Completion Scope
 
@@ -94,6 +133,13 @@ without marking either as recommended. Record the selected scope in the
 execution plan and follow it. A newly discovered material owner gate or an
 unresolvable blocker may still require pausing; report it with the blocked
 batch and missing decision or dependency.
+
+## Build the Execution Graph
+
+Treat task dependencies as a directed graph, not checklist order alone.
+Both routes use this single execution graph, authorization preflight, verification,
+integration, tracker, per-task commits, and independent final review. Local tasks
+follow the same ordered task contracts; delegation uses the following shared batches.
 
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
@@ -115,13 +161,15 @@ batch and missing decision or dependency.
 
 If the approved tasks require a later-numbered task to unblock an earlier one,
 stop before building the batch plan. Do not silently reorder tasks or mix stories
-to make the batch run: return the sequencing defect to the plan/tasks review gate
+to make the batch run: return the sequencing defect to the producing workflow's review gate
 for correction and renewed approval as required by the project's workflow.
 
 Before execution, present the entire execution plan as a Markdown table. Include
 one row per batch with its batch number, task IDs, scope, dependencies, integration
-surface, verification, required model class, and initial status. Do not ask for
-routine batching approval when the owner already approved implementation.
+surface, verification, required model class, execution mode (local or delegated),
+and initial status. Track eligible local segments as work units in this same table
+and tracker, not a second execution algorithm. Do not ask for routine batching
+approval when the owner already approved implementation.
 
 Immediately after presenting the table, initialize the execution tracker with one
 item per batch. Mark the first dependency-ready batch `in_progress`, later batches
@@ -136,24 +184,31 @@ while implementation remains.
 Use the agent/model mappings obtained in preflight for `sonnet-class` and
 `opus-class`, as applicable. Before each batch, confirm its selected mapping remains
 usable. If a new class or replacement mapping is needed, repeat the capability
-check and obtain the selection through the runtime's `ask_user` question tool before proceeding. Delegation
-is mandatory, but an agent's report is not proof of completion.
+check and obtain the selection through the question capability before proceeding.
+For eligible local work, recheck current model/class and context fit at each checkpoint;
+if unsafe, record the evidence and delegate the affected segment, never silently
+switch models. For delegated work, an agent's report is not proof of completion.
 
 - Delegate a task or safe batch only when write scope and dependencies are clear.
 - Run conflicting or dependent work sequentially.
 - Run all batches sequentially, including independent batches with isolated write
   surfaces.
-- Stay within the delegation runtime's documented spawn budgets: a large epic of
-  many tens of tasks delegates on the order of 20 batches, which is within the
-  pinned runtime's defaults, but verify the per-run and session-wide budgets
-  before starting and stop rather than exceeding them.
-- If delegation is unavailable, stop before implementation and report
+- Verify and stay within observed per-run and session-wide delegation budgets;
+  stop rather than exceeding them or assuming historical runtime limits.
+- If required delegation is unavailable, stop before implementation and report
   `Delegation: UNAVAILABLE` to the user.
 - Resume a previously used agent only when it uses the model selected for the batch, the
   runtime supports resumption, its retained context materially overlaps, and observed context
   headroom is adequate. Inspect accumulated context, compaction, tool output, and demonstrated
   scope rather than treating task count or billed tokens as capacity. When evidence is inadequate,
   record that limitation and issue a smaller fresh brief with durable handoff context.
+- There is no forced one-session-per-class limit. Rotate to a fresh bounded child when
+  observed capacity is inadequate, retaining selected class/model and durable evidence.
+  If context metrics are unavailable, state that limitation and conservatively narrow
+  the next delegation; do not force reuse or equate billed tokens with occupied context.
+- Inspect the failed run and tool invocation before retry or relaunch. Resume with a
+  targeted correction only when supported and the cause is understood; if evidence
+  is missing or uncertain, stop and report the blocker. Rotation is not a blind retry.
 
 Before dispatching file changes, check which mutation tool the selected agent/model
 actually receives and is permitted to use. Pi's core tool set exposes `edit` and
@@ -165,15 +220,17 @@ stop and report the observed blocker.
 
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 required model class, selected model, allowed files, dependencies, acceptance
-criteria, baseline failures, exclusions, authorization limits, the batch commit
+criteria, baseline failures, exclusions, authorization limits, the per-task commit
 convention and whether the delegate or the coordinator performs it, the selected
 agent's verified file-mutation tool when file changes are needed, and required
-return evidence. Ask for changed files, checks, incomplete work, and non-obvious
-handoff context.
+return evidence. Include the verified origin, source/supporting artifacts, current
+approval/review locations, internal task sequence, shared context, producer checks,
+and integration checkpoints. Ask for changed files, checks, incomplete work, and
+non-obvious handoff context.
 
 ## Execute and Integrate
 
-For each task or batch:
+For each task, whether local or inside a delegated batch:
 
 1. Establish the smallest meaningful failing check before behavior changes.
 2. Implement only the assigned scope.
@@ -195,10 +252,10 @@ and that committing is permitted. If repository instructions, governing principl
 or policy forbid or constrain committing (for example, a different message format,
 branch, squash, sign-off, or a deferred-commit review gate), do not silently skip,
 defer, or reshape the commit: call the runtime's `ask_user` question tool, state the
-contradicting directive and the requested per-batch commit, and let the owner decide.
+contradicting directive and the requested per-task commit, and let the owner decide.
 Record the decision in the execution tracker and apply it consistently to later
 batches. If the workspace has no usable version-control or commit capability, report
-the observed condition and ask the owner whether to proceed without per-batch
+the observed condition and ask the owner whether to proceed without per-task
 commits. Never omit a required task commit without an explicit owner decision.
 
 Do not push, deploy, send external messages, run paid services, or perform
@@ -212,16 +269,32 @@ do not require owner escalation.
 
 ## Review and Acceptance
 
-Review accumulated changes against the spec, plan, tasks, governing principles,
-failure paths, migrations, contracts, documentation, and the project memory store
-(per the `memory-handling` skill). Derive QA from the selected
+No per-task reviews: after all implementation task commits, obtain one fresh independent
+final review from the owner-selected usable reviewer, not an implementation session.
+Provide the full committed revision range and source/task/approval evidence, not merely a clean working-tree diff.
+Review against applicable source/supporting artifacts, tasks, governing principles,
+failure paths, migrations, contracts, documentation, and applicable project memory
+(per discoverable `memory-handling` when required). Missing independent capability
+blocks final acceptance; the implementer cannot self-certify independent review.
+Derive QA from the selected
 artifacts and detected project capabilities; never import another project's threat
 model, data, commands, or runtime assumptions.
 
 For each acceptance scenario report `PASS`, `FAIL`, `PARTIAL`, `NOT RUN`, or
 `UNAVAILABLE` with the command or observation. Distinguish local or simulated
 evidence from live acceptance. Do not call unavailable external validation passed.
-Fix in-scope failures, re-run affected checks, and leave blocked dependents pending.
+Record review findings/dispositions. Fix in-scope failures, re-run affected checks,
+and commit verified review fixes separately; leave blocked dependents pending.
+Source/task sequencing or authorization defects return to the producing workflow's
+review gate, with renewed affected approval before dependents proceed.
+
+## Maintaining this contract
+
+With Python 3 available, run `python3 scripts/test_intake_contract.py` and
+`python3 scripts/test_batching_contract.py` from this skill directory. These static
+checks cover authorization/strategy and preserved batching instructions, not runtime
+model obedience. If Python is unavailable, report checks `UNAVAILABLE` and inspect
+the contract manually rather than claiming automated validation.
 
 ## Finish
 

@@ -94,13 +94,14 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
 
 ### Origin-neutral execution
 
-- [ ] T006 [Coordinator intake] Generalize origin-specific intake and local/delegated selection while preserving T005's batching contract.
+- [x] T006 [Coordinator intake] Generalize origin-specific intake and local/delegated selection while preserving T005's batching contract.
   - **Depends**: T003, T004, T005.
   - **Outcome / write scope**: coordinator intake/execution instructions and coupled tests; do not undo context-continuity criteria or create another graph.
   - **Acceptance evidence**: EPIC still requires current spec/plan/both approvals/review/provenance; Requirements Manager requires approved durable source/tasks/review without fake plan/SpecKit prerequisite; other origins validate gates, ambiguous origin blocks. Three bounded tasks permit class/context-fit local, four require delegation; complete implementation count excludes standalone reviews, not origin/plan/remaining count, retained on resume unless recorded scope/safety revision. One common graph uses T005 criteria; owner selections/checks/integration/tracker/failure inspection remain. Context-aware matching reuse/rotation, no forced one-per-class, silent switch or unauthorized local fallback. Commit each task; no per-task review; one fresh final review of full committed range. Sequencing defects return to producer review. Capability/fallback checks explicit.
   - **Capability needs**: edits/search/static checks; future runtime capabilities checked when used.
   - **Model class**: opus-class.
   - **Rationale**: indivisible high-impact authorization/execution boundary.
+  - **Execution evidence**: coordinator now checks origin-specific durable approvals and applicable SpecKit evidence, permits eligible <=3-task local execution, mandates shared delegation above three using full-list/resume count, and preserves T005 batching. Six new static intake/strategy checks fail before the change and pass after it; predecessor batching, EPIC/shared contracts, validator units, lint, task order, and diff checks pass. Per-task commits, inspected-failure/context rotation, and one fresh full-range final review are explicit; runtime obedience remains untested.
 
 ### Lightweight delivery and verification
 
