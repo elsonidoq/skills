@@ -65,13 +65,14 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Rationale**: bounded historical extraction governed by baseline.
   - **Execution evidence**: `skills/epic-brainstorming/SKILL.md` and `scripts/test_contract.py`; focused static contract tests and suite lint passed; manager integration is verified by T004/T007 and their operational checks.
 
-- [ ] T003 [Shared task generation] Extract common task semantics and centralize validator/tests.
+- [x] T003 [Shared task generation] Extract common task semantics and centralize validator/tests.
   - **Depends**: T001, T002.
   - **Outcome / write scope**: `skills/task-generation/SKILL.md`; relocate EPIC task-order validator/tests; update observed callers and pointers, forwarding only for proven consumers. One validator implementation.
   - **Acceptance evidence**: shared outcomes/dependencies/files/evidence/capabilities/class+rationale; sonnet default and justified opus with 30% gate; documentation/integration/acceptance coverage; consecutive IDs from T001, earlier producers, contiguous stories/setup and manual implicit dependencies; project format discovery/Markdown fallback. Unit tests accept prior ranges/none and reject missing/duplicate/gapped IDs, absent/forward/self prerequisites and resumed stories. Direct adapter requires no plan; SpecKit adapter uses observed stage commands; lint/tests pass. T005 subsequently adds shared context-coherent task organization.
   - **Capability needs**: edits, Python 3/search/lint.
   - **Model class**: sonnet-class.
   - **Rationale**: localized contract/validator extraction.
+  - **Execution evidence**: `skills/task-generation/` is the sole validator implementation; expanded units cover ranges/none, self and forward prerequisites, resumed stories, gaps/duplicates/missing fields; no non-historical in-repository caller required a forwarding wrapper.
 
 - [ ] T004 [EPIC workflow] Restore executable EPIC stages, current safety protections and SpecKit wrappers.
   - **Depends**: T001, T002, T003.

@@ -26,16 +26,17 @@ class TaskOrderTests(unittest.TestCase):
             [],
         )
 
-    def test_forward_edge_and_repeated_story(self):
+    def test_forward_self_edge_and_repeated_story(self):
         errors = module.check("""\
 - [ ] T001 [US1] Consumer
   - **Depends**: T003. **Evidence**: pending
 - [ ] T002 [US2] Other
-  - **Depends**: none. **Evidence**: pending
+  - **Depends**: T002. **Evidence**: pending
 - [ ] T003 [US1] Producer
   - **Depends**: none. **Evidence**: pending
 """)
         self.assertTrue(any("T001 depends on later-numbered T003" in error for error in errors))
+        self.assertTrue(any("T002 depends on itself" in error for error in errors))
         self.assertTrue(any("US1 resumes" in error for error in errors))
 
     def test_missing_duplicate_and_out_of_order(self):
@@ -50,6 +51,17 @@ class TaskOrderTests(unittest.TestCase):
         self.assertTrue(any("duplicate task number" in error for error in errors))
         self.assertTrue(any("not numbered immediately after" in error for error in errors))
         self.assertTrue(any("no explicit Depends" in error for error in errors))
+
+    def test_none_and_range_are_valid(self):
+        self.assertEqual(
+            module.check("""\
+- [ ] T001 Setup
+  - **Depends**: none
+- [ ] T002 Build
+  - **Depends**: T001–T001
+"""),
+            [],
+        )
 
     def test_no_tasks_is_not_a_pass(self):
         self.assertTrue(module.check("# Empty list\n"))
