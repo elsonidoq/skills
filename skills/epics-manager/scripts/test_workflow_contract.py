@@ -53,6 +53,18 @@ class EpicWorkflowContractTests(unittest.TestCase):
         self.assertIn("review the created plan", TEXT)
         self.assertIn("authorization to\nprepare tasks", TEXT)
 
+    def test_routing_repair_and_helper_adapter_contracts(self):
+        self.assertIn("explicitly recommend `requirements-manager`", TEXT)
+        self.assertIn("documentation-initialization exception", TEXT)
+        self.assertIn("Do not\nreclassify admitted or resumed work", TEXT)
+        self.assertIn("apply them through the\ndetected constitution capability", TEXT)
+        self.assertIn("verify the resulting detected constitution is usable", TEXT)
+        self.assertIn("Do not reopen a valid settled constitution", TEXT)
+        self.assertIn("`delegating-architectural-planning`", TEXT)
+        self.assertIn("fixed `opus-class`", TEXT)
+        self.assertIn("same-session specification review/fix plus plan create/review/fix", TEXT)
+        self.assertIn("upstream context-coherent sequencing", TEXT)
+
 
 if __name__ == "__main__":
     unittest.main()

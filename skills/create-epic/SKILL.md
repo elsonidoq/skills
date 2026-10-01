@@ -65,9 +65,9 @@ ask if it is unclear.
 
 ## Sizing
 
-State the sizing verdict before writing an epic. Use the full SpecKit pipeline only
-when all three conditions hold: at least eight expected tasks, at least one
-unresolved material design decision, and multiple subsystems.
+State the sizing verdict before writing an epic. Apply the authoritative
+[`Epic Sizing: When the Pipeline Earns Its Overhead`](../../docs/best_practices_spec_driven_development.md#epic-sizing-when-the-pipeline-earns-its-overhead)
+reference; do not copy its sizing conditions here.
 
 Exception: when a parent command passes the explicit owner-approved directive
 `documentation initialization requires an epic`, create the documentation epic

@@ -21,18 +21,23 @@ the available question capability rather than attaching a likely source.
 
 Read [`../../docs/best_practices_spec_driven_development.md`](../../docs/best_practices_spec_driven_development.md)
 before EPIC admission and specification work. If that distributed reference is missing, stop
-with a missing-install report; do not substitute a summary. Use its sizing guidance to record
-admission evidence and rationale. For a substantive scope change, route the choice to the owner
-and document the decision; preserve the detected documentation-initialization exception.
+with a missing-install report; do not substitute a summary. Use its sizing guidance to record admission evidence and rationale. Before EPIC-only
+capability checks, if genuinely fresh work does not justify the pipeline under that authoritative
+reference, explicitly recommend `requirements-manager`; ask for and preserve the owner's route
+choice, source, and valid artifacts for its shared brainstorming, direct task generation, review,
+and approval handoff. Preserve the detected documentation-initialization exception. Do not
+reclassify admitted or resumed work merely because uncertainty was resolved; reconsider admission
+only for a substantive scope change or explicit owner direction, then record the choice.
 
 Verify the project's observed SpecKit constitution (when required), specification,
 clarification, planning, tasks, and analysis commands, instructions, templates, and
 prerequisite checks. Report each as `AVAILABLE` or `UNAVAILABLE` with evidence and blocker.
 If a required capability is unavailable, stop at the affected stage; never install, simulate,
-or replace it with generic Markdown. Inspect a required detected constitution for missing or
-template-only content. Obtain owner-derived principles through the observed question capability
-and record them in the established project convention; if that capability is absent or the
-owner has not supplied principles, stop before specification work. Verify usable
+or replace it with generic Markdown. Inspect a required detected constitution for missing or template-only content. When invalid,
+obtain owner-derived principles through the observed question capability, apply them through the
+detected constitution capability, and verify the resulting detected constitution is usable before
+specification work. If that capability or principles are absent, or repair/verification fails,
+stop before specification work. Do not reopen a valid settled constitution. Verify usable
 question/delegation capabilities and owner-selected class bindings before assigning work;
 missing capabilities stop with an explicit report. Do not hard-code a provider, model, agent,
 path, state schema, or command name.
@@ -104,10 +109,14 @@ specification before `plan_create`; missing/stale approval returns here.
 ### `plan_create` — `opus-class`
 
 **Entry/input:** stage brief/handoff contract, current approved specification, source, and
-detected planning capability. **Steps:** in one same-session pass, review the specification,
-correct non-material defects, create the plan with the observed SpecKit planning instructions,
-and review the created plan and correct mechanical/non-material defects before leaving the
-pass. Cover interfaces,
+detected planning capability. **Steps:** when the approved work conditionally calls for
+`delegating-architectural-planning`, invoke it as this stage's adapter with an observed
+owner-selected binding, the upstream context-coherent sequencing, shared-context, and brief/handoff
+constraints. This manager retains fixed `opus-class`, mandatory capability stops, and the
+same-session specification review/fix plus plan create/review/fix; those rules supersede the
+helper's standalone local fallback, separate-review, or agent-choice policies. Otherwise, or after
+that adapter returns, in one same-session pass review the specification, correct non-material
+defects, create the plan with the observed SpecKit planning instructions, and review the created plan and correct mechanical/non-material defects before leaving the pass. Cover interfaces,
 sequencing, risks, verification, integration, documentation scope, and coherent consecutive
 same-class work where retained context is useful. Preserve prerequisite order and story
 acceptance boundaries; do not reorder dependencies or pad distant work to fill a future batch.
