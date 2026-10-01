@@ -121,7 +121,7 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Model class**: sonnet-class.
   - **Rationale**: bounded routing/docs integration.
 
-- [ ] T009 [Contract tests] Wire deterministic operational workflow checks into routine validation.
+- [x] T009 [Contract tests] Wire deterministic operational workflow checks into routine validation.
   - **Depends**: T004, T005, T006, T007.
   - **Outcome / write scope**: checker/tests and wiring; no unused parallel manifest.
   - **Acceptance evidence**: operational stage bodies/required elements/order/transitions, not diagrams; classes/shared invocations/gate branches/create-only/plan same-turn review-fix/approvals-renewal-staleness/source/flagged/deferrals/handoff/recovery; capability fallback/stops; direct no-plan/no-SpecKit; one graph/three-four threshold/local suitability/context reuse/rotation/per-task commits/one final review/async-only. Context-continuity grouping permits sequential dependencies/shared files/headings and distinguishes real split reasons; upstream producers support it without reorder. Frontmatter/references/no obsolete platform/state/hard-coded bindings. Ordinary validation runs checks; static limits explicit, no model calls.
