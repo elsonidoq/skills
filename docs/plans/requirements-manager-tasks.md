@@ -83,13 +83,14 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Rationale**: explicit approved stage and inventory contracts.
   - **Execution evidence**: operational `skills/epics-manager/SKILL.md` restores the approved chain, shared primitive references, stage ownership, current approvals/resume, SpecKit/capability stops, and independent review; `scripts/test_workflow_contract.py` covers the static contract.
 
-- [ ] T005 [Context-continuity batching] Update shared coordinator batching criteria and upstream plan/task organization to amortize startup and reuse useful context.
+- [x] T005 [Context-continuity batching] Update shared coordinator batching criteria and upstream plan/task organization to amortize startup and reuse useful context.
   - **Depends**: T003, T004.
   - **Outcome / write scope**: batching/brief/session criteria in `skills/coordinate-implementation/SKILL.md`; organization guidance in `skills/task-generation/SKILL.md` and EPIC `plan_create`/`tasks_create`; focused checks. No separate batching algorithm or unrelated intake change.
   - **Acceptance evidence**: batch consecutive coherent same-class work for startup amortization and context locality. Permit sequential internal dependencies/shared files with producer checks; headings, story transitions and overlapping files alone are not automatic split triggers. Preserve task order, story acceptance boundaries and separate commits. Aim for 5–7 only when scope/context permit; split for evidenced model/gate/context/incompatible-scope or unsatisfied external integration boundary, not arbitrary headings. Upstream plan/task producers arrange coherent consecutive work without class-based dependency reordering or distant-task padding. Brief states internal task sequence/shared context/integration checkpoints; runtime observes context and uses durable handoff for rotation. Only async background delegation; no parallel implementation batches. Record deliberate removal of old isolation-first criteria in baseline inventory. Focused scenarios keep related producer/consumer tasks across phase headings together and split genuine class/gate/context boundaries. Later T009–T010 regression/mutations reject gratuitous heading/file/dependency splits and unsafe regrouping.
   - **Capability needs**: local edits/search/history, static tests/lint.
   - **Model class**: sonnet-class.
   - **Rationale**: owner specified concrete batching recipe; bounded shared-policy and producer-guidance update.
+  - **Execution evidence**: coordinator, shared task-generation, and EPIC producer guidance now preserve coherent consecutive same-class work and task commits while splitting only at evidenced boundaries; focused static batching/upstream contract checks pass.
 
 ### Origin-neutral execution
 

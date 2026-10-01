@@ -97,19 +97,21 @@ batch and missing decision or dependency.
 
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
-3. Build batches only from consecutive task entries in the approved list, within
-   one user story (or one shared setup/stage segment when tasks have no story).
-   Never pull a distant producer forward into a batch: execute intervening
-   prerequisite batches first. Aim for 5-7 tasks only when the
-   consecutive tasks do not conflict on files, schemas, migrations, shared
-   runtime state, or acceptance setup, and have the same required model class.
-   Smaller batches, including one task, are fine at story/stage boundaries,
-   dependency bottlenecks, owner gates, model-class boundaries, or conflicting
-   write surfaces; record the reason rather than filling a batch with distant work.
-4. Keep contract producers before consumers and preserve explicit owner gates.
-5. Prefer vertical slices that can be integrated and verified independently.
-6. Execute every batch sequentially; never run implementation batches in parallel.
-   Re-evaluate the execution graph after each batch completes.
+3. Build batches only from consecutive task entries in the approved list and one required
+   model class. Keep coherent producer/consumer work together to amortize startup and retain
+   useful context. Internal dependencies, shared files, and phase/story headings do not require
+   a split when one writer executes tasks sequentially, verifies each producer before its
+   consumer, preserves task acceptance boundaries, and commits each task separately. Never pull
+   a distant producer forward or reorder a prerequisite to fill a batch.
+4. Aim for 5–7 tasks only when scope and observed context permit; it is not a quota. Split at
+   evidenced model-class changes, owner gates, context limits, genuinely incompatible scope, or
+   external integration prerequisites that cannot be satisfied inside the batch. A one-task batch
+   is valid when justified; headings, overlapping files, or internal dependencies alone are not.
+5. Keep contract producers before consumers and preserve explicit owner gates. The batch brief
+   states its internal task sequence, shared context, producer checks, and integration checkpoints.
+6. Execute every batch sequentially and delegate only asynchronously in the background; never
+   run implementation batches in parallel. Re-evaluate the execution graph after each batch
+   completes without changing approved task order.
 
 If the approved tasks require a later-numbered task to unblock an earlier one,
 stop before building the batch plan. Do not silently reorder tasks or mix stories
@@ -147,9 +149,11 @@ is mandatory, but an agent's report is not proof of completion.
   before starting and stop rather than exceeding them.
 - If delegation is unavailable, stop before implementation and report
   `Delegation: UNAVAILABLE` to the user.
-- Resume a previously used agent only when it uses the model selected for the batch,
-  the runtime supports resumption, and its retained context materially overlaps;
-  otherwise issue a fresh brief.
+- Resume a previously used agent only when it uses the model selected for the batch, the
+  runtime supports resumption, its retained context materially overlaps, and observed context
+  headroom is adequate. Inspect accumulated context, compaction, tool output, and demonstrated
+  scope rather than treating task count or billed tokens as capacity. When evidence is inadequate,
+  record that limitation and issue a smaller fresh brief with durable handoff context.
 
 Before dispatching file changes, check which mutation tool the selected agent/model
 actually receives and is permitted to use. Pi's core tool set exposes `edit` and
@@ -181,9 +185,9 @@ For each task or batch:
    If none exists, update the task list; do not invent a state-file convention.
 7. Update the execution tracker to reflect the batch's verified outcome and the
    next dependency-ready batch.
-8. Commit the batch's verified changes as one focused commit before starting the
-   next batch. A per-batch commit is a required workflow step, not an optional
-   integration action.
+8. Commit each task's verified changes as one focused commit before starting the next task.
+   Task commits are required checkpoints, not a reason to split a coherent batch or launch a
+   new session.
 
 Prefer a project's documented commit message and commit-workflow convention when one
 exists. Before the first commit, verify the workspace is a version-control repository
@@ -195,7 +199,7 @@ contradicting directive and the requested per-batch commit, and let the owner de
 Record the decision in the execution tracker and apply it consistently to later
 batches. If the workspace has no usable version-control or commit capability, report
 the observed condition and ask the owner whether to proceed without per-batch
-commits. Never omit a batch commit without an explicit owner decision.
+commits. Never omit a required task commit without an explicit owner decision.
 
 Do not push, deploy, send external messages, run paid services, or perform
 irreversible operations unless the owner requested that operation and repository
@@ -221,7 +225,7 @@ Fix in-scope failures, re-run affected checks, and leave blocked dependents pend
 
 ## Finish
 
-Return completed and pending tasks, changed files, per-batch commits (or the owner's
+Return completed and pending tasks, changed files, per-task commits (or the owner's
 recorded decision to skip or defer them), checks and results, integration
 status, unresolved owner gates, unavailable capabilities, and the next
 dependency-ready action. State separately whether implementation is complete and

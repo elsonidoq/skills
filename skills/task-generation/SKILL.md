@@ -49,6 +49,14 @@ story or stage in one contiguous segment. Check implicit dependencies and whethe
 can obtain its producers before its consumers; revise the producer placement rather than
 papering over a forward dependency.
 
+Organize consecutive same-class tasks into coherent sequential work where their retained
+context is useful. Preserve prerequisite order, individual evidence, and story acceptance
+boundaries; do not reorder dependencies or pad a segment with distant work merely to fill a
+batch. Internal producer/consumer dependencies, shared files, and phase/story headings may
+remain together when producer verification precedes consumer work. Record likely shared
+context and integration checkpoints so the execution coordinator can make an evidence-based
+batch decision.
+
 ## Review and handoff
 
 Before approval, validate explicit dependencies and story continuity with

@@ -83,8 +83,10 @@ specification before `plan_create`; missing/stale approval returns here.
 **Entry/input:** current approved specification, source, and detected planning capability.
 **Steps:** in one same-session pass, review the specification, correct non-material defects,
 and create the plan with the observed SpecKit planning instructions. Cover interfaces,
-sequencing, risks, verification, integration, and documentation scope. Material scope,
-architecture, privacy, permission, irreversible, cost, or settled-requirement choices are owner
+sequencing, risks, verification, integration, documentation scope, and coherent consecutive
+same-class work where retained context is useful. Preserve prerequisite order and story
+acceptance boundaries; do not reorder dependencies or pad distant work to fill a future batch.
+Material scope, architecture, privacy, permission, irreversible, cost, or settled-requirement choices are owner
 gates; do not use speculative defaults. If review or planning changes approved specification
 content, renew specification approval before leaving this stage. **Output:** verified plan and
 handoff context. **Approval/resume:** retain flagged owner decisions and resume the same
@@ -96,7 +98,9 @@ into separate spec critique/fix stages.
 **Entry/input:** current approved source/specification/plan and detected tasks capability.
 **Steps:** follow the observed SpecKit task command under the shared `task-generation` contract.
 This stage is create-only: create the best task list, including documentation and acceptance
-coverage, but do not self-review or self-correct it. **Output:** verified task list and handoff
+coverage. Prepare coherent consecutive same-class work with producer checks and shared-context
+notes, but keep task order, dependencies, and story acceptance boundaries intact. Do not
+self-review or self-correct it. **Output:** verified task list and handoff
 context. **Approval/resume:** task defects belong to `overall_review`; resume validates inputs
 and output rather than trusting a stage label.
 

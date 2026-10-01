@@ -26,6 +26,11 @@ class EpicWorkflowContractTests(unittest.TestCase):
         self.assertIn("task defects belong to `overall_review`", TEXT)
         self.assertIn("one same-session pass", TEXT)
 
+    def test_upstream_prepares_coherent_work_without_reordering(self):
+        self.assertIn("coherent consecutive\nsame-class work", TEXT)
+        self.assertIn("do not reorder dependencies or pad distant work", TEXT)
+        self.assertIn("producer checks and shared-context\nnotes", TEXT)
+
     def test_approvals_resume_and_capability_stops(self):
         self.assertIn("renew specification approval", TEXT)
         self.assertIn("explicit overall-review approval", TEXT)
