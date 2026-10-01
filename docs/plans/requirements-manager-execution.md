@@ -35,4 +35,9 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 
 ## Task evidence and commits
 
-Pending. Delegates record changed files, actual checks/results, context limitations and separate task commits; update only assigned completion/evidence fields in task artifact and tracker. Preserve approved definitions and owner decisions. No installer, paid probe, provider/runtime config changes, product work, push or deployment.
+| Task | Status | Evidence | Commit |
+| --- | --- | --- | --- |
+| T001 | completed | Added source-derived requirement matrix, historical inventory, deliberate-change watchlist, and capability/fallback inventory before any replacement skill was read or written. Baseline and post-change suite lint, five validator units, task-order validation, and diff check passed. | recorded with T001 change |
+| T002–T005 | pending | Batch 1 remains in progress; sequential checkpoints not started. | — |
+
+Delegates record changed files, actual checks/results, context limitations and separate task commits; update only assigned completion/evidence fields in task artifact and tracker. Preserve approved definitions and owner decisions. No installer, paid probe, provider/runtime config changes, product work, push or deployment.

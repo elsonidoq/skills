@@ -40,7 +40,7 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
 
 ### Coverage baseline
 
-- [ ] T001 [Coverage baseline] Draft the source-derived requirement matrix, historical behavior inventory, and capability/fallback inventory before reading or writing any replacement skill.
+- [x] T001 [Coverage baseline] Draft the source-derived requirement matrix, historical behavior inventory, and capability/fallback inventory before reading or writing any replacement skill.
   - **Depends**: none.
   - **Outcome / write scope**: add `docs/plans/requirements-manager-coverage.md` and its `docs/index.md` entry. No skill/script edits.
   - **Sources**: owner request/design and handoff, historical EPIC, pre-change EPIC/coordinator/create-epic, REQUIREMENTS, best-practices guidance, scripts/tests. Record derivation ordering.
@@ -52,6 +52,7 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Capability needs**: local read/write, git history, shell/static lint.
   - **Model class**: sonnet-class.
   - **Rationale**: source-driven extraction, with material ambiguity reported rather than decided.
+  - **Execution evidence**: `docs/plans/requirements-manager-coverage.md`; baseline lint, five validator units, task-order validation, and diff check passed before/after the documentation-only change; commit records the source-first checkpoint.
 
 ### Shared workflow foundation
 
