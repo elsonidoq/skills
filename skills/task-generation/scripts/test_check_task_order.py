@@ -66,6 +66,13 @@ class TaskOrderTests(unittest.TestCase):
     def test_no_tasks_is_not_a_pass(self):
         self.assertTrue(module.check("# Empty list\n"))
 
+    def test_lone_t002_is_rejected(self):
+        errors = module.check("""\
+- [ ] T002 First
+  - **Depends**: none
+""")
+        self.assertTrue(any("first task must be T001" in error for error in errors))
+
     def test_numbering_gap_is_not_a_pass(self):
         errors = module.check("""\
 - [ ] T001 Start

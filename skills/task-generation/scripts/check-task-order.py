@@ -50,6 +50,8 @@ def check(text: str) -> list[str]:
         line = task["line"]
         if number in seen:
             errors.append(f"line {line}: duplicate task number {name}")
+        if not seen and number != 1:
+            errors.append(f"line {line}: first task must be T001, not {name}")
         if seen and number != next(reversed(seen)) + 1:
             errors.append(f"line {line}: {name} is not numbered immediately after the preceding task")
         if task["depends"] is None:
