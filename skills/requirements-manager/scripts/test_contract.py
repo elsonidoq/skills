@@ -20,6 +20,15 @@ class RequirementsManagerContractTests(unittest.TestCase):
         self.assertIn("direct adapter", TEXT)
         self.assertIn("context-coherent", TEXT)
 
+    def test_operational_section_invokes_shared_brainstorming(self):
+        start = TEXT.index("## 2. Resolve only material uncertainty")
+        end = TEXT.index("\n## 3.", start)
+        operational = TEXT[start:end]
+        self.assertIn("Invoke the shared `epic-brainstorming` mechanism", operational)
+        self.assertIn("exact gate result", operational)
+        self.assertIn("owner-owned one-at-a-time dialogue", operational)
+        self.assertIn("decision application", operational)
+
     def test_route_approval_and_handoff_are_explicit(self):
         self.assertIn("best_practices_spec_driven_development.md", TEXT)
         self.assertIn("missing-install report", TEXT)

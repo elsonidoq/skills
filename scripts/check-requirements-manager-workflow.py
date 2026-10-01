@@ -23,6 +23,15 @@ def section(text: str, stage: str) -> str:
     return text[start:] if end < 0 else text[start:end]
 
 
+def numbered_section(text: str, heading: str) -> str:
+    marker = f"## {heading}"
+    start = text.find(marker)
+    if start < 0:
+        return ""
+    end = text.find("\n## ", start + len(marker))
+    return text[start:] if end < 0 else text[start:end]
+
+
 def check_contracts(texts: dict[str, str]) -> list[str]:
     failures: list[str] = []
     def require(name: str, text: str, *phrases: str) -> None:
@@ -47,6 +56,8 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
     for stage, klass in classes.items():
         require(f"stage-class-{stage}", section(epic, stage), f"— `{klass}`")
     require("gate-transition", section(epic, "brainstorm_gate"), "skip goes to `spec_create`; needed goes to `epic_brainstorm`")
+    require("brainstorm-output-transition", section(epic, "epic_brainstorm"), "**Output:** durable formatted decisions for", "`epic_brainstorm_fix`")
+    require("brainstorm-fix-output-transition", section(epic, "epic_brainstorm_fix"), "**Output:** updated brief plus concise handoff\ncontext for `spec_create`")
     require("brainstorm-fix-application", section(epic, "epic_brainstorm_fix"), "shared decision application", "apply exactly those decisions", "preserve structure, exclusions, and deferrals")
     require("spec-approval", section(epic, "spec_create"), "obtain and durably record explicit approval of the current", "specification before `plan_create`")
     require("plan-transition", section(epic, "plan_create"), "review the created plan", "renew specification approval")
@@ -62,6 +73,7 @@ def check_contracts(texts: dict[str, str]) -> list[str]:
 
     require("brainstorm", texts["brainstorm"], "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items", "exactly the recorded owner decisions", "ask in prose and end the turn")
     require("direct-route", texts["requirements"], "No intermediate\nspecification or plan is created.", "It does not require a plan or SpecKit.", "authorization to **prepare** tasks", "approval order is:", "best_practices_spec_driven_development.md")
+    require("requirements-operational-brainstorm", numbered_section(texts["requirements"], "2. Resolve only material uncertainty"), "Invoke the shared `epic-brainstorming` mechanism", "exact gate result", "owner-owned one-at-a-time dialogue", "decision application", "Do not fork the shared mechanism")
     require("direct-adapter", texts["tasks"], "A direct adapter derives tasks", "does not\n  require a plan or SpecKit", "Do not require final task/implementation approval", "30%")
     require("epic-exception", texts["create"], "documentation-initialization exception", "`requirements-manager`")
     require("runtime-dependency", texts["requirements_doc"], "ask in prose and end the turn", "do not proceed past the owner-answer gate")

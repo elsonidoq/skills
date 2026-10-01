@@ -59,6 +59,20 @@ class WorkflowMutationTests(unittest.TestCase):
         self.mutate("remove local eligibility", "coordinator", "scope is clear", "scope", "eligibility:")
         self.mutate("remove delegation threshold", "coordinator", "More than three implementation tasks require delegation", "Many tasks delegate", "delegation-count:")
         self.mutate("remove upstream coherence", "epic", "do not reorder dependencies or pad distant work", "preserve dependencies", "upstream-epic-coherence:")
+        self.mutate("remove selected class eligibility", "coordinator", "current owner-selected model/class matches each task", "selected class", "eligibility:")
+        self.mutate("remove context eligibility", "coordinator", "observed context capacity is adequate", "context", "eligibility:")
+        self.mutate("remove completed full count", "coordinator", "including completed tasks", "including tasks", "threshold:")
+        self.mutate("remove review exclusion", "coordinator", "exclude standalone review tasks", "exclude reviews", "threshold:")
+
+    def test_shared_invocation_and_conditional_transition_mutations(self):
+        text = self.texts["requirements"]
+        start = text.index("## 2. Resolve only material uncertainty")
+        end = text.index("\n## 3.", start)
+        changed = self.texts.copy(); changed["requirements"] = text[:start] + text[end + 1:]
+        errors = checker.check_contracts(changed)
+        self.assertTrue(any(e.startswith("requirements-operational-brainstorm:") for e in errors), errors)
+        self.mutate("bypass brainstorm fix", "epic", "`epic_brainstorm_fix`.", "`spec_create`.", "brainstorm-output-transition:")
+        self.mutate("bypass fix to specification", "epic", "context for `spec_create`", "context for `tasks_create`", "brainstorm-fix-output-transition:")
 
     def test_actual_contradictory_policy_insertions(self):
         self.mutate("mandatory direct plan", "requirements", "## 3. Produce direct tasks", "Direct requirements must have a plan.\n\n## 3. Produce direct tasks", "mandatory-direct-plan:")
