@@ -137,7 +137,7 @@ Eleven implementation tasks plus one independent review task: 10 `sonnet-class`,
   - **Model class**: sonnet-class.
   - **Rationale**: isolated negative regression assurance.
 
-- [ ] T011 [Integration/evidence] Verify integration, complete source-derived coverage and prepare final packet.
+- [x] T011 [Integration/evidence] Verify integration, complete source-derived coverage and prepare final packet.
   - **Depends**: T001, T008, T010.
   - **Outcome / write scope**: coverage/task evidence and demonstrated introduced wiring/docs/test defects only; no product work/install/paid probe/self-authorization/extra delegation; task commit authorized.
   - **Acceptance evidence**: actual lint/unit/task-order/workflow/mutation/diff outcomes; every baseline row verified/missing, no hidden removal. Static walkthroughs: specified/ambiguous requirement; <=3 suitable local; four delegated/resume three remaining; context-heavy task/rotation/resumption unavailable/inspected failure; coherent dependent shared-file tasks across headings batched versus real model/gate/context splits; commit conflict; sizing/EPIC exception; stale/ambiguous approvals; no SpecKit/installed direct input; forward dependencies; missing tools/classes/reviewer; >30% opus; edited resume. Distinguish PASS/FAIL/PARTIAL/NOT RUN/UNAVAILABLE and static/live. Export complete committed range, exact historical/pre-change files for T012; clean worktree is not review scope. No per-task reviews.

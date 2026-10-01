@@ -21,7 +21,7 @@ Approved sequence: T001–T005 (Terra), T006 (Sol), T007–T011 (Terra), then T0
 |---|---|---|---|---|---|---|
 | 1 | T001–T005 | Historical/current workflow sources; coverage baseline → shared primitives/validator → EPIC restoration → shared batching criteria | None external; internal prerequisites run sequentially | Draft T001 baseline before replacement text; focused tests/lint/inventory; verify and commit each of five tasks | sonnet-class / Terra | completed |
 | 2 | T006 | Origin-specific authorization and shared execution contract built by batch 1 | T003–T005 | Intake gates, local/delegated threshold, context/batching/commit checks; one task commit | opus-class / Sol | completed |
-| 3 | T007–T011 | Lightweight producer, routing/docs/discovery, contract tests, mutations and integration evidence | T001–T006 from preceding batches; internal prerequisites run sequentially | Producer/handoff tests, links/lint, operational/named mutation checks, coverage/walkthroughs and full review packet; separate commit for each of five tasks | sonnet-class / Terra | in_progress |
+| 3 | T007–T011 | Lightweight producer, routing/docs/discovery, contract tests, mutations and integration evidence | T001–T006 from preceding batches; internal prerequisites run sequentially | Producer/handoff tests, links/lint, operational/named mutation checks, coverage/walkthroughs and full review packet; separate commit for each of five tasks | sonnet-class / Terra | completed |
 
 T001's source-first ordering is an internal checkpoint, not an extra agent launch. Phase headings and shared file writes are not automatic split reasons because these are sequential single-writer batches. Batch 2 has one task because of its model-class boundary. The two five-task batches share coherent context and fit the target batch size, subject to actual scope/context observations during execution.
 
@@ -47,6 +47,7 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 | T008 | completed | Routed lightweight requirements through create-epic, requirements-manager, and coordinator; documented EPIC exception, local/delegated policy, task commits, discovery, and handoff fields; added new skills and removed stale probe entry. Lint, shell syntax, static routing/discovery, and diff checks passed without paid probe. | recorded with T008 change |
 | T009 | completed | Added one routine deterministic workflow checker for operational EPIC/direct/origin/threshold/batching/session/commit/review contracts and wired it into suite lint. Initial missing-checker invocation failed; checker and routine lint pass without model calls. | recorded with T009 change |
 | T010 | completed | Added five named in-memory mutation tests for stage/order, shared gate/review/capability, direct-route/threshold, batching/delegation, and commit/review/legacy omissions; routine lint now runs them. All pass; static tests do not prove model obedience. | recorded with T010 change |
+| T011 | completed | Ran all focused units (4+2+6+4+3+6+4), operational checker, five mutations, task-order, lint, and diff checks; completed coverage statuses and static scenario limitations. Final review packet exports follow this task commit. | recorded with T011 change |
 
 ### T006 verification checkpoint
 
