@@ -2,7 +2,7 @@
 
 ## Current state
 
-**OWNER APPROVED EXECUTION: “go ahead”.** Preparation commits record the approved revision-4 task body and batch grouping before T001. T001–T006 are verified and committed with their task evidence; batch 3 is the next approved implementation work. Earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
+**OWNER APPROVED EXECUTION: “go ahead”.** Preparation commits record the approved revision-4 task body and batch grouping before T001. T001–T011 have separate implementation commits and initial static checks, but final review returned NOT_READY with required corrections. T012 remains pending successful disposition/recheck. Scoped review-fix work follows below; completion of initial task checks is not feature acceptance. Earlier planning reconciliation: `3817425a08fe7c9bdeefed7e6e3322e268bda02e`; the subsequent batch-approval preparation commit is the complete implementation review baseline.
 
 Approved sequence: T001–T005 (Terra), T006 (Sol), T007–T011 (Terra), then T012 (fresh Sol reviewer). Execute only async background delegation, sequentially, with per-task verification/commits and no per-task reviews. The workflow is regenerated against revision 4.
 
@@ -27,11 +27,13 @@ T001's source-first ordering is an internal checkpoint, not an extra agent launc
 
 ## Final independent review (not an implementation batch)
 
-T012 runs once after batch 3, in a fresh read-only Sol reviewer session. It reads the complete committed implementation range, exact historical EPIC, pre-change protection files, coverage matrix/inventory and actual checks. Parent records findings/dispositions and completion and commits review evidence; confirmed scoped fixes get separate verified commits. Do not resume an implementation session for review. A clean worktree is not the review input.
+First T012 report: [final semantic review](reviews/requirements-manager-final-semantic-review.md), complete reviewed range `e21a6b27aed02192aecac739e5ef033e6ce61dcf..1a067b02b45747d907619f9f5aebe7643208dd73`. Verdict NOT_READY. This is the single end-of-implementation review, followed by scoped corrections and a focused final recheck—not per-task reviews.
+
+T012 began after batch 3, in a fresh read-only Sol reviewer session. It reads the complete committed implementation range, exact historical EPIC, pre-change protection files, coverage matrix/inventory and actual checks. Parent records findings/dispositions and completion and commits review evidence; confirmed scoped fixes get separate verified commits. Do not resume an implementation session for review. A clean worktree is not the review input.
 
 ## Baseline verification
 
-Before the earlier preparation commit: existing validator units PASS (5 tests), task-order PASS, suite lint PASS (21 skills), git diff --check PASS. After revision 4: rerun task-order and diff checks before presenting batches. New workflow/mutation tests and coverage artifact do not yet exist; no runtime behavior is claimed verified.
+Before the earlier preparation commit: existing validator units PASS (5 tests), task-order PASS, suite lint PASS (21 skills), git diff --check PASS. After revision 4: rerun task-order and diff checks before presenting batches. Workflow/mutation tests and coverage now exist, but the final review demonstrated incomplete operational checks. Parent reproduced three false negatives: deleting the gate body, changing specification class, and adding contradictory mandatory-plan policy all passed the initial routine checker. Those test protections must be corrected; no runtime behavior is claimed verified.
 
 ## Task evidence and commits
 
@@ -58,5 +60,17 @@ Before the earlier preparation commit: existing validator units PASS (5 tests), 
 - `bash scripts/check-skills-lint.sh` **PASS** (23 skills); `python3 skills/task-generation/scripts/check-task-order.py docs/plans/requirements-manager-tasks.md` **PASS**; `git diff --check` **PASS**. Inspected actual coordinator diff against T005 and protection baseline; no second graph or batching algorithm added.
 - Static read-through: EPIC retains both current approvals/spec/plan/review/stage evidence; direct inputs with or without installed SpecKit require no plan; ambiguous/stale inputs stop. Three class/context-fit tasks permit local execution; four and four resumed with three remaining remain delegated. Different class/context pressure delegates the affected segment, with no unauthorized fallback. These are prompt-contract observations, not live trials.
 - T006 changes only coordinator instructions, coupled tests and task/tracker evidence. Batch 2 completes here; batch 3 is marked `in_progress` as the next approved unit, not launched by this leaf delegate. Final independent review remains T012; routine wiring/mutations remain T009–T010.
+
+## Final review dispositions and scoped correction tasks
+
+All F1–F11 are valid against inspected source. F4's false negatives were reproduced by the parent. No scope/architecture change is required: restore approved safeguards and test them. The additional T001-start validator limitation is also valid and explicitly within original T003 acceptance, despite being inherited.
+
+| Fix task | Findings / scope | Class | Status |
+|---|---|---|---|
+| FR1 | F1–F3, F5–F8, F11: restore missing EPIC/source/approval/production/fallback contracts with focused checks | sonnet-class / Terra, medium | in_progress |
+| FR2 | F4/F9 and T003 T001-start gap: operational section/transitions/classes/contradiction checks, real named mutations, routine/custom-tree wiring and validator units | sonnet-class / Terra, medium | pending (FR1) |
+| FR3 | F10: truthful metadata; update coverage/dispositions, record actual task commits/checks and export corrected review packet | sonnet-class / Terra, medium | pending (FR2) |
+
+One coherent async/background Terra fix batch runs FR1→FR2→FR3, with separate verified correction-task commits. Then a fresh async/background Sol reviewer with explicit medium thinking rechecks the final corrected range and findings. No high-thinking launch or resumption of a high-thinking reviewer.
 
 Delegates record changed files, actual checks/results, context limitations and separate task commits; update only assigned completion/evidence fields in task artifact and tracker. Preserve approved definitions and owner decisions. No installer, paid probe, provider/runtime config changes, product work, push or deployment.

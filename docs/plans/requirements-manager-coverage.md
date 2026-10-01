@@ -1,5 +1,7 @@
 # Requirements Manager source-derived coverage baseline
 
+**Final-review status: NOT_READY, corrections pending.** The initial `verified` cells below mean initial static checks passed, not that semantic acceptance succeeded. The independent review found partially absent safeguards in B05–B07, B09–B11, B15, B20–B21, B29–B30; see [findings](reviews/requirements-manager-final-semantic-review.md). Those rows and the blanket verification claims must be reconciled after corrections. Do not use the initial cells to bypass this review blocker.
+
 **Derivation order:** This matrix was drafted before replacement-skill text. It derives
 requirements from the owner-approved [design](requirements-manager.md), the revision-4
 [tasks](requirements-manager-tasks.md), historical `epics-manager` at
