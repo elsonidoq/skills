@@ -16,15 +16,19 @@ More than three tasks require async sequential delegation. One single-writer bat
 
 | Batch | IDs | Scope | Dependencies | Integration | Verification | Class/model | Mode | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | T001–T007 | Source baseline, merged skill, retirement, consumers/docs, positive/mutation tests, integration | T001→T002→T003→T004→T005→T006→T007 | Skills, installer/probe/checker, canonical docs | Individual acceptance/checkpoints and commits; full deterministic suite; independent final review | sonnet-class / openai-codex/gpt-6.1-sol | Async sequential single writer | in_progress: baseline commit precondition |
+| 1 | T001–T007 | Source baseline, merged skill, retirement, consumers/docs, positive/mutation tests, integration | T001→T002→T003→T004→T005→T006→T007 | Skills, installer/probe/checker, canonical docs | Individual acceptance/checkpoints and commits; full deterministic suite; independent final review | sonnet-class / openai-codex/gpt-6.1-sol | Async sequential single writer | in_progress: T001 ready; baseline committed |
 
-- [ ] Batch 1: in_progress; first dependency-ready task T001 after baseline commit.
+- [ ] Batch 1: in_progress; first dependency-ready task T001; baseline commit completed.
 - [ ] Independent final review: pending full attributable revision range.
 
 ## Baseline and evidence
 
-Before baseline: HEAD `a04e3df68b094f90fb2900994a82d11b1a681581`; no staged paths. Source/task digests match current approval. Existing workspace changes are prior planner work plus Coherence planning/approval/tracker artifacts and will be explicitly separated in the baseline commit. Baseline commit ID, task commit IDs, actual results, source-to-merged coverage, residual limitations and review dispositions will be recorded here. Static checks do not prove model obedience; live onboarding/install/load probe remain NOT RUN unless separately authorized.
+Before baseline: HEAD `a04e3df68b094f90fb2900994a82d11b1a681581`; no staged paths. Source/task digests match current approval. Existing workspace changes are prior planner work plus Coherence planning/approval/tracker artifacts and will be explicitly separated in the baseline commit. Baseline commit: `7f6c0cb0cbdd15967d91c84b2295a45f3c64a2d3` (`chore: snapshot current planner work before Coherence initialization`), explicitly authorized and reported to the owner before implementation. Worktree was clean immediately after this commit. Task commit IDs, actual results, source-to-merged coverage, residual limitations and review dispositions will be recorded here. Static checks do not prove model obedience; live onboarding/install/load probe remain NOT RUN unless separately authorized.
 
 ## Completion
 
-Pending implementation. No task is complete merely because its checkbox exists or a child reports success. Preserve source/task contracts; status/evidence updates are allowed without changing approved acceptance. Material contract changes return for renewal.
+Implementation in progress; independent review remains pending. Status-only task updates preserve approved contracts. Material changes require renewal.
+
+## Verified task checkpoints
+
+- T001: predecessor `7f6c0cb0cbdd15967d91c84b2295a45f3c64a2d3`. Captured complete original source bytes/hashes and 43 source-derived ledger rows in `skills/initialize-coherence/scripts/fixtures/source-contract.json`, with stage, ownership transitions, downstream tasks, named positive/rejection checks, A1–A5 mapping and active/history inventory. Every original operational line has a carrier. Original evidence is captured before merged production/deletion. `PYTHONDONTWRITEBYTECODE=1 python3 skills/initialize-coherence/scripts/test_contract.py --baseline`: 3 tests PASS. Smallest meaningful red: `... test_contract.py CandidateTests` failed exactly `initialize-coherence candidate missing` (expected, before T002). Baseline planner checker PASS; existing planner fixtures 48 tests PASS. Source/task production hashes revalidated unchanged before status updates. Only initial dirt was the approved parent baseline tracker update, included here. No staged/unrelated paths. Static coverage is not proof of model obedience.

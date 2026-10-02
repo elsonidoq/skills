@@ -1,0 +1,1045 @@
+{
+  "revision": "7f6c0cb0cbdd15967d91c84b2295a45f3c64a2d3",
+  "sources": {
+    "skills/install-memory/SKILL.md": "---\nname: install-memory\ndescription: Use when adopting this skill suite on a project so the agent reliably finds memory, state, and documentation \u2014 writes the project's instructions with the suite contract and initializes the memory store.\n---\n\n# Install Memory\n\nOne-time project adoption for this skill suite. Establish the durable contract that\nmakes retrieval deterministic: document **how memory, state, docs, and planning work** in\nthe project's instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent), and create the\nproject memory store skeleton. Proposal-first: do not write, edit, or overwrite any\ntarget until the owner approves the adoption plan.\n\n## Preflight\n\n1. Read repository instructions and the existing instructions file. In a pi\n   environment, `AGENTS.md` and `CLAUDE.md` are loaded automatically as context files;\n   the suite also reads them to discover the memory store, documentation owners, and\n   conventions.\n2. Run `git status --short`. Record the initial dirty state and content of every\n   prospective target (the instructions file and the memory directory). Do not edit a\n   target that is already dirty without explicit owner approval; re-read it immediately\n   before each patch and stop on a concurrent change.\n3. Confirm the suite requirements exist (see the global configuration repository's\n   `REQUIREMENTS.md`): pinned `pi-subagents` and `pi-ask-user` packages, an installed\n   SpecKit toolkit when the project will use the pipeline, and `jev` only when Jev\n   triage is wanted in `finish-session-jev`. Report any missing requirement rather than\n   proceeding silently.\n\n## Step 1: Propose The Adoption Plan\n\nPresent for approval:\n\n1. The requirements block to record (pinned package versions, SpecKit, jev).\n2. The instructions-file section to add, covering:\n   - **How the suite works:** request \u2192 `planner` understanding/brainstorming/scope \u2192\n     explicit owner TinySpec/Standard choice \u2192 reviewed tasks \u2192 approved handoff \u2192\n     `coordinate-implementation` \u2192 `finish-session`. TinySpec uses `tiny-spec` plus\n     separate tasks and combined approval; Standard uses installed SpecKit and its\n     specification/final approval gates. Neither automatically creates an Epic.\n   - **How memory is used:** the store location (default: `<project-root>/memory/`\n     with `memory/MEMORY.md` index and entry files; owner may choose another path),\n     the `memory-handling` retrieval contract, and the trigger-first rules.\n   - **How state is used:** the temporary current-execution state document when the\n     project uses one (common convention: root `STATE.md`), pi sessions as the\n     conversation record, and `docs/open_issues.md` as the canonical unresolved-work\n     register (`track-open-issue`).\n   - **How docs are used:** the documentation owners and the documentation-routing\n     guide established by `initialize-documentation`.\n3. The memory store skeleton: a `memory/MEMORY.md` index containing only the header,\n   this contract's rules, and a placeholder stating no gotchas are recorded yet \u2014 never\n   fabricated facts.\n4. The overwrite policy for an existing instructions file: append the suite contract as\n   a clearly marked section rather than rewriting custom content.\n\nBefore calling `ask_user` for adoption approval, present an executive brief in 4\u20136 short\nbullets covering\noutcome, included/excluded edits, decisions, risks/deferrals, validation results and\nexact target/authorization. Verify question capability; missing capability stops approval.\nFollow the discoverable planner approval contract (including renewals); report a missing\ncontract rather than inventing it. Stop until explicit approval; denial/cancellation grants\nno writes. If the project already documents a compatible contract, report that adoption\nis unnecessary and validate the existing association instead.\n\n### Refresh an existing adoption\n\nFor an old suite contract, propose an owner-approved bounded refresh of only its marked\nsuite-owned section, preserving custom memory paths, docs, policy and every unrelated byte.\nDo not globally rename references or overwrite local modifications. If the section is\nunmarked, customized ambiguously, dirty or changed concurrently, show the exact proposed\nbounds/diff and ask before proceeding; re-read immediately before applying. Update planning\nentry points without converting old artifacts or approvals. A refresh does not authorize\nsubstantive documentation work or reset the memory store.\n\n## Step 2: Apply The Approved Plan\n\n1. Add the approved section to the instructions file, preserving all existing content\n   verbatim. Keep the section self-contained and marked so `memory-handling`,\n   `finish-session`, and `compact-memory` can cite it.\n2. Create `memory/MEMORY.md` (or the approved location) with the approved skeleton.\n   Do not create a documentation directory or planning artifacts. On refresh, preserve\n   the existing memory store and index rather than replacing them with a skeleton.\n3. Apply the dirty-target protections from Preflight to every write.\n\n## Step 3: Validate And Report\n\nRe-read the instructions file and the memory index. Verify:\n\n- The suite contract section exists and names the memory store path.\n- The memory index resolves and contains no fabricated gotchas.\n- No unrelated content was changed.\n\nReport the instructions file path, the memory store path, the requirements recorded,\nanything intentionally left to `initialize-documentation`, and instruct the user to use\nthe `finish-session` skill for closeout workflows.",
+    "skills/initialize-documentation/SKILL.md": "---\nname: initialize-documentation\ndescription: Use when a project's documentation owners or directory indexes are missing and need safe initialization.\n---\n\n# Initialize Documentation\n\nEstablish documentation that can accurately own the repository's current state.\nDo not modify application code, tests, generated application assets, deployment\nstate, or unrelated files.\n\n## Preconditions\n\n1. Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and\n   existing documentation indexes, registers, runbooks, architecture records,\n   decisions, specifications, and memory configuration.\n2. Run `git status --short`. A project is **clean** only when it has no output.\n   Untracked files make it non-clean.\n3. Preserve an existing authoritative owner and its format. Do not create a\n   competing document for information that already has an owner.\n4. Never state an unverified code, operational, or historical claim as current\n   fact. Do not write credentials, tokens, personal data, or sensitive payloads.\n5. Determine from repository evidence whether the project has a persistent\n   database. If so, require an authoritative database-schema document or\n   documented set of schema documents; an existing authoritative schema\n   document satisfies this requirement even when no convention names it.\n6. Require a documentation-routing guide that names the project's material\n   change categories and the authoritative documentation owner for each. The\n   guide may be a dedicated document or a clearly identified section of an\n   existing authoritative documentation owner.\n\n## Clean Project: Initialize Documentation Owners\n\nWhen the project is clean, initialize every documentation owner required by\nits instructions or established local conventions. Discover every directory\nthat the project treats as documentation, including nested directories. Each\nsuch directory must use the project's documented index mechanism to describe\nits direct documentation files and use sections where they make the contents\neasier to scan. Inspect code and configuration only as needed to identify those\nowners; do not infer a detailed system description merely to fill a new document.\n\nWhen the project has a persistent database, its documentation owners must also\ninclude an authoritative database-schema document or documented set of schema\ndocuments. The owner must describe the current tables or collections, fields\nand types, keys and relationships, constraints, and indexes where applicable.\nPreserve an existing schema owner and format. If none exists, obtain the\nuser's choice alongside the architecture-document location; do not assume a\nfixed filename or documentation layout.\n\nInitialize or preserve the documentation-routing guide. It must identify the\nproject-specific changes that require documentation and the authoritative owner\nto update for each. It may reference existing owner documents rather than\nduplicate their content. Start it with only verified categories and owners;\ndo not use a generic list as a claim that every category applies to the project.\n\nWhen no local convention names an equivalent owner, ask the user to choose the\ndocumentation root, directory-index mechanism, and the locations and formats\nfor architecture facts, database schema, documentation-routing guide, unresolved work, and deployment steps. Do not assume a\n`docs/` layout or create any owner until the user supplies that decision.\n\nCreate a missing directory index only in the established or user-selected\nformat. For every new index, list direct documentation files other than the\nindex itself, using their title, frontmatter description, or a verified one-line\npurpose. Do not claim that a file is current or complete solely from its name.\nAdd an entry to a parent index for each direct child documentation directory.\n\nCreate parent directories only when needed for one of these files. The\n`install-memory` skill owns suite adoption and the project memory store; do not\ncreate a memory store, planning artifacts,\nor placeholder architecture facts here. Before every edit, record the target's\ninitial state and content, then re-read it immediately before patching; stop if\nit changed concurrently. Validate only paths, headings, links, and references\nintroduced by this command.\n\nReport the initializations, existing owners retained, intentionally absent\nowners, and validation result. Then instruct the user to adopt the suite with the\n`install-memory` skill when the project has not adopted it yet, and to use the\n`finish-session` skill.\n\n## Non-Clean Project: Investigate Before Initializing\n\nWhen the project is non-clean, do not initialize documentation files before\nthe investigation and plan approval. First verify that the native task/sub-agent\ncapability is available. If it is not, report `documentation initialization\nblocked: sub-agent capability unavailable` and stop without edits.\n\nLaunch a fresh sub-agent to inspect repository instructions, changed and\nuntracked paths, relevant code, configuration, schemas, generated outputs, and\nexisting documentation. Require it to return:\n\n1. A verified inventory of current documentation owners and missing or stale\n    documentation work, including the database-schema owner when the project\n    has a persistent database, the documentation-routing guide, the source and\n    minimum safe shell for every missing required owner, with primary\n    `file:line` evidence where possible.\n2. A separation of attributable current changes, likely historical/stale\n   material, dead-code candidates, and conclusions that remain uncertain.\n3. Only the material intent questions that can change documentation scope,\n   truth, ownership, including database-schema ownership when required, or\n   documentation-routing categories, or whether work is obsolete.\n4. A recommended substantive documentation scope and acceptance criteria, without\n   editing files or inventing owner intent.\n\nUse the sub-agent's evidence to ask the user its material questions. Do not\nassume that changed code is live, intentional, or representative of the\ncurrent design. After answers are available, present a documentation plan that\nidentifies authoritative owners, including database-schema ownership when\nrequired, the documentation-routing guide, additions and corrections,\nexclusions, evidence gaps, and deterministic acceptance criteria. Separate missing-owner\nshells and directory indexes from substantive documentation: shells establish discoverability\nonly. Resolve unknown shell formats with the user. Before `ask_user` approval, present an\nexecutive brief in 4\u20136 short bullets covering outcome, scope/exclusions, decisions,\nrisks/deferrals, actual\nvalidation results and exact authorization. Verify question capability and discoverable\nplanner approval contract; if unavailable stop. Wait for explicit approval of the current\ninvestigation plan and shell/index bounds. Denial/cancellation grants no edits. Renew changed\napproval with a new brief. This approval is not substantive implementation authorization.\n\nAfter approval, re-discover owners/directories and initialize only explicitly selected missing\nowners as empty/template shells plus file maps and indexes. Preserve existing formats and\napply the clean-project dirty-target/concurrent-edit protections. Do not write substantive\ncurrent-state documentation or implement the investigated changes here.\n\nReport investigation evidence, decisions/deferrals, approval location and initialized shells.\nVerify discoverable `planner`, then hand off the substantive documentation requirement and\nsource evidence for its scope assessment and explicit TinySpec/Standard choice. Missing planner\nreports `planner: UNAVAILABLE` and stops that handoff; no Epic or forced Standard exception.\nInstruct the user to adopt via `install-memory` when not yet adopted, use `finish-session` for\nthis bounded initialization, and continue substantive work through planner. Preserve custom\nproject owners and source bounds; never treat shell initialization as substantive completion.\n"
+  },
+  "supporting": {
+    "skills/memory-handling/SKILL.md": "---\nname: memory-handling\ndescription: Use when locating, retrieving, or updating the project's memory store \u2014 before planning, implementing, reviewing, or closing out work in a suite-adopting project.\n---\n\n# Memory Handling\n\nOwn the retrieval contract for the project memory store. Memory records **trigger-first\ngotchas**: non-obvious, durable guidance that would surprise an agent who read the code\nand authoritative documentation. Documentation describes current state; memory warns an\nagent *before* an action could trigger a non-obvious problem.\n\n## Discovering The Store\n\nLocate the store exactly once per session and reuse the result. The store is\nproject-associated when repository instructions `AGENTS.md`/`CLAUDE.md` (including the\nmemory-store section written by the `install-memory` skill) or documented project\nconfiguration name its path. The suite's default convention, when adopted through\n`install-memory`, is a project-owned `memory/` directory with a `MEMORY.md` index and\nentry files; an owner-approved different path is equally valid.\n\nIf no store or association can be verified, report that the project has not adopted the\nsuite (`memory adoption: missing \u2014 run install-memory`) and do not create, guess, or\nmodify a global store. Never treat a global agent-memory command, `~/.pi/...` store, or\nsimilarly named index as project association without repository evidence.\n\n## Retrieval Protocol\n\n1. **Read the whole index first.** The index is the map: each entry states its trigger and\n   consequence. It is kept small by design, so a full read is cheaper than guessing.\n2. **Open entries only when relevant.** Open an entry in full when the current action\n   matches its trigger, a material decision is being made (scope, architecture, schema,\n   permissions, cost, irreversible behavior), or the work touches files the entry names.\n3. **Cost order:** index \u2192 matching entries \u2192 nothing else. Do not open the store\n   wholesale.\n4. **Re-check after any memory write** (including writes made by `finish-session` or\n   `compact-memory`): a changed or added trigger can change which entries apply to the\n   current work.\n\n## When To Consult\n\n- On session start, when resuming suite work (`planner`, `coordinate-implementation`).\n- Before planning, before batching implementation, and before the final integration\n  review in `coordinate-implementation`.\n- Before closeout, through `finish-session`.\n- Ad hoc: whenever observable behavior seems surprising, a trigger matches, or a\n  decision could repeat a past failure.\n\n## Write Protocol\n\n- Record only verified, non-obvious, trigger-first gotchas: the trigger (the future\n  action), the consequence (what breaks and why), and the evidence pointer.\n- Supersede an outdated entry rather than editing history silently or duplicating it;\n  keep one index entry per gotcha and repair every inbound reference.\n- Never write completed-work summaries, file inventories, task ledgers, or git-owned\n  metadata; those belong to documentation or git.\n- Never write credentials, tokens, personal data, or sensitive payloads.\n- Classify surplus entries per `compact-memory`: `KEEP`, `MIGRATE` (to an authoritative\n  document), `MERGE`, or `DROP` with a recorded reason.\n\n## Report\n\nState the verified store location, the index state, the entries consulted and why,\nconstraints applied from memory, and any writes or supersessions performed in this\nsession.",
+    "REQUIREMENTS.md": "# Pi Skill Suite Requirements\n\nThis repository is a pi configuration repository. It is **not runtime-portable by design**:\nit binds to specific pi packages, pins their versions, and relies on the convention that a\nproject adopts the suite through the `install-memory` skill before the workflow skills run.\n\n## Runtime\n\n| Requirement | Pin | Verified how | Missing behavior |\n|---|---|---|---|\n| pi coding agent | 0.87.x (tested with 0.87.1) | `pi --version` | Install or update pi |\n| pi-subagents | npm:`pi-subagents@0.73.1` | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and `pi install npm:pi-subagents@0.73.1` |\n| pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Where a stage permits prose interaction, ask in prose and end the turn; do not proceed past the owner-answer gate or infer an answer. A manager's explicit mandatory preflight may stop earlier. |\n| SpecKit toolkit | installed in the **project** for planner's Standard path | detected stage commands and assets exist in the target project | Stop at the affected Standard stage with a capability report; TinySpec/direct tasking does not require it |\n| jev (optional) | `~/.agents/skills/jev` | `command -v jev` or the skill loads | Manual routing in `finish-session-jev` |\n\nAll npm pins are exact: pi treats versioned npm specifications as pinned, and `pi update\n--extensions` reconciles the checkout without moving the configured ref.\n\nKeep this table in sync with the dependency statements inside the skills. The\n`install-memory` skill copies the requirement list into a project's `AGENTS.md` when the\nsuite is adopted.\n\n## Model class mapping\n\nThe pipeline skills label work with two model classes. The mapping below is the\nconfiguration used by this suite and must resolve to usable options on the configured\nproviders. It is enforced by the `subagents.agentOverrides` sample in\n[`docs/pi-settings-sample.md`](docs/pi-settings-sample.md); skills must never hard-code a\nprovider/model ID \u2014 they verify that usable options exist and ask the owner to choose.\n\n| Class | Meaning | Model |\n|---|---|---|\n| `sonnet-class` | bounded, well-specified implementation work | `deepseek/deepseek-v4.1-flash` (fallback `deepseek/deepseek-v4-flash`) |\n| `opus-class` | work that cannot be safely decomposed | `anthropic/claude-opus-5` or `openai/gpt-sol-latest` |\n\n## Memory contract\n\nMemory is part of this skill set; a project adopting the suite is guaranteed a memory\nstore through `install-memory`. Retrieval and write rules live in the `memory-handling`\nskill; `compact-memory`, `finish-session`, `planner`, `tiny-spec`,\n`coordinate-implementation`, and `initialize-documentation` reference it. There is no \"memory unavailable\" case in projects\nthat ran `install-memory`.\n\n## Project docs\n\n`docs/open_issues.md` holds the canonical register of unresolved work\n(`track-open-issue`). Documentation owners and the documentation-routing guide are\nestablished by `initialize-documentation` and recorded in each project's instructions.",
+    "skills/planner/references/approval-and-recovery.md": "# Approval and Recovery Contract\n\n## Executive brief before approval\n\nAt EVERY artifact-approval gate, including corrections/renewals and applicable\nadoption/documentation-plan approvals, present an owner-visible executive brief as\n4\u20136 short bullets in assistant text before calling `ask_user`. Do not\nreplace it with paragraphs, artifact links, a delegated report, or `ask_user.context`.\nA brief only in tool arguments or after the question is insufficient. Combine related\nitems when useful, but cover all of:\n\n- Intended outcome and included scope.\n- Exclusions and implementation boundaries.\n- Important settled decisions and material alternatives resolved.\n- Risks, unresolved gates and intentional deferrals.\n- Actual review/validation results, including failures and UNAVAILABLE/NOT RUN checks.\n- Exact artifacts/current content and what approval authorizes: preparation,\n  specification-to-planning, or implementation of the reviewed scope; name the next\n  phase that starts automatically after approval and any explicit planning-only boundary.\n\nBe concise and accurate; headings alone are not evidence. Permit approve, withhold\napproval/request changes, and cancellation. Do not treat \u201clooks good except\u2026\u201d as full\napproval. Missing question capability stops an artifact approval; do not substitute\ninferred consent. Persist affirmative answers and their scope/content evidence in\nexisting artifact or decision conventions after authorized artifact production.\n\nAfter affirmative approval, immediately continue to the next authorized phase. Do not\nask for a second routine continuation approval or end merely with \u201capproved/ready.\u201d\nFinal planning approval starts `coordinate-implementation` and its preflight in the\nsame session unless the owner explicitly requested planning-only or a separate-session\nhandoff. The brief and approval question must communicate that scope before consent;\nolder preparation-only approvals never imply execution authorization. Missing capability,\nnew material gate, denied/ambiguous answer or an explicit owner boundary still stops.\nAncillary adoption/documentation approvals authorize only their own stated bounded writes,\nnot unrelated implementation.\n\n## Transition and invalidation table\n\n| Event | Consequence |\n| --- | --- |\n| Owner chooses depth | Preparation authorization only; persist then immediately start selected source production |\n| TinySpec ready | Generate separate tasks; no intermediate approval gate |\n| TinySpec/tasks reviewed | Bullet brief then combined source/task/scope approval; immediately start coordinator unless explicitly planning-only |\n| Standard spec ready | Bullet brief then specification approval; immediately start planning |\n| Standard plan/tasks reviewed | Bullet brief then overall approval; immediately start coordinator unless explicitly planning-only |\n| Denied, cancelled, timed out or ambiguous answer | No downstream production requiring that approval or implementation; preserve pending correction |\n| Request/source/decision changes | Recheck scope, traceability and affected downstream artifacts/review; material scope changes need owner decision |\n| Approved specification content changes | Renew specification approval before proceeding beyond the affected Standard stage |\n| Plan/tasks change after final approval | Re-review affected evidence and renew final approval |\n| Any renewal | Present a new bullet-list executive brief before `ask_user`; old brief does not cover changed content; after approval immediately resume the affected stage |\n| Fresh session/resume | Read artifacts AND linked external decisions/approvals; verify current content, scope and review; return earliest invalid gate |\n\nUse exact revisions, external snapshots/digests, or clearly bounded approved sections\nthat permit actual comparison. Avoid recursive self-hashes. A completion checkbox or\n`approved` label is not authorization. Expected task status/evidence updates during\nexecution do not by themselves change the approved task contracts; changed scope,\nacceptance, dependencies or instructions do. Do not waive drift merely by calling it\ncosmetic: verify the authorized content remains equivalent and record that comparison.\n\nUnanswered questions retain their originating context, alternatives and owner rationale.\nResume that correction context when supported; otherwise hand off durable answers and\nconstraints. Do not regenerate answers or silently apply recommended defaults.\n\n## Legacy checkpoint mapping\n\nCompatibility repairs are owned by planner, not retired skills. Original evidence is\nstill required; do not fabricate history or use a convenient origin to bypass gates.\n\n| Origin/state | Planner checkpoint and preserved requirements |\n| --- | --- |\n| `requirements-manager`, approved | Validate durable original requirement/source (possibly inside tasks), tasks, review and explicit current scope approval; no separate TinySpec/plan/SpecKit imposed |\n| `requirements-manager`, partial/stale | Preserve existing source shape; resolve missing decisions, produce/review affected tasks via direct adapter, brief and renew combined requirement/task/scope approval |\n| `epics-manager`, approved | Validate original source, spec, plan, tasks, SpecKit stage evidence, independent review and both current approvals |\n| `epics-manager`, approved spec awaiting plan | Continue mapped Standard plan stage without forcing a new path choice; retain valid spec approval and full adapter safeguards |\n| `epics-manager`, missing/stale spec approval | Return Standard specification/clarification checkpoint, brief and approve current spec before plan |\n| `epics-manager`, missing/stale plan/tasks/review | Return earliest affected Standard stage and renew affected approvals; never downgrade origin to direct tasking |\n| Other documented producer | Follow that producer's documented source/task/authorization gates; no imposed Standard placeholders |\n| Ambiguous/conflicting origin | Resolve provenance with owner before production or implementation |\n\nOld source documents labelled Epic are legacy inputs, not a new required planning\nconcept. New planning uses the explicit depth choice; legacy repair does not invent\nhistorical route-selection records. Missing runtime capabilities still block affected\nstages even with otherwise valid approvals. No installing/simulating missing SpecKit.\n",
+    "docs/plans/coherence-initialization.md": "# TinySpec: Coherence initialization\n\nStatus: preparation authorized; not approved for implementation.\nProducer: planner. Depth: TinySpec. Separate tasks required.\n\n## Request and decisions\n\nThe owner requests:\n\n> ## Context\n> The skills package works well for the planning part, from receiving the plan to finishing it. However, the onboarding flow is somewhat odd. There are two separate skills: `Initialize Memory` and `Initialize Documentation`. Both are blockers for using the rest of the skills package.\n>\n> ## Objectives\n> 1. **Name the project** Brainstorm with the user to choose a project name. A single skill called `Initialize` would be too abstract, so a concrete project name is required.\n> 2. **Merge the two initialization skills** Combine `Initialize Memory` and `Initialize Documentation` into one skill that guarantees the repository invariants are satisfied. These skills currently identify how documentation and memory are being handled and bring them into the current schema.\n>\n> ## Constraints\n> - Do not rely solely on the description above. Base the unification on the actual behavior of the existing skills.\n> - The merged skill should be named something like `Initialize` or `Initialize Invariants` (or similar).\n> - Preserve the original intent, names, numbers, negation, and constraints.\n> - If any part is ambiguous or unsupported by the context, mark it explicitly as `[unclear]`.\n\nOwner answers through ask_user, in order:\n\n- Project name: \u201cuse coherence\u201d \u2192 **Coherence**.\n- Guarantee: \u201cStructural readiness; explicit outstanding work (recommended)\u201d. Complete substantive documentation is not promised by initialization.\n- Depth: \u201cTinySpec \u2192 Tasks \u2192 Implement (recommended)\u201d. This authorizes preparation only until combined approval.\n- Planning producer binding: \u201cGpt 6.1 sol\u201d \u2192 registered `openai-codex/gpt-6.1-sol`, explicitly selected for these planning stages; not a global skill/model-policy change.\n- Merged name: \u201cinitialize-coherence \u2014 Initialize Coherence (recommended)\u201d.\n- Compatibility: \u201cDon't care about retrocompatibility, these are the firsts iterations on this skills project. The important thing is that an agent executing this skill behaves like an agent executing both old skills. This is just a UI simplification\u201d. Plan one new skill and retire both old entry points, without aliases or a backward-compatibility project. Preserve source provenance and combined operational behavior.\n\nThe actual sources are `install-memory` / **Install Memory** and `initialize-documentation` / **Initialize Documentation**. \u201cInitialize Memory\u201d is the request's label, not an additional discovered skill. No separate machine-readable \u201ccurrent schema\u201d was found: **[unclear]** beyond the inspected suite contracts. Do not invent a universal schema or migrate project data to satisfy that phrase.\n\n## Outcome and scope\n\nGive owners and agents one onboarding UI that establishes the same combined adoption, memory, documentation ownership/routing/index, and bounded refresh behavior as the two existing skills. Existing substantive documentation gaps remain explicit planner inputs.\n\nInclude the merged skill, retirement of the two source entry points, active consumer references, user-facing Coherence naming/setup, requirements references, installer/load-probe inventory and workflow/fixture checks. Update only relevant active references; retain original names in provenance and historical records. Preserve all pre-existing unrelated work.\n\nExclude broader branding/artifact rewrites, aliases, compatibility conversion of adopted projects or legacy planning artifacts, new universal state schemas, application changes, deployment, requirement installation by initialization, live model probes without separate authorization, and substantive documentation writes on dirty repositories. Initialization does not itself implement planner handoffs.\n\nRepository conventions: subject plans under `docs/plans/`, routing in `docs/index.md`. That index explicitly declares this configuration repository has no project-memory association; do not create or consult global memory for this work.\n\n## Authoritative behavior and preservation requirements\n\nWorking-tree sources, not HEAD alone, govern this change. Both source skills are already modified by unrelated planner work. Preserve their current combined contracts, including the following:\n\n1. **Approval and requirements:** Adoption is proposal-first: no target write/edit/overwrite before explicit approval. Record required runtime prerequisites; report missing requirements rather than proceeding silently or installing. Preserve pi 0.87.x (tested 0.87.1), exact `npm:pi-subagents@0.73.1` and `npm:pi-ask-user@0.15.1` pins. SpecKit is required only for applicable Standard stages, not TinySpec; Jev is optional for Jev triage with the documented manual fallback. Verify actual capabilities. Missing mandatory question capability or planner approval contract stops. Every applicable artifact approval/renewal has **4\u20136 short bullets before ask_user**, covering outcome, scope/exclusions, decisions, risks/deferrals, actual validation, current targets and exact authorization. Denial/cancellation/ambiguous answers grant no writes. Renew changed approvals; persist comparable current-content evidence. Ancillary adoption/shell approval is not substantive implementation authorization.\n2. **Dirty and concurrent targets:** Run `git status --short`. Clean means no output; untracked files make the project non-clean. Record prospective targets' initial state/content. Do not edit already-dirty targets without explicit owner approval. Re-read immediately before patches and stop on concurrent changes. Preserve unrelated bytes. Approval of a general plan is not an implicit dirty-target waiver.\n3. **Adoption/instructions/memory:** Append a marked self-contained suite contract to existing instructions, preserving custom content verbatim. Record planning flow through planner \u2192 owner TinySpec/Standard choice \u2192 reviewed tasks \u2192 approved handoff \u2192 coordinate-implementation \u2192 finish-session, without automatically creating an Epic. Record memory retrieval, conditional temporary execution-state convention (commonly STATE.md), pi session conversation record, canonical `docs/open_issues.md` unresolved register via track-open-issue, and documentation owners/routing. Default approved memory location is `<project-root>/memory/` with `memory/MEMORY.md` and entry files; owner-chosen paths remain valid. New skeleton contains only header, contract rules, and a no-gotchas-yet placeholder\u2014never fabricated facts. Whole index first, then trigger-matching entries; recheck after memory writes. No global-store substitution, secrets, tokens, personal data or sensitive payloads.\n4. **Existing adoption/refresh:** Validate an existing compatible association rather than unnecessarily adopting again. Refresh only owner-approved bounds of the suite-owned marked section, retaining custom paths/docs/policy and every unrelated byte. Unmarked/ambiguously customized/dirty sections require exact bounds/diff and approval. Preserve existing memory/index; no skeleton reset, global rename, old artifact/approval conversion, or substantive documentation authorization through refresh.\n5. **Documentation ownership:** Read instructions, indexes, registers, runbooks, architecture, decisions, specifications and memory configuration. Preserve existing authoritative owners and formats; no competing documents. Discover every documentation directory, including nested ones. Each uses the local or owner-selected index mechanism for direct documentation files other than the index itself, with verified titles/descriptions/purposes and suitable sections. Parent indexes map direct child documentation directories. Filenames alone do not establish currentness/completeness. If conventions do not name equivalent owners, obtain owner choices for documentation root, index mechanism, architecture/schema/routing/unresolved-work/deployment locations and formats. Do not assume a docs layout. Create parent directories only as needed. Do not invent detailed descriptions or placeholder architecture facts.\n6. **Schema/routing:** Determine persistent-database presence from evidence. If present, require an authoritative schema document or documented set\u2014even without a convention naming it. Preserve its owner/format. Its substantive obligation covers current tables/collections, fields/types, keys/relationships, constraints and indexes where applicable. Obtain missing schema ownership choices alongside architecture location. Require a documentation-routing guide (document or identified existing section) mapping verified project-specific material changes to authoritative owners; no generic applicability claims or duplicated owner content. Preserve this obligation even though dirty initialization can only create shells.\n7. **Clean/non-clean branches:** Preserve existing clean initialization authority for required documentation owners/indexes and verified content; no application code/tests/generated application assets/deployment/unrelated edits. On a non-clean project FIRST verify native task/sub-agent capability; if absent report exactly `documentation initialization blocked: sub-agent capability unavailable` and stop without edits. Launch a fresh read-only investigation sub-agent. Its four outputs remain: (1) verified owners/missing/stale work, schema/routing included, sources/minimum safe shells with primary file:line evidence where possible; (2) attributable current versus likely historical/stale/dead-code/uncertain findings; (3) only material intent questions changing scope/truth/ownership/routing/obsolescence; (4) substantive scope and acceptance recommendation without edits or invented intent. Changed code is not assumed live/intentional. Resolve questions and explicitly approve the current investigation plan plus shell/index bounds. Re-discover owners/directories after approval; create only approved missing empty/template shells plus file maps/indexes, never substantive current-state documentation or investigated implementation. Adoption instructions/memory writes have their own stated approved authority. Do not use structural readiness to bypass this branch.\n8. **Validation/report/handoff:** Re-read approved instructions and memory index; verify association/no fabricated gotchas/no unrelated changes. Validate only introduced documentation paths/headings/links/references, not a repository-wide audit. Report retained/initialized/intentionally absent owners, requirements, paths, evidence, decisions/deferrals, approval evidence and gaps. Missing required structure prevents a ready claim. Substantive gaps are outstanding work; a shell is not substantive completion. Verify planner before substantive handoff; missing planner reports `planner: UNAVAILABLE` and stops that handoff. Planner asks explicit TinySpec/Standard choice; no new Epic or forced Standard exception. Preserve finish-session closeout guidance.\n\nEvidence anchors: `skills/install-memory/SKILL.md:8\u201394`; `skills/initialize-documentation/SKILL.md:8\u2013130`; `skills/memory-handling/SKILL.md:13\u201360`; `skills/planner/references/approval-and-recovery.md:3\u201362`; `REQUIREMENTS.md:3\u201349`; `AGENTS.md:3\u201329`; `docs/index.md:3\u201323`. These citations describe the inspected working tree and must be revalidated if it changes.\n\n## Approach, sequencing and failure handling\n\nReplace reciprocal \u201crun the other skill\u201d instructions with one operational owner, `skills/initialize-coherence/SKILL.md`, not concatenated conflicting prohibitions. Combine preflight/discovery, preserve branch-specific investigation, gather material choices, approve exact adoption/documentation targets, apply bounded operations, verify and report. Existing prohibitions separating old skill ownership become explicit permissions within the merged approved stages\u2014not permission to relax application, planning-artifact, dirty-documentation or memory-preservation exclusions.\n\nAdvertise one entry point and remove both old skill directories from active inventory. Update active references in README, REQUIREMENTS, memory-handling, compact-memory, finish-session, load probes and checker source mappings. Installer discovery is dynamic; inspect `scripts/install-links.py` retirement logic and safely retire only links proven owned by this checkout. Preserve foreign/uncertain entries and conflict-before-write/race protection. Do not invoke installation or live probes without authorization. Rollback is an attributable patch/revert and proven suite-owned link restoration, not resetting the dirty workspace or changing project memory/custom instructions.\n\nPreserve all constraints through a source-to-merged-contract coverage ledger/test evidence, with both positive and negative cases. Do not weaken checkers merely to make removed safeguards pass. Static checks are not proof of agent obedience.\n\n## Acceptance\n\n- **A1:** Coherence has one advertised `initialize-coherence` / Initialize Coherence onboarding entry point. The two old operational skills are retired without redirects; active references, installer inventory and probe/checker expectations agree. Historical identifiers remain attributable.\n- **A2:** The merged workflow preserves requirements 1\u20138 above. A source-to-contract coverage check demonstrates combined old behavior and explicitly maps ownership-only exclusions to approved merged stages.\n- **A3:** Structural readiness reports discoverable approved instructions/memory association/index, required documentation owners/indexes/routing and schema owner where required; missing structure blocks readiness. Empty/stale substantive documentation is separately reported and handed to planner, never claimed complete.\n- **A4:** Fixtures cover clean, tracked-dirty and untracked-only inputs; missing capabilities and exact stop messages; approval denial/cancellation/renewal; dirty overlap and concurrent changes; fresh adoption, compatible no-op and bounded refresh; custom layouts/nested indexes/schema owners/routing; no fabricated facts/secrets/global-memory fallback. Dirty documentation remains shells/maps/indexes only.\n- **A5:** Active consumer routing and setup/docs describe actual merged behavior. Installer fixtures preserve foreign entries, exact-checkout retirement proof, conflicts, races, settings and repeat-run behavior. Retiring names does not authorize historical or unrelated-project rewrites.\n\n## Validation, evidence and remaining limitations\n\nBaseline producer checks: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS (static instructions); `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py` **48 tests, OK**. Baseline is not merger acceptance. After implementation run suite lint, planner checker/fixtures and focused merged-contract/mutation checks. Validate separate task ordering via task-generation's validator and manually review coverage/dependencies/class share.\n\nLive clean/dirty/refresh approval behavior and `scripts/probe-pi-load.sh` are NOT RUN and require separate authorization. Repository is already substantially dirty; no blanket approval to modify those targets or commit existing work is provided by depth selection. Exact implementation overlap bounds must be presented at combined approval/preflight. No material naming/compatibility question remains. \u201cCurrent schema\u201d beyond these inspected contracts remains [unclear] and excluded rather than guessed.\n\nPreparation provenance: initial child TinySpec output `c9fc7230-dbb6-45a8-9fdd-5a7719df1838/coherence-tinyspec-production.md`; planner persisted this repository source after owner naming/compatibility decisions. The child output was provisional, not implementation authorization. Final combined source/task/current-scope approval is still required.\n"
+  },
+  "ledger": [
+    {
+      "id": "proposal",
+      "behavior_group": "B1",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 8,
+          "end": 15
+        }
+      ],
+      "behavior": "Proposal before every write",
+      "stage": "Approval",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_proposal_preserved",
+      "negative": "test_proposal_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Proposal-first: do not write, edit, or overwrite any target until explicit owner approval"
+      ]
+    },
+    {
+      "id": "instructions",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 16,
+          "end": 19
+        }
+      ],
+      "behavior": "Read instructions and conventions",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_instructions_preserved",
+      "negative": "test_instructions_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent)",
+        "loaded automatically as context files"
+      ]
+    },
+    {
+      "id": "targets",
+      "behavior_group": "B2",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 20,
+          "end": 23
+        }
+      ],
+      "behavior": "Dirty-target and concurrent protections",
+      "stage": "Preflight",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_targets_preserved",
+      "negative": "test_targets_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Record every prospective target\u2019s initial dirty state and content",
+        "Do not edit an already-dirty target without explicit owner approval",
+        "Re-read immediately before each patch; stop on a concurrent change",
+        "Preserve unrelated bytes"
+      ]
+    },
+    {
+      "id": "requirements",
+      "behavior_group": "B1",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 24,
+          "end": 34
+        }
+      ],
+      "behavior": "Verify requirements; report missing without installing",
+      "stage": "Preflight",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_requirements_preserved",
+      "negative": "test_requirements_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "REQUIREMENTS.md",
+        "pi 0.87.x (tested 0.87.1)",
+        "npm:pi-subagents@0.73.1",
+        "npm:pi-ask-user@0.15.1",
+        "Verify actual registered and usable capabilities",
+        "SpecKit is required only for applicable Standard stages, not TinySpec",
+        "Jev is optional for Jev triage in `finish-session-jev`, with manual routing fallback",
+        "Report missing requirements; do not proceed silently or install them"
+      ]
+    },
+    {
+      "id": "flow",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 35,
+          "end": 40
+        }
+      ],
+      "behavior": "Record complete planning flow and depth gates",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_flow_preserved",
+      "negative": "test_flow_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "request \u2192 `planner` understanding/brainstorming/scope \u2192 explicit owner TinySpec/Standard choice \u2192 reviewed tasks \u2192 approved handoff \u2192 `coordinate-implementation` \u2192 `finish-session`",
+        "TinySpec uses `tiny-spec`, separate tasks and combined approval",
+        "Standard uses installed SpecKit and specification/final approval gates",
+        "Neither automatically creates an Epic"
+      ]
+    },
+    {
+      "id": "memory_path",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 41,
+          "end": 43
+        }
+      ],
+      "behavior": "Project-owned index/entries, custom paths valid",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_memory_path_preserved",
+      "negative": "test_memory_path_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "default `<project-root>/memory/` with `memory/MEMORY.md` and entry files",
+        "owner-chosen paths remain valid",
+        "`memory-handling` trigger-first retrieval"
+      ]
+    },
+    {
+      "id": "state",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 44,
+          "end": 47
+        }
+      ],
+      "behavior": "Conditional state and conversation/unresolved registers",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_state_preserved",
+      "negative": "test_state_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "temporary current-execution state only when the project uses one (commonly root `STATE.md`)",
+        "pi sessions as the conversation record",
+        "`docs/open_issues.md` as the canonical unresolved-work register via `track-open-issue`"
+      ]
+    },
+    {
+      "id": "docs_record",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 48,
+          "end": 49
+        }
+      ],
+      "behavior": "Record discovered documentation contract",
+      "stage": "Adoption",
+      "ownership_change": "replace reciprocal documentation entry point with Discovery/Documentation stages",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_docs_record_preserved",
+      "negative": "test_docs_record_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Record documentation owners and the documentation-routing guide discovered here"
+      ]
+    },
+    {
+      "id": "skeleton",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 50,
+          "end": 52
+        }
+      ],
+      "behavior": "New memory skeleton contains no invented facts",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_skeleton_preserved",
+      "negative": "test_skeleton_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "only the header, contract rules, and a no-gotchas-yet placeholder",
+        "never fabricated facts"
+      ]
+    },
+    {
+      "id": "append",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 53,
+          "end": 55
+        }
+      ],
+      "behavior": "Marked append not custom rewrite",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_append_preserved",
+      "negative": "test_append_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Append a marked, self-contained suite contract",
+        "preserving existing custom content verbatim",
+        "`memory-handling`, `finish-session`, and `compact-memory` can cite it"
+      ]
+    },
+    {
+      "id": "brief",
+      "behavior_group": "B1",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 56,
+          "end": 59
+        }
+      ],
+      "behavior": "Brief before every approval",
+      "stage": "Approval",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_brief_preserved",
+      "negative": "test_brief_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Before calling `ask_user`",
+        "4\u20136 short bullets",
+        "outcome, scope/exclusions, decisions, risks/deferrals, actual validation results",
+        "current targets/content and exact authorization",
+        "Missing mandatory question capability stops approval"
+      ]
+    },
+    {
+      "id": "renewal",
+      "behavior_group": "B1",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 60,
+          "end": 61
+        }
+      ],
+      "behavior": "Discoverable approval contract; renewal, no inferred consent",
+      "stage": "Approval",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_renewal_preserved",
+      "negative": "test_renewal_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Verify the discoverable planner approval contract; if missing, report and stop",
+        "Denial, cancellation, timeout or ambiguous answers grant no writes",
+        "Renew changed approvals with a new brief",
+        "Persist affirmative answers and comparable current-content evidence",
+        "Recheck evidence on resume"
+      ]
+    },
+    {
+      "id": "noop",
+      "behavior_group": "B4",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 62,
+          "end": 66
+        }
+      ],
+      "behavior": "Compatible association validation not readoption",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_noop_preserved",
+      "negative": "test_noop_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "For a compatible existing adoption, report adoption unnecessary and validate the existing association as a no-op"
+      ]
+    },
+    {
+      "id": "refresh",
+      "behavior_group": "B4",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 67,
+          "end": 73
+        }
+      ],
+      "behavior": "Bounded marked refresh retaining custom content and memory",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_refresh_preserved",
+      "negative": "test_refresh_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Refresh only owner-approved bounds of the marked suite-owned section",
+        "preserve custom memory paths, docs, policy and every unrelated byte",
+        "For unmarked, ambiguously customized, dirty or concurrently changed sections, show exact bounds/diff and obtain approval",
+        "Do not globally rename references, overwrite local modifications, convert old artifacts or approvals, authorize substantive documentation through refresh, or reset the memory store"
+      ]
+    },
+    {
+      "id": "memory_apply",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 75,
+          "end": 83
+        }
+      ],
+      "behavior": "Bounded adoption writes only",
+      "stage": "Adoption",
+      "ownership_change": "no-doc-directory restriction applies to adoption stage; approved Documentation stage owns docs, never planning artifacts",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_memory_apply_preserved",
+      "negative": "test_memory_apply_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Create the approved memory skeleton only for new adoption",
+        "preserve the existing memory store and index on refresh",
+        "Adoption writes are limited to approved instructions/memory",
+        "do not create documentation directories or planning artifacts in this stage"
+      ]
+    },
+    {
+      "id": "validate_memory",
+      "behavior_group": "B8",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 85,
+          "end": 91
+        }
+      ],
+      "behavior": "Reread and validate association/index no unrelated edits",
+      "stage": "Validation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_validate_memory_preserved",
+      "negative": "test_validate_memory_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Re-read approved instructions and the whole memory index",
+        "Verify marked contract, associated store path, resolving index, no fabricated gotchas and no unrelated changes"
+      ]
+    },
+    {
+      "id": "report_memory",
+      "behavior_group": "B8",
+      "citations": [
+        {
+          "path": "skills/install-memory/SKILL.md",
+          "start": 93,
+          "end": 95
+        }
+      ],
+      "behavior": "Report paths requirements and closeout",
+      "stage": "Validation",
+      "ownership_change": "report outstanding docs through integrated workflow, not reciprocal old route",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_report_memory_preserved",
+      "negative": "test_report_memory_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Report instructions/memory paths, requirements recorded",
+        "Use `finish-session` for bounded initialization closeout"
+      ]
+    },
+    {
+      "id": "exclusions",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 8,
+          "end": 12
+        }
+      ],
+      "behavior": "No application/deployment/unrelated edits",
+      "stage": "Preflight",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_exclusions_preserved",
+      "negative": "test_exclusions_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Do not modify application code, tests, generated application assets, deployment state, or unrelated files",
+        "Do not create planning artifacts"
+      ]
+    },
+    {
+      "id": "discover_docs",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 14,
+          "end": 16
+        }
+      ],
+      "behavior": "Read existing owners before new structure",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_discover_docs_preserved",
+      "negative": "test_discover_docs_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "existing documentation indexes, registers, runbooks, architecture records, decisions, specifications, and memory configuration"
+      ]
+    },
+    {
+      "id": "clean",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 17,
+          "end": 18
+        }
+      ],
+      "behavior": "Clean means empty status, including untracked",
+      "stage": "Preflight",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_clean_preserved",
+      "negative": "test_clean_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Run `git status --short`",
+        "Clean means no output; untracked files make the project non-clean",
+        "Classify from the initial status, not from changes made by this workflow"
+      ]
+    },
+    {
+      "id": "owners",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 19,
+          "end": 20
+        }
+      ],
+      "behavior": "Preserve authoritative owners/format no competing doc",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_owners_preserved",
+      "negative": "test_owners_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Preserve existing authoritative owners and formats; do not create competing documents"
+      ]
+    },
+    {
+      "id": "truth",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 21,
+          "end": 22
+        }
+      ],
+      "behavior": "No unverified facts or sensitive data",
+      "stage": "Preflight",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_truth_preserved",
+      "negative": "test_truth_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Never state unverified code, operational or historical claims as current fact",
+        "Do not write credentials, tokens, personal data, or sensitive payloads"
+      ]
+    },
+    {
+      "id": "database",
+      "behavior_group": "B6",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 23,
+          "end": 26
+        }
+      ],
+      "behavior": "Database presence from evidence; unnamed existing owner valid",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_database_preserved",
+      "negative": "test_database_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Determine persistent-database presence from repository evidence",
+        "require an authoritative database-schema document or documented set, even without a convention naming it",
+        "an existing authoritative schema owner satisfies this requirement"
+      ]
+    },
+    {
+      "id": "routing_owner",
+      "behavior_group": "B6",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 27,
+          "end": 30
+        }
+      ],
+      "behavior": "Routing guide identified document or existing section",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_routing_owner_preserved",
+      "negative": "test_routing_owner_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Require a documentation-routing guide, either a document or an identified section of an authoritative owner"
+      ]
+    },
+    {
+      "id": "directories",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 32,
+          "end": 40
+        }
+      ],
+      "behavior": "All nested dirs with local indexes; minimal source inspection",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_directories_preserved",
+      "negative": "test_directories_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Discover every documentation directory, including nested directories",
+        "Each uses the local or owner-selected index mechanism",
+        "use suitable sections",
+        "Inspect code/configuration only as needed to identify owners; do not infer detailed system descriptions to fill documents"
+      ]
+    },
+    {
+      "id": "schema_detail",
+      "behavior_group": "B6",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 42,
+          "end": 48
+        }
+      ],
+      "behavior": "Current schema detail; absent owner chosen with architecture",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_schema_detail_preserved",
+      "negative": "test_schema_detail_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "current tables/collections, fields/types, keys/relationships, constraints and indexes where applicable",
+        "Preserve schema owner/format",
+        "Obtain missing schema ownership choices alongside architecture location; do not assume a filename/layout"
+      ]
+    },
+    {
+      "id": "routing_detail",
+      "behavior_group": "B6",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 50,
+          "end": 54
+        }
+      ],
+      "behavior": "Verified project-specific routing; no duplicate or generic assertions",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_routing_detail_preserved",
+      "negative": "test_routing_detail_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Map only verified project-specific material change categories to authoritative owners",
+        "reference owner content rather than duplicate it",
+        "Do not claim a generic category applies without evidence"
+      ]
+    },
+    {
+      "id": "choices",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 56,
+          "end": 59
+        }
+      ],
+      "behavior": "Owner choices for missing conventions",
+      "stage": "Discovery",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_choices_preserved",
+      "negative": "test_choices_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "obtain owner choices for documentation root, index mechanism, architecture/schema/routing/unresolved-work/deployment locations and formats",
+        "Do not assume a `docs/` layout or create owners before those choices"
+      ]
+    },
+    {
+      "id": "indexes",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 61,
+          "end": 65
+        }
+      ],
+      "behavior": "Verified direct files, parent direct children, no filename currentness",
+      "stage": "Documentation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_indexes_preserved",
+      "negative": "test_indexes_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "For each index, list direct documentation files other than the index itself",
+        "verified title, frontmatter description or one-line purpose",
+        "Filenames alone do not establish currentness/completeness",
+        "Parent indexes map each direct child documentation directory"
+      ]
+    },
+    {
+      "id": "docs_apply",
+      "behavior_group": "B5",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 67,
+          "end": 73
+        }
+      ],
+      "behavior": "Only needed parent dirs; stage-local ownership; validation bounds",
+      "stage": "Documentation",
+      "ownership_change": "old no-memory prohibition belongs to Documentation; separately approved Adoption may write memory/instructions",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_docs_apply_preserved",
+      "negative": "test_docs_apply_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Create parent directories only as needed for approved files",
+        "Documentation writes do not create memory stores, planning artifacts or placeholder architecture facts",
+        "Apply Preflight dirty-target/concurrent-edit protections to every write"
+      ]
+    },
+    {
+      "id": "report_docs",
+      "behavior_group": "B8",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 75,
+          "end": 78
+        }
+      ],
+      "behavior": "Report initialized retained absent owners",
+      "stage": "Validation",
+      "ownership_change": "one integrated adoption flow replaces reciprocal install-memory route",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_report_docs_preserved",
+      "negative": "test_report_docs_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Report retained, initialized and intentionally absent owners",
+        "validation results"
+      ]
+    },
+    {
+      "id": "dirty_first",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 80,
+          "end": 85
+        }
+      ],
+      "behavior": "Dirty FIRST capability gate without writes",
+      "stage": "Preflight",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_dirty_first_preserved",
+      "negative": "test_dirty_first_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "On a non-clean project FIRST verify native task/sub-agent capability",
+        "documentation initialization blocked: sub-agent capability unavailable",
+        "stop without edits",
+        "No adoption write may precede this dirty capability gate"
+      ]
+    },
+    {
+      "id": "fresh",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 87,
+          "end": 89
+        }
+      ],
+      "behavior": "Fresh read-only changed/untracked/code/schema investigation",
+      "stage": "Investigation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_fresh_preserved",
+      "negative": "test_fresh_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Launch a fresh read-only investigation sub-agent",
+        "repository instructions, changed and untracked paths, relevant code, configuration, schemas, generated outputs and existing documentation"
+      ]
+    },
+    {
+      "id": "output_inventory",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 91,
+          "end": 95
+        }
+      ],
+      "behavior": "First investigation output inventory/safe shells with primary evidence",
+      "stage": "Investigation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_output_inventory_preserved",
+      "negative": "test_output_inventory_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "1. Verified owners and missing/stale work, including schema/routing, sources and minimum safe shells for every missing required owner, with primary `file:line` evidence where possible"
+      ]
+    },
+    {
+      "id": "output_attribution",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 96,
+          "end": 97
+        }
+      ],
+      "behavior": "Second output separates current/history/dead/uncertain",
+      "stage": "Investigation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_output_attribution_preserved",
+      "negative": "test_output_attribution_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "2. Attributable current changes versus likely historical/stale material, dead-code candidates and uncertain conclusions"
+      ]
+    },
+    {
+      "id": "output_questions",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 98,
+          "end": 100
+        }
+      ],
+      "behavior": "Third only material intent scope/truth/owner/routing/obsolete questions",
+      "stage": "Investigation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_output_questions_preserved",
+      "negative": "test_output_questions_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "3. Only material intent questions changing scope, truth, ownership (including schema), routing categories or obsolescence"
+      ]
+    },
+    {
+      "id": "output_scope",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 101,
+          "end": 102
+        }
+      ],
+      "behavior": "Fourth scope/acceptance recommendation not edits/intent invention",
+      "stage": "Investigation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_output_scope_preserved",
+      "negative": "test_output_scope_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "4. Recommended substantive documentation scope and acceptance criteria, without edits or invented owner intent"
+      ]
+    },
+    {
+      "id": "investigation_plan",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 104,
+          "end": 111
+        }
+      ],
+      "behavior": "Resolve intent/format then approve current plan/shell bounds",
+      "stage": "Investigation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_investigation_plan_preserved",
+      "negative": "test_investigation_plan_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Do not assume changed code is live, intentional or representative of current design",
+        "Resolve material questions and unknown shell formats with the owner",
+        "Present the current investigation plan: authoritative owners including schema/routing, additions/corrections, exclusions, evidence gaps and deterministic acceptance",
+        "Separate shells/indexes from substantive scope; shells establish discoverability only"
+      ]
+    },
+    {
+      "id": "shell_approval",
+      "behavior_group": "B1",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 112,
+          "end": 117
+        }
+      ],
+      "behavior": "Approve current investigation plan/shell bounds no implementation authority",
+      "stage": "Approval",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_shell_approval_preserved",
+      "negative": "test_shell_approval_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "For non-clean documentation, explicitly approve the current investigation plan plus exact shell/index bounds",
+        "Ancillary adoption/shell approvals are not substantive implementation authorization"
+      ]
+    },
+    {
+      "id": "dirty_apply",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 119,
+          "end": 122
+        }
+      ],
+      "behavior": "Rediscover after approval; dirty writes shell/map/index only",
+      "stage": "Documentation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_dirty_apply_preserved",
+      "negative": "test_dirty_apply_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "After approval re-discover owners/directories",
+        "On the non-clean branch, create only explicitly approved missing empty/template shells plus file maps/indexes",
+        "Do not write substantive current-state documentation or implement investigated changes",
+        "Adoption instructions/memory writes have separate stated approved authority, not permission to bypass dirty documentation bounds"
+      ]
+    },
+    {
+      "id": "handoff",
+      "behavior_group": "B8",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 124,
+          "end": 130
+        }
+      ],
+      "behavior": "Evidence/report/planner availability/depth no Epic; shell not completion",
+      "stage": "Validation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_handoff_preserved",
+      "negative": "test_handoff_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Report investigation evidence, decisions/deferrals, approval location and initialized shells",
+        "Verify discoverable `planner` before substantive handoff",
+        "planner: UNAVAILABLE",
+        "stop that handoff",
+        "source evidence for scope assessment and explicit TinySpec/Standard choice",
+        "no new Epic or forced Standard exception",
+        "Never treat shell initialization as substantive completion"
+      ]
+    },
+    {
+      "id": "retrieval",
+      "behavior_group": "B3",
+      "citations": [
+        {
+          "path": "skills/memory-handling/SKILL.md",
+          "start": 13,
+          "end": 40
+        }
+      ],
+      "behavior": "Whole index first, trigger matching and recheck, no global substitution",
+      "stage": "Adoption",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_retrieval_preserved",
+      "negative": "test_retrieval_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Read the whole index first, then trigger-matching entries",
+        "Recheck after any memory write",
+        "No global-store substitution"
+      ]
+    },
+    {
+      "id": "readiness",
+      "behavior_group": "B8",
+      "citations": [
+        {
+          "path": "docs/plans/coherence-initialization.md",
+          "start": 47,
+          "end": 60
+        }
+      ],
+      "behavior": "Structure readiness not substantive completeness",
+      "stage": "Validation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_readiness_preserved",
+      "negative": "test_readiness_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "Missing required structure blocks readiness",
+        "Structural readiness requires approved instructions/memory association/index, documentation owners/indexes/routing and schema owner where required",
+        "Report empty/stale substantive content separately as outstanding planner work",
+        "Validate only introduced documentation paths/headings/links/references, not a repository-wide audit"
+      ]
+    },
+    {
+      "id": "clean_apply",
+      "behavior_group": "B7",
+      "citations": [
+        {
+          "path": "skills/initialize-documentation/SKILL.md",
+          "start": 34,
+          "end": 40
+        }
+      ],
+      "behavior": "Clean owner initialization with verified content only",
+      "stage": "Documentation",
+      "ownership_change": "none; preserve source behavior",
+      "task": "T002; T005\u2013T007 verification",
+      "positive": "test_clean_apply_preserved",
+      "negative": "test_clean_apply_rejects_deleted_guard",
+      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "requires": [
+        "On the clean branch initialize required documentation owners/indexes with verified content only"
+      ]
+    }
+  ],
+  "acceptance": {
+    "A1": "T003 inventory; T004 consumers; T007 integration",
+    "A2": "T001 original clauses; T002 carriers; T005 positives; T006 mutations; T007 reconciliation",
+    "A3": "readiness/handoff rows; T004 finish-session; T005 boundary fixtures",
+    "A4": "all B1\u2013B8 rows; T005 scenarios; T006 negative mutations",
+    "A5": "T003 installer LinkTests; T004 consumer routes; T007 reference checks"
+  },
+  "active_consumers": [
+    "README.md",
+    "REQUIREMENTS.md",
+    "skills/memory-handling/SKILL.md",
+    "skills/compact-memory/SKILL.md",
+    "skills/finish-session/SKILL.md",
+    "scripts/check-planner-workflow.py",
+    "scripts/probe-pi-load.sh"
+  ],
+  "historical_references": [
+    "docs/plans/planner-refactor.md",
+    "docs/plans/requirements-manager-coverage.md",
+    "docs/plans/requirements-manager-tasks.md",
+    "docs/plans/requirements-manager-execution.md",
+    "docs/plans/coherence-initialization.md",
+    "docs/plans/coherence-initialization-tasks.md"
+  ],
+  "unclear": [
+    "Current schema beyond inspected suite contracts: excluded; no universal schema invented."
+  ]
+}

@@ -22,7 +22,7 @@ Every task records prospective targets' initial state/content, runs `git status 
 
 ### Source-first preservation and merged workflow
 
-- [ ] T001 [Preservation baseline] Capture source-derived behavioral coverage before replacing either source skill.
+- [x] T001 [Preservation baseline] Capture source-derived behavioral coverage before replacing either source skill.
   - **Depends**: none.
   - **Prerequisites**: coordinator preflight above; revalidate full working-tree source skills, memory-handling, REQUIREMENTS, planner approval/recovery reference, active callers and existing checker/installer tests. Preparation digests alone are insufficient if content drifted.
   - **Outcome / files**: establish the preservation ledger inside focused test/source evidence, likely `skills/initialize-coherence/scripts/test_contract.py` with adjacent fixtures only where needed. Do not add a redundant standalone coverage document or universal state schema. Capture original source citations and current-content evidence before T002 edits/deletions; retain enough attributed excerpts/revision evidence to review the retired sources later.
