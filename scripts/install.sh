@@ -5,8 +5,8 @@
 #   1. Requires pi (auto-installs pinned packages if missing)
 #   2. Symlinks every suite skill into ~/.agents/skills (pi's standard scanned
 #      location) and the spec-driven-development guidance into ~/.agents/docs,
-#      backing up anything in the way — no copies, the repo stays the single
-#      source of truth
+#      retiring only proven suite-owned old links; foreign entries are preserved
+#      and conflicts reported — no copies, the repo stays the single source of truth
 #   3. Removes the old user-settings `skills` entry for this suite (kept in
 #      sync with the ~/.agents/skills mechanism, no double registration)
 #   4. Warns when optional deps (jev) are missing
@@ -76,75 +76,9 @@ mkdir -p "$AGENTS_SKILLS" "$AGENTS_DOCS" "$AGENTS_BACKUPS"
 [ -d "$SKILLS_DIR" ] || fatal "suite skills directory missing: $SKILLS_DIR"
 [ -f "$SPEC_DRIVEN_GUIDANCE" ] || fatal "spec-driven guidance missing: $SPEC_DRIVEN_GUIDANCE"
 
-python3 - "$SKILLS_DIR" "$SPEC_DRIVEN_GUIDANCE" "$AGENTS_SKILLS" "$AGENTS_DOCS" "$AGENTS_BACKUPS" "$SETTINGS" "$AGENT_DIR" <<'PY'
-import json, os, sys, time
-
-skills_dir, spec_driven_guidance, agents_skills, agents_docs, backups, settings_path, agent_dir = sys.argv[1:]
-
-suite_skills = []
-for name in sorted(os.listdir(skills_dir)):
-    d = os.path.join(skills_dir, name)
-    if os.path.isfile(os.path.join(d, "SKILL.md")):
-        suite_skills.append((name, os.path.abspath(d)))
-
-linked = backed_up = existing_ok = 0
-for name, src in suite_skills:
-    dst = os.path.join(agents_skills, name)
-    if os.path.islink(dst):
-        if os.path.realpath(dst) == os.path.realpath(src):
-            existing_ok += 1
-            continue
-        # stale/foreign symlink -> back up
-        os.rename(dst, os.path.join(backups, f"{name}.{time.strftime('%Y%m%d%H%M%S')}"))
-        os.symlink(src, dst)
-        print(f"==> replaced symlink: ~/.agents/skills/{name} -> {src}")
-        backed_up += 1
-        continue
-    if os.path.exists(dst) or os.path.islink(dst):
-        os.rename(dst, os.path.join(backups, f"{name}.{time.strftime('%Y%m%d%H%M%S')}"))
-        print(f"==> backed up conflicting entry: ~/.agents/skills/{name}")
-        backed_up += 1
-    if not os.path.exists(dst):
-        os.symlink(src, dst)
-        print(f"==> linked: ~/.agents/skills/{name} -> {src}")
-        linked += 1
-
-# Remove the previous settings-based registration for this suite so pi does
-# not discover the same skills twice (first-wins collision warning).
-entry = os.path.realpath(skills_dir)
-saved = False
-if os.path.exists(settings_path):
-    data = json.load(open(settings_path))
-    skills = data.get("skills") or []
-    kept = [s for s in skills if os.path.realpath(os.path.expanduser(s)) != entry]
-    if len(kept) != len(skills):
-        if kept:
-            data["skills"] = kept
-        else:
-            data.pop("skills", None)
-        tmp = settings_path + ".tmp"
-        with open(tmp, "w") as fh:
-            json.dump(data, fh, indent=2)
-            fh.write("\n")
-        os.replace(tmp, settings_path)
-        print(f"==> settings: removed suite skills entry from {settings_path}")
-        saved = True
-if os.path.isdir(agent_dir) and not saved and not os.path.exists(settings_path):
-    pass  # nothing to clean
-
-print(f"==> suite skills: {len(suite_skills)} total ({linked} linked, {existing_ok} already ok, {backed_up} backed up)")
-
-doc_name = os.path.basename(spec_driven_guidance)
-doc_dst = os.path.join(agents_docs, doc_name)
-if os.path.islink(doc_dst) and os.path.realpath(doc_dst) == os.path.realpath(spec_driven_guidance):
-    print(f"==> documentation already linked: ~/.agents/docs/{doc_name}")
-else:
-    if os.path.lexists(doc_dst):
-        os.rename(doc_dst, os.path.join(backups, f"{doc_name}.{time.strftime('%Y%m%d%H%M%S')}"))
-        print(f"==> backed up conflicting documentation: ~/.agents/docs/{doc_name}")
-    os.symlink(spec_driven_guidance, doc_dst)
-    print(f"==> linked documentation: ~/.agents/docs/{doc_name} -> {spec_driven_guidance}")
-PY
+python3 "$SUITE_DIR/scripts/install-links.py" \
+  "$SKILLS_DIR" "$SPEC_DRIVEN_GUIDANCE" "$AGENTS_SKILLS" "$AGENTS_DOCS" \
+  "$AGENTS_BACKUPS" "$SETTINGS" || fatal "skill link migration blocked; conflicting entries were preserved"
 
 # ---- 5. Static validation -----------------------------------------------------
 info "running suite lint"

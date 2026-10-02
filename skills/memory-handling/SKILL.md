@@ -39,8 +39,7 @@ similarly named index as project association without repository evidence.
 
 ## When To Consult
 
-- On session start, when resuming suite work (`coordinate-implementation`,
-  `epics-manager`, `create-epic`).
+- On session start, when resuming suite work (`planner`, `coordinate-implementation`).
 - Before planning, before batching implementation, and before the final integration
   review in `coordinate-implementation`.
 - Before closeout, through `finish-session`.

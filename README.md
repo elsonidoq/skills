@@ -1,129 +1,103 @@
 # Pi Configuration
 
-Global pi skill suite for developing features deliberately across unrelated repositories. The suite is not runtime-portable: it binds to pinned pi packages and requires suite adoption per project.
+Global pi skills for deliberate feature delivery across unrelated repositories. The suite
+binds to pinned pi packages and requires adoption per project; it is not runtime-portable.
 
-## Prerequisites
+## Setup
 
-See [REQUIREMENTS.md](REQUIREMENTS.md) for the pinned runtime and model-class mapping. Install the pinned packages once:
-
-```bash
-pi install npm:pi-subagents@0.73.1
-pi install npm:pi-ask-user@0.15.1
-```
-
-Or just run the installer once — it checks pi, auto-installs the pinned
-packages, symlinks every suite skill into `~/.agents/skills` (pi's standard
-scanned location) and the spec-driven-development guidance into
-`~/.agents/docs`, backs up anything in the way, and lint-checks the suite:
+See [REQUIREMENTS.md](REQUIREMENTS.md). The installer verifies pi, installs missing pinned
+packages, links suite skills and the SDD reference, and runs deterministic validation:
 
 ```bash
-scripts/install.sh          # deterministic checks only
-scripts/install.sh --probe  # ... plus one headless pi run that asserts the
-                            #     suite skills appear in pi's system prompt
+scripts/install.sh
+scripts/install.sh --probe  # additionally invokes one model; authorize separately
 ```
 
-Start a new pi session (or run `/reload`) after installing.
+Foreign entries at installation destinations are preserved and reported, not overwritten.
+Retired links are backed up only when their target proves they belong to this checkout.
+After installation or global skill changes, run `/reload` inside pi.
 
-On each project, run the `install-memory` skill first: it writes the suite contract into the project's instructions (epics, memory, state, docs) and initializes the project memory store.
+On a project, use `install-memory` to propose and approve the project association, memory
+store and suite instructions. Existing adopters can approve a bounded refresh of the marked
+suite section without rewriting custom policy or converting existing planning artifacts.
 
-## Repository Invariants
+## Planning and Implementation
 
-Use the [documentation index and routing guide](docs/index.md) to find the
-canonical owner before reading or updating repository documentation.
+Start with one entry point:
 
-- Documentation describes the system as it exists.
-- Database-backed projects maintain authoritative documentation of their current schema.
-- Each project documents which material changes require which documentation owners.
-- Memory records only non-obvious, durable guidance.
-- Verified unresolved work has one canonical register: `docs/open_issues.md`.
-- Features are developed from approved EPIC/SpecKit artifacts or reviewed requirements-manager tasks when the pipeline is not justified.
-
-## Development Workflow
-
-1. `create-epic` turns an evidence-backed idea into a scoped EPIC, or records the owner's approved lightweight route when the SpecKit pipeline is not justified.
-2. For an EPIC, `epics-manager` requires the project's SpecKit toolkit and guides specification, approval, planning, tasks, and cross-artifact review. For a detailed lightweight requirement, `requirements-manager` preserves the requirement, uses shared brainstorming and task-generation contracts, reviews it, and records current approval without creating a specification or plan.
-3. In a fresh session, `coordinate-implementation` revalidates applicable EPIC or requirements-manager approvals and implements approved tasks in dependency order. Up to three bounded tasks may run locally only when selected class and context fit; larger lists use asynchronous, sequential, context-coherent delegation. Verify and commit every task separately, then obtain one independent final review.
-4. `requesting-code-review` and `receiving-code-review` obtain and act on an evidence-based review.
-5. `initialize-documentation` establishes documentation owners and the project's directory indexes; changed projects first create a documentation epic.
-6. `finish-session` maintains documentation, open-issue, deployment, project-memory, and temporary-execution-state invariants.
-
-## Use Cases
-
-### Initialize Documentation
-
-```
-Use the initialize-documentation skill for this project.
+```text
+Use planner for this requirement:
+<structured requirement or selected source path/section>
 ```
 
-### Deliver Recorded Session Work
+Planner inspects the requirement/codebase, brainstorms unresolved material choices, and
+presents an approximate scope assessment. This phase is read-only. It always presents both
+paths and stops for your explicit choice; the recommendation does not choose for you.
 
-```
-Use create-epic to assess the documented work in [TODO list file / audio transcription].
-If an EPIC is created, run epics-manager with its path.
-If the owner selects the lightweight route, run requirements-manager with the durable requirement/source; then use its approved handoff with coordinate-implementation.
-After the applicable producer completes, use the finish-session skill.
-```
-
-For an epic with an approved epics-manager handoff, in a fresh session:
-
-```
-Use the coordinate-implementation skill for the approved work.
-Workflow origin: epics-manager
-Specification: [specification path from epics-manager handoff]
-Plan: [plan path from epics-manager handoff]
-Tasks: [tasks path from epics-manager handoff]
-Source brief: [source brief path from epics-manager handoff]
-Specification approval: [record path and section from epics-manager handoff]
-Overall review approval: [record path and section from epics-manager handoff]
-Review evidence and decisions: [record paths and sections from epics-manager handoff]
-Use the finish-session skill.
+```text
+                         ┌→ TinySpec → Tasks → Review → Combined approval ───┐
+Request → Planner → Choose│                                                   ├→ coordinate-implementation
+                         └→ SpecKit Specify → Spec approval → Plan → Tasks ──┤
+                                                 → Analyze → Final approval ─┘
 ```
 
-For a lightweight requirement with an approved requirements-manager handoff, in a fresh session:
+- **TinySpec:** compact context, scope, decisions, approach, acceptance and validation;
+  mandatory separate tasks. Planner reviews both before one combined approval. No SpecKit
+  or unnecessary spec/plan/research hierarchy is required.
+- **Standard:** genuine installed SpecKit stages, separate what/how/task reasoning,
+  specification approval before planning, independent overall review and final approval.
+- **Both:** shared `task-generation` contract and durable current-content approval evidence.
+  Before every artifact approval or renewal, planner presents a brief bullet-list executive
+  summary in the conversation, then calls `ask_user`. You may approve, request changes or
+  withhold approval. The brief states the next phase that approval will start.
 
-```
-Use the coordinate-implementation skill for the approved work.
-Workflow origin: requirements-manager
-Requirement/source: [durable source path and section]
-Tasks: [task path]
-Current owner approval: [record path and content/revision evidence]
-Review evidence and decisions/deferrals: [record paths and sections]
-Applicable supporting artifacts: [paths]
-Use the finish-session skill.
-```
+After approval, planner immediately starts the next authorized phase without another
+continuation prompt. Final approval automatically starts `coordinate-implementation` and
+its preflight unless you explicitly requested planning-only or a separate-session handoff.
+Capability failures, material owner gates and denied/ambiguous approvals still stop progress.
 
-### Deliver Open Issues
+Choosing depth authorizes planning, not implementation. Existing legacy artifacts retain
+original provenance, source shapes and applicable gates; planner owns their repair checkpoints.
+No new Epic is required or produced.
 
-```
-Use create-epic to assess work addressing selected open issues in docs/open_issues.md.
-If an EPIC is created, run epics-manager with its path.
-If the owner selects the lightweight route, run requirements-manager with the durable requirement/source; then use its approved handoff with coordinate-implementation.
-After the applicable producer completes, use the finish-session skill.
-```
+After an approved handoff, in this or a fresh session:
 
-For an epic with an approved epics-manager handoff, in a fresh session:
-
-```
-Use the coordinate-implementation skill for the approved work.
-Workflow origin: epics-manager
-Specification: [specification path from epics-manager handoff]
-Plan: [plan path from epics-manager handoff]
-Tasks: [tasks path from epics-manager handoff]
-Source brief: [source brief path from epics-manager handoff]
-Specification approval: [record path and section from epics-manager handoff]
-Overall review approval: [record path and section from epics-manager handoff]
-Review evidence and decisions: [record paths and sections from epics-manager handoff]
-Use the finish-session skill.
+```text
+Use coordinate-implementation for the approved work.
+Producer: planner
+Planning depth: [TinySpec or Standard]
+Source: [path/section]
+Tasks: [path]
+Supporting artifacts: [paths; Standard includes specification and plan]
+Review and decisions/deferrals: [paths/sections]
+Approval evidence: [combined approval, or specification and overall approvals]
+Approved current content/revisions and implementation scope: [evidence]
 ```
 
-For a lightweight requirement with an approved requirements-manager handoff, use the same requirements-manager fields above and then `finish-session`.
+Coordinator revalidates the handoff and preserves one shared execution graph: up to three
+bounded tasks may run locally only when selected class/context fit; larger complete lists
+use asynchronous sequential delegation. It verifies and commits each task separately and
+requires one independent final implementation review. Planning depth does not select execution.
 
-## Supporting Workflows
+## Supporting Skills
 
-- `track-open-issue` gives verified unresolved work a durable owner without derailing the current session.
-- `scientific-method-debugging` observes the running system before forming causal hypotheses.
-- `handoff-prompt` produces concise, self-contained context for a fresh session or delegated agent.
-- `using-git-worktrees` isolates work when the repository and task warrant it.
-- Reusable practices borrowed from Superpowers include `brainstorming` and code-review workflows.
+- `planning-brainstorming`: shared bounded uncertainty gate and owner dialogue.
+- `tiny-spec`: lightweight source producer; not an independent manager or executor.
+- `task-generation`: task semantics, ordering, validation and adapter contract.
+- `delegating-architectural-planning`: observed SpecKit planning adapter.
+- `initialize-documentation`: owners/indexes and investigation-first bounded initialization;
+  substantive documentation work goes through planner, without a forced depth exception.
+- `requesting-code-review` / `receiving-code-review`: independent assessment and disposition.
+- `memory-handling`, `track-open-issue`, `finish-session`: durable guidance and closeout.
 
-Global assets must not assume project paths, branches, deployment state, models, or agents. Run `/reload` inside pi after changing this repository's configuration-time assets.
+## Validation and Documentation
+
+Run `scripts/check-skills-lint.sh` for deterministic suite checks. See the
+[planner regression guide](docs/plans/planner-regression.md) for trace fixtures, mutations,
+read-only RPC smoke testing, full behavioral scenarios and evidence limitations. Static tests
+are not proof of model obedience; live tests require separate authorization.
+
+Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
+describes current behavior, memory contains only verified non-obvious gotchas, and
+`docs/open_issues.md` is the canonical unresolved-work register. Global assets must not assume
+project paths, branch, deployment state, named models or an invented artifact/state schema.

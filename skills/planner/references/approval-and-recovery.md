@@ -1,0 +1,83 @@
+# Approval and Recovery Contract
+
+## Executive brief before approval
+
+At EVERY artifact-approval gate, including corrections/renewals and applicable
+adoption/documentation-plan approvals, present an owner-visible executive brief as
+4–6 short bullets in assistant text before calling `ask_user`. Do not
+replace it with paragraphs, artifact links, a delegated report, or `ask_user.context`.
+A brief only in tool arguments or after the question is insufficient. Combine related
+items when useful, but cover all of:
+
+- Intended outcome and included scope.
+- Exclusions and implementation boundaries.
+- Important settled decisions and material alternatives resolved.
+- Risks, unresolved gates and intentional deferrals.
+- Actual review/validation results, including failures and UNAVAILABLE/NOT RUN checks.
+- Exact artifacts/current content and what approval authorizes: preparation,
+  specification-to-planning, or implementation of the reviewed scope; name the next
+  phase that starts automatically after approval and any explicit planning-only boundary.
+
+Be concise and accurate; headings alone are not evidence. Permit approve, withhold
+approval/request changes, and cancellation. Do not treat “looks good except…” as full
+approval. Missing question capability stops an artifact approval; do not substitute
+inferred consent. Persist affirmative answers and their scope/content evidence in
+existing artifact or decision conventions after authorized artifact production.
+
+After affirmative approval, immediately continue to the next authorized phase. Do not
+ask for a second routine continuation approval or end merely with “approved/ready.”
+Final planning approval starts `coordinate-implementation` and its preflight in the
+same session unless the owner explicitly requested planning-only or a separate-session
+handoff. The brief and approval question must communicate that scope before consent;
+older preparation-only approvals never imply execution authorization. Missing capability,
+new material gate, denied/ambiguous answer or an explicit owner boundary still stops.
+Ancillary adoption/documentation approvals authorize only their own stated bounded writes,
+not unrelated implementation.
+
+## Transition and invalidation table
+
+| Event | Consequence |
+| --- | --- |
+| Owner chooses depth | Preparation authorization only; persist then immediately start selected source production |
+| TinySpec ready | Generate separate tasks; no intermediate approval gate |
+| TinySpec/tasks reviewed | Bullet brief then combined source/task/scope approval; immediately start coordinator unless explicitly planning-only |
+| Standard spec ready | Bullet brief then specification approval; immediately start planning |
+| Standard plan/tasks reviewed | Bullet brief then overall approval; immediately start coordinator unless explicitly planning-only |
+| Denied, cancelled, timed out or ambiguous answer | No downstream production requiring that approval or implementation; preserve pending correction |
+| Request/source/decision changes | Recheck scope, traceability and affected downstream artifacts/review; material scope changes need owner decision |
+| Approved specification content changes | Renew specification approval before proceeding beyond the affected Standard stage |
+| Plan/tasks change after final approval | Re-review affected evidence and renew final approval |
+| Any renewal | Present a new bullet-list executive brief before `ask_user`; old brief does not cover changed content; after approval immediately resume the affected stage |
+| Fresh session/resume | Read artifacts AND linked external decisions/approvals; verify current content, scope and review; return earliest invalid gate |
+
+Use exact revisions, external snapshots/digests, or clearly bounded approved sections
+that permit actual comparison. Avoid recursive self-hashes. A completion checkbox or
+`approved` label is not authorization. Expected task status/evidence updates during
+execution do not by themselves change the approved task contracts; changed scope,
+acceptance, dependencies or instructions do. Do not waive drift merely by calling it
+cosmetic: verify the authorized content remains equivalent and record that comparison.
+
+Unanswered questions retain their originating context, alternatives and owner rationale.
+Resume that correction context when supported; otherwise hand off durable answers and
+constraints. Do not regenerate answers or silently apply recommended defaults.
+
+## Legacy checkpoint mapping
+
+Compatibility repairs are owned by planner, not retired skills. Original evidence is
+still required; do not fabricate history or use a convenient origin to bypass gates.
+
+| Origin/state | Planner checkpoint and preserved requirements |
+| --- | --- |
+| `requirements-manager`, approved | Validate durable original requirement/source (possibly inside tasks), tasks, review and explicit current scope approval; no separate TinySpec/plan/SpecKit imposed |
+| `requirements-manager`, partial/stale | Preserve existing source shape; resolve missing decisions, produce/review affected tasks via direct adapter, brief and renew combined requirement/task/scope approval |
+| `epics-manager`, approved | Validate original source, spec, plan, tasks, SpecKit stage evidence, independent review and both current approvals |
+| `epics-manager`, approved spec awaiting plan | Continue mapped Standard plan stage without forcing a new path choice; retain valid spec approval and full adapter safeguards |
+| `epics-manager`, missing/stale spec approval | Return Standard specification/clarification checkpoint, brief and approve current spec before plan |
+| `epics-manager`, missing/stale plan/tasks/review | Return earliest affected Standard stage and renew affected approvals; never downgrade origin to direct tasking |
+| Other documented producer | Follow that producer's documented source/task/authorization gates; no imposed Standard placeholders |
+| Ambiguous/conflicting origin | Resolve provenance with owner before production or implementation |
+
+Old source documents labelled Epic are legacy inputs, not a new required planning
+concept. New planning uses the explicit depth choice; legacy repair does not invent
+historical route-selection records. Missing runtime capabilities still block affected
+stages even with otherwise valid approvals. No installing/simulating missing SpecKit.

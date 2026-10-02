@@ -11,9 +11,12 @@ class IntakeContractTests(unittest.TestCase):
     def test_origin_specific_authorization(self):
         for phrase in (
             "specification, plan, tasks, both current approvals",
+            "Standard depth", "TinySpec depth",
+            "separate TinySpec/source and tasks", "embedded in tasks",
+            "Missing/conflicting depth", "approval/recovery mapping",
             "required SpecKit stage evidence",
-            "For `requirements-manager` origin",
-            "durable requirement/source, tasks, review evidence",
+            "legacy `requirements-manager` origin",
+            "requirement/source, tasks, review evidence",
             "No specification, plan, or SpecKit prerequisite is required",
             "For other documented origins",
             "Ambiguous origin is a blocker",

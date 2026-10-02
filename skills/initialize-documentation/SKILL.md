@@ -66,7 +66,7 @@ Add an entry to a parent index for each direct child documentation directory.
 
 Create parent directories only when needed for one of these files. The
 `install-memory` skill owns suite adoption and the project memory store; do not
-create a memory store, an epic directory, a specification, a task list,
+create a memory store, planning artifacts,
 or placeholder architecture facts here. Before every edit, record the target's
 initial state and content, then re-read it immediately before patching; stop if
 it changed concurrently. Validate only paths, headings, links, and references
@@ -98,7 +98,7 @@ existing documentation. Require it to return:
 3. Only the material intent questions that can change documentation scope,
    truth, ownership, including database-schema ownership when required, or
    documentation-routing categories, or whether work is obsolete.
-4. A recommended documentation-epic scope and acceptance criteria, without
+4. A recommended substantive documentation scope and acceptance criteria, without
    editing files or inventing owner intent.
 
 Use the sub-agent's evidence to ask the user its material questions. Do not
@@ -106,25 +106,25 @@ assume that changed code is live, intentional, or representative of the
 current design. After answers are available, present a documentation plan that
 identifies authoritative owners, including database-schema ownership when
 required, the documentation-routing guide, additions and corrections,
-exclusions, evidence gaps, and deterministic acceptance criteria. Wait for explicit
-approval of that plan. Separate missing-owner shells and directory indexes from
-the epic: they establish discoverability only, while substantive current-state
-documentation belongs in the epic. Resolve any unknown shell format with the
-user before approval.
+exclusions, evidence gaps, and deterministic acceptance criteria. Separate missing-owner
+shells and directory indexes from substantive documentation: shells establish discoverability
+only. Resolve unknown shell formats with the user. Before `ask_user` approval, present an
+executive brief in 4–6 short bullets covering outcome, scope/exclusions, decisions,
+risks/deferrals, actual
+validation results and exact authorization. Verify question capability and discoverable
+planner approval contract; if unavailable stop. Wait for explicit approval of the current
+investigation plan and shell/index bounds. Denial/cancellation grants no edits. Renew changed
+approval with a new brief. This approval is not substantive implementation authorization.
 
-After approval, load and follow the `create-epic` skill with the approved plan, verified
-evidence, and the explicit directive `documentation initialization requires an
-epic`. If it cannot be loaded, report `create epic: UNAVAILABLE` and stop. Do not implement the plan in this workflow.
+After approval, re-discover owners/directories and initialize only explicitly selected missing
+owners as empty/template shells plus file maps and indexes. Preserve existing formats and
+apply the clean-project dirty-target/concurrent-edit protections. Do not write substantive
+current-state documentation or implement the investigated changes here.
 
-After the epic is created, re-discover required owners and documentation
-directories, then initialize every missing owner and directory index selected by
-the user or introduced by epic creation. Preserve the established format and
-create only an empty or template shell plus required file maps; do not add
-substantive current-state documentation scoped by the epic.
-Apply the same dirty-target and concurrent-edit protections as the clean-project
-path.
-
-Report the created epic's path and baseline owners and indexes initialized,
-then instruct the user to adopt the suite with the `install-memory` skill when the
-project has not adopted it yet, to use the `finish-session` skill, followed by the
-`epics-manager` skill with that epic's path.
+Report investigation evidence, decisions/deferrals, approval location and initialized shells.
+Verify discoverable `planner`, then hand off the substantive documentation requirement and
+source evidence for its scope assessment and explicit TinySpec/Standard choice. Missing planner
+reports `planner: UNAVAILABLE` and stops that handoff; no Epic or forced Standard exception.
+Instruct the user to adopt via `install-memory` when not yet adopted, use `finish-session` for
+this bounded initialization, and continue substantive work through planner. Preserve custom
+project owners and source bounds; never treat shell initialization as substantive completion.

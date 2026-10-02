@@ -21,10 +21,17 @@ an artifact.
 
 Use the adapter matching the producing workflow:
 
-- A SpecKit adapter first verifies the project's observed task-stage command and follows its
-  instructions; unavailable required stage capability is a stop.
-- A direct adapter derives tasks from an owner-authorized durable requirement/source and does not
+- A SpecKit adapter accepts planner's Standard specification/plan, first verifies the
+  project's observed task-stage command and follows its instructions; unavailable required
+  stage capability is a stop. Keep the stage create-only when its producer requires it.
+- A direct adapter derives tasks from an owner-authorized durable TinySpec or legacy
+  requirement/source and does not
   require a plan or SpecKit; final approval follows the produced-artifact review.
+
+New TinySpec work always has a separate source and tasks file. Reference source sections
+or acceptance criteria; put work-unit outcomes and task-specific checks in tasks, not a
+copy of the entire source. Existing task-embedded requirements remain valid for legacy
+work. The same task semantics apply to both adapters; no depth-specific execution schema.
 
 For either adapter, verify Python 3 before relying on the bundled validator. If unavailable
 or the task format is incompatible, manually inspect explicit dependencies, ordering,

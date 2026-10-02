@@ -11,7 +11,7 @@ project adopts the suite through the `install-memory` skill before the workflow 
 | pi coding agent | 0.87.x (tested with 0.87.1) | `pi --version` | Install or update pi |
 | pi-subagents | npm:`pi-subagents@0.73.1` | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and `pi install npm:pi-subagents@0.73.1` |
 | pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Where a stage permits prose interaction, ask in prose and end the turn; do not proceed past the owner-answer gate or infer an answer. A manager's explicit mandatory preflight may stop earlier. |
-| SpecKit toolkit | installed in the **project** when using EPIC stages | detected stage commands and assets exist in the target project | Stop at the affected EPIC stage with a capability report; direct requirements-manager tasking does not require it |
+| SpecKit toolkit | installed in the **project** for planner's Standard path | detected stage commands and assets exist in the target project | Stop at the affected Standard stage with a capability report; TinySpec/direct tasking does not require it |
 | jev (optional) | `~/.agents/skills/jev` | `command -v jev` or the skill loads | Manual routing in `finish-session-jev` |
 
 All npm pins are exact: pi treats versioned npm specifications as pinned, and `pi update
@@ -38,7 +38,7 @@ provider/model ID — they verify that usable options exist and ask the owner to
 
 Memory is part of this skill set; a project adopting the suite is guaranteed a memory
 store through `install-memory`. Retrieval and write rules live in the `memory-handling`
-skill; `compact-memory`, `finish-session`, `create-epic`, `requirements-manager`,
+skill; `compact-memory`, `finish-session`, `planner`, `tiny-spec`,
 `coordinate-implementation`, and `initialize-documentation` reference it. There is no "memory unavailable" case in projects
 that ran `install-memory`.
 

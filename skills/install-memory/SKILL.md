@@ -6,7 +6,7 @@ description: Use when adopting this skill suite on a project so the agent reliab
 # Install Memory
 
 One-time project adoption for this skill suite. Establish the durable contract that
-makes retrieval deterministic: document **how memory, state, docs, and epics work** in
+makes retrieval deterministic: document **how memory, state, docs, and planning work** in
 the project's instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent), and create the
 project memory store skeleton. Proposal-first: do not write, edit, or overwrite any
 target until the owner approves the adoption plan.
@@ -33,10 +33,11 @@ Present for approval:
 
 1. The requirements block to record (pinned package versions, SpecKit, jev).
 2. The instructions-file section to add, covering:
-   - **How the suite works:** brief → `create-epic` sizing → EPIC/SpecKit pipeline
-     (`epics-manager`) or lightweight requirement/task review (`requirements-manager`) →
-     implementation (`coordinate-implementation`) → closeout (`finish-session`). The
-     documentation-initialization workflow retains its explicit EPIC exception.
+   - **How the suite works:** request → `planner` understanding/brainstorming/scope →
+     explicit owner TinySpec/Standard choice → reviewed tasks → approved handoff →
+     `coordinate-implementation` → `finish-session`. TinySpec uses `tiny-spec` plus
+     separate tasks and combined approval; Standard uses installed SpecKit and its
+     specification/final approval gates. Neither automatically creates an Epic.
    - **How memory is used:** the store location (default: `<project-root>/memory/`
      with `memory/MEMORY.md` index and entry files; owner may choose another path),
      the `memory-handling` retrieval contract, and the trigger-first rules.
@@ -52,9 +53,24 @@ Present for approval:
 4. The overwrite policy for an existing instructions file: append the suite contract as
    a clearly marked section rather than rewriting custom content.
 
-Stop and wait for explicit owner approval. If the project already documents a
-compatible contract, report that adoption is unnecessary and validate the existing
-association instead.
+Before calling `ask_user` for adoption approval, present an executive brief in 4–6 short
+bullets covering
+outcome, included/excluded edits, decisions, risks/deferrals, validation results and
+exact target/authorization. Verify question capability; missing capability stops approval.
+Follow the discoverable planner approval contract (including renewals); report a missing
+contract rather than inventing it. Stop until explicit approval; denial/cancellation grants
+no writes. If the project already documents a compatible contract, report that adoption
+is unnecessary and validate the existing association instead.
+
+### Refresh an existing adoption
+
+For an old suite contract, propose an owner-approved bounded refresh of only its marked
+suite-owned section, preserving custom memory paths, docs, policy and every unrelated byte.
+Do not globally rename references or overwrite local modifications. If the section is
+unmarked, customized ambiguously, dirty or changed concurrently, show the exact proposed
+bounds/diff and ask before proceeding; re-read immediately before applying. Update planning
+entry points without converting old artifacts or approvals. A refresh does not authorize
+substantive documentation work or reset the memory store.
 
 ## Step 2: Apply The Approved Plan
 
@@ -62,7 +78,8 @@ association instead.
    verbatim. Keep the section self-contained and marked so `memory-handling`,
    `finish-session`, and `compact-memory` can cite it.
 2. Create `memory/MEMORY.md` (or the approved location) with the approved skeleton.
-   Do not create a documentation directory, an epic directory, or a specification.
+   Do not create a documentation directory or planning artifacts. On refresh, preserve
+   the existing memory store and index rather than replacing them with a skeleton.
 3. Apply the dirty-target protections from Preflight to every write.
 
 ## Step 3: Validate And Report

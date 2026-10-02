@@ -8,13 +8,13 @@ import unittest
 SKILL = Path(__file__).parents[1] / "SKILL.md"
 
 
-class EpicBrainstormingContractTests(unittest.TestCase):
+class PlanningBrainstormingContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.text = SKILL.read_text(encoding="utf-8")
 
     def test_frontmatter_and_gate_outcomes(self):
-        self.assertIn("name: epic-brainstorming", self.text)
+        self.assertIn("name: planning-brainstorming", self.text)
         self.assertIn("description: Use when", self.text)
         self.assertIn("`NO_BRAINSTORM_NEEDED`", self.text)
         self.assertIn("`BRAINSTORM_NEEDED`", self.text)

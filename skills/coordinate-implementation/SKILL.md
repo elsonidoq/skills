@@ -31,9 +31,10 @@ Missing review evidence, unresolved material owner gates, or approval that is
 missing, stale, or unverifiable stops implementation at the earliest affected
 producing workflow gate. Never repair provenance by inventing artifacts.
 
-Determine workflow origin from the handoff and linked artifacts. For work produced
-by `epics-manager`, require specification, plan, tasks, both current approvals,
-source provenance, overall review evidence, and required SpecKit stage evidence.
+Determine workflow origin and selected planning depth from the handoff and linked artifacts.
+For `planner` origin with Standard depth (or legacy `epics-manager` origin), require
+specification, plan, tasks, both current approvals, source provenance, overall review
+evidence, and required SpecKit stage evidence.
 On every fresh session or resume:
 
 - Read the specification-approval and overall-review-approval records, including
@@ -44,21 +45,30 @@ On every fresh session or resume:
   an `approved` label or the handoff alone.
 - Inspect the overall review evidence and unresolved owner gates. If approval is
   missing, stale, or unverifiable, or required review evidence is missing, stop
-  before implementation and return to the earliest affected `epics-manager` gate.
-  Do not replace missing pipeline stages with generic artifacts.
+  before implementation and return to the earliest affected planner Standard checkpoint,
+  including for legacy work. Do not invoke a retired producer or replace missing stages
+  with generic artifacts.
 
-For `requirements-manager` origin, require durable requirement/source, tasks, review evidence,
-and explicit current owner approval of the requirement/tasks and implementation scope.
+For `planner` origin with TinySpec depth, require a separate TinySpec/source and tasks,
+review evidence, and explicit current combined owner approval of source/tasks and
+implementation scope. For legacy `requirements-manager` origin, require durable
+requirement/source, tasks, review evidence and its explicit current combined approval;
+its original source may be embedded in tasks and needs no retroactive TinySpec.
 Verify traceability, constraints, exclusions, decisions/deferrals, and approved content
 or revision evidence. No specification, plan, or SpecKit prerequisite is required;
-do not fabricate placeholders. Missing/stale evidence returns to that manager's
-requirement/task review and approval gate.
+do not fabricate placeholders. Missing/stale evidence returns to planner's applicable
+combined source/task review and approval checkpoint. Preserve original provenance and
+source shape for repairs, including partially planned legacy work. Follow planner's
+[approval/recovery mapping](../planner/references/approval-and-recovery.md); if unavailable,
+report the missing contract and stop rather than fabricate a repair gate.
 
 For other documented origins, verify the identified producer, durable source/task
 review and current owner authorization, plus applicable project gates. Do not impose
-EPIC's two approvals on unrelated work or waive a documented producer's safeguards.
+Standard's two approvals on unrelated work or waive a documented producer's safeguards.
 Ambiguous origin is a blocker; resolve it before implementation, never assume
-standalone origin to bypass gates.
+standalone origin to bypass gates. Missing/conflicting depth for planner-origin work
+also blocks; never relabel legacy Standard work TinySpec to bypass evidence.
+Planning depth changes intake evidence only, not execution strategy or task semantics.
 
 Run SpecKit implementation/prerequisite instructions only when applicable to the
 selected origin and artifacts. Installation alone does not make SpecKit applicable

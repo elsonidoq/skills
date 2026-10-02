@@ -4,7 +4,10 @@
 
 Treat the specification as the source of truth for intended behavior, not as disposable setup for coding. It constrains agent assumptions, preserves decisions across sessions, and provides the basis for planning, tasks, tests, and review.
 
-Use this lifecycle, adapting artifact names and tooling to the repository:
+Use this lifecycle for Standard, adapting artifact names and observed tooling to the
+repository. TinySpec deliberately combines what/how in one source and has only the
+combined source/task approval described below; do not impose Standard's separate
+specification approval or planning artifacts on it:
 
 1. **Principles:** Read governing product, architecture, quality, and security rules. Do not invent missing policy.
 2. **Specify:** Define what must be true and why, without prescribing implementation unless a technical choice is already settled.
@@ -38,11 +41,11 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 - Ask a human when alternatives materially change product scope, architecture, privacy, permissions, irreversible behavior, cost, or a settled requirement.
 - Present concrete options, relevant tradeoffs, and a recommendation; record the decision and rationale in the applicable artifact.
 - Do not choose speculatively to keep the workflow moving.
-- Planning must not begin until the specification and clarification results have explicit human approval.
+- In Standard, planning must not begin until the specification and clarification results have explicit human approval. TinySpec resolves material choices but does not add a separate pre-task source approval.
 
 ### Planning, Tasks, and Analysis
 
-- Plan only from the approved specification. Cover contracts, integration points, migration and rollback where relevant, sequencing, risks, and verification.
+- Standard plans only from the approved specification. TinySpec records its bounded approach in the compact source. Both cover contracts, integration points, migration and rollback where relevant, sequencing, risks, and verification.
 - Make tasks dependency-aware and independently verifiable. Each task states its outcome, prerequisites, likely files or interfaces, acceptance evidence, and required capabilities.
 - Keep implementation choices in the plan or tasks, not retroactively in requirements, unless they become settled constraints.
 - Analyze all artifacts for omissions, contradictions, unsupported assumptions, dependency order, integration coverage, exclusions, and governing-rule compliance.
@@ -58,34 +61,66 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 - Use an independent review pass when practical. Review against the approved specification and plan, not merely for code style.
 - Do not claim readiness while required checks fail, material requirements lack evidence, or approvals are stale.
 
-## Epic Sizing: When the Pipeline Earns Its Overhead
+## Adaptive Planning Depth: Assess, Do Not Route
 
-At admission, use the full specification -> clarification -> plan -> tasks -> analysis -> implementation pipeline only when **all three** conditions hold:
+`planner` is the public entry point. Understand the structured requirement, inspect
+load-bearing code/contracts/tests and applicable memory, then brainstorm only material
+uncertainty. Before depth selection this is read-only: no planning artifacts or source
+edits. Retain answers in session history; recover missing answers by asking.
 
-1. **At least eight expected tasks:** below this, pipeline overhead usually exceeds coordination value.
-2. **At least one unresolved material design decision:** its answer changes implementation shape, such as an authorization model, data location, shared contract, or algorithm.
-3. **Multiple subsystems or workstreams:** coordination crosses boundaries such as client, server, data, infrastructure, or independent workstreams sharing a contract.
+Assess reasoning complexity and coordination cost, not estimated diff size or a fixed
+task threshold. Present approximate evidence and uncertainty about affected subsystems,
+architecture, data/API contracts, dependencies, migrations, compatibility, security,
+concurrency, deployment, test complexity, reversibility, sequencing and likely work units.
+Inspection is bounded by those questions, not an automatic repository-wide audit.
 
-If any condition fails, prefer a direct, independently verifiable task list with the applicable decisions and evidence. Typical direct-task-list cases are four or fewer mechanically obvious tasks, a single component or internal tool, or design already resolved during prior discussion. For intermediate sizes, apply the same all-three rule rather than using task count alone.
+Signals favoring **TinySpec**: localized or mechanically repetitive work, stable interfaces,
+settled approach, reversible changes, few integration boundaries, directly observable checks.
+A large mechanical diff can still fit this path.
 
-Merge candidate epics before sizing when:
+Signals favoring **Standard**: valuable separation of behavioral and architectural reasoning,
+shared contracts or data migrations, security/concurrency risks, difficult rollback, external
+integration/rollout, cross-subsystem sequencing or complex verification. A small diff can
+justify this path. Resolved product uncertainty does not eliminate architectural value.
 
-- One epic depends on a design output from another and separate planning would cause rework.
-- Both modify the same execution surface in interleaved ways, making separate task lists harder to coordinate.
-- Their combined work reaches or approaches a coherent pipeline-sized scope, such as two small epics forming six to eight related tasks. After merging, the full pipeline still requires all three conditions above.
+Always present both paths and stop for explicit owner choice through `ask_user`:
 
-Red flags during epic writing:
+- **TinySpec → Tasks → Implement:** one compact what/how source plus mandatory separate tasks.
+  No SpecKit dependency or extra specification/plan/research/design chain.
+- **Standard: Specify → Plan → Tasks → Implement:** genuine installed SpecKit capabilities,
+  separate specification approval before planning, analysis/independent review and final approval.
 
-- A one-bullet scope is probably too small for the full pipeline.
-- No open design question means clarification and planning may add no value; write tasks directly.
-- Exclusions longer than included scope suggest a sub-task that should be merged into its parent feature.
-- A dependency on another epic's design output, rather than only its delivered interface, suggests the epics should merge.
+A recommendation is information, not a routing rule. The owner may intentionally choose
+either depth. Preserve that selection on resume; reopen only for substantive scope change
+or owner direction, with recorded rationale. No new Epic artifact/concept or documentation
+exception selects depth for the owner. Related requirements sharing a design output or
+interleaved interfaces may warrant a coherent combined scope; explain this before choice.
 
-Record the sizing verdict and rationale. Human approval is required for the selected pipeline or direct-task-list path when project workflow calls for that gate.
+Both paths use `task-generation` semantics and converge on `coordinate-implementation`.
+Planning stages stop on their required unavailable capabilities; never simulate SpecKit
+or impose its stages on direct tasks merely because it is installed.
 
-Preserve the recorded admission decision as uncertainty is resolved during readiness,
-clarification, and planning; that progress does not disqualify an admitted epic.
-Reconsider sizing when scope changes substantively, obtain the owner's choice of
-pipeline or direct-task-list path, and record the revised scope and rationale before
-continuing. Do not silently reroute admitted work. Preserve explicit owner-approved
-workflow exceptions, including `documentation initialization requires an epic`.
+## Common Authorization and Handoff
+
+Planning selection authorizes preparation, not execution. TinySpec and its separate tasks
+receive planner review then one combined owner approval; no separate pre-task source
+approval. Standard retains the lifecycle above. Current-content review and authorization
+are required for both, with durable evidence and earliest-invalid-stage recovery.
+
+Before EVERY artifact approval or renewal, present an owner-visible executive brief in
+4–6 short bullets BEFORE calling `ask_user`: outcome, scope/exclusions, important decisions,
+risks/deferrals, actual review/validation results, current artifacts and exact authorization
+including the next phase. Permit withholding approval/requesting changes. After affirmative
+approval, immediately start the next authorized phase; do not ask for routine continuation.
+Final approval starts coordinator preflight by default unless the owner explicitly requested
+planning-only or a separate-session handoff. Missing capabilities/material gates still stop;
+older preparation-only approvals do not retroactively authorize execution. A label or chat-only answer is insufficient for a fresh executor.
+The operational transitions and legacy repair rules are owned by
+[planner's approval/recovery contract](../skills/planner/references/approval-and-recovery.md).
+
+The handoff names producer/depth, source/task/supporting artifact paths, current content
+or revisions, review/validation evidence, decisions/deferrals, applicable approvals and
+explicit implementation scope. Standard includes spec/plan and both approvals. TinySpec
+includes its combined approval. Use project conventions, not a new universal state file.
+Task outcomes reference authoritative source criteria rather than duplicate the whole source.
+Legacy artifacts retain their original shapes and gates; changed names never waive provenance.

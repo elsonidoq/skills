@@ -55,20 +55,18 @@ if [ "$fail" -eq 0 ]; then
   suite_skills="$(cd "$scripts_dir/../skills" && pwd)"
   selected_skills="$(cd "$SKILLS_DIR" && pwd)"
   if [ "$selected_skills" = "$suite_skills" ]; then
-    python3 "$scripts_dir/check-requirements-manager-workflow.py" || fail=$((fail + 1))
-    python3 "$scripts_dir/test-requirements-manager-workflow-mutations.py" || fail=$((fail + 1))
+    python3 "$scripts_dir/check-planner-workflow.py" || fail=$((fail + 1))
+    python3 "$scripts_dir/test-planner-workflow.py" || fail=$((fail + 1))
     for focused in \
-      "$scripts_dir/../skills/epic-brainstorming/scripts/test_contract.py" \
-      "$scripts_dir/../skills/epics-manager/scripts/test_workflow_contract.py" \
+      "$scripts_dir/../skills/planning-brainstorming/scripts/test_contract.py" \
       "$scripts_dir/../skills/task-generation/scripts/test_contract.py" \
       "$scripts_dir/../skills/task-generation/scripts/test_check_task_order.py" \
       "$scripts_dir/../skills/coordinate-implementation/scripts/test_batching_contract.py" \
-      "$scripts_dir/../skills/coordinate-implementation/scripts/test_intake_contract.py" \
-      "$scripts_dir/../skills/requirements-manager/scripts/test_contract.py"; do
+      "$scripts_dir/../skills/coordinate-implementation/scripts/test_intake_contract.py"; do
       python3 "$focused" || fail=$((fail + 1))
     done
   else
-    echo "SKIP requirements-manager workflow checks (custom skills directory; suite-wide artifacts unavailable)"
+    echo "SKIP planner workflow checks (custom skills directory; suite-wide artifacts unavailable)"
   fi
 fi
 [ "$fail" -eq 0 ]

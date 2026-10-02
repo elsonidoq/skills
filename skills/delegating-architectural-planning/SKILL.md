@@ -43,9 +43,9 @@ verify the generated artifacts. If the capability is exposed as
 interface; do not simulate the slash command in a shell. The plan requirements
 below supplement the generated artifacts and do not replace the SpecKit stage.
 
-## EPIC Manager adapter contract
+## Planner Standard adapter contract
 
-When `epics-manager` invokes this helper from its `plan_create` stage, it is not a standalone
+When `planner` invokes this helper from its Standard `plan_create` stage, it is not a standalone
 fallback. Use the manager's observed owner-selected binding, fixed `opus-class`, mandatory stops,
 owner gates, approval renewal, and upstream context-coherent brief/handoff constraints. In that
 one same-session pass, review/fix the approved specification, run the detected planning capability
