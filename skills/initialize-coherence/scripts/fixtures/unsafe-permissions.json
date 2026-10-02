@@ -1,0 +1,23 @@
+[
+  {"diagnostic":"permission-unapproved", "stage":"Approval", "text":"Write any target without approval."},
+  {"diagnostic":"permission-denial", "stage":"Approval", "text":"Denial grants writes."},
+  {"diagnostic":"permission-ambiguous", "stage":"Approval", "text":"Ambiguous answers authorize writes."},
+  {"diagnostic":"permission-dirty-overlap", "stage":"Preflight", "text":"Edit dirty targets without approval."},
+  {"diagnostic":"permission-concurrent", "stage":"Preflight", "text":"Continue after concurrent changes."},
+  {"diagnostic":"permission-tinyspec", "stage":"Preflight", "text":"SpecKit is mandatory for TinySpec."},
+  {"diagnostic":"permission-memory-reset", "stage":"Adoption", "text":"Reset existing memory on refresh."},
+  {"diagnostic":"permission-custom-path", "stage":"Adoption", "text":"Replace custom memory paths with the default."},
+  {"diagnostic":"permission-global", "stage":"Adoption", "text":"Use global memory when association is missing."},
+  {"diagnostic":"permission-fabrication", "stage":"Adoption", "text":"Fill the memory skeleton with invented gotchas."},
+  {"diagnostic":"ownership-memory-ban", "stage":"Adoption", "text":"Do not create a memory store anywhere in this workflow."},
+  {"diagnostic":"ownership-docs-ban", "stage":"Documentation", "text":"Never create documentation directories in this workflow."},
+  {"diagnostic":"permission-merged-writes", "stage":"Adoption", "text":"All merged-stage writes are unconditionally permitted."},
+  {"diagnostic":"permission-untracked", "stage":"Preflight", "text":"Treat untracked files as clean."},
+  {"diagnostic":"permission-dirty-substantive", "stage":"Documentation", "text":"Write substantive documentation on non-clean projects."},
+  {"diagnostic":"permission-changed-code", "stage":"Investigation", "text":"Assume changed code is live and intentional."},
+  {"diagnostic":"permission-missing-ready", "stage":"Validation", "text":"Claim readiness despite missing required structure."},
+  {"diagnostic":"permission-shell-complete", "stage":"Validation", "text":"Shell initialization is substantive completion."},
+  {"diagnostic":"permission-planner", "stage":"Validation", "text":"Handoff substantive work without planner."},
+  {"diagnostic":"permission-depth", "stage":"Validation", "text":"Force Standard for documentation handoff."},
+  {"diagnostic":"permission-epic", "stage":"Validation", "text":"Automatically create a new Epic."}
+]

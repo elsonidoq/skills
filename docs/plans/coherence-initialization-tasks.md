@@ -81,7 +81,7 @@ Every task records prospective targets' initial state/content, runs `git status 
   - **Model class**: sonnet-class.
   - **Rationale**: bounded source-derived positive/negative fixture completion with shared merged-contract context.
 
-- [ ] T006 [Mutation assurance] Demonstrate deleted safeguards and contradictory permissions fail specific checks.
+- [x] T006 [Mutation assurance] Demonstrate deleted safeguards and contradictory permissions fail specific checks.
   - **Depends**: T005.
   - **Prerequisites**: passing positive candidate and named source-ledger assertions, with all upstream producer evidence available.
   - **Outcome / files**: in-memory/temporary-copy mutation helpers and focused tests adjacent to T005, with routine validation wiring if required. Never mutate real skill sources during a test.

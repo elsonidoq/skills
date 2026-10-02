@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Source-first static Coherence checks. Fixtures are not model-obedience evidence."""
+import contextlib
 import hashlib
+import importlib.util
+import io
 import json
 from pathlib import Path
 import re
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
@@ -15,6 +20,30 @@ BASELINE = json.loads((HERE / "fixtures/source-contract.json").read_text())
 SKILL = HERE.parent / "SKILL.md"
 SCENARIOS = json.loads((HERE / "fixtures/scenarios.json").read_text())
 ROWS = {row["id"]: row for row in BASELINE["ledger"]}
+STAGES = ("Preflight", "Discovery", "Investigation", "Approval", "Adoption", "Documentation", "Validation")
+UNSAFE = {
+    "permission-unapproved": r"\bwrite any target without approval\b",
+    "permission-denial": r"\bdenial grants writes\b",
+    "permission-ambiguous": r"\bambiguous answers authorize writes\b",
+    "permission-dirty-overlap": r"\bedit dirty targets without approval\b",
+    "permission-concurrent": r"\bcontinue after concurrent changes\b",
+    "permission-tinyspec": r"\bspeckit is mandatory for tinyspec\b",
+    "permission-memory-reset": r"\breset existing memory on refresh\b",
+    "permission-custom-path": r"\breplace custom memory paths with the default\b",
+    "permission-global": r"\buse global memory when association is missing\b",
+    "permission-fabrication": r"\bfill the memory skeleton with invented gotchas\b",
+    "ownership-memory-ban": r"\bdo not create a memory store anywhere in this workflow\b",
+    "ownership-docs-ban": r"\bnever create documentation directories in this workflow\b",
+    "permission-merged-writes": r"\ball merged-stage writes are unconditionally permitted\b",
+    "permission-untracked": r"\btreat untracked files as clean\b",
+    "permission-dirty-substantive": r"\bwrite substantive documentation on non-clean projects\b",
+    "permission-changed-code": r"\bassume changed code is live and intentional\b",
+    "permission-missing-ready": r"\bclaim readiness despite missing required structure\b",
+    "permission-shell-complete": r"\bshell initialization is substantive completion\b",
+    "permission-planner": r"\bhandoff substantive work without planner\b",
+    "permission-depth": r"\bforce standard for documentation handoff\b",
+    "permission-epic": r"\bautomatically create a new epic\b",
+}
 SOURCE_HASHES = {
     "skills/install-memory/SKILL.md": "7894452bb308c5292c13f5cfb3d19ed945842d88e1a31e1d5dbb8861dddc715f",
     "skills/initialize-documentation/SKILL.md": "978b51d11867496a6237d233987886e9dcb718a6ac3beedf7fc52a1f16c24b32",
@@ -36,6 +65,11 @@ def stage(text, name):
 
 def check_contract(text):
     errors = []
+    if re.findall(r"^## (.+)$", text, re.M) != list(STAGES):
+        errors.append("stage-order: missing, duplicated or reordered carrying stages")
+    for diagnostic, pattern in UNSAFE.items():
+        if re.search(pattern, normalized(text)):
+            errors.append(f"{diagnostic}: contradictory permission")
     for row in BASELINE["ledger"]:
         body = normalized(stage(text, row["stage"]))
         for phrase in row["requires"]:
@@ -95,8 +129,7 @@ class CandidateTests(unittest.TestCase):
 
     def test_stage_sequence_and_dirty_first_gate(self):
         text = SKILL.read_text()
-        self.assertEqual(re.findall(r"^## (.+)$", text, re.M),
-                         ["Preflight", "Discovery", "Investigation", "Approval", "Adoption", "Documentation", "Validation"])
+        self.assertEqual(re.findall(r"^## (.+)$", text, re.M), list(STAGES))
         pre = stage(text, "Preflight")
         self.assertLess(pre.index("git status --short"), pre.index("FIRST verify"))
         self.assertIn("no adoption write may precede this dirty capability gate", normalized(pre))
@@ -216,6 +249,105 @@ class StatusFixtureTests(unittest.TestCase):
     def test_untracked_only_is_nonclean(self):
         self.assertEqual(self.status("untracked"), "?? untracked.txt\n")
         self.assertIn("untracked files make the project non-clean", normalized(stage(SKILL.read_text(), "Preflight")))
+
+
+class MutationTests(unittest.TestCase):
+    def test_original_candidate_passes_before_mutation(self):
+        self.assertEqual(check_contract(SKILL.read_text()), [])
+
+    def test_every_carrying_stage_deletion_fails_even_with_summary_mentions(self):
+        text = SKILL.read_text()
+        for name in STAGES:
+            with self.subTest(stage=name):
+                body = stage(text, name)
+                summaries = "Summary only: " + " ".join(phrase for row in BASELINE["ledger"]
+                                                    if row["stage"] == name for phrase in row["requires"])
+                changed = summaries + "\n" + text.replace(body, "", 1)
+                errors = check_contract(changed)
+                self.assertTrue(any(e.startswith("stage-order:") for e in errors), errors)
+                for row in BASELINE["ledger"]:
+                    if row["stage"] == name:
+                        self.assertTrue(any(e.startswith(row["id"] + ":") for e in errors), row["id"])
+
+    def test_stage_reordering_fails_named_diagnostic(self):
+        text = SKILL.read_text()
+        a, b = stage(text, "Approval"), stage(text, "Adoption")
+        changed = text.replace(a, "TEMP_STAGE", 1).replace(b, a, 1).replace("TEMP_STAGE", b, 1)
+        self.assertIn("stage-order: missing, duplicated or reordered carrying stages", check_contract(changed))
+
+    def test_contradictory_permission_vectors_fail_specific_diagnostics(self):
+        vectors = json.loads((HERE / "fixtures/unsafe-permissions.json").read_text())
+        self.assertEqual({v["diagnostic"] for v in vectors}, set(UNSAFE))
+        text = SKILL.read_text()
+        for vector in vectors:
+            with self.subTest(diagnostic=vector["diagnostic"]):
+                body = stage(text, vector["stage"])
+                changed = text.replace(body, body + "\n" + vector["text"] + "\n", 1)
+                self.assertIn(vector["diagnostic"] + ": contradictory permission", check_contract(changed))
+
+
+def deletion_check(row):
+    def test(self):
+        text = SKILL.read_text()
+        body = stage(text, row["stage"])
+        for phrase in row["requires"]:
+            with self.subTest(guard=phrase):
+                pattern = r"\s+".join(re.escape(word) for word in phrase.split())
+                altered, count = re.subn(pattern, "[guard removed]", body, count=1, flags=re.I)
+                self.assertEqual(count, 1, phrase)
+                errors = check_contract(text.replace(body, altered, 1))
+                self.assertTrue(any(e.startswith(row["id"] + ": missing") for e in errors), errors)
+    return test
+
+
+for row in BASELINE["ledger"]:
+    setattr(MutationTests, row["negative"], deletion_check(row))
+
+
+class InstallerMutationTests(unittest.TestCase):
+    """Run existing isolated behavioral LinkTests against in-memory installer mutants."""
+    def test_installer_guard_mutations_fail_specific_existing_fixtures(self):
+        filename = ROOT / "scripts/test-planner-workflow.py"
+        spec = importlib.util.spec_from_file_location("coherence_link_fixtures", filename)
+        fixtures = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixtures)
+        source = (ROOT / "scripts/install-links.py").read_text()
+        mutations = [
+            ("retirement-inventory", '           "install-memory", "initialize-documentation")', ')',
+             "test_coherence_retirement_inventory_is_explicit"),
+            ("retirement-proof", "old.is_symlink() and target(old) == skills / name", "old.is_symlink()",
+             "test_coherence_retired_foreign_and_uncertain_entries_preserved"),
+            ("retirement-race", "not path.is_symlink() or identity(path) != expected_identity\n            or target(path) != expected_target", "False",
+             "test_retirement_race_preserves_replaced_foreign_link"),
+            ("late-retirement-race", "not path.is_symlink() or identity(path) != expected_identity\n            or target(path) != expected_target", "False",
+             "test_retirement_race_during_backup_directory_creation"),
+            ("settings-byte-race", "before != settings_before or identity(settings) != settings_identity", "json.loads(before) != data",
+             "test_settings_byte_race_preserves_equivalent_json"),
+            ("late-settings-race", "settings.read_text() != before or identity(settings) != settings_identity", "False",
+             "test_settings_race_after_temp_write_preserves_foreign_bytes"),
+            ("current-link-race", "elif target(dst) != src:", "elif False:",
+             "test_current_link_race_preserves_foreign_work"),
+        ]
+        for diagnostic, old, new, test_name in mutations:
+            with self.subTest(diagnostic=diagnostic):
+                self.assertIn(old, source)
+                baseline = unittest.TestResult()
+                fixtures.LinkTests(test_name).run(baseline)
+                self.assertTrue(baseline.wasSuccessful(), baseline.errors + baseline.failures)
+                changed = source.replace(old, new)
+                if diagnostic == "settings-byte-race":
+                    # Both snapshot checks protect this race. Recreate the demonstrated
+                    # old behavior, not a partial mutant caught by the later guard.
+                    later = "settings.read_text() != before or identity(settings) != settings_identity"
+                    self.assertIn(later, changed)
+                    changed = changed.replace(later, "settings.read_text() != before")
+                mutant = types.ModuleType("coherence_installer_mutant")
+                exec(compile(changed, str(ROOT / "scripts/install-links.py"), "exec"), mutant.__dict__)
+                result = unittest.TestResult()
+                with mock.patch.object(fixtures, "links", mutant), contextlib.redirect_stdout(io.StringIO()):
+                    fixtures.LinkTests(test_name).run(result)
+                self.assertFalse(result.wasSuccessful(), f"{diagnostic}: surviving mutant")
+                self.assertTrue(any(test.id().endswith(test_name) or test_name in test.id()
+                                    for test, _ in result.errors + result.failures), diagnostic)
 
 
 if __name__ == "__main__":
