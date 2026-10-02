@@ -1,4 +1,4 @@
-# Pi Configuration
+# Coherence — Pi Skill Suite
 
 Global pi skills for deliberate feature delivery across unrelated repositories. The suite
 binds to pinned pi packages and requires adoption per project; it is not runtime-portable.
@@ -17,9 +17,20 @@ Foreign entries at installation destinations are preserved and reported, not ove
 Retired links are backed up only when their target proves they belong to this checkout.
 After installation or global skill changes, run `/reload` inside pi.
 
-On a project, use `install-memory` to propose and approve the project association, memory
-store and suite instructions. Existing adopters can approve a bounded refresh of the marked
-suite section without rewriting custom policy or converting existing planning artifacts.
+On a project, use [Initialize Coherence](skills/initialize-coherence/SKILL.md)
+(`initialize-coherence`) for proposal-first suite instructions, project memory association,
+and documentation owners/indexes/routing, including a schema owner when a persistent
+database exists. Compatible adoption is validated without rewriting it; an approved
+bounded refresh preserves custom paths/policy, existing memory and planning artifacts.
+
+Initially clean projects may initialize required documentation with verified content.
+Tracked-dirty or untracked-only projects require a fresh read-only investigation and approval
+of the current plan plus exact missing-shell/index bounds; documentation writes remain
+empty/template shells, maps and indexes only. Structural readiness requires all approved
+instructions/memory and required documentation structure; missing requirements, denied
+approval or missing structure prevent a ready claim. Empty/stale substantive documentation
+remains explicit outstanding work for planner's owner-selected TinySpec/Standard path.
+Initialization reports missing capabilities rather than installing prerequisites.
 
 ## Planning and Implementation
 
@@ -85,7 +96,7 @@ requires one independent final implementation review. Planning depth does not se
 - `tiny-spec`: lightweight source producer; not an independent manager or executor.
 - `task-generation`: task semantics, ordering, validation and adapter contract.
 - `delegating-architectural-planning`: observed SpecKit planning adapter.
-- `initialize-documentation`: owners/indexes and investigation-first bounded initialization;
+- `initialize-coherence`: single adoption/memory/documentation entry point;
   substantive documentation work goes through planner, without a forced depth exception.
 - `requesting-code-review` / `receiving-code-review`: independent assessment and disposition.
 - `memory-handling`, `track-open-issue`, `finish-session`: durable guidance and closeout.

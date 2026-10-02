@@ -59,7 +59,7 @@ Every task records prospective targets' initial state/content, runs `git status 
   - **Model class**: sonnet-class.
   - **Rationale**: bounded inventory/source-carrier and safety-fixture integration after merged producer verification.
 
-- [ ] T004 [Consumer routing and setup] Align Coherence setup, requirements and active consumer instructions with implemented behavior.
+- [x] T004 [Consumer routing and setup] Align Coherence setup, requirements and active consumer instructions with implemented behavior.
   - **Depends**: T002, T003.
   - **Prerequisites**: verified merged stages and retirement/inventory checks; bounded dirty-target approvals for each affected consumer/document.
   - **Outcome / files**: relevant portions of `README.md`, `REQUIREMENTS.md`, `skills/memory-handling/SKILL.md`, `skills/compact-memory/SKILL.md`, `skills/finish-session/SKILL.md`, and `docs/index.md`. Add Coherence/new skill and subject-plan/task routing in the existing index where relevant; do not restructure other entries. Repository instructions change only if an actual affected contract is found and separately bounded/approved; do not brand unrelated assets.

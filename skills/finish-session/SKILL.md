@@ -26,7 +26,7 @@ database-schema owner.
 This is an existence check only: do not audit documentation accuracy, create
 missing files, or modify any target in this step. If documentation ownership is
 unavailable or any required owner or directory index is missing, report the
-missing paths or owners, instruct the user to use the `initialize-documentation`
+missing paths or owners, instruct the user to use the `initialize-coherence`
 skill, and stop. Continue with the remaining steps only after all required
 documentation owners and indexes exist.
 
@@ -80,7 +80,7 @@ non-exhaustive seed guidance for a repository that has not yet defined more
 specific categories. The filenames illustrate a `docs/architecture/` layout
 only. Preserve an equivalent established owner rather than creating a
 competing document. If the guide identifies a missing owner, report it and
-direct the user to `initialize-documentation` instead of selecting a path
+direct the user to `initialize-coherence` instead of selecting a path
 during closeout.
 
 | Changed area | Required documentation | Example owner |
@@ -131,7 +131,7 @@ Enter this step only when a verified finding routes to memory or an already-disc
 
 Apply the repository's memory/documentation distinction from its instructions. If none exists, use this rule: documentation explains current state; memory warns a future agent before an action could trigger a non-obvious problem.
 
-Discover the memory store and index before writing, following the `memory-handling` skill's discovery rule. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project; a store named by the `install-memory` contract section is valid association. A global memory command, `~/.pi/...` store, or similarly named index is not evidence of association. Update a related memory rather than duplicating it. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
+Discover the memory store and index before writing, following the `memory-handling` skill's discovery rule. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project; a store named by the `initialize-coherence` contract section is valid association. A global memory command, `~/.pi/...` store, or similarly named index is not evidence of association. Update a related memory rather than duplicating it. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
 
 After all memory writes, check any threshold or hook explicitly configured for that verified project memory. If no
 threshold is breached, report `not needed`. If one is breached, use a compactor only when its definition explicitly

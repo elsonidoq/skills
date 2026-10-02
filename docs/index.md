@@ -24,6 +24,7 @@ unrelated projects and the legacy port keep their own documentation boundaries.
 
 ## Project Guidance
 
+- [Initialize Coherence](../skills/initialize-coherence/SKILL.md): Proposal-first suite adoption/memory and bounded documentation structural readiness.
 - [Planner](../skills/planner/SKILL.md): Single entry point, scope assessment, user-selected depth, approvals and handoff.
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
@@ -34,6 +35,10 @@ unrelated projects and the legacy port keep their own documentation boundaries.
 
 ## Implementation Plans
 
+- [Coherence Initialization](plans/coherence-initialization.md): Approved source and original behavior constraints for unified onboarding.
+- [Coherence Initialization Tasks](plans/coherence-initialization-tasks.md): Source-first sequential implementation and acceptance contracts.
+- [Coherence Planning Review](plans/reviews/coherence-planning-review.md): Digest-bound combined source/task/scope approval and execution limits.
+- [Coherence Initialization Execution](plans/coherence-initialization-execution.md): Authorized bounds, per-task verification/commits and independent review status.
 - [Planner Refactor](plans/planner-refactor.md): Approved architecture and source-first preservation ledger.
 - [Planner Regression](plans/planner-regression.md): Deterministic and live scenario strategy, evidence and limitations.
 - [Planner Approval UX](plans/planner-approval-ux.md): Owner-observed brief/continuation failures, approved correction and regression evidence.

@@ -1,8 +1,8 @@
-# Pi Skill Suite Requirements
+# Coherence — Pi Skill Suite Requirements
 
 This repository is a pi configuration repository. It is **not runtime-portable by design**:
 it binds to specific pi packages, pins their versions, and relies on the convention that a
-project adopts the suite through the `install-memory` skill before the workflow skills run.
+project adopts the suite through `initialize-coherence` before the workflow skills run.
 
 ## Runtime
 
@@ -18,8 +18,9 @@ All npm pins are exact: pi treats versioned npm specifications as pinned, and `p
 --extensions` reconciles the checkout without moving the configured ref.
 
 Keep this table in sync with the dependency statements inside the skills. The
-`install-memory` skill copies the requirement list into a project's `AGENTS.md` when the
-suite is adopted.
+`initialize-coherence` skill records the approved requirement list in the project's
+instructions during adoption. It reports missing prerequisites without installing them;
+its mandatory question/approval-contract gates stop when unavailable.
 
 ## Model class mapping
 
@@ -36,14 +37,23 @@ provider/model ID — they verify that usable options exist and ask the owner to
 
 ## Memory contract
 
-Memory is part of this skill set; a project adopting the suite is guaranteed a memory
-store through `install-memory`. Retrieval and write rules live in the `memory-handling`
-skill; `compact-memory`, `finish-session`, `planner`, `tiny-spec`,
-`coordinate-implementation`, and `initialize-documentation` reference it. There is no "memory unavailable" case in projects
-that ran `install-memory`.
+Successful adoption through `initialize-coherence` establishes an approved project-memory
+association and index, or validates a compatible existing one. Merely invoking initialization
+does not establish readiness: missing capabilities, denied approval or missing structure block
+it. Owner-selected paths remain valid; bounded refresh preserves existing memory and custom
+policy. Retrieval and write rules live in `memory-handling`; `compact-memory`, `finish-session`,
+`planner`, `tiny-spec`, `coordinate-implementation`, and `initialize-coherence` reference it.
+A missing association routes to `initialize-coherence`, never a guessed global store.
 
 ## Project docs
 
 `docs/open_issues.md` holds the canonical register of unresolved work
-(`track-open-issue`). Documentation owners and the documentation-routing guide are
-established by `initialize-documentation` and recorded in each project's instructions.
+(`track-open-issue`). `initialize-coherence` preserves or establishes documentation
+owners/indexes and a verified project-specific documentation-routing guide, recording them
+in approved project instructions. Persistent-database projects also require an authoritative
+schema owner or documented set, even without a naming convention. Initially clean projects
+may initialize verified content; non-clean projects first require fresh read-only investigation
+and approved shell/index bounds, with no substantive documentation writes. Missing required
+structure blocks readiness; empty/stale substantive content remains planner work, not completed
+by a shell. `finish-session` checks owner/index/routing/schema existence without initializing
+or auditing them.

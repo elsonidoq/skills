@@ -14,13 +14,13 @@ agent *before* an action could trigger a non-obvious problem.
 
 Locate the store exactly once per session and reuse the result. The store is
 project-associated when repository instructions `AGENTS.md`/`CLAUDE.md` (including the
-memory-store section written by the `install-memory` skill) or documented project
+memory-store section written by `initialize-coherence`) or documented project
 configuration name its path. The suite's default convention, when adopted through
-`install-memory`, is a project-owned `memory/` directory with a `MEMORY.md` index and
+`initialize-coherence`, is a project-owned `memory/` directory with a `MEMORY.md` index and
 entry files; an owner-approved different path is equally valid.
 
 If no store or association can be verified, report that the project has not adopted the
-suite (`memory adoption: missing — run install-memory`) and do not create, guess, or
+suite (`memory adoption: missing — run initialize-coherence`) and do not create, guess, or
 modify a global store. Never treat a global agent-memory command, `~/.pi/...` store, or
 similarly named index as project association without repository evidence.
 

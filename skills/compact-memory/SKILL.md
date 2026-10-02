@@ -12,7 +12,7 @@ duplicate, or git-owned records.
 1. Follow the `memory-handling` skill's discovery rule: read repository instructions (`AGENTS.md`, `CLAUDE.md`,
    or equivalent) and locate a memory store explicitly associated with the current project. A valid association is
    a documented path inside the project, or project configuration/instructions naming the store and its index;
-   a store named by the `install-memory` contract section is valid.
+   a store named by the `initialize-coherence` contract section is valid.
 2. If no project memory store exists or its association cannot be verified, stop. Report `compaction unavailable:
    no verified project memory store`; do not create a memory store or modify global memory.
 3. Read the project's memory/documentation distinction. If absent, use the `memory-handling` rule: documentation
