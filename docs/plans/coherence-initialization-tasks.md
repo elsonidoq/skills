@@ -71,7 +71,7 @@ Every task records prospective targets' initial state/content, runs `git status 
 
 ### Focused assurance and integration evidence
 
-- [ ] T005 [Positive and boundary fixtures] Complete deterministic merged-contract checks and scenario fixtures from original coverage.
+- [x] T005 [Positive and boundary fixtures] Complete deterministic merged-contract checks and scenario fixtures from original coverage.
   - **Depends**: T001, T002, T003, T004.
   - **Prerequisites**: verified merged stages, inventories and docs; T001 source evidence retained and independently comparable.
   - **Outcome / files**: complete `skills/initialize-coherence/scripts/test_contract.py` and focused adjacent fixtures; extend relevant `scripts/test-planner-workflow.py` cases rather than duplicate existing installer coverage. Wire focused suite into `scripts/check-skills-lint.sh` using current custom-directory skip convention. Fixtures are static contract/scenario checks, not a new execution engine or fabricated live agent transcript.

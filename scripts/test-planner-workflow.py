@@ -377,6 +377,15 @@ class LinkTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             return links.install(self.skills, self.guidance, self.dest, self.docs, self.backups, self.settings)
 
+    def test_coherence_retirement_inventory_is_explicit(self):
+        self.assertTrue({"install-memory", "initialize-documentation"}.issubset(links.RETIRED))
+        for name in ("install-memory", "initialize-documentation"):
+            (self.dest / name).symlink_to(self.skills / name)
+        self.install()
+        for name in ("install-memory", "initialize-documentation"):
+            self.assertFalse(os.path.lexists(self.dest / name))
+        self.assertTrue((self.dest / "initialize-coherence").is_symlink())
+
     def test_fresh_and_idempotent(self):
         self.assertEqual(self.install(), 3)
         before = {p.name: os.readlink(p) for p in self.dest.iterdir()}
@@ -446,9 +455,16 @@ class LinkTests(unittest.TestCase):
         self.assertEqual(self.settings.stat().st_mode & 0o777, 0o600)
 
     def test_bad_settings_stop_before_writes(self):
-        self.settings.write_text("not-json")
-        with self.assertRaises(ValueError): self.install()
-        self.assertFalse((self.dest / "planner").exists())
+        for contents in ("not-json", "[]", '{"skills": "not-a-list"}', '{"skills": [1]}'):
+            with self.subTest(contents=contents):
+                self.settings.write_text(contents)
+                (self.dest / "install-memory").symlink_to(self.skills / "install-memory")
+                with self.assertRaises(ValueError): self.install()
+                self.assertFalse((self.dest / "planner").exists())
+                self.assertEqual(self.settings.read_text(), contents)
+                self.assertTrue((self.dest / "install-memory").is_symlink())
+                self.assertFalse(self.backups.exists())
+                (self.dest / "install-memory").unlink()
 
     def test_retirement_race_preserves_replaced_foreign_link(self):
         old = self.dest / "install-memory"
@@ -476,6 +492,44 @@ class LinkTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "settings changed concurrently"):
                 self.install()
         self.assertEqual(self.settings.read_text(), changed)
+
+    def test_retirement_race_during_backup_directory_creation(self):
+        old = self.dest / "initialize-documentation"
+        old.symlink_to(self.skills / "initialize-documentation")
+        mkdir = Path.mkdir
+        def replace(path, *args, **kwargs):
+            if path == self.backups:
+                old.unlink(); old.symlink_to(self.root / "foreign")
+            return mkdir(path, *args, **kwargs)
+        with mock.patch.object(Path, "mkdir", new=replace):
+            with self.assertRaisesRegex(ValueError, "retired destination changed concurrently"):
+                self.install()
+        self.assertEqual(links.target(old), self.root / "foreign")
+        self.assertEqual(list(self.backups.iterdir()), [])
+
+    def test_settings_race_after_temp_write_preserves_foreign_bytes(self):
+        self.settings.write_text(json.dumps({"skills": [str(self.skills)]}))
+        chmod = os.chmod
+        changed = '{"custom": "concurrent owner change"}'
+        def replace(path, *args, **kwargs):
+            self.settings.write_text(changed)
+            return chmod(path, *args, **kwargs)
+        with mock.patch.object(links.os, "chmod", side_effect=replace):
+            with self.assertRaisesRegex(ValueError, "settings changed concurrently"):
+                self.install()
+        self.assertEqual(self.settings.read_text(), changed)
+        self.assertEqual(list(self.root.glob("settings.json.*.tmp")), [])
+
+    def test_new_link_race_never_overwrites_foreign_file(self):
+        mkdir = Path.mkdir
+        conflict = self.dest / "initialize-coherence"
+        def replace(path, *args, **kwargs):
+            if path == self.docs:
+                conflict.write_text("concurrent owner work")
+            return mkdir(path, *args, **kwargs)
+        with mock.patch.object(Path, "mkdir", new=replace):
+            with self.assertRaises(FileExistsError): self.install()
+        self.assertEqual(conflict.read_text(), "concurrent owner work")
 
     def test_current_link_race_preserves_foreign_work(self):
         self.install()

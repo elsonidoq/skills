@@ -58,6 +58,7 @@ if [ "$fail" -eq 0 ]; then
     python3 "$scripts_dir/check-planner-workflow.py" || fail=$((fail + 1))
     python3 "$scripts_dir/test-planner-workflow.py" || fail=$((fail + 1))
     for focused in \
+      "$scripts_dir/../skills/initialize-coherence/scripts/test_contract.py" \
       "$scripts_dir/../skills/planning-brainstorming/scripts/test_contract.py" \
       "$scripts_dir/../skills/task-generation/scripts/test_contract.py" \
       "$scripts_dir/../skills/task-generation/scripts/test_check_task_order.py" \
