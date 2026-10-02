@@ -18,7 +18,7 @@ SOURCE_HASHES = {
 
 
 def normalized(text):
-    return " ".join(text.split())
+    return " ".join(text.split()).casefold()
 
 
 def stage(text, name):

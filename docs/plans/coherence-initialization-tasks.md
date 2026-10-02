@@ -33,7 +33,7 @@ Every task records prospective targets' initial state/content, runs `git status 
   - **Model class**: sonnet-class.
   - **Rationale**: bounded extraction from authoritative sources; material ambiguities are reported rather than decided.
 
-- [ ] T002 [Merged workflow] Implement one operational Initialize Coherence contract with bounded stages.
+- [x] T002 [Merged workflow] Implement one operational Initialize Coherence contract with bounded stages.
   - **Depends**: T001.
   - **Prerequisites**: verified source-first ledger and original evidence; exact approved write bounds for the new skill and any existing target overlap.
   - **Outcome / files**: `skills/initialize-coherence/SKILL.md`; adjacent focused references only if necessary for readable shared ownership. Valid frontmatter uses `initialize-coherence`, title **Initialize Coherence**, and a `Use when` description. Replace reciprocal “run the other skill” instructions with preflight/discovery → material choices → bounded approvals → branch-specific application → validation/report/planner handoff; do not concatenate contradictory old prohibitions.
