@@ -16,10 +16,10 @@ More than three tasks require async sequential delegation. One single-writer bat
 
 | Batch | IDs | Scope | Dependencies | Integration | Verification | Class/model | Mode | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | T001–T007 | Source baseline, merged skill, retirement, consumers/docs, positive/mutation tests, integration | T001→T002→T003→T004→T005→T006→T007 | Skills, installer/probe/checker, canonical docs | Individual acceptance/checkpoints and commits; full deterministic suite; independent final review | sonnet-class / openai-codex/gpt-6.1-sol | Async sequential single writer | T001–T007 verified and committed sequentially; independent review pending |
+| 1 | T001–T007 | Source baseline, merged skill, retirement, consumers/docs, positive/mutation tests, integration | T001→T002→T003→T004→T005→T006→T007 | Skills, installer/probe/checker, canonical docs | Individual acceptance/checkpoints and commits; full deterministic suite; independent final review | sonnet-class / openai-codex/gpt-6.1-sol | Async sequential single writer | completed: T001–T007 verified and committed; independent review accepted with disclosed limitations |
 
-- [x] Batch 1: T001–T007 deterministic implementation checkpoints complete; final acceptance awaits independent review.
-- [ ] Independent final review: pending full attributable revision range.
+- [x] Batch 1: T001–T007 deterministic implementation checkpoints complete.
+- [x] Independent final review: full attributable revision range reviewed; OK with notes, no blockers; parent accepted disposition.
 
 ## Baseline and evidence
 
@@ -27,13 +27,19 @@ Before baseline: HEAD `a04e3df68b094f90fb2900994a82d11b1a681581`; no staged path
 
 ## Completion
 
-T001–T007 implemented with verified per-task commits. Independent review remains pending and is not replaced by this implementation report. Status-only task updates preserve approved contracts; material changes require renewal. Review baseline is `7f6c0cb0cbdd15967d91c84b2295a45f3c64a2d3`; final T007 commit is discoverable by its task-tagged git subject, avoiding a recursive self-hash.
+T001–T007 implemented with verified per-task commits. Fresh independent review completed; parent inspected the actual artifacts, accepted its no-blocker verdict, and independently reran deterministic validation. Status-only task updates preserve approved contracts; material changes require renewal. Review baseline is `7f6c0cb0cbdd15967d91c84b2295a45f3c64a2d3`; final T007 commit is discoverable by its task-tagged git subject, avoiding a recursive self-hash.
 
-Deterministic acceptance: A1 PASS (single inventory/route, no aliases); A2 PASS (44 original source rows, stage-specific positives/deletions and ownership transitions); A3 PASS (structure gates separate from substantive completion); A4 PASS (29 static pressure contexts, actual isolated Git status and named deletion/contradiction checks); A5 PASS (consumer/setup/link checks and 15 isolated installer fixtures). These are static/fixture outcomes only, not live behavior or final reviewer approval.
+Deterministic acceptance: A1 PASS (single inventory/route, no aliases); A2 PASS (44 original source rows, stage-specific positives/deletions and ownership transitions); A3 PASS (structure gates separate from substantive completion); A4 PASS (29 static pressure contexts, actual isolated Git status and named deletion/contradiction checks); A5 PASS (consumer/setup/link checks and 15 isolated installer fixtures). These are static/fixture outcomes only, not live behavior. Final independent static/fixture review is accepted; live acceptance remains NOT RUN.
 
 End-to-end contract walkthrough: new adoption + initially clean documentation applies only exact approved instructions/memory and verified owner/index content; tracked-dirty/untracked-only uses FIRST native capability gate, fresh four-output read-only investigation, material answers and current plan/shell approval before rediscovery and shell/map/index writes; compatible custom adoption validates as a no-op; marked bounded refresh retains memory/custom paths/policy and every unrelated byte. All routes converge on structure validation, separate substantive gaps/planner depth handoff and finish-session's unchanged existence-only gate.
 
 NOT RUN: live clean/dirty/refresh approval behavior, actual installation, `scripts/probe-pi-load.sh`, models, deployment. No project-memory association or universal schema was inferred. Static textual vectors do not prove arbitrary language semantics/model obedience. Installer race rechecks protect tested interleavings but are not atomic cross-process transactions. Owner must run `/reload` inside pi after these global asset changes.
+
+## Independent final review disposition
+
+Fresh read-only reviewer `openai-codex/gpt-6.1-sol`, child `1ccaa061-aa96-4cef-bab3-13b5041ee2b2`, inspected complete committed range `7f6c0cb0cbdd15967d91c84b2295a45f3c64a2d3..8b4e844d299158aa288495eecb7ead970a870084` against original baseline skills and approved source/tasks. Verdict: **OK with notes**, no evidence-backed introduced P0/P1/P2 findings. Parent disposition: accepted; no implementation fixes required. Review notes are verification boundaries, not waived defects: static tests do not prove live agent obedience; real installation/load probe/live onboarding are NOT RUN; finite filesystem rechecks are not atomic transactions. Original preparation banners are historical, with digest-bound approval governing current equivalent contracts.
+
+Parent independently reran `PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh`: 22 skills, zero lint failures; planner checker PASS; planner fixtures 56 OK; focused Coherence 135 OK; shared suites 4/2/7/3/6 OK. Source digest and checkbox-only task approval equivalence confirmed. New README/index/skill references resolve; range `git diff --check` PASS. No unrelated changes or source/task contract drift found. Implementation is complete and independently reviewed for deterministic/static acceptance; live behavior is not claimed verified. This final status update changes execution evidence only, not reviewed implementation contracts.
 
 ## Verified task checkpoints
 
