@@ -14,8 +14,8 @@ PATHS = {
     "tasks": "skills/task-generation/SKILL.md",
     "helper": "skills/delegating-architectural-planning/SKILL.md",
     "coordinator": "skills/coordinate-implementation/SKILL.md",
-    "adoption": "skills/install-memory/SKILL.md",
-    "docs": "skills/initialize-documentation/SKILL.md",
+    "adoption": "skills/initialize-coherence/SKILL.md",
+    "docs": "skills/initialize-coherence/SKILL.md",
     "memory": "skills/memory-handling/SKILL.md",
     "guidance": "docs/best_practices_spec_driven_development.md",
     "requirements": "REQUIREMENTS.md",
@@ -156,8 +156,8 @@ def check_contracts(texts):
         errors.append("execution-freeze: coordinator execution differs from pre-refactor baseline")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
-    require("docs", texts["docs"], "fresh sub-agent", "database-schema", "empty/template shells",
-            "not substantive implementation authorization", "Before `ask_user`", 
+    require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
+            "not substantive implementation authorization", "Before calling `ask_user`",
             "explicit TinySpec/Standard choice", "dirty-target/concurrent-edit")
     require("memory", texts["memory"], "Read the whole index first", "index → matching entries",
             "project-associated", "Never treat a global")
@@ -177,7 +177,14 @@ def check_contracts(texts):
 
 
 def load_texts(root=ROOT):
-    return {key: (root / path).read_text() for key, path in PATHS.items()}
+    texts = {key: (root / path).read_text() for key, path in PATHS.items()}
+    # Check operational carriers, not incidental mentions in a combined summary.
+    for key, stages in {
+        "adoption": ("Preflight", "Approval", "Adoption"),
+        "docs": ("Preflight", "Discovery", "Investigation", "Approval", "Documentation", "Validation"),
+    }.items():
+        texts[key] = "\n".join(section(texts[key], f"## {name}") for name in stages)
+    return texts
 
 
 def main():

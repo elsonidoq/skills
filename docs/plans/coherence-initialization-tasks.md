@@ -48,7 +48,7 @@ Every task records prospective targets' initial state/content, runs `git status 
 
 ### Retirement and active integration
 
-- [ ] T003 [Retirement and inventory] Retire both old operational entry points and align deterministic inventory/checker carriers.
+- [x] T003 [Retirement and inventory] Retire both old operational entry points and align deterministic inventory/checker carriers.
   - **Depends**: T001, T002.
   - **Prerequisites**: verified merged candidate and original evidence; explicit bounded approval for deleting dirty old skills and modifying existing untracked installer/checker work. Inventory current files again before deletion.
   - **Outcome / files**: remove operational `skills/install-memory/` and `skills/initialize-documentation/` contents within approved bounds, with no redirects. Update `scripts/install-links.py` retirement inventory, `scripts/probe-pi-load.sh` REQUIRED list, and `scripts/check-planner-workflow.py` source mappings; adjust directly coupled expectations in `scripts/test-planner-workflow.py`. `scripts/install.sh` is dynamic: inspect discovery/call interface and edit only if proven needed.

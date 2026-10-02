@@ -133,8 +133,9 @@ and `compact-memory` can cite it. Record:
 Create the approved memory skeleton only for new adoption: only the header, contract
 rules, and a no-gotchas-yet placeholder—never fabricated facts.
 
-For older adoption, refresh only owner-approved bounds of the marked suite-owned
-section; preserve custom memory paths, docs, policy and every unrelated byte.
+For older adoption, propose a bounded refresh. Refresh only owner-approved bounds
+of the marked suite-owned section; preserve custom memory paths, docs, policy and
+every unrelated byte.
 For unmarked, ambiguously customized, dirty or concurrently changed sections, show
 exact bounds/diff and obtain approval; a concurrent change first stops the patch
 under Preflight. Do not globally rename references, overwrite local modifications,
@@ -152,8 +153,8 @@ bounds. Create parent directories only as needed for approved files.
 
 - On the clean branch initialize required documentation owners/indexes with verified
   content only. Do not invent detailed descriptions or architecture facts.
-- On the non-clean branch, create only explicitly approved missing empty/template
-  shells plus file maps/indexes. Do not write substantive current-state documentation
+- On the non-clean branch, create only explicitly approved missing
+  empty/template shells plus file maps/indexes. Do not write substantive current-state documentation
   or implement investigated changes. Adoption instructions/memory writes have separate
   stated approved authority, not permission to bypass dirty documentation bounds.
 - For each index, list direct documentation files other than the index itself, using
@@ -184,8 +185,8 @@ evidence, decisions/deferrals, approval location and initialized shells.
 
 Verify discoverable `planner` before substantive handoff. If absent, report exactly
 `planner: UNAVAILABLE` and stop that handoff. Otherwise hand off the substantive
-requirement and source evidence for scope assessment and explicit TinySpec/Standard
-choice; no new Epic or forced Standard exception. Initialization does not implement
+requirement and source evidence for scope assessment and
+explicit TinySpec/Standard choice; no new Epic or forced Standard exception. Initialization does not implement
 that work. Use `finish-session` for bounded initialization closeout.
 
 Offline source-ledger checks: [scripts/test_contract.py](scripts/test_contract.py).

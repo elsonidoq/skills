@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -48,7 +49,8 @@ class InstructionTests(unittest.TestCase):
         ledger = (ROOT / "docs/plans/planner-refactor.md").read_text()
         for number in range(1, 25):
             self.assertIn(f"P{number:02d}", ledger)
-        for old in links.RETIRED:
+        # This ledger covers the historical planner refactor, not later onboarding.
+        for old in ("create-epic", "epics-manager", "requirements-manager", "epic-brainstorming"):
             self.assertFalse((ROOT / "skills" / old / "SKILL.md").exists())
 
     def test_negative_mutations(self):
@@ -363,7 +365,7 @@ class LinkTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.skills = self.root / "suite" / "skills"; self.skills.mkdir(parents=True)
-        for name in ("planner", "tiny-spec"):
+        for name in ("planner", "tiny-spec", "initialize-coherence"):
             (self.skills / name).mkdir(); (self.skills / name / "SKILL.md").write_text("fixture")
         self.guidance = self.root / "guide.md"; self.guidance.write_text("reference")
         self.dest = self.root / "home" / "skills"; self.dest.mkdir(parents=True)
@@ -376,19 +378,21 @@ class LinkTests(unittest.TestCase):
             return links.install(self.skills, self.guidance, self.dest, self.docs, self.backups, self.settings)
 
     def test_fresh_and_idempotent(self):
-        self.assertEqual(self.install(), 2)
+        self.assertEqual(self.install(), 3)
         before = {p.name: os.readlink(p) for p in self.dest.iterdir()}
-        self.assertEqual(self.install(), 2)
+        self.assertEqual(self.install(), 3)
         self.assertEqual(before, {p.name: os.readlink(p) for p in self.dest.iterdir()})
 
     def test_retired_owned_broken_and_valid_links(self):
         (self.skills / "create-epic").mkdir()
-        for name in ("create-epic", "epics-manager"):
+        (self.skills / "install-memory").mkdir()  # surviving directory, no operational entry
+        for name in links.RETIRED:
             (self.dest / name).symlink_to(self.skills / name)
         self.install()
-        self.assertEqual(len(list(self.backups.iterdir())), 2)
-        self.assertFalse(os.path.lexists(self.dest / "epics-manager"))
-        self.install(); self.assertEqual(len(list(self.backups.iterdir())), 2)
+        self.assertEqual(len(list(self.backups.iterdir())), len(links.RETIRED))
+        for name in links.RETIRED:
+            self.assertFalse(os.path.lexists(self.dest / name))
+        self.install(); self.assertEqual(len(list(self.backups.iterdir())), len(links.RETIRED))
 
     def test_retired_foreign_entries_preserved(self):
         (self.dest / "create-epic").write_text("foreign file")
@@ -400,12 +404,34 @@ class LinkTests(unittest.TestCase):
         self.assertTrue((self.dest / "requirements-manager").is_symlink())
         self.assertFalse(self.backups.exists())
 
+    def test_coherence_retired_foreign_and_uncertain_entries_preserved(self):
+        for kind in ("file", "directory", "foreign-link", "old-checkout", "uncertain-link"):
+            with self.subTest(kind=kind):
+                for name in ("install-memory", "initialize-documentation"):
+                    path = self.dest / name
+                    if kind == "file": path.write_text("custom")
+                    elif kind == "directory": path.mkdir()
+                    elif kind == "foreign-link": path.symlink_to(self.root / "foreign" / name)
+                    elif kind == "old-checkout": path.symlink_to(self.root / "old" / "skills" / name)
+                    else: path.symlink_to(self.skills / (name + "-custom"))
+                self.install()
+                self.assertFalse(self.backups.exists())
+                for name in ("install-memory", "initialize-documentation"):
+                    path = self.dest / name
+                    self.assertTrue(os.path.lexists(path))
+                    if path.is_dir() and not path.is_symlink(): path.rmdir()
+                    else: path.unlink()
+
     def test_new_name_conflict_stops_before_retirement(self):
-        (self.dest / "planner").write_text("owner data")
-        (self.dest / "create-epic").symlink_to(self.skills / "create-epic")
-        with self.assertRaises(ValueError): self.install()
-        self.assertTrue((self.dest / "create-epic").is_symlink())
-        self.assertEqual((self.dest / "planner").read_text(), "owner data")
+        (self.dest / "install-memory").symlink_to(self.skills / "install-memory")
+        for name in ("planner", "initialize-coherence"):
+            with self.subTest(name=name):
+                conflict = self.dest / name
+                conflict.write_text("owner data")
+                with self.assertRaises(ValueError): self.install()
+                self.assertTrue((self.dest / "install-memory").is_symlink())
+                self.assertEqual(conflict.read_text(), "owner data")
+                conflict.unlink()
 
     def test_documentation_conflict_preserved(self):
         self.docs.mkdir(); (self.docs / self.guidance.name).write_text("foreign docs")
@@ -423,6 +449,46 @@ class LinkTests(unittest.TestCase):
         self.settings.write_text("not-json")
         with self.assertRaises(ValueError): self.install()
         self.assertFalse((self.dest / "planner").exists())
+
+    def test_retirement_race_preserves_replaced_foreign_link(self):
+        old = self.dest / "install-memory"
+        old.symlink_to(self.skills / "install-memory")
+        foreign = self.root / "foreign"
+        original = links.backup
+        def replace_before_backup(path, *args, **kwargs):
+            path.unlink(); path.symlink_to(foreign)
+            return original(path, *args, **kwargs)
+        with mock.patch.object(links, "backup", side_effect=replace_before_backup):
+            with self.assertRaisesRegex(ValueError, "retired destination changed concurrently"):
+                self.install()
+        self.assertEqual(links.target(old), foreign)
+        self.assertFalse(self.backups.exists())
+
+    def test_settings_byte_race_preserves_equivalent_json(self):
+        original = json.dumps({"skills": [str(self.skills)], "custom": True})
+        changed = original + "\n\n"
+        self.settings.write_text(original)
+        symlink = Path.symlink_to
+        def replace_settings(path, *args, **kwargs):
+            self.settings.write_text(changed)
+            return symlink(path, *args, **kwargs)
+        with mock.patch.object(Path, "symlink_to", new=replace_settings):
+            with self.assertRaisesRegex(ValueError, "settings changed concurrently"):
+                self.install()
+        self.assertEqual(self.settings.read_text(), changed)
+
+    def test_current_link_race_preserves_foreign_work(self):
+        self.install()
+        original = Path.mkdir
+        def replace_link(path, *args, **kwargs):
+            if path == self.docs:
+                link = self.dest / "planner"
+                link.unlink(); link.symlink_to(self.root / "foreign")
+            return original(path, *args, **kwargs)
+        with mock.patch.object(Path, "mkdir", new=replace_link):
+            with self.assertRaisesRegex(ValueError, "destination changed concurrently"):
+                self.install()
+        self.assertEqual(links.target(self.dest / "planner"), self.root / "foreign")
 
 
 class RpcDriverTests(unittest.TestCase):
