@@ -91,7 +91,7 @@ Every task records prospective targets' initial state/content, runs `git status 
   - **Model class**: sonnet-class.
   - **Rationale**: focused assurance of checker sensitivity, independently observable without agent execution.
 
-- [ ] T007 [Integration and acceptance packet] Run complete deterministic checks and reconcile source-to-implementation evidence.
+- [x] T007 [Integration and acceptance packet] Run complete deterministic checks and reconcile source-to-implementation evidence.
   - **Depends**: T001, T002, T003, T004, T005, T006.
   - **Prerequisites**: all producer evidence verified; current approved content and bounded attribution still valid. Coordinator's independent implementation review remains required; this task neither replaces it nor self-approves delivery.
   - **Outcome / files**: final evidence in established task/execution conventions; fix only demonstrated introduced integration/doc/check defects within approved bounds, returning changed contracts/material scope to planner approval renewal. No mandatory new tracker/schema/report artifact.

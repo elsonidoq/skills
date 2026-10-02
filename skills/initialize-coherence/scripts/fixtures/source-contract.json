@@ -27,7 +27,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_proposal_preserved",
       "negative": "test_proposal_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_proposal_preserved and test_proposal_rejects_deleted_guard; all required guard phrases checked in Approval; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Proposal-first: do not write, edit, or overwrite any target until explicit owner approval"
       ]
@@ -48,7 +48,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_instructions_preserved",
       "negative": "test_instructions_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_instructions_preserved and test_instructions_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent)",
         "loaded automatically as context files"
@@ -70,7 +70,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_targets_preserved",
       "negative": "test_targets_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_targets_preserved and test_targets_rejects_deleted_guard; all required guard phrases checked in Preflight; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Record every prospective target\u2019s initial dirty state and content",
         "Do not edit an already-dirty target without explicit owner approval",
@@ -86,6 +86,11 @@
           "path": "skills/install-memory/SKILL.md",
           "start": 24,
           "end": 34
+        },
+        {
+          "path": "REQUIREMENTS.md",
+          "start": 8,
+          "end": 23
         }
       ],
       "behavior": "Verify requirements; report missing without installing",
@@ -94,7 +99,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_requirements_preserved",
       "negative": "test_requirements_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_requirements_preserved and test_requirements_rejects_deleted_guard; all required guard phrases checked in Preflight; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "REQUIREMENTS.md",
         "pi 0.87.x (tested 0.87.1)",
@@ -122,7 +127,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_flow_preserved",
       "negative": "test_flow_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_flow_preserved and test_flow_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "request \u2192 `planner` understanding/brainstorming/scope \u2192 explicit owner TinySpec/Standard choice \u2192 reviewed tasks \u2192 approved handoff \u2192 `coordinate-implementation` \u2192 `finish-session`",
         "TinySpec uses `tiny-spec`, separate tasks and combined approval",
@@ -146,7 +151,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_memory_path_preserved",
       "negative": "test_memory_path_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_memory_path_preserved and test_memory_path_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "default `<project-root>/memory/` with `memory/MEMORY.md` and entry files",
         "owner-chosen paths remain valid",
@@ -169,7 +174,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_state_preserved",
       "negative": "test_state_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_state_preserved and test_state_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "temporary current-execution state only when the project uses one (commonly root `STATE.md`)",
         "pi sessions as the conversation record",
@@ -192,7 +197,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_docs_record_preserved",
       "negative": "test_docs_record_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_docs_record_preserved and test_docs_record_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Record documentation owners and the documentation-routing guide discovered here"
       ]
@@ -213,7 +218,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_skeleton_preserved",
       "negative": "test_skeleton_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_skeleton_preserved and test_skeleton_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "only the header, contract rules, and a no-gotchas-yet placeholder",
         "never fabricated facts"
@@ -235,7 +240,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_append_preserved",
       "negative": "test_append_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_append_preserved and test_append_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Append a marked, self-contained suite contract",
         "preserving existing custom content verbatim",
@@ -258,7 +263,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_brief_preserved",
       "negative": "test_brief_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_brief_preserved and test_brief_rejects_deleted_guard; all required guard phrases checked in Approval; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Before calling `ask_user`",
         "4\u20136 short bullets",
@@ -275,6 +280,11 @@
           "path": "skills/install-memory/SKILL.md",
           "start": 60,
           "end": 61
+        },
+        {
+          "path": "skills/planner/references/approval-and-recovery.md",
+          "start": 26,
+          "end": 58
         }
       ],
       "behavior": "Discoverable approval contract; renewal, no inferred consent",
@@ -283,7 +293,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_renewal_preserved",
       "negative": "test_renewal_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_renewal_preserved and test_renewal_rejects_deleted_guard; all required guard phrases checked in Approval; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Verify the discoverable planner approval contract; if missing, report and stop",
         "Denial, cancellation, timeout or ambiguous answers grant no writes",
@@ -308,7 +318,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_noop_preserved",
       "negative": "test_noop_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_noop_preserved and test_noop_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "For a compatible existing adoption, report adoption unnecessary and validate the existing association as a no-op"
       ]
@@ -329,7 +339,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_refresh_preserved",
       "negative": "test_refresh_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_refresh_preserved and test_refresh_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Refresh only owner-approved bounds of the marked suite-owned section",
         "preserve custom memory paths, docs, policy and every unrelated byte",
@@ -353,7 +363,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_memory_apply_preserved",
       "negative": "test_memory_apply_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_memory_apply_preserved and test_memory_apply_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Create the approved memory skeleton only for new adoption",
         "preserve the existing memory store and index on refresh",
@@ -377,7 +387,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_validate_memory_preserved",
       "negative": "test_validate_memory_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_validate_memory_preserved and test_validate_memory_rejects_deleted_guard; all required guard phrases checked in Validation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Re-read approved instructions and the whole memory index",
         "Verify marked contract, associated store path, resolving index, no fabricated gotchas and no unrelated changes"
@@ -399,7 +409,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_report_memory_preserved",
       "negative": "test_report_memory_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_report_memory_preserved and test_report_memory_rejects_deleted_guard; all required guard phrases checked in Validation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Report instructions/memory paths, requirements recorded",
         "Use `finish-session` for bounded initialization closeout"
@@ -421,7 +431,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_exclusions_preserved",
       "negative": "test_exclusions_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_exclusions_preserved and test_exclusions_rejects_deleted_guard; all required guard phrases checked in Preflight; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Do not modify application code, tests, generated application assets, deployment state, or unrelated files",
         "Do not create planning artifacts"
@@ -443,7 +453,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_discover_docs_preserved",
       "negative": "test_discover_docs_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_discover_docs_preserved and test_discover_docs_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "existing documentation indexes, registers, runbooks, architecture records, decisions, specifications, and memory configuration"
       ]
@@ -464,7 +474,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_clean_preserved",
       "negative": "test_clean_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_clean_preserved and test_clean_rejects_deleted_guard; all required guard phrases checked in Preflight; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Run `git status --short`",
         "Clean means no output; untracked files make the project non-clean",
@@ -487,7 +497,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_owners_preserved",
       "negative": "test_owners_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_owners_preserved and test_owners_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Preserve existing authoritative owners and formats; do not create competing documents"
       ]
@@ -508,7 +518,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_truth_preserved",
       "negative": "test_truth_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_truth_preserved and test_truth_rejects_deleted_guard; all required guard phrases checked in Preflight; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Never state unverified code, operational or historical claims as current fact",
         "Do not write credentials, tokens, personal data, or sensitive payloads"
@@ -530,7 +540,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_database_preserved",
       "negative": "test_database_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_database_preserved and test_database_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Determine persistent-database presence from repository evidence",
         "require an authoritative database-schema document or documented set, even without a convention naming it",
@@ -553,7 +563,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_routing_owner_preserved",
       "negative": "test_routing_owner_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_routing_owner_preserved and test_routing_owner_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Require a documentation-routing guide, either a document or an identified section of an authoritative owner"
       ]
@@ -574,7 +584,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_directories_preserved",
       "negative": "test_directories_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_directories_preserved and test_directories_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Discover every documentation directory, including nested directories",
         "Each uses the local or owner-selected index mechanism",
@@ -598,7 +608,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_schema_detail_preserved",
       "negative": "test_schema_detail_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_schema_detail_preserved and test_schema_detail_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "current tables/collections, fields/types, keys/relationships, constraints and indexes where applicable",
         "Preserve schema owner/format",
@@ -621,7 +631,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_routing_detail_preserved",
       "negative": "test_routing_detail_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_routing_detail_preserved and test_routing_detail_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Map only verified project-specific material change categories to authoritative owners",
         "reference owner content rather than duplicate it",
@@ -644,7 +654,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_choices_preserved",
       "negative": "test_choices_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_choices_preserved and test_choices_rejects_deleted_guard; all required guard phrases checked in Discovery; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "obtain owner choices for documentation root, index mechanism, architecture/schema/routing/unresolved-work/deployment locations and formats",
         "Do not assume a `docs/` layout or create owners before those choices"
@@ -666,7 +676,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_indexes_preserved",
       "negative": "test_indexes_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_indexes_preserved and test_indexes_rejects_deleted_guard; all required guard phrases checked in Documentation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "For each index, list direct documentation files other than the index itself",
         "verified title, frontmatter description or one-line purpose",
@@ -690,7 +700,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_docs_apply_preserved",
       "negative": "test_docs_apply_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_docs_apply_preserved and test_docs_apply_rejects_deleted_guard; all required guard phrases checked in Documentation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Create parent directories only as needed for approved files",
         "Documentation writes do not create memory stores, planning artifacts or placeholder architecture facts",
@@ -713,7 +723,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_report_docs_preserved",
       "negative": "test_report_docs_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_report_docs_preserved and test_report_docs_rejects_deleted_guard; all required guard phrases checked in Validation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Report retained, initialized and intentionally absent owners",
         "validation results"
@@ -735,7 +745,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_dirty_first_preserved",
       "negative": "test_dirty_first_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_dirty_first_preserved and test_dirty_first_rejects_deleted_guard; all required guard phrases checked in Preflight; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "On a non-clean project FIRST verify native task/sub-agent capability",
         "documentation initialization blocked: sub-agent capability unavailable",
@@ -759,7 +769,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_fresh_preserved",
       "negative": "test_fresh_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_fresh_preserved and test_fresh_rejects_deleted_guard; all required guard phrases checked in Investigation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Launch a fresh read-only investigation sub-agent",
         "repository instructions, changed and untracked paths, relevant code, configuration, schemas, generated outputs and existing documentation"
@@ -781,7 +791,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_output_inventory_preserved",
       "negative": "test_output_inventory_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_output_inventory_preserved and test_output_inventory_rejects_deleted_guard; all required guard phrases checked in Investigation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "1. Verified owners and missing/stale work, including schema/routing, sources and minimum safe shells for every missing required owner, with primary `file:line` evidence where possible"
       ]
@@ -802,7 +812,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_output_attribution_preserved",
       "negative": "test_output_attribution_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_output_attribution_preserved and test_output_attribution_rejects_deleted_guard; all required guard phrases checked in Investigation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "2. Attributable current changes versus likely historical/stale material, dead-code candidates and uncertain conclusions"
       ]
@@ -823,7 +833,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_output_questions_preserved",
       "negative": "test_output_questions_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_output_questions_preserved and test_output_questions_rejects_deleted_guard; all required guard phrases checked in Investigation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "3. Only material intent questions changing scope, truth, ownership (including schema), routing categories or obsolescence"
       ]
@@ -844,7 +854,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_output_scope_preserved",
       "negative": "test_output_scope_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_output_scope_preserved and test_output_scope_rejects_deleted_guard; all required guard phrases checked in Investigation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "4. Recommended substantive documentation scope and acceptance criteria, without edits or invented owner intent"
       ]
@@ -865,7 +875,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_investigation_plan_preserved",
       "negative": "test_investigation_plan_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_investigation_plan_preserved and test_investigation_plan_rejects_deleted_guard; all required guard phrases checked in Investigation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Do not assume changed code is live, intentional or representative of current design",
         "Resolve material questions and unknown shell formats with the owner",
@@ -889,7 +899,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_shell_approval_preserved",
       "negative": "test_shell_approval_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_shell_approval_preserved and test_shell_approval_rejects_deleted_guard; all required guard phrases checked in Approval; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "For non-clean documentation, explicitly approve the current investigation plan plus exact shell/index bounds",
         "Ancillary adoption/shell approvals are not substantive implementation authorization"
@@ -911,7 +921,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_dirty_apply_preserved",
       "negative": "test_dirty_apply_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_dirty_apply_preserved and test_dirty_apply_rejects_deleted_guard; all required guard phrases checked in Documentation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "After approval re-discover owners/directories",
         "On the non-clean branch, create only explicitly approved missing empty/template shells plus file maps/indexes",
@@ -935,7 +945,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_handoff_preserved",
       "negative": "test_handoff_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_handoff_preserved and test_handoff_rejects_deleted_guard; all required guard phrases checked in Validation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Report investigation evidence, decisions/deferrals, approval location and initialized shells",
         "Verify discoverable `planner` before substantive handoff",
@@ -962,7 +972,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_retrieval_preserved",
       "negative": "test_retrieval_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_retrieval_preserved and test_retrieval_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Read the whole index first, then trigger-matching entries",
         "Recheck after any memory write",
@@ -975,8 +985,8 @@
       "citations": [
         {
           "path": "docs/plans/coherence-initialization.md",
-          "start": 47,
-          "end": 60
+          "start": 55,
+          "end": 55
         }
       ],
       "behavior": "Structure readiness not substantive completeness",
@@ -985,7 +995,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_readiness_preserved",
       "negative": "test_readiness_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_readiness_preserved and test_readiness_rejects_deleted_guard; all required guard phrases checked in Validation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "Missing required structure blocks readiness",
         "Structural readiness requires approved instructions/memory association/index, documentation owners/indexes/routing and schema owner where required",
@@ -1009,7 +1019,7 @@
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_clean_apply_preserved",
       "negative": "test_clean_apply_rejects_deleted_guard",
-      "evidence": "source captured before production; candidate/test results recorded in execution tracker",
+      "evidence": "PASS: test_clean_apply_preserved and test_clean_apply_rejects_deleted_guard; all required guard phrases checked in Documentation; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "On the clean branch initialize required documentation owners/indexes with verified content only"
       ]
