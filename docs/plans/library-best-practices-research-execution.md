@@ -17,12 +17,24 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 | 1 | T001–T004 | Shared reference and route hooks | Approved source/tasks | Planner, TinySpec, Standard helper | Clause/link review; existing gates/checks | sonnet-class / delegated GPT-6.1 Sol | in_progress |
 | 2 | T005–T007 | Tests, documentation, acceptance | Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | pending |
 
-- [ ] Batch 1 — in_progress; no implementation task completed yet.
+- [ ] Batch 1 — in_progress; T001 verified, consumers pending.
 - [ ] Batch 2 — pending; blocked on verified Batch 1.
 - [ ] Fresh final independent review — pending all task commits.
 
 ## Validation and evidence
 
 Preparation baseline: task-order validator PASS; planner static checker PASS; 56 existing fixture tests PASS; diff whitespace PASS. No live research, model-obedience or genuine SpecKit behavior exercise is authorized by these results. Implementation must preserve execution hash/gates and existing tests; add evidence-backed negative/mutation/scenario coverage. No claim of absolute regression absence can be inferred from static tests.
+
+### Batch 1 task evidence
+
+- T001 verified: fail-before confirmed the shared reference absent; inline clause assertions
+  pass-after cover all eight source clauses, durable schema, safe failure and simulated
+  evidence → constraint → validation. Manual mapping: clauses 1–3 → Discover, trigger
+  and reuse; 4–5 → Obtain sufficient evidence; 6–7 → Classify and translate;
+  8/durable schema → Persist within verified authority; route/failure → persistence,
+  Safe failure and return. No actual library claims or internet exercise.
+  Packaging inspection: installer links whole skill directories (`scripts/install-links.py`);
+  sibling links will resolve within the distributed suite, not a copied standalone skill.
+  `git diff --check` PASS. Commit subject: `feat: establish shared dependency research contract`.
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.
