@@ -30,6 +30,7 @@ unrelated projects and the legacy port keep their own documentation boundaries.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
+- [Dependency Research](../skills/planner/references/dependency-research.md): Shared repository-first evidence, proportional reuse/version refresh, discoverable technical ownership and bounded persistence for TinySpec and Standard, including direct/standalone entry.
 - [Best Practices for Spec-Driven Development](best_practices_spec_driven_development.md): Evidence-backed specifications and qualitative depth assessment.
 - [Pi Settings Sample](pi-settings-sample.md): Configuration examples and attributed, verified configuration decisions.
 
@@ -41,6 +42,9 @@ unrelated projects and the legacy port keep their own documentation boundaries.
 - [Coherence Initialization Execution](plans/coherence-initialization-execution.md): Authorized bounds, per-task verification/commits and independent review status.
 - [Planner Refactor](plans/planner-refactor.md): Approved architecture and source-first preservation ledger.
 - [Planner Regression](plans/planner-regression.md): Deterministic and live scenario strategy, evidence and limitations.
+- [Library Best-Practices Research](plans/library-best-practices-research.md): Approved shared dependency-evidence source (R1–R6).
+- [Library Best-Practices Research Tasks](plans/library-best-practices-research-tasks.md): Sequential contract, integration, regression and documentation tasks.
+- [Library Best-Practices Research Execution](plans/library-best-practices-research-execution.md): Hash-bound authority, verified task evidence and pending independent review.
 - [Planner Approval UX](plans/planner-approval-ux.md): Owner-observed brief/continuation failures, approved correction and regression evidence.
 - [Planner Astra Initial Review](plans/reviews/planner-astra-initial-review.md): Independent implementation findings, subsequently corrected.
 - [Planner Astra Final Recheck](plans/reviews/planner-astra-final-recheck.md): Accepted targeted corrections; live-validation limits remain explicit.

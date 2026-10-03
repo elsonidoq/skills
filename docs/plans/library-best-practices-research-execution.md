@@ -18,7 +18,7 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 | 2 | T005–T007 | Tests, documentation, acceptance | Verified Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | in_progress |
 
 - [x] Batch 1 — completed; T001–T004 verified and separately committed.
-- [ ] Batch 2 — in_progress; T005 verified; T006–T007 pending.
+- [ ] Batch 2 — in_progress; T005–T006 verified; T007 pending.
 - [ ] Fresh final independent review — pending all task commits.
 
 ## Validation and evidence
@@ -102,6 +102,16 @@ Run `/reload` inside pi after global skill changes.
   assert carrier obligations and illustrative evidence→constraint→check correspondence,
   not agent execution or research quality. No new policy engine/fixture workflow.
   Execution hash freeze unchanged; `git diff --check` PASS. Verified changes committed as
-  `test: protect shared dependency research obligations` (T005).
+  `test: protect shared dependency research obligations` (T005), commit `51485d7`.
+- T006 verified: fail-before discovery assertion reported absent Dependency Research
+  index link. Pass-after inline Python check resolves all local index/regression links,
+  confirms every documented named test exists and the no-memory declaration is preserved.
+  Added only shared/source/task/execution discovery and focused regression guidance;
+  manual comparison with operational carriers/tests confirms both routes and standalone,
+  repository-first reuse/refresh, discovered durable ownership, safe failure, timing and
+  bounded Standard writes. Illustrative static walkthroughs versus semantic supporting-span
+  review versus NOT RUN authorized behavioral evidence are distinct. Checker PASS;
+  68 tests PASS; `git diff --check` PASS. Verified changes committed as
+  `docs: expose dependency research and assurance limits` (T006).
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.

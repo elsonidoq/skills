@@ -34,6 +34,48 @@ adapter double creation, remove stage bodies, swap stages and insert contradicto
 Trace mutations test tool-context-only briefs, hidden reasoning, post-question summaries,
 cancelled choices, unoffered paths, pending-approval content changes and forbidden actions.
 
+## Dependency research assurance
+
+The [shared contract](../../skills/planner/references/dependency-research.md) applies
+before consequential TinySpec approach and Standard specification/plan decisions,
+including direct TinySpec, direct Standard and helper-managed/standalone entry.
+Repository guidance/version discovery comes first; adequate applicable guidance can
+satisfy evidence without a search. Trivial skip records a reason, while version changes
+refresh only deficient portions. Durable guidance uses a discovered specific technical
+owner/index, not fixed target-project paths. Preselection remains read-only; selected
+production verifies bounded writes before persistence/readiness. The Standard helper's
+narrow documentation permission is additional to, not a replacement for, SpecKit-only
+planning authority. Missing required research/authority returns exact gaps and affected
+decisions; recollection is not evidence and deferral requires explicit owner bounds.
+
+`DependencyResearchTests` in `scripts/test-planner-workflow.py` covers these offline cases:
+
+| Case | Deterministic evidence (simulated where stated) |
+| --- | --- |
+| Unfamiliar indexing engine: batching/flush/lifecycle | `test_simulated_indexing_trace_in_both_routes_and_entries`: fictional version-specific lifecycle span → derived shutdown constraint → observable completion-before-close check; assumption has its own check, no universal batching rule |
+| Recent applicable guidance; trivial use; changed version | `test_simulated_reuse_skip_and_version_refresh`: carrying clauses for no new search/date bump, brief skip reason and targeted refresh preserving other guidance |
+| Unavailable search with inadequate local guidance; unsupported/uninspected sources; explicit deferral | `test_simulated_insufficient_evidence_and_bounded_deferral`: exact-gap/affected-decision return, unsupported evidence rejection, impact/bounds/validation retained without fabricated evidence |
+| Both routes, direct/standalone and preselection | Route/entry carrier assertions, research-order mutations, whole planner-stage removal with summaries intact, and no preselection docs persistence |
+| Evidence/version/provenance/traceability or authority lost | `test_research_clause_removals_have_named_diagnostics`: actual carrying clauses removed individually; specific diagnostics required, not summary keyword matches |
+| Missing/wrong reference; packaging | Required-carrier and isolated-copy link rejection; whole-directory symlinks resolve all three consumers without installation |
+| Unsafe fallback or widened writes | `test_unsafe_research_permissions_are_rejected`: contradictory preselection persistence, arbitrary helper edits and recollection fallback rejected |
+
+These are instruction/fixture sensitivity checks and illustrative semantic walkthroughs,
+not a fake research engine or agent-produced artifacts. The suite preserves all 56 prior
+tests and execution SHA freeze; current results are recorded in the
+[execution evidence](library-best-practices-research-execution.md). Static phrase checks
+cannot establish source truth, version applicability or actual source-backed constraints.
+Manual semantic review must inspect supporting spans and follow documented recommendation
+or local evidence → derived decision/constraint → observable validation, distinguishing
+assumptions and checking durable owner/index discovery and targeted preservation.
+
+Live research/model/real-SpecKit dependency-production scenarios are **NOT RUN** and need
+separate authorization and isolation as below. Future evidence must capture usable research
+calls/sources, supporting versioned spans, write timing/scope, artifact snapshots and actual
+source→constraint→validation correspondence across managed and standalone entries. Include
+local reuse/trivial skip, changed-version refresh, unavailable/insufficient evidence and
+explicit bounded deferral; deterministic PASS is not behavioral acceptance.
+
 ## Trace evidence and executive briefs
 
 `python3 scripts/planner-trace.py events.jsonl contract.json` accepts Pi message/tool events
