@@ -15,11 +15,11 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 | Batch | Tasks | Scope | Dependencies | Integration | Verification | Class / mode | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001–T004 | Shared reference and route hooks | Approved source/tasks | Planner, TinySpec, Standard helper | Clause/link review; existing gates/checks | sonnet-class / delegated GPT-6.1 Sol | completed |
-| 2 | T005–T007 | Tests, documentation, acceptance | Verified Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | in_progress |
+| 2 | T005–T007 | Tests, documentation, acceptance | Verified Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | completed |
 
 - [x] Batch 1 — completed; T001–T004 verified and separately committed.
-- [ ] Batch 2 — in_progress; T005–T006 verified; T007 pending.
-- [ ] Fresh final independent review — pending all task commits.
+- [x] Batch 2 — completed; T005–T007 verified and separately committed.
+- [ ] Fresh final independent review — pending coordinator-owned review of the full committed range; not self-certified.
 
 ## Validation and evidence
 
@@ -112,6 +112,59 @@ Run `/reload` inside pi after global skill changes.
   bounded Standard writes. Illustrative static walkthroughs versus semantic supporting-span
   review versus NOT RUN authorized behavioral evidence are distinct. Checker PASS;
   68 tests PASS; `git diff --check` PASS. Verified changes committed as
-  `docs: expose dependency research and assurance limits` (T006).
+  `docs: expose dependency research and assurance limits` (T006), commit `e588bc6`.
+- T007 verified: fail-before packet assertion reported missing R1–R6 reconciliation.
+  Pass-after reconciliation below checked against actual clauses, named test results,
+  links and attributable full-range diffs. No introduced integration defect or excluded
+  surface found. Verified evidence committed as `docs: reconcile dependency research
+  integration evidence` (T007); this completes implementation tasks, not independent
+  review or final feature acceptance.
+
+### R1–R6 integration reconciliation
+
+| Criterion | Carrying sections and positive/rejection evidence | Result / limit |
+| --- | --- | --- |
+| R1 routes/direct/standalone | Planner TinySpec source, Standard `spec_create`/`plan_create`/`overall_review`; TinySpec dependency evidence; helper Preflight/adapter. Simulated indexing route/entry assertions; missing invocation, standalone clause, stage deletion and after-design mutations | PASS static/manual; no actual model or SpecKit production |
+| R2 proportional reuse/refresh | Shared Discover/Obtain, all consumer preflights. Simulated reuse/skip/version-refresh assertions; repository-first, skip, targeted-refresh, local-evidence and source hierarchy clause removals | PASS static/manual; no real version research |
+| R3 durable provenance/traceability | Shared Classify/Persist; TinySpec compact source; helper Boundary/Completion; planner selected-production review. Classification/version/source/owner/schema/traceability removals reject; index links resolve | PASS static/manual simulated correspondence; no real research output |
+| R4 safe failure/bounded authority | Shared Safe failure/Persist, planner plan brief, helper Preflight/Boundary/adapter. Unsupported-source, fallback, exact-gap, bounded permission and arbitrary-write rejection; illustrative bounded deferral assertions | PASS static/manual; no actual unavailable-tool behavior exercise |
+| R5 selected-only persistence/gates | Planner Before selection/selected stages, shared Persist, TinySpec direct authority, helper approved-spec/renewal rules. No-persistence and permission mutations; original approval/class/one-plan checks and coordinator freeze unchanged | PASS static/manual; actual write timing outside these local edits NOT RUN |
+| R6 regression integrity | Required shared carrier/link loader; 12 research tests plus all original 56; regression guide limitations and whole-stage/summary masking tests | PASS deterministic; independent review pending |
+
+Manual supporting-span walkthrough: the explicitly simulated shared “Lifecycle” span
+requires queued work completion before close; simulated local shutdown races a queue.
+The recommendation is distinct from the derived shutdown ordering constraint; the
+observable check tests completion before the close event. The wait-time assumption
+has a separate validation check, not a documented guarantee. The test's fictional v2
+URL is labelled simulated and unresolvable by design; it is not internet evidence.
+No universal batching/flush claim is inferred. For actual use, canonical guidance must
+hold version, primary supporting claims/date and uncertainty, be discovered through the
+repository owner/index, and receive only deficient-section refresh; the source/plan links
+that owner and carries the constraint/check. Both Standard brief modes and helper boundary
+agree on explicit destinations/changes/prohibitions in addition to SpecKit artifacts.
+
+Final commands/results (all local; Python invocations use `PYTHONDONTWRITEBYTECODE=1`):
+
+- `python3 scripts/check-planner-workflow.py`: PASS.
+- `python3 scripts/test-planner-workflow.py -v`: PASS, 68 tests; named research positives/rejections.
+- `bash scripts/check-skills-lint.sh`: PASS, 22 skills, 0 failures; planner 68 and focused
+  suites 135/4/2/7/3/6 tests PASS. No introduced lint failure or warning to ignore.
+- `python3 skills/task-generation/scripts/check-task-order.py docs/plans/library-best-practices-research-tasks.md`: PASS.
+- `python3 skills/coordinate-implementation/scripts/test_intake_contract.py`: PASS, 6 tests.
+- `python3 skills/coordinate-implementation/scripts/test_batching_contract.py`: PASS, 3 tests.
+- Inline Python index/regression link and named-test check: PASS; packet reconciliation assertions PASS.
+- `git diff --check` and full-range whitespace check from `f59ed226`: PASS.
+- Full-range diff/name inspection, clean/staged inventory and `sha256sum` of source/tasks:
+  PASS, approval-bound digests unchanged. Since preparation `27dee6f`, only authorized
+  three skills/shared reference, two scripts, index/regression docs and tracker differ.
+  Batch 2 changes only its five allowed existing files; original tests and execution SHA
+  remain unchanged. No untracked/staged unrelated work, installation, push or deployment.
+
+Residual limits: phrase-based checker sensitivity is not semantic completeness, natural-language
+obedience, real source quality/applicability or actual filesystem preservation proof. Semantic
+walkthroughs here are simulated, not agent-produced plans. Live research/model/real-SpecKit and
+baseline/candidate behavioral runs NOT RUN; no dependency integration was designed. Fresh
+independent review and final acceptance remain coordinator-owned and pending. Run `/reload`
+inside pi after the global skill changes.
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.
