@@ -18,7 +18,7 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 | 2 | T005–T007 | Tests, documentation, acceptance | Verified Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | in_progress |
 
 - [x] Batch 1 — completed; T001–T004 verified and separately committed.
-- [ ] Batch 2 — in_progress; producer prerequisites verified, T005–T007 not yet executed.
+- [ ] Batch 2 — in_progress; T005 verified; T006–T007 pending.
 - [ ] Fresh final independent review — pending all task commits.
 
 ## Validation and evidence
@@ -84,5 +84,24 @@ blockers. T005 focused regression coverage, T006 discovery docs, T007 full accep
 fresh independent review remain outstanding. Static/semantic review is not model obedience
 or real research quality proof; live research/model/real-SpecKit exercises NOT RUN.
 Run `/reload` inside pi after global skill changes.
+
+### Batch 2 task evidence
+
+- Preflight: inspected all five Batch 1 commits and their actual files; clean workspace,
+  `main`, source/task hashes match approval. Baseline checker PASS; original 56 tests PASS.
+  No skill integration defect found; no skill writes required in this batch.
+- T005 verified: new tests failed before checker implementation (65 tests, 36 named
+  failures), including carrier/link, removed clauses, unsafe permissions and stage order.
+  After implementation and expanded coverage: checker PASS; 68 tests PASS (all original
+  56 preserved). `DependencyResearchTests` adds 12 tests: 36 individual clause-removal
+  subcases assert specific diagnostics; whole carrier/stage deletion retains summary
+  mentions but fails; missing/wrong packaged links, post-design placement and contradictory
+  permissions fail. Required shared carrier and actual relative link owner checked;
+  isolated whole-directory symlink packaging resolves all consumers without installation.
+  Simulated indexing trace and reuse/skip/version-refresh/failure/deferral walkthroughs
+  assert carrier obligations and illustrative evidence→constraint→check correspondence,
+  not agent execution or research quality. No new policy engine/fixture workflow.
+  Execution hash freeze unchanged; `git diff --check` PASS. Verified changes committed as
+  `test: protect shared dependency research obligations` (T005).
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.

@@ -160,6 +160,219 @@ class InstructionTests(unittest.TestCase):
         self.assertIn("SKIP planner workflow checks", run.stdout)
 
 
+class DependencyResearchTests(unittest.TestCase):
+    """Contract sensitivity and labelled simulated walkthroughs, not agent runs."""
+
+    def setUp(self):
+        self.texts = checker.load_texts()
+        self.texts.setdefault("research", (ROOT / "skills/planner/references/dependency-research.md").read_text())
+
+    def assert_diagnostic(self, texts, label):
+        errors = checker.check_contracts(texts)
+        self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
+
+    def test_shared_reference_is_required_carrier(self):
+        self.assertIn("research", checker.PATHS)
+        changed = dict(self.texts)
+        del changed["research"]
+        self.assert_diagnostic(changed, "research-reference")
+
+    def test_research_clause_removals_have_named_diagnostics(self):
+        # Remove the actual obligation inside its carrier, not a summary keyword.
+        cases = [
+            ("planner", "## Discovery and capability boundary", "[dependency research contract](references/dependency-research.md)", "research-planner-link"),
+            ("tiny", "## Dependency evidence before approach decisions", "[dependency research contract](../planner/references/dependency-research.md)", "research-tiny"),
+            ("helper", "## Preflight", "[dependency research contract](../planner/references/dependency-research.md)", "research-helper"),
+            ("planner", "## Before selection:", "no dependency docs,\nsource, plan or decisions may be persisted", "research-preselection"),
+            ("planner", "### TinySpec path", "before consequential approach decisions", "research-tiny-handoff"),
+            ("planner", "spec_create", "apply the shared research contract before consequential dependency constraints\n   are chosen", "research-spec"),
+            ("planner", "plan_create", "For helper invocation or the direct Standard pass", "research-plan"),
+            ("planner", "plan_create", "with explicit bounded permission\n   in addition to detected SpecKit artifacts", "research-plan"),
+            ("tiny", "## Dependency evidence before approach decisions", "Direct/standalone entry verifies equivalent TinySpec selection/preparation authority", "research-tiny"),
+            ("helper", "## Preflight", "Standalone entry verifies equivalent Standard planning/preparation authority", "research-helper"),
+            ("helper", "## Planner Boundary", "only explicit bounded\npermission permits canonical research-document and necessary discovery-link writes", "research-boundary"),
+            ("helper", "## Planner Boundary", "No arbitrary documentation edits or product code writes", "research-boundary"),
+            ("research", "## Discover, trigger and reuse", "Read repository instructions, dependency declarations/lockfiles", "research-discovery"),
+            ("research", "## Discover, trigger and reuse", "Trivial use can skip new internet\nresearch with a brief reason", "research-discovery"),
+            ("research", "## Discover, trigger and reuse", "refresh only\nthose portions", "research-discovery"),
+            ("research", "## Obtain sufficient evidence", "Adequate local guidance can satisfy evidence\nwithout a new search call", "research-evidence"),
+            ("research", "## Obtain sufficient evidence", "official documentation, official guides/\nexamples/repositories and maintainers first", "research-evidence"),
+            ("research", "## Classify and translate", "URL and applicable version", "research-traceability"),
+            ("research", "## Classify and translate", "**Repository-derived decision:** local evidence, resulting decision and rationale", "research-traceability"),
+            ("research", "## Classify and translate", "**Assumption:** uncertainty and a defined validation check", "research-traceability"),
+            ("research", "## Classify and translate", "Unsupported snippets, uninspected URLs, uncertain statements and generic model\nrecollection cannot satisfy required source evidence", "research-traceability"),
+            ("research", "## Classify and translate", "recommendation/local evidence → derived decision/implementation constraint → observable\nvalidation", "research-traceability"),
+            ("research", "## Persist within verified authority", "primary URLs tied to supporting\nclaims, research date for evolving guidance", "research-persistence"),
+            ("research", "## Safe failure and return", "stop affected consequential design and return the exact gap", "research-failure"),
+            ("research", "## Safe failure and return", "No generic-knowledge fallback, fabricated\nsources, automatic deferral, installation or premature readiness", "research-failure"),
+            ("research", "## Safe failure and return", "Record impact, allowed bounds and outstanding validation", "research-failure"),
+            ("research", "## Discover, trigger and reuse", "installed/targeted dependency and version/range", "research-discovery"),
+            ("research", "## Obtain sufficient evidence", "verify actually usable, permitted", "research-evidence"),
+            ("research", "## Persist within verified authority", "repository technical owner and its discoverability index", "research-persistence"),
+            ("research", "## Persist within verified authority", "Re-read each target immediately before", "research-persistence"),
+            ("tiny", "## Compact source contract", "Trace source recommendation/local evidence → compact implementation\n  constraint → observable acceptance/check", "research-tiny-traceability"),
+            ("helper", "## Planner Boundary", "supporting source spans → implementation constraints → observable checks", "research-boundary"),
+            ("helper", "## Preflight", "standalone local fallback cannot bypass required research", "research-helper"),
+            ("helper", "## Planner Standard adapter contract", "absence is not implied authority", "research-helper-adapter"),
+            ("planner", "## Selected production and stage handoffs", "supporting spans → constraints → observable checks", "research-review"),
+            ("planner", "overall_review", "direct Standard\n   pass and helper-managed/standalone contract coverage", "research-standard-review"),
+        ]
+        for key, heading, clause, label in cases:
+            with self.subTest(diagnostic=label, removed=clause):
+                changed = dict(self.texts)
+                carrier = checker.stage(changed[key], heading) if heading in ("spec_create", "plan_create", "overall_review") else checker.section(changed[key], heading)
+                self.assertEqual(carrier.count(clause), 1)
+                changed[key] = changed[key].replace(carrier, carrier.replace(clause, "", 1), 1)
+                self.assert_diagnostic(changed, label)
+
+    def test_whole_research_carriers_cannot_be_replaced_by_summary(self):
+        for key, heading, label in (
+            ("tiny", "## Dependency evidence before approach decisions", "research-tiny"),
+            ("helper", "## Preflight", "research-helper"),
+            ("research", "## Classify and translate", "research-traceability"),
+            ("research", "## Safe failure and return", "research-failure"),
+        ):
+            with self.subTest(carrier=heading):
+                changed = dict(self.texts)
+                body = checker.section(changed[key], heading)
+                changed[key] = changed[key].replace(body, heading + "\n", 1) + "\n## Summary only\n" + body
+                self.assert_diagnostic(changed, label)
+
+    def test_planner_stage_deletions_preserve_summary_but_fail_research(self):
+        for name, label in (("spec_create", "research-spec"), ("plan_create", "research-plan"),
+                            ("overall_review", "research-standard-review")):
+            with self.subTest(stage=name):
+                changed = dict(self.texts)
+                body = checker.stage(changed["planner"], name)
+                changed["planner"] = changed["planner"].replace(body, f"**`{name}`**\n", 1)
+                self.assertIn("Carry dependency research triggers", changed["planner"])
+                self.assert_diagnostic(changed, label)
+
+    def test_standard_and_helper_after_design_wording_is_rejected(self):
+        for key, before, after, label in (
+            ("planner", "Before consequential plan decisions", "After consequential plan decisions", "research-plan"),
+            ("planner", "before consequential dependency constraints", "after consequential dependency constraints", "research-spec"),
+            ("helper", "before consequential architecture/plan decisions", "after consequential architecture/plan decisions", "research-helper"),
+        ):
+            with self.subTest(route=label):
+                changed = dict(self.texts)
+                self.assertIn(before, changed[key])
+                changed[key] = changed[key].replace(before, after, 1)
+                self.assert_diagnostic(changed, label)
+
+    def test_distributed_whole_directory_links_resolve_shared_owner(self):
+        # Packaging shape used by install-links.py; no installation is performed.
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            for name in ("planner", "tiny-spec", "delegating-architectural-planning"):
+                (target / name).symlink_to(ROOT / "skills" / name, target_is_directory=True)
+            for name, relative in (("planner", "references/dependency-research.md"),
+                                   ("tiny-spec", "../planner/references/dependency-research.md"),
+                                   ("delegating-architectural-planning", "../planner/references/dependency-research.md")):
+                self.assertEqual((target / name / relative).resolve(),
+                                 (ROOT / "skills/planner/references/dependency-research.md").resolve())
+                self.assertIn("# Dependency research contract", (target / name / relative).read_text())
+
+    def test_tiny_research_moved_after_approach_is_rejected(self):
+        changed = dict(self.texts)
+        body = checker.section(changed["tiny"], "## Dependency evidence before approach decisions")
+        changed["tiny"] = changed["tiny"].replace(body, "", 1) + "\n" + body
+        self.assert_diagnostic(changed, "research-order")
+
+    def test_missing_or_unresolvable_packaged_links(self):
+        # Isolated file copies only; no installer or user's installation is changed.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for path in set(checker.PATHS.values()):
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text((ROOT / path).read_text())
+            checker.load_texts(root)
+            tiny = root / checker.PATHS["tiny"]
+            tiny.write_text(tiny.read_text().replace("../planner/references/dependency-research.md", "../planner/references/absent.md"))
+            with self.assertRaisesRegex(ValueError, "research-reference:.*tiny"):
+                checker.load_texts(root)
+            tiny.write_text((ROOT / checker.PATHS["tiny"]).read_text())
+            (root / "skills/planner/references/dependency-research.md").unlink()
+            with self.assertRaisesRegex(ValueError, "research-reference:"):
+                checker.load_texts(root)
+
+    def test_unsafe_research_permissions_are_rejected(self):
+        for key, heading, policy, label in (
+            ("planner", "## Before selection:", "Persist dependency docs before selection.", "research-preselection"),
+            ("helper", "## Planner Boundary", "Arbitrary documentation edits are permitted.", "research-boundary"),
+            ("research", "## Safe failure and return", "Use model recollection when required research is unavailable.", "research-failure"),
+        ):
+            with self.subTest(policy=policy):
+                changed = dict(self.texts)
+                changed[key] = changed[key].replace(heading, heading + "\n" + policy, 1)
+                self.assert_diagnostic(changed, label)
+
+    def test_simulated_indexing_trace_in_both_routes_and_entries(self):
+        # Fictional v2 guide, local call sites and outputs: not real source research.
+        evidence = {"kind": "documented recommendation", "version": "simulated v2",
+                    "span": "Lifecycle: complete queued batches before close",
+                    "url": "https://example.invalid/simulated/v2/lifecycle"}
+        decision = {"kind": "repository-derived decision", "local": "simulated shutdown races pending flush",
+                    "constraint": "await queued batches before close", "source": evidence["span"]}
+        assumption = {"kind": "assumption", "claim": "bounded shutdown wait", "check": "measure wait under simulated load"}
+        check = {"constraint": decision["constraint"], "observable": "pending batch completion precedes close event"}
+        self.assertIn("queued batches", evidence["span"])
+        self.assertEqual(decision["source"], evidence["span"])
+        self.assertEqual(check["constraint"], decision["constraint"])
+        self.assertIn("precedes close", check["observable"])
+        self.assertTrue(assumption["check"])
+        for key, heading, expected in (
+            ("planner", "### TinySpec path", "before consequential approach decisions"),
+            ("planner", "plan_create", "For helper invocation or the direct Standard pass"),
+            ("tiny", "## Dependency evidence before approach decisions", "Direct/standalone entry verifies equivalent"),
+            ("helper", "## Preflight", "Standalone entry verifies equivalent"),
+        ):
+            with self.subTest(simulated_route=key, entry=heading):
+                carrier = checker.stage(self.texts[key], heading) if heading == "plan_create" else checker.section(self.texts[key], heading)
+                self.assertIn(expected, carrier)
+        classification = checker.section(self.texts["research"], "## Classify and translate")
+        for obligation in ("**Documented recommendation:**", "**Repository-derived decision:**", "**Assumption:**", "observable\nvalidation"):
+            self.assertIn(obligation, classification)
+
+    def test_simulated_reuse_skip_and_version_refresh(self):
+        # Expected offline walkthrough facts, not an automated research policy engine.
+        discovery = checker.section(self.texts["research"], "## Discover, trigger and reuse")
+        evidence = checker.section(self.texts["research"], "## Obtain sufficient evidence")
+        persistence = checker.section(self.texts["research"], "## Persist within verified authority")
+        for case, carrier, obligations in (
+            ("recent applicable simulated v2 guidance: reuse, zero new searches/date bump", evidence,
+             ("Adequate local guidance can satisfy evidence\nwithout a new search call",)),
+            ("trivial simulated import: skip with reason", discovery,
+             ("Trivial use can skip new internet\nresearch with a brief reason",)),
+            ("simulated v1 lifecycle outdated for v2: refresh lifecycle only", discovery,
+             ("version applicability", "refresh only\nthose portions", "no universal freshness deadline or decorative date bump")),
+            ("targeted simulated refresh preserves other guidance", persistence,
+             ("Re-read each target immediately before", "preserve unrelated content")),
+        ):
+            with self.subTest(simulated_case=case):
+                for obligation in obligations:
+                    self.assertIn(obligation, carrier)
+
+    def test_simulated_insufficient_evidence_and_bounded_deferral(self):
+        failure = checker.section(self.texts["research"], "## Safe failure and return")
+        classification = checker.section(self.texts["research"], "## Classify and translate")
+        for case, carrier, obligations in (
+            ("simulated unavailable search plus inadequate local guide: return missing v2 lifecycle evidence, affected shutdown decision", failure,
+             ("required tools, usable sources, version evidence or write authority", "stop affected consequential design and return the exact gap", "affected\ndecisions and evidence/authority needed")),
+            ("simulated uninspected URL/snippet: cannot satisfy evidence", classification,
+             ("Unsupported snippets, uninspected URLs", "recollection cannot satisfy required source evidence")),
+            ("simulated explicit owner deferral: defer only shutdown timing; impact risk, bounded use, pending-load check remain", failure,
+             ("explicit bounded owner deferral through existing gates", "Record impact, allowed bounds and outstanding validation", "not fabricate evidence or waive unrelated gates")),
+        ):
+            with self.subTest(simulated_case=case):
+                for obligation in obligations:
+                    self.assertIn(obligation, carrier)
+        pre = checker.section(self.texts["planner"], "## Before selection:")
+        self.assertIn("no dependency docs,\nsource, plan or decisions may be persisted", pre)
+        self.assertIn("Carry findings in session until selection", pre)
+
+
 BRIEF = "\n".join((
     "- Outcome: fix search ranking.",
     "- Scope: ranking only; exclude API migration.",

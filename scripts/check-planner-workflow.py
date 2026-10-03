@@ -19,6 +19,7 @@ PATHS = {
     "memory": "skills/memory-handling/SKILL.md",
     "guidance": "docs/best_practices_spec_driven_development.md",
     "requirements": "REQUIREMENTS.md",
+    "research": "skills/planner/references/dependency-research.md",
 }
 # Captured BEFORE replacement. Intake-only refactor must not weaken execution.
 EXECUTION_SHA256 = "080e25e4365a2e88e65303a7a0b95e0c0d8ff7456d55099b7c96c89367b82751"
@@ -173,11 +174,106 @@ def check_contracts(texts):
                "automatically split internal dependencies", "regroup dependencies to fill batches",
                "direct requirements must have a plan", "mandatory plan for direct requirements")
     reject("silent-routing", p, "automatically choose TinySpec", "automatically choose Standard")
+
+    # Research obligations must occur in their operational carriers, not summaries.
+    require("research-planner-link", section(p, "## Discovery and capability boundary"),
+            "[dependency research contract](references/dependency-research.md)",
+            "inspect repository\nguidance and dependency/version evidence first")
+    require("research-preselection", pre, "no dependency docs,\nsource, plan or decisions may be persisted",
+            "Carry findings in session until selection")
+    reject("research-preselection", pre, "Persist dependency docs before selection")
+    require("research-review", production, "persist reusable guidance during authorized production before readiness",
+            "both direct/standalone consumers", "version/provenance", "proportional reuse/targeted refresh",
+            "supporting spans → constraints → observable checks", "capability/permission gaps",
+            "stop affected design rather than default to model recollection", "never automatically defer or fabricate evidence")
+    require("research-tiny-handoff", tiny, "Supply the shared research contract", "bounded\n   canonical-owner/discovery writes before consequential approach decisions",
+            "Apply the dependency evidence/permission review above before combined approval")
+    require("research-spec", spec, "apply the shared research contract before consequential dependency constraints\n   are chosen",
+            "carry evidence-backed constraints/checks, not invented dependency rules")
+    require("research-plan", plan, "Before consequential plan decisions, complete required shared-contract research",
+            "For helper invocation or the direct Standard pass", "canonical research-document and necessary discovery-link destinations",
+            "observed allowed changes and prohibited operations, with explicit bounded permission\n   in addition to detected SpecKit artifacts",
+            "Do not grant arbitrary documentation edits\n   or code writes", "missing required evidence/authority stops")
+    require("research-standard-review", review, "direct Standard\n   pass and helper-managed/standalone contract coverage")
+    t_research = section(texts["tiny"], "## Dependency evidence before approach decisions")
+    require("research-tiny", t_research, "[dependency research contract](../planner/references/dependency-research.md)",
+            "before consequential dependency approach decisions", "Verify the reference is readable",
+            "reuse adequate applicable guidance", "Refresh only version-sensitive/stale/conflicting/missing portions",
+            "Direct/standalone entry verifies equivalent TinySpec selection/preparation authority",
+            "bounded canonical technical-owner/discovery-link writes", "during authorized production before readiness",
+            "required insufficient evidence cannot default to recollection", "return exact gaps, affected decisions",
+            "impact, allowed bounds and outstanding validation, never automatic deferral")
+    source_contract = section(texts["tiny"], "## Compact source contract")
+    require("research-tiny-traceability", source_contract, "Classify documented\n  recommendations, repository-derived decisions/rationale and assumptions",
+            "Trace source recommendation/local evidence → compact implementation\n  constraint → observable acceptance/check")
+    research_pos = texts["tiny"].find("## Dependency evidence before approach decisions")
+    approach_pos = texts["tiny"].find("## Compact source contract")
+    if research_pos < 0 or approach_pos < 0 or research_pos > approach_pos:
+        errors.append("research-order: TinySpec research must precede compact approach production")
+    h_pre = section(texts["helper"], "## Preflight")
+    require("research-helper", h_pre, "[dependency research contract](../planner/references/dependency-research.md)",
+            "before consequential architecture/plan decisions", "verify it is readable",
+            "Standalone entry verifies equivalent Standard planning/preparation authority",
+            "bounded\ncanonical-owner/discovery writes", "No recollection fallback or automatic deferral",
+            "returns exact missing evidence, affected decisions and needed authority",
+            "standalone local fallback cannot bypass required research",
+            "Research-driven approved-specification changes require renewed approval")
+    require("research-helper-adapter", section(texts["helper"], "## Planner Standard adapter contract"),
+            "explicit bounded documentation permission", "absence is not implied authority")
+    h_boundary = section(texts["helper"], "## Planner Boundary")
+    require("research-boundary", h_boundary, "only explicit bounded\npermission permits canonical research-document and necessary discovery-link writes",
+            "observed destinations with specified allowed changes and prohibited operations",
+            "No arbitrary documentation edits or product code writes", "missing required authority stops",
+            "supporting source spans → implementation constraints → observable checks")
+    reject("research-boundary", h_boundary, "Arbitrary documentation edits are permitted")
+    r = texts.get("research", "")
+    if not r:
+        errors.append("research-reference: required shared carrier missing or empty")
+    require("research-discovery", section(r, "## Discover, trigger and reuse"),
+            "Read repository instructions, dependency declarations/lockfiles", "installed/targeted dependency and version/range",
+            "First repository use, insufficient guidance", "Trivial use can skip new internet\nresearch with a brief reason",
+            "reuse guidance\nwith cited evidence", "version applicability", "refresh only\nthose portions",
+            "A recent date alone proves neither applicability nor completeness")
+    require("research-evidence", section(r, "## Obtain sufficient evidence"),
+            "verify actually usable, permitted", "Tool names/configuration\nalone are not capability evidence",
+            "Adequate local guidance can satisfy evidence\nwithout a new search call",
+            "official documentation, official guides/\nexamples/repositories and maintainers first",
+            "Label newer-version differences", "Inspect meaningful supporting sections",
+            "not just\nsearch snippets or URL lists", "invent universal batching/flush rules")
+    require("research-traceability", section(r, "## Classify and translate"),
+            "**Documented recommendation:** inspected supporting source section/claim, primary\n  URL and applicable version",
+            "**Repository-derived decision:** local evidence, resulting decision and rationale",
+            "**Assumption:** uncertainty and a defined validation check",
+            "Unsupported snippets, uninspected URLs, uncertain statements and generic model\nrecollection cannot satisfy required source evidence",
+            "recommendation/local evidence → derived decision/implementation constraint → observable\nvalidation",
+            "Material unresolved choices return to the existing owner gate")
+    require("research-persistence", section(r, "## Persist within verified authority"),
+            "Preselection inspection/research is read-only", "During authorized selected\nproduction, persist reusable guidance before readiness",
+            "repository technical owner and its discoverability index", "verify/obtain bounded authority",
+            "Re-read each target immediately before", "preserve unrelated content; stop on concurrent overlap",
+            "dependency/version or range, applicable practices and\npitfalls, repository-derived decisions/rationale",
+            "primary URLs tied to supporting\nclaims, research date for evolving guidance", "uncertainty/validation needs",
+            "explicit bounded permission **in addition to** detected SpecKit artifacts",
+            "Standalone/direct entry verifies equivalent selection/preparation and write authority")
+    failure = section(r, "## Safe failure and return")
+    require("research-failure", failure, "required tools, usable sources, version evidence or write authority",
+            "stop affected consequential design and return the exact gap", "affected\ndecisions and evidence/authority needed",
+            "No generic-knowledge fallback, fabricated\nsources, automatic deferral, installation or premature readiness",
+            "explicit bounded owner deferral through existing gates", "Record impact, allowed bounds and outstanding validation",
+            "not fabricate evidence or waive unrelated gates")
+    reject("research-failure", failure, "Use model recollection when required research is unavailable")
     return errors
 
 
 def load_texts(root=ROOT):
+    research_path = root / PATHS["research"]
+    if not research_path.is_file():
+        raise ValueError("research-reference: required shared reference unavailable")
     texts = {key: (root / path).read_text() for key, path in PATHS.items()}
+    for key in ("planner", "tiny", "helper"):
+        destinations = re.findall(r"\[dependency research contract\]\(([^)]+)\)", texts[key])
+        if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != research_path.resolve():
+            raise ValueError(f"research-reference: {key} shared link missing/unresolvable or wrong owner")
     # Check operational carriers, not incidental mentions in a combined summary.
     for key, stages in {
         "adoption": ("Preflight", "Approval", "Adoption"),
