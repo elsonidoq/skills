@@ -23,6 +23,26 @@ existing sources rather than copying long transcripts. If the request exists onl
 in conversation, preserve enough context for a fresh executor. No intermediary Epic,
 research/design file chain, or redundant requirement capture is required.
 
+## Dependency evidence before approach decisions
+
+Read and apply the shared [dependency research contract](../planner/references/dependency-research.md)
+before consequential dependency approach decisions. Verify the reference is readable;
+missing packaging stops with a missing-install report. Start with repository guidance
+and actual dependency/version evidence; reuse adequate applicable guidance or record a
+trivial skip reason. Refresh only version-sensitive/stale/conflicting/missing portions.
+Consume planner's research findings and usable permitted capability evidence, or verify
+them locally when needed; required insufficient evidence cannot default to recollection.
+
+Direct/standalone entry verifies equivalent TinySpec selection/preparation authority,
+source destination and bounded canonical technical-owner/discovery-link writes; do not
+assume planner invocation or permission. Persist reusable guidance in the discovered
+repository owner/index during authorized production before readiness, re-reading targets
+and preserving unrelated content. This is not a mandatory intermediate research/design
+file chain or a new source approval. Missing required evidence/version/capability/write
+authority stops affected design: return exact gaps, affected decisions and evidence
+needed to planner (or the owner on direct entry) for explicit bounded deferral with
+impact, allowed bounds and outstanding validation, never automatic deferral.
+
 ## Compact source contract
 
 Include these semantics, using only relevant detail rather than empty ceremony:
@@ -30,13 +50,17 @@ Include these semantics, using only relevant detail rather than empty ceremony:
 - **Context/outcome:** beneficiary, desired behavior and source provenance.
 - **Scope:** included surfaces, exclusions and separately scheduled work.
 - **Decisions/constraints:** settled answers and rationale, verified integration/API/data
-  constraints, compatibility/security rules and evidence citations.
+  constraints, compatibility/security rules and evidence citations. Classify documented
+  recommendations, repository-derived decisions/rationale and assumptions; cite supporting
+  spans and link canonical reusable guidance rather than duplicating the research note.
 - **Approach:** implementation shape, affected modules/interfaces, producer/consumer
   sequencing, failure handling, migration/rollback when applicable. Keep bounded detail
   sufficient for execution; do not conceal unresolved material choices behind a default.
 - **Acceptance/validation:** independently observable criteria, relevant normal/error/edge
   behavior, test/check expectations, integration/documentation obligations and unavailable
-  external checks. Criterion identifiers are useful for task references, not mandatory.
+  external checks. Trace source recommendation/local evidence → compact implementation
+  constraint → observable acceptance/check; give assumptions defined validation.
+  Criterion identifiers are useful for task references, not mandatory.
 - **Risks/dependencies/notes:** remaining uncertainty, explicit owner deferrals and any
   verified non-obvious execution context.
 
@@ -54,7 +78,10 @@ to this source rather than duplicating it wholesale. No SpecKit prerequisite exi
 for TinySpec; installation alone does not change its depth.
 
 Return the source path/bounds, content evidence, source links, decisions/deferrals,
-constraints and unresolved blockers to planner. Planner owns source/task review and
+constraints and unresolved blockers to planner. Include dependency/version/provenance,
+reuse/skip or refresh rationale, canonical owner/discovery links, supporting spans →
+constraints → checks, capability/permission gaps and explicit deferral bounds.
+Planner owns source/task review and
 one combined approval, including an executive brief before `ask_user`. A standalone
 TinySpec approval before task production is not required. Report source production,
 not readiness for implementation or feature acceptance.
