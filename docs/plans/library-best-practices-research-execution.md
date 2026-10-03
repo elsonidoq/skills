@@ -14,11 +14,11 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 
 | Batch | Tasks | Scope | Dependencies | Integration | Verification | Class / mode | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | T001–T004 | Shared reference and route hooks | Approved source/tasks | Planner, TinySpec, Standard helper | Clause/link review; existing gates/checks | sonnet-class / delegated GPT-6.1 Sol | in_progress |
-| 2 | T005–T007 | Tests, documentation, acceptance | Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | pending |
+| 1 | T001–T004 | Shared reference and route hooks | Approved source/tasks | Planner, TinySpec, Standard helper | Clause/link review; existing gates/checks | sonnet-class / delegated GPT-6.1 Sol | completed |
+| 2 | T005–T007 | Tests, documentation, acceptance | Verified Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | in_progress |
 
-- [ ] Batch 1 — in_progress; T001–T004 verified, final batch evidence pending.
-- [ ] Batch 2 — pending; blocked on verified Batch 1.
+- [x] Batch 1 — completed; T001–T004 verified and separately committed.
+- [ ] Batch 2 — in_progress; producer prerequisites verified, T005–T007 not yet executed.
 - [ ] Fresh final independent review — pending all task commits.
 
 ## Validation and evidence
@@ -74,6 +74,15 @@ Preparation baseline: task-order validator PASS; planner static checker PASS; 56
   tests); task-order validator PASS; `git diff --check` PASS. Installed packaging inspected
   read-only via `scripts/install.sh`/`install-links.py`: actual `~/.agents/skills` symlinks
   for all three consumers resolve this checkout's shared reference. No installation run.
-  Commit subject: `feat: align Standard research and bounded documentation authority`.
+  Commit: `55a56a3` (`feat: align Standard research and bounded documentation authority`).
+
+Batch 1 final reconciliation: source/task digests remain exactly approval-bound; only
+three skills, the new shared reference and this tracker changed from preparation commit
+`27dee6f`. No source/task/approval/test mutations. Existing approval/recovery and SDD
+contracts inspected; gate/class/one-plan checks and execution freeze PASS. No unresolved
+blockers. T005 focused regression coverage, T006 discovery docs, T007 full acceptance and
+fresh independent review remain outstanding. Static/semantic review is not model obedience
+or real research quality proof; live research/model/real-SpecKit exercises NOT RUN.
+Run `/reload` inside pi after global skill changes.
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.
