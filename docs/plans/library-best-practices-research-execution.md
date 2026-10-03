@@ -19,7 +19,7 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 
 - [x] Batch 1 — completed; T001–T004 verified and separately committed.
 - [x] Batch 2 — completed; T005–T007 verified and separately committed.
-- [ ] Fresh final independent review — pending coordinator-owned review of the full committed range; not self-certified.
+- [x] Fresh final independent review — GPT-6.1 Sol reviewed `f59ed226..7e4c1d0` independently; no issues found, verdict ready with runtime-validation limits.
 
 ## Validation and evidence
 
@@ -129,7 +129,7 @@ Run `/reload` inside pi after global skill changes.
 | R3 durable provenance/traceability | Shared Classify/Persist; TinySpec compact source; helper Boundary/Completion; planner selected-production review. Classification/version/source/owner/schema/traceability removals reject; index links resolve | PASS static/manual simulated correspondence; no real research output |
 | R4 safe failure/bounded authority | Shared Safe failure/Persist, planner plan brief, helper Preflight/Boundary/adapter. Unsupported-source, fallback, exact-gap, bounded permission and arbitrary-write rejection; illustrative bounded deferral assertions | PASS static/manual; no actual unavailable-tool behavior exercise |
 | R5 selected-only persistence/gates | Planner Before selection/selected stages, shared Persist, TinySpec direct authority, helper approved-spec/renewal rules. No-persistence and permission mutations; original approval/class/one-plan checks and coordinator freeze unchanged | PASS static/manual; actual write timing outside these local edits NOT RUN |
-| R6 regression integrity | Required shared carrier/link loader; 12 research tests plus all original 56; regression guide limitations and whole-stage/summary masking tests | PASS deterministic; independent review pending |
+| R6 regression integrity | Required shared carrier/link loader; 12 research tests plus all original 56; regression guide limitations and whole-stage/summary masking tests | PASS deterministic; independent review ready with runtime-validation limits |
 
 Manual supporting-span walkthrough: the explicitly simulated shared “Lifecycle” span
 requires queued work completion before close; simulated local shutdown races a queue.
@@ -164,7 +164,13 @@ Residual limits: phrase-based checker sensitivity is not semantic completeness, 
 obedience, real source quality/applicability or actual filesystem preservation proof. Semantic
 walkthroughs here are simulated, not agent-produced plans. Live research/model/real-SpecKit and
 baseline/candidate behavioral runs NOT RUN; no dependency integration was designed. Fresh
-independent review and final acceptance remain coordinator-owned and pending. Run `/reload`
-inside pi after the global skill changes.
+independent review completed with no findings; coordinator accepts the instruction/check/documentation
+change based on that review and rerun local gates, not demonstrated runtime obedience.
+Parent reran the checker, 68 planner tests, complete skill lint (22 skills, zero failures and
+all focused suites), and full committed-range whitespace checks: PASS. Working tree was clean.
+Fresh reviewer inspected the full committed patch and current/baseline carrying files; its
+read-only tool set did not run test commands. No review fixes were required. Implementation
+T001–T007 is complete, with no pending dependency-ready work or owner gate. Runtime behavioral
+acceptance remains NOT RUN as described above. Run `/reload` inside pi after the global skill changes.
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.
