@@ -17,7 +17,7 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 | 1 | T001–T004 | Shared reference and route hooks | Approved source/tasks | Planner, TinySpec, Standard helper | Clause/link review; existing gates/checks | sonnet-class / delegated GPT-6.1 Sol | in_progress |
 | 2 | T005–T007 | Tests, documentation, acceptance | Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | pending |
 
-- [ ] Batch 1 — in_progress; T001 verified, consumers pending.
+- [ ] Batch 1 — in_progress; T001–T002 verified, remaining consumers pending.
 - [ ] Batch 2 — pending; blocked on verified Batch 1.
 - [ ] Fresh final independent review — pending all task commits.
 
@@ -35,6 +35,16 @@ Preparation baseline: task-order validator PASS; planner static checker PASS; 56
   Safe failure and return. No actual library claims or internet exercise.
   Packaging inspection: installer links whole skill directories (`scripts/install-links.py`);
   sibling links will resolve within the distributed suite, not a copied standalone skill.
-  `git diff --check` PASS. Commit subject: `feat: establish shared dependency research contract`.
+  `git diff --check` PASS. Commit: `3a07e2e` (`feat: establish shared dependency research contract`).
+- T002 verified: fail-before showed no shared link, bounded docs brief or early spec
+  research. Pass-after operational-section assertions confirm resolving shared link,
+  read-only preselection, research before consequential spec constraints, helper/direct
+  Standard bounded documentation permission and both route reviews. Existing checker
+  PASS and 56 tests PASS; `git diff --check` PASS. One intermediate mutation failure
+  exposed duplicated `explicit owner deferral` text masking the original assertion;
+  rephrased the new clause without weakening its semantics, then reran all 56 tests.
+  Manual comparison: order, classes, owner gates, approvals/renewal and single-plan
+  semantics preserved; no helper permissions presumed before T004 alignment.
+  Commit subject: `feat: integrate dependency research into planner stages`.
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.

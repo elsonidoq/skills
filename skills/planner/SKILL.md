@@ -22,7 +22,8 @@ In suite-adopting projects, verify discoverable `memory-handling` and read the w
 project memory index, then trigger-matching entries. Missing required memory stops;
 do not substitute a global store. Read the distributed
 [SDD reference](../../docs/best_practices_spec_driven_development.md) and
-[approval/recovery contract](references/approval-and-recovery.md). A missing required
+[approval/recovery contract](references/approval-and-recovery.md) and
+[dependency research contract](references/dependency-research.md). A missing required
 reference stops with a missing-install report. Verify discoverable
 `planning-brainstorming`, `tiny-spec`, `task-generation`, and `coordinate-implementation`
 before the stage that needs each; do not duplicate an unavailable skill.
@@ -53,12 +54,19 @@ not false precision. Material product, architecture, privacy, permissions, cost,
 irreversible, or settled-requirement changes are owner decisions. Resolve mechanical
 facts without unnecessary dialogue or speculative material defaults.
 
+Apply the shared dependency research contract during discovery: inspect repository
+guidance and dependency/version evidence first; detect consequential research needs,
+proportional reuse/skip and targeted refresh before design. Verify permitted usable
+research capabilities only when needed; configuration names are not usability proof.
+
 ## Before selection: understand → brainstorm → assess → ask
 
 Fresh planning is read-only until the owner selects depth: no source edits, decision
 files, TinySpec, specification, plan, or tasks. Session history carries request bounds,
 evidence, answers/rationale, and deferrals. If interrupted, recover those records;
 if unavailable, ask for missing answers, never invent a durable preselection artifact.
+Dependency inspection/research may inform assessment read-only; no dependency docs,
+source, plan or decisions may be persisted. Carry findings in session until selection.
 
 Invoke `planning-brainstorming` in preselection mode with the inspected request/bounds
 and readiness target “informed scope assessment.” Preserve its exact gate result;
@@ -119,10 +127,27 @@ replace necessary constraints in a fresh delegate's brief. Do not delegate owner
 Resume originating correction context when supported and suitable; otherwise pass a
 durable correction handoff. Re-present unanswered questions before downstream work.
 
+Carry dependency research triggers, local/version findings, reuse/skip rationale,
+inspected supporting spans, capability evidence and gaps into selected production.
+Verify bounded canonical technical-owner and necessary discovery-link write scope;
+persist reusable guidance during authorized production before readiness, preserving
+unrelated content. No fixed project paths or arbitrary documentation permission.
+Before existing approvals/readiness, review actual shared-link resolution (including
+both direct/standalone consumers), canonical owner/discovery, version/provenance,
+proportional reuse/targeted refresh, supporting spans → constraints → observable checks,
+classified recommendations/derived decisions/assumptions, and capability/permission gaps.
+Required insufficient research returns the exact gap, affected decisions and needed
+evidence; stop affected design rather than default to model recollection or readiness.
+Obtain the owner's explicit bounded deferral through existing gates with impact, allowed bounds
+and outstanding validation; never automatically defer or fabricate evidence.
+
 ### TinySpec path
 
 1. **Source creation — `sonnet-class`:** invoke `tiny-spec` with verified request,
    decisions, source bounds, observed destination, and preparation authorization.
+   Supply the shared research contract, findings/capability evidence and bounded
+   canonical-owner/discovery writes before consequential approach decisions; inspect
+   returned research traceability and persistence with the source.
    Inspect returned compact source and blockers. No SpecKit prerequisite or standalone
    TinySpec approval is required before task production.
 2. **Tasks — `sonnet-class`:** invoke `task-generation` direct adapter with TinySpec and
@@ -134,6 +159,7 @@ durable correction handoff. Re-present unanswered questions before downstream wo
    class share, explicit and implicit dependencies, and stage feasibility. Record
    fixes, validation results and current content evidence. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
+   Apply the dependency evidence/permission review above before combined approval.
 4. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
    obtain explicit approval of current TinySpec/source, tasks, and implementation scope,
    stating that approval starts the coordinator next unless planning-only was requested.
@@ -154,7 +180,10 @@ valid settled principles. Verify permitted usable owner-selected stage bindings 
 an independent reviewer before assigning their work.
 
 1. **`spec_create` — `sonnet-class`:** follow observed specification instructions and
-   SDD reference using request/provenance and shared gate result. Reflect settled
+   SDD reference using request/provenance and shared gate result. Supply research
+   triggers/context and apply the shared research contract before consequential dependency constraints
+   are chosen; carry evidence-backed constraints/checks, not invented dependency rules.
+   Reflect settled
    decisions. Clarify only when requested or required by the detected workflow;
    mechanical gaps are resolved directly, material choices go to the owner. Inspect
    specification, then provide a bullet-list executive brief including clarification
@@ -166,6 +195,12 @@ an independent reviewer before assigning their work.
    capability, then review/fix the produced plan. Cover contracts, architecture,
    integration, sequencing, migration/rollback, risks, docs, verification, and coherent
    consecutive same-class work. Do not reorder dependencies or pad distant tasks.
+   Before consequential plan decisions, complete required shared-contract research and
+   durable guidance. For helper invocation or the direct Standard pass, the brief must
+   identify canonical research-document and necessary discovery-link destinations,
+   observed allowed changes and prohibited operations, with explicit bounded permission
+   in addition to detected SpecKit artifacts. Do not grant arbitrary documentation edits
+   or code writes; missing required evidence/authority stops the affected branch.
    When approved work calls for `delegating-architectural-planning`, verify and invoke
    it as the planner Standard adapter for this ENTIRE pass. Inspect its returned
    evidence; do not create the plan again. Only when no adapter is invoked perform
@@ -183,6 +218,8 @@ an independent reviewer before assigning their work.
 4. **`overall_review` — independent owner-selected reviewer:** follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
    coverage, dependencies, class share, documentation, integration and approvals.
+   Apply the dependency evidence/permission review above, including the direct Standard
+   pass and helper-managed/standalone contract coverage, before overall approval.
    Fix mechanical task-level issues and record evidence. Flag only material
    friction/complexity or genuine specification deviation with alternatives and a
    recommendation; never apply unresolved material defaults. Task ordering, grouping,
