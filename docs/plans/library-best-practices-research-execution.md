@@ -17,7 +17,7 @@ Context capacity metrics are unavailable; use two fresh bounded batches (T001–
 | 1 | T001–T004 | Shared reference and route hooks | Approved source/tasks | Planner, TinySpec, Standard helper | Clause/link review; existing gates/checks | sonnet-class / delegated GPT-6.1 Sol | in_progress |
 | 2 | T005–T007 | Tests, documentation, acceptance | Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | pending |
 
-- [ ] Batch 1 — in_progress; T001–T003 verified, Standard helper pending.
+- [ ] Batch 1 — in_progress; T001–T004 verified, final batch evidence pending.
 - [ ] Batch 2 — pending; blocked on verified Batch 1.
 - [ ] Fresh final independent review — pending all task commits.
 
@@ -59,6 +59,21 @@ Preparation baseline: task-order validator PASS; planner static checker PASS; 56
   local guidance needs no new search; targeted refresh preserves other sections; inadequate
   evidence returns the affected shutdown decision, missing supporting span/version and
   validation needs. No mandatory research artifact chain introduced.
-  Commit subject: `feat: apply shared dependency research in TinySpec`.
+  Commit: `f21ea5b` (`feat: apply shared dependency research in TinySpec`).
+- T004 verified: fail-before showed missing shared contract and no bounded docs exception
+  alongside the SpecKit-only boundary. Pass-after operational assertions verify resolving
+  link, standalone pre-design research, exact failure, bounded extra documentation writes,
+  renewed specification approval and retained single creation. Manual before/after review:
+  explicit destination/change/prohibition permission now aligns with T002; absence stops,
+  no arbitrary docs/code authority; approved spec, genuine SpecKit, fixed adapter class,
+  owner stops and standalone fallback remain, and fallback cannot bypass research.
+  Simulated Standard/helper/standalone walkthrough: classify version-specific supporting
+  span, derive a plan constraint and observable check, persist under explicit owner/index
+  bounds before readiness; unavailable evidence returns affected decisions, not a ruling.
+  Checker PASS; 56 tests PASS; lint PASS (22 skills, plus existing suites of 135/4/2/7/3/6
+  tests); task-order validator PASS; `git diff --check` PASS. Installed packaging inspected
+  read-only via `scripts/install.sh`/`install-links.py`: actual `~/.agents/skills` symlinks
+  for all three consumers resolve this checkout's shared reference. No installation run.
+  Commit subject: `feat: align Standard research and bounded documentation authority`.
 
 Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.

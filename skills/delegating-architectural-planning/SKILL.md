@@ -19,9 +19,32 @@ Verify and provide:
   per the `memory-handling` skill and include verified trigger-first gotchas as
   constraints for the planner.
 - Existing architecture decisions and upstream/downstream dependencies.
-- The planner's write scope and prohibited operations.
+- The planner's write scope and prohibited operations, including separately authorized
+  canonical research-document and necessary discovery-link destinations/allowed changes
+  in addition to detected SpecKit artifacts when durable guidance is required.
+- Shared dependency research triggers, local/version findings, reuse/skip rationale,
+  inspected supporting spans, usable permitted capability evidence and outstanding gaps.
 - The detected SpecKit planning command or skill, its invocation instructions,
   template, prerequisite scripts, and expected output paths.
+
+Read and apply the shared [dependency research contract](../planner/references/dependency-research.md)
+before consequential architecture/plan decisions; verify it is readable or stop with
+a missing-install report. Discover repository guidance/dependency versions first;
+reuse adequate applicable evidence or refresh only deficient version-sensitive portions.
+Complete required research and authorized durable guidance before readiness, tracing
+documented recommendations/local evidence → plan constraints → observable verification;
+label repository-derived decisions/rationale and assumptions with defined checks.
+
+Standalone entry verifies equivalent Standard planning/preparation authority under the
+approved-specification/plan-request prerequisites, research availability and bounded
+canonical-owner/discovery writes; do not infer permission from invocation. Missing
+required tools, usable sources, version evidence or write authority stops affected
+design and returns exact missing evidence, affected decisions and needed authority to
+planner (or the standalone owner). No recollection fallback or automatic deferral:
+planner/owner must explicitly resolve any bounded deferral with impact, allowed bounds
+and outstanding validation. The standalone local fallback cannot bypass required research.
+Research-driven approved-specification changes require renewed approval through the
+existing owner gate, including standalone entry; return them rather than assume approval.
 
 Verify that the planning capability is available to the planner in the
 delegated context. If it is missing or cannot be used there, report
@@ -52,11 +75,20 @@ one same-session pass, review/fix the approved specification, run the detected p
 once to create the plan, then review/fix the produced plan. Return evidence and resulting artifacts
 to the manager for inspection; do not direct it to create the plan again. The standalone local
 fallback and separate-review policies below do not apply to this adapter invocation.
+Verify the manager's explicit bounded documentation permission against the preflight
+and boundary below; absence is not implied authority. Research-driven changes to any
+approved specification content return through the manager's renewed specification
+approval gate before leaving the affected stage; do not invent an owner ruling.
 
 ## Planner Boundary
 
 The planner may read the supplied context and run the detected SpecKit planning
-stage to write its specified plan artifacts.
+stage to write its specified plan artifacts. In addition, only explicit bounded
+permission permits canonical research-document and necessary discovery-link writes
+at observed destinations with specified allowed changes and prohibited operations.
+Discover the repository technical owner/index, re-read targets before targeted updates,
+and preserve unrelated content. No arbitrary documentation edits or product code writes
+are authorized by this narrow exception; missing required authority stops the branch.
 Unless separately authorized, it must not:
 
 - Implement tasks or modify product code.
@@ -70,7 +102,8 @@ Ensure the SpecKit plan covers:
 - Architecture, contracts, and relevant files or interfaces when knowable;
   discovery steps when not.
 - Sequencing, dependencies, parallel-safety constraints, and integration points.
-- Verification strategy, including fail-then-pass checks for behavior changes.
+- Verification strategy, including fail-then-pass checks for behavior changes and
+  supporting source spans → implementation constraints → observable checks.
 - Security, privacy, migration, rollback, and authorization gates where relevant.
 - Documentation scope and specialized capabilities needed for implementation.
 
@@ -100,7 +133,10 @@ the required runtime policy is undefined.
 ## Completion
 
 Verify that the detected SpecKit planning stage ran and inspect its outputs
-against the approved spec and planner boundary. Return the plan path,
-architecture/dependency summary, capability requirements, corrections, and
+against the approved spec and planner boundary. Verify shared-link resolution,
+version/provenance, canonical owner/discovery, targeted reuse, evidence classification,
+traceability and remaining capability/permission gaps before returning. Return these
+research results with the plan path, architecture/dependency summary, capability
+requirements, corrections, explicit deferral bounds/validation, and
 open owner decisions. Stop after planning and wait for owner approval before
 implementation.
