@@ -1,0 +1,28 @@
+# Library best-practices research — execution
+
+Producer: planner; depth: TinySpec. Approved source/tasks and content hashes are in `reviews/library-best-practices-research-review.md`. Owner approved implementation with “Make sure there are no regressions in the skill behavior.” Later selections: GPT-6.1 Sol for implementation and a fresh independent final review; local task commits explicitly allowed, no push. These answer the task document's reserved model/commit permissions.
+
+## Preflight and strategy
+
+Seven bounded sonnet-class tasks require delegated sequential execution. Binding: `openai-codex/gpt-6.1-sol`, verified available in registry and successful preparation runs; `delegate` has read/bash/edit/write, successful edit/write route exists in parent, worker has declared edit/write. Question tool usable; fresh reviewer discovered with read-only tools and same model available. Async doctor reports available support, unlimited session budget, fan-out limit 64. Actual launch remains authoritative capability evidence.
+
+Workspace: `/home/dev/projects/skills`, branch `main`, initial implementation base `f59ed226194da789c245f5983a618c0cf13a1486`. Only this task's planning artifacts are untracked; no unrelated changes observed. Single writer in existing checkout; no competing writes/isolation requirement. No declared memory adoption. No Standard/SpecKit prerequisite for implementing this TinySpec-origin skill change.
+
+Context capacity metrics are unavailable; use two fresh bounded batches (T001–T004 and T005–T007), not forced retained-session reuse. Dependency order is unchanged; each producer is verified before its consumer. One final fresh independent review after all task commits.
+
+## Execution graph
+
+| Batch | Tasks | Scope | Dependencies | Integration | Verification | Class / mode | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | T001–T004 | Shared reference and route hooks | Approved source/tasks | Planner, TinySpec, Standard helper | Clause/link review; existing gates/checks | sonnet-class / delegated GPT-6.1 Sol | in_progress |
+| 2 | T005–T007 | Tests, documentation, acceptance | Batch 1 | Checker, fixtures, indices | Existing/new regressions, lint, coordinator tests | sonnet-class / delegated GPT-6.1 Sol | pending |
+
+- [ ] Batch 1 — in_progress; no implementation task completed yet.
+- [ ] Batch 2 — pending; blocked on verified Batch 1.
+- [ ] Fresh final independent review — pending all task commits.
+
+## Validation and evidence
+
+Preparation baseline: task-order validator PASS; planner static checker PASS; 56 existing fixture tests PASS; diff whitespace PASS. No live research, model-obedience or genuine SpecKit behavior exercise is authorized by these results. Implementation must preserve execution hash/gates and existing tests; add evidence-backed negative/mutation/scenario coverage. No claim of absolute regression absence can be inferred from static tests.
+
+Per-task verified commits are delegated. Parent separately commits these approved preparation records. Do not change approved source/task contracts; task status/evidence updates only under existing approval contract. No push, deploy, paid/live research or external publication.
