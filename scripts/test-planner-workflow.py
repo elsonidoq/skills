@@ -428,6 +428,39 @@ class DependencyResearchTests(unittest.TestCase):
         self.assertIn("Carry findings in session until selection", pre)
 
 
+class ProjectCoordinationWiringTests(unittest.TestCase):
+    """Wiring checks for the optional shared owner; no live agent/SpecKit calls."""
+
+    def test_shared_reference_is_required_not_summary_only(self):
+        texts = checker.load_texts()
+        del texts["coordination"]
+        self.assertTrue(any(e.startswith("coordination-reference:") for e in checker.check_contracts(texts)))
+
+    def test_lost_coordinator_reflection_fails_with_shared_summary_intact(self):
+        texts = checker.load_texts()
+        body = checker.section(texts["coordinator"], "## Coordination reflection and guideline approval")
+        texts["coordinator"] = texts["coordinator"].replace(body, "", 1) + "\n## Summary only\n" + body
+        self.assertIn("Exact guideline approval", texts["coordination"])
+        self.assertTrue(any(e.startswith("coordination-approval:") for e in checker.check_contracts(texts)))
+
+    def test_all_distributed_consumers_resolve_coordination_owner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            for name in ("memory-handling", "planner", "tiny-spec", "task-generation", "coordinate-implementation"):
+                (target / name).symlink_to(ROOT / "skills" / name, target_is_directory=True)
+            owner = ROOT / checker.PATHS["coordination"]
+            for name in ("memory-handling", "planner", "tiny-spec", "task-generation", "coordinate-implementation"):
+                relative = "references/project-coordination.md" if name == "memory-handling" else "../memory-handling/references/project-coordination.md"
+                self.assertEqual((target / name / relative).resolve(), owner.resolve())
+                self.assertIn("# Project coordination memory", (target / name / relative).read_text())
+
+    def test_reflection_phase_after_review_and_checkpoint_inside_execution(self):
+        text = checker.load_texts()["coordinator"]
+        self.assertLess(text.index("## Execute and Integrate"), text.index("### Coordination evidence checkpoint"))
+        self.assertLess(text.index("### Coordination evidence checkpoint"), text.index("## Review and Acceptance"))
+        self.assertLess(text.index("## Review and Acceptance"), text.index("## Coordination reflection and guideline approval"))
+
+
 BRIEF = "\n".join((
     "- Outcome: fix search ranking.",
     "- Scope: ranking only; exclude API migration.",

@@ -39,7 +39,7 @@ Complete implementation count: seven (T001–T007), requiring delegation. One co
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001–T007 | Contract, consumers, evidence/routing, reflection, tests, docs, integration | Internal T001 → T002 → T003 → T004 → T005 → T006 → T007 | memory-handling, planner, TinySpec, task-generation, coordinator | Per-task checks and required aggregate regression | sonnet-class | Delegated | in_progress |
 
-- [ ] Batch 1: **in_progress**, T001–T004 verified; T005 next dependency-ready task.
+- [ ] Batch 1: **in_progress**, T001–T005 verified; T006 next dependency-ready task.
 - [ ] Fresh independent final review after all task commits.
 
 Per-task evidence follows; independent acceptance remains pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
@@ -79,5 +79,13 @@ All commands are local/offline. No association, actual guideline/store, `.pi/` o
 - Baseline expected FAIL: no coordinator closeout carrying phase for shared approval protocol. Added post-review/blocked reflection and exact decision/baseline gate; canonical procedure from T001 already supplies full shared protocol unchanged.
 - Manual state walkthrough: accept/edit/add require explicit resulting content; reject retains bytes/evidence; pending/unavailable/cancelled/ambiguous grant no write; immediate re-read detects drift and requires renewed approval. Implementation approval alone grants none. Nine reflection prompts and scoped evidence-only/no-update/contrary statuses inspected.
 - Checks: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; intake (6) and batching (3) commands from T003 PASS; `git diff --check` PASS. Frozen execution original lines/order preserved PASS; digest deliberately refreshed to `89cbd7fa77bcb098d39ff9dcc9c17bc4892de2a248a45dfa25aa1d460e0b4660` for only additive reflection phase. Diff inspected; no safety assertion removed.
-- Commit: `feat: gate coordination guideline reflection on exact approval` (hash at next checkpoint).
+- Commit: `feat: gate coordination guideline reflection on exact approval` `aad1840`.
 - Operational hooks checkpoint complete before T005 assurance; actual model/SpecKit behavior NOT RUN, independent final review pending.
+
+### T005 — completed
+
+- Baseline expected FAIL: no source-specific approval diagnostic or lifecycle fixtures. Extended operational checker with named coordination diagnostics, required canonical links and phase placement; retained every prior assertion, mutation and execution digest.
+- Added 18 focused tests (instruction removals/unsafe policies and explicitly simulated filesystem examples) and 4 planner wiring tests. Examples prescribe file operations, not a production persistence/approval engine; no helper introduced. Cover two runs/tasks, failed/partial/manual/unknown, new/resume/interrupted rows retaining prior run, evidence-only/tentative/contrary/no-update, all decision states/exact content/drift, observed selected reads/no match and compatible two-attempt routing.
+- First planner test run: FAIL (1/78), moved reflection could still satisfy section lookup after Finish. Inspected cause; added actual phase-order validation instead of weakening mutation. Final planner run PASS (78); focused PASS (18). Explicit removed-drift check rejected with `coordination-approval` diagnostic.
+- Commands (Python bytecode disabled for suite commands): `python3 skills/memory-handling/scripts/test_coordination_contract.py` PASS (18); `python3 scripts/check-planner-workflow.py` PASS; `python3 scripts/test-planner-workflow.py` PASS (78); coordinator intake/batching PASS (6/3); task-generation contract/order units PASS (2/7); `python3 skills/task-generation/scripts/check-task-order.py docs/plans/project-coordination-memory-tasks.md` PASS; `bash scripts/check-skills-lint.sh` PASS (22 skills, all bundled suites); `git diff --check` PASS.
+- Static diff/new test file inspected: focused source-derived boundaries only, no engine/dependency/model calls. Offline PASS is not live acceptance. Commit: `test: cover coordination memory contracts and simulated lifecycle` (hash at next checkpoint).

@@ -66,7 +66,7 @@ Before each write, re-read targets and preserve unrelated content; stop on concu
 
 ### Focused assurance and documentation
 
-- [ ] T005 [Deterministic assurance] Add source-derived contract/mutation checks and clearly simulated lifecycle fixtures.
+- [x] T005 [Deterministic assurance] Add source-derived contract/mutation checks and clearly simulated lifecycle fixtures.
   - **Depends**: T001, T002, T003, T004.
   - **Prerequisites**: verified integrated operational carriers; inspect existing checker section/stage loaders, mutation patterns and coordinator/task tests; identify actual changed seam before adding cases.
   - **Outcome**: focused offline tests detect missing early retrieval, selective-reading/evidence boundaries, unsafe approval/mutation or routing changes and lost existing safeguards; finite temporary-project fixtures demonstrate the specified persistence layout and decision lifecycle without claiming to execute skill instructions.

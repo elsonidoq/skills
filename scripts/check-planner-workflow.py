@@ -20,6 +20,7 @@ PATHS = {
     "guidance": "docs/best_practices_spec_driven_development.md",
     "requirements": "REQUIREMENTS.md",
     "research": "skills/planner/references/dependency-research.md",
+    "coordination": "skills/memory-handling/references/project-coordination.md",
 }
 # Deliberately updated for approved coordination-memory T003–T004: additive routing,
 # factual evidence checkpoints and exact approval-controlled reflection. Original
@@ -294,6 +295,133 @@ def check_contracts(texts):
             "explicit bounded owner deferral through existing gates", "Record impact, allowed bounds and outstanding validation",
             "not fabricate evidence or waive unrelated gates")
     reject("research-failure", failure, "Use model recollection when required research is unavailable")
+    # Coordination boundaries belong in operational phases, never summary mentions.
+    link = "[project coordination contract](../memory-handling/references/project-coordination.md)"
+    discovery = section(p, "## Discovery and capability boundary")
+    require("coordination-early", discovery, link, "during initial understanding",
+            "`GUIDELINES.md` before brainstorming, scope assessment and depth choice",
+            "no invented knowledge, writes or new adoption gate",
+            "distinctly from required gotcha-memory stops",
+            "Ordinary planning does not read", "index-first relevant-only retrieval",
+            "no match retains uncertainty")
+    require("coordination-handoff", production,
+            "Carry exact applicable coordination guideline constraints and evidence references",
+            "both TinySpec and Standard stage briefs", "source observables/acceptance",
+            "task dependencies, checkpoints, verification and coordinator handoff",
+            "Memory cannot override source requirements or owner authority",
+            "absence requires no migration and changes no class/share/approval rule")
+    require("coordination-tiny", section(texts["tiny"], "## Inputs and preflight"),
+            link, "including direct/standalone entry", "not index/history by default",
+            "Carry exact applicable constraints and evidence references",
+            "acceptance/verification", "required gotcha-memory stops",
+            "index-first relevant-only retrieval", "retains uncertainty on no match")
+    require("coordination-tasks", section(t, "## Preconditions and adapters"),
+            link, "including direct entry without planner", "task dependencies, delegation",
+            "checkpoints and REQUIRED verification/acceptance", "source/owner authority",
+            "required gotcha-memory stops remain distinct", "No default index/history intake",
+            "index-first relevant-only retrieval", "does not alter classes, share or approval rules")
+    require("coordination-memory", section(texts["memory"], "## Optional project coordination memory"),
+            "[project coordination contract](references/project-coordination.md)",
+            "Required gotcha-memory rules above remain", "never go into this gotcha index")
+    require("coordination-intake", section(c, "## Load and Verify"), link,
+            "exact applicable constraints/evidence references", "bounded evidence",
+            "Without association/write authority", "never\nsilently initialize",
+            "No default evidence-history intake")
+    checkpoint = section(c, "### Coordination evidence checkpoint")
+    if not (0 <= c.find("## Execute and Integrate") < c.find("### Coordination evidence checkpoint")
+            < c.find("## Review and Acceptance")):
+        errors.append("coordination-checkpoint: checkpoint must be inside execution before review")
+        checkpoint = ""
+    require("coordination-checkpoint", checkpoint,
+            "At each task/attempt checkpoint", "failed, blocked or partial work and manual/user",
+            "task/type, areas/tags", "approved class", "role/model/reasoning effort (or `unknown`)",
+            "individual attempt/check results, reviewer findings, inspected failure cause",
+            "escalation outcomes, surprises and manual findings", "Unknown is not success",
+            "reuse on resume, never overwrite another run", "separate summary/task records",
+            "before refreshing", "after every evidence write", "no duplicate rows",
+            "reconcile interrupted record/index updates", "retaining existing runs",
+            "never grants permission to mutate guidelines", "Without association/write authority")
+    capability = section(c, "## Select Execution Capability")
+    require("coordination-routing", capability,
+            "usable owner-selected options", "Low favors a cheaper",
+            "strong executable acceptance oracle", "stronger verification/review",
+            "not forced opus", "reclassification or share-gate bypass",
+            "Never silently\nreplace selected models, weaken approved classes",
+            "inspect the child run and failed invocation first", "Preserve valid",
+            "unrelated workspace changes", "architecture and authority permit",
+            "verified stronger capability and owner-selection gates",
+            "Unknown cause", "unestablished clean state stops", "Record both attempts")
+    reflection = section(c, "## Coordination reflection and guideline approval")
+    if not (0 <= c.find("## Review and Acceptance") < c.find("## Coordination reflection and guideline approval")
+            < c.find("## Maintaining this contract")):
+        errors.append("coordination-approval: reflection must follow review before closeout")
+        reflection = ""
+    require("coordination-reflection", reflection,
+            "After implementation/verification and fresh independent review, or at a blocked pause",
+            "nine reflection questions", "project-specific versus general",
+            "reusable versus incidental", "reinforcement; contradiction",
+            "guideline support versus evidence-only", "delegation lessons; manual validation",
+            "surprises needing qualification/more evidence", "insufficient and conflicting",
+            "index-first and\nrelevant-only", "separately from `REFLECTION.md`",
+            "add/refine/supersede/remove", "supporting/contradicting pointers",
+            "no update\nproposed", "not a universal ban or permanent routing rule")
+    require("coordination-approval", reflection,
+            "executive brief and exact candidate diff", "existing `ask_user`",
+            "accept, edit, reject, or add", "approval is not guideline approval",
+            "Explicit accepted/edited/added resulting content", "comparable baseline/proposed content evidence",
+            "Pending, unavailable, cancelled or ambiguous answers leave guidelines unchanged",
+            "Rejection leaves guideline bytes identical", "rejection disposition",
+            "Immediately before applying only approved changes, re-read",
+            "compare with the approved baseline: concurrent drift stops application",
+            "renewed review/approval", "Re-check relevant guidance after",
+            "Report implementation/feature acceptance separately")
+    q = texts.get("coordination", "")
+    if not q:
+        errors.append("coordination-reference: required shared carrier missing or empty")
+    require("coordination-association", section(q, "## Association and optional discovery"),
+            "project instructions or documented project configuration", "respect declared equivalent layouts",
+            "No global-store fallback or guessed association", "no new adoption",
+            "declared missing/unreadable", "required-memory policy", "Discovery is read-only",
+            "never a discovery", "bounded owner approval", "preserve existing content")
+    require("coordination-guidelines", section(q, "## Compact guidelines"),
+            "before brainstorming", "exact constraints", "scope/trigger", "qualitative",
+            "Owner-supplied entries name their origin", "Preserve uncertainty and contrary",
+            "`REFLECTION.md` is not planner guidance")
+    require("coordination-selective", section(q, "## Selective historical retrieval"),
+            "Ordinary planning reads guidelines, not", "justified only",
+            "ambiguous/tentative/conflicting", "user request", "new contradictory",
+            "read the compact evidence index first", "only those selected records",
+            "Do not recursively", "Unrelated records\nstay unread",
+            "no relevant evidence means proceed retaining uncertainty")
+    require("coordination-evidence", section(q, "## Separate factual evidence"),
+            "SUMMARY.md", "T001.md", "T002.md", "REFLECTION.md",
+            "Reuse that ID on resume", "never\noverwrite another run",
+            "append-oriented", "without erasing observations or prior runs",
+            "verified write authority", "Without association/write authority",
+            "otherwise `unknown`", "failed, blocked and partial", "unknown outcomes are explicitly unknown",
+            "sensitive payloads", "run record before its index entry", "Every new evidence write refreshes",
+            "Keep one row per run", "Reconcile an\ninterrupted record/index update on resume")
+    require("coordination-synthesis", section(q, "## Conservative reflection"),
+            "independent review", "evidence-only", "insufficient evidence and conflicting",
+            "without numerical confidence", "One failure", "never a universal",
+            "supporting\nand contradicting pointers", "no update proposed", "never automatic mutation")
+    require("coordination-exact-write", section(q, "## Exact guideline approval"),
+            "executive brief and exact candidate diff before", "accept, edit, reject, or add",
+            "Implementation approval grants no guideline", "comparable baseline/proposed",
+            "resulting content must be explicitly approved", "Pending, unavailable, cancelled or ambiguous",
+            "Rejection leaves guidelines byte-identical", "re-read\n`GUIDELINES.md`",
+            "compare with the approved baseline", "drift stops", "renewed review/approval",
+            "Re-check", "acceptance separately")
+    require("coordination-class", section(q, "## Class-compatible routing experiment"),
+            "compatible with the approved class", "strong executable acceptance oracle",
+            "owner-selection gates", "Inspect the failed child run and invocation",
+            "unknown cause", "Record both attempts", "not provider names or permanent rules")
+    for key in ("planner", "tiny", "tasks", "coordinator", "coordination"):
+        reject("coordination-unsafe", texts.get(key, ""),
+               "Always read the entire evidence directory", "Read coordination history on every request",
+               "Automatically apply guideline proposals", "Implementation approval authorizes guideline writes",
+               "Ignore concurrent guideline drift", "Automatically downgrade approved classes",
+               "Retry without inspecting the failed invocation", "One failure permanently bans a model")
     return errors
 
 
@@ -301,7 +429,14 @@ def load_texts(root=ROOT):
     research_path = root / PATHS["research"]
     if not research_path.is_file():
         raise ValueError("research-reference: required shared reference unavailable")
+    coordination_path = root / PATHS["coordination"]
+    if not coordination_path.is_file():
+        raise ValueError("coordination-reference: required shared reference unavailable")
     texts = {key: (root / path).read_text() for key, path in PATHS.items()}
+    for key in ("memory", "planner", "tiny", "tasks", "coordinator"):
+        destinations = re.findall(r"\[project coordination contract\]\(([^)]+)\)", texts[key])
+        if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != coordination_path.resolve():
+            raise ValueError(f"coordination-reference: {key} shared link missing/unresolvable or wrong owner")
     for key in ("planner", "tiny", "helper"):
         destinations = re.findall(r"\[dependency research contract\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != research_path.resolve():
