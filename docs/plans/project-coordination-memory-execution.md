@@ -39,12 +39,14 @@ Complete implementation count: seven (T001–T007), requiring delegation. One co
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001–T007 | Contract, consumers, evidence/routing, reflection, tests, docs, integration | Internal T001 → T002 → T003 → T004 → T005 → T006 → T007 | memory-handling, planner, TinySpec, task-generation, coordinator | Per-task checks and required aggregate regression | sonnet-class | Delegated | in_progress |
 
-- [ ] Batch 1: **in_progress**, T001 first dependency-ready task.
+- [ ] Batch 1: **in_progress**, T001–T003 verified; T004 next dependency-ready task.
 - [ ] Fresh independent final review after all task commits.
 
 Per-task evidence follows; independent acceptance remains pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
 
 ## Sequential implementation evidence
+
+Operational checkpoint after T003: shared discovery/planning/evidence/routing hooks committed before reflection and expensive assurance work. No blockers; observed tool/diff capacity adequate for remaining bounded sequence. Fresh independent review is still required.
 
 All commands are local/offline. No association, actual guideline/store, `.pi/` or `.specify/` writes. Original source digest verified; task contracts compared to e3c2910 with checkbox normalization. Commits are recorded at the next checkpoint to avoid recursive self-hashes; the final task commit is identified by its unique subject and returned full revision range.
 
@@ -62,4 +64,12 @@ All commands are local/offline. No association, actual guideline/store, `.pi/` o
 - Added discovery before brainstorm/assessment/choice and exact source/task/checkpoint handoffs for both routes and direct consumers; optional absence remains read-only, required gotchas remain distinct.
 - Checks: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py` PASS (74 tests); `PYTHONDONTWRITEBYTECODE=1 python3 skills/task-generation/scripts/test_contract.py` PASS (2 tests); focused early-stage/two-route/link assertions PASS; `git diff --check` PASS.
 - Manual fictional walkthrough: an owner-supplied heuristic-implementation guideline with a manual checkpoint flows from early read to informed owner depth choice, source observable, task verification and brief in either route; no-store path invents nothing. This is not actual project evidence or global policy. Existing choice/approval/Standard stages unchanged; diff inspected.
-- Commit: `feat: carry project coordination guidance through planning` (hash at next checkpoint).
+- Commit: `feat: carry project coordination guidance through planning` `e30525e`.
+
+### T003 — completed
+
+- Baseline expected FAIL: absent attributable checkpoint/routing carrier. Added load/write-authority hook, separate factual checkpoint and class-compatible real-work experiment; no actual store writes.
+- Manual A3–A5/A11 walkthrough: failed/partial/manual/unknown observations retain individual attempts, resume uses same ID and repairs row after records; absent authority uses handoff. Inspected cause/clean-state/stronger-capability/owner-selection gates stop uncertain escalation.
+- Checks: planner checker PASS; coordinator intake PASS (6), batching PASS (3); `git diff --check` PASS. Commands: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py`, `PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_intake_contract.py`, `PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_batching_contract.py`.
+- Diff inspected. First whole-file additive-line assertion failed because load sentence was split; inspected cause, then checked the actually frozen execution region: original lines/order retained PASS. Deliberate T003 execution digest `7e13bff8311eb4df622b49b8a46ab7f4b683ade6e12d43fa81b9ff2133378184`; existing safety assertions unchanged.
+- Commit: `feat: record coordination outcomes and safe routing experiments` (hash at next checkpoint).

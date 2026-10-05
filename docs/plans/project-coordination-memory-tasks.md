@@ -40,7 +40,7 @@ Before each write, re-read targets and preserve unrelated content; stop on concu
 
 ### Coordinator checkpoints and reflection
 
-- [ ] T003 [Execution evidence and routing] Record task/run outcomes and preserve safe real-work delegation experiments.
+- [x] T003 [Execution evidence and routing] Record task/run outcomes and preserve safe real-work delegation experiments.
   - **Depends**: T001, T002.
   - **Prerequisites**: canonical store contract, applicable planning handoff, coordinator checkpoint/retry/class-selection baseline and execution-freeze marker inspected. Verify associated evidence write authority before future project writes.
   - **Outcome**: coordinator records attributable attempts/checks/manual observations in separate run/task files and maintains a compact index at existing checkpoints, including failures/partial work; optional residual reasoning informs class-compatible owner-selected routing without new model taxonomy.

@@ -87,6 +87,25 @@ outcome. Keep one row per run, no duplicate rows, transcripts or full logs. Reco
 interrupted record/index update on resume before reporting successful persistence;
 failed writes remain reported failures, not acceptance passes.
 
+## Class-compatible routing experiment
+
+Optional `residual_reasoning: low|medium|high` plus a brief rationale fits task notes/briefs;
+absence preserves existing routing. Low favors a cheaper usable owner-selected option
+compatible with the approved class. Medium requires a strong executable acceptance oracle
+plus stronger verification/review; high favors stronger compatible reasoning. These are
+real-work experiment proposals, not synthetic benchmarks, model optimization or a new
+class taxonomy. Existing sonnet-class/opus-class semantics and class-share gates remain
+authoritative: high alone never forces opus or bypasses the share gate. Never silently
+replace selected models, relabel/weaken classes or waive REQUIRED acceptance.
+
+Inspect the failed child run and invocation before retry/escalation. Preserve valid evidence
+and unrelated work; isolate/restore only the failed task's clean state where the existing
+workspace architecture and authority permit. Escalate through verified stronger capability
+and owner-selection gates; unknown cause, unavailable permitted option or unestablished
+clean state stops with a precise blocker. Record both attempts and outcomes, approved class,
+capability role, actual observed model/effort or unknown. Guidelines refer to class/capability
+and task/oracle conditions, not provider names or permanent rules from a single outcome.
+
 ## Conservative reflection
 
 After implementation/verification and independent review, or when pausing with a blocker,

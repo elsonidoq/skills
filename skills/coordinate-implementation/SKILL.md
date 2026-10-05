@@ -17,7 +17,15 @@ Read repository instructions, governing principles, linked contracts, research,
 decisions, and source constraints. In projects declaring the memory contract, verify
 `memory-handling` is discoverable and load the project memory store, index, and
 trigger-matching entries; missing required memory capability stops with a report.
-Treat verified trigger-first gotchas as implementation constraints. Verify:
+Treat verified trigger-first gotchas as implementation constraints.
+Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md):
+read associated compact guidelines and carry exact applicable constraints/evidence references
+from planning into task briefs/checkpoints. Verify optional association and bounded evidence
+write authority separately from required gotcha memory. Without association/write authority,
+keep observations in the existing execution handoff and offer future bounded setup; never
+silently initialize a store. Undeclared optional memory adds no blocker; report declared
+missing/unreadable content accurately. No default evidence-history intake; justified
+clarification follows index-first relevant-only retrieval. Verify:
 
 - The source, tasks, and supporting artifacts refer to the same approved scope.
 - Required upstream outputs, accepted decisions, and current authorization exist.
@@ -233,6 +241,19 @@ mutation tool in a brief or smoke test. If the tool set is uncertain, verify it 
 a bounded, safe test before implementation; if no permitted mutation tool works,
 stop and report the observed blocker.
 
+For optional real-work routing experiments, apply the shared contract's class-compatible
+residual-reasoning guidance using only usable owner-selected options. Low favors a cheaper
+compatible selected option; medium requires a strong executable acceptance oracle plus
+stronger verification/review; high favors stronger compatible reasoning, not forced opus
+reclassification or share-gate bypass. Absence preserves existing routing. Never silently
+replace selected models, weaken approved classes or turn one outcome into permanent policy.
+On a cheap-option failure, inspect the child run and failed invocation first. Preserve valid
+completed evidence and unrelated workspace changes; isolate/restore only the failed task's
+clean state where existing workspace architecture and authority permit. Escalate only via
+verified stronger capability and owner-selection gates. Unknown cause, unavailable permitted
+capability or unestablished clean state stops with the precise blocker; no blind retry.
+Record both attempts, corrections and escalation outcomes at the evidence checkpoint.
+
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 required model class, selected model, allowed files, dependencies, acceptance
 criteria, baseline failures, exclusions, authorization limits, the per-task commit
@@ -294,6 +315,24 @@ Material product, architecture, privacy, permission, cost, or irreversible choic
 remain owner gates. Save verified progress and ask one concise question when a gate
 blocks dependent work. Implementation details with a mechanically verifiable answer
 do not require owner escalation.
+
+### Coordination evidence checkpoint
+
+At each task/attempt checkpoint, including failed, blocked or partial work and manual/user
+validation, record observed outcomes under the shared contract's associated write bounds.
+Identify task/type, areas/tags, optional `residual_reasoning: low|medium|high` and rationale,
+approved class, actual selected capability role/model/reasoning effort (or `unknown`),
+individual attempt/check results, reviewer findings, inspected failure cause, retries and
+escalation outcomes, surprises and manual findings. Unknown is not success. Keep bounded
+evidence links, not raw logs/secrets; distinguish each attempt and preserve corrections.
+
+Reuse a safe project run ID or retain a unique filesystem-safe date/subject ID in the
+tracker; reuse on resume, never overwrite another run. Persist separate summary/task records
+before refreshing that run's compact index row after every evidence write; no duplicate rows
+or monolithic history. On resume reconcile interrupted record/index updates before reporting
+successful persistence, retaining existing runs and all observations. Evidence recording
+never grants permission to mutate guidelines. Without association/write authority, retain
+these same factual observations in the existing handoff rather than creating a store.
 
 ## Review and Acceptance
 

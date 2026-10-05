@@ -21,10 +21,10 @@ PATHS = {
     "requirements": "REQUIREMENTS.md",
     "research": "skills/planner/references/dependency-research.md",
 }
-# Updated only for the owner-authorized proportionate-validation correction:
-# acceptance boundary, evidence reuse, early checkpoints and narrowed timeout recovery.
-# Other execution rules remain frozen; clause mutations cover the new obligations.
-EXECUTION_SHA256 = "960f0d415f9a7d888982bb308d4f757f367b318d5d55e0bcfb2690c7bf455c09"
+# Deliberately updated for approved coordination-memory T003: additive routing and
+# factual evidence checkpoints. Original execution lines/order and safety mutations
+# remain preserved, including the earlier proportionality correction.
+EXECUTION_SHA256 = "7e13bff8311eb4df622b49b8a46ab7f4b683ade6e12d43fa81b9ff2133378184"
 
 
 def section(text, heading):
