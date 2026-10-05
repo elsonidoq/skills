@@ -16,6 +16,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
 | Verified unresolved bug, risk or investigation | [Open Issues](open_issues.md), via `track-open-issue` |
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
+| Optional project coordination guidelines, selective history and reviewed feedback | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence remain in each explicitly associated project, not this suite |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
 
 This configuration suite has no declared project-memory adoption contract or
@@ -30,12 +31,16 @@ unrelated projects and the legacy port keep their own documentation boundaries.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
+- [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Optional associated guidelines before choice, separate indexed run/task evidence, selective reads and exact approval-controlled reflection; no automatic setup/mutation.
 - [Dependency Research](../skills/planner/references/dependency-research.md): Shared repository-first evidence, proportional reuse/version refresh, discoverable technical ownership and bounded persistence for TinySpec and Standard, including direct/standalone entry.
 - [Best Practices for Spec-Driven Development](best_practices_spec_driven_development.md): Evidence-backed specifications and qualitative depth assessment.
 - [Pi Settings Sample](pi-settings-sample.md): Configuration examples and attributed, verified configuration decisions.
 
 ## Implementation Plans
 
+- [Project Coordination Memory Source](plans/project-coordination-memory.md): A1–A12 generic support and preservation bounds; approval is recorded separately.
+- [Project Coordination Memory Tasks](plans/project-coordination-memory-tasks.md): Sequential contract, consumer, assurance and documentation work.
+- [Project Coordination Memory Execution](plans/project-coordination-memory-execution.md): Current-content approval, per-task evidence and independent final review status.
 - [Coherence Initialization](plans/coherence-initialization.md): Approved source and original behavior constraints for unified onboarding.
 - [Coherence Initialization Tasks](plans/coherence-initialization-tasks.md): Source-first sequential implementation and acceptance contracts.
 - [Coherence Planning Review](plans/reviews/coherence-planning-review.md): Digest-bound combined source/task/scope approval and execution limits.

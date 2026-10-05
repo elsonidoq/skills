@@ -39,7 +39,7 @@ Complete implementation count: seven (T001–T007), requiring delegation. One co
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001–T007 | Contract, consumers, evidence/routing, reflection, tests, docs, integration | Internal T001 → T002 → T003 → T004 → T005 → T006 → T007 | memory-handling, planner, TinySpec, task-generation, coordinator | Per-task checks and required aggregate regression | sonnet-class | Delegated | in_progress |
 
-- [ ] Batch 1: **in_progress**, T001–T005 verified; T006 next dependency-ready task.
+- [ ] Batch 1: **in_progress**, T001–T006 verified; T007 next dependency-ready task.
 - [ ] Fresh independent final review after all task commits.
 
 Per-task evidence follows; independent acceptance remains pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
@@ -88,4 +88,11 @@ All commands are local/offline. No association, actual guideline/store, `.pi/` o
 - Added 18 focused tests (instruction removals/unsafe policies and explicitly simulated filesystem examples) and 4 planner wiring tests. Examples prescribe file operations, not a production persistence/approval engine; no helper introduced. Cover two runs/tasks, failed/partial/manual/unknown, new/resume/interrupted rows retaining prior run, evidence-only/tentative/contrary/no-update, all decision states/exact content/drift, observed selected reads/no match and compatible two-attempt routing.
 - First planner test run: FAIL (1/78), moved reflection could still satisfy section lookup after Finish. Inspected cause; added actual phase-order validation instead of weakening mutation. Final planner run PASS (78); focused PASS (18). Explicit removed-drift check rejected with `coordination-approval` diagnostic.
 - Commands (Python bytecode disabled for suite commands): `python3 skills/memory-handling/scripts/test_coordination_contract.py` PASS (18); `python3 scripts/check-planner-workflow.py` PASS; `python3 scripts/test-planner-workflow.py` PASS (78); coordinator intake/batching PASS (6/3); task-generation contract/order units PASS (2/7); `python3 skills/task-generation/scripts/check-task-order.py docs/plans/project-coordination-memory-tasks.md` PASS; `bash scripts/check-skills-lint.sh` PASS (22 skills, all bundled suites); `git diff --check` PASS.
-- Static diff/new test file inspected: focused source-derived boundaries only, no engine/dependency/model calls. Offline PASS is not live acceptance. Commit: `test: cover coordination memory contracts and simulated lifecycle` (hash at next checkpoint).
+- Static diff/new test file inspected: focused source-derived boundaries only, no engine/dependency/model calls. Offline PASS is not live acceptance. Commit: `test: cover coordination memory contracts and simulated lifecycle` `7a148cc`.
+
+### T006 — completed
+
+- Baseline expected FAIL: user docs lacked discoverable optional coordination setup/feedback. Updated README, requirements, routing index and regression guide in lockstep with implemented owner and actual test counts.
+- Checks: focused local Markdown link resolution across all four docs PASS; `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; `PYTHONDONTWRITEBYTECODE=1 python3 skills/memory-handling/scripts/test_coordination_contract.py` PASS (18); `git diff --check` PASS.
+- Manual doc-to-contract comparison/diff inspected: optional absence versus required gotcha gate, no-adoption declaration, separate records/selective history, bounded setup/writes/exact approval/drift, owner-selected two-class routing, fictional-only heuristic example and offline versus live NOT RUN all retained. `/reload` advised. No runtime/dependency pin or actual association change.
+- Commit: `docs: explain optional coordination memory and verification limits` (hash at next checkpoint).

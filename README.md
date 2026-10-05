@@ -90,6 +90,42 @@ bounded tasks may run locally only when selected class/context fit; larger compl
 use asynchronous sequential delegation. It verifies and commits each task separately and
 requires one independent final implementation review. Planning depth does not select execution.
 
+## Optional project coordination memory
+
+Projects may separately associate a coordination root in project instructions or documented
+configuration, using the [shared contract](skills/memory-handling/references/project-coordination.md).
+Setup proposes exact project-local paths and bounded writes for owner approval, preserving
+existing content; it never guesses a global store or initializes one on a read. This suite
+repository declares no adoption/coordination association and does not seed project knowledge.
+Missing optional coordination memory preserves existing behavior; required adopted gotcha
+memory still has its existing discovery/stop rules.
+
+Compact `GUIDELINES.md` is read during initial understanding, **before Planner → Choose**,
+and exact applicable constraints/evidence references reach TinySpec or Standard, tasks and
+coordinator briefs. Ordinary planning does not read execution history. Only justified
+clarification/synthesis (tentative/conflicting guidance, user justification or contrary
+observations) reads the compact evidence index, then selected relevant records.
+
+Separate `evidence/<run-id>/SUMMARY.md`, task files and `REFLECTION.md` keep factual attempts,
+checks, failures/partial work, unknowns and manual validation out of synthesized guidance and
+the gotcha `MEMORY.md` index. Records precede refresh of one compact index row per run; resume
+retains attempts and reconciles interrupted updates. Without associated write authority,
+observations stay in the existing execution handoff, not a silently created store.
+
+After verification and independent review (or a blocked pause), conservative reflection
+proposes scoped guidance or evidence-only/no update. An executive brief and exact candidate
+diff precede `ask_user`: **accept, edit, reject, or add**. Implementation approval grants no
+guideline authority. Only explicitly approved resulting content may be applied after an
+immediate baseline re-read; drift requires renewed approval. Reject preserves guideline
+bytes; pending/unavailable/cancelled/ambiguous decisions write no guidelines. Optional memory
+approval is reported separately from implementation acceptance.
+
+Residual-reasoning notes may inform class-compatible owner-selected real-work routing;
+no class weakening, automatic model replacement or permanent rule from one outcome.
+For example, a **fictional project** might scope a manual output checkpoint to heuristic
+implementation. That example is neither real evidence nor a global heuristic policy.
+After changing these global skills, run `/reload` inside pi.
+
 ## Supporting Skills
 
 - `planning-brainstorming`: shared bounded uncertainty gate and owner dialogue.
@@ -109,6 +145,7 @@ read-only RPC smoke testing, full behavioral scenarios and evidence limitations.
 are not proof of model obedience; live tests require separate authorization.
 
 Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
-describes current behavior, memory contains only verified non-obvious gotchas, and
+describes current behavior, gotcha memory contains only verified non-obvious warnings,
+optional coordination memory separates reusable guidelines from factual run/task evidence, and
 `docs/open_issues.md` is the canonical unresolved-work register. Global assets must not assume
 project paths, branch, deployment state, named models or an invented artifact/state schema.

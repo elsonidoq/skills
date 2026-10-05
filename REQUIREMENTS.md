@@ -43,7 +43,22 @@ does not establish readiness: missing capabilities, denied approval or missing s
 it. Owner-selected paths remain valid; bounded refresh preserves existing memory and custom
 policy. Retrieval and write rules live in `memory-handling`; `compact-memory`, `finish-session`,
 `planner`, `tiny-spec`, `coordinate-implementation`, and `initialize-coherence` reference it.
-A missing association routes to `initialize-coherence`, never a guessed global store.
+A missing required gotcha association routes to `initialize-coherence`, never a guessed global store.
+
+Optional coordination memory is a separate project-local association, not a required migration
+or a replacement for adopted gotcha memory. Its [shared contract](skills/memory-handling/references/project-coordination.md)
+owns compact `GUIDELINES.md`, separate run/task evidence with a compact index, selective
+history retrieval and explicit accept/edit/reject/add guideline approval with current-content
+drift protection. Setup/write bounds require owner approval; undeclared optional absence adds
+no blocker or initialization. Planner reads associated guidelines before depth choice and
+carries applicable constraints into both routes. Evidence/checkpoints need associated write
+authority; implementation approval never grants synthesized guideline mutation.
+
+Optional `residual_reasoning: low|medium|high` notes describe task/oracle conditions, not a
+third class or provider policy. Routing retains approved sonnet/opus classes, class-share
+rules, usable owner selections, inspected failure causes and separately verified stronger
+capability gates. No ML, dependencies, automatic model optimization or one-outcome permanent
+rules are introduced. Runtime pins and the two-class configuration above remain unchanged.
 
 ## Project docs
 

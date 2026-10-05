@@ -7,8 +7,10 @@ checks, negative mutations, synthetic trace fixtures, isolated installation-link
 a fake RPC process test, existing shared task-order units and coordinator contracts.
 These checks make known regressions observable; they do not prove arbitrary natural-language
 completeness or live model obedience. The coordinator execution section is checked against
-a SHA-256 freeze, updated for the owner-authorized proportionality correction only:
-acceptance boundaries, evidence reuse, early checkpoints and narrowed timeout recovery.
+a SHA-256 freeze, deliberately updated for owner-authorized proportionality and additive
+coordination-memory T003–T004 hooks. Original execution lines/order and safety mutations
+remain intact: acceptance boundaries, evidence reuse, early checkpoints, narrowed timeout
+recovery, sequential batches, per-task commits and fresh independent final review.
 
 The source-first [preservation ledger](planner-refactor.md) maps preserved and deliberately
 changed behaviors. Historical coverage/reviews remain historical. Unmapped behaviors or a
@@ -20,6 +22,7 @@ surviving relevant mutation require investigation, not silently updating expecte
 bash scripts/check-skills-lint.sh
 python3 scripts/check-planner-workflow.py
 python3 scripts/test-planner-workflow.py
+python3 skills/memory-handling/scripts/test_coordination_contract.py
 python3 skills/task-generation/scripts/check-task-order.py scripts/fixtures/planner/tiny-tasks.md
 python3 skills/task-generation/scripts/check-task-order.py scripts/fixtures/planner/standard-tasks.md
 git diff --check
@@ -76,6 +79,41 @@ calls/sources, supporting versioned spans, write timing/scope, artifact snapshot
 source→constraint→validation correspondence across managed and standalone entries. Include
 local reuse/trivial skip, changed-version refresh, unavailable/insufficient evidence and
 explicit bounded deferral; deterministic PASS is not behavioral acceptance.
+
+## Project coordination memory assurance
+
+The [canonical contract](../../skills/memory-handling/references/project-coordination.md)
+owns optional declared project-local association, compact guidelines before planner choice,
+separate factual evidence and conservative exact approval. There is no global fallback,
+automatic store setup, bulk history intake or automatic guideline mutation. Required adopted
+gotcha-memory gates are distinct. Setup and evidence writes require associated bounded
+authority; actual project knowledge does not belong in this configuration repository.
+
+`python3 skills/memory-handling/scripts/test_coordination_contract.py` runs 18 tests;
+`ProjectCoordinationWiringTests` adds 4 tests to the existing planner suite (78 total).
+The instruction checks read actual operational carriers and required shared links;
+removal/unsafe-policy mutations require named diagnostics, not surviving summary words.
+
+| Source | Named offline evidence (fixtures explicitly simulated) |
+| --- | --- |
+| A1–A2 | `test_A1_A2_early_association_and_both_route_direct_constraints`, late-read rejection, required-link negatives; simulated fictional heuristic/manual-checkpoint handoff and empty unassociated project |
+| A3–A5 | `test_A3_A4_A5_factual_checkpoint_and_index_removals`; simulated two runs/multiple tasks with failed/partial/manual/unknown, resume/interrupted record-before-index repair retaining prior records and a unique row |
+| A6 | `test_A6_reflection_uncertainty_and_no_update_removals`; simulated separate evidence-only/tentative/contrary/insufficient/no-update reflection |
+| A7–A9 | `test_A7_A8_A9_exact_approval_rejection_and_drift_removals`; prescribed pending/unavailable/cancelled/ambiguous/reject byte identity, exact accept/edit/add content and baseline record, concurrent-drift preservation/renewal |
+| A10 | `test_A10_selective_index_first_and_no_match_removals`; observed simulated index-first selected reads with unrelated records unread and no-match uncertainty; bulk-read policy rejection |
+| A11 | `test_A11_routing_selection_class_and_inspected_cause_removals`; fictional selected compatible options, both attempts/manual failure, no permanent provider rule; class/retry/one-outcome policy rejection |
+| A12 | `test_A12_existing_execution_safeguards_survive_mutations`, existing planner/coordinator/task checks, frozen execution preservation and both-route packaging/phase checks |
+
+The temporary filesystem examples carry out prescribed operations directly. They are **not**
+a production persistence/approval engine, a fake `ask_user` implementation or proof that an
+agent obeys these instructions. No persistence helper was introduced. Offline PASS means
+contract sensitivity, link/stage wiring and illustrative file/byte checks only. Real model
+read/write/approval adherence and actual SpecKit production are **NOT RUN** and require
+separate authorization with attributable collected events/artifact snapshots. Review actual
+scope/unknowns, row refresh/reconciliation, exact diff/answer/baseline drift and selected
+class/capability handling manually. See the [execution record](project-coordination-memory-execution.md)
+for commands, results, digest changes and pending independent review; optional guideline
+approval never substitutes for feature acceptance. After global skill changes run `/reload`.
 
 ## Proportionate validation regression
 

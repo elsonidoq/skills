@@ -78,7 +78,7 @@ Before each write, re-read targets and preserve unrelated content; stop on concu
   - **Model class**: sonnet-class.
   - **Rationale**: finite source-derived cases reuse existing checker/fixture patterns; broader behavioral evidence is explicitly separate.
 
-- [ ] T006 [Lockstep documentation] Document optional adoption, selective access and reviewed feedback lifecycle.
+- [x] T006 [Lockstep documentation] Document optional adoption, selective access and reviewed feedback lifecycle.
   - **Depends**: T001, T002, T003, T004, T005.
   - **Prerequisites**: implemented contracts and actual named test results; re-read documentation routing, requirements memory/model sections, README flow and regression guide before edits.
   - **Outcome**: users can discover generic coordination support, propose an explicitly approved project association and understand compact guidance versus indexed evidence, no-memory fallback, conservative routing/reflection and verification limits.
