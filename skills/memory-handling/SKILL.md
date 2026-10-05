@@ -58,6 +58,16 @@ similarly named index as project association without repository evidence.
 - Classify surplus entries per `compact-memory`: `KEEP`, `MIGRATE` (to an authoritative
   document), `MERGE`, or `DROP` with a recorded reason.
 
+## Optional project coordination memory
+
+Apply the shared [project coordination contract](references/project-coordination.md)
+for separately associated compact `GUIDELINES.md` and indexed run/task evidence.
+Discover optional association read-only; absent coordination memory neither initializes
+anything nor adds an adoption blocker. Required gotcha-memory rules above remain
+unchanged. Coordination records never go into this gotcha index or its entries.
+Ordinary planning reads associated guidelines early, not execution history; justified
+history reads and evidence/approval-controlled guideline writes follow the shared owner.
+
 ## Report
 
 State the verified store location, the index state, the entries consulted and why,

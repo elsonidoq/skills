@@ -14,7 +14,7 @@ Before each write, re-read targets and preserve unrelated content; stop on concu
 
 ### Shared contract and planning consumers
 
-- [ ] T001 [Coordination contract] Establish optional coordination discovery and two-store persistence rules.
+- [x] T001 [Coordination contract] Establish optional coordination discovery and two-store persistence rules.
   - **Depends**: none.
   - **Prerequisites**: future execution preflight above; read source Association and the two knowledge layers, Retrieval and planning integration, repository policy, memory-handling and existing gotcha-memory association/write rules.
   - **Outcome**: extend memory-handling through one shared portable reference, keeping compact synthesized coordination guidelines separate from gotcha entries and factual execution evidence.

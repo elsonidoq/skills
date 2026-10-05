@@ -42,4 +42,16 @@ Complete implementation count: seven (T001–T007), requiring delegation. One co
 - [ ] Batch 1: **in_progress**, T001 first dependency-ready task.
 - [ ] Fresh independent final review after all task commits.
 
-Per-task checks/commits and independent acceptance are pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
+Per-task evidence follows; independent acceptance remains pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
+
+## Sequential implementation evidence
+
+All commands are local/offline. No association, actual guideline/store, `.pi/` or `.specify/` writes. Original source digest verified; task contracts compared to e3c2910 with checkbox normalization. Commits are recorded at the next checkpoint to avoid recursive self-hashes; the final task commit is identified by its unique subject and returned full revision range.
+
+### T001 — completed
+
+- Missing-clause baseline: canonical coordination reference absent (expected FAIL); existing planner checker PASS.
+- Added portable shared association, compact guidelines, selective history, separate evidence/index and conservative approval contract; gotcha rules unchanged.
+- Checks: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; focused Python clause/layout/link assertions PASS; `git diff --check` PASS. Manual mapping to A1–A10: declared paths/no fallback, record-before-index/resume, unknown/partial/manual and exact approval/drift boundaries inspected.
+- Diff inspected: only shared owner/link plus task status/evidence. Commit: `feat: define optional project coordination memory contract` (hash at next checkpoint).
+- No live model or persistence claim; tests for lifecycle/wiring follow T005.
