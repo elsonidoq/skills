@@ -355,6 +355,40 @@ and commit verified review fixes separately; leave blocked dependents pending.
 Source/task sequencing or authorization defects return to the producing workflow's
 review gate, with renewed affected approval before dependents proceed.
 
+## Coordination reflection and guideline approval
+
+After implementation/verification and fresh independent review, or at a blocked pause,
+apply the shared contract's nine reflection questions: usefulness to future planning;
+project-specific versus general; reusable versus incidental; reinforcement; contradiction;
+guideline support versus evidence-only; delegation lessons; manual validation missed by
+automated checks; and surprises needing qualification/more evidence. Distinguish direct
+observation, tentative/repeated pattern, stable guidance, insufficient and conflicting
+evidence without scoring. Select prior evidence only when justified, index-first and
+relevant-only. A single failure is not a universal ban or permanent routing rule.
+
+Append attributable observations at the evidence checkpoint and refresh the index,
+separately from `REFLECTION.md` candidate add/refine/supersede/remove changes with scope,
+status and supporting/contradicting pointers, or evidence-only items. Record `no update
+proposed` when no reusable lesson exists. General lessons/global skill changes require
+separate approved scope; do not smuggle them into project guidelines.
+
+Before guideline mutation, show an executive brief and exact candidate diff, then use
+existing `ask_user` to allow accept, edit, reject, or add a guideline. Implementation
+approval is not guideline approval. Explicit accepted/edited/added resulting content,
+approved bounds, answer/disposition and comparable baseline/proposed content evidence
+must be persisted in the reflection record under verified write authority; refresh the
+index. Pending, unavailable, cancelled or ambiguous answers leave guidelines unchanged
+and proposals pending. Rejection leaves guideline bytes identical, retaining evidence
+and rejection disposition. Immediately before applying only approved changes, re-read
+guidelines and compare with the approved baseline: concurrent drift stops application
+and requires renewed review/approval, not overwrite. Re-check relevant guidance after
+approved writes. Without association/write authority, report candidates/observations
+in the existing handoff; offer bounded future setup, never initialize or silently write.
+
+Report implementation/feature acceptance separately from optional memory approval that
+is pending or rejected; optional memory approval never substitutes for independent
+implementation review or required acceptance checks.
+
 ## Maintaining this contract
 
 With Python 3 available, run `python3 scripts/test_intake_contract.py` and

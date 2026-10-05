@@ -39,7 +39,7 @@ Complete implementation count: seven (T001–T007), requiring delegation. One co
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001–T007 | Contract, consumers, evidence/routing, reflection, tests, docs, integration | Internal T001 → T002 → T003 → T004 → T005 → T006 → T007 | memory-handling, planner, TinySpec, task-generation, coordinator | Per-task checks and required aggregate regression | sonnet-class | Delegated | in_progress |
 
-- [ ] Batch 1: **in_progress**, T001–T003 verified; T004 next dependency-ready task.
+- [ ] Batch 1: **in_progress**, T001–T004 verified; T005 next dependency-ready task.
 - [ ] Fresh independent final review after all task commits.
 
 Per-task evidence follows; independent acceptance remains pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
@@ -72,4 +72,12 @@ All commands are local/offline. No association, actual guideline/store, `.pi/` o
 - Manual A3–A5/A11 walkthrough: failed/partial/manual/unknown observations retain individual attempts, resume uses same ID and repairs row after records; absent authority uses handoff. Inspected cause/clean-state/stronger-capability/owner-selection gates stop uncertain escalation.
 - Checks: planner checker PASS; coordinator intake PASS (6), batching PASS (3); `git diff --check` PASS. Commands: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py`, `PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_intake_contract.py`, `PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_batching_contract.py`.
 - Diff inspected. First whole-file additive-line assertion failed because load sentence was split; inspected cause, then checked the actually frozen execution region: original lines/order retained PASS. Deliberate T003 execution digest `7e13bff8311eb4df622b49b8a46ab7f4b683ade6e12d43fa81b9ff2133378184`; existing safety assertions unchanged.
-- Commit: `feat: record coordination outcomes and safe routing experiments` (hash at next checkpoint).
+- Commit: `feat: record coordination outcomes and safe routing experiments` `6a690e7`.
+
+### T004 — completed
+
+- Baseline expected FAIL: no coordinator closeout carrying phase for shared approval protocol. Added post-review/blocked reflection and exact decision/baseline gate; canonical procedure from T001 already supplies full shared protocol unchanged.
+- Manual state walkthrough: accept/edit/add require explicit resulting content; reject retains bytes/evidence; pending/unavailable/cancelled/ambiguous grant no write; immediate re-read detects drift and requires renewed approval. Implementation approval alone grants none. Nine reflection prompts and scoped evidence-only/no-update/contrary statuses inspected.
+- Checks: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; intake (6) and batching (3) commands from T003 PASS; `git diff --check` PASS. Frozen execution original lines/order preserved PASS; digest deliberately refreshed to `89cbd7fa77bcb098d39ff9dcc9c17bc4892de2a248a45dfa25aa1d460e0b4660` for only additive reflection phase. Diff inspected; no safety assertion removed.
+- Commit: `feat: gate coordination guideline reflection on exact approval` (hash at next checkpoint).
+- Operational hooks checkpoint complete before T005 assurance; actual model/SpecKit behavior NOT RUN, independent final review pending.

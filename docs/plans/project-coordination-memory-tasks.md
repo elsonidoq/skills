@@ -52,7 +52,7 @@ Before each write, re-read targets and preserve unrelated content; stop on concu
   - **Model class**: sonnet-class.
   - **Rationale**: existing checkpoints and capability gates supply bounded seams; experiment behavior is fully specified.
 
-- [ ] T004 [Reflection and approval] Add conservative closeout proposals and approval-controlled guideline mutation.
+- [x] T004 [Reflection and approval] Add conservative closeout proposals and approval-controlled guideline mutation.
   - **Depends**: T001, T002, T003.
   - **Prerequisites**: verified evidence/index producer and current guideline discovery; read existing executive-brief/current-content approval and coordinator final-review/finish boundaries.
   - **Outcome**: after verification and independent review, or at a blocked pause, coordinator reflects on useful project-specific lessons, records evidence separately and offers exact scoped guideline changes for accept/edit/reject/add through existing question interaction.
