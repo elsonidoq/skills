@@ -92,7 +92,7 @@ Before each write, re-read targets and preserve unrelated content; stop on concu
 
 ### Integration reconciliation
 
-- [ ] T007 [Integration acceptance] Reconcile all source criteria and preserved execution gates.
+- [x] T007 [Integration acceptance] Reconcile all source criteria and preserved execution gates.
   - **Depends**: T001, T002, T003, T004, T005, T006.
   - **Prerequisites**: current approved source/tasks and producer check evidence; no unresolved material scope/authorization drift. Coordinator fresh independent final review remains separate and required, not replaced by this implementer check.
   - **Outcome**: attributable A1–A12 acceptance packet in existing task/execution conventions, with only demonstrated in-scope integration defects repaired and material changes returned through existing gates.

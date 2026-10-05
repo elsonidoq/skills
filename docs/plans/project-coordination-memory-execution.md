@@ -10,7 +10,7 @@ Producer: `planner`; depth: TinySpec; source provenance: owner's conversation re
 - Tasks SHA256: `fdf460094fb45b3b9ef40289d4f47aec447ba8aed38c2f60616e7d3944726cb3`
 - Owner answer through `ask_user`: **Approve implementation**.
 - Authorized scope: T001–T007, generic coordination-memory support, focused tests and lockstep documentation. Coordinator preflight starts immediately. No actual project-store initialization, live/paid runs, push or deployment.
-- Planning preparation model choice: `openai-codex/gpt-6.1-sol`; implementation and independent-review selection remain pending.
+- Planning preparation model choice: `openai-codex/gpt-6.1-sol`; implementation and independent-review owner selections are recorded in preflight below.
 
 ## Planner-owned review
 
@@ -37,9 +37,9 @@ Complete implementation count: seven (T001–T007), requiring delegation. One co
 
 | Batch | Task IDs | Scope | Dependencies | Integration surface | Verification | Class | Mode | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | T001–T007 | Contract, consumers, evidence/routing, reflection, tests, docs, integration | Internal T001 → T002 → T003 → T004 → T005 → T006 → T007 | memory-handling, planner, TinySpec, task-generation, coordinator | Per-task checks and required aggregate regression | sonnet-class | Delegated | in_progress |
+| 1 | T001–T007 | Contract, consumers, evidence/routing, reflection, tests, docs, integration | Internal T001 → T002 → T003 → T004 → T005 → T006 → T007 | memory-handling, planner, TinySpec, task-generation, coordinator | Per-task checks and required aggregate regression | sonnet-class | Delegated | completed |
 
-- [ ] Batch 1: **in_progress**, T001–T006 verified; T007 next dependency-ready task.
+- [x] Batch 1: **completed**, T001–T007 sequentially implemented and locally verified/committed; feature acceptance is not self-certified.
 - [ ] Fresh independent final review after all task commits.
 
 Per-task evidence follows; independent acceptance remains pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
@@ -95,4 +95,36 @@ All commands are local/offline. No association, actual guideline/store, `.pi/` o
 - Baseline expected FAIL: user docs lacked discoverable optional coordination setup/feedback. Updated README, requirements, routing index and regression guide in lockstep with implemented owner and actual test counts.
 - Checks: focused local Markdown link resolution across all four docs PASS; `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; `PYTHONDONTWRITEBYTECODE=1 python3 skills/memory-handling/scripts/test_coordination_contract.py` PASS (18); `git diff --check` PASS.
 - Manual doc-to-contract comparison/diff inspected: optional absence versus required gotcha gate, no-adoption declaration, separate records/selective history, bounded setup/writes/exact approval/drift, owner-selected two-class routing, fictional-only heuristic example and offline versus live NOT RUN all retained. `/reload` advised. No runtime/dependency pin or actual association change.
-- Commit: `docs: explain optional coordination memory and verification limits` (hash at next checkpoint).
+- Commit: `docs: explain optional coordination memory and verification limits` `5c05148`.
+
+### T007 — completed (implementer integration, not independent acceptance)
+
+- Baseline expected FAIL: aggregate A1–A12 packet not recorded. Reconciled current source → carrier → named checks below; no integration defect required further contract/test scope.
+- Required commands, all with `PYTHONDONTWRITEBYTECODE=1` for Python/lint: `python3 skills/memory-handling/scripts/test_coordination_contract.py` PASS (18); `python3 scripts/check-planner-workflow.py` PASS; `python3 scripts/test-planner-workflow.py` PASS (78); `python3 skills/coordinate-implementation/scripts/test_intake_contract.py` PASS (6); `python3 skills/coordinate-implementation/scripts/test_batching_contract.py` PASS (3); `python3 skills/task-generation/scripts/test_contract.py` PASS (2); `python3 skills/task-generation/scripts/test_check_task_order.py` PASS (7); `python3 skills/task-generation/scripts/check-task-order.py docs/plans/project-coordination-memory-tasks.md` PASS; `bash scripts/check-skills-lint.sh` PASS (22 skills and all bundled suites); `git diff --check` PASS.
+- Focused aggregate Python inspection PASS: source digest unchanged; task contracts byte-equal to e3c2910 after checkbox normalization; only authorized paths changed; all changed Markdown links resolve; original frozen execution lines/order preserved; no staged files before final task. Manual full carrier diff inspected: early handoff, failure/partial/index/current-content approval and class-compatible escalation preserve TinySpec/direct, Standard/SpecKit and legacy routes, 0% opus, owner gates, sequential batches, task commits and fresh independent final review.
+- Final task commit: `test: reconcile coordination memory integration evidence`; resolve with `git log -1 --format=%H --grep='^test: reconcile coordination memory integration evidence$'`. Actual hash/full committed range returned in worker artifact, avoiding a recursive self-hash. Review the seven implementation commits from e3c2910, not merely a clean tree; initial project base is 6f4448eeaeaf48031a612bd0eef192d9cf3adea2.
+- No actual association/guideline/store, excluded untracked `.pi/`/`.specify/`, dependency, provider, SpecKit, push or deployment writes/calls. Real model adherence and real SpecKit acceptance NOT RUN (not authorized). Natural-language adherence, evidence quality and compact-index growth remain residual risks; offline simulations do not eliminate them.
+- Next action: coordinator obtains one fresh separate owner-selected final review of full range/source/tasks/approval/evidence. Independent review and feature acceptance remain **pending**. Run `/reload` inside pi after these global skill changes.
+
+## A1–A12 integration packet
+
+Local static/simulated status: PASS for each row; this is not independent feature acceptance.
+Canonical carrier: `skills/memory-handling/references/project-coordination.md` (PC below).
+Named cases are in `skills/memory-handling/scripts/test_coordination_contract.py` unless noted.
+
+| ID | Operational carrier | Named positive / meaningful rejection evidence |
+| --- | --- | --- |
+| A1 | PC Compact guidelines; planner Discovery + Selected production; TinySpec Inputs; tasks Preconditions | `test_A1_A2_early_association_and_both_route_direct_constraints`; `test_A1_late_discovery_with_summary_intact_is_rejected`; simulated early handoff; required-link negatives |
+| A2 | PC Association; all consumer preflights, separate required gotcha stops | Same A1/A2 contract case; `test_A1_A2_simulated_early_guideline_handoff_and_no_store`; removed no-adoption/no-fabrication/gotcha-distinction clauses fail specific diagnostics |
+| A3 | PC Separate factual evidence; coordinator Coordination evidence checkpoint | `test_A3_A4_A5_factual_checkpoint_and_index_removals`; `test_A3_A4_simulated_two_runs_multiple_tasks_failed_partial_manual_unknown` |
+| A4 | PC per-run summary/task/reflection layout + coordinator checkpoint | Same two-run/multi-task example; removed separate-record checkpoint fails `coordination-checkpoint` |
+| A5 | PC record-before-index/resume + coordinator checkpoint | `test_A5_simulated_resume_interrupted_record_then_index_repair` (unique row, prior record retained); record/refresh/reconcile removals fail named diagnostics |
+| A6 | PC Conservative reflection; coordinator post-review/blocked reflection | `test_A6_reflection_uncertainty_and_no_update_removals`; `test_A6_simulated_reflection_evidence_only_tentative_contrary_no_update` |
+| A7 | PC Exact guideline approval; coordinator reflection approval gate | `test_A7_A8_A9_exact_approval_rejection_and_drift_removals`; `test_A7_A9_simulated_pending_unavailable_cancelled_ambiguous_rejected_bytes`; silent-authority contradiction rejected |
+| A8 | Same exact resulting-content/baseline re-read carriers | `test_A8_simulated_exact_accept_edit_add_content_and_baseline_evidence`; `test_A8_simulated_concurrent_drift_preserved_and_renewal_pending`; removed current-content/diff/selection clauses rejected |
+| A9 | Same explicit rejection/evidence retention carriers | Pending/reject example checks bytes plus retained evidence/disposition; removal of byte-identity/disposition rejected |
+| A10 | PC Selective historical retrieval; planner/direct consumer clarification + coordinator synthesis | `test_A10_selective_index_first_and_no_match_removals`; `test_A10_simulated_index_first_relevant_only_and_no_match_uncertainty`; bulk policies rejected |
+| A11 | PC Class-compatible routing; task residual notes; coordinator Select Execution Capability + checkpoint | `test_A11_routing_selection_class_and_inspected_cause_removals`; factual two-attempt fictional fixture; `test_unsafe_bulk_silent_drift_class_retry_and_single_outcome_policies` |
+| A12 | Unchanged existing route/approval/class/share/graph/commit/review clauses; deliberately reviewed digest | `test_A12_existing_execution_safeguards_survive_mutations`; planner 78 tests incl `ProjectCoordinationWiringTests`; coordinator/task/order suites and lint; baseline original-line-order check |
+
+No optional memory approval is pending for this repository because none was requested and no store is associated. Future actual guideline proposals require their own explicit approval; implementation approval is not reusable memory authority.
