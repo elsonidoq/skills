@@ -40,9 +40,9 @@ Complete implementation count: seven (T001–T007), requiring delegation. One co
 | 1 | T001–T007 | Contract, consumers, evidence/routing, reflection, tests, docs, integration | Internal T001 → T002 → T003 → T004 → T005 → T006 → T007 | memory-handling, planner, TinySpec, task-generation, coordinator | Per-task checks and required aggregate regression | sonnet-class | Delegated | completed |
 
 - [x] Batch 1: **completed**, T001–T007 sequentially implemented and locally verified/committed; feature acceptance is not self-certified.
-- [ ] Fresh independent final review after all task commits.
+- [x] Fresh independent final review after all task commits: no findings; OK with notes (offline/live distinction).
 
-Per-task evidence follows; independent acceptance remains pending. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
+Per-task evidence follows; coordinator acceptance disposition and end-of-run reflection are recorded below. This approval record is external to approved source/tasks to avoid recursive self-hashes. Expected task checkbox/evidence changes do not alter task contracts; compare normalized contract content against approved revision evidence when resuming.
 
 ## Sequential implementation evidence
 
@@ -104,11 +104,11 @@ All commands are local/offline. No association, actual guideline/store, `.pi/` o
 - Focused aggregate Python inspection PASS: source digest unchanged; task contracts byte-equal to e3c2910 after checkbox normalization; only authorized paths changed; all changed Markdown links resolve; original frozen execution lines/order preserved; no staged files before final task. Manual full carrier diff inspected: early handoff, failure/partial/index/current-content approval and class-compatible escalation preserve TinySpec/direct, Standard/SpecKit and legacy routes, 0% opus, owner gates, sequential batches, task commits and fresh independent final review.
 - Final task commit: `test: reconcile coordination memory integration evidence`; resolve with `git log -1 --format=%H --grep='^test: reconcile coordination memory integration evidence$'`. Actual hash/full committed range returned in worker artifact, avoiding a recursive self-hash. Review the seven implementation commits from e3c2910, not merely a clean tree; initial project base is 6f4448eeaeaf48031a612bd0eef192d9cf3adea2.
 - No actual association/guideline/store, excluded untracked `.pi/`/`.specify/`, dependency, provider, SpecKit, push or deployment writes/calls. Real model adherence and real SpecKit acceptance NOT RUN (not authorized). Natural-language adherence, evidence quality and compact-index growth remain residual risks; offline simulations do not eliminate them.
-- Next action: coordinator obtains one fresh separate owner-selected final review of full range/source/tasks/approval/evidence. Independent review and feature acceptance remain **pending**. Run `/reload` inside pi after these global skill changes.
+- Subsequent action completed: fresh separate owner-selected final review of full range/source/tasks/approval/evidence found no issues. Coordinator independently reran required local validation and recorded acceptance disposition below. Run `/reload` inside pi after these global skill changes.
 
 ## A1–A12 integration packet
 
-Local static/simulated status: PASS for each row; this is not independent feature acceptance.
+Local static/simulated status: PASS for each row; independent review and coordinator disposition below accept the approved instruction-contract scope, not live model behavior.
 Canonical carrier: `skills/memory-handling/references/project-coordination.md` (PC below).
 Named cases are in `skills/memory-handling/scripts/test_coordination_contract.py` unless noted.
 
@@ -128,3 +128,21 @@ Named cases are in `skills/memory-handling/scripts/test_coordination_contract.py
 | A12 | Unchanged existing route/approval/class/share/graph/commit/review clauses; deliberately reviewed digest | `test_A12_existing_execution_safeguards_survive_mutations`; planner 78 tests incl `ProjectCoordinationWiringTests`; coordinator/task/order suites and lint; baseline original-line-order check |
 
 No optional memory approval is pending for this repository because none was requested and no store is associated. Future actual guideline proposals require their own explicit approval; implementation approval is not reusable memory authority.
+
+## Independent review and coordinator acceptance
+
+Reviewed implementation range: `e3c2910571ad36b5988516858c33a5b086cbd91b..bc887328396e0e52165eefbce0934e1f14a8015d`. Fresh read-only reviewer, selected `openai-codex/gpt-6.1-sol`, child `7c615393-58a0-439d-9f02-3c09cd4dbe41`, workflow `74cd714b-aac2-4410-bcbe-96d0b3139e34`. The reviewer lacked a committed-diff tool; coordinator supplied a complete `git diff e3c2910..HEAD` patch and commit inventory through the supervisor channel, allowing actual full-range review without relaunch or model changes.
+
+Verdict: **No issues found; OK with notes**. Read all 15 changed files, source/tasks/approval records, surrounding contracts and actual tests. A1–A12 alignment, all five canonical consumer links, original frozen execution lines/order and safety mutations verified. No code/scope questions or corrective changes required. Reviewer's tools could not execute tests; reviewer requested coordinator reruns rather than treating reported tests as independent execution evidence.
+
+Coordinator independently inspected the canonical shared contract, consumer/coordinator diff and actual new tests/checker; reran `python3 scripts/check-planner-workflow.py` (PASS), `python3 scripts/test-planner-workflow.py` (78 PASS), `python3 skills/memory-handling/scripts/test_coordination_contract.py` (18 PASS), `bash scripts/check-skills-lint.sh` (22 skills, zero failures; all bundled suites PASS, including coordinator intake/batching and task contract/order units), approved task-order validation (PASS), and working-tree/full committed-range `git diff --check` (PASS). Python bytecode disabled. Independently compared source digest, task contracts after checkbox normalization, and original frozen execution line order: PASS.
+
+Disposition: **Implementation complete; approved instruction-contract/static/simulated acceptance verified**. No pending implementation tasks or required offline checks. Live guideline reads/writes/approval adherence, routing outcomes and genuine SpecKit production are **NOT RUN**, outside approved scope, not claimed passed. No push, deployment, actual association/store/guideline creation or excluded-file changes. Remaining risks: natural-language adherence, evidence quality and index growth. Review notes are validation limitations, not unresolved defects. Documentation-only closeout changes do not alter the reviewed operational contracts.
+
+## End-of-run reflection (existing handoff; no associated store)
+
+Direct observations: the worker completed seven sonnet-class tasks with separate verified commits. Two local check failures were inspected and corrected (T003 assertion boundary and T005 phase-order sensitivity); no failed child or model escalation occurred. The fresh reviewer needed a full committed-range patch because its tools could not generate one; the supervisor-supplied artifact unblocked review. Automated checks do not prove actual agents obey persistence/approval guidance. No user/manual product validation or real model-routing experiment occurred; absent outcomes stay unknown.
+
+These observations do not establish a repeated project-specific routing or planning pattern. No prior coordination history is associated, so no evidence directory was loaded and no supporting history was invented. Reviewer tool availability is runtime-specific; it does not justify a permanent project model rule. Existing review guidance already requires accessible actual changes. **No update proposed; evidence-only in this execution handoff.** No synthesized memory mutation or approval request is warranted. Future setup/guideline changes retain their separate bounded approval gate.
+
+Next action: run `/reload` inside pi to load changed global skills. Projects may adopt the optional associated coordination layout through the documented bounded setup approval; this completed change does not adopt it for them.
