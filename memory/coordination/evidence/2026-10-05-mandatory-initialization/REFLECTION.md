@@ -17,4 +17,5 @@ Candidate guideline changes: **no update proposed**; evidence-only.
 memory-approval interaction occurred. Independent correction review identified one valid
 preselection write-authority contradiction; it was corrected with a focused regression.
 That generic contract defect does not justify a project guideline or model-routing rule.
-Independent recheck remains pending.
+Independent recheck confirmed the P1 resolved and found no new issues; merge verdict OK.
+No guideline update proposed; these observations remain factual evidence only.

@@ -29,5 +29,8 @@ Independent correction review found one valid P1 conflict: blocked preselection 
 mandatory evidence writes but only initialization was excepted from read-only operation.
 Corrected shared/planner/docs boundaries and added a targeted negative regression;
 coordination suite now 21 PASS, planner 78 PASS, checker/lint/whitespace PASS.
-Review recheck pending before the owner's requested merge/push. Live agent/SpecKit obedience NOT RUN.
+Retained reviewer recheck `9dce170f-6857-4f60-8dff-c701eb666c1f` inspected
+`9aac934..45ab599`: prior P1 resolved, no new issues, merge verdict OK.
+Approved instruction-contract scope is ready for the owner's requested merge/push.
+Live agent/SpecKit obedience NOT RUN.
 No learned guidelines added; existing untracked `.pi/` and `.specify/` untouched.
