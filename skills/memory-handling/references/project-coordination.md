@@ -34,8 +34,12 @@ all staged files. No separate setup approval is required. If creation or commit 
 by permissions, repository policy or unavailable Git, report the exact blocker and stop;
 do not continue with nonpersistent memory or silently skip the commit. On resume, inspect
 any partially completed initialization and finish its missing commit without duplicating
-files/commits. This bounded initialization is the sole exception to planner's preselection
-read-only rule; it grants no source, planning-artifact or learned-guideline write authority.
+files/commits. The preselection read-only rule permits only bounded coordination-store
+initialization/commit and factual evidence/index/reflection persistence, including runs
+blocked before depth selection (for example, unavailable question capability). Record
+observed blockers and evidence-only reflection in the project-local store; do not infer
+an owner decision. This exception grants no source, planning-artifact/decision-file or
+unapproved learned-guideline write authority.
 
 ## Compact guidelines
 

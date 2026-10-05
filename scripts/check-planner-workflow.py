@@ -398,7 +398,16 @@ def check_contracts(texts):
             "Tell the user", "commit only those new files", "path-limited commit",
             "Preserve unrelated working-tree and staged", "No separate setup approval is required",
             "report the exact blocker and stop", "finish its missing commit",
-            "sole exception to planner's preselection", "no source, planning-artifact or learned-guideline write authority")
+            "preselection read-only rule permits only bounded coordination-store",
+            "initialization/commit and factual evidence/index/reflection persistence",
+            "blocked before depth selection", "unavailable question capability",
+            "no source, planning-artifact/decision-file or",
+            "unapproved learned-guideline write authority")
+    require("coordination-preselection", pre,
+            "factual evidence/index/reflection", "including blocked runs before depth selection",
+            "no source edits, decision")
+    require("coordination-preselection", production,
+            "factual evidence/index/reflection", "including blocked preselection")
     require("coordination-guidelines", section(q, "## Compact guidelines"),
             "before brainstorming", "exact constraints", "scope/trigger", "qualitative",
             "Owner-supplied entries name their origin", "Preserve uncertainty and contrary",

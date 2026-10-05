@@ -25,5 +25,9 @@ Existing declared project-local layouts are reused; otherwise default is project
 Focused checker PASS; planner suite 78 PASS; coordination suite 20 PASS; skill lint and all
 bundled suites PASS after correcting one doc wording regression; whitespace PASS.
 See [T001](T001.md) for attempts/checks and [reflection](REFLECTION.md).
-Independent correction review pending. Live agent/SpecKit obedience NOT RUN.
+Independent correction review found one valid P1 conflict: blocked preselection needed
+mandatory evidence writes but only initialization was excepted from read-only operation.
+Corrected shared/planner/docs boundaries and added a targeted negative regression;
+coordination suite now 21 PASS, planner 78 PASS, checker/lint/whitespace PASS.
+Review recheck pending before the owner's requested merge/push. Live agent/SpecKit obedience NOT RUN.
 No learned guidelines added; existing untracked `.pi/` and `.specify/` untouched.

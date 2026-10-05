@@ -170,7 +170,7 @@ class CoordinationContractTests(unittest.TestCase):
             "partial stores get only their missing files", "Repeated entry is idempotent",
             "Tell the user", "path-limited commit", "Preserve unrelated working-tree and staged",
             "report the exact blocker and stop", "finish its missing commit",
-            "sole exception to planner's preselection",
+            "initialization/commit and factual evidence/index/reflection persistence",
         ):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordination", "## Project-local initialization", clause, "coordination-initialization")
@@ -180,6 +180,18 @@ class CoordinationContractTests(unittest.TestCase):
             ("coordinator", "## Load and Verify", "without a setup approval gate", "coordination-intake"),
         ):
             self.assert_rejected(key, heading, clause, diagnostic)
+
+    def test_blocked_preselection_evidence_is_permitted_without_planning_authority(self):
+        # Concrete reviewed boundary: initialization succeeded, ask_user unavailable.
+        self.assertEqual(checker.check_contracts(self.texts), [])
+        for key, heading, clause, diagnostic in (
+            ("coordination", "## Project-local initialization", "blocked before depth selection", "coordination-initialization"),
+            ("coordination", "## Project-local initialization", "unapproved learned-guideline write authority", "coordination-initialization"),
+            ("planner", "## Before selection:", "including blocked runs before depth selection", "coordination-preselection"),
+            ("planner", "## Selected production and stage handoffs", "including blocked preselection", "coordination-preselection"),
+        ):
+            with self.subTest(carrier=key, clause=clause):
+                self.assert_rejected(key, heading, clause, diagnostic)
 
 
 class SimulatedFilesystemExamples(unittest.TestCase):

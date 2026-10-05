@@ -114,7 +114,8 @@ mandated independent reviews or honest PASS/FAIL/NOT RUN reporting.
 ## Before selection: understand → brainstorm → assess → ask
 
 Fresh planning is read-only until the owner selects depth, except the shared contract's
-bounded mandatory coordination-store initialization/commit: no source edits, decision
+bounded coordination-store initialization/commit and factual evidence/index/reflection
+persistence, including blocked runs before depth selection: no source edits, decision
 files, TinySpec, specification, plan, or tasks. Session history carries request bounds,
 evidence, answers/rationale, and deferrals. If interrupted, recover those records;
 if unavailable, ask for missing answers, never invent a durable preselection artifact.
@@ -199,7 +200,8 @@ both TinySpec and Standard stage briefs: source observables/acceptance, producer
 boundaries, task dependencies, checkpoints, verification and coordinator handoff. Verify
 these constraints reach tasks through the shared adapter, not just a memory summary.
 Memory cannot override source requirements or owner authority. Preselection stays read-only
-except bounded mandatory coordination-store initialization/commit;
+except bounded coordination-store initialization/commit and factual evidence/index/reflection
+persistence for all runs, including blocked preselection;
 no default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
 (low/medium/high with rationale) may inform later class-compatible owner-selected routing;
 absence requires no migration and changes no class/share/approval rule.

@@ -43,7 +43,8 @@ Use planner for this requirement:
 
 Planner inspects the requirement/codebase, brainstorms unresolved material choices, and
 presents an approximate scope assessment. This phase is read-only except mandatory
-project-local coordination-store initialization and its focused commit. It always presents both
+project-local coordination-store initialization/commit and factual evidence/index/reflection
+persistence, including runs blocked before depth selection. It always presents both
 paths and stops for your explicit choice; the recommendation does not choose for you.
 
 ```text

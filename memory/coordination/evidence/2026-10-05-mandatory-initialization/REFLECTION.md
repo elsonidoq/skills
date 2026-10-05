@@ -14,4 +14,7 @@ no supporting past runs were invented or bulk-loaded.
 
 Candidate guideline changes: **no update proposed**; evidence-only.
 `GUIDELINES.md` remains the empty initialized document; no learned-memory mutation or
-memory-approval interaction occurred. Independent correction review remains pending.
+memory-approval interaction occurred. Independent correction review identified one valid
+preselection write-authority contradiction; it was corrected with a focused regression.
+That generic contract defect does not justify a project guideline or model-routing rule.
+Independent recheck remains pending.

@@ -90,10 +90,11 @@ missing files, notifies the user and commits only initialization files before pr
 there is no setup approval, opt-out or handoff-only path. Default `memory/coordination/`
 is relative to the current project, not global skill installation. Existing files and staged
 work survive; repeated/partial initialization is idempotent. Creation/commit/persistence
-failures stop. Learned guidelines still require exact approval; no bulk history intake or
-fabricated lessons. Required adopted gotcha-memory gates remain distinct.
+failures stop. Blocked preselection runs may persist factual evidence/index/reflection;
+that bounded exception grants no source/decision artifact or unapproved guideline authority.
+Learned guidelines still require exact approval; no bulk history intake or fabricated lessons. Required adopted gotcha-memory gates remain distinct.
 
-`python3 skills/memory-handling/scripts/test_coordination_contract.py` runs 20 tests;
+`python3 skills/memory-handling/scripts/test_coordination_contract.py` runs 21 tests;
 `ProjectCoordinationWiringTests` adds 4 tests to the existing planner suite (78 total).
 The instruction checks read actual operational carriers and required shared links;
 removal/unsafe-policy mutations require named diagnostics, not surviving summary words.
