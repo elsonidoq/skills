@@ -26,7 +26,7 @@ Before each write, re-read targets and preserve unrelated content; stop on concu
   - **Model class**: sonnet-class.
   - **Rationale**: settled portable format and retrieval/write constraints are independently comparable to the source.
 
-- [ ] T002 [Planning integration] Consume compact guidance before choice and propagate it through both task adapters.
+- [x] T002 [Planning integration] Consume compact guidance before choice and propagate it through both task adapters.
   - **Depends**: T001.
   - **Prerequisites**: verified canonical coordination contract and links; read planner discovery/preselection/handoff, TinySpec inputs/source, shared task-generation and Standard stage contracts together.
   - **Outcome**: associated guidance reaches assessment before Planner → Choose, both selected source routes, task decomposition/checkpoints/verification and coordinator briefs without default history intake or changes to owner depth selection.

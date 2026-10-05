@@ -19,6 +19,18 @@ creates the task artifact. If a required source, preparation authorization, appl
 approval, or capability is missing, report the missing evidence and stop rather than inventing
 an artifact.
 
+Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
+in either adapter, including direct entry without planner: discover optional association
+read-only and read compact guidelines during initial understanding. Carry exact applicable
+constraints and evidence references from source/handoff into task dependencies, delegation
+briefs, checkpoints and REQUIRED verification/acceptance. Do not treat a memory summary
+as downstream application or override source/owner authority. Undeclared optional memory
+preserves existing behavior without writes, invented knowledge or a new adoption gate;
+required gotcha-memory stops remain distinct. No default index/history intake; justified
+clarification uses index-first relevant-only retrieval, retaining uncertainty on no match.
+Optional `residual_reasoning: low|medium|high` with a brief rationale fits existing notes;
+absence requires no migration and does not alter classes, share or approval rules.
+
 Use the adapter matching the producing workflow:
 
 - A SpecKit adapter accepts planner's Standard specification/plan, first verifies the

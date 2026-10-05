@@ -53,5 +53,13 @@ All commands are local/offline. No association, actual guideline/store, `.pi/` o
 - Missing-clause baseline: canonical coordination reference absent (expected FAIL); existing planner checker PASS.
 - Added portable shared association, compact guidelines, selective history, separate evidence/index and conservative approval contract; gotcha rules unchanged.
 - Checks: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; focused Python clause/layout/link assertions PASS; `git diff --check` PASS. Manual mapping to A1–A10: declared paths/no fallback, record-before-index/resume, unknown/partial/manual and exact approval/drift boundaries inspected.
-- Diff inspected: only shared owner/link plus task status/evidence. Commit: `feat: define optional project coordination memory contract` (hash at next checkpoint).
+- Diff inspected: only shared owner/link plus task status/evidence. Commit: `feat: define optional project coordination memory contract` `916642b`.
 - No live model or persistence claim; tests for lifecycle/wiring follow T005.
+
+### T002 — completed
+
+- Baseline expected FAIL: no early coordination discovery/handoff in planner.
+- Added discovery before brainstorm/assessment/choice and exact source/task/checkpoint handoffs for both routes and direct consumers; optional absence remains read-only, required gotchas remain distinct.
+- Checks: `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` PASS; `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py` PASS (74 tests); `PYTHONDONTWRITEBYTECODE=1 python3 skills/task-generation/scripts/test_contract.py` PASS (2 tests); focused early-stage/two-route/link assertions PASS; `git diff --check` PASS.
+- Manual fictional walkthrough: an owner-supplied heuristic-implementation guideline with a manual checkpoint flows from early read to informed owner depth choice, source observable, task verification and brief in either route; no-store path invents nothing. This is not actual project evidence or global policy. Existing choice/approval/Standard stages unchanged; diff inspected.
+- Commit: `feat: carry project coordination guidance through planning` (hash at next checkpoint).

@@ -18,6 +18,16 @@ instructions, governing principles and applicable memory via discoverable
 stops with a report; no invented path, model binding or project policy. Preserve dirty
 and unrelated content; inspect existing source immediately before changing it.
 
+Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
+in preflight, including direct/standalone entry: discover optional association read-only
+and read compact guidelines during initial understanding, not index/history by default.
+Carry exact applicable constraints and evidence references into source observables,
+producer/consumer boundaries, checkpoints and acceptance/verification, then return them
+for tasking. Guidance never overrides source or owner authority. Undeclared optional
+memory preserves existing behavior, no writes or invented knowledge; declared missing
+content is reported distinctly from required gotcha-memory stops. Justified historical
+clarification uses index-first relevant-only retrieval and retains uncertainty on no match.
+
 Use the owner's established source format where it is complete. Link authoritative
 existing sources rather than copying long transcripts. If the request exists only
 in conversation, preserve enough context for a fresh executor. No intermediary Epic,

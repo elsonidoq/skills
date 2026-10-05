@@ -28,6 +28,16 @@ reference stops with a missing-install report. Verify discoverable
 `planning-brainstorming`, `tiny-spec`, `task-generation`, and `coordinate-implementation`
 before the stage that needs each; do not duplicate an unavailable skill.
 
+Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
+during initial understanding: discover optional project association and read associated
+`GUIDELINES.md` before brainstorming, scope assessment and depth choice. Report applicable
+guidance, exact constraints and evidence references in the assessment, without changing
+owner choice or source authority. Undeclared optional memory preserves existing behavior:
+no invented knowledge, writes or new adoption gate; declared missing/unreadable content
+is reported distinctly from required gotcha-memory stops. Ordinary planning does not read
+the evidence index/history. Justified clarification of tentative/conflicting guidance
+uses index-first relevant-only retrieval; no match retains uncertainty.
+
 Verify callable question capability before owner gates, and permitted usable
 owner-selected class bindings before assigning work. The suite runtime requirements
 are in the global configuration repository's `REQUIREMENTS.md`; configuration names
@@ -179,6 +189,15 @@ Required insufficient research returns the exact gap, affected decisions and nee
 evidence; stop affected design rather than default to model recollection or readiness.
 Obtain the owner's explicit bounded deferral through existing gates with impact, allowed bounds
 and outstanding validation; never automatically defer or fabricate evidence.
+
+Carry exact applicable coordination guideline constraints and evidence references into
+both TinySpec and Standard stage briefs: source observables/acceptance, producer/consumer
+boundaries, task dependencies, checkpoints, verification and coordinator handoff. Verify
+these constraints reach tasks through the shared adapter, not just a memory summary.
+Memory cannot override source requirements or owner authority. Preselection stays read-only;
+no default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
+(low/medium/high with rationale) may inform later class-compatible owner-selected routing;
+absence requires no migration and changes no class/share/approval rule.
 
 ### TinySpec path
 
