@@ -11,6 +11,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Suite runtime prerequisites and model-class configuration requirements | [REQUIREMENTS.md](../REQUIREMENTS.md) |
 | User-facing suite setup and workflow entry points | [README.md](../README.md) |
 | Global repository policy and portability constraints | [AGENTS.md](../AGENTS.md) |
+| Project development principles and constitution amendments | [Project Constitution](../.specify/memory/constitution.md) |
 | A skill's operational contract | Its `skills/<name>/SKILL.md`; shared brainstorming and task semantics belong to the shared owners linked below |
 | Planning depth assessment principles | [Spec-driven-development guidance](best_practices_spec_driven_development.md); planner assesses and the owner chooses |
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
@@ -27,6 +28,7 @@ and the legacy port keep their own documentation boundaries.
 
 ## Project Guidance
 
+- [Project Constitution](../.specify/memory/constitution.md): Portable global assets, mandatory project-local coordination persistence, exact guideline approval and pragmatic verification.
 - [Initialize Coherence](../skills/initialize-coherence/SKILL.md): Proposal-first suite adoption/memory and bounded documentation structural readiness.
 - [Planner](../skills/planner/SKILL.md): Single entry point, scope assessment, user-selected depth, approvals and handoff.
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.

@@ -32,6 +32,12 @@ approval or missing structure prevent a ready claim. Empty/stale substantive doc
 remains explicit outstanding work for planner's owner-selected TinySpec/Standard path.
 Initialization reports missing capabilities rather than installing prerequisites.
 
+This repository tracks its project-local SpecKit 1.0.12 setup: `.specify/` contains shared
+scripts, templates, integration metadata and the [project constitution](.specify/memory/constitution.md);
+`.pi/prompts/` exposes the project SpecKit commands in pi. Machine-local feature pointers,
+extension overrides and `.pi/subagents/` runtime state remain ignored. Other projects
+still need their own SpecKit installation for Standard; TinySpec does not require it.
+
 ## Planning and Implementation
 
 Start with one entry point:

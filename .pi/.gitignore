@@ -1,0 +1,2 @@
+# Per-checkout agent runtime state; project prompts remain shared.
+subagents/

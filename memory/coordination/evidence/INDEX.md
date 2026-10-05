@@ -4,4 +4,5 @@ Read this index first when historical evidence is needed, then only relevant rec
 
 | Run | Date | Areas / tags | Relevant patterns | Outcome |
 | --- | --- | --- | --- | --- |
+| [2026-10-05-speckit-setup](2026-10-05-speckit-setup/SUMMARY.md) | 2026-10-05 | speckit, setup, constitution | tracked scaffolding; policy alignment | checks PASS; review pending |
 | [2026-10-05-mandatory-initialization](2026-10-05-mandatory-initialization/SUMMARY.md) | 2026-10-05 | coordination, initialization, persistence | automatic create/notify/commit; staged-work preservation | checks PASS; preselection fix independently cleared |
