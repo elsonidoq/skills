@@ -21,8 +21,10 @@ PATHS = {
     "requirements": "REQUIREMENTS.md",
     "research": "skills/planner/references/dependency-research.md",
 }
-# Captured BEFORE replacement. Intake-only refactor must not weaken execution.
-EXECUTION_SHA256 = "080e25e4365a2e88e65303a7a0b95e0c0d8ff7456d55099b7c96c89367b82751"
+# Updated only for the owner-authorized proportionate-validation correction:
+# acceptance boundary, evidence reuse, early checkpoints and narrowed timeout recovery.
+# Other execution rules remain frozen; clause mutations cover the new obligations.
+EXECUTION_SHA256 = "960f0d415f9a7d888982bb308d4f757f367b318d5d55e0bcfb2690c7bf455c09"
 
 
 def section(text, heading):
@@ -151,6 +153,36 @@ def check_contracts(texts):
             "embedded in tasks", "partially planned legacy work", "For other documented origins",
             "Ambiguous origin is a blocker", "Missing/conflicting depth", "Installation alone",
             "external", "approval/recovery mapping")
+    validation = section(p, "## Proportionate validation")
+    require("validation-focused", validation,
+            "actual changed seam", "concrete failure", "lowest validation layer",
+            "smallest sufficient check", "selected result or argument reaches the intended consumer",
+            "Do not automatically add\nexhaustive matrices, fault injection, new test infrastructure or broad suites",
+            "necessary integration layer", "expected verification effort qualitatively",
+            "No universal deadlines", "not a new task schema")
+    require("validation-risk", validation,
+            "Genuine schema, security or durability", "migration, authorization or persistence",
+            "small diffs alone never justify weakening safety evidence")
+    require("validation-authority", validation,
+            "Optional checks are not acceptance blockers", "gate\nis not a waiver",
+            "Never drop an owner-required check or approved\nsafety criterion without explicit authority",
+            "mandated independent reviews", "owner's selected planning depth")
+    require("validation-reuse", validation,
+            "Reuse valid unchanged evidence", "scope, revisions and environment",
+            "Avoid repeated historical intake", "small causal\nsteps", "actually blocks")
+    require("validation-tasks", section(t, "## Task contract"),
+            "smallest sufficient check", "changed seam's concrete failure",
+            "REQUIRED checks", "optional hardening/broader regression", "separately gated",
+            "Optional checks do not become blockers", "owner-required criteria",
+            "expected verification\neffort", "valid unchanged evidence")
+    require("validation-execution", section(c, "## Execute and Integrate"),
+            "REQUIRED checks remain required", "optional hardening/broader regression is not a blocker",
+            "explicit permissions", "leave acceptance blocked", "renewed approval",
+            "Reuse valid unchanged evidence", "lowest sufficient layer")
+    require("validation-timeout", section(c, "## Select Execution Capability"),
+            "checkpoint early", "After a\n  timeout, inspect", "retain valid completed\n  evidence",
+            "narrow the remaining step instead of restarting the entire batch",
+            "timeout alone is not retry authority")
     marker = "## Execution Capability Preflight"
     body = c[c.index(marker):] if marker in c else ""
     if hashlib.sha256(body.encode()).hexdigest() != EXECUTION_SHA256:

@@ -31,6 +31,61 @@ links = load("links", "install-links.py")
 rpc = load("rpc", "planner-rpc-smoke.py")
 
 
+class ProportionateValidationTests(unittest.TestCase):
+    """Instruction-removal regressions, not behavioral/model evaluations."""
+
+    def assert_clause_required(self, key, clause, diagnostic):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        self.assertIn(clause, texts[key])
+        texts[key] = texts[key].replace(clause, "", 1)
+        self.assertTrue(any(e.startswith(diagnostic + ":")
+                            for e in checker.check_contracts(texts)))
+
+    def test_selection_wiring_gets_focused_check_not_automatic_matrix(self):
+        for clause in (
+            "lowest validation layer", "smallest sufficient check",
+            "selected result or argument reaches the intended consumer",
+            "Do not automatically add\nexhaustive matrices, fault injection, new test infrastructure or broad suites",
+            "necessary integration layer",
+        ):
+            with self.subTest(clause=clause):
+                self.assert_clause_required("planner", clause, "validation-focused")
+
+    def test_schema_security_durability_retain_necessary_checks(self):
+        self.assert_clause_required("planner", "migration, authorization or persistence", "validation-risk")
+
+    def test_optional_checks_cannot_silently_block(self):
+        for key, clause, diagnostic in (
+            ("planner", "Optional checks are not acceptance blockers", "validation-authority"),
+            ("tasks", "Optional checks do not become blockers", "validation-tasks"),
+            ("coordinator", "optional hardening/broader regression is not a blocker", "validation-execution"),
+        ):
+            with self.subTest(key=key):
+                self.assert_clause_required(key, clause, diagnostic)
+
+    def test_owner_required_checks_need_authority_to_change(self):
+        self.assert_clause_required("planner",
+            "Never drop an owner-required check or approved\nsafety criterion without explicit authority",
+            "validation-authority")
+        self.assert_clause_required("coordinator", "leave acceptance blocked", "validation-execution")
+        self.assert_clause_required("tasks", "owner-required criteria", "validation-tasks")
+
+    def test_timeout_narrows_remaining_work_without_blind_retry(self):
+        for clause in (
+            "checkpoint early", "retain valid completed\n  evidence",
+            "narrow the remaining step instead of restarting the entire batch",
+            "timeout alone is not retry authority",
+        ):
+            with self.subTest(clause=clause):
+                self.assert_clause_required("coordinator", clause, "validation-timeout")
+
+    def test_reuse_and_causal_repairs_avoid_repeated_intake(self):
+        for clause in ("Reuse valid unchanged evidence", "Avoid repeated historical intake", "actually blocks"):
+            with self.subTest(clause=clause):
+                self.assert_clause_required("planner", clause, "validation-reuse")
+
+
 class InstructionTests(unittest.TestCase):
     def setUp(self):
         self.texts = checker.load_texts()

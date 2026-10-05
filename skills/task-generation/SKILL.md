@@ -46,6 +46,19 @@ brief class rationale. Cover all in-scope work, integration/acceptance checks, a
 lockstep documentation whose evidence compares documentation with implemented behavior.
 Record exclusions so tasking cannot reintroduce them.
 
+Acceptance evidence uses the smallest sufficient check at the lowest layer that can
+observe the changed seam's concrete failure. In existing task fields, distinguish
+REQUIRED checks from optional hardening/broader regression and separately gated
+live/provider/engine/browser checks; record required permissions and unavailable
+capabilities without treating them as passes. State briefly the expected verification
+effort and why any broader check is necessary, not a universal deadline or new schema.
+Do not attach exhaustive matrices, fault injection, new test infrastructure or broad
+suites to simple query/wiring changes by default. Preserve necessary schema/security/
+durability checks and owner-required criteria. Optional checks do not become blockers;
+changing approved acceptance requires the producing workflow's review/approval gate.
+Reference valid unchanged evidence rather than duplicating checks. Keep unrelated
+compatibility repairs in small causal steps, with evidenced prerequisites only.
+
 Default bounded, well-specified work to `sonnet-class`. Use `opus-class` only when it cannot
 be safely decomposed into bounded independently verifiable work. No more than 30% of the
 complete task list may be `opus-class` without recorded owner approval of the affected IDs,

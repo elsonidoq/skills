@@ -59,6 +59,45 @@ guidance and dependency/version evidence first; detect consequential research ne
 proportional reuse/skip and targeted refresh before design. Verify permitted usable
 research capabilities only when needed; configuration names are not usability proof.
 
+## Proportionate validation
+
+During assessment and selected production/review, identify the actual changed seam
+and its concrete failure before choosing checks. Choose the lowest validation layer
+that can detect that failure; use the smallest sufficient check, not the broadest
+available suite. Carry this rationale into source/task acceptance and the handoff
+using existing artifact fields, not a new task schema.
+
+For a small selection/query or wiring change, prefer a focused check showing the
+selected result or argument reaches the intended consumer. Do not automatically add
+exhaustive matrices, fault injection, new test infrastructure or broad suites.
+If mocks cannot detect the concrete failure (for example, real query semantics),
+use the necessary integration layer instead. Genuine schema, security or durability
+changes retain the checks needed to detect migration, authorization or persistence
+failures; small diffs alone never justify weakening safety evidence.
+
+Separate REQUIRED acceptance checks (from source criteria, owner direction or
+repository policy) from optional hardening and broader regression. Identify separately
+gated live/provider/engine/browser checks and their permissions/capabilities; a gate
+is not a waiver when the check is REQUIRED. Optional checks are not acceptance blockers;
+new evidence of a concrete risk returns to the affected scope/approval gate rather
+than silently expanding acceptance. Never drop an owner-required check or approved
+safety criterion without explicit authority and renewed affected approval.
+
+Describe expected verification effort qualitatively: a focused existing check and
+bounded setup for a local seam, or justified additional setup/checks for affected
+contracts and risks. No universal deadlines. Compare this effort with the actual
+change before approval; remove unjustified expansion, not necessary criteria.
+Reuse valid unchanged evidence after checking its scope, revisions and environment
+still apply; refresh only invalidated evidence. Avoid repeated historical intake:
+carry settled evidence and decisions forward while preserving current approval checks.
+Separate unrelated recovery wiring or legacy compatibility repairs into small causal
+steps with their own outcomes/checks; include a prerequisite only with evidence that
+it actually blocks the selected change. Preserve dependency order and scope authority.
+
+Apply this boundary at both path reviews and in delegated briefs. It changes neither
+the owner's selected planning depth nor approval provenance, explicit permissions,
+mandated independent reviews or honest PASS/FAIL/NOT RUN reporting.
+
 ## Before selection: understand → brainstorm → assess → ask
 
 Fresh planning is read-only until the owner selects depth: no source edits, decision

@@ -7,7 +7,8 @@ checks, negative mutations, synthetic trace fixtures, isolated installation-link
 a fake RPC process test, existing shared task-order units and coordinator contracts.
 These checks make known regressions observable; they do not prove arbitrary natural-language
 completeness or live model obedience. The coordinator execution section is checked against
-its pre-refactor SHA-256; intake and references are the only intended execution-skill changes.
+a SHA-256 freeze, updated for the owner-authorized proportionality correction only:
+acceptance boundaries, evidence reuse, early checkpoints and narrowed timeout recovery.
 
 The source-first [preservation ledger](planner-refactor.md) maps preserved and deliberately
 changed behaviors. Historical coverage/reviews remain historical. Unmapped behaviors or a
@@ -62,7 +63,7 @@ decisions; recollection is not evidence and deferral requires explicit owner bou
 
 These are instruction/fixture sensitivity checks and illustrative semantic walkthroughs,
 not a fake research engine or agent-produced artifacts. The suite preserves all 56 prior
-tests and execution SHA freeze; current results are recorded in the
+tests; its historical execution SHA freeze and results are recorded in the
 [execution evidence](library-best-practices-research-execution.md). Static phrase checks
 cannot establish source truth, version applicability or actual source-backed constraints.
 Manual semantic review must inspect supporting spans and follow documented recommendation
@@ -75,6 +76,18 @@ calls/sources, supporting versioned spans, write timing/scope, artifact snapshot
 source→constraint→validation correspondence across managed and standalone entries. Include
 local reuse/trivial skip, changed-version refresh, unavailable/insufficient evidence and
 explicit bounded deferral; deterministic PASS is not behavioral acceptance.
+
+## Proportionate validation regression
+
+`ProportionateValidationTests` in `scripts/test-planner-workflow.py` removes operational
+clauses and requires specific diagnostics for focused selection/wiring checks instead
+of automatic matrices, necessary schema/security/durability checks, nonblocking optional
+checks, authority to change owner-required checks, evidence reuse/causal repairs, and
+early checkpoints with narrowed timeout recovery. The checker also requires qualitative
+effort, the real integration-layer exception and separately gated acceptance semantics.
+These are static instruction regressions, not model-obedience evidence. Applying the
+new checks to pre-change instructions exposes all seven validation diagnostic groups.
+No paid behavioral evaluation or live/provider/engine/browser checks are implied.
 
 ## Trace evidence and executive briefs
 

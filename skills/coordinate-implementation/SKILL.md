@@ -219,6 +219,11 @@ switch models. For delegated work, an agent's report is not proof of completion.
 - Inspect the failed run and tool invocation before retry or relaunch. Resume with a
   targeted correction only when supported and the cause is understood; if evidence
   is missing or uncertain, stop and report the blocker. Rotation is not a blind retry.
+- For long delegated work, checkpoint early with completed changes, check results,
+  remaining work and blockers, before the observed run budget is exhausted. After a
+  timeout, inspect that checkpoint and the failed invocation; retain valid completed
+  evidence and narrow the remaining step instead of restarting the entire batch.
+  Resume only under the inspected-cause rule above; a timeout alone is not retry authority.
 
 Before dispatching file changes, check which mutation tool the selected agent/model
 actually receives and is permitted to use. Pi's core tool set exposes `edit` and
@@ -240,14 +245,27 @@ non-obvious handoff context.
 
 ## Execute and Integrate
 
+Enforce the approved task-generation acceptance boundary in each brief and checkpoint:
+REQUIRED checks remain required; optional hardening/broader regression is not a blocker.
+Separately gated live/provider/engine/browser checks still need explicit permissions;
+if required but unavailable, report NOT RUN/UNAVAILABLE and leave acceptance blocked.
+Never silently waive an owner-required check or approved safety criterion; changing
+acceptance returns to the producing workflow for explicit authority and renewed approval.
+Reuse valid unchanged evidence after verifying scope, revisions and environment, and
+refresh only affected evidence rather than repeating historical intake or whole suites.
+New unrelated compatibility failures become separate causal work with scope/dependency
+gates, not an automatic expansion of the current task.
+
 For each task, whether local or inside a delegated batch:
 
 1. Establish the smallest meaningful failing check before behavior changes.
 2. Implement only the assigned scope.
 3. Inspect the actual diff; preserve unrelated changes.
-4. Run task-level checks and validate reports against observable output.
-5. Integrate at the planned boundary and run affected contract or cross-component
-   checks before releasing dependents.
+4. Run required task-level checks at the lowest sufficient layer and validate reports
+   against observable output; do not automatically expand to matrices or broad suites.
+5. Integrate at the planned boundary and run required affected contract or cross-component
+   checks before releasing dependents; justify additions by a concrete changed-seam risk
+   and apply the acceptance/approval boundary above.
 6. Update task completion and decisions in the project's existing artifact format.
    If none exists, update the task list; do not invent a state-file convention.
 7. Update the execution tracker to reflect the batch's verified outcome and the
