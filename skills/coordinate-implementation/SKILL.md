@@ -19,13 +19,14 @@ decisions, and source constraints. In projects declaring the memory contract, ve
 trigger-matching entries; missing required memory capability stops with a report.
 Treat verified trigger-first gotchas as implementation constraints.
 Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md):
-read associated compact guidelines and carry exact applicable constraints/evidence references
-from planning into task briefs/checkpoints. Verify optional association and bounded evidence
-write authority separately from required gotcha memory. Without association/write authority,
-keep observations in the existing execution handoff and offer future bounded setup; never
-silently initialize a store. Undeclared optional memory adds no blocker; report declared
-missing/unreadable content accurately. No default evidence-history intake; justified
-clarification follows index-first relevant-only retrieval. Verify:
+ensure the mandatory project-local store exists, including direct/resumed execution.
+Automatically initialize missing files, notify the user and commit only initialization files
+before proceeding, without a setup approval gate. Read compact guidelines and carry exact
+applicable constraints/evidence references from planning into task briefs/checkpoints.
+Persist evidence in this store on every run, never a handoff-only alternative. Initialization,
+commit or evidence-write failures stop with the exact blocker; required gotcha memory
+remains separate. No default evidence-history intake; justified clarification follows
+index-first relevant-only retrieval. Verify:
 
 - The source, tasks, and supporting artifacts refer to the same approved scope.
 - Required upstream outputs, accepted decisions, and current authorization exist.
@@ -331,8 +332,9 @@ tracker; reuse on resume, never overwrite another run. Persist separate summary/
 before refreshing that run's compact index row after every evidence write; no duplicate rows
 or monolithic history. On resume reconcile interrupted record/index updates before reporting
 successful persistence, retaining existing runs and all observations. Evidence recording
-never grants permission to mutate guidelines. Without association/write authority, retain
-these same factual observations in the existing handoff rather than creating a store.
+never grants permission to mutate guidelines. Persist these factual observations in the
+initialized project-local store; handoffs link evidence rather than substitute for it.
+Evidence-write failures stop affected work with the exact blocker, never a no-write fallback.
 
 ## Review and Acceptance
 
@@ -382,11 +384,11 @@ and proposals pending. Rejection leaves guideline bytes identical, retaining evi
 and rejection disposition. Immediately before applying only approved changes, re-read
 guidelines and compare with the approved baseline: concurrent drift stops application
 and requires renewed review/approval, not overwrite. Re-check relevant guidance after
-approved writes. Without association/write authority, report candidates/observations
-in the existing handoff; offer bounded future setup, never initialize or silently write.
+approved writes. Persist candidates/observations in the initialized project-local store;
+if persistence fails, report the blocker, never replace it with a handoff-only path.
 
-Report implementation/feature acceptance separately from optional memory approval that
-is pending or rejected; optional memory approval never substitutes for independent
+Report implementation/feature acceptance separately from guideline approval that
+is pending or rejected; guideline approval never substitutes for independent
 implementation review or required acceptance checks.
 
 ## Maintaining this contract

@@ -65,8 +65,11 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 
 `planner` is the public entry point. Understand the structured requirement, inspect
 load-bearing code/contracts/tests and applicable memory, then brainstorm only material
-uncertainty. Before depth selection this is read-only: no planning artifacts or source
-edits. Retain answers in session history; recover missing answers by asking.
+uncertainty. Before depth selection this is read-only except mandatory project-local coordination-store
+initialization and its focused commit: no planning artifacts or source edits. Create missing
+coordination files, notify the user and commit only initialization files through the
+[shared contract](../skills/memory-handling/references/project-coordination.md), then continue.
+Retain answers in session history; recover missing answers by asking.
 
 Assess reasoning complexity and coordination cost, not estimated diff size or a fixed
 task threshold. Present approximate evidence and uncertainty about affected subsystems,

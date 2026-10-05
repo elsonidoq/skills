@@ -16,12 +16,14 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
 | Verified unresolved bug, risk or investigation | [Open Issues](open_issues.md), via `track-open-issue` |
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
-| Optional project coordination guidelines, selective history and reviewed feedback | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence remain in each explicitly associated project, not this suite |
+| Required project-local coordination guidelines, selective history and reviewed feedback | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
 
-This configuration suite has no declared project-memory adoption contract or
-suite-level database/schema owner. Do not initialize either merely for closeout;
-unrelated projects and the legacy port keep their own documentation boundaries.
+This configuration suite has no declared project-memory adoption contract for gotcha
+memory or suite-level database/schema owner. Coordination memory is a separate mandatory project-local store at
+`memory/coordination/`; initialize its missing files through the shared contract. Do not
+initialize gotcha memory or database documentation merely for closeout; unrelated projects
+and the legacy port keep their own documentation boundaries.
 
 ## Project Guidance
 
@@ -31,7 +33,7 @@ unrelated projects and the legacy port keep their own documentation boundaries.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
-- [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Optional associated guidelines before choice, separate indexed run/task evidence, selective reads and exact approval-controlled reflection; no automatic setup/mutation.
+- [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Mandatory project-local files automatically initialized/notified/committed before choice, separate indexed evidence, selective reads and approval-controlled learned-guideline changes.
 - [Dependency Research](../skills/planner/references/dependency-research.md): Shared repository-first evidence, proportional reuse/version refresh, discoverable technical ownership and bounded persistence for TinySpec and Standard, including direct/standalone entry.
 - [Best Practices for Spec-Driven Development](best_practices_spec_driven_development.md): Evidence-backed specifications and qualitative depth assessment.
 - [Pi Settings Sample](pi-settings-sample.md): Configuration examples and attributed, verified configuration decisions.

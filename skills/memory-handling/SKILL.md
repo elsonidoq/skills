@@ -10,6 +10,10 @@ gotchas**: non-obvious, durable guidance that would surprise an agent who read t
 and authoritative documentation. Documentation describes current state; memory warns an
 agent *before* an action could trigger a non-obvious problem.
 
+First ensure the mandatory coordination store through the shared contract below, even
+when no gotcha-memory adoption exists. The gotcha discovery rules that follow do not
+create an optional or nonpersistent coordination branch.
+
 ## Discovering The Store
 
 Locate the store exactly once per session and reuse the result. The store is
@@ -58,15 +62,18 @@ similarly named index as project association without repository evidence.
 - Classify surplus entries per `compact-memory`: `KEEP`, `MIGRATE` (to an authoritative
   document), `MERGE`, or `DROP` with a recorded reason.
 
-## Optional project coordination memory
+## Required project coordination memory
 
 Apply the shared [project coordination contract](references/project-coordination.md)
-for separately associated compact `GUIDELINES.md` and indexed run/task evidence.
-Discover optional association read-only; absent coordination memory neither initializes
-anything nor adds an adoption blocker. Required gotcha-memory rules above remain
-unchanged. Coordination records never go into this gotcha index or its entries.
-Ordinary planning reads associated guidelines early, not execution history; justified
-history reads and evidence/approval-controlled guideline writes follow the shared owner.
+for project-local compact `GUIDELINES.md` and indexed run/task evidence. Automatically
+initialize missing files, notify the user and commit only initialization files before
+proceeding; no separate setup approval or handoff-only alternative. Use the declared
+project-local root or default `<project-root>/memory/coordination/` through one lifecycle.
+Required gotcha-memory rules above remain unchanged and are a separate store contract;
+coordination initialization does not require or establish gotcha-memory adoption.
+Coordination records never go into this gotcha index or its entries. Read guidelines
+early, not execution history; selective history and approval-controlled guideline writes
+follow the shared owner.
 
 ## Report
 

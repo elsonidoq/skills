@@ -45,14 +45,17 @@ policy. Retrieval and write rules live in `memory-handling`; `compact-memory`, `
 `planner`, `tiny-spec`, `coordinate-implementation`, and `initialize-coherence` reference it.
 A missing required gotcha association routes to `initialize-coherence`, never a guessed global store.
 
-Optional coordination memory is a separate project-local association, not a required migration
-or a replacement for adopted gotcha memory. Its [shared contract](skills/memory-handling/references/project-coordination.md)
-owns compact `GUIDELINES.md`, separate run/task evidence with a compact index, selective
-history retrieval and explicit accept/edit/reject/add guideline approval with current-content
-drift protection. Setup/write bounds require owner approval; undeclared optional absence adds
-no blocker or initialization. Planner reads associated guidelines before depth choice and
-carries applicable constraints into both routes. Evidence/checkpoints need associated write
-authority; implementation approval never grants synthesized guideline mutation.
+Coordination memory is mandatory and project-local, separate from adopted gotcha memory.
+Its [shared contract](skills/memory-handling/references/project-coordination.md) owns compact
+`GUIDELINES.md`, separate run/task evidence with a compact index, selective history retrieval
+and explicit accept/edit/reject/add guideline approval with current-content drift protection.
+Every entry point automatically initializes missing files, notifies the user and commits
+only those files before proceeding. The default root is `<project-root>/memory/coordination/`;
+existing declared project-local layouts use the same lifecycle. No setup approval, opt-out or
+handoff-only persistence path. Existing files/staged work are preserved; failures to initialize,
+commit or persist evidence stop with the exact blocker. Planner reads guidelines before depth
+choice and carries constraints into both routes. Empty initialization invents no knowledge;
+implementation approval never grants synthesized guideline mutation.
 
 Optional `residual_reasoning: low|medium|high` notes describe task/oracle conditions, not a
 third class or provider policy. Routing retains approved sonnet/opus classes, class-share

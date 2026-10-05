@@ -42,7 +42,8 @@ Use planner for this requirement:
 ```
 
 Planner inspects the requirement/codebase, brainstorms unresolved material choices, and
-presents an approximate scope assessment. This phase is read-only. It always presents both
+presents an approximate scope assessment. This phase is read-only except mandatory
+project-local coordination-store initialization and its focused commit. It always presents both
 paths and stops for your explicit choice; the recommendation does not choose for you.
 
 ```text
@@ -90,15 +91,18 @@ bounded tasks may run locally only when selected class/context fit; larger compl
 use asynchronous sequential delegation. It verifies and commits each task separately and
 requires one independent final implementation review. Planning depth does not select execution.
 
-## Optional project coordination memory
+## Project coordination memory
 
-Projects may separately associate a coordination root in project instructions or documented
-configuration, using the [shared contract](skills/memory-handling/references/project-coordination.md).
-Setup proposes exact project-local paths and bounded writes for owner approval, preserving
-existing content; it never guesses a global store or initializes one on a read. This suite
-repository declares no adoption/coordination association and does not seed project knowledge.
-Missing optional coordination memory preserves existing behavior; required adopted gotcha
-memory still has its existing discovery/stop rules.
+Every run uses project-local coordination files through the
+[shared contract](skills/memory-handling/references/project-coordination.md). Before planning
+or direct task/execution work, skills automatically create missing `GUIDELINES.md` and
+`evidence/INDEX.md`, tell the user and commit only the initialization files, then proceed.
+No setup approval or opt-out/handoff-only path. Use a declared project-local coordination
+root if present; otherwise the default is `<project-root>/memory/coordination/`. Existing
+files and unrelated staged work are preserved; repeat entry needs no initialization commit.
+Initialization/write/commit failures stop with a precise blocker, not nonpersistent execution.
+Empty guidelines invent no lessons. Required adopted gotcha-memory rules remain separate.
+This repository's coordination store is `memory/coordination/`.
 
 Compact `GUIDELINES.md` is read during initial understanding, **before Planner → Choose**,
 and exact applicable constraints/evidence references reach TinySpec or Standard, tasks and
@@ -109,16 +113,17 @@ observations) reads the compact evidence index, then selected relevant records.
 Separate `evidence/<run-id>/SUMMARY.md`, task files and `REFLECTION.md` keep factual attempts,
 checks, failures/partial work, unknowns and manual validation out of synthesized guidance and
 the gotcha `MEMORY.md` index. Records precede refresh of one compact index row per run; resume
-retains attempts and reconciles interrupted updates. Without associated write authority,
-observations stay in the existing execution handoff, not a silently created store.
+retains attempts and reconciles interrupted updates. Every run persists observations in
+the project-local store; execution handoffs link evidence rather than replace it.
 
 After verification and independent review (or a blocked pause), conservative reflection
 proposes scoped guidance or evidence-only/no update. An executive brief and exact candidate
 diff precede `ask_user`: **accept, edit, reject, or add**. Implementation approval grants no
 guideline authority. Only explicitly approved resulting content may be applied after an
 immediate baseline re-read; drift requires renewed approval. Reject preserves guideline
-bytes; pending/unavailable/cancelled/ambiguous decisions write no guidelines. Optional memory
-approval is reported separately from implementation acceptance.
+bytes; pending/unavailable/cancelled/ambiguous decisions change no learned guidelines.
+Guideline approval is reported separately from implementation acceptance; automatic empty
+initialization is not permission to add or rewrite learned guidance.
 
 Residual-reasoning notes may inform class-compatible owner-selected real-work routing;
 no class weakening, automatic model replacement or permanent rule from one outcome.
@@ -146,6 +151,6 @@ are not proof of model obedience; live tests require separate authorization.
 
 Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
 describes current behavior, gotcha memory contains only verified non-obvious warnings,
-optional coordination memory separates reusable guidelines from factual run/task evidence, and
+project-local coordination memory separates reusable guidelines from factual run/task evidence, and
 `docs/open_issues.md` is the canonical unresolved-work register. Global assets must not assume
 project paths, branch, deployment state, named models or an invented artifact/state schema.

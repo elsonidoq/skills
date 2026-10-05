@@ -429,7 +429,7 @@ class DependencyResearchTests(unittest.TestCase):
 
 
 class ProjectCoordinationWiringTests(unittest.TestCase):
-    """Wiring checks for the optional shared owner; no live agent/SpecKit calls."""
+    """Wiring checks for mandatory project-local memory; no live agent/SpecKit calls."""
 
     def test_shared_reference_is_required_not_summary_only(self):
         texts = checker.load_texts()

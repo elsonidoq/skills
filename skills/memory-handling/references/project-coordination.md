@@ -1,29 +1,45 @@
 # Project coordination memory
 
-Optional project-local coordination knowledge, shared by memory-handling, planner,
+Required project-local coordination knowledge, shared by memory-handling, planner,
 TinySpec, task-generation and coordinator. This is an instruction contract, not a
 persistence engine or a replacement workflow. Actual project knowledge never belongs
 in global skills. Keep required adopted gotcha-memory discovery/retrieval/write gates
 unchanged; coordination evidence is not a gotcha ledger.
 
-## Association and optional discovery
+## Project-local initialization
 
-Discover association only from project instructions or documented project configuration
-naming a coordination root; respect declared equivalent layouts and explicit approved
-paths. No global-store fallback or guessed association. Undeclared optional coordination
-memory means existing behavior, no invented knowledge, no writes and no new adoption
-blocker. Report a declared missing/unreadable root or guidelines accurately; do not
-fabricate guidance or bypass an existing required-memory policy. Discovery is read-only.
+Use one mandatory lifecycle in every entry point: ensure the project-local store exists,
+read compact guidelines, persist execution evidence, reflect, and apply only approved
+guideline changes. There is no opt-out or handoff-only persistence path.
 
-For requested setup, propose `<approved-project-memory-root>/coordination/` only if a
-project-memory root already exists; otherwise obtain a project-local root through the
-existing question/approval interaction. This is a proposal convention, never a discovery
-assumption. Association and skeleton creation require bounded owner approval of exact
-paths/writes and preserve existing content. No-memory reads never initialize a store.
+Resolve the current project root from the selected repository/workspace, never the global
+skill installation. Reuse a coordination root/layout explicitly declared in project
+instructions or configuration; otherwise use `<project-root>/memory/coordination/`.
+The default requires no adoption or association ceremony. Keep every destination inside
+the current project; refuse an outside-project path, unreadable file or path collision
+rather than selecting a second store or overwriting existing content.
+
+Before planning assessment/depth choice or direct task/execution work, automatically
+create only missing directories, `GUIDELINES.md` and `evidence/INDEX.md`. Initialize
+empty guidelines with “No approved project coordination guidelines yet” and an empty
+index with Run, Date, Areas/tags, Relevant patterns and Outcome columns. Do not invent
+lessons, historical runs or seed a generic policy. Preserve every existing file byte-for-byte;
+partial stores get only their missing files. Repeated entry is idempotent: no new files
+or initialization commit when nothing is missing.
+
+Tell the user which files were initialized, then commit only those new files as a focused
+initialization commit before proceeding. Preserve unrelated working-tree and staged
+changes; use explicit paths and a path-limited commit, never `git add .` or a commit of
+all staged files. No separate setup approval is required. If creation or commit is blocked
+by permissions, repository policy or unavailable Git, report the exact blocker and stop;
+do not continue with nonpersistent memory or silently skip the commit. On resume, inspect
+any partially completed initialization and finish its missing commit without duplicating
+files/commits. This bounded initialization is the sole exception to planner's preselection
+read-only rule; it grants no source, planning-artifact or learned-guideline write authority.
 
 ## Compact guidelines
 
-Read associated `GUIDELINES.md` during initial understanding, before brainstorming,
+Read project-local `GUIDELINES.md` during initial understanding, before brainstorming,
 scope assessment and depth choice. Report applicable guidance and carry exact constraints
 and evidence references into either selected source route, task decomposition/dependencies,
 checkpoints, verification and coordinator briefs. Direct/standalone consumers discover
@@ -50,10 +66,10 @@ stay unread; no relevant evidence means proceed retaining uncertainty, not inven
 
 ## Separate factual evidence
 
-For new approved layouts:
+Default layout (existing declared project-local equivalents use the same lifecycle):
 
 ```text
-<approved-coordination-root>/
+<project-root>/memory/coordination/
   GUIDELINES.md
   evidence/
     INDEX.md
@@ -68,10 +84,10 @@ Reuse an existing safe project execution/run ID; otherwise derive a unique files
 date/subject ID and retain it in the execution tracker. Reuse that ID on resume; never
 overwrite another run. Separate summary/task files prevent a monolithic execution history.
 Evidence is factual and append-oriented: keep attempts and corrections distinguishable,
-update summary/index metadata without erasing observations or prior runs. Bound writes to
-the associated store and verified write authority. Without association/write authority,
-report observations in the existing execution handoff and offer future bounded setup,
-never silently initialize a store. Evidence-write authority is not guideline authority.
+update summary/index metadata without erasing observations or prior runs. Persist every
+run's evidence in the initialized project-local store; an execution handoff may link it,
+never replace it. If an evidence write fails, report the blocker and stop affected work,
+not a successful persistence checkpoint. Evidence-write authority is not guideline authority.
 
 At task/attempt checkpoints, record task ID/type, areas/tags, residual reasoning when
 assessed, approved class, selected capability role, model and reasoning effort when
@@ -148,4 +164,4 @@ and rejection disposition. Immediately before applying only approved changes, re
 `GUIDELINES.md` and compare with the approved baseline; concurrent/baseline drift stops
 application and requires renewed review/approval, never unapproved overwrite. Re-check
 relevant guidance after approved writes. Report implementation/feature acceptance separately
-from optional memory approval that is pending or rejected.
+from guideline approval that is pending or rejected.

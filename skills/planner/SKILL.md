@@ -29,14 +29,17 @@ reference stops with a missing-install report. Verify discoverable
 before the stage that needs each; do not duplicate an unavailable skill.
 
 Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
-during initial understanding: discover optional project association and read associated
-`GUIDELINES.md` before brainstorming, scope assessment and depth choice. Report applicable
-guidance, exact constraints and evidence references in the assessment, without changing
-owner choice or source authority. Undeclared optional memory preserves existing behavior:
-no invented knowledge, writes or new adoption gate; declared missing/unreadable content
-is reported distinctly from required gotcha-memory stops. Ordinary planning does not read
-the evidence index/history. Justified clarification of tentative/conflicting guidance
-uses index-first relevant-only retrieval; no match retains uncertainty.
+during initial understanding: ensure the mandatory project-local store exists and read
+`GUIDELINES.md` before brainstorming, scope assessment and depth choice. Automatically
+initialize missing files, notify the user and commit only initialization files before
+proceeding, without a setup approval gate. Reuse the declared project-local root or default
+`<project-root>/memory/coordination/`; preserve existing files and unrelated staged changes.
+Empty guidelines mean no invented project knowledge, not a nonpersistent execution path.
+Creation/commit failures stop with the exact blocker; required gotcha-memory stops remain
+separate. Report applicable guidance, exact constraints and evidence references without
+changing owner choice or source authority. Ordinary planning does not read the evidence
+index/history. Justified clarification uses index-first relevant-only retrieval; no match
+retains uncertainty.
 
 Verify callable question capability before owner gates, and permitted usable
 owner-selected class bindings before assigning work. The suite runtime requirements
@@ -110,7 +113,8 @@ mandated independent reviews or honest PASS/FAIL/NOT RUN reporting.
 
 ## Before selection: understand → brainstorm → assess → ask
 
-Fresh planning is read-only until the owner selects depth: no source edits, decision
+Fresh planning is read-only until the owner selects depth, except the shared contract's
+bounded mandatory coordination-store initialization/commit: no source edits, decision
 files, TinySpec, specification, plan, or tasks. Session history carries request bounds,
 evidence, answers/rationale, and deferrals. If interrupted, recover those records;
 if unavailable, ask for missing answers, never invent a durable preselection artifact.
@@ -194,7 +198,8 @@ Carry exact applicable coordination guideline constraints and evidence reference
 both TinySpec and Standard stage briefs: source observables/acceptance, producer/consumer
 boundaries, task dependencies, checkpoints, verification and coordinator handoff. Verify
 these constraints reach tasks through the shared adapter, not just a memory summary.
-Memory cannot override source requirements or owner authority. Preselection stays read-only;
+Memory cannot override source requirements or owner authority. Preselection stays read-only
+except bounded mandatory coordination-store initialization/commit;
 no default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
 (low/medium/high with rationale) may inform later class-compatible owner-selected routing;
 absence requires no migration and changes no class/share/approval rule.

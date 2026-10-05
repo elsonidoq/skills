@@ -8,8 +8,9 @@ a fake RPC process test, existing shared task-order units and coordinator contra
 These checks make known regressions observable; they do not prove arbitrary natural-language
 completeness or live model obedience. The coordinator execution section is checked against
 a SHA-256 freeze, deliberately updated for owner-authorized proportionality and additive
-coordination-memory T003–T004 hooks. Original execution lines/order and safety mutations
-remain intact: acceptance boundaries, evidence reuse, early checkpoints, narrowed timeout
+coordination-memory T003–T004 hooks and the owner's mandatory project-local initialization
+correction (replacing optional/handoff-only persistence). Safety mutations remain intact:
+acceptance boundaries, evidence reuse, early checkpoints, narrowed timeout
 recovery, sequential batches, per-task commits and fresh independent final review.
 
 The source-first [preservation ledger](planner-refactor.md) maps preserved and deliberately
@@ -83,20 +84,23 @@ explicit bounded deferral; deterministic PASS is not behavioral acceptance.
 ## Project coordination memory assurance
 
 The [canonical contract](../../skills/memory-handling/references/project-coordination.md)
-owns optional declared project-local association, compact guidelines before planner choice,
-separate factual evidence and conservative exact approval. There is no global fallback,
-automatic store setup, bulk history intake or automatic guideline mutation. Required adopted
-gotcha-memory gates are distinct. Setup and evidence writes require associated bounded
-authority; actual project knowledge does not belong in this configuration repository.
+owns mandatory project-local storage, compact guidelines before planner choice, separate
+factual evidence and conservative exact approval. Every entry point automatically creates
+missing files, notifies the user and commits only initialization files before proceeding;
+there is no setup approval, opt-out or handoff-only path. Default `memory/coordination/`
+is relative to the current project, not global skill installation. Existing files and staged
+work survive; repeated/partial initialization is idempotent. Creation/commit/persistence
+failures stop. Learned guidelines still require exact approval; no bulk history intake or
+fabricated lessons. Required adopted gotcha-memory gates remain distinct.
 
-`python3 skills/memory-handling/scripts/test_coordination_contract.py` runs 18 tests;
+`python3 skills/memory-handling/scripts/test_coordination_contract.py` runs 20 tests;
 `ProjectCoordinationWiringTests` adds 4 tests to the existing planner suite (78 total).
 The instruction checks read actual operational carriers and required shared links;
 removal/unsafe-policy mutations require named diagnostics, not surviving summary words.
 
 | Source | Named offline evidence (fixtures explicitly simulated) |
 | --- | --- |
-| A1–A2 | `test_A1_A2_early_association_and_both_route_direct_constraints`, late-read rejection, required-link negatives; simulated fictional heuristic/manual-checkpoint handoff and empty unassociated project |
+| A1–A2 | `test_A1_A2_early_association_and_both_route_direct_constraints`, late-read rejection, required-link negatives; simulated fictional heuristic/manual-checkpoint handoff, empty initialized store, initialization clause removals and temporary-Git create/commit/preservation/repeat/partial checks |
 | A3–A5 | `test_A3_A4_A5_factual_checkpoint_and_index_removals`; simulated two runs/multiple tasks with failed/partial/manual/unknown, resume/interrupted record-before-index repair retaining prior records and a unique row |
 | A6 | `test_A6_reflection_uncertainty_and_no_update_removals`; simulated separate evidence-only/tentative/contrary/insufficient/no-update reflection |
 | A7–A9 | `test_A7_A8_A9_exact_approval_rejection_and_drift_removals`; prescribed pending/unavailable/cancelled/ambiguous/reject byte identity, exact accept/edit/add content and baseline record, concurrent-drift preservation/renewal |
@@ -112,7 +116,8 @@ read/write/approval adherence and actual SpecKit production are **NOT RUN** and 
 separate authorization with attributable collected events/artifact snapshots. Review actual
 scope/unknowns, row refresh/reconciliation, exact diff/answer/baseline drift and selected
 class/capability handling manually. See the [execution record](project-coordination-memory-execution.md)
-for commands, results, digest changes and pending independent review; optional guideline
+for historical commands/results and completed review; the mandatory-initialization correction
+is documented in project-local execution evidence. Learned-guideline
 approval never substitutes for feature acceptance. After global skill changes run `/reload`.
 
 ## Proportionate validation regression

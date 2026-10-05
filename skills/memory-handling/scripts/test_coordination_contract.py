@@ -8,6 +8,7 @@ mutating actual instruction carriers, not by pretending these examples execute s
 import importlib.util
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest import mock
 
@@ -33,15 +34,15 @@ class CoordinationContractTests(unittest.TestCase):
         self.assertEqual(checker.check_contracts(self.texts), [])
         cases = (
             ("planner", "## Discovery and capability boundary", "`GUIDELINES.md` before brainstorming, scope assessment and depth choice", "coordination-early"),
-            ("planner", "## Discovery and capability boundary", "no invented knowledge, writes or new adoption gate", "coordination-early"),
-            ("planner", "## Discovery and capability boundary", "distinctly from required gotcha-memory stops", "coordination-early"),
+            ("planner", "## Discovery and capability boundary", "initialize missing files, notify the user and commit only initialization files", "coordination-early"),
+            ("planner", "## Discovery and capability boundary", "required gotcha-memory stops remain", "coordination-early"),
             ("planner", "## Selected production and stage handoffs", "both TinySpec and Standard stage briefs", "coordination-handoff"),
             ("planner", "## Selected production and stage handoffs", "task dependencies, checkpoints, verification and coordinator handoff", "coordination-handoff"),
             ("tiny", "## Inputs and preflight", "including direct/standalone entry", "coordination-tiny"),
             ("tasks", "## Preconditions and adapters", "including direct entry without planner", "coordination-tasks"),
             ("tasks", "## Preconditions and adapters", "checkpoints and REQUIRED verification/acceptance", "coordination-tasks"),
-            ("coordination", "## Association and optional discovery", "No global-store fallback or guessed association", "coordination-association"),
-            ("coordination", "## Association and optional discovery", "bounded owner approval", "coordination-association"),
+            ("coordination", "## Project-local initialization", "No separate setup approval is required", "coordination-initialization"),
+            ("coordination", "## Project-local initialization", "commit only those new files", "coordination-initialization"),
         )
         for case in cases:
             with self.subTest(clause=case[2]):
@@ -63,7 +64,7 @@ class CoordinationContractTests(unittest.TestCase):
             "individual attempt/check results, reviewer findings, inspected failure cause", "Unknown is not success",
             "reuse on resume, never overwrite another run", "separate summary/task records", "before refreshing",
             "after every evidence write", "no duplicate rows", "reconcile interrupted record/index updates",
-            "retaining existing runs", "Without association/write authority",
+            "retaining existing runs", "never a no-write fallback",
         ):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordinator", "### Coordination evidence checkpoint", clause, "coordination-checkpoint")
@@ -122,6 +123,8 @@ class CoordinationContractTests(unittest.TestCase):
             "Automatically apply guideline proposals", "Implementation approval authorizes guideline writes",
             "Ignore concurrent guideline drift", "Automatically downgrade approved classes",
             "Retry without inspecting the failed invocation", "One failure permanently bans a model",
+            "Without association/write authority", "offer future bounded setup",
+            "Undeclared optional memory preserves existing behavior",
         ):
             changed = dict(self.texts)
             changed["coordination"] += "\n" + policy
@@ -160,13 +163,32 @@ class CoordinationContractTests(unittest.TestCase):
                 checker.load_texts(root)
 
 
+    def test_mandatory_initialization_preservation_commit_and_blocker_removals(self):
+        for clause in (
+            "one mandatory lifecycle in every entry point", "<project-root>/memory/coordination/",
+            "create only missing", "Preserve every existing file byte-for-byte",
+            "partial stores get only their missing files", "Repeated entry is idempotent",
+            "Tell the user", "path-limited commit", "Preserve unrelated working-tree and staged",
+            "report the exact blocker and stop", "finish its missing commit",
+            "sole exception to planner's preselection",
+        ):
+            with self.subTest(clause=clause):
+                self.assert_rejected("coordination", "## Project-local initialization", clause, "coordination-initialization")
+        for key, heading, clause, diagnostic in (
+            ("tiny", "## Inputs and preflight", "without a setup approval gate", "coordination-tiny"),
+            ("tasks", "## Preconditions and adapters", "without a setup approval gate", "coordination-tasks"),
+            ("coordinator", "## Load and Verify", "without a setup approval gate", "coordination-intake"),
+        ):
+            self.assert_rejected(key, heading, clause, diagnostic)
+
+
 class SimulatedFilesystemExamples(unittest.TestCase):
     """Prescribed portable examples, NOT an implementation of the skill lifecycle."""
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.project = Path(self.temp.name)
-        self.root = self.project / "approved-local-root" / "coordination"
+        self.root = self.project / "memory" / "coordination"
         self.root.mkdir(parents=True)
         self.guidelines = self.root / "GUIDELINES.md"
         self.baseline = ("# Fictional project guidance — simulated, not global policy\n"
@@ -195,17 +217,57 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         self.index.write_text("# Simulated evidence index\n" + self.row)
         self.reflection = self.run / "REFLECTION.md"
 
-    def test_A1_A2_simulated_early_guideline_handoff_and_no_store(self):
+    def test_A1_A2_simulated_early_guideline_handoff_and_empty_store(self):
         read = self.guidelines.read_bytes()
         # Explicit example handoff, not a model-generated source/task artifact.
         for route in ("TinySpec/direct", "Standard/SpecKit (simulated only)"):
             handoff = {"route": route, "constraint": read, "checkpoint": "manual output", "before_choice": True}
             self.assertEqual(handoff["constraint"], self.baseline)
             self.assertTrue(handoff["before_choice"])
-        empty = self.project / "simulated-unassociated-project"
-        empty.mkdir()
-        self.assertEqual(list(empty.iterdir()), [])  # read-only/no inferred setup
-        self.assertIn("no new adoption", checker.load_texts()["coordination"])
+        self.assertIn("No separate setup approval is required", checker.load_texts()["coordination"])
+        # No knowledge is invented when automatically initialized guidelines are empty.
+        empty = self.project / "empty-project" / "memory" / "coordination"
+        (empty / "evidence").mkdir(parents=True)
+        (empty / "GUIDELINES.md").write_text("# Project coordination guidelines\n\nNo approved project coordination guidelines yet.\n")
+        (empty / "evidence" / "INDEX.md").write_text("# Execution evidence index\n")
+        self.assertIn("No approved", (empty / "GUIDELINES.md").read_text())
+        self.assertEqual(list((empty / "evidence").iterdir()), [empty / "evidence" / "INDEX.md"])
+
+    def test_missing_files_initialization_commit_preserves_staged_work_and_repeat(self):
+        # Prescribed skill operations in a real temporary Git repo, not an agent runtime.
+        project = self.project / "new-project"
+        project.mkdir()
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(project), *args], stderr=subprocess.STDOUT)
+        git("init", "-q")
+        git("config", "user.name", "Fixture")
+        git("config", "user.email", "fixture@example.invalid")
+        (project / "unrelated.txt").write_text("unrelated staged work\n")
+        git("add", "--", "unrelated.txt")
+        root = project / "memory" / "coordination"
+        (root / "evidence").mkdir(parents=True)
+        files = [root / "GUIDELINES.md", root / "evidence" / "INDEX.md"]
+        files[0].write_text("# Project coordination guidelines\n\nNo approved project coordination guidelines yet.\n")
+        files[1].write_text("# Execution evidence index\n\n| Run | Date | Areas / tags | Relevant patterns | Outcome |\n| --- | --- | --- | --- | --- |\n")
+        paths = [str(p.relative_to(project)) for p in files]
+        notification = "Initialized project-local coordination files: " + ", ".join(paths)
+        self.assertIn("GUIDELINES.md", notification)
+        git("add", "--", *paths)
+        git("commit", "--only", "-qm", "chore: initialize project coordination memory", "--", *paths)
+        committed = git("ls-tree", "-r", "--name-only", "HEAD").decode().splitlines()
+        self.assertEqual(set(committed), set(paths))
+        self.assertEqual(git("diff", "--cached", "--name-only").decode().strip(), "unrelated.txt")
+        baseline = {p: p.read_bytes() for p in files}
+        head = git("rev-parse", "HEAD")
+        # Repeated entry: no missing files -> no write/commit. Partial recovery only
+        # creates the missing index, preserving a manually maintained guideline.
+        self.assertFalse([p for p in files if not p.exists()])
+        self.assertEqual(git("rev-parse", "HEAD"), head)
+        files[1].unlink()
+        missing = [p for p in files if not p.exists()]
+        self.assertEqual(missing, [files[1]])
+        missing[0].write_bytes(baseline[missing[0]])
+        self.assertEqual(files[0].read_bytes(), baseline[files[0]])
 
     def test_A3_A4_simulated_two_runs_multiple_tasks_failed_partial_manual_unknown(self):
         (self.run / "T002.md").write_text("# Simulated T002 verification\nOutcome: blocked; capability unknown\n")

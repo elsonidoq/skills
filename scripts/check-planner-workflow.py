@@ -22,10 +22,10 @@ PATHS = {
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
 }
-# Deliberately updated for approved coordination-memory T003–T004: additive routing,
-# factual evidence checkpoints and exact approval-controlled reflection. Original
-# execution lines/order and safety mutations retain the proportionality correction.
-EXECUTION_SHA256 = "89cbd7fa77bcb098d39ff9dcc9c17bc4892de2a248a45dfa25aa1d460e0b4660"
+# Deliberately updated for the owner's mandatory auto-initialization correction:
+# project-local persistence replaces optional/handoff-only coordination paths.
+# Model selection, batching, task commits and guideline approval remain protected.
+EXECUTION_SHA256 = "e14b7f7eeb12ca05a32d08e1011193f333f5e0b10552a265d57e06581b8a3bc9"
 
 
 def section(text, heading):
@@ -300,10 +300,12 @@ def check_contracts(texts):
     discovery = section(p, "## Discovery and capability boundary")
     require("coordination-early", discovery, link, "during initial understanding",
             "`GUIDELINES.md` before brainstorming, scope assessment and depth choice",
-            "no invented knowledge, writes or new adoption gate",
-            "distinctly from required gotcha-memory stops",
+            "ensure the mandatory project-local store exists",
+            "initialize missing files, notify the user and commit only initialization files",
+            "without a setup approval gate", "Creation/commit failures stop",
+            "required gotcha-memory stops remain", "no invented project knowledge",
             "Ordinary planning does not read", "index-first relevant-only retrieval",
-            "no match retains uncertainty")
+            "retains uncertainty")
     require("coordination-handoff", production,
             "Carry exact applicable coordination guideline constraints and evidence references",
             "both TinySpec and Standard stage briefs", "source observables/acceptance",
@@ -312,20 +314,27 @@ def check_contracts(texts):
             "absence requires no migration and changes no class/share/approval rule")
     require("coordination-tiny", section(texts["tiny"], "## Inputs and preflight"),
             link, "including direct/standalone entry", "not index/history by default",
+            "ensure the mandatory project-local store", "initialize missing files, notify the user",
+            "commit only initialization", "without a setup approval gate",
             "Carry exact applicable constraints and evidence references",
             "acceptance/verification", "required gotcha-memory stops",
             "index-first relevant-only retrieval", "retains uncertainty on no match")
     require("coordination-tasks", section(t, "## Preconditions and adapters"),
-            link, "including direct entry without planner", "task dependencies, delegation",
+            link, "including direct entry without planner", "dependencies, delegation briefs",
+            "ensure the mandatory project-local", "initialize missing files, notify the user",
+            "initialization files before proceeding", "without a setup approval gate",
             "checkpoints and REQUIRED verification/acceptance", "source/owner authority",
             "required gotcha-memory stops remain distinct", "No default index/history intake",
-            "index-first relevant-only retrieval", "does not alter classes, share or approval rules")
-    require("coordination-memory", section(texts["memory"], "## Optional project coordination memory"),
+            "index-first relevant-only", "does not alter classes, share or approval rules")
+    require("coordination-memory", section(texts["memory"], "## Required project coordination memory"),
             "[project coordination contract](references/project-coordination.md)",
-            "Required gotcha-memory rules above remain", "never go into this gotcha index")
+            "Required gotcha-memory rules above remain", "never go into this gotcha index",
+            "initialize missing files, notify the user", "commit only initialization files",
+            "no separate setup approval or handoff-only alternative")
     require("coordination-intake", section(c, "## Load and Verify"), link,
-            "exact applicable constraints/evidence references", "bounded evidence",
-            "Without association/write authority", "never\nsilently initialize",
+            "applicable constraints/evidence references", "mandatory project-local store exists",
+            "initialize missing files, notify the user and commit only initialization files",
+            "without a setup approval gate", "never a handoff-only alternative",
             "No default evidence-history intake")
     checkpoint = section(c, "### Coordination evidence checkpoint")
     if not (0 <= c.find("## Execute and Integrate") < c.find("### Coordination evidence checkpoint")
@@ -340,7 +349,8 @@ def check_contracts(texts):
             "reuse on resume, never overwrite another run", "separate summary/task records",
             "before refreshing", "after every evidence write", "no duplicate rows",
             "reconcile interrupted record/index updates", "retaining existing runs",
-            "never grants permission to mutate guidelines", "Without association/write authority")
+            "never grants permission to mutate guidelines", "initialized project-local store",
+            "Evidence-write failures stop", "never a no-write fallback")
     capability = section(c, "## Select Execution Capability")
     require("coordination-routing", capability,
             "usable owner-selected options", "Low favors a cheaper",
@@ -378,11 +388,17 @@ def check_contracts(texts):
     q = texts.get("coordination", "")
     if not q:
         errors.append("coordination-reference: required shared carrier missing or empty")
-    require("coordination-association", section(q, "## Association and optional discovery"),
-            "project instructions or documented project configuration", "respect declared equivalent layouts",
-            "No global-store fallback or guessed association", "no new adoption",
-            "declared missing/unreadable", "required-memory policy", "Discovery is read-only",
-            "never a discovery", "bounded owner approval", "preserve existing content")
+    require("coordination-initialization", section(q, "## Project-local initialization"),
+            "one mandatory lifecycle in every entry point", "no opt-out or handoff-only",
+            "current project root", "never the global", "explicitly declared",
+            "<project-root>/memory/coordination/", "no adoption or association ceremony",
+            "inside\nthe current project", "automatically\ncreate only missing",
+            "No approved project coordination guidelines yet", "Preserve every existing file byte-for-byte",
+            "partial stores get only their missing files", "Repeated entry is idempotent",
+            "Tell the user", "commit only those new files", "path-limited commit",
+            "Preserve unrelated working-tree and staged", "No separate setup approval is required",
+            "report the exact blocker and stop", "finish its missing commit",
+            "sole exception to planner's preselection", "no source, planning-artifact or learned-guideline write authority")
     require("coordination-guidelines", section(q, "## Compact guidelines"),
             "before brainstorming", "exact constraints", "scope/trigger", "qualitative",
             "Owner-supplied entries name their origin", "Preserve uncertainty and contrary",
@@ -397,7 +413,7 @@ def check_contracts(texts):
             "SUMMARY.md", "T001.md", "T002.md", "REFLECTION.md",
             "Reuse that ID on resume", "never\noverwrite another run",
             "append-oriented", "without erasing observations or prior runs",
-            "verified write authority", "Without association/write authority",
+            "initialized project-local store", "never replace it", "If an evidence write fails",
             "otherwise `unknown`", "failed, blocked and partial", "unknown outcomes are explicitly unknown",
             "sensitive payloads", "run record before its index entry", "Every new evidence write refreshes",
             "Keep one row per run", "Reconcile an\ninterrupted record/index update on resume")
@@ -421,7 +437,9 @@ def check_contracts(texts):
                "Always read the entire evidence directory", "Read coordination history on every request",
                "Automatically apply guideline proposals", "Implementation approval authorizes guideline writes",
                "Ignore concurrent guideline drift", "Automatically downgrade approved classes",
-               "Retry without inspecting the failed invocation", "One failure permanently bans a model")
+               "Retry without inspecting the failed invocation", "One failure permanently bans a model",
+               "Without association/write authority", "offer future bounded setup",
+               "Undeclared optional memory preserves existing behavior")
     return errors
 
 
