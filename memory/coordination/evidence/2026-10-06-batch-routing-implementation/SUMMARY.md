@@ -8,7 +8,7 @@ Preflight baseline: HEAD `4aaab3325b93705ad3665741e926de189a9f8742`, index and w
 
 | Batch | Tasks | Status | Dependency | Selected profile | Notes |
 | --- | --- | --- | --- | --- | --- |
-| B1 | T001–T002 | in_progress | none | gpt-6.1-sol / medium | T001 V1 failed; authorized assertion correction; T002 not started |
+| B1 | T001–T002 | in_progress | none | gpt-6.1-sol / medium | T001 verified after authorized correction; T002 ready |
 | B2 | T003–T004 | pending | B1 | gpt-6.1-sol / medium | planner handoffs/routing |
 | B3 | T005–T006 | pending | B2 | gpt-6.1-sol / medium | union/acceptance |
 | B4 | T007–T009 | pending | B3 | gpt-6.1-sol / medium | diagnosis/feedback/docs |
@@ -17,3 +17,5 @@ Preflight baseline: HEAD `4aaab3325b93705ad3665741e926de189a9f8742`, index and w
 Sequential only; one in-progress batch. Batch briefs carry full task verification union; parent audits returned commits/check evidence before releasing dependents. Each task commit is followed by a separate factual evidence-only checkpoint. Unknown actual profile is not inferred from selection; inspect run status when available. Accepted first-attempt and escalation feedback to be appended per batch with attribution/evidence strength, not converted automatically into project guideline.
 
 B1 attempt evidence: [T001](T001.md). Baseline `65333dc`; unverified T001 commit `29ea330e637f497618e18ffa403fd8e645379e5e` followed a case-sensitive assertion failure because a semicolon command chain did not block commit. V1 blocked; V2 manual inspection PASS. Supervisor authorized narrow same-session test correction with preserved history and separate checkpoints. Selected invocation `openai-codex/gpt-6.1-sol:medium`, actual unknown. Attribution `verification_contract_gap`, not model capability; no guideline update.
+
+T001 correction `91cbe7ea4ecad02fb01aae64ee208a11642569e1` after failed-attempt evidence `1a81f1ae5c5020ca020f904b78ddfe8592b1dec1`: full batching script 5 tests OK, diff check PASS, V1/V2 PASS. Failed attempt retained. T002 may proceed after this separate evidence checkpoint; parent acceptance audit remains pending.
