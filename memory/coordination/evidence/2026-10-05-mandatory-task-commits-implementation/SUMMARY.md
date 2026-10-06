@@ -15,3 +15,4 @@
 - Parent inspected correction `bcfb7b3` and evidence `251ad9c`: source wording fixed and task-relative clean state confirmed, but the claimed INDEX update was absent (row still said T003–T007 pending). Coordinator repaired exact factual index/tracker metadata while child remained blocked; no source reimplementation. T003 validated; next T004. The inaccurate claim is preserved as an inspected evidence discrepancy, not inferred model causation.
 
 - T004 task `5e60119`: remaining nine skills and all active prompts aligned; runtime extension hook gate removed; focused assertion/lint/diff PASS; validation pending.
+- T004 correction `827b684`: restored existing SpecKit before/after hook semantics byte-for-byte; no new hook subsystem or bypass; validation pending.
