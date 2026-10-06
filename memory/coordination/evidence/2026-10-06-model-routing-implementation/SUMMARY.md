@@ -12,8 +12,8 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | completed: 7c6bdad; parent audit PASS |
 | 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | completed: bb4d5fa, 01e86f3; RF001 868f20e; parent audit PASS |
-| 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | completed: `fa6a343`; evidence checkpoint pending |
-| 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | pending: 3 |
+| 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | completed: fa6a343; parent audit PASS |
+| 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | in_progress |
 | 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
 | 6 | T007–T010 | 5 | Luna brief → safe recovery → temp-Git oracle → memory; per-task commits | Sol 6.1/medium | delegated | pending: 5 |
 | 7 | T011 | 6 | remaining active consumers; focused suite checks | Terra 5.6/medium | delegated | pending: 6 |
@@ -39,7 +39,7 @@ Coordinator independently inspected the actual T002/T003 commit diffs, parent SH
 
 ## RF001 coordinator review fix
 
-[RF001.md](RF001.md): coordinator identified obsolete source-dependent diagnostic filtering after T003 migration. Baseline `809478b1817380048f4ce6c239374f80ac34c693`; VERIFIED one-path product `868f20e750052d27d5b96b44d5913211fd213539` removes only the temporary helper and restores both direct checker calls. All guards retained; memory 25 tests, planner checker and planner 84 tests plus scoped diff PASS. Resumed Sol 6.1/medium label verified. Separate evidence-only checkpoint precedes handoff; parent audit pending, no blocker, T004 not started. Protected untracked files untouched.
+[RF001.md](RF001.md): coordinator identified obsolete source-dependent diagnostic filtering after T003 migration. Baseline `809478b1817380048f4ce6c239374f80ac34c693`; VERIFIED one-path product `868f20e750052d27d5b96b44d5913211fd213539` removes only the temporary helper and restores both direct checker calls. All guards retained; memory 25 tests, planner checker and planner 84 tests plus scoped diff PASS. Resumed Sol 6.1/medium label verified. Separate evidence-only checkpoint preceded handoff; parent audit PASS. T004 then completed and was audited separately. Protected untracked files untouched.
 
 ## T004 checkpoint
 
@@ -54,5 +54,4 @@ order-helper, both fixture validator, negative dependency/story, planner static/
 Terra/medium context and read/bash/edit/write availability were provided at dispatch; internal effort,
 provider behavior, cost and live workflow obedience remain unknown. No settings, guideline,
 rollback, deployment or T005 work occurred. Product diff/staged paths were inspected before the
-focused commit. This evidence/index checkpoint follows before T005 release; protected untracked
-paths remain untouched.
+focused commit. Evidence-only checkpoint `86389846128ae8f68512f256fbda392e249f37f1` followed the T004 product commit. Coordinator inspected both commit parents/scopes, full six-path diff and [T004.md](T004.md), reran task-generation contract (6), order-helper (7), both fixture validators, planner checker/84 tests and scoped whitespace: PASS. Tracked tree/index clean, protected untracked paths untouched. T005 is released only after this additional audit/index checkpoint.
