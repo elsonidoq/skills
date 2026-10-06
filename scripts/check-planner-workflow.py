@@ -197,9 +197,12 @@ def check_contracts(texts):
             "Missing runtime capabilities")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
-            "authorization to\n**prepare** tasks", "30%", "Number in execution order from T001",
-            "explicit `Depends`", "earlier task", "implicit dependencies", "manually inspect",
-            "coherent sequential work", "do not reorder dependencies or pad", "lockstep documentation")
+            "authorization to\n**prepare** tasks", "model\nfamily, concrete binding, and effort",
+            "complete task-and-reviewer routing preview", "least-adequate-effort rationale after decomposition",
+            "supported pairing without a qualifying benchmark row", "no provider IDs, fixed family mappings",
+            "Number in execution order from T001", "explicit `Depends`", "earlier task",
+            "implicit dependencies", "manually inspect", "coherent sequential work",
+            "do not reorder dependencies or pad", "lockstep documentation")
     require("adapter", texts["helper"], "Planner Standard adapter", "`planner`", "same-session pass",
             "do not direct it to create the plan again", "standalone local\nfallback")
     c = texts["coordinator"]
@@ -379,7 +382,8 @@ def check_contracts(texts):
             "initialization files before proceeding", "without a setup approval gate",
             "checkpoints and REQUIRED verification/acceptance", "source/owner authority",
             "required gotcha-memory stops remain distinct", "No default index/history intake",
-            "index-first relevant-only", "does not alter classes, share or approval rules")
+            "index-first relevant-only", "does not infer an effort or alter approval rules",
+            "without converting historical class labels")
     require("coordination-memory", section(texts["memory"], "## Required project coordination memory"),
             "[project coordination contract](references/project-coordination.md)",
             "Required gotcha-memory rules above remain", "never go into this gotcha index",

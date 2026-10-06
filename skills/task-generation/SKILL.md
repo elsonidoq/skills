@@ -30,8 +30,9 @@ dependencies, delegation briefs, checkpoints and REQUIRED verification/acceptanc
 treat a memory summary as downstream application or override source/owner authority.
 No default index/history intake; justified clarification uses index-first relevant-only
 retrieval, retaining uncertainty on no match.
-Optional `residual_reasoning: low|medium|high` with a brief rationale fits existing notes;
-absence requires no migration and does not alter classes, share or approval rules.
+Optional `residual_reasoning: low|medium|high` with a brief rationale records what remains
+after decomposition; it does not infer an effort or alter approval rules. Preserve valid legacy
+artifacts without converting historical class labels into a family, binding, or effort selection.
 
 Use the adapter matching the producing workflow:
 
@@ -55,10 +56,20 @@ as unavailable.
 ## Task contract
 
 Every task records an outcome, explicit prerequisites, likely files or interfaces,
-independently observable acceptance evidence, required capabilities, model class, and a
-brief class rationale. Cover all in-scope work, integration/acceptance checks, and
-lockstep documentation whose evidence compares documentation with implemented behavior.
-Record exclusions so tasking cannot reintroduce them.
+independently observable acceptance evidence, required capabilities, and a proposed model
+family, concrete binding, and effort. Before the single final implementation approval, include
+a complete task-and-reviewer routing preview that identifies each proposed family, binding and
+effort; provider-documentation/runtime capability evidence; independently stated family
+suitability and least-adequate-effort rationale after decomposition; relevant benchmark signals
+or a no-row coverage gap; uncertainty disposition; and bounded retry authority. A proposed
+selection remains pending until the applicable owner approval and current capability checks;
+do not invent an effort, map a historical class, or treat risk, role, family name, budget, or a
+strong oracle as an effort default. A supported pairing without a qualifying benchmark row
+records research or a bounded owner uncertainty decision rather than automatic exclusion.
+
+Cover all in-scope work, integration/acceptance checks, and lockstep documentation whose
+evidence compares documentation with implemented behavior. Record exclusions so tasking cannot
+reintroduce them.
 
 Acceptance evidence uses the smallest sufficient check at the lowest layer that can
 observe the changed seam's concrete failure. In existing task fields, distinguish
@@ -73,10 +84,13 @@ changing approved acceptance requires the producing workflow's review/approval g
 Reference valid unchanged evidence rather than duplicating checks. Keep unrelated
 compatibility repairs in small causal steps, with evidenced prerequisites only.
 
-Default bounded, well-specified work to `sonnet-class`. Use `opus-class` only when it cannot
-be safely decomposed into bounded independently verifiable work. No more than 30% of the
-complete task list may be `opus-class` without recorded owner approval of the affected IDs,
-rationale, and delivery impact.
+Use the shared family/effort routing contract: decompose first; keep risk controls in
+acceptance, approval, review, and recovery safeguards; and justify effort separately from
+remaining ambiguity, oracle quality, comparable evidence, and context/tool constraints. Select
+the least supported effort adequate for the selected binding only after provider documentation,
+runtime capability, and owner authorization are established. A weak oracle returns for stronger
+observable acceptance and decomposition rather than a higher-effort proposal. Portable task
+policy names no provider IDs, fixed family mappings, effort defaults, or family share cap.
 
 Follow the observed project format. When no established complete format exists, use numbered
 Markdown tasks with explicit `Depends` fields. Number in execution order from T001 with no
@@ -85,22 +99,25 @@ story or stage in one contiguous segment. Check implicit dependencies and whethe
 can obtain its producers before its consumers; revise the producer placement rather than
 papering over a forward dependency.
 
-Organize consecutive same-class tasks into coherent sequential work where their retained
-context is useful. Preserve prerequisite order, individual evidence, and story acceptance
-boundaries; do not reorder dependencies or pad a segment with distant work merely to fill a
-batch. Internal producer/consumer dependencies, shared files, and phase/story headings may
-remain together when producer verification precedes consumer work. Record likely shared
-context and integration checkpoints so the execution coordinator can make an evidence-based
-batch decision.
+Organize consecutive tasks with compatible selected family, binding, effort, and retained
+context into coherent sequential work where useful. Preserve prerequisite order, individual
+evidence, and story acceptance boundaries; do not reorder dependencies or pad a segment with
+distant work merely to fill a batch. Internal producer/consumer dependencies, shared files, and
+phase/story headings may remain together when producer verification precedes consumer work.
+Record likely shared context and integration checkpoints so the execution coordinator can make
+an evidence-based batch decision.
 
 ## Review and handoff
 
 Before approval, validate explicit dependencies and story continuity with
 `python3 scripts/check-task-order.py /path/to/tasks.md` from this skill directory when the
 format supports it. Then manually inspect traceability, exclusions, documentation,
-integration, acceptance evidence, class share, implicit dependencies, and stage feasibility.
-Return defects to the producing workflow's review gate. Record the validation outcome and
-current content evidence with the task artifact so a later handoff can detect stale approval.
+integration, acceptance evidence, the complete pending task/reviewer routing preview, hard
+support/owner gates, no-row uncertainty disposition, implicit dependencies, and stage
+feasibility. Validate both adapters without imposing a Standard plan prerequisite on direct
+TinySpec work. Return defects to the producing workflow's review gate. Record the validation
+outcome and current content evidence with the task artifact so a later handoff can detect stale
+approval.
 
 ## Mandatory task checkpoint
 
