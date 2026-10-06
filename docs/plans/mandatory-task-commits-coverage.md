@@ -34,6 +34,8 @@ skills. T004 wires all active routes and classifies planning/analyze/checklist/c
 converge/plan/specify/tasks/taskstoissues routes as read-only or retained-artifact producers
 under the same contract; no prompt may offer a commit waiver.
 
-T005 supplies static omission mutations and temporary-Git protocol fixtures (implemented by `scripts/test-task-commit-contract.py`). T006 aligns
-governing/user documentation. T007 reconciles every row against actual evidence. Static and
-fixture evidence does not prove runtime model obedience.
+T005 supplies static omission mutations and temporary-Git protocol fixtures (implemented by
+`scripts/check-task-commit-contract.py` and `scripts/test-task-commit-contract.py`). T006 aligns
+governing/user documentation. T007 integration checks verified all rows and active prompt links
+against the canonical owner; no row claims runtime model obedience. Static assertions and
+Git fixtures remain instruction/protocol evidence only.
