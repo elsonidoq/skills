@@ -11,7 +11,6 @@ while pi is not running, then run `/reload` inside the next session.
   "subagents": {
     "defaultModel": "deepseek/deepseek-v4.1-flash",
     "agentOverrides": {
-      "worker": { "model": "deepseek/deepseek-v4.1-flash" },
       "reviewer": { "model": "deepseek/deepseek-v4.1-flash" },
       "scout": { "model": "deepseek/deepseek-v4.1-flash" },
       "oracle": { "model": "anthropic/claude-opus-5" }
@@ -20,11 +19,36 @@ while pi is not running, then run `/reload` inside the next session.
 }
 ```
 
-The `subagents` block implements this suite's model-class mapping
-([REQUIREMENTS.md](../REQUIREMENTS.md)): `sonnet-class` work runs on
-`deepseek/deepseek-v4.1-flash`; `opus-class` advisors run on `anthropic/claude-opus-5`.
-Per-run overrides from `coordinate-implementation` take precedence over these
-`agentOverrides` values.
+Implementation uses one owner-selected exact binding plus independently justified effort per
+batch invocation, not the old implementation-task class mapping. This sample intentionally
+has no `worker` model override. Keep unrelated reviewer/scout/oracle stage choices separate;
+the shown defaults are examples, not verified callable profiles or owner selections.
+
+Use the [qualified seed rubric](../skills/coordinate-implementation/references/batch-routing.md)
+and [coordinator contract](../skills/coordinate-implementation/SKILL.md) to assess the batch
+and record proposed versus selected profile, rationale and applicable approved guidance or none.
+After verifying installed-runtime permissions, callable binding, supported effort and tools at
+assignment and dispatch, pass the selected profile explicitly using the runtime's verified
+per-run interface (`model: "provider/id:effort"` for pi-subagents). Copy it unchanged into
+actual dispatch arguments and inspect the effective configuration before launch: no default,
+agent override or setting may silently replace the selected implementation profile. A mismatch
+blocks dispatch and returns to capability/owner selection, never automatic substitution.
+Do not assume override precedence from this sample alone. Record observed profile separately;
+unobservable actual binding/effort stays unknown.
+
+Task-local REQUIRED items form the whole batch verification union, with concrete item-mapped
+return evidence and inspected focused per-task commits plus separate evidence checkpoints.
+Passing contracts allow cheap acceptance without a strong per-batch reviewer, while one fresh
+independent final review remains required. Empty project guidelines use the qualified seed
+without invented success history; relevant approved guidance cannot override source/owner gates.
+Diagnosed repair preserves attempts/valid work, supplies the full contract and reruns invalidated
+items through the same gates, not a fixed profile ladder. Indexed feedback is qualified evidence,
+not automatic guideline approval.
+
+Static/symbolic fixtures demonstrate these contracts, not live model performance, supported effort
+or authenticated callability. Registry names and effort suffix syntax alone are insufficient;
+any live/provider probe requires separate permission and usable runtime support. See
+[REQUIREMENTS.md](../REQUIREMENTS.md) for runtime and workflow gates.
 
 The `packages` array is maintained automatically by `pi install` (see
 [REQUIREMENTS.md](../REQUIREMENTS.md) for the exact pins).

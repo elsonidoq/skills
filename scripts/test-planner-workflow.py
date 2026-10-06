@@ -53,6 +53,24 @@ class ProportionateValidationTests(unittest.TestCase):
             with self.subTest(clause=clause):
                 self.assert_clause_required("planner", clause, "validation-focused")
 
+    def test_batch_profile_feedback_and_diagnosed_repair_carriers(self):
+        # Causal replacement coverage for obsolete implementation-class assertions.
+        for key, clause, diagnostic in (
+            ("coordinator", "exact selected and observed profile", "coordination-checkpoint"),
+            ("coordinator", "contract strength, first/final outcome", "coordination-checkpoint"),
+            ("coordinator", "Non-model causes never count as capability failure", "coordination-checkpoint"),
+            ("coordinator", "An unknown observation is never overwritten by selection", "coordination-checkpoint"),
+            ("coordinator", "Inspect the failed child run, invocation, partial commits and check evidence", "coordination-routing"),
+            ("coordinator", "rerun every invalidated item", "coordination-routing"),
+            ("coordinator", "unknown cause stops blind restart", "coordination-routing"),
+            ("coordination", "unknown observation is never overwritten", "coordination-evidence"),
+            ("coordination", "Relevant approved guidance may override the seed", "coordination-profile"),
+            ("coordination", "weak or\ninvalidated successes are not strong positive guidance", "coordination-profile"),
+            ("coordination", "`environment_or_tooling`", "coordination-profile"),
+        ):
+            with self.subTest(clause=clause):
+                self.assert_clause_required(key, clause, diagnostic)
+
     def test_schema_security_durability_retain_necessary_checks(self):
         self.assert_clause_required("planner", "migration, authorization or persistence", "validation-risk")
 

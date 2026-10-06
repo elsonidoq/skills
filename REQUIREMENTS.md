@@ -22,18 +22,48 @@ Keep this table in sync with the dependency statements inside the skills. The
 instructions during adoption. It reports missing prerequisites without installing them;
 its mandatory question/approval-contract gates stop when unavailable.
 
-## Model class mapping
+## Implementation batch selection
 
-The pipeline skills label work with two model classes. The mapping below is the
-configuration used by this suite and must resolve to usable options on the configured
-providers. It is enforced by the `subagents.agentOverrides` sample in
-[`docs/pi-settings-sample.md`](docs/pi-settings-sample.md); skills must never hard-code a
-provider/model ID — they verify that usable options exist and ask the owner to choose.
+Implementation tasks carry objective REQUIRED task-local verification items, expected
+outputs, smallest sufficient checks and manual/permission gates through
+[task-generation](skills/task-generation/SKILL.md), not mandatory model classes or shares.
+The coordinator uses the [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md)
+plus applicable approved project guidance to assess consecutive sequential batches, normally
+2–5 related tasks when feasible, never a quota. Select one exact binding and independently
+justified reasoning effort per invocation through owner choice; task assignments never
+silently select a different profile inside that invocation.
 
-| Class | Meaning | Model |
+At assignment and dispatch verify permissions, tools, callable binding and supported effort
+through the installed runtime. Registry entries, thinking flags and suffix syntax alone
+are not callability/support evidence. Copy the selected exact profile into actual dispatch
+arguments and check settings/agent defaults do not override it. Requested/selected is not
+observed: actual binding or effort remains unknown when unobservable. The settings
+[sample](docs/pi-settings-sample.md) contains no unconditional implementation-worker override.
+Seed examples are provisional, not hard-coded provider defaults or a universal repair ladder.
+
+Dispatch supplies the whole REQUIRED union and returns concrete item-mapped evidence and
+per-task checkpoints. The coordinator inspects every task diff/checkpoint, outputs, scope
+and manual gates before accepting/releasing dependents. Missing/contradictory/unrun proof
+blocks acceptance; passing contracts need no mandatory strong per-batch reviewer. Preserve
+focused per-task implementation commits, separate evidence-only checkpoints and one fresh
+independent final review over the complete committed range. Diagnose failures from child
+run/invocation/partial commits before authorized targeted repair; preserve valid work and
+prior attempts, supply the full contract and rerun invalidated items.
+
+Static assertions and symbolic fixtures check instructions and sample artifacts, not live
+model performance or runtime obedience. Live/provider checks require separate authorization
+and usable permitted binding/effort/tool support; fixture success never substitutes for them.
+
+### Separate planning/advisory stage options
+
+Unrelated planning and reviewer selections remain separate, verified usable and owner-selected.
+Existing stage labels/options below are not implementation-task assignments or a share rule.
+Skills do not hard-code provider IDs; preserve stage-specific authority and preflight gates.
+
+| Stage label | Meaning outside implementation assignment | Existing options |
 |---|---|---|
-| `sonnet-class` | bounded, well-specified implementation work | `deepseek/deepseek-v4.1-flash` (fallback `deepseek/deepseek-v4-flash`) |
-| `opus-class` | work that cannot be safely decomposed | `anthropic/claude-opus-5` or `openai/gpt-sol-latest` |
+| `sonnet-class` | bounded planning/advisory work | `deepseek/deepseek-v4.1-flash` (fallback `deepseek/deepseek-v4-flash`) |
+| `opus-class` | advisory work that cannot be safely decomposed | `anthropic/claude-opus-5` or `openai/gpt-sol-latest` |
 
 ## Memory contract
 
@@ -57,11 +87,14 @@ commit or persist evidence stop with the exact blocker. Planner reads guidelines
 choice and carries constraints into both routes. Empty initialization invents no knowledge;
 implementation approval never grants synthesized guideline mutation.
 
-Optional `residual_reasoning: low|medium|high` notes describe task/oracle conditions, not a
-third class or provider policy. Routing retains approved sonnet/opus classes, class-share
-rules, usable owner selections, inspected failure causes and separately verified stronger
-capability gates. No ML, dependencies, automatic model optimization or one-outcome permanent
-rules are introduced. Runtime pins and the two-class configuration above remain unchanged.
+Optional `residual_reasoning: low|medium|high` notes describe task/oracle conditions,
+not assignments. Existing indexed attempts retain exact selected/observed profiles or unknown,
+assessment factors, contract strength, first/final outcome, diagnosed attribution and repair
+references. Environment/tooling or other non-model causes do not penalize capability; weak or
+invalidated successes cannot become strong positive guidance. Approved applicable guidelines
+may override the seed, never source/owner permissions; raw outcomes never mutate guidelines.
+No new store, schema, ML or automatic model optimization is introduced. Runtime pins and
+unrelated stage options remain unchanged.
 
 ## Project docs
 
