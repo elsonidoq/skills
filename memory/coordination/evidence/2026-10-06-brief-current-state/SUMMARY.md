@@ -71,4 +71,6 @@ No learned guideline update proposed.
 
 S1 evidence checkpoint updates this summary/index and STATE.md separately from its contract commit.
 S2 next: focused recovery/mutation/scenario checks, with no runtime/provider exercise.
-
+Evidence-checkpoint deviation: 8df4127 was committed despite diff-check reporting an extra EOF blank
+line because the shell command did not chain that check to commit. Remove only that blank, validate
+and checkpoint the correction before S2. No task verification or source scope is invalidated.
