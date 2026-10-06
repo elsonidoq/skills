@@ -1,7 +1,9 @@
 # Active planning routing — bounded implementation validation
 
-Status: T001/T002 verified; T003 static/manual validation complete, **fresh independent final
-semantic review pending coordinator action**. This is implementer evidence, not final feature acceptance.
+Status: **accepted within the approved static/manual validation scope**. T001–T003 checkpoints
+were audited by the coordinator; fresh independent final semantic review found no issues.
+The implementer-time pending dispositions below are retained as attributable prior evidence;
+the final disposition is recorded in the coordinator section. Live obedience is not verified.
 Source: [approved TinySpec](../active-planning-routing-tinyspec.md), SHA-256
 `1f44d5b3dfe4fdddcd4a0445ab85ec8700363b11465c13f19252a65c66423c5a`;
 [tasks](../active-planning-routing-tasks.md), SHA-256
@@ -110,10 +112,40 @@ prerequisites and weakened safeguards; tests alone do not certify semantic compl
 finding blocks completion; verified corrections checkpoint separately and affected evidence/review renews.
 Disposable full-range patch and name-status exports are supplied in the worker handoff, not repo scratch.
 
+## Coordinator acceptance and independent final review
+
+Fresh read-only reviewer run `0de14e60-d8ac-466a-b7a8-a154967e94a4` in workflow
+`eb9e143f-0214-4b23-a667-e77586c61297` reviewed the complete supplied patch and all 16
+changed current files for range
+`91d560de5d00d7f22a57b49f4a0e0c67a83eea97..07fcea32363acc4c94baec62845d7d71da21d842`,
+against approved artifacts and protected boundaries. **No issues found; Merge verdict: OK with notes.**
+Reviewer notes: no execution tool, so tests were not independently rerun by the reviewer;
+literal checks do not prove arbitrary prose consistency or live model obedience.
+
+Coordinator disposition: notes are valid limitations, not defects or waived REQUIRED checks.
+The coordinator inspected the actual six task/evidence commits, complete operational/checker/test/doc
+diffs, approval/source/task identities and task-owned residual state, then independently reran
+`PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh`: **PASS**, 22 skills/0 failures,
+283 embedded tests and both static checkers; coordination contract tests: **PASS**, 21;
+committed-range `git diff --check`: **PASS**. Original source/task digests and historical
+initialization fixture remain unchanged. Only the original two excluded untracked files remain;
+no unrelated staging or operational correction was needed.
+
+Final T003/V3 independent review and A5: **PASS within static/manual scope**, superseding
+pending worker dispositions without erasing them. A1–A4 and all other REQUIRED items are accepted
+from consistent inspected evidence and coordinator reruns. No new profile, guideline, runtime,
+settings, recovery policy, historical migration or external operation was authorized or added.
+Review output is retained in the runtime artifact `review/active-routing.md` for this workflow;
+this section is the durable findings/disposition owner. No guideline update proposed.
+
+Later runtime status observation reports worker and reviewer `model: openai-codex/gpt-6.1-sol:medium`,
+`thinking: medium`. This is attributable runtime-setting evidence, appended after their original
+unknown reports, not retroactive provider-execution attestation.
+
 ## T003/V4: closeout limits
 
 No live provider/runtime-obedience probes; **NOT RUN**, separately authorized only.
 Unrelated untracked `.env` and `docs/plans/mandatory-task-commits.md` were neither read nor edited;
 metadata and status remained unchanged. No historical migration or guideline change. Semantic prose
-and real model behavior remain residual risks until independent review and any separately permitted
-runtime validation. After global skill changes, run **`/reload` inside pi**.
+and real model behavior remain residual risks despite independent semantic review; any live
+runtime validation remains separately permitted and NOT RUN. After global skill changes, run **`/reload` inside pi**.
