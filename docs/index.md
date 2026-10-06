@@ -44,6 +44,11 @@ and the legacy port keep their own documentation boundaries.
 
 ## Implementation Plans
 
+- [Mandatory Task Commits — TinySpec](plans/mandatory-task-commits-tinyspec.md): Authoritative pragmatic checkpoint scope and A1–A7 acceptance; no runtime extension gate.
+- [Mandatory Task Commits — Tasks](plans/mandatory-task-commits-tasks.md): Separate dependency-aware task contracts derived from the TinySpec.
+- [Mandatory Task Commits — Planning Review](plans/reviews/mandatory-task-commits-planning-review.md): Exact source/task approval identities and owner authorization.
+- [Mandatory Task Commits — Execution](plans/mandatory-task-commits-execution.md): Execution checkpoint and recovery evidence; final acceptance links to the independent review.
+- [Mandatory Task Commits — Final Review](plans/reviews/mandatory-task-commits-final-review.md): Independent finding/disposition, RF001 correction and accepted targeted recheck; validation limits.
 - [Project Coordination Memory Source](plans/project-coordination-memory.md): A1–A12 generic support and preservation bounds; approval is recorded separately.
 - [Project Coordination Memory Tasks](plans/project-coordination-memory-tasks.md): Sequential contract, consumer, assurance and documentation work.
 - [Project Coordination Memory Execution](plans/project-coordination-memory-execution.md): Current-content approval, per-task evidence and independent final review status.

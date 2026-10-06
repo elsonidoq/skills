@@ -25,4 +25,5 @@
 - T005 second follow-up `d2262dd`: consumer-link, independent waiver/recovery, and heading-preserving hook-body mutations now diagnostic; validation pending.
 - T006 task `e7db4ec`: governing/user documentation and constitution 2.1.0 aligned; checker/lint/diff PASS; validation pending.
 - T007 task `f701e69`: integrated required checks PASS, coverage reconciled, full-range packet pending evidence checkpoint/export; fresh final review remains pending.
-- RF001 task `a742f20`: F1 commit opt-in contradiction corrected with production diagnostic/mutation; focused checker/tests/lint/workflow/diff PASS; fresh Sol recheck pending.
+- RF001 task `a742f20`: F1 commit opt-in contradiction corrected with production diagnostic/mutation; focused checker/tests/lint/workflow/diff PASS; fresh Sol recheck was pending at that checkpoint (subsequent accepted outcome recorded in FINAL above).
+- Owner-requested finish-session: [CLOSEOUT.md](CLOSEOUT.md) records bounded documentation-discovery repair (five checked index links), no new issue/guideline/deployment/state work, and excluded concurrent untracked model-routing specs. Final review/implementation unchanged; /reload still required and not observed.
