@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Active planning routing — TinySpec](active-planning-routing-tinyspec.md): active class removal, Sol/medium Standard planning exception and verification bounds.
 - [Coherence initialization — TinySpec](coherence-initialization.md): source and adoption bounds.
 - [Coherence initialization — tasks](coherence-initialization-tasks.md): implementation task contracts.
 - [Coherence initialization — execution](coherence-initialization-execution.md): task checkpoints and review disposition.
