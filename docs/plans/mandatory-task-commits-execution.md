@@ -20,14 +20,14 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001–T007 | Contract, coordinator, all consumers/prompts, fixtures, governing docs, integration evidence | Internal T001 → T007, approved order | Shared reference → consumer checkpoints → regression wiring/docs | Per-task required checks and commits; coordinator verifies each checkpoint; final full-range review | sonnet-class / Terra | async delegated, one writer | in_progress |
 
-- [ ] Batch 1 — in_progress; first dependency-ready task T001.
+- [ ] Batch 1 — in_progress; T001–T002 verified; next dependency-ready task T003. Initial child exited prematurely; retained-session continuation follows inspected failure and recovery evidence.
 
 ## Task checkpoints
 
 | Task | State | Task baseline / commit | Checks / remaining work |
 | --- | --- | --- | --- |
-| T001 | completed | 4781969baa8be02f939fbaaf31f8fc3d70cb8ff3 / f49113d5b6dd5f926c2ecea5fb9780562342a0b8; evidence checkpoint pending | shared contract/inventory; static reference/lint checks PASS |
-| T002 | pending | not started | coordinator protocol |
+| T001 | completed | 4781969baa8be02f939fbaaf31f8fc3d70cb8ff3 / f49113d5b6dd5f926c2ecea5fb9780562342a0b8; evidence checkpoint 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 | shared contract/inventory; parent checkpoint validated; lint/diff checks PASS |
+| T002 | completed | 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 / d2d1b2f7ac4c744337e2118922cf343b9345128f; coordinator evidence recovery committed separately | coordinator protocol; parent intake 7/batching 3/static workflow/diff checks PASS |
 | T003 | pending | not started | workflow consumers |
 | T004 | pending | not started | standalone skills/prompts |
 | T005 | pending | not started | diagnostic mutations/Git fixtures |
@@ -37,6 +37,10 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 Writer owns task commits and evidence-only metadata checkpoints. After each task, provide exact baseline/task commit/evidence checkpoint and check outcomes via supervisor, then wait for coordinator validation before next-task writes. Coordinator independently inspects actual Git/diff/required checks; unknown or failing state is not commit authority. If a missing commit is recoverable, coordinator alone commits understood verified changes; otherwise stop. Fresh implementers must not commit inherited unknown changes.
 
 Preserve approved source/task contracts; update this tracker and bounded execution evidence rather than editing acceptance definitions. Commit each task's verified changes separately; record its SHA afterward in a focused evidence-only checkpoint before the next task. No per-task independent reviews, no push/deploy/install/paid services, no skip/defer question.
+
+## Inspected execution interruption
+
+Initial worker `0a1e298e-4f37-4ce0-9209-0d1deab128e7` exited with an incomplete final report after T002 task commit. Workflow `96f38eed-425a-47bb-a848-236b1beb4f84` failed acceptance: criterion-1 not-satisfied. Parent inspected status, terminal output and session/tool events; no timeout or infrastructure failure reported. Immediate rejection cause is incomplete batch scope, not failed implementation tests or proven model-capability insufficiency. Both task commits preserved; missing T002 metadata is recovered by coordinator before continuation. Tracked/index clean with historical draft unchanged. Resume must retain the same selected model/session and continue T003–T007, not replay T001/T002 or finalize at an intermediate checkpoint. Final review is not yet launched.
 
 ## Final acceptance
 
