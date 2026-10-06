@@ -45,3 +45,12 @@ Before any relaunch:
 
 Only launch a new expensive subagent after the owner explicitly requests it or the inspected
 failure proves that a fresh session is necessary.
+
+## Mandatory Task Checkpoints
+
+For authorized retained repository work, apply the shared
+[task-commit contract](skills/memory-handling/references/task-commit-contract.md): each independently
+verifiable task is validated and committed with explicit owned paths before later task work,
+completion reporting, or handoff. This does not authorize writes, adaptation, external operations,
+or guideline changes; read-only/no-change work makes no empty commit. Preserve unrelated dirty work;
+Git/policy/ownership/verification conflicts stop rather than waive the checkpoint.

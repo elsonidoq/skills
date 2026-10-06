@@ -75,3 +75,11 @@ and approved shell/index bounds, with no substantive documentation writes. Missi
 structure blocks readiness; empty/stale substantive content remains planner work, not completed
 by a shell. `finish-session` checks owner/index/routing/schema existence without initializing
 or auditing them.
+## Task commit contract
+
+Package-managed execution uses the shared [task-commit contract](skills/memory-handling/references/task-commit-contract.md).
+It requires focused per-task Git checkpoints for authorized retained repository output, while preserving
+compatible signing/message conventions, unrelated dirty work, and existing approval gates. It adds no
+runtime extension, adapter, provider/model binding, dependency, installation, live probe, push, deployment,
+or history rewrite requirement. Missing Git/identity/permissions, failed hooks/checks, unclear ownership, or
+conflicting policy stops the affected task; static checks and temporary-Git fixtures do not prove model obedience.

@@ -161,3 +161,14 @@ describes current behavior, gotcha memory contains only verified non-obvious war
 project-local coordination memory separates reusable guidelines from factual run/task evidence, and
 `docs/open_issues.md` is the canonical unresolved-work register. Global assets must not assume
 project paths, branch, deployment state, named models or an invented artifact/state schema.
+
+## Mandatory task checkpoints
+
+For authorized retained repository output, the shared [task-commit contract](skills/memory-handling/references/task-commit-contract.md)
+requires a focused, verified per-task commit before later task work, completion reporting, or handoff. A task is an
+independently verifiable work unit, not a tool call or batch. Read-only, no-change, scratch, and external-only work
+creates no empty commit. Preserve unrelated staged/unstaged work; ambiguous ownership, unavailable Git, failed hooks,
+or incompatible policy stops rather than waives the checkpoint. Coordinators independently inspect task diffs/checks
+and may recover only understood verified contextual changes; fresh implementers never commit unknown work. Evidence
+updates are separate evidence-only checkpoints. This is instruction-managed with static/Git-fixture evidence, not
+runtime proof that a model obeys it. After these global skill changes, run `/reload` in pi.

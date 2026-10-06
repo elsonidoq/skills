@@ -37,8 +37,13 @@ fixtures alone MUST NOT be represented as runtime-obedience proof.
 
 Implementation MUST follow approved task dependencies, preserve unrelated workspace changes,
 verify before claiming completion, and obtain independent review where the workflow requires
-it. Inspect a failed delegated run and its invocation before retrying, resuming, or relaunching;
-unknown failures MUST be reported rather than blindly rerun.
+it. Authorized retained repository tasks MUST follow the shared
+[task-commit contract](../../skills/memory-handling/references/task-commit-contract.md): focused,
+path-limited verification commits precede subsequent task work, reporting, or handoff; read-only/no-change
+work makes no empty commit; ownership/Git/verification conflicts stop rather than waive the checkpoint.
+This does not grant write, guideline, adaptation, external-operation, or runtime-extension authority. Inspect a
+failed delegated run and its invocation before retrying, resuming, or relaunching; unknown failures MUST be
+reported rather than blindly rerun.
 
 ### VI. Compatibility and Ownership
 
@@ -91,4 +96,8 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-05
+**Version**: 2.1.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-05
+
+Amendment 2.1.0 records the owner-approved package-wide mandatory task-checkpoint policy. It
+adds no runtime interception/adapter requirement and preserves existing authorization, planning,
+guideline, and safety boundaries; the MINOR version reflects materially expanded execution guidance.

@@ -128,3 +128,15 @@ explicit implementation scope. Standard includes spec/plan and both approvals. T
 includes its combined approval. Use project conventions, not a new universal state file.
 Task outcomes reference authoritative source criteria rather than duplicate the whole source.
 Legacy artifacts retain their original shapes and gates; changed names never waive provenance.
+
+## Retained task checkpoints
+
+After required verification, each authorized retained repository task uses the shared
+[task-commit contract](../skills/memory-handling/references/task-commit-contract.md): explicitly stage only owned
+paths and make a focused commit before subsequent task writes, completion reporting, or handoff. Source and task-list
+production are separate retained deliverables; their existing preparation/combined-approval gates remain unchanged.
+Read-only/no-change work creates no empty commit. Preserve unrelated dirty work and stop on uncertain ownership,
+missing Git/identity, failed hooks/checks, or conflicting policy rather than offering a waiver. Coordinators inspect
+actual diffs/SHA/check evidence and only recover understood verified contextual work; fresh implementers return unknown
+state without writing. Record factual evidence in a distinct evidence-only checkpoint. Static assertions and temporary
+Git fixtures demonstrate policy/Git examples, not runtime model obedience.
