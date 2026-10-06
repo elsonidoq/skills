@@ -33,4 +33,38 @@ Assessment: moderate residual cross-contract reasoning; bounded local tool chain
 
 Capability evidence: subagent list reports executable native worker (read/bash/edit/write/contact_supervisor) and read-only reviewer; models registry/current session reports exact Sol binding; current parent session medium/model events observed. Doctor: async available, unlimited session spawn budget, fan-out limit 64, 0 active roots. Git identity/commits verified by preparation checkpoints; Python 3.12.3 and baseline checker/80 tests PASS. Runtime launch preflight is authoritative; registry/suffix evidence is not provider attestation. Missing support/authentication/tooling stops, not fallback. No live provider smoke probe authorized. Child receives edit/write, whose parent route succeeded during preparation; actual child tool results remain authoritative.
 
+## Worker checkpoints
+
+Worker requested/selected profile (parent evidence): `openai-codex/gpt-6.1-sol:medium`.
+Worker observed actual binding/effort: unknown; this child has no independent execution attestation.
+Approved guidance: none. Single writer, native read/edit/write/bash; no delegation or live probes.
+Initial main HEAD and empty index verified at `91d560de5d00d7f22a57b49f4a0e0c67a83eea97`;
+approved source/task digests matched before writes. Approved contracts remain byte-unchanged;
+use this tracker, not digest-sensitive task checkboxes.
+
+| Task/item | Baseline → result / evidence | Outcome |
+| --- | --- | --- |
+| T001/V1 | 91d560de5d00d7f22a57b49f4a0e0c67a83eea97 → f9330400adaf668b0ead6089deaf6affefc915b5; checker and `ActivePlanningRoutingTests` | PASS: pre-change exact Sol/medium assertion expected FAIL, same assertion post-change PASS; 7 new tests, 46 consumer-scoped mutation/link cases reject restored classes (both labels), changed family/effort, partial pass, fallback/default substitution, adapter bypass, lost selection/observed gates and summary-only carriers |
+| T001/V2 | f933040; all commands with `PYTHONDONTWRITEBYTECODE=1 python3` | PASS: `scripts/check-planner-workflow.py`; `scripts/test-planner-workflow.py` 87 (baseline 80); brainstorming `scripts/test_contract.py` 4; task-generation `scripts/test_contract.py` 4; memory-handling `scripts/test_coordination_contract.py` 21 |
+| T001/V3 | Manual baseline-to-patch inspection; bounded table below | PASS instruction inspection only; no live model-obedience inference |
+| T001/V4 | `git diff --check`; explicit eight-path commit/show/status/index audit; historical fixture compared byte-for-byte with HEAD | PASS: only assigned T001 paths; historical initialization fixture unchanged; no staged files or task-owned residual changes; excluded untracked files untouched (metadata unchanged) |
+
+T001 diagnosed check iterations: initial checker FAIL on two wrapped literal phrases (36 cascade
+assertion failures); aligned wrapping. Next suite FAIL on two non-unique mutation targets; narrowed
+actual carrier targets. Next suite FAIL on one whole-pass mutation because another ENTIRE mention
+masked it; strengthened exact direct/helper entire-pass assertion. Final required union PASS.
+These are inspected instruction/test-contract causes, not model-capability evidence or blind retries.
+
+### T001 protected-boundary inspection (D4)
+
+| Boundary | Retained operational carrier / rationale |
+| --- | --- |
+| Depth/owner dialogue | Planner Before selection; both options and `ask_user` STOP; brainstorming Owner dialogue stays orchestrator-owned; preselection read-only remains |
+| Approval/current content/renewal | Planner Approval-driven continuation, TinySpec Combined approval, Standard spec_create/plan_create/overall_review and Approval, resume and legacy recovery; denied/stale answers never authorize work |
+| Standard order/create-only tasks | Standard spec → complete same-session spec review/fix → one plan → plan review/fix → create-only tasks → independent overall review; unchanged causal stage/removal/order assertions |
+| Helper ownership | Planner plan_create and helper Planner Standard adapter contract propagate exact selected Sol/medium, one entire pass and no duplicate creation; standalone policies explicitly cannot override manager |
+| Writes/research | Planner Selected production/research paragraphs and helper Preflight/Planner Boundary retain separate bounded documentation permission, no arbitrary edits/code, research/approval stops |
+| Task checkpoints/retries/final review | Shared task-commit link unchanged; coordinator contract unchanged and causal mutation coverage retained for checkpoints, inspected failure and fresh final review |
+| Six factors/profile evidence | Shared seed's original table unchanged: residual reasoning; agentic/tool depth; verification blind spots (weakest unobservable failure); scope/coupling; failure cost/reversibility; approved guidance or none. All three consumers link this owner and require independent family/effort rationale, exact owner selection, runtime support, unchanged dispatch and unknown observed values. Planning never inherits implementation quotas/REQUIRED rules |
+
 Limits: baseline checks do not accept the proposed implementation; static/simulated checks cannot prove model obedience; no paid/live probes. Untracked .env and docs/plans/mandatory-task-commits.md untouched. No delegated attempt or failed child. Reflection: no guideline update proposed; semantic validation limits are explicit source constraints, not newly learned project policy.
