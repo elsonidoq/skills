@@ -77,10 +77,14 @@ rules above for reusable skills and commands.
   index first, then only matching entries; recheck it after writes. Do not substitute
   global memory. The separate mandatory coordination store is `memory/coordination/`:
   its approved guidelines and indexed factual run evidence obey their own shared contract.
-- State: pi sessions record the conversation. No temporary current-execution state
-  document is declared here; if one is later adopted, keep only current execution truth
-  and replace its current block rather than accumulate history. `docs/open_issues.md` is
-  the canonical unresolved-work register via `track-open-issue`.
+- State: project-root `STATE.md` holds BRIEF project-owned current truth, not a
+  coordinator-owned tracker. Coordinator maintains implementation-relevant current state;
+  `finish-session` reconciles the same snapshot. Follow the coordinator's
+  [snapshot/recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery):
+  replace current truth, link authoritative approvals/tasks/checkpoint evidence, preserve
+  custom/unrelated content, and reconcile Git/ownership/active runs before continuation.
+  No growing ledger or duplicate evidence. Pi sessions record the conversation;
+  `docs/open_issues.md` is the canonical unresolved-work register via `track-open-issue`.
 - Documentation: `docs/index.md` is the routing guide and root directory index;
   `docs/plans/index.md` and `docs/plans/reviews/index.md` map their direct files.
   `README.md` owns setup/workflow, `REQUIREMENTS.md` runtime requirements,

@@ -8,6 +8,9 @@ description: Use when implementing or resuming approved work from a reviewed tas
 Implement reviewed tasks in dependency order while preserving artifact provenance,
 integration safety, and evidence. Work in the selected workspace; do not regenerate
 planning artifacts as a substitute for resolving implementation blockers.
+On compaction, restart or uncertain execution context, first read the project snapshot under
+Brief Current State and Recovery to locate intake pointers; then run Load and Verify and the
+full reconciliation below before continuation. Snapshot pointers are not authorization.
 
 ## Load and Verify
 
@@ -94,6 +97,86 @@ command is unavailable, report
 `SpecKit implementation: UNAVAILABLE` and execute the reviewed tasks directly from
 their contracts. If a prerequisite checker is unavailable, perform direct artifact
 and path checks and label the scripted check `UNAVAILABLE`.
+
+## Brief Current State and Recovery
+
+`STATE.md` is project-owned temporary **current state**, not a coordinator-owned tracker.
+During implementation the coordinator maintains implementation-relevant current truth there;
+other authorized workflows, including `finish-session`, use the same snapshot. Resolve the
+selected project root, never the global skill path. Reuse an explicitly declared project-local
+equivalent; otherwise default to root `STATE.md`. A project prohibition or conflicting location
+blocks adoption, not a second file. Preserve unrelated/custom content and headers: replace only
+an understood current-execution block. For an existing ambiguous/custom file, show proposed
+bounds and obtain owner approval before using it; never silently repurpose it. Reject paths
+outside the selected project (including symlink escapes), unreadable/non-file collisions or
+unverified project roots; report the exact blocker rather than overwrite or choose a fallback.
+
+Keep the execution snapshot BRIEF: a handful of short bullets/pointers (normally no more than
+ten), omitting inactive/irrelevant fields. Include active execution/run ID; approved source,
+tasks and current approval references; current batch/task and concise progress; latest verified
+checkpoint SHA and evidence pointer; active delegated run IDs/status or explicit none/unknown;
+current blocker/owner gate; and the exact next safe action. Reference the authoritative execution
+plan/task artifacts, approvals, Git and coordination evidence instead of copying their contents.
+The snapshot conveys no authorization or acceptance. Replace current truth in place; never
+append historical ledgers, transcripts, completed-task history, full check logs or duplicate evidence.
+
+Establish the snapshot after authorization/preflight and before execution, including before
+any delegated dispatch. Reuse the coordination run ID. Refresh at meaningful transitions:
+dispatch intent and returned run identity, verified task/batch checkpoint, blocker/owner gate,
+review/repair transition and completion. Do not depend on advance compaction notification.
+While a sequential worker runs, retain its ID, last audited checkpoint and the next action
+"inspect this run, then audit its returned checkpoints"; do not imply its internal progress is
+already accepted. Record a returned child ID immediately, even while the child is running.
+Delegated briefs exclude snapshot writes to prevent competition; another authorized workflow
+may update it only across an explicit non-overlapping write boundary, not by racing this writer.
+
+### Recovery before continuation
+
+After compaction, restart or uncertain execution context, before any task write or dispatch:
+
+1. Read the current snapshot, including its custom ownership/location constraints.
+2. Locate and validate approved source/tasks, approval references and current authorization
+   through Load and Verify; state labels and a remembered approval are not proof.
+3. Reconcile its recorded checkpoint with current Git HEAD, actual diffs, index/worktree
+   ownership and verification/evidence references. State may lag committed work. Inspect task
+   and distinct evidence commits; recover missing evidence checkpoints only from verified facts.
+4. Inspect every recorded delegated run and invocation through the runtime before dispatching,
+   resuming or replacing work. A running child means inspect/wait, not duplicate dispatch;
+   unknown status or a dispatch intent without a recorded ID requires runtime reconciliation.
+   Check for unrecorded active dispatches too; a stale snapshot's "none" is not runtime proof.
+   Missing runtime evidence stops replacement. Failed runs retain the inspected-cause/profile gates.
+5. Continue only with the exact next action supported by reconciled current state, then refresh
+   the snapshot. Conflicts, missing evidence, partial task-owned changes or uncertain child status
+   require reconciliation or a precise stop, never guessed completion, blind retry or cleanup.
+
+Missing state never means no progress or no active child. Recover from authoritative artifacts,
+Git, verification and runtime evidence where possible before establishing a snapshot; otherwise
+report the exact blocker. Do not fabricate progress, repeat commits or redispatch unknown work.
+
+### Writes and checkpoint ordering
+
+Record the initial state as a bounded evidence checkpoint before retained task writes/dispatch.
+For local tasks, preserve focused task commit → separate run-summary/index evidence checkpoint;
+include the refreshed snapshot in the latter. Snapshot pointers name already verified task/evidence
+commits, not the commit containing their own update. Never chase a snapshot's own SHA with another
+commit. Dispatch intent is checkpointed before launch; the returned ID is written immediately and
+checkpointed at the next safe coordinator evidence boundary. A pending snapshot write is understood
+coordinator-owned dirtiness, explicitly outside worker task/evidence paths, not unknown task work.
+Do not race Git/index commits with an active writer: workers still make every internal task/evidence
+checkpoint without coordinator waits; the coordinator commits its pending snapshot at the batch
+boundary after the writer is terminal and its checkpoints have been audited. Read-only review runs
+permit coordinator-only evidence commits when no other writer owns those paths/index.
+
+No state commit after every tool call and no new per-task tracker or Git-policy exception. At a
+blocked pause, review/repair transition or completion, verify and checkpoint the state with bounded
+evidence before handoff/reporting; completion replaces active progress with a short terminal
+disposition and next action, not a completed-work summary. Preserve existing dirty state unless its
+exact ownership/content is established and overlap authorized; never adopt another writer's edits.
+Re-read/compare the intended block before each update and inspect diff/ownership before staging;
+concurrent drift, same-file ambiguity, write/check/commit failure stops affected work with the exact
+blocker. Preserve recoverable work. If an active child exists, report the persistence failure and
+its ID/status, inspect it and arrange a safe pause; do not launch replacement or claim persistence.
+On resume reconcile pending state/evidence and any partially completed commits before continuing.
 
 ## Execution Capability Preflight
 
@@ -343,9 +426,10 @@ For each task, whether local or inside a delegated batch:
    checks before releasing dependents; justify additions by a concrete changed-seam risk
    and apply the acceptance/approval boundary above.
 6. Update task completion and decisions in the project's existing artifact format.
-   If none exists, update the task list; do not invent a state-file convention.
+   If none exists, update the task list; the brief current-state snapshot only points to it.
 7. Update the execution tracker to reflect the batch's verified outcome and the
-   next dependency-ready batch.
+   next dependency-ready batch. Refresh the snapshot at the coordinator's verified boundary
+   under Brief Current State and Recovery; workers return evidence rather than writing it.
 8. Commit each task's verified changes as one focused commit before starting the next task.
    Task commits are required checkpoints, not a reason to split a coherent batch or launch a
    new session.
@@ -486,6 +570,8 @@ the contract manually rather than claiming automated validation.
 
 ## Finish
 
+Reconcile and checkpoint the brief snapshot's terminal disposition or precise blocker and next
+safe action under Brief Current State and Recovery; `finish-session` preserves that same lifecycle.
 Return completed and pending tasks, changed files, per-task commits, checks and results, integration
 status, unresolved owner gates, unavailable capabilities, and the next
 dependency-ready action. State separately whether implementation is complete and

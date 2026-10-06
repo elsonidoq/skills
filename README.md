@@ -115,6 +115,25 @@ unrelated planning/reviewer selections remain separate from implementation selec
 Static/symbolic fixtures demonstrate contracts, not live model performance or obedience;
 live support/callability checks require separate permission and usable runtime capabilities.
 
+## Brief current state
+
+During approved execution, coordinator maintains implementation-relevant current truth in
+project-owned root `STATE.md` (or an explicitly declared project-local equivalent).
+This is a **brief snapshot**, not a coordinator-owned tracker: short current-work/run,
+authorization/checkpoint/evidence pointers, active workers, blocker and exact next action.
+Replace current truth; no transcripts, logs, completed-task ledger or accumulated history.
+Preserve custom/unrelated content and coordinate write boundaries with other workflows.
+`finish-session` reconciles the same snapshot, retaining only a concise terminal disposition
+and next action when complete. Task artifacts, approvals, Git and coordination evidence stay
+authoritative; state confers no authorization or acceptance.
+
+After compaction/restart/uncertainty, read state and revalidate approval, Git/ownership,
+verification evidence and recorded children before continuing. Stale/missing state requires
+reconciliation or a precise stop, never fabricated progress or duplicate dispatch. See the
+[coordinator lifecycle and recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery)
+for bounded evidence commits, safe active-worker persistence and failure handling. No runtime
+compaction hook or live robustness claim is implied.
+
 ## Project coordination memory
 
 Every run uses project-local coordination files through the

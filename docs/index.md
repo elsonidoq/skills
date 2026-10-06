@@ -20,6 +20,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Model-routing benchmark evidence and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md); keep the source record discoverable as project guidelines evolve. [Batch Routing Contracts Research](../specs/002-batch-routing-contracts/research.md) owns the newer batch-only seed evidence and runtime limitations |
 | Required project-local coordination guidelines, selective history and reviewed feedback | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
+| Brief project-owned current state and implementation recovery | [Coordinator snapshot/recovery contract](../skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery); this project's snapshot is root [STATE.md](../STATE.md), not a history/authorization owner |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
 
 This repository's marked [Coherence adoption contract](../AGENTS.md) associates its

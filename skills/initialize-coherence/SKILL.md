@@ -124,9 +124,17 @@ and `compact-memory` can cite it. Record:
   owner-chosen paths remain valid. Follow `memory-handling` trigger-first retrieval:
   Read the whole index first, then trigger-matching entries. Recheck after any memory
   write. No global-store substitution.
-- State: temporary current-execution state only when the project uses one (commonly
-  root `STATE.md`), pi sessions as the conversation record, and `docs/open_issues.md`
-  as the canonical unresolved-work register via `track-open-issue`.
+- State: project-owned BRIEF current truth, not a coordinator-owned tracker. Record
+  the coordinator default root `STATE.md` or preserve an explicitly declared project-local
+  equivalent. Coordinator maintains implementation-relevant current truth before execution/
+  dispatch and at meaningful transitions; `finish-session` reconciles that same snapshot.
+  Link the [snapshot/recovery contract](../coordinate-implementation/SKILL.md#brief-current-state-and-recovery):
+  replace current truth, no accumulated history, authorization/evidence remain authoritative.
+  Preserve custom/unrelated state content; collision, dirty overlap or unclear bounds require
+  explicit approval, never silent repurposing. Adoption records the location/lifecycle, not
+  fabricated progress or a placeholder snapshot; coordinator establishes it after preflight.
+  Keep pi sessions as the conversation record and `docs/open_issues.md` as the canonical
+  unresolved-work register via `track-open-issue`.
 - Documentation: Record documentation owners and the documentation-routing guide
   discovered here.
 

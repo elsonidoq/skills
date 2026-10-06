@@ -101,7 +101,14 @@ keep attempts and corrections distinguishable, update current disposition and in
 without erasing observations or prior runs. Persist every run's evidence in the initialized
 project-local store; an execution handoff may link it, never replace it. If an evidence write
 fails, report the blocker and stop affected work, not a successful persistence checkpoint.
-Evidence-write authority is not guideline authority.
+Evidence-write authority is not guideline authority. The project-owned brief current-state
+snapshot (`STATE.md` by default) is separate from this append-oriented factual evidence:
+[coordinator snapshot/recovery](../../coordinate-implementation/SKILL.md#brief-current-state-and-recovery)
+owns its execution update lifecycle. State links run/checkpoint evidence without copying it;
+it is neither another coordination store nor an authorization record. Exclude state writes
+from delegated worker evidence scope; coordinate explicit write boundaries with other workflows.
+State updates join bounded coordinator evidence checkpoints under that lifecycle; internal
+worker task/evidence checkpoints remain uninterrupted and independently audited on return.
 
 At task/attempt checkpoints, record task ID/type, areas/tags, residual reasoning when
 assessed, selected capability role, exact selected and observed profile (binding plus

@@ -44,7 +44,7 @@ documentation owners and indexes exist.
 
 - Start with `git status --short`, `git diff --name-status`, and `git diff --cached --name-status`. From those summaries, inspect full diffs and relevant untracked files only for paths attributable to this session; neither diff command includes untracked contents. Treat pre-existing or unattributable changes as out of scope and report the uncertainty.
 - Record each prospective target's initial dirty state and content before editing. Do not edit a target that was already dirty unless the user explicitly approves that overlap. Re-read and compare it with the recorded content immediately before applying a patch; if it changed concurrently, stop and report the conflict.
-- Do not discard, stage, commit, or rewrite unrelated work. Limit edits to closeout documentation, issue or deployment records, and a verified project memory store. Do not modify application code, tests, generated application assets, or completed implementation artifacts.
+- Do not discard, stage, commit, or rewrite unrelated work. Limit edits to closeout documentation, issue or deployment records, a verified project memory store, and the attributable current-state block in Step 6. Do not modify application code, tests, generated application assets, or completed implementation artifacts.
 - Verify a durable claim against its primary artifact: code, configuration, schema, generator output, or external source explicitly configured by the repository. Never record an unverified claim as current truth.
 - Do not write credentials, tokens, personal data, or sensitive payloads. Use redacted placeholders such as `$SERVICE_TOKEN`.
 - Do not execute deployment procedures. Do not invent deployment commands, rollback steps, or environment state. Record an unknown or verification gap instead.
@@ -140,13 +140,30 @@ has been inspected for dirty-target and concurrent-edit protection. Record its p
 and compare them immediately before invoking it. When no such compactor is available, report `compaction needed`
 with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
 
-## Step 6: Update the Temporary Execution State, Only When One Exists
+## Step 6: Reconcile Brief Current State
 
-Enter this step only when repository instructions identify a temporary current-execution state document (a common convention is root `STATE.md`); otherwise report `not needed`. Treat the document as temporary only: its current block is rewritten, never appended to.
+Use the same project-owned snapshot maintained by `coordinate-implementation`, not a closeout
+tracker. Follow its [Brief Current State and Recovery](../coordinate-implementation/SKILL.md#brief-current-state-and-recovery)
+contract for location, recovery, write bounds and checkpoint ordering. Reuse a declared project-local
+equivalent; otherwise root `STATE.md` is the coordinator default. When no execution snapshot exists
+and no project instruction requires one, report `not needed`; closeout alone does not fabricate
+implementation progress or initialize a competing file. If required state is missing, reconcile
+authoritative artifacts/Git/runtime evidence first or report the exact blocker.
 
-Rewrite that document's current-execution block so it states, for this session only: the active work stream and its exact next action; the commands actually run and their observed results; current blockers, gates and working-tree/branch state; and the one-line map of durable-fact owners preserved from its header. Record unknown or unverified items as `unknown`; never mark an unrun check as passed.
+Keep the current block BRIEF: replace active progress with a concise terminal disposition and exact
+next safe action, or retain paused work, active run/child IDs and its blocker/gate. Link approved
+source/tasks/approval and latest verified checkpoint/evidence where relevant; no commands/results
+catalogue. Record unknowns honestly; unrun checks never pass. Reconcile any active child before
+claiming completion; unresolved review/acceptance remains a gate, not a successful terminal state.
+Preserve custom headers, unrelated current-state content and durable-owner pointers. Do not erase
+surplus historical content or migrate it into docs/memory without separately approved scope.
 
-Do not put durable facts, completed-work summaries, file inventories, per-task ledgers, or session history there: those route to Step 3 owners (documentation, `docs/open_issues.md`, memory) or belong to git. If the document already holds more than its current execution, that surplus is git-owned history — do not migrate it into documentation or memory. Apply the base workflow's dirty-target, concurrent-edit and unrelated-target protections.
+Apply the base dirty-target, concurrent-edit and unrelated-target protections. Coordinate explicit
+non-overlapping write responsibility with any active coordinator; never compete to write the file.
+Verify and checkpoint an authorized update with bounded closeout evidence before reporting/handoff,
+referencing already verified commits, never its own commit. Failed writes/checkpoints or ambiguous
+ownership stop affected closeout. Do not append history, completed-task ledgers, transcripts, full
+logs, file inventories or duplicate verification evidence.
 
 ## Step 7: Validate Only What You Changed
 

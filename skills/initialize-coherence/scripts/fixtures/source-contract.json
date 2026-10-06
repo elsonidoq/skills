@@ -168,15 +168,19 @@
           "end": 47
         }
       ],
-      "behavior": "Conditional state and conversation/unresolved registers",
+      "behavior": "Brief project-owned current state and conversation/unresolved registers",
       "stage": "Adoption",
-      "ownership_change": "none; preserve source behavior",
+      "ownership_change": "Owner-approved brief-current-state change supersedes the conditional state default; historical source bytes remain immutable. Current acceptance requires project-owned state, declared equivalents and no fabricated progress.",
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_state_preserved",
       "negative": "test_state_rejects_deleted_guard",
-      "evidence": "PASS: test_state_preserved and test_state_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
+      "evidence": "Current acceptance amended by the approved 2026-10-06-brief-current-state run; source snapshot and citations retain original provenance. Positive/deletion checks validate the revised state guards, not runtime obedience.",
       "requires": [
-        "temporary current-execution state only when the project uses one (commonly root `STATE.md`)",
+        "project-owned BRIEF current truth, not a coordinator-owned tracker",
+        "coordinator default root `STATE.md`",
+        "preserve an explicitly declared project-local equivalent",
+        "replace current truth, no accumulated history",
+        "not fabricated progress or a placeholder snapshot",
         "pi sessions as the conversation record",
         "`docs/open_issues.md` as the canonical unresolved-work register via `track-open-issue`"
       ]

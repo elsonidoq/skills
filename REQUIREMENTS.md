@@ -114,6 +114,19 @@ may override the seed, never source/owner permissions; raw outcomes never mutate
 No new store, schema, ML or automatic model optimization is introduced. Runtime pins and
 stage workflow/approval boundaries remain unchanged.
 
+## Brief current-state contract
+
+Coordinator maintains BRIEF implementation-relevant current truth in project-owned root
+`STATE.md`, or a declared project-local equivalent, through its
+[snapshot/recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery).
+It is not a coordinator-owned tracker or authorization record. Initialization records that
+lifecycle without fabricated progress; finish-session reconciles the same snapshot. Preserve
+custom content/write ownership, replace current truth rather than append history, and recover
+from authoritative approval/Git/evidence/runtime state before continuation. Updates use bounded
+coordinator evidence checkpoints without changing mandatory worker task/evidence commits.
+Write/ownership/checkpoint failures stop affected work. No compaction hook, persistence framework,
+runtime/settings change, dependency, automatic restart or live provider exercise is required.
+
 ## Project docs
 
 `docs/open_issues.md` holds the canonical register of unresolved work

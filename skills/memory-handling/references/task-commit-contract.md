@@ -83,6 +83,14 @@ and recover a successful reported SHA without duplicating it. Inspect a failed a
 retry or escalation. Later defects require dependency analysis and separate verified correction
 tasks, never automatic rollback.
 
+The brief project-owned current-state snapshot follows the
+[coordinator snapshot/recovery lifecycle](../../coordinate-implementation/SKILL.md#brief-current-state-and-recovery),
+not a new task ledger. Include coordinator state updates in bounded evidence checkpoints;
+reference already verified task/evidence commits, never recursively commit a snapshot's own SHA.
+A returned child ID is written immediately; pending coordinator-owned state is explicitly excluded
+from worker paths and committed at the safe coordinator boundary, never by racing the worker's
+Git/index. This does not waive any internal task/evidence checkpoint, ownership check or failure stop.
+
 Operational assertions can check instructions, and temporary-Git fixtures can demonstrate Git
 protocol cases such as scoped commits, hook failures and unrelated-work preservation. Neither
 proves that an unrestricted model obeys instructions at runtime.
