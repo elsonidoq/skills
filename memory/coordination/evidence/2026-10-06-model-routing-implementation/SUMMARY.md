@@ -32,3 +32,7 @@ Worker run `c60908b1-1653-4566-94b0-eeb3931c7e1b` resolved to `openai-codex/gpt-
 ## T003 checkpoint / batch return
 
 [T003.md](T003.md): baseline evidence `e98b68d`; VERIFIED product `01e86f35cdc083888efe24db7dfd151de625b512`; six paths (bounded brainstorming regression overlap authorized), 84 planner / 25 memory / 4 brainstorming tests and 22-skill lint PASS. T002 bounded shared-checker seam resolved; coordinator bytes/digest deliberately unchanged with safety comparison. Product/evidence ordering: T002 `bb4d5fa` → evidence `e98b68d` → T003 `01e86f3` → distinct evidence checkpoint. Tracked worktree/index clean after checkpoints; protected untracked paths untouched. Parent audit and independent reviewer pending; T004 not started. `/reload` required after accepting skill updates.
+
+## RF001 coordinator review fix
+
+[RF001.md](RF001.md): coordinator identified obsolete source-dependent diagnostic filtering after T003 migration. Baseline `809478b1817380048f4ce6c239374f80ac34c693`; VERIFIED one-path product `868f20e750052d27d5b96b44d5913211fd213539` removes only the temporary helper and restores both direct checker calls. All guards retained; memory 25 tests, planner checker and planner 84 tests plus scoped diff PASS. Resumed Sol 6.1/medium label verified. Separate evidence-only checkpoint precedes handoff; parent audit pending, no blocker, T004 not started. Protected untracked files untouched.
