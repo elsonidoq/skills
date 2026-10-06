@@ -349,6 +349,14 @@ ordered checkpoint list at batch completion. At the batch boundary, the coordina
 checks every task's actual diff, focused SHA, check evidence and residual task-owned changes
 before accepting the batch or releasing external dependents; a report, clean tree or commit
 existence is insufficient. It rejects combined, empty-success or unauthorized commits.
+For cheap batch acceptance, validate every REQUIRED item against consistent concrete outputs:
+check the union is complete, results match command exits and observables, referenced outputs exist,
+and inspected per-task diffs stay within owned scope. Missing, failed, contradictory, unauthorized
+or unrun REQUIRED evidence blocks acceptance; unmet manual/permission gates block acceptance and
+dependent release. Optional checks cannot compensate for missing required proof. Keep affected
+external dependents pending until the invalid evidence or gate is resolved and reverified.
+A passing contract needs no mandatory strong-model per-batch reviewer; the fresh independent final
+review over the complete committed range below remains required and is not replaced by this audit.
 Failed checks/commits/evidence persistence, unexpected changes and genuine owner/dependency
 gates still stop internal continuation and return a blocker. Local execution keeps the same
 per-task commit and verification boundary without adding a supervisor round trip.

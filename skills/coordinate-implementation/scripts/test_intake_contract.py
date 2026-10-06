@@ -85,6 +85,14 @@ class IntakeContractTests(unittest.TestCase):
             self.assertIn(phrase, TEXT)
         self.assertNotIn("selection for each class", TEXT)
 
+    def test_invalid_evidence_stops_release_without_adding_batch_review(self):
+        normalized = " ".join(TEXT.split())
+        self.assertIn("unmet manual/permission gates block acceptance and dependent release", normalized)
+        self.assertIn("no mandatory strong-model per-batch reviewer", normalized)
+        self.assertIn("one fresh independent final review", normalized)
+        self.assertIn("full committed revision range", normalized)
+        self.assertIn("not an implementation session", normalized)
+
     def test_origin_neutral_downstream_references(self):
         self.assertIn("applicable source/supporting artifacts", TEXT)
         self.assertNotIn("Review accumulated changes against the spec, plan, tasks", TEXT)

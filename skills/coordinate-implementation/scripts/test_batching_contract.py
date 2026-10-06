@@ -218,5 +218,108 @@ class SimulatedUnionReturnTests(unittest.TestCase):
         self.assertTrue(returned["items"]["T006/V1"]["reason"])
 
 
+def simulated_audit(brief, returned):
+    """Bounded acceptance oracle for sample artifacts, not production enforcement."""
+    expected = {item["ref"] for item in brief["required_union"]}
+    if set(returned["items"]) != expected:
+        return "blocked"
+    for item in brief["required_union"]:
+        result = returned["items"][item["ref"]]
+        output = returned["outputs"].get(result.get("evidence"))
+        if (result.get("status") != "pass" or not output
+                or output.get("command") != item["check"]
+                or output.get("exit") != 0
+                or output.get("observable") != "both invariants satisfied"
+                or not all(returned["gates"].get(item["ref"], {}).get(gate)
+                           for gate in ("manual", "permission"))):
+            return "blocked"
+    allowed = {path for task in brief["tasks"] for path in task["owned_paths"]}
+    if not set(returned["files"]).issubset(allowed):
+        return "blocked"
+    checkpoints = returned["checkpoints"]
+    if [cp["task"] for cp in checkpoints] != [task["id"] for task in brief["tasks"]]:
+        return "blocked"
+    for task, cp in zip(brief["tasks"], checkpoints):
+        if (cp["baseline"] != task["baseline"] or not cp.get("result")
+                or not cp.get("evidence_checkpoint") or not cp.get("diff_inspected")
+                or not cp.get("focused_scope")):
+            return "blocked"
+    return "accepted"
+
+
+def audited_sample(selected="symbolic/luna:medium"):
+    brief, returned = sample_batch_contract(selected)
+    returned["observed_profile"] = selected  # simulated reported observation, not request inference
+    returned["gates"] = {item["ref"]: {"manual": True, "permission": True}
+                         for item in brief["required_union"]}
+    for cp in returned["checkpoints"]:
+        cp.update(diff_inspected=True, focused_scope=True)
+    return brief, returned
+
+
+class SimulatedAcceptanceTests(unittest.TestCase):
+    """Offline Luna success and negative evidence cases; no live performance claim."""
+
+    def test_cheap_acceptance_instruction_carriers(self):
+        for phrase in (
+            "validate every REQUIRED item against consistent concrete outputs",
+            "Missing, failed, contradictory, unauthorized or unrun REQUIRED evidence blocks acceptance",
+            "unmet manual/permission gates block acceptance and dependent release",
+            "Optional checks cannot compensate", "no mandatory strong-model per-batch reviewer",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, " ".join(TEXT.split()))
+
+    def assert_complete_accepted(self, selected):
+        brief, returned = audited_sample(selected)
+        self.assertEqual(simulated_audit(brief, returned), "accepted")
+        required = {item["ref"] for item in brief["required_union"]}
+        passed = {ref for ref, result in returned["items"].items() if result["status"] == "pass"}
+        self.assertEqual(passed, required)  # 100% REQUIRED evidence
+        self.assertEqual(brief["selected"], selected)
+        self.assertEqual(returned["observed_profile"], selected)
+        self.assertTrue(all(cp["diff_inspected"] for cp in returned["checkpoints"]))
+        self.assertEqual(len(returned["checkpoints"]), 2)
+        self.assertNotIn("reviewer", returned)  # accepted without a strong per-batch reviewer
+
+    def test_simulated_luna_medium_accepted_without_strong_reviewer(self):
+        self.assert_complete_accepted("symbolic/luna:medium")
+
+    def test_simulated_luna_max_accepted_preserves_max(self):
+        self.assert_complete_accepted("symbolic/luna:max")
+
+    def test_invalid_required_evidence_blocks_dependent_release(self):
+        for case in ("removed item", "removed output", "failed", "contradictory", "unrun",
+                     "unauthorized scope", "manual gate", "permission gate",
+                     "missing checkpoint", "uninspected diff", "unfocused checkpoint"):
+            with self.subTest(case=case):
+                brief, returned = audited_sample()
+                if case == "removed item":
+                    del returned["items"]["T006/V1"]
+                elif case == "removed output":
+                    returned["outputs"].clear()
+                elif case == "failed":
+                    returned["items"]["T006/V1"]["status"] = "fail"
+                elif case == "contradictory":
+                    returned["outputs"]["shared-output"]["exit"] = 1  # pass report contradicted
+                elif case == "unrun":
+                    returned["items"]["T006/V1"].update(status="not_verified", evidence=None,
+                                                        reason="check not run")
+                elif case == "unauthorized scope":
+                    returned["files"].append("outside/owned-scope.md")
+                elif case in ("manual gate", "permission gate"):
+                    returned["gates"]["T006/V1"][case.split()[0]] = False
+                elif case == "missing checkpoint":
+                    returned["checkpoints"].pop()
+                elif case == "uninspected diff":
+                    returned["checkpoints"][1]["diff_inspected"] = False
+                else:
+                    returned["checkpoints"][1]["focused_scope"] = False
+                disposition = simulated_audit(brief, returned)
+                self.assertEqual(disposition, "blocked")
+                release_dependents = disposition == "accepted"
+                self.assertFalse(release_dependents)
+
+
 if __name__ == "__main__":
     unittest.main()
