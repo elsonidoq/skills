@@ -1,13 +1,31 @@
-# Batch-level routing planning — factual run evidence
+# Batch routing planning — compact evidence
 
-Date: 2026-10-06. Areas/tags: planner, batch routing, verification contracts, coordination integration.
+Date: 2026-10-06. Tags: Standard planning, batch routing, verification contracts.
+**Disposition:** overall review READY; owner approved T001–T010 implementation `4aaab33`, resolving earlier pending states (planning approval alone did not). [Implementation reflection](../2026-10-06-batch-routing-implementation/SUMMARY.md): no guideline change.
 
-- Owner selected Standard and directed use of GPT-6.1 Sol for planning; current parent session reported `openai-codex/gpt-6-sol`/medium, so actual parent profile was **not** 6.1 Sol. Claude Sonnet/Claude Code attempts failed due disabled Claude subscription; no retry was made on that provider. Owner selected the different Sol profile explicitly; delegated plan worker requested `openai-codex/gpt-6.1-sol:medium` (actual child-reported execution effort has not been independently inspected, so actual is unknown).
-- New source `specs/002-batch-routing-contracts/spec.md` and checklist committed `5d0fc66` after structural checks. Owner approved current digest `1b4d5b90ac1e1429739e5260d0955716d125a1b4ae8430141e89b610eacd9895` at specification-to-planning gate; approval recorded `3d33a02`. This is not implementation approval.
-- Targeted supplied-CSV/runtime research `specs/002-batch-routing-contracts/research.md` committed `dc62fa3`; no live model benchmark or authenticated routing probe. Previous project guidelines were empty; no gotcha-memory association is declared.
-- Planning worker baseline `dc62fa3`, requested profile `openai-codex/gpt-6.1-sol:medium`, selected role planner/writer, approved Standard plan stage. Returned plan/data-model/quickstart and additive docs research link in focused commit `c0be379743b1682a27db2aa47aded280d4623885`; 4 paths, 253 insertions/1 deletion. Parent inspected commit scope and content. Reported checks: 61 local links, digest, placeholders, FR coverage, index preservation and `git diff --check` PASS. `git diff HEAD^ HEAD --check` independently PASS; clean worktree. No implementation checks or independent overall review yet.
-- Supervisor authorized plan worker to leave factual coordination checkpoint to parent because its write scope excluded memory evidence. Evidence-only checkpoint `5b0e804` followed plan commit before task production.
-- Task producer baseline `5b0e804`, requested `openai-codex/gpt-6.1-sol:medium`, actual observed profile not independently confirmed. Created only `specs/002-batch-routing-contracts/tasks.md` (10 tasks, SHA-256 `02f3fc611877bd54aaf709f3c92e15fff884b7a82be2dfca275313c60861977e`) in focused commit `c69f6f886751ff9cd826e8fd09bb204ef1240cf8`. Creation-only format/ordering assertions and task-order validator PASS, committed diff whitespace PASS; overall independent review and final implementation approval pending. T003 scope and T010 review boundary flagged by producer for planner review. No implementation or live profile tests run.
-- Independent Standard overall review (fresh reviewer requested `openai-codex/gpt-6.1-sol:medium`, actual effort not independently confirmed) found one blocking contradiction: tasks instructed an intermediate US1 stop despite coordinator's all-batches default. T003 breadth/T010 independent review were checked and not blocking. Parent corrected only `tasks.md` strategy sentence in focused review-fix commit `1996210`; `check-task-order.py`, targeted wording assertion and diff whitespace PASS. New task digest `71c4e3c785fa3be822d73c3f83db39c31fd4c9e78ecf5e8faea5ccdb00f8728f`. Independent follow-up and final approval pending.
-- Subagent status confirms plan/task producer and reviewer runs used `gpt-6.1-sol` thinking `medium`; earlier unknown actual-effort statements above were pre-status uncertainty, now resolved for those observed runs (not for parent spec/research work). Same independent reviewer rechecked corrected task against coordinator and returned READY; reviewed evidence recorded `specs/002-batch-routing-contracts/overall-review.md` at `f7b151c`. Current source/plan/tasks digests verified by parent; implementation approval still pending.
-- Planning observations alone do not propose a reusable project guideline; implementation/verification reflection remains pending. No guideline changed.
+## Profiles, bounds and approvals
+
+Owner selected Standard/GPT-6.1 Sol, replacing active Sonnet/Opus assignment classes. Parent: `openai-codex/gpt-6-sol:medium`, **not** 6.1 Sol. Claude Sonnet/Claude Code attempts failed (disabled subscription), no provider retry; exact failed model/effort unrecorded. Owner selected different Sol profile. Planner/writer, task producer and fresh reviewer requested `openai-codex/gpt-6.1-sol:medium`; later subagent status confirmed `gpt-6.1-sol`, thinking `medium`, resolving earlier unknowns for those runs only, not parent spec/research.
+
+Empty guidelines/no declared gotcha-memory association. Supplied-CSV/runtime research, no live benchmark/authenticated probe; structural/manual checks are not callability/obedience/feature evidence. Read-only reviewer ran no shell/live probes or independent digest/benchmark recomputation; parent verified digests/Git state.
+
+## Checkpoint / attempt ledger
+
+Unrecorded baselines remain unknown; result/evidence SHAs are distinct.
+
+| Stage | Baseline → result; evidence | Checks / outcome / exception |
+| --- | --- | --- |
+| Specification | unknown → `5d0fc66`; approval `3d33a02` | Spec/checklist structural PASS; exact spec-to-plan approval, **not** implementation. Historical source 001 does not authorize changed scope. |
+| Research | unknown → `dc62fa3` | Bounded supplied-CSV/runtime material; no live profile test. |
+| Plan | `dc62fa3` → `c0be379`; evidence `5b0e804` | Plan/data-model/quickstart + research link, 4 paths (+253/−1). Worker: 61 links/digest/placeholders/FR coverage/index preservation/whitespace PASS; parent inspected scope/content, reran committed whitespace/clean state. Supervisor authorized parent checkpoint: worker scope excluded memory. |
+| Tasks | `5b0e804` → `c69f6f8`; evidence `2766e5f` | Only tasks.md, 10 tasks; creation-only format/order + validator/whitespace PASS. Producer flagged T003 breadth/T010 review boundary, neither blocking. |
+| Review / fix | `c69f6f8` → `1996210`; evidence `74c99af` | BLOCK: intermediate US1 stop vs all-batches default. Parent changed only strategy sentence; order/targeted assertion/whitespace PASS. FR-001–FR-011, dependencies/item refs, benchmark limits/memory reuse non-blocking. |
+| Recheck / approval | `1996210` → `f7b151c`; evidence `95d3480` | Same reviewer READY/no new issue. Parent verified digests; owner approved `4aaab33`: conditional usable Sol/medium implementation + fresh reviewer, no partial boundary. |
+
+Specification SHA-256: `1b4d5b90ac1e1429739e5260d0955716d125a1b4ae8430141e89b610eacd9895`. Original task digest: `02f3fc611877bd54aaf709f3c92e15fff884b7a82be2dfca275313c60861977e`; corrected: `71c4e3c785fa3be822d73c3f83db39c31fd4c9e78ecf5e8faea5ccdb00f8728f`. Plan digest/bounds: [implementation approval](../../../../specs/002-batch-routing-contracts/implementation-approval.md); [spec gate](../../../../specs/002-batch-routing-contracts/spec-approval.md). Fresh/recheck reviewer run IDs and limitations: [overall review](../../../../specs/002-batch-routing-contracts/overall-review.md).
+
+## Reflection and historical retrieval
+
+**No update proposed** from planning; no inferred guideline approval. Implementation approval excludes live comparison/deployment/push/paid service/automatic guidance/historical-spec changes; changed approved content requires re-review/renewal.
+
+Only these two historical compactions owner-approved. Original pending/unknown observations: `f17244a5ef28c68256ff8f6ac09dcf058c282d90`: `git show f17244a:memory/coordination/evidence/2026-10-06-batch-routing-planning/SUMMARY.md`.
