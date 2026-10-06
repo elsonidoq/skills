@@ -27,18 +27,21 @@ ATTEMPT_N_RUNNING
   -> FAILED_INSPECTION (required check, reviewer finding or later defect)
   -> BLOCKED_UNKNOWN (failed invocation/cause or execution status unavailable)
 
-FAILED_INSPECTION
+FAILED_INSPECTION (even on final Sol / exhausted attempt or unavailable successor)
   -> EVIDENCE_CHECKPOINTED_BEFORE_MUTATION (cause, baseline, ownership,
      intended task commit/inverse, dependencies, permission and remaining budget)
   -> FAILED_ATTEMPT_COMMIT (only if task-owned changed content not already committed;
      label NOT VERIFIED; failed checks explicitly recorded)
+  -> FAILURE_SHA_AND_CHECK_STATUS_EVIDENCE_CHECKPOINTED (existing or new task
+     commit SHA, failed-check status and exact intended inverse; REQUIRED before inverse)
   -> ORDINARY_INVERSE_COMMIT (exact failed task commit only)
   -> RESTORED_BASELINE_VERIFIED + RECOVERY_EVIDENCE_CHECKPOINTED
-  -> NEXT_ELIGIBLE_FAMILY_SELECTED (Luna -> Terra -> Sol, or Terra -> Sol)
-  -> ATTEMPT_(N+1)_RUNNING
+  -> STOP_FINAL (budget exhausted, no qualified next family, or environment still blocked)
+     OR NEXT_ELIGIBLE_FAMILY_SELECTED (Luna -> Terra -> Sol, or Terra -> Sol)
+  -> ATTEMPT_(N+1)_RUNNING (only on the selected-next-family branch)
 ```
 
-Guard on **every** transition: if ownership is mixed, source approvals stale, runtime binding unavailable, effort unsupported, benchmark nonmatching, evidence persistence fails, inverse conflicts, dependents would be invalidated, or attempt budget is exhausted, stop and report the precise blocker. Environmental failure is not automatically fixed by a stronger family. A task with no changed content has no failure/inverse commit pair and cannot automatically retry under this recovery policy; record the event without inventing a commit. An initial Sol failure or failed third attempt ends automatic escalation. Astra can be selected initially or for an independent review under its own evidence and owner gates, but is never an automatic fourth attempt.
+**Separate transition guards:** Failure inspection and factual evidence remain required even when no attempts remain or the next family/effort/benchmark disappears. Before a failed-attempt commit or inverse, verify task-only ownership, baseline, approvals/permission, dependent impact, evidence checkpoints and ordinary inverse safety; if these fail, preserve evidence and stop *mutation*, not failure reporting. If the intermediate failure-SHA/check-status evidence checkpoint fails, do **not** create the inverse. Only the next-dispatch branch checks remaining attempt budget, task-relevant exact-version/effort benchmark, supported effort, owner-selected usable runtime binding and resolved environmental cause. These dispatch-only gaps never prevent safe recovery of the just-failed task. A task with no changed content has no failure/inverse commit pair and cannot automatically retry under this recovery policy; record the event without inventing a commit. A final Sol or third-attempt failure with safe task-owned changes still records/checkpoints and ordinarily inverts them, then stops without further dispatch. Astra can be selected initially or for an independent review under its own evidence and owner gates, but is never an automatic fourth attempt.
 
 ## Read and write boundaries
 
