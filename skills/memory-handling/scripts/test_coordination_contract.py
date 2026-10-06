@@ -58,17 +58,6 @@ def routing_errors(text):
             + ["unsafe " + policy for policy in UNSAFE_ROUTING if policy.lower() in text.lower()])
 
 
-def integrated_errors(texts):
-    errors = checker.check_contracts(texts)
-    # T002 producer-first seam: only the obsolete shared-carrier assertion may fail
-    # until the T003 checker migration. Any additional discrepancy fails this suite.
-    if "## Class-compatible routing experiment" in Path(checker.__file__).read_text():
-        legacy = [e for e in errors if e.startswith("coordination-class:")]
-        assert len(legacy) == 7, errors
-        errors = [e for e in errors if not e.startswith("coordination-class:")]
-    return errors
-
-
 class FamilyEffortContractTests(unittest.TestCase):
     def test_old_class_rule_is_not_current_routing_authority(self):
         requirements = (ROOT / "REQUIREMENTS.md").read_text()
@@ -115,7 +104,7 @@ class CoordinationContractTests(unittest.TestCase):
         self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
 
     def test_A1_A2_early_association_and_both_route_direct_constraints(self):
-        self.assertEqual(integrated_errors(self.texts), [])
+        self.assertEqual(checker.check_contracts(self.texts), [])
         cases = (
             ("planner", "## Discovery and capability boundary", "`GUIDELINES.md` before brainstorming, scope assessment and depth choice", "coordination-early"),
             ("planner", "## Discovery and capability boundary", "initialize missing files, notify the user and commit only initialization files", "coordination-early"),
@@ -267,7 +256,7 @@ class CoordinationContractTests(unittest.TestCase):
 
     def test_blocked_preselection_evidence_is_permitted_without_planning_authority(self):
         # Concrete reviewed boundary: initialization succeeded, ask_user unavailable.
-        self.assertEqual(integrated_errors(self.texts), [])
+        self.assertEqual(checker.check_contracts(self.texts), [])
         for key, heading, clause, diagnostic in (
             ("coordination", "## Project-local initialization", "blocked before depth selection", "coordination-initialization"),
             ("coordination", "## Project-local initialization", "unapproved learned-guideline write authority", "coordination-initialization"),
