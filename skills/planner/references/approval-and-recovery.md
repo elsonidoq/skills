@@ -81,3 +81,8 @@ Old source documents labelled Epic are legacy inputs, not a new required plannin
 concept. New planning uses the explicit depth choice; legacy repair does not invent
 historical route-selection records. Missing runtime capabilities still block affected
 stages even with otherwise valid approvals. No installing/simulating missing SpecKit.
+
+Existing approved tasks with inadequate REQUIRED contracts block dispatch and return to the
+producing review/approval gate for correction and renewed affected approval. Preserve original
+source provenance, valid approvals and task-embedded legacy requirements; do not fabricate
+historical contracts or add requirements retroactively under old approval.

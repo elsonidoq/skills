@@ -79,6 +79,10 @@ acceptance criteria, exclusions, and open questions as applicable. Preserve the 
 format; add a concise deferred note when the owner deferred work. Do not invent scope,
 rewrite unrelated sections, or replace the next stage with a plan.
 
+Planning gate bindings are not implementation-task assignments. Carry settled source constraints,
+research links, applicable guidelines and observable verification needs into the next-stage handoff;
+leave task-local REQUIRED items to task generation and batch profiles to the coordinator.
+
 ## Durable handoff and resume
 
 Retain the gate result, agenda when present, owner decisions/rationale, deferrals and

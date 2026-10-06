@@ -111,8 +111,11 @@ Ensure the SpecKit plan covers:
 - Security, privacy, migration, rollback, and authorization gates where relevant.
 - Documentation scope and specialized capabilities needed for implementation.
 
-Leave implementation task breakdown and model-class labeling to the SpecKit
-tasks stage; do not use the plan as a substitute for it.
+Leave implementation task breakdown, not model-class labeling, to the SpecKit
+tasks stage; do not use the plan as a substitute for it. Carry source constraints, canonical
+research, applicable guidelines and observable verification needs for stable REQUIRED items
+through the task-generation contract. Coordinator owns later batch profile selection;
+manager-governed planning-stage bindings remain unchanged.
 
 ## Owner Gates
 

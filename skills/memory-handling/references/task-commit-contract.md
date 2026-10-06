@@ -73,10 +73,12 @@ an interception guarantee.
 
 ## Evidence, interruption, and limits
 
-Record each task/attempt baseline, result SHA, checks and outcomes in the existing factual
-evidence/tracker. After a task commit, capture its SHA and commit the resulting evidence update
-as a distinct, focused evidence-only checkpoint before later task writes or handoff; it is not
-an implementation-task substitute. On interruption reconcile commits and pending evidence,
+Record each task/attempt baseline, result SHA, checks and outcomes concisely in the existing
+factual evidence/tracker. For new coordination runs, append a compact checkpoint row or
+exception to the same run `SUMMARY.md`, not a separate task evidence file. After a task commit,
+capture its SHA and commit the resulting run-summary/index update as a distinct, focused
+evidence-only checkpoint before later task writes or handoff; it is not an implementation-task
+substitute. Older per-task evidence files remain valid and need no default migration. On interruption reconcile commits and pending evidence,
 and recover a successful reported SHA without duplicating it. Inspect a failed attempt before
 retry or escalation. Later defects require dependency analysis and separate verified correction
 tasks, never automatic rollback.

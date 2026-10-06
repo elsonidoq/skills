@@ -40,11 +40,11 @@ class IntakeContractTests(unittest.TestCase):
 
     def test_local_suitability_and_common_graph(self):
         for phrase in (
-            "current owner-selected model/class matches",
+            "current owner-selected exact profile fits",
             "observed context capacity is adequate",
             "delegate the affected task or segment",
             "Both routes use this single execution graph",
-            "never silently switch models or downgrade task classes",
+            "never silently switch selected profiles",
             "No unauthorized local fallback",
             "producing workflow's review gate",
         ):
@@ -55,7 +55,7 @@ class IntakeContractTests(unittest.TestCase):
     def test_capabilities_context_and_inspected_failures(self):
         for phrase in (
             "fresh independent reviewer",
-            "no forced one-session-per-class limit",
+            "no forced one-session-per-profile limit",
             "Inspect the failed run and tool invocation before retry or relaunch",
             "If context metrics are unavailable",
             "Agent/model selection: UNAVAILABLE",
@@ -78,6 +78,20 @@ class IntakeContractTests(unittest.TestCase):
             "failed recovery stops dispatch", "evidence-only checkpoint",
         ):
             self.assertIn(phrase, TEXT)
+
+    def test_assignment_and_dispatch_owner_gates(self):
+        for phrase in ("owner selection remains required", "at assignment and again at dispatch",
+                       "supported effort", "callable binding", "no silent settings/agent override"):
+            self.assertIn(phrase, TEXT)
+        self.assertNotIn("selection for each class", TEXT)
+
+    def test_invalid_evidence_stops_release_without_adding_batch_review(self):
+        normalized = " ".join(TEXT.split())
+        self.assertIn("unmet manual/permission gates block acceptance and dependent release", normalized)
+        self.assertIn("no mandatory strong-model per-batch reviewer", normalized)
+        self.assertIn("one fresh independent final review", normalized)
+        self.assertIn("full committed revision range", normalized)
+        self.assertIn("not an implementation session", normalized)
 
     def test_origin_neutral_downstream_references(self):
         self.assertIn("applicable source/supporting artifacts", TEXT)

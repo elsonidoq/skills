@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Operational instruction checks, not model-obedience or semantic completeness proof."""
 import argparse
-import hashlib
 from pathlib import Path
 import re
 
@@ -22,10 +21,6 @@ PATHS = {
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
 }
-# Deliberately updated for owner-requested healthy internal-batch autonomy:
-# subagents verify/commit without routine supervisor waits; coordinator audits on return.
-# Per-task commits, failure stops, model selection and owner gates remain protected.
-EXECUTION_SHA256 = "ef21eb994d430aa213c6ea75833ae03a8db68ff84e284f78a7f7b50d3bd304b4"
 
 
 def section(text, heading):
@@ -141,9 +136,16 @@ def check_contracts(texts):
     require("legacy", a, "inside tasks", "approved spec awaiting plan", "earliest affected Standard",
             "Other documented producer", "Ambiguous/conflicting origin", "retired skills",
             "Missing runtime capabilities")
+    require("batch-handoff", production, "stable task-local REQUIRED", "qualified seed rubric", "canonical research", "not implementation-task assignments")
+    require("batch-tiny", tiny, "verification item completeness")
+    require("batch-standard", review, "verification item completeness")
+    require("batch-legacy", a, "inadequate REQUIRED contracts", "producing review/approval gate", "renewed affected approval")
+    require("batch-helper", texts["helper"], "not model-class labeling", "applicable guidelines")
+    require("batch-source", texts["tiny"], "stable task-local REQUIRED")
+    require("batch-brainstorm", texts["brainstorm"], "not implementation-task assignments")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
-            "authorization to\n**prepare** tasks", "30%", "Number in execution order from T001",
+            "authorization to\n**prepare** tasks", "stable task-local references", "Number in execution order from T001",
             "explicit `Depends`", "earlier task", "implicit dependencies", "manually inspect",
             "coherent sequential work", "do not reorder dependencies or pad", "lockstep documentation")
     require("adapter", texts["helper"], "Planner Standard adapter", "`planner`", "same-session pass",
@@ -184,10 +186,20 @@ def check_contracts(texts):
             "checkpoint early", "After a\n  timeout, inspect", "retain valid completed\n  evidence",
             "narrow the remaining step instead of restarting the entire batch",
             "timeout alone is not retry authority")
-    marker = "## Execution Capability Preflight"
-    body = c[c.index(marker):] if marker in c else ""
-    if hashlib.sha256(body.encode()).hexdigest() != EXECUTION_SHA256:
-        errors.append("execution-freeze: coordinator execution differs from pre-refactor baseline")
+    require("execution-checkpoints", section(c, "## Execute and Integrate"),
+            "Commit each task's verified changes as one focused commit", "separate evidence-only checkpoint",
+            "failed recovery stops dispatch", "coordinator independently", "no routine coordinator pause")
+    require("execution-sequential", section(c, "## Build the Execution Graph"),
+            "only asynchronously in the background", "never\n   run implementation batches in parallel",
+            "Never pull\n   a distant producer forward or reorder a prerequisite", "commits each task separately")
+    require("execution-selection", section(c, "## Select Execution Capability"),
+            "one exact profile", "proposed versus owner-selected", "Family rationale", "Effort rationale",
+            "at assignment and again at dispatch", "supported effort", "callable binding",
+            "Copy the owner-selected binding and effort unchanged", "no silent settings/agent override",
+            "actual model or effort remains unknown")
+    require("execution-strategy", section(c, "## Select Execution Strategy"),
+            "Up to three bounded implementation tasks", "More than three implementation tasks require delegation",
+            "Retain the recorded strategy on resume", "current owner-selected exact profile fits")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
@@ -311,7 +323,7 @@ def check_contracts(texts):
             "both TinySpec and Standard stage briefs", "source observables/acceptance",
             "task dependencies, checkpoints, verification and coordinator handoff",
             "Memory cannot override source requirements or owner authority",
-            "absence requires no migration and changes no class/share/approval rule")
+            "absence requires no migration and changes no approval rule")
     require("coordination-tiny", section(texts["tiny"], "## Inputs and preflight"),
             link, "including direct/standalone entry", "not index/history by default",
             "ensure the mandatory project-local store", "initialize missing files, notify the user",
@@ -325,7 +337,7 @@ def check_contracts(texts):
             "initialization files before proceeding", "without a setup approval gate",
             "checkpoints and REQUIRED verification/acceptance", "source/owner authority",
             "required gotcha-memory stops remain distinct", "No default index/history intake",
-            "index-first relevant-only", "does not alter classes, share or approval rules")
+            "index-first relevant-only", "does not alter approval rules")
     require("coordination-memory", section(texts["memory"], "## Required project coordination memory"),
             "[project coordination contract](references/project-coordination.md)",
             "Required gotcha-memory rules above remain", "never go into this gotcha index",
@@ -343,24 +355,32 @@ def check_contracts(texts):
         checkpoint = ""
     require("coordination-checkpoint", checkpoint,
             "At each task/attempt checkpoint", "failed, blocked or partial work and manual/user",
-            "task/type, areas/tags", "approved class", "role/model/reasoning effort (or `unknown`)",
-            "individual attempt/check results, reviewer findings, inspected failure cause",
-            "escalation outcomes, surprises and manual findings", "Unknown is not success",
-            "reuse on resume, never overwrite another run", "separate summary/task records",
-            "before refreshing", "after every evidence write", "no duplicate rows",
-            "reconcile interrupted record/index updates", "retaining existing runs",
+            "task/type, areas/tags", "exact selected and observed profile", "binding plus effort or unknown",
+            "contract strength, first/final outcome", "diagnosis, repair/escalation",
+            "item check/checkpoint references", "individual check results, reviewer findings",
+            "accepted, partial, escalated", "`model_capability`", "`planning_or_spec_gap`",
+            "`verification_contract_gap`", "`batching_error`", "`environment_or_tooling`",
+            "`external_dependency`", "`unknown`", "Non-model causes never count as capability failure",
+            "weak or invalidated successes", "An unknown observation is never overwritten by selection",
+            "Unknown is not success",
+            "reuse on resume, never overwrite another run", "sole evidence file for each new run",
+            "before refreshing its index row after every evidence", "no duplicate rows",
+            "reconcile interrupted summary/index updates", "retaining prior attempts",
             "never grants permission to mutate guidelines", "initialized project-local store",
             "Evidence-write failures stop", "never a no-write fallback")
     capability = section(c, "## Select Execution Capability")
     require("coordination-routing", capability,
-            "usable owner-selected options", "Low favors a cheaper",
-            "strong executable acceptance oracle", "stronger verification/review",
-            "not forced opus", "reclassification or share-gate bypass",
-            "Never silently\nreplace selected models, weaken approved classes",
-            "inspect the child run and failed invocation first", "Preserve valid",
-            "unrelated workspace changes", "architecture and authority permit",
-            "verified stronger capability and owner-selection gates",
-            "Unknown cause", "unestablished clean state stops", "Record both attempts")
+            "usable owner-selected", "independent family/effort rationales",
+            "Strong contracts and cheap recovery", "missing requirements or permissions",
+            "Never silently replace selected models",
+            "Inspect the failed child run, invocation, partial commits and check evidence", "Preserve valid",
+            "unrelated\nchanges and prior attempt evidence", "affected dependencies and invalidated REQUIRED items",
+            "raise effort, change model or both", "no fixed profile ladder",
+            "permitted callable binding, supported effort, tools and owner-selection gates",
+            "safe task-owned state stops", "unknown cause stops blind restart",
+            "original assessment and selected/observed profile", "complete batch contract",
+            "rerun every invalidated item", "reuse only confirmed-valid evidence",
+            "Retain both attempts", "Repair success alone does not prove")
     reflection = section(c, "## Coordination reflection and guideline approval")
     if not (0 <= c.find("## Review and Acceptance") < c.find("## Coordination reflection and guideline approval")
             < c.find("## Maintaining this contract")):
@@ -372,9 +392,10 @@ def check_contracts(texts):
             "reusable versus incidental", "reinforcement; contradiction",
             "guideline support versus evidence-only", "delegation lessons; manual validation",
             "surprises needing qualification/more evidence", "insufficient and conflicting",
-            "index-first and\nrelevant-only", "separately from `REFLECTION.md`",
-            "add/refine/supersede/remove", "supporting/contradicting pointers",
-            "no update\nproposed", "not a universal ban or permanent routing rule")
+            "index-first and\nrelevant-only", "same run `SUMMARY.md`",
+            "Older runs with `REFLECTION.md` remain", "add/refine/supersede/remove",
+            "supporting/contradicting pointers", "no update proposed",
+            "not a universal ban or permanent routing rule")
     require("coordination-approval", reflection,
             "executive brief and exact candidate diff", "existing `ask_user`",
             "accept, edit, reject, or add", "approval is not guideline approval",
@@ -411,7 +432,7 @@ def check_contracts(texts):
     require("coordination-guidelines", section(q, "## Compact guidelines"),
             "before brainstorming", "exact constraints", "scope/trigger", "qualitative",
             "Owner-supplied entries name their origin", "Preserve uncertainty and contrary",
-            "`REFLECTION.md` is not planner guidance")
+            "run evidence and reflection are not planner guidance")
     require("coordination-selective", section(q, "## Selective historical retrieval"),
             "Ordinary planning reads guidelines, not", "justified only",
             "ambiguous/tentative/conflicting", "user request", "new contradictory",
@@ -419,11 +440,15 @@ def check_contracts(texts):
             "Do not recursively", "Unrelated records\nstay unread",
             "no relevant evidence means proceed retaining uncertainty")
     require("coordination-evidence", section(q, "## Separate factual evidence"),
-            "SUMMARY.md", "T001.md", "T002.md", "REFLECTION.md",
+            "one compact evidence file per run", "SUMMARY.md", "Do not create separate task",
+            "short attributable checkpoint/attempt ledger", "Older runs with separate task",
             "Reuse that ID on resume", "never\noverwrite another run",
             "append-oriented", "without erasing observations or prior runs",
-            "initialized project-local store", "never replace it", "If an evidence write fails",
-            "otherwise `unknown`", "failed, blocked and partial", "unknown outcomes are explicitly unknown",
+            "initialized\nproject-local store", "never replace it", "If an evidence write\nfails",
+            "exact selected and observed profile", "unknown observation is never overwritten",
+            "contract strength, first/final outcome", "item check/checkpoint references",
+            "accepted, partial, escalated and blocked", "failed, blocked and partial",
+            "unknown outcomes are explicitly unknown",
             "sensitive payloads", "run record before its index entry", "Every new evidence write refreshes",
             "Keep one row per run", "Reconcile an\ninterrupted record/index update on resume")
     require("coordination-synthesis", section(q, "## Conservative reflection"),
@@ -437,10 +462,17 @@ def check_contracts(texts):
             "Rejection leaves guidelines byte-identical", "re-read\n`GUIDELINES.md`",
             "compare with the approved baseline", "drift stops", "renewed review/approval",
             "Re-check", "acceptance separately")
-    require("coordination-class", section(q, "## Class-compatible routing experiment"),
-            "compatible with the approved class", "strong executable acceptance oracle",
-            "owner-selection gates", "Inspect the failed child run and invocation",
-            "unknown cause", "Record both attempts", "not provider names or permanent rules")
+    require("coordination-profile", section(q, "## Qualified batch routing feedback"),
+            "Family and effort have independent", "one exact permitted owner-selected profile",
+            "Relevant approved guidance may override the seed", "owner/source authority",
+            "contract strength, first/final outcome", "`model_capability`", "`planning_or_spec_gap`",
+            "`verification_contract_gap`", "`batching_error`", "`environment_or_tooling`",
+            "`external_dependency`", "`unknown`", "Non-model causes never count as capability failure",
+            "weak or\ninvalidated successes are not strong positive guidance",
+            "Unknown actual model/effort stays unknown", "Inspect failed child run, invocation, partial commits",
+            "permitted binding/support and owner gates", "unknown cause or unavailable/unauthorized repair stops",
+            "full contract", "rerunning all invalidated checks", "selective/index-first retrieval",
+            "exact owner approval", "baseline drift checks", "never automatically become guidance")
     for key in ("planner", "tiny", "tasks", "coordinator", "coordination"):
         reject("coordination-unsafe", texts.get(key, ""),
                "Always read the entire evidence directory", "Read coordination history on every request",

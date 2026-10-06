@@ -78,7 +78,8 @@ verifies authorization, task evidence, integration, and required independent rev
 to shared skill contracts MUST be checked with focused fixtures and the relevant existing
 suite checks. Before assessment/depth choice or direct task/execution work, ensure the coordination
 store exists and read its compact guidelines. Factual evidence and reflection MUST be persisted
-in indexed project-local run/task files, including blocked preselection runs. This bounded
+in one indexed project-local evidence file per new run, including blocked preselection runs;
+older multi-file run records remain valid and selectively retrievable. This bounded
 initialization/commit and factual persistence is the exception to preselection read-only operation;
 it grants no source/planning/decision-file or unapproved learned-guideline write authority.
 Synthesized guideline changes still require explicit review/approval against exact resulting
@@ -96,7 +97,13 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 2.1.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-05
+**Version**: 2.2.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-06
+
+Amendment 2.2.0 records the owner's approval of compact one-file-per-run coordination
+evidence for future runs, with a bounded compaction of the two 2026-10-06 batch-routing
+runs. It preserves indexed selective retrieval, factual task/attempt attribution, distinct
+Git evidence checkpoints, historical multi-file compatibility and exact guideline approval;
+no existing learned guideline is changed. MINOR reflects a material evidence-layout change.
 
 Amendment 2.1.0 records the owner-approved package-wide mandatory task-checkpoint policy. It
 adds no runtime interception/adapter requirement and preserves existing authorization, planning,

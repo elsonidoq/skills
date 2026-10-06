@@ -17,16 +17,17 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
 | Verified unresolved bug, risk or investigation | [Open Issues](open_issues.md), via `track-open-issue` |
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
-| Model-routing benchmark evidence and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md); keep the source record discoverable as project guidelines evolve |
+| Model-routing benchmark evidence and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md); keep the source record discoverable as project guidelines evolve. [Batch Routing Contracts Research](../specs/002-batch-routing-contracts/research.md) owns the newer batch-only seed evidence and runtime limitations |
 | Required project-local coordination guidelines, selective history and reviewed feedback | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
 
-This configuration suite has no declared project-memory adoption contract for gotcha
-memory or suite-level database/schema owner. Coordination memory is a separate mandatory project-local store at
-`memory/coordination/`; initialize its missing files through the shared contract. Do not
-initialize gotcha memory or database documentation merely for closeout; unrelated projects
-and the legacy port keep their own documentation boundaries.
+This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
+[gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
+Coordination memory remains a separate mandatory project-local store at
+`memory/coordination/`; initialize its missing files through the shared contract. No
+suite-level persistent database/schema owner is declared. Unrelated projects and the
+legacy port retain their own documentation and memory boundaries.
 
 ## Project Guidance
 
@@ -45,6 +46,7 @@ and the legacy port keep their own documentation boundaries.
 
 ## Implementation Plans
 
+- [Plans directory index](plans/index.md): Direct plan records and the nested review index.
 - [Mandatory Task Commits — TinySpec](plans/mandatory-task-commits-tinyspec.md): Authoritative pragmatic checkpoint scope and A1–A7 acceptance; no runtime extension gate.
 - [Mandatory Task Commits — Tasks](plans/mandatory-task-commits-tasks.md): Separate dependency-aware task contracts derived from the TinySpec.
 - [Mandatory Task Commits — Planning Review](plans/reviews/mandatory-task-commits-planning-review.md): Exact source/task approval identities and owner authorization.

@@ -94,9 +94,26 @@ Approved current content/revisions and implementation scope: [evidence]
 ```
 
 Coordinator revalidates the handoff and preserves one shared execution graph: up to three
-bounded tasks may run locally only when selected class/context fit; larger complete lists
-use asynchronous sequential delegation. It verifies and commits each task separately and
-requires one independent final implementation review. Planning depth does not select execution.
+bounded tasks may run locally only when owner-selected exact profile/context fit; larger
+complete lists use asynchronous sequential delegation. Tasks carry stable REQUIRED item contracts,
+not implementation-model classes or shares. Normally 2–5 consecutive related tasks share one
+exact binding plus independently justified effort per invocation when feasible; this is not a quota.
+The [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md) and relevant
+approved project guidelines inform owner selection; empty guidelines invent no success history.
+Verify permitted callable binding, supported effort, tools and owner gates at assignment/dispatch,
+and ensure settings do not silently override actual dispatch arguments. Actual profile stays
+unknown when unobservable, never inferred from selection.
+
+Dispatch supplies the whole REQUIRED union; concrete returned item evidence and every focused
+task diff/checkpoint are audited before acceptance or dependent release. Missing, contradictory,
+unrun or unauthorized evidence blocks; a passing contract needs no mandatory strong per-batch
+reviewer. Diagnose failures before authorized targeted repair, retain valid work/prior attempts,
+supply the full contract and rerun invalidated items without a fixed model/effort ladder.
+Each task has its own implementation commit followed by a separate factual evidence checkpoint;
+one fresh independent final review covers the complete committed range. Planning depth and
+unrelated planning/reviewer selections remain separate from implementation selection.
+Static/symbolic fixtures demonstrate contracts, not live model performance or obedience;
+live support/callability checks require separate permission and usable runtime capabilities.
 
 ## Project coordination memory
 
@@ -117,11 +134,13 @@ coordinator briefs. Ordinary planning does not read execution history. Only just
 clarification/synthesis (tentative/conflicting guidance, user justification or contrary
 observations) reads the compact evidence index, then selected relevant records.
 
-Separate `evidence/<run-id>/SUMMARY.md`, task files and `REFLECTION.md` keep factual attempts,
-checks, failures/partial work, unknowns and manual validation out of synthesized guidance and
-the gotcha `MEMORY.md` index. Records precede refresh of one compact index row per run; resume
-retains attempts and reconciles interrupted updates. Every run persists observations in
-the project-local store; execution handoffs link evidence rather than replace it.
+One compact `evidence/<run-id>/SUMMARY.md` per new run holds the current disposition, short
+task/checkpoint references, exceptions and reflection or proposed guidance; no separate task
+or reflection files are created. Older multi-file runs remain readable. Factual attempts,
+checks, failures/partial work, unknowns and manual validation stay outside approved guidelines
+and the gotcha `MEMORY.md` index. The run record precedes refresh of its one compact index row;
+resume retains attempts and reconciles interrupted updates. Every run persists observations
+locally; execution handoffs link evidence rather than replace it.
 
 After verification and independent review (or a blocked pause), conservative reflection
 proposes scoped guidance or evidence-only/no update. An executive brief and exact candidate
@@ -132,8 +151,12 @@ bytes; pending/unavailable/cancelled/ambiguous decisions change no learned guide
 Guideline approval is reported separately from implementation acceptance; automatic empty
 initialization is not permission to add or rewrite learned guidance.
 
-Residual-reasoning notes may inform class-compatible owner-selected real-work routing;
-no class weakening, automatic model replacement or permanent rule from one outcome.
+Indexed attempts record exact selected/observed profile or unknown, assessment factors, contract
+strength, first/final outcome, diagnosis and repair/checkpoint references, preserving partial,
+escalated and blocked work. Non-model causes (including unavailable tools/environments) do not
+count as capability failure; weak/invalidated success is not strong guidance. Residual-reasoning
+notes inform batch assessment, not task assignments. No automatic model replacement or permanent
+rule from one outcome; only relevant approved guidelines may override the seed within owner/source gates.
 For example, a **fictional project** might scope a manual output checkpoint to heuristic
 implementation. That example is neither real evidence nor a global heuristic policy.
 After changing these global skills, run `/reload` inside pi.

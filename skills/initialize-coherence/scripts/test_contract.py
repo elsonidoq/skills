@@ -163,14 +163,21 @@ class CandidateTests(unittest.TestCase):
         for phrase in ("0.87.x", "0.87.1", "pi-subagents@0.73.1", "pi-ask-user@0.15.1", "tinyspec/direct tasking does not require it", "manual routing", "schema owner", "missing required structure blocks readiness"):
             self.assertIn(phrase, requirements)
 
-    def test_introduced_references_and_repo_nonassociation(self):
+    def test_introduced_references_and_repo_association(self):
         for path in ("README.md", "docs/index.md", "skills/initialize-coherence/SKILL.md"):
             for target in re.findall(r"\]\(([^)]+)\)", (ROOT / path).read_text()):
                 if not target.startswith(("http", "#")):
                     self.assertTrue((ROOT / path).parent.joinpath(target.split("#", 1)[0]).exists(), (path, target))
         index = (ROOT / "docs/index.md").read_text()
-        self.assertIn("no declared project-memory adoption contract", index)
-        self.assertIn("suite-level database/schema owner", index)
+        agents = (ROOT / "AGENTS.md").read_text()
+        gotchas = (ROOT / "memory/MEMORY.md").read_text()
+        self.assertIn("<!-- coherence-suite-contract:start -->", agents)
+        self.assertIn("associated store is `memory/`", normalized(agents))
+        self.assertIn("No project gotchas recorded yet.", gotchas)
+        self.assertIn("[gotcha-memory index](../memory/MEMORY.md)", index)
+        self.assertIn("[Plans directory index](plans/index.md)", index)
+        self.assertIn("coordination memory remains a separate", normalized(index))
+        self.assertIn("no suite-level persistent database/schema owner", normalized(index))
 
 
 class PreservationTests(unittest.TestCase):

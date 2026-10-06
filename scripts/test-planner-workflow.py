@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import re
 import unittest
 from unittest import mock
 
@@ -51,6 +52,24 @@ class ProportionateValidationTests(unittest.TestCase):
         ):
             with self.subTest(clause=clause):
                 self.assert_clause_required("planner", clause, "validation-focused")
+
+    def test_batch_profile_feedback_and_diagnosed_repair_carriers(self):
+        # Causal replacement coverage for obsolete implementation-class assertions.
+        for key, clause, diagnostic in (
+            ("coordinator", "exact selected and observed profile", "coordination-checkpoint"),
+            ("coordinator", "contract strength, first/final outcome", "coordination-checkpoint"),
+            ("coordinator", "Non-model causes never count as capability failure", "coordination-checkpoint"),
+            ("coordinator", "An unknown observation is never overwritten by selection", "coordination-checkpoint"),
+            ("coordinator", "Inspect the failed child run, invocation, partial commits and check evidence", "coordination-routing"),
+            ("coordinator", "rerun every invalidated item", "coordination-routing"),
+            ("coordinator", "unknown cause stops blind restart", "coordination-routing"),
+            ("coordination", "unknown observation is never overwritten", "coordination-evidence"),
+            ("coordination", "Relevant approved guidance may override the seed", "coordination-profile"),
+            ("coordination", "weak or\ninvalidated successes are not strong positive guidance", "coordination-profile"),
+            ("coordination", "`environment_or_tooling`", "coordination-profile"),
+        ):
+            with self.subTest(clause=clause):
+                self.assert_clause_required(key, clause, diagnostic)
 
     def test_schema_security_durability_retain_necessary_checks(self):
         self.assert_clause_required("planner", "migration, authorization or persistence", "validation-risk")
@@ -137,12 +156,15 @@ class InstructionTests(unittest.TestCase):
             ("planner", "Do not end the turn merely to report approval", "End the turn after approval", "continuation:"),
             ("planner", "automatically invoke `coordinate-implementation`", "wait for a separate execution request", "final-continuation:"),
             ("approval", "inside tasks", "separate new source", "legacy:"),
-            ("tasks", "30%", "100%", "task-contract:"),
+            ("tasks", "stable task-local references", "unstable references", "task-contract:"),
             ("brainstorm", "no more than three items", "unbounded agenda", "brainstorm:"),
             ("brainstorm", "Only in selected-production", "In any mode", "brainstorm:"),
-            ("coordinator", "Commit each task's verified changes as one focused commit", "Commit each batch", "execution-freeze:"),
-            ("coordinator", "only asynchronously in the background", "foreground is fine", "execution-freeze:"),
+            ("coordinator", "Commit each task's verified changes as one focused commit", "Commit each batch", "execution-checkpoints:"),
+            ("coordinator", "only asynchronously in the background", "foreground is fine", "execution-sequential:"),
             ("coordinator", "separate TinySpec/source and tasks", "source checklist only", "intake:"),
+            ("coordinator", "Copy the owner-selected binding and effort unchanged", "Use an agent default", "execution-selection:"),
+            ("coordinator", "at assignment and again at dispatch", "at assignment only", "execution-selection:"),
+            ("coordinator", "Retain the recorded strategy on resume", "Recount incomplete tasks", "execution-strategy:"),
             ("adoption", "every unrelated byte", "custom content", "adoption:"),
             ("docs", "not substantive implementation authorization", "implementation authorization", "docs:"),
         ]
@@ -205,8 +227,28 @@ class InstructionTests(unittest.TestCase):
         for name in ("tiny-tasks.md", "standard-tasks.md"):
             source = (HERE / "fixtures/planner" / name).read_text()
             self.assertEqual(validator.check(source), [], name)
-            for field in ("Outcome", "Files/interfaces", "Acceptance", "Capabilities", "Model class"):
+            for field in ("Outcome", "Files/interfaces", "Acceptance", "Capabilities"):
                 self.assertIn(f"**{field}**", source)
+
+    def test_batch_handoff_mutations_and_adapter_items(self):
+        for key, clause, diagnostic in (
+            ("planner", "stable task-local REQUIRED", "batch-handoff:"),
+            ("approval", "inadequate REQUIRED contracts", "batch-legacy:"),
+            ("tiny", "stable task-local REQUIRED", "batch-source:"),
+            ("helper", "not model-class labeling", "batch-helper:"),
+            ("brainstorm", "not implementation-task assignments", "batch-brainstorm:"),
+        ):
+            with self.subTest(carrier=key):
+                self.assertIn(clause, self.texts[key])
+                changed = dict(self.texts)
+                changed[key] = changed[key].replace(clause, "removed", 1)
+                self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
+        for name in ("tiny-tasks.md", "standard-tasks.md"):
+            source = (HERE / "fixtures/planner" / name).read_text()
+            self.assertNotIn("Model class", source)
+            for ident in re.findall(r"^- \[ \] (T\d+)", source, re.M):
+                self.assertIn(f"REQUIRED {ident}/V1", source)
+                self.assertIn("Evidence:", source)
 
     def test_custom_lint_is_not_coupled_to_suite(self):
         with tempfile.TemporaryDirectory() as directory:

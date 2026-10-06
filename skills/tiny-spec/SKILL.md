@@ -92,6 +92,9 @@ Return the source path/bounds, content evidence, source links, decisions/deferra
 constraints and unresolved blockers to planner. Include dependency/version/provenance,
 reuse/skip or refresh rationale, canonical owner/discovery links, supporting spans →
 constraints → checks, capability/permission gaps and explicit deferral bounds.
+Return source verification needs for stable task-local REQUIRED items in task generation,
+with pass criteria, smallest sufficient checks, expected evidence and manual/permission gates.
+Do not assign implementation-task profiles; the coordinator owns batch selection.
 Planner owns source/task review and
 one combined approval, including an executive brief before `ask_user`. A standalone
 TinySpec approval before task production is not required. Report source production,

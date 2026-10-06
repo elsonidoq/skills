@@ -203,8 +203,16 @@ Memory cannot override source requirements or owner authority. Preselection stay
 except bounded coordination-store initialization/commit and factual evidence/index/reflection
 persistence for all runs, including blocked preselection;
 no default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
-(low/medium/high with rationale) may inform later class-compatible owner-selected routing;
-absence requires no migration and changes no class/share/approval rule.
+(low/medium/high with rationale) may inform later owner-selected batch routing;
+absence requires no migration and changes no approval rule.
+
+Pass source constraints, canonical research links, applicable guidelines and stable task-local REQUIRED
+verification needs through both adapters to task generation and coordinator. Each item retains
+its pass criterion, smallest sufficient check, expected evidence and manual/permission gates;
+optional checks stay distinct. The [qualified seed rubric](../coordinate-implementation/references/batch-routing.md)
+belongs to later coordinator selection: planning-stage bindings are not implementation-task assignments.
+Missing or ambiguous contracts, including old approved tasks, return to the producing review/approval
+gate for affected review and renewed approval, never fabricated historical requirements.
 
 ### TinySpec path
 
@@ -221,7 +229,7 @@ absence requires no migration and changes no class/share/approval rule.
    consecutive without reordering dependencies or padding distant tasks.
 3. **Review — planner-owned:** review source-to-task traceability, in-scope coverage,
    exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
-   class share, explicit and implicit dependencies, and stage feasibility. Record
+   verification item completeness, explicit and implicit dependencies, and stage feasibility. Record
    fixes, validation results and current content evidence. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
    Apply the dependency evidence/permission review above before combined approval.
@@ -259,7 +267,7 @@ an independent reviewer before assigning their work.
    same-session pass review/fix the specification, create one plan through the observed
    capability, then review/fix the produced plan. Cover contracts, architecture,
    integration, sequencing, migration/rollback, risks, docs, verification, and coherent
-   consecutive same-class work. Do not reorder dependencies or pad distant tasks.
+   consecutive context-coherent work. Do not reorder dependencies or pad distant tasks.
    Before consequential plan decisions, complete required shared-contract research and
    durable guidance. For helper invocation or the direct Standard pass, the brief must
    identify canonical research-document and necessary discovery-link destinations,
@@ -282,7 +290,7 @@ an independent reviewer before assigning their work.
    checks without breaking prerequisite order or story acceptance boundaries.
 4. **`overall_review` — independent owner-selected reviewer:** follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
-   coverage, dependencies, class share, documentation, integration and approvals.
+   coverage, dependencies, verification item completeness, documentation, integration and approvals.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
    Fix mechanical task-level issues and record evidence. Flag only material

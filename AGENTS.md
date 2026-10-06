@@ -54,3 +54,36 @@ verifiable task is validated and committed with explicit owned paths before late
 completion reporting, or handoff. This does not authorize writes, adaptation, external operations,
 or guideline changes; read-only/no-change work makes no empty commit. Preserve unrelated dirty work;
 Git/policy/ownership/verification conflicts stop rather than waive the checkpoint.
+
+<!-- coherence-suite-contract:start -->
+## Coherence suite adoption for this repository
+
+Owner-approved 2026-10-06. This section associates **this repository**, not unrelated
+projects, with its local memory and documentation owners. Preserve the global portability
+rules above for reusable skills and commands.
+
+- Required runtime: pi coding agent 0.87.x (tested 0.87.1), pinned
+  `npm:pi-subagents@0.73.1` and `npm:pi-ask-user@0.15.1`. Verify registered, usable
+  capabilities before applicable stages; report missing requirements rather than install.
+  SpecKit is required only for a project's Standard planning stages, not TinySpec;
+  Jev is optional for `finish-session-jev` with manual routing fallback.
+- Planning: request → `planner` understanding/brainstorming/scope → explicit owner
+  TinySpec/Standard choice → reviewed tasks → approved handoff →
+  `coordinate-implementation` → `finish-session`. TinySpec uses `tiny-spec`, separate
+  tasks and combined approval; Standard uses installed SpecKit and specification/final
+  approval gates. Neither automatically creates an Epic.
+- Gotcha memory: this repository's associated store is `memory/`, with `MEMORY.md` as
+  its index and optional trigger-first entries. Follow `memory-handling`: read the whole
+  index first, then only matching entries; recheck it after writes. Do not substitute
+  global memory. The separate mandatory coordination store is `memory/coordination/`:
+  its approved guidelines and indexed factual run evidence obey their own shared contract.
+- State: pi sessions record the conversation. No temporary current-execution state
+  document is declared here; if one is later adopted, keep only current execution truth
+  and replace its current block rather than accumulate history. `docs/open_issues.md` is
+  the canonical unresolved-work register via `track-open-issue`.
+- Documentation: `docs/index.md` is the routing guide and root directory index;
+  `docs/plans/index.md` and `docs/plans/reviews/index.md` map their direct files.
+  `README.md` owns setup/workflow, `REQUIREMENTS.md` runtime requirements,
+  `.specify/memory/constitution.md` project principles, and each skill's `SKILL.md`
+  its operational contract. Follow the routing guide for all other owners.
+<!-- coherence-suite-contract:end -->
