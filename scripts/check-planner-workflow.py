@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Operational instruction checks, not model-obedience or semantic completeness proof."""
 import argparse
-import hashlib
 from pathlib import Path
 import re
 
@@ -22,10 +21,6 @@ PATHS = {
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
 }
-# Deliberately updated for owner-requested healthy internal-batch autonomy:
-# subagents verify/commit without routine supervisor waits; coordinator audits on return.
-# Per-task commits, failure stops, model selection and owner gates remain protected.
-EXECUTION_SHA256 = "ef21eb994d430aa213c6ea75833ae03a8db68ff84e284f78a7f7b50d3bd304b4"
 
 
 def section(text, heading):
@@ -191,10 +186,20 @@ def check_contracts(texts):
             "checkpoint early", "After a\n  timeout, inspect", "retain valid completed\n  evidence",
             "narrow the remaining step instead of restarting the entire batch",
             "timeout alone is not retry authority")
-    marker = "## Execution Capability Preflight"
-    body = c[c.index(marker):] if marker in c else ""
-    if hashlib.sha256(body.encode()).hexdigest() != EXECUTION_SHA256:
-        errors.append("execution-freeze: coordinator execution differs from pre-refactor baseline")
+    require("execution-checkpoints", section(c, "## Execute and Integrate"),
+            "Commit each task's verified changes as one focused commit", "separate evidence-only checkpoint",
+            "failed recovery stops dispatch", "coordinator independently", "no routine coordinator pause")
+    require("execution-sequential", section(c, "## Build the Execution Graph"),
+            "only asynchronously in the background", "never\n   run implementation batches in parallel",
+            "Never pull\n   a distant producer forward or reorder a prerequisite", "commits each task separately")
+    require("execution-selection", section(c, "## Select Execution Capability"),
+            "one exact profile", "proposed versus owner-selected", "Family rationale", "Effort rationale",
+            "at assignment and again at dispatch", "supported effort", "callable binding",
+            "Copy the owner-selected binding and effort unchanged", "no silent settings/agent override",
+            "actual model or effort remains unknown")
+    require("execution-strategy", section(c, "## Select Execution Strategy"),
+            "Up to three bounded implementation tasks", "More than three implementation tasks require delegation",
+            "Retain the recorded strategy on resume", "current owner-selected exact profile fits")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
@@ -360,10 +365,9 @@ def check_contracts(texts):
             "Evidence-write failures stop", "never a no-write fallback")
     capability = section(c, "## Select Execution Capability")
     require("coordination-routing", capability,
-            "usable owner-selected options", "Low favors a cheaper",
-            "strong executable acceptance oracle", "stronger verification/review",
-            "not forced opus", "reclassification or share-gate bypass",
-            "Never silently\nreplace selected models, weaken approved classes",
+            "usable owner-selected", "independent family/effort rationales",
+            "Strong contracts and cheap recovery", "missing requirements or permissions",
+            "Never silently replace selected models",
             "inspect the child run and failed invocation first", "Preserve valid",
             "unrelated workspace changes", "architecture and authority permit",
             "verified stronger capability and owner-selection gates",

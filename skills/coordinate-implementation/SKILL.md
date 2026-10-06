@@ -98,7 +98,7 @@ and path checks and label the scripted check `UNAVAILABLE`.
 ## Execution Capability Preflight
 
 Before establishing completion scope or executing work, verify permitted, usable
-question capability and owner-selected model/class bindings, including the current
+question capability and owner-selected exact profile bindings, including the current
 agent for eligible local execution. Check callable bindings, not configuration names
 alone. The suite declares question/delegation runtime requirements in the global
 configuration repository's `REQUIREMENTS.md`; verify their availability rather than
@@ -115,12 +115,13 @@ Markdown checklist, updating items as they move through `pending`, `in_progress`
 and `completed` states. Do not stop execution solely because a dedicated todo tool
 is unavailable.
 
-For every model class used by incomplete tasks, verify at least one usable local or
-delegated agent/model option. Use the question capability to obtain the owner's
-selection for each class and independent review before implementation. Retain valid
-recorded selections on resume; do not re-request settled choices. Offer only observed,
-permitted options; never silently switch models or downgrade task classes. If no usable
-mapping exists, report `Agent/model selection: UNAVAILABLE` with the class and stop.
+Use the shared [qualified seed rubric](references/batch-routing.md) to assess each batch,
+not to assign implementation-task classes. Verify usable permitted options and independent
+review selection through the question capability; owner selection remains required.
+Retain valid recorded choices on resume; offer only observed permitted options and
+never silently switch selected profiles. If no usable option exists, report
+`Agent/model selection: UNAVAILABLE` with the binding/effort gap and stop.
+Planning/reviewer stage selections remain separate from implementation batch selection.
 
 ## Select Execution Strategy
 
@@ -128,15 +129,15 @@ Count the complete approved implementation task list, including completed tasks;
 exclude standalone review tasks. Select by this count, not origin, plan presence, or remaining task count:
 
 - Up to three bounded implementation tasks may run locally only when the
-  current owner-selected model/class matches each task, scope is clear, and
-  observed context capacity is adequate. For a different class, broader isolation,
+  current owner-selected exact profile fits the batch contract, scope is clear, and
+  observed context capacity is adequate. For an incompatible profile, broader isolation,
   or excessive context, delegate the affected task or segment using the shared
   batching rules below. Do not change the current model to force local eligibility.
 - More than three implementation tasks require delegation through the same
-  consecutive homogeneous sequential batching machinery, including one-task batches
-  where justified. The 5–7 target below is guidance, never a threshold or quota.
+  consecutive context-coherent sequential batching machinery, including one-task batches
+  where justified. The 2–5 target below is guidance, never a threshold or quota.
 
-Record the complete count, chosen local/delegated strategy, class selections,
+Record the complete count, chosen local/delegated strategy, batch profile selections,
 context evidence/limitations, and any delegated segments in the tracker before work.
 Retain the recorded strategy on resume unless approved scope changes or an observed
 safety/context constraint requires a recorded revision and renewed gates as applicable.
@@ -169,14 +170,13 @@ follow the same ordered task contracts; delegation uses the following shared bat
 
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
-3. Build batches only from consecutive task entries in the approved list and one required
-   model class. Keep coherent producer/consumer work together to amortize startup and retain
+3. Build batches only from consecutive task entries in the approved list and one exact profile per invocation. Keep coherent producer/consumer work together to amortize startup and retain
    useful context. Internal dependencies, shared files, and phase/story headings do not require
    a split when one writer executes tasks sequentially, verifies each producer before its
    consumer, preserves task acceptance boundaries, and commits each task separately. Never pull
    a distant producer forward or reorder a prerequisite to fill a batch.
-4. Aim for 5–7 tasks only when scope and observed context permit; it is not a quota. Split at
-   evidenced model-class changes, owner gates, context limits, genuinely incompatible scope, or
+4. Normally 2–5 related tasks when scope and observed context permit; it is not a quota. Split at
+   evidenced material profile differences, permissions, owner gates, context limits, incompatible scope, or
    external integration prerequisites that cannot be satisfied inside the batch. A one-task batch
    is valid when justified; headings, overlapping files, or internal dependencies alone are not.
 5. Keep contract producers before consumers and preserve explicit owner gates. The batch brief
@@ -192,7 +192,7 @@ for correction and renewed approval as required by the project's workflow.
 
 Before execution, present the entire execution plan as a Markdown table. Include
 one row per batch with its batch number, task IDs, scope, dependencies, integration
-surface, verification, required model class, execution mode (local or delegated),
+surface, verification, selected exact binding and effort, execution mode (local or delegated),
 and initial status. Track eligible local segments as work units in this same table
 and tracker, not a second execution algorithm. Do not ask for routine batching
 approval when the owner already approved implementation.
@@ -207,13 +207,32 @@ while implementation remains.
 
 ## Select Execution Capability
 
-Use the agent/model mappings obtained in preflight for `sonnet-class` and
-`opus-class`, as applicable. Before each batch, confirm its selected mapping remains
-usable. If a new class or replacement mapping is needed, repeat the capability
-check and obtain the selection through the question capability before proceeding.
-For eligible local work, recheck current model/class and context fit at each checkpoint;
-if unsafe, record the evidence and delegate the affected segment, never silently
-switch models. For delegated work, an agent's report is not proof of completion.
+Before each batch, record ordered task IDs, assessment of residual reasoning, agentic/tool
+depth, weakest material blind spot, scope/coupling, failure cost/reversibility and relevant
+guidance. Record applicable approved evidence or explicit none, proposed versus owner-selected
+exact binding and effort, separate Family rationale and Effort rationale, and a conditional
+repair option in the existing brief/tracker. Empty guidelines invent no success history.
+Deep tools, weak oracles, unresolved design or costly failure defeat optimistic Luna routing;
+use the seed's stronger-option or owner/design gates, not a universal ranking.
+
+Verify permissions, callable binding, supported effort and tool access through the installed
+runtime at assignment and again at dispatch. Registry entries and suffix syntax alone
+cannot establish support or authenticated callability. Any missing permission, binding, supported effort or tool access blocks dispatch;
+missing owner selection also blocks. Live/provider probes require separate explicit permission;
+static fixtures do not prove live support. Required manual gates remain blocking.
+For eligible local work, recheck current exact profile and context fit at each checkpoint;
+if unsafe, record evidence and delegate, never silently switch profiles. Keep the recorded
+local/delegated strategy and its count/authorization gates. Requested/selected is not observed:
+unobservable actual model or effort remains unknown, never inferred from the request.
+For delegated work, an agent's report is not proof of completion.
+
+Copy the owner-selected binding and effort unchanged into the actual dispatch arguments:
+use the installed runtime's verified interface (for pi-subagents, model: "provider/id:effort").
+Compare the final arguments with the recorded decision before launch; no silent settings/agent override
+may replace the selected profile. One invocation supplies one exact profile for all its tasks,
+never per-task assignments. A mismatch or unsupported argument blocks launch and returns to
+capability/owner selection, not automatic substitution. Record selected and observed profiles
+separately in the tracker; unknown observation stays unknown.
 
 - Delegate a task or safe batch only when write scope and dependencies are clear.
 - Run conflicting or dependent work sequentially.
@@ -228,8 +247,8 @@ switch models. For delegated work, an agent's report is not proof of completion.
   headroom is adequate. Inspect accumulated context, compaction, tool output, and demonstrated
   scope rather than treating task count or billed tokens as capacity. When evidence is inadequate,
   record that limitation and issue a smaller fresh brief with durable handoff context.
-- There is no forced one-session-per-class limit. Rotate to a fresh bounded child when
-  observed capacity is inadequate, retaining selected class/model and durable evidence.
+- There is no forced one-session-per-profile limit. Rotate to a fresh bounded child when
+  observed capacity is inadequate, retaining selected exact profile and durable evidence.
   If context metrics are unavailable, state that limitation and conservatively narrow
   the next delegation; do not force reuse or equate billed tokens with occupied context.
 - Inspect the failed run and tool invocation before retry or relaunch. Resume with a
@@ -249,12 +268,10 @@ mutation tool in a brief or smoke test. If the tool set is uncertain, verify it 
 a bounded, safe test before implementation; if no permitted mutation tool works,
 stop and report the observed blocker.
 
-For optional real-work routing experiments, apply the shared contract's class-compatible
-residual-reasoning guidance using only usable owner-selected options. Low favors a cheaper
-compatible selected option; medium requires a strong executable acceptance oracle plus
-stronger verification/review; high favors stronger compatible reasoning, not forced opus
-reclassification or share-gate bypass. Absence preserves existing routing. Never silently
-replace selected models, weaken approved classes or turn one outcome into permanent policy.
+For optional real-work routing experiments, use the qualified seed with usable owner-selected
+options and independent family/effort rationales. Strong contracts and cheap recovery may justify
+bounded experiments; higher effort does not resolve missing requirements or permissions.
+Never silently replace selected models or turn one outcome into permanent policy.
 On a cheap-option failure, inspect the child run and failed invocation first. Preserve valid
 completed evidence and unrelated workspace changes; isolate/restore only the failed task's
 clean state where existing workspace architecture and authority permit. Escalate only via
@@ -263,7 +280,7 @@ capability or unestablished clean state stops with the precise blocker; no blind
 Record both attempts, corrections and escalation outcomes at the evidence checkpoint.
 
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
-required model class, selected model, allowed files, dependencies, acceptance
+owner-selected exact binding and effort, allowed files, dependencies, acceptance
 criteria, baseline failures, exclusions, authorization limits, the per-task commit
 convention and delegate ownership of internal task/evidence commits, the selected
 agent's verified file-mutation tool when file changes are needed, and required
