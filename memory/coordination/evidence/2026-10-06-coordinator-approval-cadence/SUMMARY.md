@@ -1,6 +1,6 @@
-# Coordinator approval/cadence — planning
+# Coordinator approval/cadence
 
-Run: `2026-10-06-coordinator-approval-cadence`. Current disposition: F001/T001/T002 verified and committed; B1 completed; fresh independent final review dispatch next. Implementation performed locally.
+Run: `2026-10-06-coordinator-approval-cadence`. Current disposition: F001/T001/T002 implemented locally, verified and independently accepted; B1 completed. No blockers or active children; next `/reload`.
 
 Owner selected TinySpec and current direct planning profile `openai-codex/gpt-6.1-sol:medium` through ask_user in session `01a11363-637b-70cf-9968-9f8d03265bf9`. Selected/observed binding and effort agree with PI_PROVIDER/PI_MODEL/PI_REASONING_LEVEL. Role: planner/source/tasks/review. Family rationale: instruction/recovery reconciliation; effort rationale: settled local scope, bounded medium reasoning. All six factors: settled design with moderate residual instruction reasoning; shallow local read/edit/Git tools; static oracle cannot prove obedience; coordinator/shared-owner coupling; reversible Markdown/tests but important restart safety; no approved project guidance. No live research needed, no delegation. Repairs require inspected concrete failure, preserved task state and renewed profile selection if changed.
 
@@ -35,5 +35,11 @@ Batch B1 remains in_progress: T001 completed, T002 in_progress. Local current pr
 | T002 | 396945e | 3242f3a | V1 docs-to-contract/local links PASS; V2 lint 22 skills/0 failures and all suites PASS; V3 full packet mapped A1–A5, review pending; V4 diff/path/task-order audit PASS |
 
 B1 completed: T001/T002 verified. T002 documentation points to the same approval/recovery owners; task checkbox change only, approved contracts preserved. Lint reports suites 87/135/4/4/7/28/9/14/12 PASS plus planner/task-commit checkers. Validation packet: `docs/plans/reviews/coordinator-approval-cadence-validation.md`. Audited implementation range `1b9653c..3242f3a` includes owner-authorized F001, two tasks and focused evidence. Next dispatch: one fresh read-only native reviewer, exact approved `openai-codex/gpt-6.1-sol:medium`; no implementation delegation. Runtime fleet inspected: no active children, capacity/spawn budget unlimited. Reviewer observation unknown until runtime reports it. No routine writes while review runs; returned-ID capture retains recovery safety.
+
+| Independent acceptance | 6f4ec8c | 775826f | fresh reviewer 6efc8da0 completed; no issues, OK; exact range inspected; final acceptance record links/diff PASS |
+
+Final reviewer `6efc8da0-dc05-4e39-a720-9114e4291169` read actual range `1b9653c..3242f3a` and matched supplied diff byte-for-byte, independently compared protected worker/recovery clauses, and found no issues/open questions. Report `/tmp/coordinator-approval-cadence-final-review.md`; durable substantive verdict in validation record. Reviewer selected `openai-codex/gpt-6.1-sol:medium`; its original actual-profile observation unknown remains retained. Later runtime status confirms terminal process, model `gpt-6.1-sol`, thinking medium; full provider binding not independently exposed. Recorded tests reviewed, not rerun by reviewer. A1–A5 and all REQUIRED items accepted; implementation complete, offline feature acceptance verified, live obedience NOT RUN. Pending child-ID snapshot reconciled at terminal closeout, not repeatedly checkpointed. No worker behavior changes.
+
+Final reflection (nine-question synthesis): verified coordinator approval/cadence correction is global approved skill scope, not a new project learned guideline; fixture-specific brittleness is incidental and evidence-only. No project pattern, contradiction, delegation/manual discovery or surprise justifies a new guideline. No update proposed, guidelines unchanged. No implementation delegation; one separately approved read-only final review only.
 
 No guideline update proposed. Worker duties unchanged. Source digest: `42899605f88dc92663914d0ce7dd2c35c5017048585e50dcf401718af700ea16`. Actual runtime obedience NOT RUN; preparation is not feature acceptance.
