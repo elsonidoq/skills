@@ -13,7 +13,7 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 | 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | completed: 7c6bdad; parent audit PASS |
 | 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | completed: bb4d5fa, 01e86f3; RF001 868f20e; parent audit PASS |
 | 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | completed: fa6a343; parent audit PASS |
-| 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | in_progress |
+| 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | completed: b487e60; parent audit pending |
 | 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
 | 6 | T007–T010 | 5 | Luna brief → safe recovery → temp-Git oracle → memory; per-task commits | Sol 6.1/medium | delegated | pending: 5 |
 | 7 | T011 | 6 | remaining active consumers; focused suite checks | Terra 5.6/medium | delegated | pending: 6 |
@@ -55,3 +55,23 @@ Terra/medium context and read/bash/edit/write availability were provided at disp
 provider behavior, cost and live workflow obedience remain unknown. No settings, guideline,
 rollback, deployment or T005 work occurred. Product diff/staged paths were inspected before the
 focused commit. Evidence-only checkpoint `86389846128ae8f68512f256fbda392e249f37f1` followed the T004 product commit. Coordinator inspected both commit parents/scopes, full six-path diff and [T004.md](T004.md), reran task-generation contract (6), order-helper (7), both fixture validators, planner checker/84 tests and scoped whitespace: PASS. Tracked tree/index clean, protected untracked paths untouched. T005 is released only after this additional audit/index checkpoint.
+
+## T005 checkpoint
+
+[T005.md](T005.md): exact baseline `ca7324a`; VERIFIED product
+`b487e60c3032d1246db2ddc9676ff80d25698337`, six product paths. Sol 6.1/medium
+session records matched approved selection; actual bash/edit/write observed. Coordinator
+routing now uses current approved exact binding/effort/context, separate advisory effort
+rationale, immediate dispatch drift stops and bounded diagnosed retry authority. Local/delegated
+thresholds, async sequential graph order, task/evidence commits, owner gates and independent
+final review preserved. No T008/T009 failed-attempt/inverse exception implemented.
+Direct changed-seam planner assertions were migrated after inspected failures; supervisor
+also approved only A11/A12 memory mutation assertions as a narrow discovered overlap.
+No suppression or bypass. Final coordinator 4/7, planner static/85, memory 25, task-generation
+6/order 7, approved task order, task-commit static/12 and full 22-skill lint (including 135
+workflow fixtures) PASS; whitespace and complete six-path diff inspected. Freeze deliberately
+renewed from `ef21eb99...` to `d80611aa...` after exact unchanged safety-section comparison.
+Six approved artifact identities still match; guidelines/protected untracked files untouched.
+Distinct T005/SUMMARY/INDEX evidence-only checkpoint precedes return. Parent audit and final
+independent review pending; T006 remains unreleased and was not started. Static checks are not
+provider-internal effort or live obedience evidence. `/reload` remains required after acceptance.
