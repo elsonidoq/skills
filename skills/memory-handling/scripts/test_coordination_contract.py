@@ -68,7 +68,7 @@ class CoordinationContractTests(unittest.TestCase):
         ):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordinator", "### Coordination evidence checkpoint", clause, "coordination-checkpoint")
-        for clause in ("append-oriented", "run record before its index entry", "Keep one row per run", "sensitive payloads"):
+        for clause in ("Evidence is factual and append-oriented:", "run record before its index entry", "Keep one row per run", "sensitive payloads"):
             self.assert_rejected("coordination", "## Separate factual evidence", clause, "coordination-evidence")
 
     def test_A6_reflection_uncertainty_and_no_update_removals(self):

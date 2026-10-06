@@ -495,7 +495,7 @@ def check_contracts(texts):
             "one compact evidence file per run", "SUMMARY.md", "Do not create separate task",
             "short attributable checkpoint/attempt ledger", "Older runs with separate task",
             "Reuse that ID on resume", "never\noverwrite another run",
-            "append-oriented", "without erasing observations or prior runs",
+            "Evidence is factual and append-oriented:", "without erasing observations or prior runs",
             "initialized\nproject-local store", "never replace it", "If an evidence write\nfails",
             "exact selected and observed profile", "unknown observation is never overwritten",
             "contract strength, first/final outcome", "item check/checkpoint references",
