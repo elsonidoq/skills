@@ -29,9 +29,14 @@ outputs, smallest sufficient checks and manual/permission gates through
 [task-generation](skills/task-generation/SKILL.md), not mandatory model classes or shares.
 The coordinator uses the [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md)
 plus applicable approved project guidance to assess consecutive sequential batches, normally
-2–5 related tasks when feasible, never a quota. Select one exact binding and independently
-justified reasoning effort per invocation through owner choice; task assignments never
-silently select a different profile inside that invocation.
+2–5 related tasks when feasible, never a quota. Assess every batch before presenting the complete
+approval table, with a one/two-sentence batch description, exact proposed binding/effort and
+independent family/effort rationales. Implementation authorization is not routing approval:
+explicit `ask_user` approval of boundaries/profiles is required before implementation or dispatch.
+Reuse verified unchanged approval on resume; changed boundaries/profiles need affected-row approval.
+There is no universal Sol/medium default and no forced model diversity. Select one exact binding
+and independently justified reasoning effort per invocation through owner choice; task assignments
+never silently select a different profile inside that invocation.
 
 At assignment and dispatch verify permissions, tools, callable binding and supported effort
 through the installed runtime. Registry entries, thinking flags and suffix syntax alone
@@ -122,8 +127,14 @@ Coordinator maintains BRIEF implementation-relevant current truth in project-own
 It is not a coordinator-owned tracker or authorization record. Initialization records that
 lifecycle without fabricated progress; finish-session reconciles the same snapshot. Preserve
 custom content/write ownership, replace current truth rather than append history, and recover
-from authoritative approval/Git/evidence/runtime state before continuation. Updates use bounded
-coordinator evidence checkpoints without changing mandatory worker task/evidence commits.
+from authoritative approval/Git/evidence/runtime state before continuation. Updates use only the
+coordinator owner's exclusive write boundaries: approved start/imminent dispatch, immediate child-ID
+capture with safe deferred commit, audited batch/verified local task checkpoint, genuine blocker,
+final review/closeout, and materially changed recovery truth. Coalesce same-boundary changes and
+skip byte-identical writes; polling, ordinary progress and healthy internal worker activity cause
+no coordinator persistence. Reference worker evidence rather than duplicate its ledger. Reflection
+occurs at terminal closeout or a genuine blocked pause, not routine batch transitions. Mandatory
+worker task/evidence commits and local implementer duties remain unchanged.
 Write/ownership/checkpoint failures stop affected work. No compaction hook, persistence framework,
 runtime/settings change, dependency, automatic restart or live provider exercise is required.
 

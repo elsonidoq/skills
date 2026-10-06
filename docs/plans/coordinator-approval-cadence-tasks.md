@@ -22,7 +22,7 @@ Consecutive tasks share source and the same coordinator approval/cadence seam. T
   - **REQUIRED T001/V4:** manual baseline-to-diff map confirms unchanged worker implementation/evidence commits, no supervisor waits, no worker snapshot writes, exact-profile propagation and recovery safety. `git diff --check` and explicit owned-path commit inspection pass; record focused SHA and subsequent evidence checkpoint. Ambiguous shared-owner change blocks completion rather than expanding scope.
   - **Verification effort:** focused additions to existing harnesses plus existing directly affected regressions; no new framework or exhaustive matrix.
 
-- [ ] T002 — Align coordinator-facing documentation and reconcile acceptance
+- [x] T002 — Align coordinator-facing documentation and reconcile acceptance
   - **Depends**: T001
   - **Outcome:** normative documentation points to the same approval and cadence authority; A1–A5 have concrete integrated evidence and an independent-review packet.
   - **Source coverage:** A5; integrated A1–A4.
