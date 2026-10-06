@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [Coordinator approval/cadence — planning review](coordinator-approval-cadence-planning-review.md): exact TinySpec/task identities and combined approval gate; coordinator-only scope.
 - [Active planning routing — TinySpec planning review](active-planning-routing-planning-review.md): exact source/task identities, coverage, validation limits and combined approval gate.
 - [Active planning routing — bounded implementation validation](active-planning-routing-validation.md): item-mapped static/manual evidence, scenarios and reviewer packet; independent final review pending, live NOT RUN.
 - [Coherence initialization — planning review and approval](coherence-planning-review.md): reviewed content and owner gate.
