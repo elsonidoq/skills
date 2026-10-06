@@ -53,3 +53,7 @@ When new evidence disproves an earlier position, update the classification and p
 - Accepted changes have verification evidence.
 - Declined items have technical rationale.
 - Remaining risks or unresolved decisions are explicit.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Review is read-only until an authorized fix becomes a separate verified retained task; unknown inherited changes stop.

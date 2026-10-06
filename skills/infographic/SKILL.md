@@ -49,7 +49,7 @@ python3 <skill-dir>/scripts/build.py <kb-root> <content.json>
 5. Inspect the resulting file for readable structure, escaped content, working source links, and mobile behavior.
 6. Report the output path. If an actual delivery bridge exists, pass its outbox path with `--outbox <path>` and report the observed delivery state separately.
 
-Do not commit the page unless the user explicitly asks.
+For authorized retained repository output, apply the shared task checkpoint after required validation; do not infer creation, upload, or external-delivery authority.
 
 ## Content Schema
 
@@ -102,3 +102,7 @@ Use grouped list or step items when an item has a short `term`, optional `detail
 - Missing renderer capability or knowledge-base sources.
 - Sources were not opened or cannot be traced.
 - The content is mostly prose sections when a list, comparison, steps, or stats express its structure better.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Authorized retained repository output checkpoints after its existing approval and validation; this neither grants creation/upload authority nor requires a commit for external-only output.

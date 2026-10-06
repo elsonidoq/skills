@@ -164,3 +164,7 @@ Command ends after Phase 1 design. Report branch, IMPL_PLAN path, and generated 
 - [ ] Plan workflow executed and design artifacts generated
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with branch, plan path, and generated artifacts
+
+## Task checkpoint boundary
+
+Apply the shared [task-commit contract](../../skills/memory-handling/references/task-commit-contract.md): read-only analysis creates no empty commit; authorized retained artifacts checkpoint as bounded tasks without bypassing their existing approval gates.

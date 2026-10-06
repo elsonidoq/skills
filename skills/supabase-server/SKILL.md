@@ -89,3 +89,7 @@ Do not mechanically translate auth names or fields from old examples. Use the in
 - Confirm secrets are not logged, returned, or committed.
 
 For detailed APIs, use the matching package's `docs/getting-started.md`, `docs/auth-modes.md`, adapter docs, core-primitives docs, error-handling docs, API reference, security docs, and source exports. Treat those files as versioned references, not timeless claims.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Secret safety and explicit external-operation permissions remain independent; only authorized retained repository changes checkpoint.

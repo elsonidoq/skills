@@ -19,18 +19,18 @@ the consumer is already wired; later task evidence changes rows only after verif
 | finish-session-jev | Same closeout boundary; external routing remains authorized separately | integrated | T003 link/read-through |
 | track-open-issue | Bounded retained register update | integrated | T003 link/read-through |
 | handoff-prompt | Retained handoff deliverable, not unknown inherited work | integrated | T003 link/read-through |
-| brainstorming | Analysis/read-only unless an authorized retained deliverable exists | planned | T004 |
-| using-git-worktrees | Workspace/ignore decisions stay gated; no commit waiver | planned | T004 |
-| requesting-code-review | Review request artifacts when retained; review scope stays bounded | planned | T004 |
-| receiving-code-review | Review fixes are separate verified tasks; review alone is read-only | planned | T004 |
-| writing-skills | Bounded skill deliverable is a task | planned | T004 |
-| incorporate-skill | Adaptation-plan approval precedes writes and checkpoints | planned | T004 |
-| infographic | Authorized retained repository output checkpoints automatically | planned | T004 |
-| scientific-method-debugging | Investigation-only work has no empty checkpoint; retained fix does | planned | T004 |
-| supabase-server | External/secret safety and operation permissions remain independent | planned | T004 |
+| brainstorming | Analysis/read-only unless an authorized retained deliverable exists | integrated | T004 link/read-through |
+| using-git-worktrees | Workspace/ignore decisions stay gated; no commit waiver | integrated | T004 link/read-through |
+| requesting-code-review | Review request artifacts when retained; review scope stays bounded | integrated | T004 link/read-through |
+| receiving-code-review | Review fixes are separate verified tasks; review alone is read-only | integrated | T004 link/read-through |
+| writing-skills | Bounded skill deliverable is a task | integrated | T004 link/read-through |
+| incorporate-skill | Adaptation-plan approval precedes writes and checkpoints | integrated | T004 link/read-through |
+| infographic | Authorized retained repository output checkpoints automatically | integrated | T004 link/read-through |
+| scientific-method-debugging | Investigation-only work has no empty checkpoint; retained fix does | integrated | T004 link/read-through |
+| supabase-server | External/secret safety and operation permissions remain independent | integrated | T004 link/read-through |
 
 Relevant active prompt routes (`.pi/prompts/speckit.*.md`) are package entry points rather than
-skills. T004 wires the implementation route and classifies planning/analyze/checklist/clarify/
+skills. T004 wires all active routes and classifies planning/analyze/checklist/clarify/
 converge/plan/specify/tasks/taskstoissues routes as read-only or retained-artifact producers
 under the same contract; no prompt may offer a commit waiver.
 

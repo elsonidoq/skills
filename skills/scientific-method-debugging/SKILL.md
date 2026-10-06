@@ -87,3 +87,7 @@ Example: if a test proves the classifier returns the right tag for the correct c
 - Instrumenting only where you already suspect the bug
 - Proposing a fix the moment you spot a suspicious value, before checking the full picture
 - Fixing two root causes in one change
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Investigation and disposable probes create no empty commit; an authorized retained fix is a bounded checkpointed task.

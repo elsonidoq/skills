@@ -51,3 +51,7 @@ Offer two or three viable approaches with trade-offs and a recommendation. Prese
 - Important alternatives and trade-offs were considered.
 - Error, compatibility, and verification expectations are stated.
 - The user approved the design that will be implemented.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Exploration remains read-only/disposable until existing approval authorizes retained implementation; no empty checkpoint for analysis.

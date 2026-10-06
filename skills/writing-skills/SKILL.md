@@ -58,3 +58,7 @@ Before publishing, verify:
 - every supporting file is still required and referenced
 
 For a discipline-enforcing or high-risk skill, test realistic pressure scenarios before and after the change. For ordinary guidance, run a focused read-through or static validation that would have exposed the original defect.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). A material reusable-skill deliverable is a bounded retained task; use the shared checkpoint after validation.

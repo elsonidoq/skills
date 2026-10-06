@@ -41,3 +41,7 @@ After entering the workspace:
 ## Ready State
 
 Report the workspace location, branch or detached state, setup performed, baseline result, and any fallback taken. Never claim isolation or a clean baseline without observable evidence.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Worktree and ignore-rule choices remain explicit gates; this contract supplies no waiver or authority to alter ignore rules.

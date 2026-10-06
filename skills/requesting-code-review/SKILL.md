@@ -37,3 +37,7 @@ The reviewer mechanism may be an agent, person, service, or local review tool. D
 - Findings cite concrete locations and impact.
 - The verdict states whether the change is ready and under what conditions.
 - Unresolved findings and verification gaps are visible to the next decision-maker.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Review requests preserve exact review scope; a read-only request does not create a commit or grant implementation authority.

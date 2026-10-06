@@ -343,3 +343,7 @@ Success criteria must be:
 - [ ] Specification written to `SPEC_FILE` and validated against quality checklist
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with feature directory, spec file path, and checklist results
+
+## Task checkpoint boundary
+
+Apply the shared [task-commit contract](../../skills/memory-handling/references/task-commit-contract.md): read-only analysis creates no empty commit; authorized retained artifacts checkpoint as bounded tasks without bypassing their existing approval gates.

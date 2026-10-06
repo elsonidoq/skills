@@ -67,3 +67,7 @@ Validate changed paths, frontmatter, local references, and relevant focused test
 capability is available, request a fresh review for portability, safety, trigger accuracy, and accidental loss of
 essential guidance. Otherwise, perform a separate self-review and report `independent review: UNAVAILABLE`. Report
 the source, destination, changes, validations, review findings, and anything intentionally left project-local.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Adaptation-plan approval still precedes every write; after approval, owned retained changes checkpoint without adopting unknown work.

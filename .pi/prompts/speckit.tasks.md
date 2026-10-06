@@ -214,3 +214,7 @@ Every task MUST strictly follow this format:
 - [ ] tasks.md generated with all phases, task IDs, and file paths
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with task count, story breakdown, and MVP scope
+
+## Task checkpoint boundary
+
+Apply the shared [task-commit contract](../../skills/memory-handling/references/task-commit-contract.md): read-only analysis creates no empty commit; authorized retained artifacts checkpoint as bounded tasks without bypassing their existing approval gates.
