@@ -1,0 +1,22 @@
+# Model routing implementation — execution tracker
+
+Origin: planner / Standard. Approved spec, plan, tasks, assignments and separate reviewer: `specs/001-model-family-routing/spec-approval.md` and `overall-review-approval.md` at approval checkpoint `b8f0ee9`; initial task contracts SHA-256 `fa81735de24f8ee0251f1f45c9afcca66a9b2336717ff100cf62c53358e0c78c`. Current execution baseline: `b8f0ee9249ebefae1896a799e53c72961722be46`. This is a factual run tracker, not project guideline authority.
+
+Verified store: `memory/coordination/GUIDELINES.md` says no approved guidelines; `evidence/INDEX.md` read, selected previous routing planning record consulted for capability/provenance. Gotcha-memory adoption not declared and `memory/MEMORY.md` absent; no invented gotchas. No initialization needed. Unrelated untracked `.env` and `docs/plans/mandatory-task-commits.md` exist; do not inspect or stage. Tracked tree and index clean, Git user name/email present; no signing requirement configured. Workspace is the existing main checkout, not a claimed isolated worktree. No settings, guideline or provider benchmark change is authorized.
+
+Preflight checks: `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` PASS and resolved this feature; SpecKit hooks file absent; requirements checklist 16/16 PASS. `python3 skills/coordinate-implementation/scripts/test_intake_contract.py`, `test_batching_contract.py`, `python3 skills/task-generation/scripts/check-task-order.py specs/001-model-family-routing/tasks.md`, `python3 scripts/check-task-commit-contract.py`, `python3 scripts/check-planner-workflow.py` PASS at baseline. These are static/fixture checks, not implementation acceptance. `ask_user` question capability observed; async delegated reviewer previously completed; worker role advertises read/bash/edit/write. Settings modelScope currently includes exact Terra 5.6, Sol 6.1 and Astra 6 (not Luna); the prior owner-authorized basic read calls for the proposed medium efforts and earlier Astra/medium reviewer are in the planning evidence. Fresh task-specific capability and context checks still required before each launch; no live writer success is inferred.
+
+Count: twelve approved implementation tasks; all pending at start. Strategy: sequential delegated batches because count >3 and current local model (`openai-codex/gpt-6-sol`) does not match any selected task binding. Internal dependencies remain ordered; one writer per batch in shared checkout. No parallel implementation and no routine per-task owner question. Stop if unexpected worktree/index drift, failed checkpoint or tool/capability mismatch. The existing task list is the authoritative contract; this table is progress state only.
+
+| Batch | Tasks | Prerequisite | Surface/checks | Selected binding | Mode | State |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | in_progress |
+| 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | pending: 1 |
+| 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | pending: 2 |
+| 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | pending: 3 |
+| 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
+| 6 | T007–T010 | 5 | Luna brief → safe recovery → temp-Git oracle → memory; per-task commits | Sol 6.1/medium | delegated | pending: 5 |
+| 7 | T011 | 6 | remaining active consumers; focused suite checks | Terra 5.6/medium | delegated | pending: 6 |
+| 8 | T012 | 7 | integration, suite/lint, fresh independent reviewer | Sol 6.1/medium writer; Astra 6/medium reviewer | delegated | pending: 7 |
+
+Per-task attempt/checkpoint records go in this run's separate `T###.md` files, then the compact index is refreshed. T001 allowed output: this summary and T001 record for factual evidence; source-cited inventory may be retained in this run's T001 record, not a new global model policy. The implementer must establish the actual HEAD/index at launch, compare to this baseline after this evidence checkpoint, use explicit task-owned paths, run required checks, and commit the task outcome only if verified. A separate evidence-only checkpoint must capture its SHA before T002 begins. Unsafe/mixed ownership stops. No actual T001 execution yet at this tracker initialization.
