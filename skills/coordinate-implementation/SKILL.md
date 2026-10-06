@@ -394,10 +394,21 @@ do not require owner escalation.
 At each task/attempt checkpoint, including failed, blocked or partial work and manual/user
 validation, record observed outcomes under the shared contract's associated write bounds.
 Identify task/type, areas/tags, optional `residual_reasoning: low|medium|high` and rationale,
-approved class, actual selected capability role/model/reasoning effort (or `unknown`),
-individual attempt/check results, reviewer findings, inspected failure cause, retries and
-escalation outcomes, surprises and manual findings. Unknown is not success. Keep bounded
-evidence links, not raw logs/secrets; distinguish each attempt and preserve corrections.
+selected capability role, exact selected and observed profile (binding plus effort or unknown),
+assessment factors and applicable approved guidance or none, contract strength, first/final outcome,
+diagnosis, repair/escalation and item check/checkpoint references. Retain accepted, partial, escalated
+and blocked attempts, individual check results, reviewer findings, surprises and manual findings.
+Use attribution `model_capability`, `planning_or_spec_gap`, `verification_contract_gap`, `batching_error`,
+`environment_or_tooling`, `external_dependency` or `unknown` with concrete diagnostic evidence.
+Non-model causes never count as capability failure; unavailable environments leave required items
+not_verified and acceptance blocked without a model penalty. Complete meaningful first-attempt
+success supports qualified positive feedback; weak or invalidated successes are not strong positive
+guidance. An unknown observation is never overwritten by selection; append later supported observations
+with provenance, preserving original uncertainty and every prior attempt. Unknown is not success.
+Keep bounded evidence links, not raw logs/secrets; distinguish attempts and preserve corrections.
+Relevant approved guidelines may override the seed based on scope/evidence, never owner/source or
+permission gates; selective reflection, exact owner approval and drift checks remain the only
+route to learned guidelines.
 
 Reuse a safe project run ID or retain a unique filesystem-safe date/subject ID in the
 tracker; reuse on resume, never overwrite another run. Persist separate summary/task records

@@ -401,5 +401,92 @@ class SimulatedRepairTests(unittest.TestCase):
         self.assertIn("unknown cause stops blind restart", " ".join(TEXT.split()))
 
 
+
+COORDINATION_PATH = Path(__file__).parents[2] / "memory-handling" / "references" / "project-coordination.md"
+
+
+def simulated_feedback(selected, observed, outcome, diagnosis, *, strong=True, invalidated=False):
+    """Qualified offline attempt record, not a learner or guideline writer."""
+    return {"selected": selected, "observed": observed, "first_outcome": outcome,
+            "final_outcome": outcome, "diagnosis": diagnosis,
+            "contract_strength": "strong" if strong else "weak",
+            "capability_penalty": outcome == "blocked" and diagnosis == "model_capability",
+            "qualified_positive": outcome == "accepted" and strong and not invalidated}
+
+
+class SimulatedFeedbackTests(unittest.TestCase):
+    def test_feedback_instruction_carriers(self):
+        memory = " ".join(COORDINATION_PATH.read_text().split())
+        coordinator = " ".join(TEXT.split())
+        for text in (memory, coordinator):
+            for phrase in (
+                "exact selected and observed profile", "contract strength", "first/final outcome",
+                "accepted, partial, escalated and blocked", "model_capability",
+                "planning_or_spec_gap", "verification_contract_gap", "batching_error",
+                "environment_or_tooling", "external_dependency", "unknown",
+                "Non-model causes never count as capability failure",
+                "weak or invalidated successes", "unknown observation is never overwritten",
+            ):
+                with self.subTest(phrase=phrase, carrier="memory" if text == memory else "coordinator"):
+                    self.assertIn(phrase, text)
+        self.assertNotIn("class-share gates remain authoritative", memory)
+        self.assertIn("Relevant approved guidance may override the seed", memory)
+
+    def test_environment_blocked_luna_medium_without_capability_penalty(self):
+        brief, returned = audited_sample()
+        returned["observed_profile"] = "unknown"
+        returned["items"]["T006/V1"].update(status="not_verified", evidence=None,
+                                              reason="required local tool unavailable; not run")
+        outcome = simulated_audit(brief, returned)
+        self.assertEqual(outcome, "blocked")
+        feedback = simulated_feedback(brief["selected"], returned["observed_profile"],
+                                      outcome, "environment_or_tooling")
+        self.assertEqual(feedback["selected"], "symbolic/luna:medium")
+        self.assertEqual(feedback["observed"], "unknown")
+        self.assertEqual(feedback["diagnosis"], "environment_or_tooling")
+        self.assertFalse(feedback["capability_penalty"])
+        self.assertFalse(feedback["qualified_positive"])
+        self.assertTrue(returned["items"]["T006/V1"]["reason"])
+        for cause in ("planning_or_spec_gap", "verification_contract_gap", "batching_error",
+                      "environment_or_tooling", "external_dependency", "unknown"):
+            self.assertFalse(simulated_feedback(brief["selected"], "unknown", "blocked", cause)["capability_penalty"])
+        for strong, invalidated in ((False, False), (True, True)):
+            self.assertFalse(simulated_feedback(brief["selected"], "unknown", "accepted", "unknown",
+                                               strong=strong, invalidated=invalidated)["qualified_positive"])
+
+    def test_approved_applicable_guideline_sol_medium_overrides_seed_luna_max(self):
+        seed = "symbolic/luna:max"
+        guideline = {"ref": "fixture/GUIDELINES.md#compatibility", "approved": True,
+                     "applicable": True, "evidence": "fixture/repeated-compatibility-failures",
+                     "profile": "symbolic/sol:medium"}
+        def select(guidance, *, owner=True, source=True):
+            proposal = guidance["profile"] if guidance["approved"] and guidance["applicable"] else seed
+            dispatch = SimulatedProfileTraceTests.simulated_dispatch(proposal, owner=owner and source)
+            return proposal, dispatch
+        proposal, dispatch = select(guideline)
+        self.assertEqual(proposal, "symbolic/sol:medium")
+        self.assertEqual(dispatch["args"]["model"], proposal)
+        self.assertTrue(guideline["ref"] and guideline["evidence"])
+        for gate in ("owner", "source"):
+            self.assertEqual(select(guideline, **{gate: False})[1]["disposition"], "blocked")
+        for field in ("approved", "applicable"):
+            unqualified = dict(guideline, **{field: False})
+            self.assertEqual(select(unqualified)[0], seed)
+        self.assertEqual(guideline["profile"], "symbolic/sol:medium")  # no mutation
+
+    def test_memory_lifecycle_approval_and_drift_preserved(self):
+        memory = " ".join(COORDINATION_PATH.read_text().split())
+        for phrase in (
+            "Resolve the current project root", "create only missing directories",
+            "commit only those new files", "no opt-out or handoff-only persistence path",
+            "read the compact evidence index first", "open only those selected records",
+            "before its index entry", "never overwrite another run",
+            "allow accept, edit, reject, or add", "Implementation approval grants no guideline",
+            "compare with the approved baseline", "drift stops application",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, memory)
+
+
 if __name__ == "__main__":
     unittest.main()
