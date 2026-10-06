@@ -18,3 +18,4 @@
 - T004 correction `827b684`: restored existing SpecKit before/after hook semantics byte-for-byte; no new hook subsystem or bypass; validation pending.
 
 - T005 task `0b26a28`: static/mutation and temporary-Git fixtures added; fail-before fixture correction recorded; all focused checks PASS; validation pending.
+- T005 follow-up `b1b6da4`: routine diagnostic oracle and actual mutation tests added; hook operational guards and residual-task fixture now covered; validation pending.
