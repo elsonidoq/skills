@@ -12,7 +12,7 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | completed: 7c6bdad; parent audit PASS |
 | 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | completed: bb4d5fa, 01e86f3; RF001 868f20e; parent audit PASS |
-| 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | in_progress |
+| 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | completed: `fa6a343`; evidence checkpoint pending |
 | 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | pending: 3 |
 | 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
 | 6 | T007–T010 | 5 | Luna brief → safe recovery → temp-Git oracle → memory; per-task commits | Sol 6.1/medium | delegated | pending: 5 |
@@ -40,3 +40,19 @@ Coordinator independently inspected the actual T002/T003 commit diffs, parent SH
 ## RF001 coordinator review fix
 
 [RF001.md](RF001.md): coordinator identified obsolete source-dependent diagnostic filtering after T003 migration. Baseline `809478b1817380048f4ce6c239374f80ac34c693`; VERIFIED one-path product `868f20e750052d27d5b96b44d5913211fd213539` removes only the temporary helper and restores both direct checker calls. All guards retained; memory 25 tests, planner checker and planner 84 tests plus scoped diff PASS. Resumed Sol 6.1/medium label verified. Separate evidence-only checkpoint precedes handoff; parent audit pending, no blocker, T004 not started. Protected untracked files untouched.
+
+## T004 checkpoint
+
+[T004.md](T004.md): baseline `3c87c20`; VERIFIED product `fa6a3436ad72701ba4684d8d663012034d94d196`.
+The six owned product paths migrate task-generation from active class/share routing to pending
+family/binding/effort selections with a complete task/reviewer preview; both direct TinySpec and
+Standard fixtures retain task order and use no provider IDs. The directly impacted planner
+checker/test overlap replaces its old `30%` and `Model class` assertions only; T011 consumers are
+unchanged. Expected pre-change old-policy assertion failed, then 6 task-generation contract, 7
+order-helper, both fixture validator, negative dependency/story, planner static/84-test, memory
+25-test, brainstorming 4-test, full 22-skill lint and scoped whitespace checks PASS. Exact selected
+Terra/medium context and read/bash/edit/write availability were provided at dispatch; internal effort,
+provider behavior, cost and live workflow obedience remain unknown. No settings, guideline,
+rollback, deployment or T005 work occurred. Product diff/staged paths were inspected before the
+focused commit. This evidence/index checkpoint follows before T005 release; protected untracked
+paths remain untouched.
