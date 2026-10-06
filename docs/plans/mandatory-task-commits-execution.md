@@ -18,21 +18,21 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 
 | Batch | Tasks | Scope | Dependencies | Integration surface | Verification | Class / model | Mode | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | T001–T007 | Contract, coordinator, all consumers/prompts, fixtures, governing docs, integration evidence | Internal T001 → T007, approved order | Shared reference → consumer checkpoints → regression wiring/docs | Per-task required checks and commits; coordinator verifies each checkpoint; final full-range review | sonnet-class / Terra | async delegated, one writer | checkpointed; final validation pending |
+| 1 | T001–T007 | Contract, coordinator, all consumers/prompts, fixtures, governing docs, integration evidence | Internal T001 → T007, approved order | Shared reference → consumer checkpoints → regression wiring/docs | Per-task required checks and commits; coordinator verifies each checkpoint; final full-range review | sonnet-class / Terra | async delegated, one writer | completed |
 
-- [ ] Batch 1 — in_progress; T001–T006 verified; next dependency-ready task T007. Initial child exited prematurely; retained-session continuation follows inspected failure and recovery evidence.
+- [x] Batch 1 — completed; T001–T007 commits and task-relative checkpoints independently verified. Initial incomplete return was inspected and the retained Terra session continued; fresh final review remains pending.
 
 ## Task checkpoints
 
 | Task | State | Task baseline / commit | Checks / remaining work |
 | --- | --- | --- | --- |
 | T001 | completed | 4781969baa8be02f939fbaaf31f8fc3d70cb8ff3 / f49113d5b6dd5f926c2ecea5fb9780562342a0b8; evidence checkpoint 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 | shared contract/inventory; parent checkpoint validated; lint/diff checks PASS |
-| T002 | completed | 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 / d2d1b2f7ac4c744337e2118922cf343b9345128f; coordinator evidence recovery committed separately | coordinator protocol; parent intake 7/batching 3/static workflow/diff checks PASS |
+| T002 | completed | 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 / d2d1b2f7ac4c744337e2118922cf343b9345128f; coordinator evidence recovery b358b64 | coordinator protocol; parent intake 7/batching 3/static workflow/diff checks PASS |
 | T003 | completed | b358b64344a0388328e2079a24fe2d1468e7024b / 65564a4e232872afa99762454754d7412b6f258c; correction bcfb7b3; evidence 251ad9c plus coordinator index recovery | workflow consumers; link/lint tests PASS; actual correction and task-relative clean state independently validated |
-| T004 | completed | 7f7ed1ae09b1f7d2751ab1b68809806414b0622a / 5e60119779596f03e0d31e478957cce650a1dbb4; evidence checkpoint pending | standalone skills/prompts; links/lint/diff PASS |
-| T005 | completed | f33b2395c72a0d4e835123f0cfcdbf388f5764f0 / 0b26a28e31cb618656aaafc01b61ef169ebf0f71; evidence checkpoint pending | static mutations/Git fixtures PASS |
-| T006 | completed | a67497b0f879442f64ee9a2d781851da226d8b81 / e7db4ec2dea26e4c25567352850cb29f2087f8ea; evidence checkpoint pending | governing docs/link checks PASS |
-| T007 | completed | 8b2faaafcd353538ca2dff19c4d628ba9058a81e / f701e697a485b13b0223cd900bf62b9afb3c43d2; evidence checkpoint pending | integrated checks PASS; review packet pending export |
+| T004 | completed | 7f7ed1ae09b1f7d2751ab1b68809806414b0622a / 5e60119779596f03e0d31e478957cce650a1dbb4; correction 827b684; evidence f162c6d/f33b239 | standalone skills/prompts; restored original hooks; parent validated; links/lint/diff PASS |
+| T005 | completed | f33b2395c72a0d4e835123f0cfcdbf388f5764f0 / 0b26a28e31cb618656aaafc01b61ef169ebf0f71; corrections b1b6da4/d2262dd; evidence 48a4245/81d6793/a67497b | diagnostic mutations and Git fixtures PASS; parent validated |
+| T006 | completed | a67497b0f879442f64ee9a2d781851da226d8b81 / e7db4ec2dea26e4c25567352850cb29f2087f8ea; evidence 8b2faaa | governing docs/link checks PASS; parent validated |
+| T007 | completed | 8b2faaafcd353538ca2dff19c4d628ba9058a81e / f701e697a485b13b0223cd900bf62b9afb3c43d2; evidence 105284c plus parent final metadata reconciliation | integration PASS; parent reran lint and confirmed full packet matches actual committed diff |
 
 Writer owns task commits and evidence-only metadata checkpoints. After each task, provide exact baseline/task commit/evidence checkpoint and check outcomes via supervisor, then wait for coordinator validation before next-task writes. Coordinator independently inspects actual Git/diff/required checks; unknown or failing state is not commit authority. If a missing commit is recoverable, coordinator alone commits understood verified changes; otherwise stop. Fresh implementers must not commit inherited unknown changes.
 
@@ -44,4 +44,6 @@ Initial worker `0a1e298e-4f37-4ce0-9209-0d1deab128e7` exited with an incomplete 
 
 ## Final acceptance
 
-Pending all task commits and one fresh independent Sol review of the complete actual committed range. Reviewer findings/dispositions and scoped correction commits will be recorded here. No completion, feature acceptance, runtime-obedience proof or model-causation conclusion is implied by dispatch.
+Implementation tasks and their checkpoints are complete; fresh independent Sol review of the complete actual committed range remains REQUIRED and pending. Reviewer findings/dispositions and scoped correction commits will be recorded here. No feature acceptance, runtime-obedience proof or model-causation conclusion is implied by task completion.
+
+The original packet covers `4781969baa8be02f939fbaaf31f8fc3d70cb8ff3..105284c001cc8166561a1829716c24e6fe8e3a4f`; coordinator verified it byte-identical to actual Git diff and reran final skill lint PASS. This factual reconciliation is committed afterward; packet/history are regenerated through that resulting metadata commit, with exact final endpoint stored in the external history packet to avoid a self-referential SHA. Original historical draft remains untracked, unchanged and excluded.
