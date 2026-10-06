@@ -134,11 +134,13 @@ coordinator briefs. Ordinary planning does not read execution history. Only just
 clarification/synthesis (tentative/conflicting guidance, user justification or contrary
 observations) reads the compact evidence index, then selected relevant records.
 
-Separate `evidence/<run-id>/SUMMARY.md`, task files and `REFLECTION.md` keep factual attempts,
-checks, failures/partial work, unknowns and manual validation out of synthesized guidance and
-the gotcha `MEMORY.md` index. Records precede refresh of one compact index row per run; resume
-retains attempts and reconciles interrupted updates. Every run persists observations in
-the project-local store; execution handoffs link evidence rather than replace it.
+One compact `evidence/<run-id>/SUMMARY.md` per new run holds the current disposition, short
+task/checkpoint references, exceptions and reflection or proposed guidance; no separate task
+or reflection files are created. Older multi-file runs remain readable. Factual attempts,
+checks, failures/partial work, unknowns and manual validation stay outside approved guidelines
+and the gotcha `MEMORY.md` index. The run record precedes refresh of its one compact index row;
+resume retains attempts and reconciles interrupted updates. Every run persists observations
+locally; execution handoffs link evidence rather than replace it.
 
 After verification and independent review (or a blocked pause), conservative reflection
 proposes scoped guidance or evidence-only/no update. An executive brief and exact candidate

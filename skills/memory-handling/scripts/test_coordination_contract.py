@@ -60,11 +60,11 @@ class CoordinationContractTests(unittest.TestCase):
 
     def test_A3_A4_A5_factual_checkpoint_and_index_removals(self):
         for clause in (
-            "failed, blocked or partial work and manual/user", "role/model/reasoning effort (or `unknown`)",
-            "individual attempt/check results, reviewer findings, inspected failure cause", "Unknown is not success",
-            "reuse on resume, never overwrite another run", "separate summary/task records", "before refreshing",
-            "after every evidence write", "no duplicate rows", "reconcile interrupted record/index updates",
-            "retaining existing runs", "never a no-write fallback",
+            "failed, blocked or partial work and manual/user", "exact selected and observed profile",
+            "individual check results, reviewer findings", "Unknown is not success",
+            "reuse on resume, never overwrite another run", "sole evidence file for each new run",
+            "before refreshing its index row after every evidence", "no duplicate rows",
+            "reconcile interrupted summary/index updates", "retaining prior attempts", "never a no-write fallback",
         ):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordinator", "### Coordination evidence checkpoint", clause, "coordination-checkpoint")
@@ -75,8 +75,9 @@ class CoordinationContractTests(unittest.TestCase):
         for clause in (
             "nine reflection questions", "project-specific versus general", "reusable versus incidental",
             "reinforcement; contradiction", "guideline support versus evidence-only", "delegation lessons; manual validation",
-            "surprises needing qualification/more evidence", "insufficient and conflicting", "separately from `REFLECTION.md`",
-            "supporting/contradicting pointers", "no update\nproposed", "not a universal ban or permanent routing rule",
+            "surprises needing qualification/more evidence", "insufficient and conflicting", "same run `SUMMARY.md`",
+            "Older runs with `REFLECTION.md` remain", "supporting/contradicting pointers",
+            "no update proposed", "not a universal ban or permanent routing rule",
         ):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordinator", "## Coordination reflection and guideline approval", clause, "coordination-reflection")
@@ -105,14 +106,16 @@ class CoordinationContractTests(unittest.TestCase):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordination", "## Selective historical retrieval", clause, "coordination-selective")
 
-    def test_A11_routing_selection_class_and_inspected_cause_removals(self):
+    def test_A11_profile_selection_and_inspected_cause_removals(self):
         for clause in (
-            "usable owner-selected options", "Low favors a cheaper", "strong executable acceptance oracle",
-            "stronger verification/review", "not forced opus", "reclassification or share-gate bypass",
-            "Never silently\nreplace selected models, weaken approved classes",
-            "inspect the child run and failed invocation first", "unrelated workspace changes",
-            "architecture and authority permit", "verified stronger capability and owner-selection gates",
-            "Unknown cause", "unestablished clean state stops", "Record both attempts",
+            "usable owner-selected", "independent family/effort rationales",
+            "Never silently replace selected models",
+            "Inspect the failed child run, invocation, partial commits and check evidence",
+            "unrelated\nchanges and prior attempt evidence", "affected dependencies and invalidated REQUIRED items",
+            "raise effort, change model or both", "no fixed profile ladder",
+            "permitted callable binding, supported effort, tools and owner-selection gates",
+            "safe task-owned state stops", "unknown cause stops blind restart",
+            "complete batch contract", "rerun every invalidated item", "Retain both attempts",
         ):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordinator", "## Select Execution Capability", clause, "coordination-routing")
@@ -131,16 +134,17 @@ class CoordinationContractTests(unittest.TestCase):
             self.assertTrue(any(e.startswith("coordination-unsafe:") for e in checker.check_contracts(changed)), policy)
 
     def test_A12_existing_execution_safeguards_survive_mutations(self):
-        for clause in (
-            "Commit each task's verified changes as one focused commit", "only asynchronously in the background",
-            "Run all batches sequentially", "never silently switch models or downgrade task classes",
-            "Inspect the failed run and tool invocation before retry or relaunch", "fresh independent",
-            "REQUIRED checks remain required",
+        for clause, diagnostic in (
+            ("Commit each task's verified changes as one focused commit", "execution-checkpoints:"),
+            ("only asynchronously in the background", "execution-sequential:"),
+            ("never\n   run implementation batches in parallel", "execution-sequential:"),
+            ("Copy the owner-selected binding and effort unchanged", "execution-selection:"),
+            ("separate evidence-only checkpoint", "execution-checkpoints:"),
         ):
             changed = dict(self.texts)
             self.assertIn(clause, changed["coordinator"])
             changed["coordinator"] = changed["coordinator"].replace(clause, "", 1)
-            self.assertTrue(any(e.startswith("execution-freeze:") for e in checker.check_contracts(changed)), clause)
+            self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)), clause)
 
     def test_required_links_and_missing_carrier_in_isolated_copy(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -212,9 +216,8 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         self.run = self.evidence / "simulated-2026-01-01-heuristic"
         self.run.mkdir()
         self.summary = self.run / "SUMMARY.md"
-        self.summary.write_text("# Simulated run\nAreas/tags: heuristic\nOutcome: partial; manual validation pending\n")
-        (self.run / "T001.md").write_text(
-            "# Simulated T001 implementation; tags: heuristic\n"
+        self.summary.write_text("# Simulated run\nAreas/tags: heuristic\nOutcome: partial; manual validation pending\n"
+            "Task T001: tags: heuristic; baseline: fixture-base; result: fixture-commit; evidence: fixture-evidence\n"
             "residual_reasoning: medium — executable output oracle\n"
             "approved class: sonnet-class; role: worker; model: fictional-option-A; effort: unknown\n"
             "Attempt 1: FAIL; check: output mismatch; cause: inspected missed boundary\n"
@@ -227,7 +230,7 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         self.index = self.evidence / "INDEX.md"
         self.row = "| [simulated-2026-01-01-heuristic](simulated-2026-01-01-heuristic/SUMMARY.md) | 2026-01-01 | heuristic | manual checkpoint | partial |\n"
         self.index.write_text("# Simulated evidence index\n" + self.row)
-        self.reflection = self.run / "REFLECTION.md"
+        self.reflection = self.summary  # Reflection and decisions share the sole run record.
 
     def test_A1_A2_simulated_early_guideline_handoff_and_empty_store(self):
         read = self.guidelines.read_bytes()
@@ -282,16 +285,18 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         self.assertEqual(files[0].read_bytes(), baseline[files[0]])
 
     def test_A3_A4_simulated_two_runs_multiple_tasks_failed_partial_manual_unknown(self):
-        (self.run / "T002.md").write_text("# Simulated T002 verification\nOutcome: blocked; capability unknown\n")
+        with self.summary.open("a") as f:
+            f.write("Task T002: outcome blocked; capability unknown; baseline fixture-evidence; check NOT RUN\n")
         second = self.evidence / "simulated-2026-01-02-other"
         second.mkdir()
         (second / "SUMMARY.md").write_text("# Simulated unrelated run\nTags: other; outcome: PASS\n")
-        (second / "T001.md").write_text("# Simulated independent task\nOutcome: PASS; effort: unknown\n")
+        with (second / "SUMMARY.md").open("a") as f:
+            f.write("Task T001: outcome PASS; effort unknown; result fixture-second\n")
         with self.index.open("a") as f:
             f.write("| [simulated-2026-01-02-other](simulated-2026-01-02-other/SUMMARY.md) | 2026-01-02 | other | unrelated | PASS |\n")
         self.assertEqual(len(list(self.evidence.glob("*/SUMMARY.md"))), 2)
-        self.assertEqual(len(list(self.evidence.glob("*/T*.md"))), 3)
-        first = (self.run / "T001.md").read_text()
+        self.assertEqual(len(list(self.evidence.glob("*/T*.md"))), 0)
+        first = self.summary.read_text()
         for fact in ("Attempt 1: FAIL", "Attempt 2:", "effort: unknown", "Manual validation: FAIL", "outcome: partial", "no permanent routing rule"):
             self.assertIn(fact, first)
         self.assertNotIn("Attempt 1", self.index.read_text())
@@ -306,9 +311,9 @@ class SimulatedFilesystemExamples(unittest.TestCase):
             f.write(prior_row)
         prior_bytes = (prior / "SUMMARY.md").read_bytes()
         old_index = self.index.read_text()
-        with (self.run / "T001.md").open("a") as f:
-            f.write("Resume correction: manual output now validated PASS\n")
-        self.summary.write_text(self.summary.read_text() + "Resume: manual PASS; overall PASS\n")
+        self.summary.write_text(self.summary.read_text() +
+                                "Resume correction: manual output now validated PASS\n"
+                                "Resume: manual PASS; overall PASS\n")
         # Deliberately interrupted example: record exists but row is stale.
         self.assertEqual(self.index.read_text(), old_index)
         updated = self.row.replace("| partial |", "| PASS after resume |")
@@ -316,17 +321,17 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         # A second reconciliation of the same row is byte-idempotent.
         self.index.write_text(self.index.read_text().replace(self.row, updated))
         self.assertEqual(self.index.read_text().count("](simulated-2026-01-01-heuristic/SUMMARY.md)"), 1)
-        self.assertIn("Attempt 1: FAIL", (self.run / "T001.md").read_text())
-        self.assertIn("Resume correction", (self.run / "T001.md").read_text())
+        self.assertIn("Attempt 1: FAIL", self.summary.read_text())
+        self.assertIn("Resume correction", self.summary.read_text())
         self.assertIn(prior_row, self.index.read_text())
         self.assertEqual((prior / "SUMMARY.md").read_bytes(), prior_bytes)
 
     def test_A6_simulated_reflection_evidence_only_tentative_contrary_no_update(self):
-        self.reflection.write_text(
-            "# Simulated reflection, not planner guidance\n"
-            "Direct observation: manual FAIL in T001.md; automation missed it\n"
+        self.reflection.write_text(self.reflection.read_text() +
+            "\n## Reflection (not planner guidance)\n"
+            "Direct observation: manual FAIL in T001; automation missed it\n"
             "Tentative scoped caution: heuristic outputs need manual validation\n"
-            "Supporting: T001.md attempt 2; contrary: later valid output\n"
+            "Supporting: T001 attempt 2; contrary: later valid output\n"
             "Insufficient evidence: one failure cannot support universal delegation ban\n"
             "Repeated/stable pattern: unknown; evidence-only, not promoted\n"
             "Disposition: no update proposed (existing owner guideline covers checkpoint)\n")
@@ -339,11 +344,11 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         # No gate is executed here. Each prescribed decision record is evidence only.
         for state in ("pending", "unavailable", "cancelled", "ambiguous", "reject"):
             with self.subTest(state=state):
-                self.reflection.write_text("# Simulated proposal\nDecision: " + state + "\nGuidelines unchanged; implementation approval is not memory approval\n")
+                self.reflection.write_text(self.reflection.read_text() + "\nDecision: " + state + "\nGuidelines unchanged; implementation approval is not memory approval\n")
                 self.index.write_text("# Simulated evidence index\n" + self.row.replace("manual checkpoint", "decision " + state))
                 self.assertEqual(self.guidelines.read_bytes(), self.baseline)
                 self.assertIn(state, self.reflection.read_text())
-                self.assertTrue((self.run / "T001.md").exists())
+                self.assertEqual(list(self.run.glob("*.md")), [self.summary])
 
     def test_A8_simulated_exact_accept_edit_add_content_and_baseline_evidence(self):
         for decision, statement in (
@@ -354,7 +359,7 @@ class SimulatedFilesystemExamples(unittest.TestCase):
             with self.subTest(decision=decision):
                 self.guidelines.write_bytes(self.baseline)
                 approved_result = self.baseline + statement
-                self.reflection.write_text("# Simulated exact decision\nDecision: " + decision + "\nBaseline:\n" + self.baseline.decode() + "Approved resulting content:\n" + approved_result.decode())
+                self.reflection.write_text(self.reflection.read_text() + "\nDecision: " + decision + "\nBaseline:\n" + self.baseline.decode() + "Approved resulting content:\n" + approved_result.decode())
                 immediately_reread = self.guidelines.read_bytes()
                 self.assertEqual(immediately_reread, self.baseline)
                 self.guidelines.write_bytes(approved_result)  # prescribed example, not gate logic
@@ -363,7 +368,7 @@ class SimulatedFilesystemExamples(unittest.TestCase):
                 self.assertIn(approved_result.decode(), self.reflection.read_text())
 
     def test_A8_simulated_concurrent_drift_preserved_and_renewal_pending(self):
-        self.reflection.write_text("# Simulated pending exact diff\nApproved baseline:\n" + self.baseline.decode())
+        self.reflection.write_text(self.reflection.read_text() + "\nApproved baseline:\n" + self.baseline.decode())
         concurrent = self.baseline + b"- Concurrent fictional owner addition.\n"
         self.guidelines.write_bytes(concurrent)
         immediately_reread = self.guidelines.read_bytes()
@@ -390,8 +395,7 @@ class SimulatedFilesystemExamples(unittest.TestCase):
             index_text = self.index.read_text()
             self.assertIn("heuristic", index_text)
             self.summary.read_text()
-            (self.run / "T001.md").read_text()
-        self.assertEqual(reads, [self.index, self.summary, self.run / "T001.md"])
+        self.assertEqual(reads, [self.index, self.summary])
         self.assertNotIn(unrelated / "SUMMARY.md", reads)
         # For a no-match request, index alone is read, uncertainty retained.
         reads.clear()

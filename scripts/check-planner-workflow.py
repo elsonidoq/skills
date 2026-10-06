@@ -363,9 +363,9 @@ def check_contracts(texts):
             "`external_dependency`", "`unknown`", "Non-model causes never count as capability failure",
             "weak or invalidated successes", "An unknown observation is never overwritten by selection",
             "Unknown is not success",
-            "reuse on resume, never overwrite another run", "separate summary/task records",
-            "before refreshing", "after every evidence write", "no duplicate rows",
-            "reconcile interrupted record/index updates", "retaining existing runs",
+            "reuse on resume, never overwrite another run", "sole evidence file for each new run",
+            "before refreshing its index row after every evidence", "no duplicate rows",
+            "reconcile interrupted summary/index updates", "retaining prior attempts",
             "never grants permission to mutate guidelines", "initialized project-local store",
             "Evidence-write failures stop", "never a no-write fallback")
     capability = section(c, "## Select Execution Capability")
@@ -392,9 +392,10 @@ def check_contracts(texts):
             "reusable versus incidental", "reinforcement; contradiction",
             "guideline support versus evidence-only", "delegation lessons; manual validation",
             "surprises needing qualification/more evidence", "insufficient and conflicting",
-            "index-first and\nrelevant-only", "separately from `REFLECTION.md`",
-            "add/refine/supersede/remove", "supporting/contradicting pointers",
-            "no update\nproposed", "not a universal ban or permanent routing rule")
+            "index-first and\nrelevant-only", "same run `SUMMARY.md`",
+            "Older runs with `REFLECTION.md` remain", "add/refine/supersede/remove",
+            "supporting/contradicting pointers", "no update proposed",
+            "not a universal ban or permanent routing rule")
     require("coordination-approval", reflection,
             "executive brief and exact candidate diff", "existing `ask_user`",
             "accept, edit, reject, or add", "approval is not guideline approval",
@@ -431,7 +432,7 @@ def check_contracts(texts):
     require("coordination-guidelines", section(q, "## Compact guidelines"),
             "before brainstorming", "exact constraints", "scope/trigger", "qualitative",
             "Owner-supplied entries name their origin", "Preserve uncertainty and contrary",
-            "`REFLECTION.md` is not planner guidance")
+            "run evidence and reflection are not planner guidance")
     require("coordination-selective", section(q, "## Selective historical retrieval"),
             "Ordinary planning reads guidelines, not", "justified only",
             "ambiguous/tentative/conflicting", "user request", "new contradictory",
@@ -439,10 +440,11 @@ def check_contracts(texts):
             "Do not recursively", "Unrelated records\nstay unread",
             "no relevant evidence means proceed retaining uncertainty")
     require("coordination-evidence", section(q, "## Separate factual evidence"),
-            "SUMMARY.md", "T001.md", "T002.md", "REFLECTION.md",
+            "one compact evidence file per run", "SUMMARY.md", "Do not create separate task",
+            "short attributable checkpoint/attempt ledger", "Older runs with separate task",
             "Reuse that ID on resume", "never\noverwrite another run",
             "append-oriented", "without erasing observations or prior runs",
-            "initialized project-local store", "never replace it", "If an evidence write fails",
+            "initialized\nproject-local store", "never replace it", "If an evidence write\nfails",
             "exact selected and observed profile", "unknown observation is never overwritten",
             "contract strength, first/final outcome", "item check/checkpoint references",
             "accepted, partial, escalated and blocked", "failed, blocked and partial",

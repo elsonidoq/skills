@@ -56,21 +56,22 @@ available. Cover only reusable planning, decomposition, delegation, verification
 checkpoints, subsystem risk and implementation traps. Preserve uncertainty and contrary
 evidence. Owner-supplied entries name their origin, never fabricate supporting runs.
 Merge/refine/supersede instead of accumulating transcripts or duplicating observations.
-`GUIDELINES.md` is not the gotcha `MEMORY.md` index; `REFLECTION.md` is not planner guidance.
+`GUIDELINES.md` is not the gotcha `MEMORY.md` index; run evidence and reflection are not planner guidance.
 
 ## Selective historical retrieval
 
 Ordinary planning reads guidelines, not `evidence/INDEX.md` or history. Historical
 clarification is justified only by matching ambiguous/tentative/conflicting guidance,
 pattern synthesis, a user request for justification, or new contradictory observations.
-State the trigger, read the compact evidence index first, select relevant summaries/task
-records by tags and pointers, then open only those selected records. Do not recursively
+State the trigger, read the compact evidence index first, select relevant run summaries
+(or task records in older runs) by tags and pointers, then open only those selected records. Do not recursively
 load the directory or promote raw outcomes directly into instructions. Unrelated records
 stay unread; no relevant evidence means proceed retaining uncertainty, not invented facts.
 
 ## Separate factual evidence
 
-Default layout (existing declared project-local equivalents use the same lifecycle):
+For new runs use one compact evidence file per run (existing declared project-local equivalents
+use the same lifecycle):
 
 ```text
 <project-root>/memory/coordination/
@@ -79,19 +80,28 @@ Default layout (existing declared project-local equivalents use the same lifecyc
     INDEX.md
     <run-id>/
       SUMMARY.md
-      T001.md
-      T002.md
-      REFLECTION.md
 ```
+
+`SUMMARY.md` owns the current disposition, a short attributable checkpoint/attempt ledger,
+exceptions and reflection/any guideline candidate or decision. Do not create separate task,
+review or reflection files for new runs, and do not reproduce task contracts, full check logs,
+Git inventories or a second narrative of every task. Keep task ID, baseline/result/evidence
+SHA, exact selected/observed profile when applicable, item result/evidence pointer, attribution
+and manual/reviewer exceptions sufficiently traceable for later synthesis; use a terse row when
+checks pass normally and expand only a surprising failure or contested conclusion. Shared
+run-wide limitations are stated once. A summary is a selective learning source, not a task
+transcript. Per-task implementation commits and distinct evidence-only Git checkpoints remain
+required; each checkpoint updates this same file and the compact index row.
 
 Reuse an existing safe project execution/run ID; otherwise derive a unique filesystem-safe
 date/subject ID and retain it in the execution tracker. Reuse that ID on resume; never
-overwrite another run. Separate summary/task files prevent a monolithic execution history.
-Evidence is factual and append-oriented: keep attempts and corrections distinguishable,
-update summary/index metadata without erasing observations or prior runs. Persist every
-run's evidence in the initialized project-local store; an execution handoff may link it,
-never replace it. If an evidence write fails, report the blocker and stop affected work,
-not a successful persistence checkpoint. Evidence-write authority is not guideline authority.
+overwrite another run. Older runs with separate task or `REFLECTION.md` files remain valid and
+selectively readable; do not migrate them by default. Evidence is factual and append-oriented:
+keep attempts and corrections distinguishable, update current disposition and index metadata
+without erasing observations or prior runs. Persist every run's evidence in the initialized
+project-local store; an execution handoff may link it, never replace it. If an evidence write
+fails, report the blocker and stop affected work, not a successful persistence checkpoint.
+Evidence-write authority is not guideline authority.
 
 At task/attempt checkpoints, record task ID/type, areas/tags, residual reasoning when
 assessed, selected capability role, exact selected and observed profile (binding plus
@@ -156,8 +166,9 @@ ask whether the observation is:
 8. A manual-validation discovery automated checks missed?
 9. A surprising outcome requiring qualification or more evidence?
 
-Append attributable observations to run/task evidence and refresh the index separately
-from concise candidates in `REFLECTION.md`. Distinguish direct observation, tentative
+Append attributable observations and concise candidates (or `no update proposed`) in the
+run's `SUMMARY.md`, then refresh the index separately. Older runs may retain separate task
+and `REFLECTION.md` files. Distinguish direct observation, tentative
 pattern, repeated pattern, stable guideline, insufficient evidence and conflicting
 evidence without numerical confidence scores. Review selected prior evidence only when
 needed for synthesis using selective retrieval. One failure may support a narrowly scoped
@@ -173,7 +184,8 @@ reusable lesson exists, record `no update proposed`. Synthesis is never automati
 Present an executive brief and exact candidate diff before the existing `ask_user` gate;
 allow accept, edit, reject, or add a guideline. Implementation approval grants no guideline
 mutation authority. Persist the answer, approved bounds, comparable baseline/proposed
-content evidence and decision disposition in `REFLECTION.md` (and refresh the index).
+content evidence and decision disposition in the run's `SUMMARY.md` (or an existing older
+`REFLECTION.md`) and refresh the index.
 Accepted, edited or added resulting content must be explicitly approved; do not infer
 an edited/additional statement or widen approval beyond that content.
 

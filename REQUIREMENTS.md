@@ -77,7 +77,7 @@ A missing required gotcha association routes to `initialize-coherence`, never a 
 
 Coordination memory is mandatory and project-local, separate from adopted gotcha memory.
 Its [shared contract](skills/memory-handling/references/project-coordination.md) owns compact
-`GUIDELINES.md`, separate run/task evidence with a compact index, selective history retrieval
+`GUIDELINES.md`, one compact evidence file per new run with a shared index (older task files remain valid), selective history retrieval
 and explicit accept/edit/reject/add guideline approval with current-content drift protection.
 Every entry point automatically initializes missing files, notifies the user and commits
 only those files before proceeding. The default root is `<project-root>/memory/coordination/`;

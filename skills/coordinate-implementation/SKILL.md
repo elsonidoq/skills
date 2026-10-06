@@ -411,10 +411,12 @@ permission gates; selective reflection, exact owner approval and drift checks re
 route to learned guidelines.
 
 Reuse a safe project run ID or retain a unique filesystem-safe date/subject ID in the
-tracker; reuse on resume, never overwrite another run. Persist separate summary/task records
-before refreshing that run's compact index row after every evidence write; no duplicate rows
-or monolithic history. On resume reconcile interrupted record/index updates before reporting
-successful persistence, retaining existing runs and all observations. Evidence recording
+tracker; reuse on resume, never overwrite another run. Persist a compact `SUMMARY.md` as
+the sole evidence file for each new run before refreshing its index row after every evidence
+write; no duplicate rows, separate per-task files or monolithic task narrative. Keep a short
+current disposition, checkpoint/item-result pointers and exceptions; historical separate
+records remain valid. On resume reconcile interrupted summary/index updates before reporting
+successful persistence, retaining prior attempts and observations. Evidence recording
 never grants permission to mutate guidelines. Persist these factual observations in the
 initialized project-local store; handoffs link evidence rather than substitute for it.
 Evidence-write failures stop affected work with the exact blocker, never a no-write fallback.
@@ -451,10 +453,10 @@ observation, tentative/repeated pattern, stable guidance, insufficient and confl
 evidence without scoring. Select prior evidence only when justified, index-first and
 relevant-only. A single failure is not a universal ban or permanent routing rule.
 
-Append attributable observations at the evidence checkpoint and refresh the index,
-separately from `REFLECTION.md` candidate add/refine/supersede/remove changes with scope,
-status and supporting/contradicting pointers, or evidence-only items. Record `no update
-proposed` when no reusable lesson exists. General lessons/global skill changes require
+Append attributable observations and concise candidate add/refine/supersede/remove changes
+with scope, status and supporting/contradicting pointers (or evidence-only items) in the
+same run `SUMMARY.md`; refresh the index separately. Older runs with `REFLECTION.md` remain
+valid. Record `no update proposed` when no reusable lesson exists. General lessons/global skill changes require
 separate approved scope; do not smuggle them into project guidelines.
 
 Before guideline mutation, show an executive brief and exact candidate diff, then use
