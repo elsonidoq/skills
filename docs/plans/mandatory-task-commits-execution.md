@@ -44,11 +44,11 @@ Initial worker `0a1e298e-4f37-4ce0-9209-0d1deab128e7` exited with an incomplete 
 
 ## Final acceptance
 
-Implementation tasks and their checkpoints are complete. Fresh independent Sol review of `4781969..9a715c2` returned **NOT_READY / BLOCK** for F1: architectural-planning's existing separate commit opt-in contradicts the mandatory checkpoint. Parent classified F1 valid; bounded correction RF001 and focused recheck required before acceptance. Review/authorization: `reviews/mandatory-task-commits-final-review.md`. No feature acceptance, runtime-obedience proof or model-causation conclusion is implied by task completion.
+Implementation tasks and their checkpoints are complete. Fresh independent Sol review of `4781969..9a715c2` returned **NOT_READY / BLOCK** for F1: architectural-planning's existing separate commit opt-in contradicts the mandatory checkpoint. Parent classified F1 valid; bounded correction RF001 task commit recorded; evidence checkpoint and focused recheck required before acceptance. Review/authorization: `reviews/mandatory-task-commits-final-review.md`. No feature acceptance, runtime-obedience proof or model-causation conclusion is implied by task completion.
 
 | Correction | State | Binding | Dependencies / verification |
 | --- | --- | --- | --- |
-| RF001 | in_progress | sonnet-class / Terra | T003/T005 complete; F1 valid; fix planner commit opt-in, operational assertion/mutation, affected checks and separate commit |
+| RF001 | completed | f8baf91d527466d61db750121a4892d27bcbdd43 / a742f2064ad6a55450594bf57f13c577662a38f0; evidence checkpoint pending | F1 correction, operational assertion/mutation, affected checks PASS; fresh Sol recheck pending |
 
 Fresh Sol recheck follows verified RF001; retained original implementation/reviewer sessions preserve relevant context rather than launching replacements.
 
