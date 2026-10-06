@@ -4,7 +4,7 @@ Read this index first when historical evidence is needed, then only relevant rec
 
 | Run | Date | Areas / tags | Relevant patterns | Outcome |
 | --- | --- | --- | --- | --- |
-| [2026-10-06-active-planning-routing](2026-10-06-active-planning-routing/SUMMARY.md) | 2026-10-06 | planning, routing, semantic validation | active contracts only; Sol/medium Standard exception; static limits | T001–T003 accepted; coordinator reruns PASS; fresh review no issues; live NOT RUN; no guideline update; /reload required |
+| [2026-10-06-active-planning-routing](2026-10-06-active-planning-routing/SUMMARY.md) | 2026-10-06 | planning, routing, semantic validation | active contracts only; Sol/medium Standard exception; static limits | T001–T003 accepted; fresh review no issues; closeout dbdfb74 archived draft/ignored credentials; clean tree; live NOT RUN; /reload required |
 | [2026-10-05-batch-commit-autonomy](2026-10-05-batch-commit-autonomy/SUMMARY.md) | 2026-10-05 | commits, batching, coordinator | subagent internal commits; coordinator return-boundary audit; no routine waits | task 42812af accepted; checks PASS; fresh Sol READY / merge OK; /reload pending |
 | [2026-10-05-mandatory-task-commits-planning](2026-10-05-mandatory-task-commits-planning/SUMMARY.md) | 2026-10-05 | planning, commits, coordinator, recovery | owner-selected pragmatic checkpoints; no runtime gate; no waiver | source/tasks approved; baseline checks PASS; coordinator preflight started |
 | [2026-10-05-speckit-setup](2026-10-05-speckit-setup/SUMMARY.md) | 2026-10-05 | speckit, setup, constitution | tracked scaffolding; policy alignment | checks PASS; independent review OK |
