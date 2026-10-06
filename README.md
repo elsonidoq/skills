@@ -94,9 +94,10 @@ Approved current content/revisions and implementation scope: [evidence]
 ```
 
 Coordinator revalidates the handoff and preserves one shared execution graph: up to three
-bounded tasks may run locally only when selected class/context fit; larger complete lists
-use asynchronous sequential delegation. It verifies and commits each task separately and
-requires one independent final implementation review. Planning depth does not select execution.
+bounded tasks may run locally only when the owner-selected family, exact binding, effort and
+observed context fit; larger complete lists use asynchronous sequential delegation. It verifies
+and commits each task separately and requires one independent final implementation review.
+Planning depth does not select execution.
 
 ## Project coordination memory
 
@@ -132,10 +133,14 @@ bytes; pending/unavailable/cancelled/ambiguous decisions change no learned guide
 Guideline approval is reported separately from implementation acceptance; automatic empty
 initialization is not permission to add or rewrite learned guidance.
 
-Residual-reasoning notes may inform class-compatible owner-selected real-work routing;
-no class weakening, automatic model replacement or permanent rule from one outcome.
-For example, a **fictional project** might scope a manual output checkpoint to heuristic
-implementation. That example is neither real evidence nor a global heuristic policy.
+Residual-reasoning notes may inform owner-selected family/binding/effort routing after
+decomposition; they do not establish a family rank, automatic effort increase, model replacement
+or permanent rule from one outcome. Source-backed initial guidance, derived provisional guidance,
+owner selections and factual project outcomes remain distinct. When a project retains a source
+archive, routine work uses its compact index/research citations and opens matching rows only on
+demand; guideline supersession does not erase that provenance. For example, a **fictional project**
+might scope a manual output checkpoint to heuristic implementation. That example is neither real
+evidence nor a global heuristic policy.
 After changing these global skills, run `/reload` inside pi.
 
 ## Supporting Skills

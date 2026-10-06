@@ -9,22 +9,21 @@ while pi is not running, then run `/reload` inside the next session.
     "/Users/elsonidoq/.config/opencode/skills"
   ],
   "subagents": {
-    "defaultModel": "deepseek/deepseek-v4.1-flash",
+    "defaultModel": "provider/default-model",
     "agentOverrides": {
-      "worker": { "model": "deepseek/deepseek-v4.1-flash" },
-      "reviewer": { "model": "deepseek/deepseek-v4.1-flash" },
-      "scout": { "model": "deepseek/deepseek-v4.1-flash" },
-      "oracle": { "model": "anthropic/claude-opus-5" }
+      "worker": { "model": "provider/worker-model" },
+      "reviewer": { "model": "provider/reviewer-model" }
     }
   }
 }
 ```
 
-The `subagents` block implements this suite's model-class mapping
-([REQUIREMENTS.md](../REQUIREMENTS.md)): `sonnet-class` work runs on
-`deepseek/deepseek-v4.1-flash`; `opus-class` advisors run on `anthropic/claude-opus-5`.
-Per-run overrides from `coordinate-implementation` take precedence over these
-`agentOverrides` values.
+The `subagents` block is illustrative configuration, not this suite's routing policy.
+Replace each placeholder with a provider/model available to your account and project. Before an
+approved task runs, verify its owner-selected family, exact binding and effort against provider
+documentation, permitted usable runtime support, required tools/context and the current approval;
+a catalog entry or these defaults is not dispatch proof. Per-run approved bindings take precedence
+over `agentOverrides`; do not silently substitute an unavailable selection.
 
 The `packages` array is maintained automatically by `pi install` (see
 [REQUIREMENTS.md](../REQUIREMENTS.md) for the exact pins).

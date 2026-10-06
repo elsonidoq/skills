@@ -72,11 +72,13 @@ choice and carries constraints into both routes. Empty initialization invents no
 implementation approval never grants synthesized guideline mutation.
 
 Optional `residual_reasoning: low|medium|high` notes describe remaining task/oracle
-conditions, not provider effort settings. Source-backed provisional guidance, owner
-preferences, factual local outcomes and synthesized guidelines remain distinct. Retain
-initial source provenance even after guideline supersession; exact-content guideline
-approval is independent of routing/implementation approval. Runtime pins remain unchanged;
-no ML, dependencies, automatic optimization or one-outcome permanent rules are introduced.
+conditions, not provider effort settings. Source-backed observations, derived provisional
+guidance, owner preferences, factual local outcomes and synthesized guidelines remain distinct.
+Retain initial source provenance even after guideline supersession; when a project retains an
+archive, routine work uses compact index/research citations and matching rows on demand, never
+automatic whole-dataset prompts. Exact-content guideline approval is independent of
+routing/implementation approval. Runtime pins remain unchanged; no ML, dependencies, automatic
+optimization or one-outcome permanent rules are introduced.
 
 ## Project docs
 

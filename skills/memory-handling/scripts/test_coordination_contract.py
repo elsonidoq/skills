@@ -90,6 +90,22 @@ class FamilyEffortContractTests(unittest.TestCase):
                        "compare with the approved baseline", "drift stops"):
             self.assertIn(clause, exact)
 
+    def test_routing_docs_keep_project_sources_and_selections_distinct(self):
+        docs = {
+            "README.md": ("family/binding/effort routing", "matching rows only on\ndemand"),
+            "REQUIREMENTS.md": ("Source-backed observations, derived provisional", "matching rows on demand"),
+            "docs/index.md": ("compact index → research → source-identified archive", "keep unknown metadata unknown"),
+            "docs/pi-settings-sample.md": ("illustrative configuration, not this suite's routing policy", "catalog entry"),
+            "docs/best_practices_spec_driven_development.md": ("source observations, derived provisional guidance", "matching rows only on demand"),
+        }
+        for path, clauses in docs.items():
+            with self.subTest(path=path):
+                text = (ROOT / path).read_text()
+                for clause in clauses:
+                    self.assertIn(clause, text)
+                self.assertNotIn("sonnet-class", text)
+                self.assertNotIn("opus-class", text)
+
 
 class CoordinationContractTests(unittest.TestCase):
     def setUp(self):
@@ -471,6 +487,53 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         self.index.write_text("# Simulated evidence index\n" + self.row.replace("partial", "drift; pending renewal"))
         self.assertEqual(self.guidelines.read_bytes(), concurrent)
         self.assertIn("renewed review/approval pending", self.reflection.read_text())
+
+    def test_T006_simulated_archive_discovery_is_on_demand_and_matching_only(self):
+        docs = self.project / "docs"
+        feature = self.project / "specs" / "routing"
+        archive = feature / "evidence" / "effort.csv"
+        docs.mkdir()
+        archive.parent.mkdir(parents=True)
+        index = docs / "index.md"
+        research = feature / "research.md"
+        index.write_text("[Routing research](../specs/routing/research.md)\n")
+        research.write_text("Compact rubric; unknown snapshot remains unknown.\n"
+                            "[Source archive](evidence/effort.csv)\n")
+        archive.write_text("family,effort,benchmark,value,snapshot\n"
+                           "Terra,medium,Terminal,1.0,unknown\n"
+                           "Sol,high,Terminal,2.0,unknown\n"
+                           "Terra,medium,Other,3.0,unknown\n")
+
+        reads = []
+        prompts = []
+        original_read_text = Path.read_text
+        def observed_read(path, *args, **kwargs):
+            reads.append(path)
+            return original_read_text(path, *args, **kwargs)
+
+        # Routine context receives only the index and compact research citation.
+        with mock.patch.object(Path, "read_text", new=observed_read):
+            prompts.append(index.read_text() + research.read_text())
+        self.assertEqual(reads, [index, research])
+        self.assertNotIn(archive, reads)
+        self.assertNotIn("Terra,medium,Terminal,1.0", prompts[0])
+
+        # Simulated on-demand lookup: stream local rows and expose only matching content;
+        # this is not disk-level random access or evidence of live agent obedience.
+        # A superseded or removed guideline does not remove project source discovery.
+        self.guidelines.write_text("# Superseded guidance\n")
+        self.guidelines.unlink()
+        reads.clear()
+        with archive.open() as source:
+            next(source)
+            rows = [row.rstrip("\n") for row in source
+                    if row.startswith("Terra,medium,Terminal,")]
+        prompts.append("\n".join(rows))
+        self.assertEqual(reads, [])
+        self.assertEqual(rows, ["Terra,medium,Terminal,1.0,unknown"])
+        self.assertIn("unknown", prompts[-1])
+        self.assertNotIn("Sol,high,Terminal,2.0", prompts[-1])
+        self.assertNotIn("Terra,medium,Other,3.0", prompts[-1])
 
     def test_A10_simulated_index_first_relevant_only_and_no_match_uncertainty(self):
         unrelated = self.evidence / "simulated-unrelated"

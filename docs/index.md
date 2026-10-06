@@ -8,7 +8,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 
 | Material change / information | Authoritative owner to read and update |
 | --- | --- |
-| Suite runtime prerequisites and model-class configuration requirements | [REQUIREMENTS.md](../REQUIREMENTS.md) |
+| Suite runtime prerequisites and family/effort routing requirements | [REQUIREMENTS.md](../REQUIREMENTS.md) |
 | User-facing suite setup and workflow entry points | [README.md](../README.md) |
 | Global repository policy and portability constraints | [AGENTS.md](../AGENTS.md) |
 | Project development principles and constitution amendments | [Project Constitution](../.specify/memory/constitution.md) |
@@ -17,7 +17,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
 | Verified unresolved bug, risk or investigation | [Open Issues](open_issues.md), via `track-open-issue` |
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
-| Model-routing benchmark evidence and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md); keep the source record discoverable as project guidelines evolve |
+| Model-routing benchmark evidence and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md); follow compact index → research → source-identified archive → matching rows on demand, keep unknown metadata unknown, and preserve the source record as project guidelines evolve |
 | Required project-local coordination guidelines, selective history and reviewed feedback | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |

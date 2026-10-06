@@ -47,6 +47,7 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 
 - Standard plans only from the approved specification. TinySpec records its bounded approach in the compact source. Both cover contracts, integration points, migration and rollback where relevant, sequencing, risks, and verification.
 - Make tasks dependency-aware and independently verifiable. Each task states its outcome, prerequisites, likely files or interfaces, acceptance evidence, and required capabilities.
+- Where execution routing matters, record the owner-selected family, exact binding and independent effort rationale separately from source observations, derived provisional guidance and factual task outcomes. Provider/runtime capability and owner authorization remain hard gates; advisory benchmark gaps require targeted research or a bounded owner uncertainty decision, not an invented score or automatic rejection.
 - Keep implementation choices in the plan or tasks, not retroactively in requirements, unless they become settled constraints.
 - Analyze all artifacts for omissions, contradictions, unsupported assumptions, dependency order, integration coverage, exclusions, and governing-rule compliance.
 - Material changes return to specification clarification and approval; non-material corrections may be made directly and recorded.
@@ -127,7 +128,11 @@ or revisions, review/validation evidence, decisions/deferrals, applicable approv
 explicit implementation scope. Standard includes spec/plan and both approvals. TinySpec
 includes its combined approval. Use project conventions, not a new universal state file.
 Task outcomes reference authoritative source criteria rather than duplicate the whole source.
-Legacy artifacts retain their original shapes and gates; changed names never waive provenance.
+When source evidence includes a retained archive, make the compact index/research record
+discoverable and inspect matching rows only on demand; do not put a whole dataset into routine
+prompts or infer unknown metadata. Preserve source identity separately from derived guidance,
+owner decisions and outcomes even if guidelines are superseded. Legacy artifacts retain their
+original shapes and gates; changed names never waive provenance.
 
 ## Retained task checkpoints
 
