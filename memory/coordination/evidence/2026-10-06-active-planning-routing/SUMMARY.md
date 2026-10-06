@@ -1,6 +1,6 @@
-# Active planning routing — preparation
+# Active planning routing — preparation and implementation
 
-Producer planner; owner-selected TinySpec. Status: combined source/tasks/implementation approval recorded in planning review at ebdc99b58e411377731cdec1cce85b606fc234ed; coordinator preflight complete, implementation dispatch next. Owner selected Sol/medium worker and fresh Sol/medium reviewer through ask_user. Exact approved source/task digests remain unchanged. Areas/tags: planning, routing, skill contracts, semantic validation.
+Producer planner; owner-selected TinySpec. Status: T001–T003 implementation/checkpoints verified; batch return awaits coordinator checkpoint audit and fresh independent final semantic review, not feature accepted. Combined source/tasks/implementation approval recorded in planning review at ebdc99b58e411377731cdec1cce85b606fc234ed; coordinator preflight baseline retained below. Owner selected Sol/medium worker and fresh Sol/medium reviewer through ask_user. Exact approved source/task digests remain unchanged. Areas/tags: planning, routing, skill contracts, semantic validation.
 
 Owner bounds: active contracts only; Sol/medium for the entire Standard plan_create pass, direct/helper; all other selections use existing routing criteria. Historical records, broad draft 001 retry/assignment changes, runtime/settings changes and live probes excluded. Owner selected current Sol/medium for local preparation; no implementation or reviewer selection inferred. Applicable approved coordination guidance: none; gotcha index empty.
 
@@ -22,12 +22,12 @@ Preparation exception: initial task-order check FAIL because heading-based task 
 
 Complete task count: three (T001–T003). Strategy: one fresh async sequential worker, same checkout, no parallel writer; context-headroom metrics unavailable in parent, fresh bounded handoff preferred. Shared routing seam couples three skills to one checker; splitting writers would overlap ownership. T002 consumes T001; T003 consumes both. Parent does not mutate while worker runs. Independent final reviewer uses fresh context and read-only tools; reviewer receives full implementation range/patch, not a clean-tree diff.
 
-- [ ] Batch 1 — T001–T003: in_progress (authorized; dispatch next).
-- [ ] Final independent review — pending completed batch and parent checkpoint/evidence audit.
+- [x] Batch 1 — T001–T003: worker-verified task/evidence checkpoints complete; coordinator boundary audit pending.
+- [ ] Final independent review — pending coordinator launch/inspection over complete committed range; feature acceptance pending.
 
 | Batch | Tasks | Scope | Dependencies | Integration | Verification | Selected profile | Mode | Initial status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | T001–T003 | Skills/checks → normative docs → acceptance scenarios | Internal T001 → T002 → T003 | Planner, brainstorming, helper/shared rubric, tests/docs | Whole approved REQUIRED item union; per-task and evidence commits; parent audit; final review | openai-codex/gpt-6.1-sol:medium | fresh async single writer | in_progress |
+| 1 | T001–T003 | Skills/checks → normative docs → acceptance scenarios | Internal T001 → T002 → T003 | Planner, brainstorming, helper/shared rubric, tests/docs | Whole approved REQUIRED item union; per-task and evidence commits; parent audit; final review | openai-codex/gpt-6.1-sol:medium | fresh async single writer | worker verified; coordinator audit/review pending |
 
 Assessment: moderate residual cross-contract reasoning; bounded local tool chain; weakest blind spot semantic contradictions/model obedience; tightly coupled producer/consumer prose/checker/docs; reversible owned changes with approval weakening risk; approved guidance none. Implementation Family rationale: Sol for cross-consumer inference and semantic blind spots, not fixed planning exception. Effort rationale: medium for settled design and bounded remaining inference. Reviewer Family rationale: same usable Sol with independent fresh context for adversarial semantic comparison. Reviewer Effort rationale: medium for bounded complete-diff review, no escalation to high. Conditional repair: inspect failed run/invocation/check/partial commit evidence; retain valid work; unknown cause stops; any profile change requires verified support and owner selection.
 
@@ -77,5 +77,24 @@ T002 baseline: that SHA; result: `0fd2c67499e94827173bf672e3d3d98f52519163`.
 | T002/V1 | REQUIREMENTS Planning/advisory selection ↔ planner Shared routing selection/Standard plan_create and helper adapter (A1–A3/A5); settings prose ↔ exact selection/observed gates; docs routing owner/link ↔ existing shared seed; constitution Project Constraints ↔ REQUIREMENTS owner terminology | PASS manual: entire same-session Sol/medium direct/helper pass, unavailable stop/no substitution, other six-factor selections, examples not selections/support proof. README inspected for contradictions: none requiring change |
 | T002/V2 | Python local Markdown resolution across four owned docs: 66 links PASS; scoped active contract/docs obsolete-label search: zero; shared reference table/options unchanged | PASS: no replacement router; preserved Claude example ID and configuration decision attribution; intentional negative mutations and historical source-contract snapshot remain attributable, not normative authority |
 | T002/V3 | `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` and `scripts/test-planner-workflow.py`: PASS, 87; `git diff --check`, four-path diff/show/status/index audit; exact constitution substitution comparison | PASS: only owner-reference phrase changed in constitution, no principle/version amendment; no settings/runtime/history writes; no staged/task-owned residual files |
+
+### T003 integrated evidence checkpoint
+
+T002 evidence-only checkpoint: `c4d13740194c26c90727b792d85867cde10ff77a` (SUMMARY/index).
+T003 baseline: that SHA; result: `587a98da13feb5e5845b8add04c35273757ba581`.
+Bounded validation/discovery: [artifact](../../../../docs/plans/reviews/active-planning-routing-validation.md).
+
+| Item | Evidence | Outcome |
+| --- | --- | --- |
+| T003/V1 | Validation artifact seven manual/simulated scenario rows: TinySpec, Standard direct/helper, non-plan supported owner profile, Sol unavailable/unsupported, default mismatch, denied/stale approval/missing writes | PASS instruction walkthroughs, not LIVE PASS |
+| T003/V2 | `PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh`: 22 skills/0 failed, planner/task-commit checkers and 283 embedded tests PASS; `PYTHONDONTWRITEBYTECODE=1 python3 skills/memory-handling/scripts/test_coordination_contract.py`: 21 PASS; `git diff --check` | PASS; combined scoped diff excludes unrelated paths/history; fixture byte-identical and source/task digests unchanged |
+| T003/V3 | Artifact A1–A5/all REQUIRED reconciliation, complete changed-path inventory and baseline-to-final HEAD reviewer range in returned packet | Packet PASS; fresh independent semantic review NOT VERIFIED (coordinator-owned, pending). A5 partial until review; no acceptance claim |
+| T003/V4 | Report/review-index 24 local links PASS; explicit two-path artifact commit/show/index audit then this separate SUMMARY/index checkpoint | PASS; no staged/task-owned residual files; final exact range/SHAs exported in worker return; live NOT RUN and /reload required |
+
+Reflection at worker batch return: observed bounded instruction/test repairs, no live obedience
+or actual profile attestation. General semantics/fixture blind spots are existing approved limits,
+not learned project guidance; final reflection/reviewer disposition remains coordinator-owned.
+**No guideline update proposed.** All requested implementation tasks have focused task commits
+and separate evidence-only checkpoints; independent review is deliberately pending, not waived.
 
 Limits: baseline checks do not accept the proposed implementation; static/simulated checks cannot prove model obedience; no paid/live probes. Untracked .env and docs/plans/mandatory-task-commits.md untouched. No delegated attempt or failed child. Reflection: no guideline update proposed; semantic validation limits are explicit source constraints, not newly learned project policy.
