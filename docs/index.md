@@ -22,11 +22,12 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
 
-This configuration suite has no declared project-memory adoption contract for gotcha
-memory or suite-level database/schema owner. Coordination memory is a separate mandatory project-local store at
-`memory/coordination/`; initialize its missing files through the shared contract. Do not
-initialize gotcha memory or database documentation merely for closeout; unrelated projects
-and the legacy port keep their own documentation boundaries.
+This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
+[gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
+Coordination memory remains a separate mandatory project-local store at
+`memory/coordination/`; initialize its missing files through the shared contract. No
+suite-level persistent database/schema owner is declared. Unrelated projects and the
+legacy port retain their own documentation and memory boundaries.
 
 ## Project Guidance
 
@@ -45,6 +46,7 @@ and the legacy port keep their own documentation boundaries.
 
 ## Implementation Plans
 
+- [Plans directory index](plans/index.md): Direct plan records and the nested review index.
 - [Mandatory Task Commits — TinySpec](plans/mandatory-task-commits-tinyspec.md): Authoritative pragmatic checkpoint scope and A1–A7 acceptance; no runtime extension gate.
 - [Mandatory Task Commits — Tasks](plans/mandatory-task-commits-tasks.md): Separate dependency-aware task contracts derived from the TinySpec.
 - [Mandatory Task Commits — Planning Review](plans/reviews/mandatory-task-commits-planning-review.md): Exact source/task approval identities and owner authorization.
