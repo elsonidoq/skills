@@ -26,7 +26,7 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 
 | Task | State | Task baseline / commit | Checks / remaining work |
 | --- | --- | --- | --- |
-| T001 | pending | not started | shared contract/inventory |
+| T001 | completed | 4781969baa8be02f939fbaaf31f8fc3d70cb8ff3 / f49113d5b6dd5f926c2ecea5fb9780562342a0b8; evidence checkpoint pending | shared contract/inventory; static reference/lint checks PASS |
 | T002 | pending | not started | coordinator protocol |
 | T003 | pending | not started | workflow consumers |
 | T004 | pending | not started | standalone skills/prompts |
