@@ -20,3 +20,13 @@ The owner answered **“Approve corrected specification”** at the planner's re
 - Next authorized phase: resume Standard planning with the recorded benchmark evidence and this eligibility restriction. This renewal does not approve implementation, model deployment, automatic project-guideline mutation, or an unverified score.
 
 If the specification changes again, compare against the renewed digest and obtain another approval before leaving the affected planning stage. This external decision record does not change approved specification bytes.
+
+## Renewal after advisory rubric and on-demand dataset decision
+
+On 2026-10-06 the owner answered **“Approve revised specification”** at the planner's current-content `ask_user` gate after the new six-bullet executive brief. This supersedes the prior benchmark-only routing approval for the corrected content, without erasing its history.
+
+- Current specification: `specs/001-model-family-routing/spec.md`, SHA-256 `e4c0bb5e87b7172d57aab3e1fb0f28bf0b3a44b3c5eb6dce754f63e3a64f8438`.
+- Current quality checklist: `specs/001-model-family-routing/checklists/requirements.md`, SHA-256 `127dcf18f2dc9e7effd81105e5acf660811b5b5aeb052e71f66be01ccdc66278`.
+- Correction checkpoints: `c1dd9dd` (advisory rubric), `40fcf8d` (on-demand access). Focused content/diff checks PASS; specification-quality checklist 16/16. Independent Astra/medium read-only review run `7d370928-e33d-40bf-854e-8f7150468785` and targeted follow-up `3b908738-d023-4da6-af6f-8cd7e7138eca` found no blocking findings; external benchmark claims and live behavior were not reverified by the reviewer.
+- Deliberate change: benchmark rows inform independently reasoned family/effort choices, not a hard exact-pair eligibility gate; provider-documented usable runtime support and owner selection remain hard gates. Supplied CSV evidence is to be archived project-locally and inspected selectively on demand, not loaded wholesale into routine agent prompts. Preserve prior Luna and failure-recovery decisions.
+- Authorization: resume Standard planning to reconcile source-backed research, data model, validation guide, plan and tasks under this approved specification. Present revised per-task/reviewer assignment proposals with the task scope for **one final implementation approval**. This renewal does not authorize implementation, dispatch, deployment, paid model probes, automatic guideline edits, or rollback. Changed specification bytes require renewed approval again before downstream production.
