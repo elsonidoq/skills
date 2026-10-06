@@ -10,8 +10,8 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 
 | Batch | Tasks | Prerequisite | Surface/checks | Selected binding | Mode | State |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | in_progress |
-| 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | pending: 1 |
+| 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | completed: 7c6bdad; parent audit PASS |
+| 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | in_progress |
 | 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | pending: 2 |
 | 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | pending: 3 |
 | 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
@@ -19,4 +19,8 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 | 7 | T011 | 6 | remaining active consumers; focused suite checks | Terra 5.6/medium | delegated | pending: 6 |
 | 8 | T012 | 7 | integration, suite/lint, fresh independent reviewer | Sol 6.1/medium writer; Astra 6/medium reviewer | delegated | pending: 7 |
 
-Per-task attempt/checkpoint records go in this run's separate `T###.md` files, then the compact index is refreshed. T001 allowed output: this summary and T001 record for factual evidence; source-cited inventory may be retained in this run's T001 record, not a new global model policy. The implementer must establish the actual HEAD/index at launch, compare to this baseline after this evidence checkpoint, use explicit task-owned paths, run required checks, and commit the task outcome only if verified. A separate evidence-only checkpoint must capture its SHA before T002 begins. Unsafe/mixed ownership stops. No actual T001 execution yet at this tracker initialization.
+Per-task attempt/checkpoint records go in this run's separate `T###.md` files, then the compact index is refreshed. Each implementer must establish actual HEAD/index at launch, compare to the latest evidence-only checkpoint, use explicit task-owned paths, run required checks, and commit only verified task outcomes. Unsafe/mixed ownership stops.
+
+## T001 checkpoint and coordinator audit
+
+Worker run `c60908b1-1653-4566-94b0-eeb3931c7e1b` resolved to `openai-codex/gpt-5.6-terra:medium` with a completed process. Task baseline `8635599a1395f551e0be0085b8550e569996f154`; focused task commit `7c6bdadcd3f06cc2c1bdb6a146fb20a3756fc2e0` has that exact parent and only adds [T001.md](T001.md), 61 lines. Parent independently inspected commit metadata, changed-path list and full task record, and checked `git diff 8635599 7c6bdad --check` PASS; tracked worktree/index remain clean and the two unrelated untracked paths remain. Parent reran task-order, planner checker and memory coordination tests: PASS. Worker additionally recorded planner tests, suite lint, memory and brainstorming tests PASS; bounded `rg` old-rule migration inventory was an expected FAIL against the target, not a current baseline test failure. Inventory identifies class/share contract owners, fixtures and deliberate coordinator SHA freeze before changes. No task-owned residual change or blocker found. Its shorthand “no provider call” refers to no **separate** provider probe: the Terra worker itself was a live delegated provider request, not proof of provider-internal effort, cost or implementation performance. No rollback, guideline change or task T002 work occurred during T001. T002–T003 are released only after this distinct evidence/index checkpoint commits.
