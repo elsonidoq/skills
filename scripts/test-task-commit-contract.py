@@ -78,6 +78,13 @@ class StaticContractMutationTests(unittest.TestCase):
             errors = checker.check(coordinator_text=mutation)
             self.assertTrue(any(diagnostic in error for error in errors), errors)
 
+    def test_architectural_planning_commit_opt_in_mutation_is_diagnostic(self):
+        text = (ROOT / "skills/delegating-architectural-planning/SKILL.md").read_text()
+        self.assertEqual(checker.check(), [])
+        restored_opt_in = text.replace("must not push or dispatch additional agents", "Commit, push, or dispatch additional agents")
+        errors = checker.check(architectural_text=restored_opt_in)
+        self.assertIn("architectural planning commit opt-in reintroduced", errors)
+
     def test_removed_consumer_link_reports_specific_diagnostic(self):
         holder = tempfile.TemporaryDirectory()
         self.addCleanup(holder.cleanup)

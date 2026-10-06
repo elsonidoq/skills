@@ -95,7 +95,11 @@ Unless separately authorized, it must not:
 - Change the approved product scope.
 - Run paid, live, deployment, or release operations unrelated to producing
   the SpecKit planning artifacts.
-- Commit, push, or dispatch additional agents.
+- It must not push or dispatch additional agents.
+
+For already-authorized planning outputs within the bounded write permission above, verify and
+make the focused path-limited task checkpoint required by the shared contract before completion or handoff. This mandatory checkpoint needs no separate commit opt-in; it does not authorize
+new writes, specification/adaptation changes, pushes, or additional delegation.
 
 Ensure the SpecKit plan covers:
 

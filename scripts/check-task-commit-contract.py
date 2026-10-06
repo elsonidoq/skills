@@ -13,7 +13,7 @@ SKILLS = (
 ).split()
 
 
-def check(root=ROOT, coordinator_text=None, prompt_text=None):
+def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text=None):
     errors = []
     contract = root / "skills/memory-handling/references/task-commit-contract.md"
     if not contract.is_file():
@@ -37,6 +37,12 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None):
     for prompt in (root / ".pi/prompts").glob("speckit.*.md"):
         if "task-commit-contract.md" not in prompt.read_text():
             errors.append(f"prompt link missing: {prompt.name}")
+    architectural = architectural_text if architectural_text is not None else (root / "skills/delegating-architectural-planning/SKILL.md").read_text()
+    for phrase in ("focused path-limited task checkpoint", "before completion or handoff", "must not push or dispatch additional agents"):
+        if phrase not in architectural:
+            errors.append(f"architectural planning checkpoint guard missing: {phrase!r}")
+    if "Commit, push, or dispatch additional agents" in architectural:
+        errors.append("architectural planning commit opt-in reintroduced")
     prompt = prompt_text if prompt_text is not None else (root / ".pi/prompts/speckit.implement.md").read_text()
     for phrase in ("hooks.before_implement", "hooks.after_implement", "MUST actually invoke the hook", "Wait for the result of the hook command"):
         if phrase not in prompt:

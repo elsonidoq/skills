@@ -11,7 +11,7 @@ the consumer is already wired; later task evidence changes rows only after verif
 | planning-brainstorming | Read-only preselection; no empty commit | integrated | T003 link/read-through |
 | tiny-spec | Retained source deliverable, separate from task-list deliverable | integrated | T003 link/read-through |
 | task-generation | Retained task-list deliverable and dependency order | integrated | T003 link/read-through |
-| delegating-architectural-planning | Approved planning artifacts only; no adaptation bypass | integrated | T003 link/read-through |
+| delegating-architectural-planning | Approved planning artifacts only; no adaptation bypass | integrated | T003 link/read-through; RF001 operational checkpoint correction |
 | memory-handling | Factual evidence/checkpoint persistence, not guideline authority | integrated | T003 link/read-through |
 | compact-memory | Retained compact-memory output only after its approval boundary | integrated | T003 link/read-through |
 | initialize-coherence | Focused/idempotent initialization; preserve approval boundary | integrated | T003 link/read-through |
