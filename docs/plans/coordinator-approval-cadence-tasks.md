@@ -9,7 +9,7 @@ D1–D4 and A1–A5 govern work. Limit changes to coordinator behavior; no chang
 
 Consecutive tasks share source and the same coordinator approval/cadence seam. T001 produces verified instructions/tests before T002 documents and validates the integrated contract. A single batch may be coherent; this task list does not assign batch boundaries or profiles.
 
-- [ ] T001 — Enforce coordinator batch approval and explicit persistence boundaries
+- [x] T001 — Enforce coordinator batch approval and explicit persistence boundaries
   - **Depends**: none
   - **Outcome:** complete routing table requires approval before implementation/dispatch; coordinator persists only at D3 boundaries without weakening recovery or worker checkpoints.
   - **Source coverage:** A1–A4, D1–D4.

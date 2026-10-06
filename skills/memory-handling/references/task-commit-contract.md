@@ -85,8 +85,11 @@ tasks, never automatic rollback.
 
 The brief project-owned current-state snapshot follows the
 [coordinator snapshot/recovery lifecycle](../../coordinate-implementation/SKILL.md#brief-current-state-and-recovery),
-not a new task ledger. Include coordinator state updates in bounded evidence checkpoints;
-reference already verified task/evidence commits, never recursively commit a snapshot's own SHA.
+not a new task ledger. Include coordinator state updates only at that owner's exclusive write
+boundaries, coalescing same-boundary evidence and skipping unchanged status; polling and healthy
+worker internal progress do not require coordinator writes or duplicate checkpoint records.
+Local implementer duties remain unchanged. Reference already verified task/evidence commits,
+never recursively commit a snapshot's own SHA.
 A returned child ID is written immediately; pending coordinator-owned state is explicitly excluded
 from worker paths and committed at the safe coordinator boundary, never by racing the worker's
 Git/index. This does not waive any internal task/evidence checkpoint, ownership check or failure stop.

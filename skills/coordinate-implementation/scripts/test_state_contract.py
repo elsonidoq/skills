@@ -78,11 +78,26 @@ UNSAFE = {
 }
 
 
+CADENCE_GUARDS = (
+    "exclusive coordinator write boundaries", "approved execution start", "imminent dispatch",
+    "returned run identity", "audited batch completion", "verified local task checkpoint",
+    "genuine blocked pause", "final review dispatch and terminal closeout",
+    "materially changed recovery truth", "No coordinator persistence for polling",
+    "healthy internal worker progress", "Skip byte-identical writes",
+    "Coalesce events at the same safe boundary", "one summary/index/state evidence checkpoint",
+    "No extra summary/index write solely for child-ID capture",
+    "Reflection occurs once at terminal closeout or a genuine blocked pause",
+    "Worker task/evidence checkpoints remain unchanged",
+)
+
+
 def contract_errors(text):
     body = section(text, "Brief Current State and Recovery")
     errors = []
     for group, phrases in GUARDS.items():
         carrier = body
+        if group in ("ownership", "brief", "lifecycle"):
+            carrier = body.split("### Coordinator write boundaries", 1)[0]
         if group == "recovery":
             carrier = body.split("### Recovery before continuation", 1)[-1].split(
                 "### Writes and checkpoint ordering", 1)[0] if "### Recovery before continuation" in body else ""
@@ -91,6 +106,11 @@ def contract_errors(text):
         for phrase in phrases:
             if phrase not in norm(carrier):
                 errors.append(group + ": " + phrase)
+    cadence = body.split("### Coordinator write boundaries", 1)[-1].split(
+        "### Recovery before continuation", 1)[0] if "### Coordinator write boundaries" in body else ""
+    for phrase in CADENCE_GUARDS:
+        if phrase not in norm(cadence):
+            errors.append("cadence: " + phrase)
     # An ordered recovery recipe, not five disconnected mentions.
     recovery = body.split("### Recovery before continuation", 1)[-1].split("### Writes", 1)[0]
     if re.findall(r"^(\d)\. ", recovery, re.M) != ["1", "2", "3", "4", "5"]:
@@ -154,6 +174,38 @@ class ContractTests(unittest.TestCase):
     def test_reordered_recovery_is_rejected(self):
         mutated = TEXT.replace("2. Locate", "3. Locate", 1).replace("3. Reconcile", "2. Reconcile", 1)
         self.assertIn("recovery-order", contract_errors(mutated))
+
+
+class CadenceTests(unittest.TestCase):
+    """Bounded rule-to-action walkthroughs, not a coordinator persistence engine."""
+    def test_cadence_mutations_are_section_bound(self):
+        body = section(TEXT, "Brief Current State and Recovery")
+        for phrase in CADENCE_GUARDS:
+            pattern = r"\s+".join(re.escape(word) for word in phrase.split())
+            altered, count = re.subn(pattern, "REMOVED", body)
+            with self.subTest(phrase=phrase):
+                self.assertGreaterEqual(count, 1)
+                # A footer/summary cannot rescue the missing operational boundary.
+                self.assertIn("cadence: " + phrase, contract_errors(TEXT.replace(body, altered, 1) + "\n## Footer\n" + phrase))
+
+    def test_symbolic_write_schedule_coalesces_and_skips_routine_work(self):
+        self.assertEqual(contract_errors(TEXT), [])
+        checkpoints = {"start", "dispatch", "audit", "local-task", "blocker", "review", "closeout", "recovery"}
+        for events, changed, state_write, evidence_checkpoints in (
+            ({"start", "dispatch"}, True, True, 1),
+            ({"child-id"}, True, True, 0),  # immediate ID; commit deferred safely
+            ({"audit", "dispatch"}, True, True, 1),
+            ({"blocker"}, True, True, 1),
+            ({"review", "closeout"}, True, True, 1),
+            ({"recovery"}, True, True, 1),
+            ({"local-task"}, True, True, 1),
+            ({"poll", "wait", "passing-check", "worker-task"}, True, False, 0),
+            ({"audit"}, False, False, 0),
+        ):
+            with self.subTest(events=events, changed=changed):
+                boundary = bool(events & checkpoints)
+                self.assertEqual(changed and (boundary or "child-id" in events), state_write)
+                self.assertEqual(int(changed and boundary), evidence_checkpoints)
 
 
 # Deliberately symbolic: represents a manual rule-to-action walkthrough, NOT real runtime.

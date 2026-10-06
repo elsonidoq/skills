@@ -44,6 +44,74 @@ class SeedRubricTests(unittest.TestCase):
         self.assertIn("../../../specs/002-batch-routing-contracts/research.md", rubric)
 
 
+def approval_errors(text):
+    """Section-bound instruction check, not a runtime authorization engine."""
+    graph = " ".join(text.split("## Build the Execution Graph", 1)[-1].split(
+        "## Select Execution Capability", 1)[0].split())
+    capability = " ".join(text.split("## Select Execution Capability", 1)[-1].split(
+        "## Execute and Integrate", 1)[0].split())
+    errors = []
+    for label, phrase in {
+        "table": "present the entire execution plan as a Markdown table",
+        "description": "one or two sentences describing the batch",
+        "profile": "proposed exact binding and effort",
+        "approval": "Implementation authorization is not execution-routing approval",
+        "gate": "before any implementation write or dispatch",
+        "question": "use `ask_user` to obtain explicit approval",
+        "resume": "Reuse verified unchanged approval on resume",
+        "change": "Changes to batch boundaries or exact profiles require approval of the affected rows",
+    }.items():
+        if phrase not in graph:
+            errors.append(label)
+    if "Do not ask for routine batching approval" in graph:
+        errors.append("approval-bypass")
+    for label, phrase in {
+        "assessment-order": "Assess every batch before presenting the complete table",
+        "no-default": "Never inherit Sol/medium or another universal default",
+        "uniform-valid": "Identical profiles across batches are valid when individually justified",
+    }.items():
+        if phrase not in capability:
+            errors.append(label)
+    return errors
+
+
+class ApprovalGateTests(unittest.TestCase):
+    def test_complete_table_and_assessment_gate(self):
+        self.assertEqual(approval_errors(TEXT), [])
+
+    def test_missing_table_description_profile_approval_and_default_guards(self):
+        for phrase, diagnostic in (
+            ("present the entire execution plan as a Markdown table", "table"),
+            ("one or two sentences describing the batch", "description"),
+            ("proposed exact binding and effort", "profile"),
+            ("Implementation authorization is not execution-routing approval", "approval"),
+            ("before any implementation write or dispatch", "gate"),
+            ("use `ask_user` to obtain explicit approval", "question"),
+            ("Assess every batch before presenting the complete table", "assessment-order"),
+            ("Never inherit Sol/medium or another universal default", "no-default"),
+        ):
+            with self.subTest(diagnostic=diagnostic):
+                normalized = " ".join(TEXT.split())
+                self.assertIn(diagnostic, approval_errors(normalized.replace(phrase, "REMOVED", 1)))
+        mutated = TEXT.replace("## Select Execution Capability", "Do not ask for routine batching approval\n\n## Select Execution Capability", 1)
+        self.assertIn("approval-bypass", approval_errors(mutated))
+
+    def test_symbolic_resumed_and_changed_plan_approval(self):
+        self.assertEqual(approval_errors(TEXT), [])
+        approved = (("B1", ("T001", "T002"), "symbolic/sol:medium"),)
+        for current, answer, expected in (
+            (approved, "approve", True), (approved, "cancel", False),
+            (approved, "ambiguous", False), (approved, None, False),
+            ((("B1", ("T001", "T002"), "symbolic/sol:low"),), "approve", False),
+            ((("B1", ("T001",), "symbolic/sol:medium"),), "approve", False),
+        ):
+            # Simulated comparison only: unchanged durable content + explicit approval.
+            self.assertEqual(answer == "approve" and current == approved, expected)
+        for phrase, label in (("Reuse verified unchanged approval on resume", "resume"),
+                              ("Changes to batch boundaries or exact profiles require approval of the affected rows", "change")):
+            self.assertIn(label, approval_errors(" ".join(TEXT.split()).replace(phrase, "REMOVED", 1)))
+
+
 class BatchingContractTests(unittest.TestCase):
     def test_coherent_sequential_work_is_not_split_by_incidental_boundaries(self):
         self.assertIn("amortize startup and retain\n   useful context", TEXT)

@@ -121,14 +121,40 @@ The snapshot conveys no authorization or acceptance. Replace current truth in pl
 append historical ledgers, transcripts, completed-task history, full check logs or duplicate evidence.
 
 Establish the snapshot after authorization/preflight and before execution, including before
-any delegated dispatch. Reuse the coordination run ID. Refresh at meaningful transitions:
-dispatch intent and returned run identity, verified task/batch checkpoint, blocker/owner gate,
-review/repair transition and completion. Do not depend on advance compaction notification.
+any delegated dispatch. Reuse the coordination run ID. Refresh only at the exclusive boundaries
+below, including returned run identity; review/repair transition and completion use those same
+boundaries, not an extra write loop.
+Do not depend on advance compaction notification.
 While a sequential worker runs, retain its ID, last audited checkpoint and the next action
 "inspect this run, then audit its returned checkpoints"; do not imply its internal progress is
 already accepted. Record a returned child ID immediately, even while the child is running.
 Delegated briefs exclude snapshot writes to prevent competition; another authorized workflow
 may update it only across an explicit non-overlapping write boundary, not by racing this writer.
+
+### Coordinator write boundaries
+
+These are the exclusive coordinator write boundaries for `STATE.md` and coordination evidence:
+
+| Boundary | Snapshot action | Summary/index action |
+| --- | --- | --- |
+| approved execution start / imminent dispatch | Establish current truth and checkpoint dispatch intent before launch; combine next intent with the just-audited boundary when known. | Record approved plan/approval pointers and baseline once, not copied task contracts or routing assessments. |
+| returned run identity | Record a returned child ID immediately; checkpoint at the next safe coordinator boundary without racing an active writer. | No extra summary/index write solely for child-ID capture. |
+| audited batch completion / verified local task checkpoint | Update verified progress and exact next safe action, including next dispatch intent when known. | Record one audit disposition pointing to worker checkpoints, not a duplicate internal-task ledger. Local implementer task/evidence duties still apply. |
+| genuine blocked pause / failed attempt requiring repair or owner decision | Record blocker, active run and safe next action; checkpoint when safe. Repair launch uses imminent dispatch after diagnosis and profile gates. | Record bounded exception/diagnosis and decision disposition; do not repeatedly record an unchanged blocker. |
+| final review dispatch and terminal closeout | Use the same dispatch-intent/returned-ID safety rules for review, then replace with terminal disposition. | Consolidate findings, dispositions, reflection and outcome at closeout; a genuine blocked pause may retain its own exception/reflection. |
+| materially changed recovery truth | Refresh reconciled facts once before continuation when the stored snapshot is materially stale. | Recover only verified missing facts or exceptions, never replay history or repeat checkpoints. |
+
+No coordinator persistence for polling, waiting, ordinary tool calls/progress messages,
+individual passing checks, unchanged status, or healthy internal worker progress. Keep the active
+worker ID and last audited checkpoint until its terminal return; task activity is not accepted
+coordinator progress. Skip byte-identical writes. Coalesce events at the same safe boundary into
+one summary/index/state evidence checkpoint, including pending snapshot changes when safe;
+child-ID capture remains an immediate write, not an immediate competing commit. Reflect distinct
+attempts in the same bounded checkpoint rather than triggering a write per check or message.
+Reflection occurs once at terminal closeout or a genuine blocked pause, never routine batch
+transitions. Worker task/evidence checkpoints remain unchanged and independently auditable.
+Existing initialization and exact guideline-approval authority remain separate; this cadence
+neither authorizes guideline mutation nor weakens required local implementer checkpoints.
 
 ### Recovery before continuation
 
@@ -273,15 +299,25 @@ stop before building the batch plan. Do not silently reorder tasks or mix storie
 to make the batch run: return the sequencing defect to the producing workflow's review gate
 for correction and renewed approval as required by the project's workflow.
 
-Before execution, present the entire execution plan as a Markdown table. Include
-one row per batch with its batch number, task IDs, scope, dependencies, integration
-surface, verification, selected exact binding and effort, execution mode (local or delegated),
-and initial status. Track eligible local segments as work units in this same table
-and tracker, not a second execution algorithm. Do not ask for routine batching
-approval when the owner already approved implementation.
+Before execution, assess all batches under Select Execution Capability, then present the entire execution plan as a Markdown table.
+Include one row per batch with batch number, task IDs, one or two sentences describing the batch
+outcome and principal work, dependencies, integration surface and verification pointers,
+proposed exact binding and effort, separate concise Family rationale and Effort rationale,
+execution mode (local or delegated), and initial status. Track eligible local segments as work
+units in this same table and tracker, not a second execution algorithm.
 
-Immediately after presenting the table, initialize the execution tracker with one
-item per batch. Mark the first dependency-ready batch `in_progress`, later batches
+Implementation authorization is not execution-routing approval. After presenting the entire
+table, use `ask_user` to obtain explicit approval of batch boundaries and exact profiles
+before any implementation write or dispatch. Persist the answer against the current plan in the
+existing tracker/evidence convention, not another approval artifact. Missing, denied, cancelled
+or ambiguous approval blocks execution. Reuse verified unchanged approval on resume after
+content/authorization reconciliation; do not re-ask for unchanged routing or routine progress.
+Changes to batch boundaries or exact profiles require approval of the affected rows before
+execution; unchanged rows retain their valid approval. Source/task scope or acceptance changes
+still return to their producing approval gate. Copy approved profiles unchanged at dispatch.
+
+After explicit routing approval, initialize the execution tracker with one item per batch.
+Mark the first dependency-ready batch `in_progress`, later batches
 `pending`, and blocked batches `pending` with the blocking producer named in the
 item. Update it after every batch: mark verified batches `completed`, mark the next
 dependency-ready batch `in_progress`, and add, remove, or revise batches only when
@@ -290,7 +326,10 @@ while implementation remains.
 
 ## Select Execution Capability
 
-Before each batch, record ordered task IDs, assessment of residual reasoning, agentic/tool
+Assess every batch before presenting the complete table and obtaining routing approval.
+Never inherit Sol/medium or another universal default from planning, the current agent or earlier
+batches. Identical profiles across batches are valid when individually justified; do not force
+model diversity. Record ordered task IDs, assessment of residual reasoning, agentic/tool
 depth, weakest material blind spot, scope/coupling, failure cost/reversibility and relevant
 guidance. Record applicable approved evidence or explicit none, proposed versus owner-selected
 exact binding and effort, separate Family rationale and Effort rationale, and a conditional
@@ -427,9 +466,10 @@ For each task, whether local or inside a delegated batch:
    and apply the acceptance/approval boundary above.
 6. Update task completion and decisions in the project's existing artifact format.
    If none exists, update the task list; the brief current-state snapshot only points to it.
-7. Update the execution tracker to reflect the batch's verified outcome and the
-   next dependency-ready batch. Refresh the snapshot at the coordinator's verified boundary
-   under Brief Current State and Recovery; workers return evidence rather than writing it.
+7. At the verified coordinator batch boundary, update the execution tracker to reflect the
+   batch's verified outcome and next dependency-ready batch. Refresh the snapshot only under
+   Coordinator write boundaries; never on healthy internal worker task progress. Local task
+   evidence checkpoints remain required; workers return evidence rather than writing the snapshot.
 8. Commit each task's verified changes as one focused commit before starting the next task.
    Task commits are required checkpoints, not a reason to split a coherent batch or launch a
    new session.
@@ -477,6 +517,10 @@ do not require owner escalation.
 
 At each task/attempt checkpoint, including failed, blocked or partial work and manual/user
 validation, record observed outcomes under the shared contract's associated write bounds.
+The implementer retains every internal task/attempt checkpoint; the coordinator writes only at
+Coordinator write boundaries, referencing returned evidence instead of duplicating its ledger.
+Batch assessment is recorded once in the approved brief/tracker; retain its pointer and expand
+only changed facts or exceptions, not repeated six-factor narratives at every tool/check event.
 Identify task/type, areas/tags, optional `residual_reasoning: low|medium|high` and rationale,
 selected capability role, exact selected and observed profile (binding plus effort or unknown),
 assessment factors and applicable approved guidance or none, contract strength, first/final outcome,
@@ -529,7 +573,9 @@ review gate, with renewed affected approval before dependents proceed.
 ## Coordination reflection and guideline approval
 
 After implementation/verification and fresh independent review, or at a blocked pause,
-apply the shared contract's nine reflection questions: usefulness to future planning;
+reflect once at terminal closeout or that genuine pause, never at routine batch transitions or
+polling/progress events.
+Apply the shared contract's nine reflection questions: usefulness to future planning;
 project-specific versus general; reusable versus incidental; reinforcement; contradiction;
 guideline support versus evidence-only; delegation lessons; manual validation missed by
 automated checks; and surprises needing qualification/more evidence. Distinguish direct
