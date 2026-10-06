@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Static contract mutations and temporary-Git protocol fixtures, not model-obedience tests."""
 import importlib.util
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -67,14 +68,27 @@ class StaticContractMutationTests(unittest.TestCase):
         text = COORDINATOR.read_text()
         self.assertEqual(checker.check(), [])
         mutations = (
-            text.replace("no skip/defer question", "ask whether to skip/defer"),
-            text.replace("never adopts or commits unknown work", "may commit unknown inherited work"),
-            text.replace("coordinator alone may recover", "implementer may recover"),
+            (text.replace("no skip/defer question", "ask whether to skip/defer"), "coordinator checkpoint guard missing"),
+            (text.replace("never adopts or commits unknown work", "may commit unknown inherited work"), "coordinator checkpoint guard missing"),
+            (text.replace("coordinator alone may recover", "implementer may recover"), "coordinator checkpoint guard missing"),
+            (text.replace("failed recovery stops dispatch", "failed recovery may continue"), "coordinator checkpoint guard missing"),
+            (text + "\nA coordinator may proceed without per-task commits.\n", "coordinator checkpoint waiver reintroduced"),
         )
-        for mutation in mutations:
+        for mutation, diagnostic in mutations:
             errors = checker.check(coordinator_text=mutation)
-            self.assertTrue(errors)
-            self.assertTrue(any("coordinator checkpoint" in error for error in errors), errors)
+            self.assertTrue(any(diagnostic in error for error in errors), errors)
+
+    def test_removed_consumer_link_reports_specific_diagnostic(self):
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name) / "fixture"
+        for skill in checker.SKILLS:
+            shutil.copytree(ROOT / "skills" / skill, root / "skills" / skill)
+        shutil.copytree(ROOT / ".pi/prompts", root / ".pi/prompts")
+        consumer = root / "skills/brainstorming/SKILL.md"
+        consumer.write_text(consumer.read_text().replace("task-commit-contract.md", "removed-contract.md"))
+        errors = checker.check(root)
+        self.assertIn("consumer link missing: brainstorming", errors)
 
     def test_existing_speckit_hook_operations_and_additive_prompt_link_are_protected(self):
         prompt = (ROOT / ".pi/prompts/speckit.implement.md").read_text()
@@ -82,6 +96,11 @@ class StaticContractMutationTests(unittest.TestCase):
         for phrase in ("hooks.before_implement", "hooks.after_implement", "MUST actually invoke the hook"):
             errors = checker.check(prompt_text=prompt.replace(phrase, "REMOVED"))
             self.assertIn(f"SpecKit hook operational guard missing: {phrase!r}", errors)
+        # Preserve headings but remove both executable-body instructions.
+        bodyless = prompt.replace("MUST actually invoke the hook", "MUST not invoke the hook").replace("Wait for the result of the hook command", "Do not wait")
+        errors = checker.check(prompt_text=bodyless)
+        self.assertIn("SpecKit hook operational guard missing: 'MUST actually invoke the hook'", errors)
+        self.assertIn("SpecKit hook operational guard missing: 'Wait for the result of the hook command'", errors)
 
 
 class GitProtocolFixtureTests(unittest.TestCase):

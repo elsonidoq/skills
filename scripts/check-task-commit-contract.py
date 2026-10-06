@@ -29,7 +29,7 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None):
     ):
         if phrase not in coordinator:
             errors.append(f"coordinator checkpoint guard missing: {phrase!r}")
-    if "ask whether to skip/defer" in coordinator:
+    if "ask whether to skip/defer" in coordinator or "proceed without per-task commits" in coordinator:
         errors.append("coordinator checkpoint waiver reintroduced")
     for skill in SKILLS:
         if "task-commit-contract.md" not in (root / "skills" / skill / "SKILL.md").read_text():
