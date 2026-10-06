@@ -290,6 +290,20 @@ approval/review locations, internal task sequence, shared context, producer chec
 and integration checkpoints. Ask for changed files, checks, incomplete work, and
 non-obvious handoff context.
 
+Aggregate the whole union of REQUIRED task-local references from the approved producer
+contract in the brief/tracker. For every reference retain the expected evidence and pass criterion,
+smallest sufficient check, manual/permission gates and optional checks separately. Include each
+task's baseline and owned paths, internal producer checks before consumer use, and the per-task
+commit followed by separate evidence checkpoint convention. Missing or ambiguous REQUIRED contracts
+return to the producing review/approval gate before dispatch; never retrofit approved tasks.
+
+Require the implementer return to identify actual profile or unknown separately from selection,
+and pass/fail/not_verified for every REQUIRED reference with concrete command/output or bounded
+artifact pointers and an explicit not_verified reason for unrun/unavailable checks. A shared output
+retains every item mapping without duplicate execution. Return changed files, incomplete work,
+and ordered baseline/result and separate evidence checkpoint references for every task.
+Confidence-only summaries are not evidence.
+
 ## Execute and Integrate
 
 Enforce the approved task-generation acceptance boundary in each brief and checkpoint:

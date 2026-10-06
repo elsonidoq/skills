@@ -142,5 +142,81 @@ class SimulatedProfileTraceTests(unittest.TestCase):
         self.assertNotEqual(returned["observed_effort"], selected.split(":")[1])
 
 
+# Offline sample artifacts only: these helpers do not implement a runtime router.
+def sample_batch_contract(selected="symbolic/luna:medium"):
+    tasks = [
+        {"id": "T005", "baseline": "fixture-base", "owned_paths": ["fixture/producer.md"],
+         "required": [{"ref": "T005/V1", "criterion": "shared check passes",
+                       "check": "fixture shared-check", "expected_evidence": "shared-output",
+                       "manual_gate": "scope inspection", "permission_gate": "local only"}]},
+        {"id": "T006", "baseline": "fixture-task-005", "owned_paths": ["fixture/consumer.md"],
+         "required": [{"ref": "T006/V1", "criterion": "shared check passes",
+                       "check": "fixture shared-check", "expected_evidence": "shared-output",
+                       "manual_gate": "scope inspection", "permission_gate": "local only"}]},
+    ]
+    brief = {"selected": selected, "tasks": tasks,
+             "required_union": [item for task in tasks for item in task["required"]],
+             "producer_checks": ["T005/V1 before T006"],
+             "checkpoint_convention": "per-task commit then separate evidence commit"}
+    returned = {
+        "observed_profile": "unknown",
+        "items": {item["ref"]: {"status": "pass", "evidence": "shared-output", "reason": None}
+                  for item in brief["required_union"]},
+        "outputs": {"shared-output": {"command": "fixture shared-check", "exit": 0,
+                                      "observable": "both invariants satisfied"}},
+        "files": ["fixture/producer.md", "fixture/consumer.md"],
+        "checkpoints": [
+            {"task": "T005", "baseline": "fixture-base", "result": "fixture-task-005",
+             "evidence_checkpoint": "fixture-evidence-005"},
+            {"task": "T006", "baseline": "fixture-evidence-005", "result": "fixture-task-006",
+             "evidence_checkpoint": "fixture-evidence-006"},
+        ],
+    }
+    # The next task starts after the prior separate evidence checkpoint.
+    tasks[1]["baseline"] = "fixture-evidence-005"
+    return brief, returned
+
+
+class SimulatedUnionReturnTests(unittest.TestCase):
+    """Sample brief/return trace, not a live invocation or model performance test."""
+
+    def test_whole_required_union_and_return_carriers(self):
+        normalized = " ".join(TEXT.split())
+        for phrase in (
+            "whole union of REQUIRED task-local references", "expected evidence and pass criterion",
+            "manual/permission gates", "shared output retains every item mapping",
+            "pass/fail/not_verified", "explicit not_verified reason",
+            "ordered baseline/result and separate evidence checkpoint references",
+            "Missing or ambiguous REQUIRED contracts return to the producing review/approval gate",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, normalized)
+
+    def test_two_task_shared_check_union_and_ordered_checkpoints(self):
+        brief, returned = sample_batch_contract()
+        refs = [item["ref"] for item in brief["required_union"]]
+        self.assertEqual(refs, ["T005/V1", "T006/V1"])
+        self.assertEqual(set(returned["items"]), set(refs))
+        for ref in refs:
+            self.assertEqual(returned["items"][ref]["evidence"], "shared-output")
+        self.assertEqual(len(returned["outputs"]), 1)  # no duplicate execution
+        self.assertEqual([cp["task"] for cp in returned["checkpoints"]], ["T005", "T006"])
+        for task, cp in zip(brief["tasks"], returned["checkpoints"]):
+            self.assertEqual(cp["baseline"], task["baseline"])
+            self.assertTrue(cp["result"])
+            self.assertTrue(cp["evidence_checkpoint"])
+        self.assertEqual(returned["observed_profile"], "unknown")
+
+    def test_not_verified_return_keeps_reference_and_explicit_reason(self):
+        brief, returned = sample_batch_contract()
+        returned["items"]["T006/V1"] = {
+            "status": "not_verified", "evidence": None,
+            "reason": "required local tool unavailable; check not run",
+        }
+        self.assertEqual(set(returned["items"]), {i["ref"] for i in brief["required_union"]})
+        self.assertEqual(returned["items"]["T006/V1"]["status"], "not_verified")
+        self.assertTrue(returned["items"]["T006/V1"]["reason"])
+
+
 if __name__ == "__main__":
     unittest.main()
