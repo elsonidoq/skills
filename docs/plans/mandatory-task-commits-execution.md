@@ -44,12 +44,12 @@ Initial worker `0a1e298e-4f37-4ce0-9209-0d1deab128e7` exited with an incomplete 
 
 ## Final acceptance
 
-Implementation tasks and their checkpoints are complete. Fresh independent Sol review of `4781969..9a715c2` returned **NOT_READY / BLOCK** for F1: architectural-planning's existing separate commit opt-in contradicts the mandatory checkpoint. Parent classified F1 valid; bounded correction RF001 task commit recorded; evidence checkpoint and focused recheck required before acceptance. Review/authorization: `reviews/mandatory-task-commits-final-review.md`. No feature acceptance, runtime-obedience proof or model-causation conclusion is implied by task completion.
+Implementation T001–T007 and RF001 are complete with verified focused commits. Initial Sol review of `4781969..9a715c2` was BLOCK for F1, the architectural-planning commit opt-in. After RF001, independent Sol targeted recheck (`fa9d8238-b609-497a-8a5d-e6e45bc1b6e2`) returned **F1 FIXED; READY / Merge verdict OK** against corrected HEAD `ec27632c013d59c8676c177e5f2fe4dd4fa75cb8`. Parent accepted the implementation; final full package lint/integrated checks PASS (11 focused checkpoint tests). Review/disposition: `reviews/mandatory-task-commits-final-review.md`. Acceptance covers the approved instruction-managed protocol and Git/static checks, not runtime-obedience proof, provider/live tests or deployment.
 
 | Correction | State | Binding | Dependencies / verification |
 | --- | --- | --- | --- |
-| RF001 | completed | f8baf91d527466d61db750121a4892d27bcbdd43 / a742f2064ad6a55450594bf57f13c577662a38f0; evidence checkpoint pending | F1 correction, operational assertion/mutation, affected checks PASS; fresh Sol recheck pending |
+| RF001 | completed | f8baf91d527466d61db750121a4892d27bcbdd43 / a742f2064ad6a55450594bf57f13c577662a38f0; evidence ec27632c013d59c8676c177e5f2fe4dd4fa75cb8 | parent checkpoint verified; checks PASS; independent Sol recheck FIXED / READY |
 
-Fresh Sol recheck follows verified RF001; retained original implementation/reviewer sessions preserve relevant context rather than launching replacements.
+Retained Terra implementation and independent fresh-origin Sol reviewer sessions supplied RF001/recheck without replacement or model switching. Final closeout only records review/tracker/evidence/reflection; no operational edits after reviewed HEAD. No pending implementation tasks or review blockers. Historical untracked draft remains unchanged/excluded. No push/deploy performed. Run `/reload` in pi to load changed global skills.
 
 The original packet covers `4781969baa8be02f939fbaaf31f8fc3d70cb8ff3..105284c001cc8166561a1829716c24e6fe8e3a4f`; coordinator verified it byte-identical to actual Git diff and reran final skill lint PASS. This factual reconciliation is committed afterward; packet/history are regenerated through that resulting metadata commit, with exact final endpoint stored in the external history packet to avoid a self-referential SHA. Original historical draft remains untracked, unchanged and excluded.
