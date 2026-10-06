@@ -18,6 +18,90 @@ checker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(checker)
 
 
+# Instruction sensitivity only, not runtime enforcement or a routing engine.
+ROUTING_GUARDS = (
+    "separate family suitability and effort rationale",
+    "provider-documented options", "permitted usable exact runtime",
+    "current owner selection before execution", "Catalog-only availability does not prove callability",
+    "unsupported runtime effort blocks", "Never silently\nreplace selected models",
+    "Risk strengthens decomposition", "not automatic high effort or strongest-family selection",
+    "least\nsupported effort justified as adequate after decomposition",
+    "not role, family, stakes", "High-risk/strong-oracle work",
+    "Weak-oracle work returns for decomposition", "No unconditional low/medium default",
+    "supported no-row pairing is not automatically excluded", "complete targeted research or",
+    "explicit bounded owner uncertainty decision", "gap, rationale, allowed scope",
+    "runtime support, owner routing authorization or REQUIRED acceptance",
+    "owner preference is a choice, not a measured score",
+    "Unknown snapshot, mode, evaluation date and run\nmanifest remain unknown",
+    "never fabricated exact-pair measurements", "Secondary\nlabels are not firsthand verification",
+    "do not rank noncomparable percentages", "counterevidence and nonmonotonic effort results",
+    "Guideline supersession/removal must not erase original source",
+    "no automatic whole-CSV loading or full-dataset prompts", "matching rows on demand",
+    "Routing approval and exact-content guideline approval are distinct",
+    "Record approved scope and listed selections distinctly", "Missing hard gates stop readiness",
+    "Inspect the failed child run and invocation", "Unknown cause",
+    "No new failed-attempt commit/inverse authority",
+)
+UNSAFE_ROUTING = (
+    "Catalog presence authorizes execution", "Unsupported runtime effort may proceed",
+    "Risk always selects high effort", "Reviewer role always selects high effort",
+    "Weak oracles select maximum effort", "Always default to medium effort",
+    "No benchmark row forbids a supported pairing", "Estimated scores prove exact-pair success",
+    "Owner preference is a measured advantage", "Rank all harness percentages together",
+    "Automatically load the whole CSV", "Routing approval authorizes guideline mutation",
+)
+
+
+def routing_errors(text):
+    body = checker.section(text, "## Family and effort routing")
+    return (["missing " + clause for clause in ROUTING_GUARDS if clause not in body]
+            + ["unsafe " + policy for policy in UNSAFE_ROUTING if policy.lower() in text.lower()])
+
+
+def integrated_errors(texts):
+    errors = checker.check_contracts(texts)
+    # T002 producer-first seam: only the obsolete shared-carrier assertion may fail
+    # until the T003 checker migration. Any additional discrepancy fails this suite.
+    if "## Class-compatible routing experiment" in Path(checker.__file__).read_text():
+        legacy = [e for e in errors if e.startswith("coordination-class:")]
+        assert len(legacy) == 7, errors
+        errors = [e for e in errors if not e.startswith("coordination-class:")]
+    return errors
+
+
+class FamilyEffortContractTests(unittest.TestCase):
+    def test_old_class_rule_is_not_current_routing_authority(self):
+        requirements = (ROOT / "REQUIREMENTS.md").read_text()
+        self.assertIn("## Model family and independent effort", requirements)
+        for old in ("Routing retains approved sonnet/opus classes", "two-class configuration", "deepseek/"):
+            self.assertNotIn(old, requirements)
+        for name in ("Luna", "Terra", "Sol", "Astra"):
+            self.assertIn(name, requirements)
+
+    def test_independent_rubric_hard_gates_and_no_row_guard_deletions(self):
+        text = checker.load_texts()["coordination"]
+        self.assertEqual(routing_errors(text), [])
+        for guard in ROUTING_GUARDS:
+            with self.subTest(guard=guard):
+                self.assertEqual(text.count(guard), 1)
+                self.assertIn("missing " + guard, routing_errors(text.replace(guard, "", 1)))
+
+    def test_named_unsafe_support_risk_role_no_row_and_evidence_mutations(self):
+        text = checker.load_texts()["coordination"]
+        for policy in UNSAFE_ROUTING:
+            with self.subTest(policy=policy):
+                self.assertIn("unsafe " + policy, routing_errors(text + "\n" + policy))
+
+    def test_source_discovery_and_exact_guideline_gate_survive_supersession(self):
+        text = checker.load_texts()["coordination"]
+        for clause in ("source\nfacts, unknown metadata or discovery links", "source archive → matching rows on demand"):
+            self.assertIn(clause, text)
+        exact = checker.section(text, "## Exact guideline approval")
+        for clause in ("resulting content must be explicitly approved", "Rejection leaves guidelines byte-identical",
+                       "compare with the approved baseline", "drift stops"):
+            self.assertIn(clause, exact)
+
+
 class CoordinationContractTests(unittest.TestCase):
     def setUp(self):
         self.texts = checker.load_texts()
@@ -31,7 +115,7 @@ class CoordinationContractTests(unittest.TestCase):
         self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
 
     def test_A1_A2_early_association_and_both_route_direct_constraints(self):
-        self.assertEqual(checker.check_contracts(self.texts), [])
+        self.assertEqual(integrated_errors(self.texts), [])
         cases = (
             ("planner", "## Discovery and capability boundary", "`GUIDELINES.md` before brainstorming, scope assessment and depth choice", "coordination-early"),
             ("planner", "## Discovery and capability boundary", "initialize missing files, notify the user and commit only initialization files", "coordination-early"),
@@ -183,7 +267,7 @@ class CoordinationContractTests(unittest.TestCase):
 
     def test_blocked_preselection_evidence_is_permitted_without_planning_authority(self):
         # Concrete reviewed boundary: initialization succeeded, ask_user unavailable.
-        self.assertEqual(checker.check_contracts(self.texts), [])
+        self.assertEqual(integrated_errors(self.texts), [])
         for key, heading, clause, diagnostic in (
             ("coordination", "## Project-local initialization", "blocked before depth selection", "coordination-initialization"),
             ("coordination", "## Project-local initialization", "unapproved learned-guideline write authority", "coordination-initialization"),
@@ -216,11 +300,11 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         (self.run / "T001.md").write_text(
             "# Simulated T001 implementation; tags: heuristic\n"
             "residual_reasoning: medium — executable output oracle\n"
-            "approved class: sonnet-class; role: worker; model: fictional-option-A; effort: unknown\n"
+            "approved family: fictional-family; role: worker; model: fictional-option-A; effort: unknown\n"
             "Attempt 1: FAIL; check: output mismatch; cause: inspected missed boundary\n"
             "Reviewer findings: unknown; manual validation: pending, not success\n"
             "Correction: authorized failed-task isolation; unrelated work preserved\n"
-            "Escalation: verified stronger class-compatible option selected by fictional owner\n"
+            "Escalation: verified usable owner-selected option selected by fictional owner\n"
             "Attempt 2: automated PASS; model: fictional-option-B; effort: unknown\n"
             "Manual validation: FAIL — visually implausible output; outcome: partial\n"
             "Surprise: automation missed manual defect; no permanent routing rule\n")

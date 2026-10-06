@@ -22,18 +22,32 @@ Keep this table in sync with the dependency statements inside the skills. The
 instructions during adoption. It reports missing prerequisites without installing them;
 its mandatory question/approval-contract gates stop when unavailable.
 
-## Model class mapping
+## Model family and independent effort
 
-The pipeline skills label work with two model classes. The mapping below is the
-configuration used by this suite and must resolve to usable options on the configured
-providers. It is enforced by the `subagents.agentOverrides` sample in
-[`docs/pi-settings-sample.md`](docs/pi-settings-sample.md); skills must never hard-code a
-provider/model ID — they verify that usable options exist and ask the owner to choose.
+Initial owner-facing families are Luna, Terra, Sol and Astra. A family implies no
+provider, version, supported effort, price, context capacity or universal rank.
+Portable skills never hard-code a provider/model ID. Verify the exact binding and
+effort against provider documentation, permitted usable runtime support and the
+owner's current selection before execution. Catalog-only availability is not callability;
+unsupported runtime effort or missing required tools/context blocks the affected stage.
+Explicitly verify nonadjustable behavior where applicable; omitted effort is not a known value.
+Do not silently substitute a selected binding or infer selections from historical classes.
 
-| Class | Meaning | Model |
-|---|---|---|
-| `sonnet-class` | bounded, well-specified implementation work | `deepseek/deepseek-v4.1-flash` (fallback `deepseek/deepseek-v4-flash`) |
-| `opus-class` | work that cannot be safely decomposed | `anthropic/claude-opus-5` or `openai/gpt-sol-latest` |
+Use the [shared family/effort rubric](skills/memory-handling/references/project-coordination.md#family-and-effort-routing)
+for each stage, task and independent reviewer. Family suitability and effort need separate
+rationales after decomposition; choose the least supported effort justified as adequate
+for residual reasoning. Risk strengthens safeguards, not automatic high effort or the
+strongest family. Weak oracles return for decomposition and stronger observable acceptance.
+No unconditional low/medium default, automatic maximum, universal family rank, fabricated
+savings or mandatory per-configuration probe is introduced.
+
+Benchmark coverage is advisory. A supported no-row pairing requires targeted research or
+an explicit bounded owner uncertainty decision, not automatic exclusion or invented scores.
+Neither source evidence nor an uncertainty decision waives hard capability, owner-selection,
+REQUIRED checks, current-content approvals, dependencies, per-task checkpoints or review.
+Present task/reviewer proposals before the single combined final implementation approval;
+record approval of scope and listed routing selections distinctly. Changed or unusable
+selections return for renewed affected owner decision, never a routine second selection gate.
 
 ## Memory contract
 
@@ -57,11 +71,12 @@ commit or persist evidence stop with the exact blocker. Planner reads guidelines
 choice and carries constraints into both routes. Empty initialization invents no knowledge;
 implementation approval never grants synthesized guideline mutation.
 
-Optional `residual_reasoning: low|medium|high` notes describe task/oracle conditions, not a
-third class or provider policy. Routing retains approved sonnet/opus classes, class-share
-rules, usable owner selections, inspected failure causes and separately verified stronger
-capability gates. No ML, dependencies, automatic model optimization or one-outcome permanent
-rules are introduced. Runtime pins and the two-class configuration above remain unchanged.
+Optional `residual_reasoning: low|medium|high` notes describe remaining task/oracle
+conditions, not provider effort settings. Source-backed provisional guidance, owner
+preferences, factual local outcomes and synthesized guidelines remain distinct. Retain
+initial source provenance even after guideline supersession; exact-content guideline
+approval is independent of routing/implementation approval. Runtime pins remain unchanged;
+no ML, dependencies, automatic optimization or one-outcome permanent rules are introduced.
 
 ## Project docs
 

@@ -94,7 +94,7 @@ never replace it. If an evidence write fails, report the blocker and stop affect
 not a successful persistence checkpoint. Evidence-write authority is not guideline authority.
 
 At task/attempt checkpoints, record task ID/type, areas/tags, residual reasoning when
-assessed, approved class, selected capability role, model and reasoning effort when
+assessed, approved family/binding/effort, selected capability role, model and reasoning effort when
 observed (otherwise `unknown`), individual attempt/check results, reviewer findings,
 failure cause, retries/escalation and outcomes, surprises, manual/user validation.
 Include failed, blocked and partial work; unknown outcomes are explicitly unknown,
@@ -107,24 +107,64 @@ outcome. Keep one row per run, no duplicate rows, transcripts or full logs. Reco
 interrupted record/index update on resume before reporting successful persistence;
 failed writes remain reported failures, not acceptance passes.
 
-## Class-compatible routing experiment
+## Family and effort routing
 
-Optional `residual_reasoning: low|medium|high` plus a brief rationale fits task notes/briefs;
-absence preserves existing routing. Low favors a cheaper usable owner-selected option
-compatible with the approved class. Medium requires a strong executable acceptance oracle
-plus stronger verification/review; high favors stronger compatible reasoning. These are
-real-work experiment proposals, not synthetic benchmarks, model optimization or a new
-class taxonomy. Existing sonnet-class/opus-class semantics and class-share gates remain
-authoritative: high alone never forces opus or bypasses the share gate. Never silently
-replace selected models, relabel/weaken classes or waive REQUIRED acceptance.
+Luna, Terra, Sol and Astra are family names, not provider IDs, fixed stages or a
+universal rank. Record separate family suitability and effort rationale for every
+stage/task/reviewer. Verify provider-documented options, permitted usable exact runtime
+binding/effort, required tools/context and current owner selection before execution.
+Catalog-only availability does not prove callability; unsupported runtime effort blocks.
+Verify nonadjustable behavior explicitly; omitted effort remains unknown. Never silently
+replace selected models. Drift or unavailability requires renewed affected owner decision.
 
-Inspect the failed child run and invocation before retry/escalation. Preserve valid evidence
-and unrelated work; isolate/restore only the failed task's clean state where the existing
-workspace architecture and authority permit. Escalate through verified stronger capability
-and owner-selection gates; unknown cause, unavailable permitted option or unestablished
-clean state stops with a precise blocker. Record both attempts and outcomes, approved class,
-capability role, actual observed model/effort or unknown. Guidelines refer to class/capability
-and task/oracle conditions, not provider names or permanent rules from a single outcome.
+Decompose first. Profile complexity, risk/security/data/dependency impact, residual ambiguity,
+oracle quality, context/tool needs, latency/cost constraints and relevant local outcomes.
+Risk strengthens decomposition, executable checks and applicable approval/review/recovery
+safeguards, not automatic high effort or strongest-family selection. Choose the least
+supported effort justified as adequate after decomposition. Higher effort needs concrete
+remaining reasoning or comparable lower-setting counterevidence, not role, family, stakes
+or spare budget alone. High-risk/strong-oracle work and fresh independent reviewer roles
+do not force high effort. Weak-oracle work returns for decomposition and stronger observable
+acceptance, not reflexive max. No unconditional low/medium default, universal rank,
+fabricated savings or mandatory per-configuration probe. Unknown costs remain unknown.
+
+Benchmark coverage is advisory: a supported no-row pairing is not automatically excluded.
+Before consequential selection, inspect adequate evidence, complete targeted research or
+record an explicit bounded owner uncertainty decision with gap, rationale, allowed scope
+and remaining validation. Neither that decision nor a score waives provider documentation,
+runtime support, owner routing authorization or REQUIRED acceptance. Missing research tools
+or durable-write authority is a reported gap, never invented evidence.
+
+Keep benchmark observations, derived provisional guidance, owner preferences and project
+outcomes distinct. A conservative owner preference is a choice, not a measured score.
+Retain source identity/location and supporting row/span, inspection date, reported version
+and effort, metric/unit/direction, dataset/split/harness/setup, reported result, verification
+status, limitations and task applicability. Unknown snapshot, mode, evaluation date and run
+manifest remain unknown. Missing results, other versions/efforts/workloads and Estimated-only
+evidence may inform qualified context, never fabricated exact-pair measurements. Secondary
+labels are not firsthand verification. Compare only comparable versions, metrics, splits,
+harnesses and setup; do not rank noncomparable percentages, composites, normalized Elo or
+overlapping samples as project success. Retain counterevidence and nonmonotonic effort results.
+
+Keep source-backed initial guidance and archive discovery separate from learned guidelines
+and local execution records. Guideline supersession/removal must not erase original source
+facts, unknown metadata or discovery links. Routine agents receive concise rubric/citations
+only: no automatic whole-CSV loading or full-dataset prompts. Use compact research/index →
+source archive → matching rows on demand, not whole history or unrelated rows. Project-owned
+sources and outcomes never become permanent global skill policy.
+
+Routing approval and exact-content guideline approval are distinct. Before the single final
+implementation approval present all task/reviewer proposals with family, exact binding,
+independent effort, capability/benchmark evidence, rationale, uncertainty disposition and
+bounded retry authority. Record approved scope and listed selections distinctly; approval
+starts preflight, not a routine second assignment question. Missing hard gates stop readiness.
+
+Inspect the failed child run and invocation before retry/escalation. Unknown cause,
+unavailable permitted option or unestablished clean state stops. Preserve valid evidence
+and unrelated work; existing task-commit and safety/approval gates remain in force.
+Record both attempts and outcomes, selected/observed family/binding/effort or unknown.
+No new failed-attempt commit/inverse authority is granted by this rubric. Guidelines express
+task/oracle conditions, not permanent family rules from a single outcome.
 
 ## Conservative reflection
 
