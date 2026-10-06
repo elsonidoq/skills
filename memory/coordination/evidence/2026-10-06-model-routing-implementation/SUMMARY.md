@@ -11,8 +11,8 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 | Batch | Tasks | Prerequisite | Surface/checks | Selected binding | Mode | State |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | completed: 7c6bdad; parent audit PASS |
-| 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | locally verified; parent audit/reviewer pending |
-| 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | pending: 2 |
+| 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | completed: bb4d5fa, 01e86f3; RF001 868f20e; parent audit PASS |
+| 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | in_progress |
 | 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | pending: 3 |
 | 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
 | 6 | T007–T010 | 5 | Luna brief → safe recovery → temp-Git oracle → memory; per-task commits | Sol 6.1/medium | delegated | pending: 5 |
@@ -31,7 +31,11 @@ Worker run `c60908b1-1653-4566-94b0-eeb3931c7e1b` resolved to `openai-codex/gpt-
 
 ## T003 checkpoint / batch return
 
-[T003.md](T003.md): baseline evidence `e98b68d`; VERIFIED product `01e86f35cdc083888efe24db7dfd151de625b512`; six paths (bounded brainstorming regression overlap authorized), 84 planner / 25 memory / 4 brainstorming tests and 22-skill lint PASS. T002 bounded shared-checker seam resolved; coordinator bytes/digest deliberately unchanged with safety comparison. Product/evidence ordering: T002 `bb4d5fa` → evidence `e98b68d` → T003 `01e86f3` → distinct evidence checkpoint. Tracked worktree/index clean after checkpoints; protected untracked paths untouched. Parent audit and independent reviewer pending; T004 not started. `/reload` required after accepting skill updates.
+[T003.md](T003.md): baseline evidence `e98b68d`; VERIFIED product `01e86f35cdc083888efe24db7dfd151de625b512`; six paths (bounded brainstorming regression overlap authorized), 84 planner / 25 memory / 4 brainstorming tests and 22-skill lint PASS. T002 bounded shared-checker seam resolved; coordinator bytes/digest deliberately unchanged with safety comparison. Product/evidence ordering: T002 `bb4d5fa` → evidence `e98b68d` → T003 `01e86f3` → distinct evidence checkpoint. Tracked worktree/index clean after checkpoints; protected untracked paths untouched. Parent audit found the temporary T002 diagnostic compatibility helper should be removed after T003; it was corrected in RF001 before releasing T004. The fresh independent reviewer is reserved for final implementation acceptance, not a per-task gate. `/reload` required after accepting global skill updates.
+
+## Batch 2 audit and RF001 correction
+
+Coordinator independently inspected the actual T002/T003 commit diffs, parent SHAs, separate evidence paths and [T002](T002.md)/[T003](T003.md) checks; verified only approved product paths and the specifically authorized brainstorming test overlap changed. Focused planner (84), memory (25), brainstorming (4) and suite lint (22 skills) PASS, as do scoped diff whitespace and task order. T002's temporary seven-diagnostic checker bridge was a producer/consumer migration aid; after T003 it remained as a dormant source-dependent exception. Same Sol/medium worker resumed with exact retained binding and cleaned it in [RF001](RF001.md): product `868f20e750052d27d5b96b44d5913211fd213539` (one test file), evidence `f60b196dd43a40d2612128062c6cd3067e5e890d`, each with the expected prior parent. Parent inspected actual removal diff and reran planner checker/test (84), memory (25), task order and full-range non-CSV whitespace: PASS; no live model-obedience inference. Only protected unrelated untracked files remain. T004 is released after this distinct audit/index checkpoint.
 
 ## RF001 coordinator review fix
 
