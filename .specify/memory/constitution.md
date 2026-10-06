@@ -61,7 +61,7 @@ be collapsed into one competing store.
 ## Project Constraints
 
 The repository's `AGENTS.md` governs global portability and skill-use policy;
-`REQUIREMENTS.md` owns runtime prerequisites and model classes; `docs/index.md` routes
+`REQUIREMENTS.md` owns runtime prerequisites and model/effort routing requirements; `docs/index.md` routes
 other documentation. Reuse a coordination root declared in the current project's instructions
 or configuration; otherwise use `<project-root>/memory/coordination/`. Resolve the current project
 root from its selected repository/workspace, never from the global skill installation. Every

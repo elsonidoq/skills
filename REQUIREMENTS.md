@@ -54,16 +54,34 @@ Static assertions and symbolic fixtures check instructions and sample artifacts,
 model performance or runtime obedience. Live/provider checks require separate authorization
 and usable permitted binding/effort/tool support; fixture success never substitutes for them.
 
-### Separate planning/advisory stage options
+### Planning/advisory selection
 
-Unrelated planning and reviewer selections remain separate, verified usable and owner-selected.
-Existing stage labels/options below are not implementation-task assignments or a share rule.
-Skills do not hard-code provider IDs; preserve stage-specific authority and preflight gates.
+Planning/advisory invocations use the same
+[qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md): assess
+all six applicable factors, including the weakest verification blind spot, and justify family
+and supported effort independently. Obtain one exact owner-selected binding plus effort;
+verify permissions, tools, callable binding and supported effort at assignment and dispatch.
+Pass the selected profile unchanged through direct calls and helper briefs/dispatch. A missing
+selection/support or settings/default mismatch blocks work, never silently substitutes.
+Record proposed, selected and observed separately; unknown actual binding/effort stays unknown.
+Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites.
 
-| Stage label | Meaning outside implementation assignment | Existing options |
-|---|---|---|
-| `sonnet-class` | bounded planning/advisory work | `deepseek/deepseek-v4.1-flash` (fallback `deepseek/deepseek-v4-flash`) |
-| `opus-class` | advisory work that cannot be safely decomposed | `anthropic/claude-opus-5` or `openai/gpt-sol-latest` |
+The explicit owner-required exception is Standard `plan_create`: **Sol with exactly medium
+supported effort** for the complete same-session specification review/fix → one plan creation →
+produced-plan review/fix, both direct and helper execution. Resolve its concrete binding from
+permitted usable runtime options, not a provider/version hard-coded into skills. Unavailable
+Sol/medium stops with the precise binding/support gap; no substitution, settings/default override
+or standalone helper fallback may bypass this rule. It is an owner preference, not a family
+hierarchy, capability ranking or benchmark claim. Independently authorized standalone helper
+selection stays separate but cannot override a manager-governed Standard invocation.
+
+Other selections—including TinySpec source/tasks, brainstorming assessment/application,
+Standard specification/tasks and independent reviewer—follow the shared rubric, not fixed
+stage families or replacement classes. Preserve planner-owned dialogue, stage order, approvals,
+write boundaries and reviewer independence. See the operational
+[planner](skills/planner/SKILL.md) and
+[helper adapter](skills/delegating-architectural-planning/SKILL.md) contracts.
+Settings examples are neither current owner selections nor capability proof.
 
 ## Memory contract
 
@@ -94,7 +112,7 @@ references. Environment/tooling or other non-model causes do not penalize capabi
 invalidated successes cannot become strong positive guidance. Approved applicable guidelines
 may override the seed, never source/owner permissions; raw outcomes never mutate guidelines.
 No new store, schema, ML or automatic model optimization is introduced. Runtime pins and
-unrelated stage options remain unchanged.
+stage workflow/approval boundaries remain unchanged.
 
 ## Project docs
 

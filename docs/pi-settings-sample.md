@@ -24,6 +24,21 @@ batch invocation, not the old implementation-task class mapping. This sample int
 has no `worker` model override. Keep unrelated reviewer/scout/oracle stage choices separate;
 the shown defaults are examples, not verified callable profiles or owner selections.
 
+Planning/advisory selections also use the existing
+[qualified seed rubric](../skills/coordinate-implementation/references/batch-routing.md),
+with all six applicable factors and independent family/effort rationales, not stage classes.
+Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites.
+Standard `plan_create` alone requires **Sol with exactly medium supported effort** for the entire
+same-session specification review/fix → one plan creation → produced-plan review/fix, both direct
+and helper execution. Resolve the concrete Sol binding from permitted usable runtime options;
+unavailable Sol/medium stops with the precise gap, never substitutes another profile or uses a
+standalone helper fallback to bypass the manager. Other independently authorized standalone helper
+selections remain separate. These example Claude IDs/defaults imply no current routing authority.
+For every planning invocation, verify selection, permissions, tools, callable binding and supported
+effort at assignment and dispatch; propagate the exact selected profile unchanged. A default or
+agent override mismatch blocks dispatch. Record proposed/selected separately from observed;
+unknown actual binding/effort stays unknown. No configuration change is prescribed by this cleanup.
+
 Use the [qualified seed rubric](../skills/coordinate-implementation/references/batch-routing.md)
 and [coordinator contract](../skills/coordinate-implementation/SKILL.md) to assess the batch
 and record proposed versus selected profile, rationale and applicable approved guidance or none.

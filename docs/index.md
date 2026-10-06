@@ -8,7 +8,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 
 | Material change / information | Authoritative owner to read and update |
 | --- | --- |
-| Suite runtime prerequisites and model-class configuration requirements | [REQUIREMENTS.md](../REQUIREMENTS.md) |
+| Suite runtime prerequisites and model/effort routing requirements | [REQUIREMENTS.md](../REQUIREMENTS.md) |
 | User-facing suite setup and workflow entry points | [README.md](../README.md) |
 | Global repository policy and portability constraints | [AGENTS.md](../AGENTS.md) |
 | Project development principles and constitution amendments | [Project Constitution](../.specify/memory/constitution.md) |
@@ -37,6 +37,7 @@ legacy port retain their own documentation and memory boundaries.
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
+- [Qualified routing rubric](../skills/coordinate-implementation/references/batch-routing.md): Single six-factor planning/advisory and implementation selection prior; Standard `plan_create` requires Sol/medium for its entire direct/helper pass, with no unavailable-profile substitution. Implementation-only batching rules are not planning prerequisites.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
 - [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Mandatory project-local files automatically initialized/notified/committed before choice, separate indexed evidence, selective reads and approval-controlled learned-guideline changes.
 - [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md): Mandatory focused checkpoints for authorized retained tasks, coordinator recovery/fresh-agent boundaries, and truthful static/Git-fixture limits.
