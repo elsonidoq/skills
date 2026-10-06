@@ -34,7 +34,7 @@ Excluded files `.env` and `docs/plans/mandatory-task-commits.md` were not read a
 | Task | Owned deliverable | Required checks / acceptance | Status |
 | --- | --- | --- | --- |
 | S1 | Coordinator snapshot/recovery instructions; minimum shared references; initialize/finish alignment; README/requirements/index; local AGENTS.md/STATE.md adoption; directly affected fixture expectation | Smallest failing snapshot check; existing coordinator/intake/batching, initialization, planner and checkpoint checks; lint; scoped diff inspection. Brief project-owned current truth, all recovery/lifecycle/persistence safeguards, no routing changes. | verified: 4f8bc9a |
-| S2 | Focused coordinator snapshot test plus necessary lint/check wiring | Contract tests and targeted mutations for absent recovery, duplicate dispatch, stale trust, historical accumulation. Bounded simulations/manual scenarios: checkpoint compaction, running child, lagging committed work, partial dirty task, missing/conflicting authority/evidence, custom/dirty state, terminal closeout. Relevant existing checks/lint; no runtime-obedience claim. | pending |
+| S2 | Focused coordinator snapshot test plus necessary lint/check wiring | Contract tests and targeted mutations for absent recovery, duplicate dispatch, stale trust, historical accumulation. Bounded simulations/manual scenarios: checkpoint compaction, running child, lagging committed work, partial dirty task, missing/conflicting authority/evidence, custom/dirty state, terminal closeout. Relevant existing checks/lint; no runtime-obedience claim. | verified: 94b3f83 |
 
 All incomplete tasks authorized; S2 depends on S1. Fresh independent final read-only review covers the complete
 committed range from the baseline through S2, with source/approval/check evidence. In-scope review fixes require
@@ -70,7 +70,23 @@ No learned guideline update proposed.
 | S1 first/final | ca1c853 → 4f8bc9a | Smallest missing-section assertion failed before edit and passed afterward. Existing initialization initially failed on its obsolete conditional-state expectation; amended only that ledger row under approved scope, preserving immutable source bytes. Planner 87, checkpoint 12, intake 9, batching 25, initialization 135 and lint PASS; post-final wording intake/batching/checkers rerun PASS; actual ten-path diff inspected. | PASS; contract consistency only, runtime obedience unknown; attribution verification_contract_gap for outdated fixture, not model failure |
 
 S1 evidence checkpoint updates this summary/index and STATE.md separately from its contract commit.
-S2 next: focused recovery/mutation/scenario checks, with no runtime/provider exercise.
+| S2 first/final | ff6bf27 → 94b3f83 | test_state_contract.py: 12 tests PASS, 58 guard deletions + 4 contradictory permissions + removed/reordered recovery; seven Git-backed symbolic walkthroughs. First test pass exposed mutation deleting an earlier unrelated authorization mention; confined mutations to their carrying section, then all PASS. Planner checker/test 87, task-commit checker/test 12, lint 22 skills/0 failures plus all focused consumers PASS; staged diff/ownership inspected. | PASS; instruction/simulated Git evidence only; runtime child status/compaction symbolic; attribution verification_contract_gap for mutation targeting, corrected before commit |
+
+Scenario/manual read-through disposition (PASS means bounded example consistency, not live compaction):
+
+| Scenario | Test evidence / safe action |
+| --- | --- |
+| After verified checkpoint | test_compaction_after_verified_checkpoint: inspect actual task/evidence commits, pointer does not self-reference; continue verified dependency-ready action |
+| Worker still running | test_compaction_while_worker_running: pending parent state excluded from worker commits; symbolic child inspect/wait, audit on return; unknown runtime/write failure stops |
+| State lags committed work | test_state_lagging_committed_work: inspect newer Git/evidence, refresh snapshot; no duplicate task commit |
+| Partial task-owned changes | test_partial_task_owned_changes_with_stale_state: retain actual diff, stop reconciliation; no guessed acceptance/cleanup |
+| Missing/conflicting state | test_missing_state_or_conflicting_authority_evidence: recover authoritative facts if available; approval/evidence/runtime gaps stop; no fabricated snapshot |
+| Custom/dirty state | test_existing_custom_dirty_and_concurrent_state: preserve bytes until exact bounds/overlap approval, drift stops; scoped state update preserves custom header and unrelated staged index |
+| Completion/closeout | test_completion_closeout_replaces_without_history: pending review stays gated; terminal replacement is brief/idempotent, no accumulated ledger |
+
+Final review dispatch intent: fresh read-only reviewer, selected openai-codex/gpt-6.1-sol:medium,
+complete baseline-to-current committed range; snapshot records returned identity immediately. No worker
+is running. Live compaction/provider exercises remain NOT RUN. No guideline update proposed.
 Evidence-checkpoint deviation: 8df4127 was committed despite diff-check reporting an extra EOF blank
 line because the shell command did not chain that check to commit. Remove only that blank, validate
 and checkpoint the correction before S2. No task verification or source scope is invalidated.
