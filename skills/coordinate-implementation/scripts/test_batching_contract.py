@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Static checks for context-continuity batching instructions."""
 
+from copy import deepcopy
 from pathlib import Path
 import unittest
 
@@ -319,6 +320,85 @@ class SimulatedAcceptanceTests(unittest.TestCase):
                 self.assertEqual(disposition, "blocked")
                 release_dependents = disposition == "accepted"
                 self.assertFalse(release_dependents)
+
+
+
+def failed_capability_sample():
+    brief, returned = audited_sample("symbolic/luna:max")
+    brief["assessment"] = {"reasoning": "bounded compatibility inference", "tools": "local",
+                           "oracle": "explicit invariant", "scope": "two coupled tasks",
+                           "recovery": "cheap", "guidance": "none"}
+    returned["items"]["T006/V1"].update(status="fail", evidence="consumer-failed")
+    returned["outputs"]["consumer-failed"] = {
+        "command": "fixture shared-check", "exit": 1, "observable": "compatibility invariant failed"}
+    return brief, returned
+
+
+def simulated_repair_brief(brief, failed, diagnosis, *, inspected=True,
+                           binding=True, effort=True, owner=True, permission=True, tools=True):
+    """Offline diagnosed repair artifact; never launches an agent or restores Git state."""
+    if diagnosis != "model_capability" or not all((inspected, binding, effort, owner, permission, tools)):
+        return None
+    return {"original_assessment": deepcopy(brief["assessment"]),
+            "original_selected": brief["selected"], "original_observed": failed["observed_profile"],
+            "selected": "symbolic/sol:medium", "diagnosis": diagnosis,
+            "diagnostic_evidence": "consumer-failed: explicit compatibility invariant",
+            "passed": ["T005/V1"], "failed": ["T006/V1"],
+            "affected_dependencies": ["T006 consumer and external dependents"],
+            "invalidated": ["T006/V1"], "reusable": ["T005/V1"],
+            "current_state": deepcopy(failed), "complete_contract": deepcopy(brief)}
+
+
+class SimulatedRepairTests(unittest.TestCase):
+    """Offline failure/repair scenarios, not comparative model performance evidence."""
+
+    def test_diagnosis_first_repair_instruction_carriers(self):
+        for phrase in (
+            "Inspect the failed child run, invocation, partial commits and check evidence",
+            "identify affected dependencies and invalidated REQUIRED items",
+            "raise effort, change model or both", "no fixed profile ladder",
+            "original assessment and selected/observed profile", "complete batch contract",
+            "rerun every invalidated item", "reuse only confirmed-valid evidence",
+            "Repair success alone does not prove model-only attribution",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, " ".join(TEXT.split()))
+
+    def test_luna_max_capability_failure_authorized_sol_medium_repair(self):
+        brief, failed = failed_capability_sample()
+        original = deepcopy(failed)
+        self.assertEqual(simulated_audit(brief, failed), "blocked")
+        repair = simulated_repair_brief(brief, failed, "model_capability")
+        self.assertEqual(repair["original_selected"], "symbolic/luna:max")
+        self.assertEqual(repair["original_observed"], "symbolic/luna:max")
+        self.assertEqual(repair["original_assessment"], brief["assessment"])
+        self.assertEqual(repair["complete_contract"], brief)
+        self.assertTrue(repair["diagnostic_evidence"])
+        self.assertTrue(repair["affected_dependencies"])
+        self.assertEqual(repair["selected"], "symbolic/sol:medium")
+        repaired = deepcopy(failed)
+        repaired["observed_profile"] = repair["selected"]  # simulated observation
+        # Invalidated item cannot pass by reusing failed evidence.
+        repaired["items"]["T006/V1"]["status"] = "pass"
+        self.assertEqual(simulated_audit(brief, repaired), "blocked")
+        repaired["outputs"]["repair-output"] = {
+            "command": "fixture shared-check", "exit": 0, "observable": "both invariants satisfied"}
+        repaired["items"]["T006/V1"]["evidence"] = "repair-output"
+        repaired["checkpoints"][1].update(result="fixture-repair-006",
+                                            evidence_checkpoint="fixture-repair-evidence-006")
+        self.assertEqual(repair["invalidated"], ["T006/V1"])
+        self.assertEqual(simulated_audit(brief, repaired), "accepted")
+        self.assertEqual(repaired["items"]["T005/V1"], original["items"]["T005/V1"])
+        self.assertEqual(repaired["checkpoints"][0], original["checkpoints"][0])
+        self.assertEqual(failed, original)  # original attempt and valid work retained
+
+    def test_unknown_unavailable_or_unauthorized_repair_stops(self):
+        brief, failed = failed_capability_sample()
+        self.assertIsNone(simulated_repair_brief(brief, failed, "unknown"))
+        for gate in ("inspected", "binding", "effort", "owner", "permission", "tools"):
+            with self.subTest(gate=gate):
+                self.assertIsNone(simulated_repair_brief(brief, failed, "model_capability", **{gate: False}))
+        self.assertIn("unknown cause stops blind restart", " ".join(TEXT.split()))
 
 
 if __name__ == "__main__":

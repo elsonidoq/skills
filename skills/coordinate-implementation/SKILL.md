@@ -272,12 +272,27 @@ For optional real-work routing experiments, use the qualified seed with usable o
 options and independent family/effort rationales. Strong contracts and cheap recovery may justify
 bounded experiments; higher effort does not resolve missing requirements or permissions.
 Never silently replace selected models or turn one outcome into permanent policy.
-On a cheap-option failure, inspect the child run and failed invocation first. Preserve valid
-completed evidence and unrelated workspace changes; isolate/restore only the failed task's
-clean state where existing workspace architecture and authority permit. Escalate only via
-verified stronger capability and owner-selection gates. Unknown cause, unavailable permitted
-capability or unestablished clean state stops with the precise blocker; no blind retry.
-Record both attempts, corrections and escalation outcomes at the evidence checkpoint.
+On any batch failure, use diagnosis-first targeted repair, not a cheap-option-only rule.
+Inspect the failed child run, invocation, partial commits and check evidence before any
+retry, resumption or relaunch. Diagnose capability, planning/spec gap, verification contract
+gap, batching error, environment/tooling, external dependency or unknown from concrete
+artifacts; a generic abort/timeout is not a diagnosis. Preserve valid task work, unrelated
+changes and prior attempt evidence; identify affected dependencies and invalidated REQUIRED items.
+Do not reset the whole batch or discard passing tasks unless their evidence is implicated.
+
+A targeted repair may raise effort, change model or both; there is no fixed profile ladder.
+Recheck permitted callable binding, supported effort, tools and owner-selection gates before
+assignment and dispatch. Missing inspection, unavailable/unauthorized repair or unestablished
+safe task-owned state stops with the precise blocker; unknown cause stops blind restart.
+Planning/spec or contract gaps return to their producing approval gate, not a model substitution.
+Supply the original assessment and selected/observed profile (unknown stays unknown), passed/failed
+items, diagnostic evidence, affected dependencies, current implementation/checkpoint state and
+complete batch contract, including reusable and invalidated item mappings. Before acceptance,
+rerun every invalidated item and reuse only confirmed-valid evidence after checking scope,
+revision and environment. Inspect repair task diffs/checkpoints through the same cheap acceptance
+boundary and keep dependents blocked until all REQUIRED evidence is valid. Retain both attempts,
+corrections and outcomes at separate evidence checkpoints. Repair success alone does not prove
+model-only attribution.
 
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 owner-selected exact binding and effort, allowed files, dependencies, acceptance
