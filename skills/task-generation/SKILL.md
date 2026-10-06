@@ -31,7 +31,10 @@ treat a memory summary as downstream application or override source/owner author
 No default index/history intake; justified clarification uses index-first relevant-only
 retrieval, retaining uncertainty on no match.
 Optional `residual_reasoning: low|medium|high` with a brief rationale fits existing notes;
-absence requires no migration and does not alter classes, share or approval rules.
+it informs later batch assessment, not an execution assignment. Absence requires no
+migration and does not alter approval rules. The coordinator owns batch profile selection
+using the shared [qualified seed rubric](../coordinate-implementation/references/batch-routing.md),
+not a model/effort label assigned by the task producer.
 
 Use the adapter matching the producing workflow:
 
@@ -55,13 +58,18 @@ as unavailable.
 ## Task contract
 
 Every task records an outcome, explicit prerequisites, likely files or interfaces,
-independently observable acceptance evidence, required capabilities, model class, and a
-brief class rationale. Cover all in-scope work, integration/acceptance checks, and
+independently observable acceptance evidence, required capabilities and shared context. Cover all in-scope work, integration/acceptance checks, and
 lockstep documentation whose evidence compares documentation with implemented behavior.
 Record exclusions so tasking cannot reintroduce them.
 
 Acceptance evidence uses the smallest sufficient check at the lowest layer that can
-observe the changed seam's concrete failure. In existing task fields, distinguish
+observe the changed seam's concrete failure. Use stable task-local references such as
+`T001/V1` in existing acceptance/observable/invariant/test fields, not a new schema. Each
+REQUIRED item states its objective pass criterion, smallest sufficient check, expected evidence
+(command/output or bounded artifact reference), and any manual/permission gates. Identify
+optional checks separately. Missing required capability, permission or evidence means explicitly
+NOT VERIFIED, not passed. Preserve item references through handoff so a shared check can cover
+multiple items without losing any task mapping. In existing task fields, distinguish
 REQUIRED checks from optional hardening/broader regression and separately gated
 live/provider/engine/browser checks; record required permissions and unavailable
 capabilities without treating them as passes. State briefly the expected verification
@@ -73,10 +81,9 @@ changing approved acceptance requires the producing workflow's review/approval g
 Reference valid unchanged evidence rather than duplicating checks. Keep unrelated
 compatibility repairs in small causal steps, with evidenced prerequisites only.
 
-Default bounded, well-specified work to `sonnet-class`. Use `opus-class` only when it cannot
-be safely decomposed into bounded independently verifiable work. No more than 30% of the
-complete task list may be `opus-class` without recorded owner approval of the affected IDs,
-rationale, and delivery impact.
+Do not assign implementation-task model classes, family/effort profiles or allocation quotas.
+Describe residual reasoning and required capabilities instead; later batch assessment selects
+one owner-authorized supported profile per invocation, independently justifying family and effort.
 
 Follow the observed project format. When no established complete format exists, use numbered
 Markdown tasks with explicit `Depends` fields. Number in execution order from T001 with no
@@ -85,7 +92,7 @@ story or stage in one contiguous segment. Check implicit dependencies and whethe
 can obtain its producers before its consumers; revise the producer placement rather than
 papering over a forward dependency.
 
-Organize consecutive same-class tasks into coherent sequential work where their retained
+Organize consecutive related tasks into coherent sequential work where their retained
 context is useful. Preserve prerequisite order, individual evidence, and story acceptance
 boundaries; do not reorder dependencies or pad a segment with distant work merely to fill a
 batch. Internal producer/consumer dependencies, shared files, and phase/story headings may
@@ -98,8 +105,12 @@ batch decision.
 Before approval, validate explicit dependencies and story continuity with
 `python3 scripts/check-task-order.py /path/to/tasks.md` from this skill directory when the
 format supports it. Then manually inspect traceability, exclusions, documentation,
-integration, acceptance evidence, class share, implicit dependencies, and stage feasibility.
-Return defects to the producing workflow's review gate. Record the validation outcome and
+integration, item completeness/evidence/gates, implicit dependencies, and stage feasibility.
+Missing or ambiguous REQUIRED contracts block dispatch and return to the producing review/approval gate,
+including existing approved tasks with inadequate contracts. Do not fabricate historical contracts,
+retrofit new requirements into legacy approvals, or waive checks; obtain affected review and renewed
+approval before dispatch. Preserve original source provenance and legacy task-embedded requirements.
+Return other defects to the producing workflow's review gate. Record the validation outcome and
 current content evidence with the task artifact so a later handoff can detect stale approval.
 
 ## Mandatory task checkpoint

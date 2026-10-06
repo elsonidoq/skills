@@ -16,6 +16,28 @@ class TaskGenerationContractTests(unittest.TestCase):
         self.assertIn("authorization to\n**prepare** tasks", TEXT)
         self.assertIn("Do not require final task/implementation approval", TEXT)
 
+    def test_objective_items_replace_task_profile_allocation(self):
+        for obsolete in ("sonnet-class", "opus-class", "30%", "same-class", "class share"):
+            with self.subTest(obsolete=obsolete):
+                self.assertNotIn(obsolete, TEXT)
+        for required in (
+            "stable task-local references", "T001/V1", "pass criterion",
+            "smallest sufficient check", "expected evidence", "manual/permission gates",
+            "REQUIRED", "optional checks separately", "files or interfaces",
+            "required capabilities", "shared context", "not an execution assignment",
+            "producing review/approval gate", "Do not fabricate historical contracts",
+            "../coordinate-implementation/references/batch-routing.md",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, TEXT)
+
+    def test_adapter_legacy_and_checkpoint_boundaries_remain(self):
+        self.assertIn("Existing task-embedded requirements remain valid for legacy", TEXT)
+        self.assertIn("Keep the stage create-only", TEXT)
+        self.assertIn("separate source and tasks file", TEXT)
+        self.assertIn("task-commit contract", TEXT)
+        self.assertIn("checkpointing it separately", TEXT)
+
     def test_context_coherence_preserves_dependency_order(self):
         self.assertIn("coherent sequential work", TEXT)
         self.assertIn("do not reorder dependencies or pad a segment", TEXT)
