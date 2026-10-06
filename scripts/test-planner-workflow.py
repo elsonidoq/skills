@@ -141,7 +141,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "No independent planning", "Mandatory independent planning", "tiny-flow:"),
             ("planner", "template-only", "generic", "standard-preflight:"),
             ("planner", "verify repaired output", "assume valid output", "standard-preflight:"),
-            ("planner", "**`spec_create` — `sonnet-class`", "**`spec_create` — `opus-class`", "spec:"),
+            ("planner", "**`spec_create` — shared routing selection", "**`spec_create` — `sonnet-class`", "spec:"),
             ("planner", "specification approval before `plan_create`", "approval later", "spec:"),
             ("planner", "Only when no adapter is invoked", "After the adapter returns", "plan:"),
             ("planner", "do not create the plan again", "create the plan again", "plan:"),
@@ -255,6 +255,96 @@ class InstructionTests(unittest.TestCase):
             run = subprocess.run(["bash", str(HERE / "check-skills-lint.sh"), directory], capture_output=True, text=True)
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertIn("SKIP planner workflow checks", run.stdout)
+
+
+class ActivePlanningRoutingTests(unittest.TestCase):
+    """Consumer-scoped policy mutations; no provider or model-obedience claims."""
+
+    def setUp(self):
+        self.texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(self.texts), [])
+
+    def mutate(self, key, heading, old, new, diagnostic):
+        changed = dict(self.texts)
+        carrier = (checker.stage(changed[key], heading) if heading == "plan_create"
+                   else checker.section(changed[key], heading))
+        self.assertEqual(carrier.count(old), 1, old)
+        changed[key] = changed[key].replace(carrier, carrier.replace(old, new, 1), 1)
+        errors = checker.check_contracts(changed)
+        self.assertTrue(any(e.startswith(diagnostic + ":") for e in errors), errors)
+
+    def test_standard_exact_family_and_effort_entire_direct_helper_pass(self):
+        for key, heading, label in (("planner", "plan_create", "plan-profile"),
+                                    ("helper", "## Planner Standard adapter contract", "adapter-profile")):
+            for old, new in (("Sol family", "Luna family"),
+                             ("**medium** supported effort", "**low** supported effort"),
+                             ("for the ENTIRE", "for creation-only"),
+                             ("Unavailable Sol/medium stops", "Unavailable Sol/medium falls back"),
+                             ("no substitution, settings/default override or standalone", "allow substitution or standalone"),
+                             ("unchanged", "using an agent default")):
+                with self.subTest(consumer=key, mutant=new):
+                    self.mutate(key, heading, old, new, label)
+
+    def test_restored_class_authority_in_actual_consumers(self):
+        for key, heading, old in (("planner", "### TinySpec path", "**Source creation — shared routing selection"),
+                                  ("brainstorm", "## 1. Gate assessment", "shared routing selection"),
+                                  ("helper", "## Planner Standard adapter contract", "Sol family")):
+            for label in ("sonnet-class", "opus-class"):
+                with self.subTest(consumer=key, label=label):
+                    self.mutate(key, heading, old, label, "obsolete-planning-class")
+
+    def test_selection_and_observed_gates_reach_each_consumer(self):
+        cases = (("planner", "## Shared routing selection", "planning-selection",
+                  ("Family rationale", "Effort rationale", "weakest verification blind spot",
+                   "one exact selected profile unchanged", "Missing owner selection or support stops",
+                   "settings or agent defaults overriding selection stop dispatch",
+                   "unknown actual model or effort stays unknown")),
+                 ("brainstorm", "## Capability preflight", "routing-brainstorm",
+                  ("all six", "effort independently", "missing selection/support", "unknown actual")),
+                 ("helper", "## Preflight", "routing-helper",
+                  ("all six", "effort independently", "missing selection/support", "unknown actual",
+                   "standalone selection cannot override a manager-governed\nStandard invocation's Sol/medium exception")))
+        for key, heading, label, clauses in cases:
+            for clause in clauses:
+                with self.subTest(consumer=key, clause=clause):
+                    self.mutate(key, heading, clause, "removed", label)
+
+    def test_brainstorm_application_and_assessment_wiring(self):
+        for heading, clause, label in (("## 1. Gate assessment", "using the preflight's shared routing selection", "routing-brainstorm-assessment"),
+                                       ("## 3. Apply decisions", "with the preflight's\nshared routing selection", "routing-brainstorm-application")):
+            self.mutate("brainstorm", heading, clause, "using a default", label)
+
+    def test_manager_adapter_bypass_and_duplicate_pass_are_rejected(self):
+        for old, new in (("policies below do not apply to this adapter invocation", "standalone selection supersedes the manager"),
+                         ("once to create the plan", "twice to create the plan"),
+                         ("do not direct it to create the plan again", "direct it to create the plan again")):
+            self.mutate("helper", "## Planner Standard adapter contract", old, new, "adapter-profile")
+        self.mutate("planner", "plan_create", "may bypass this rule", "fallback is permitted", "plan-profile")
+
+    def test_summary_cannot_replace_operational_selection(self):
+        for key, heading, label in (("planner", "## Shared routing selection", "planning-selection"),
+                                    ("helper", "## Planner Standard adapter contract", "adapter-profile")):
+            changed = dict(self.texts)
+            carrier = checker.section(changed[key], heading)
+            changed[key] = changed[key].replace(carrier, heading + "\n", 1) + "\n## Summary only\n" + carrier
+            self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+    def test_shared_router_link_and_applicability_are_required(self):
+        self.mutate("routing", "## Applicability to planning/advisory invocations",
+                    "rules do not become planning prerequisites", "rules become planning prerequisites", "routing-applicability")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for path in set(checker.PATHS.values()):
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text((ROOT / path).read_text())
+            for key in ("planner", "brainstorm", "helper"):
+                target = root / checker.PATHS[key]
+                original = target.read_text()
+                target.write_text(original.replace("../coordinate-implementation/references/batch-routing.md", "../absent.md"))
+                with self.assertRaisesRegex(ValueError, "routing-reference: " + key):
+                    checker.load_texts(root)
+                target.write_text(original)
 
 
 class DependencyResearchTests(unittest.TestCase):

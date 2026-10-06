@@ -5,6 +5,17 @@ assignments. It is provisional guidance, not a callable default, performance gua
 benchmark-only eligibility rule or universal quality/cost ranking. Task contracts and
 owner decisions remain authoritative.
 
+## Applicability to planning/advisory invocations
+
+Planning/advisory consumers use the same six-factor assessment, independent family/effort
+rationales, exact owner-selected profile and selection/observed/repair gates below, with their
+own permissions and output verification. Assess applicable factors for the invocation rather
+than invent implementation task IDs. Implementation-only batching, task-count and REQUIRED-item
+rules do not become planning prerequisites. An explicit owner-mandated stage profile (Standard
+`plan_create`: Sol with exactly medium supported effort for the entire direct/helper pass)
+controls that stage; this seed cannot substitute another profile or create a family hierarchy.
+Standalone helper selection remains separate and cannot bypass a manager-governed Standard rule.
+
 ## Assess all six factors
 
 Record ordered task IDs and the weakest material condition, not an average across tasks.

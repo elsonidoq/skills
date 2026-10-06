@@ -54,8 +54,16 @@ claim that the planning stage ran.
 Inspect the runtime for an allowed delegation tool (the `subagent` tool from the
 `pi-subagents` package is the suite's pinned delegation mechanism; see the global
 configuration repository's `REQUIREMENTS.md`) and configured planning-capable
-agents. Use an owner-selected agent when available; otherwise choose from observed
-capabilities and report the choice. Never invent an agent, model, command, or
+agents. For independently authorized standalone selection, use the
+[qualified seed rubric](../coordinate-implementation/references/batch-routing.md): assess all six
+applicable factors, including the weakest verification blind spot; justify family and supported
+effort independently and obtain one exact owner-selected profile. Verify permissions, tools,
+callable binding and supported effort at assignment and dispatch. Copy the selected binding/effort
+unchanged into the invocation; missing selection/support or a settings/default override stops,
+never silently substitutes. Record proposed, selected and observed separately; unknown actual
+model or effort stays unknown. Implementation-only batching, task-count and REQUIRED-item rules
+are not planning prerequisites. This standalone selection cannot override a manager-governed
+Standard invocation's Sol/medium exception. Never invent an agent, model, command, or
 configuration. If delegation is unavailable, state
 `Architectural delegation: UNAVAILABLE` and offer to run the installed SpecKit
 planning stage locally with a separate review pass.
@@ -69,8 +77,14 @@ below supplement the generated artifacts and do not replace the SpecKit stage.
 ## Planner Standard adapter contract
 
 When `planner` invokes this helper from its Standard `plan_create` stage, it is not a standalone
-fallback. Use the manager's observed owner-selected binding, fixed `opus-class`, mandatory stops,
-owner gates, approval renewal, and upstream context-coherent brief/handoff constraints. In that
+fallback. Select the Sol family with exactly **medium** supported effort for the ENTIRE
+Standard direct/helper pass. Use the manager's exact selected Sol/medium binding and effort
+unchanged in the helper brief/dispatch, not an inferred observed profile. Verify a permitted
+callable Sol binding and medium support at assignment and dispatch. Unavailable Sol/medium stops
+with the precise binding/support gap; no substitution, settings/default override or standalone
+helper fallback may bypass this rule. Record observed binding/effort separately;
+unknown stays unknown. Preserve mandatory stops, owner gates, approval renewal, and upstream context-coherent
+brief/handoff constraints. In that
 one same-session pass, review/fix the approved specification, run the detected planning capability
 once to create the plan, then review/fix the produced plan. Return evidence and resulting artifacts
 to the manager for inspection; do not direct it to create the plan again. The standalone local

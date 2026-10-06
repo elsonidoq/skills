@@ -20,6 +20,7 @@ PATHS = {
     "requirements": "REQUIREMENTS.md",
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
+    "routing": "skills/coordinate-implementation/references/batch-routing.md",
 }
 
 
@@ -87,7 +88,8 @@ def check_contracts(texts):
             "Re-present unanswered questions", "selected depth", "current content/revision evidence",
             "Explicit approved implementation scope", "Coordinator alone")
     tiny = section(p, "### TinySpec path")
-    require("tiny-flow", tiny, "**Source creation — `sonnet-class`", "**Tasks — `sonnet-class`",
+    require("tiny-flow", tiny, "**Source creation — shared routing selection", "**Tasks — shared routing selection",
+            "**Review — planner-owned, shared routing selection",
             "invoke `tiny-spec`", "invoke `task-generation` direct adapter",
             "Create separate tasks", "No independent planning", "**Combined approval:**",
             "BEFORE `ask_user`", "Denial returns to review", "No SpecKit prerequisite",
@@ -101,26 +103,76 @@ def check_contracts(texts):
             "verify repaired output", "Missing repair capability", "Do not reopen",
             "never install, simulate slash commands", "Required absent\ncapability stops")
     spec = stage(std, "spec_create")
-    require("spec", spec, "— `sonnet-class`", "Clarify only when requested or required",
+    require("spec", spec, "— shared routing selection",  "Clarify only when requested or required",
             "BEFORE\n   `ask_user`", "specification approval before `plan_create`",
             "bullet-list executive brief", "immediately continue to `plan_create`")
     plan = stage(std, "plan_create")
-    require("plan", plan, "— `opus-class`", "same-session pass", "review/fix the specification",
+    require("plan", plan, "— Sol/medium",  "same-session pass", "review/fix the specification",
             "create one plan", "review/fix the produced plan", "ENTIRE pass",
             "do not create the plan again", "Only when no adapter is invoked",
             "renewed specification approval", "new executive brief", "do not reorder".capitalize())
     tasks = stage(std, "tasks_create")
-    require("task-stage", tasks, "— `sonnet-class`", "authorization to prepare tasks",
+    require("task-stage", tasks, "— shared routing selection",  "authorization to prepare tasks",
             "create-only", "no producer self-review/correction", "`overall_review`")
     review = stage(std, "overall_review")
-    require("review", review, "independent owner-selected reviewer", "observed analysis",
+    require("review", review, "independent owner-selected reviewer", "use shared routing selection", "observed analysis",
             "never apply unresolved material defaults", "renew affected approvals",
             "BEFORE `ask_user`", "plan-phase implications", "Missing independent reviewer",
             "bullet-list executive", "immediately proceed to handoff")
     b = texts["brainstorm"]
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
             "one material item", "recorded owner decisions", "preselection", "read-only",
-            "session history", "Only in selected-production", "owner's rationale", "sonnet-class")
+            "session history", "Only in selected-production", "owner's rationale")
+    # Routing obligations must reach operational consumers, not a summary keyword.
+    routing_link = "[qualified seed rubric](../coordinate-implementation/references/batch-routing.md)"
+    selection = section(p, "## Shared routing selection")
+    require("planning-selection", selection, routing_link,
+            "all six applicable factors", "weakest verification blind spot",
+            "Family rationale", "Effort rationale", "proposed versus owner-selected",
+            "one exact selected profile unchanged", "Missing owner selection or support stops",
+            "settings or agent defaults overriding selection stop dispatch",
+            "selected versus observed separately", "unknown actual model or effort stays unknown",
+            "assignment and dispatch", "permissions, tools, callable binding and supported effort",
+            "Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites")
+    require("planning-preflight", section(p, "## Discovery and capability boundary"),
+            "owner-selected exact profiles", "Apply the shared routing selection")
+    for key, heading in (("brainstorm", "## Capability preflight"), ("helper", "## Preflight")):
+        carrier = section(texts[key], heading)
+        require("routing-" + key, carrier, routing_link, "all six",
+                "weakest verification blind spot", "effort independently", "one exact",
+                "owner-selected profile", "permissions, tools", "callable binding and supported effort",
+                "assignment", "dispatch", "selected binding/effort", "unchanged",
+                "missing selection/support", "settings/default", "stops", "never silently substitutes",
+                "proposed", "selected and observed separately", "unknown actual", "stays unknown",
+                "Implementation-only batching, task-count and REQUIRED-item rules")
+    require("routing-brainstorm-assessment", section(b, "## 1. Gate assessment"),
+            "using the preflight's shared routing selection")
+    require("routing-brainstorm-application", section(b, "## 3. Apply decisions"),
+            "with the preflight's\nshared routing selection")
+    adapter = section(texts["helper"], "## Planner Standard adapter contract")
+    for label, carrier in (("plan-profile", plan), ("adapter-profile", adapter)):
+        require(label, carrier, "Sol family with exactly **medium** supported effort", "ENTIRE",
+                "direct/helper pass", "callable Sol binding and medium support",
+                "assignment and dispatch", "selected", "unchanged", "brief/dispatch",
+                "Unavailable Sol/medium stops", "precise", "binding/support gap",
+                "no substitution, settings/default override or standalone",
+                "helper fallback", "may bypass this rule", "observed binding/effort separately",
+                "unknown stays unknown")
+        reject(label, carrier, "fallback is permitted", "use another family", "use an agent default",
+               "standalone selection supersedes", "substitute an available profile")
+    require("plan-profile", plan, "for the ENTIRE direct/helper pass")
+    require("adapter-profile", adapter, "for the ENTIRE\nStandard direct/helper pass", "one same-session pass", "review/fix the approved specification",
+            "once to create the plan", "review/fix the produced plan", "do not direct it to create the plan again",
+            "policies below do not apply to this adapter invocation")
+    require("routing-helper", section(texts["helper"], "## Preflight"),
+            "standalone selection cannot override a manager-governed\nStandard invocation's Sol/medium exception")
+    routing = texts.get("routing", "")
+    require("routing-applicability", section(routing, "## Applicability to planning/advisory invocations"),
+            "same six-factor assessment", "own permissions and output verification",
+            "Implementation-only batching, task-count and REQUIRED-item\nrules do not become planning prerequisites",
+            "cannot bypass a manager-governed Standard rule")
+    for key in ("planner", "brainstorm", "helper"):
+        reject("obsolete-planning-class", texts[key], "sonnet-class", "opus-class")
     require("tiny-source", texts["tiny"], "explicit TinySpec selection/preparation authorization",
             "Context/outcome", "Scope", "Decisions/constraints", "Approach", "Acceptance/validation",
             "Risks/dependencies/notes", "Do not embed an implementation task checklist",
@@ -500,6 +552,12 @@ def load_texts(root=ROOT):
         destinations = re.findall(r"\[dependency research contract\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != research_path.resolve():
             raise ValueError(f"research-reference: {key} shared link missing/unresolvable or wrong owner")
+    routing_path = root / PATHS["routing"]
+    for key in ("planner", "brainstorm", "helper"):
+        destinations = re.findall(r"\[qualified seed rubric\]\(([^)]+)\)", texts[key])
+        if not destinations or any((root / PATHS[key]).parent.joinpath(dest).resolve() != routing_path.resolve()
+                                   for dest in destinations):
+            raise ValueError(f"routing-reference: {key} shared link missing/unresolvable or wrong owner")
     # Check operational carriers, not incidental mentions in a combined summary.
     for key, stages in {
         "adoption": ("Preflight", "Approval", "Adoption"),

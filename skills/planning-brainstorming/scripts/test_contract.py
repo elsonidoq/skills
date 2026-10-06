@@ -33,7 +33,12 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
         self.assertIn("Record owner deferrals", self.text)
 
     def test_capability_stop_and_portable_binding(self):
-        self.assertIn("owner-selected `sonnet-class` binding", self.text)
+        self.assertIn("owner-selected profile", self.text)
+        self.assertIn("[qualified seed rubric](../coordinate-implementation/references/batch-routing.md)", self.text)
+        self.assertIn("effort independently", self.text)
+        self.assertIn("unknown actual model or effort stays unknown", self.text)
+        self.assertNotIn("sonnet-class", self.text)
+        self.assertNotIn("opus-class", self.text)
         self.assertIn("missing capability and stop before downstream production", self.text)
         self.assertIn("ask in prose and end the turn", self.text)
         self.assertIn("do not continue downstream or infer an", self.text)

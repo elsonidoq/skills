@@ -219,11 +219,11 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         self.summary.write_text("# Simulated run\nAreas/tags: heuristic\nOutcome: partial; manual validation pending\n"
             "Task T001: tags: heuristic; baseline: fixture-base; result: fixture-commit; evidence: fixture-evidence\n"
             "residual_reasoning: medium — executable output oracle\n"
-            "approved class: sonnet-class; role: worker; model: fictional-option-A; effort: unknown\n"
+            "selected profile: fictional-option-A/medium; role: worker; observed model/effort: unknown\n"
             "Attempt 1: FAIL; check: output mismatch; cause: inspected missed boundary\n"
             "Reviewer findings: unknown; manual validation: pending, not success\n"
             "Correction: authorized failed-task isolation; unrelated work preserved\n"
-            "Escalation: verified stronger class-compatible option selected by fictional owner\n"
+            "Repair: inspected missed boundary; verified exact profile selected by fictional owner\n"
             "Attempt 2: automated PASS; model: fictional-option-B; effort: unknown\n"
             "Manual validation: FAIL — visually implausible output; outcome: partial\n"
             "Surprise: automation missed manual defect; no permanent routing rule\n")

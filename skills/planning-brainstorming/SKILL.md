@@ -13,9 +13,15 @@ owner direction; it does not create a specification, plan, task list, or impleme
 Before using this skill, verify that the runtime can ask the owner questions and that the
 planner can retain the selected source bounds, decisions, deferrals and handoff. In
 preselection mode use available session history only; in selected-production or legacy
-repair mode use established project artifacts. Verify a usable
-owner-selected `sonnet-class` binding before assigning gate assessment or decision
-application. If a required capability is unavailable, report the
+repair mode use established project artifacts. Use the
+[qualified seed rubric](../coordinate-implementation/references/batch-routing.md) for gate
+assessment and decision application: assess all six applicable factors, including the
+weakest verification blind spot, and justify family and supported effort independently. Verify one exact
+owner-selected profile, permissions, tools, callable binding and supported effort at assignment
+and dispatch. Copy the selected binding/effort unchanged into each invocation; a settings/default
+override or missing selection/support stops, never silently substitutes. Record proposed,
+selected and observed separately; unknown actual model or effort stays unknown.
+Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites. If a required capability is unavailable, report the
 missing capability and stop before downstream production. When the runtime's permitted fallback
 is prose interaction, ask in prose and end the turn; do not continue downstream or infer an
 answer. A manager's explicit mandatory preflight may instead stop before the question is posed.
@@ -38,7 +44,8 @@ the planner's mandatory user choice.
 
 ## 1. Gate assessment
 
-Have bounded `sonnet-class` work return a first line that is exactly one of:
+Have bounded work using the preflight's shared routing selection return a first line
+that is exactly one of:
 
 - `NO_BRAINSTORM_NEEDED` — direction is settled, or remaining ambiguity is mechanical or
   answerable from the source/evidence. State why the target is ready for the next stage.
@@ -72,8 +79,8 @@ is never permission to infer a material decision.
 
 ## 3. Apply decisions
 
-Only in selected-production or legacy-repair mode, use bounded `sonnet-class` work to
-apply exactly the recorded owner decisions to the supplied bounded source. Update only
+Only in selected-production or legacy-repair mode, use bounded work with the preflight's
+shared routing selection to apply exactly the recorded owner decisions to the supplied bounded source. Update only
 claims affected by those decisions: settled decisions, outcome,
 acceptance criteria, exclusions, and open questions as applicable. Preserve the source's
 format; add a concise deferred note when the owner deferred work. Do not invent scope,
