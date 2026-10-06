@@ -11,3 +11,4 @@
 - No guideline update proposed; `GUIDELINES.md` remains unchanged.
 
 - T003 task `65564a4`: 12 workflow consumers linked with bounded role text; focused link assertion, skill lint and diff check PASS; coordinator validation pending.
+- T003 correction `bcfb7b3`: TinySpec/task-generation wording now explicitly checkpoints authorized production before combined approval; T001/T002 parent validation retained.
