@@ -137,7 +137,7 @@ No implementation task is marked [P]: writers are sequential and shared coordina
 
 ## Implementation Strategy
 
-1. Complete setup/foundation and US1 for the routing MVP; stop and validate its independent criteria. Do not claim complete feature acceptance before US2/US3.
+1. Complete setup/foundation and US1 for the routing MVP; validate its independent criteria, then continue through US2, US3 and final integration unless an explicit owner-defined partial boundary or genuine blocker applies. Do not claim complete feature acceptance before US2/US3.
 2. Add US2 union/return/acceptance, retaining cheap successful Luna paths and final review.
 3. Add US3 diagnosis/feedback and all five named simulated scenarios, preserving approvals and evidence history.
 4. Synchronize docs, run focused integration checks, obtain final independent review and only then close out under the existing approval workflow. No deploy/demo, push or paid comparison is part of this task list.
