@@ -1,0 +1,12 @@
+# Mandatory task commits — planning
+
+- Producer: planner; owner explicitly selected TinySpec. Input: `docs/plans/mandatory-task-commits.md`, untracked historical draft; authoritative selected source: `docs/plans/mandatory-task-commits-tinyspec.md`.
+- Coordination store verified from README: `memory/coordination/`; compact guidelines read, no approved entries. No gotcha association declared in AGENTS.md. No guidelines changed.
+- Initial scope question was cancelled; preparation paused without inferring scope. The owner subsequently proposed layered implementer/coordinator cleanliness checks and approved the assistant's refined protocol with “I approve”. This settles design scope, not final implementation authorization.
+- Approved direction: mandatory per-task commits; no waiver question; coordinator recovers verified contextual commits; fresh implementers do not commit unknown work; per-task rather than merely per-batch checks; preserve unrelated changes; no runtime extension gate.
+- Preparation class: sonnet-class (bounded source/task production). Through ask_user the owner selected “Current Sol”: `openai-codex/gpt-6.1-sol`, observed working in this session. No implementation/reviewer mapping selected and no delegates launched.
+- Source production: completed locally through loaded tiny-spec contract with selected binding. Verified 22 distributed skills, coordinator exceptions, infographic commit conflict, existing coordination preservation gates and execution hash protection. No external research required; runtime integration excluded.
+- Source baseline: repository HEAD before planning artifact checkpoint; source commit captured by Git history after commit, never guessed here.
+- Outcome: TinySpec source prepared; task production and combined review/approval pending. No implementation authorization, skill/config changes, independent implementation review, model retry/escalation or live runtime compliance evidence.
+- Evidence/index persistence uses shared contract. Source preparation checkpoint includes this summary and reflection plus compact index. Historical draft remains untouched and outside task-owned scope.
+- Next: produce separate tasks, validate dependency order, review against A1–A7 and record comparable content evidence before combined owner approval. Approval will start coordinator preflight unless the owner selects an explicit planning-only boundary.
