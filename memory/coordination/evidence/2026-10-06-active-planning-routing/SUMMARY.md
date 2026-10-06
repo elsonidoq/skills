@@ -1,6 +1,6 @@
 # Active planning routing — preparation and implementation
 
-Producer planner; owner-selected TinySpec. Status: T001–T003 implementation/checkpoints verified; batch return awaits coordinator checkpoint audit and fresh independent final semantic review, not feature accepted. Combined source/tasks/implementation approval recorded in planning review at ebdc99b58e411377731cdec1cce85b606fc234ed; coordinator preflight baseline retained below. Owner selected Sol/medium worker and fresh Sol/medium reviewer through ask_user. Exact approved source/task digests remain unchanged. Areas/tags: planning, routing, skill contracts, semantic validation.
+Producer planner; owner-selected TinySpec. Status: T001–T003 and their separate evidence checkpoints audited and accepted by coordinator; fresh independent final review found no issues. Feature accepted within approved static/manual validation scope; live model obedience NOT RUN. Combined source/tasks/implementation approval recorded in planning review at ebdc99b58e411377731cdec1cce85b606fc234ed; coordinator preflight baseline retained below. Owner selected Sol/medium worker and fresh Sol/medium reviewer through ask_user. Exact approved source/task digests remain unchanged. Areas/tags: planning, routing, skill contracts, semantic validation.
 
 Owner bounds: active contracts only; Sol/medium for the entire Standard plan_create pass, direct/helper; all other selections use existing routing criteria. Historical records, broad draft 001 retry/assignment changes, runtime/settings changes and live probes excluded. Owner selected current Sol/medium for local preparation; no implementation or reviewer selection inferred. Applicable approved coordination guidance: none; gotcha index empty.
 
@@ -22,12 +22,12 @@ Preparation exception: initial task-order check FAIL because heading-based task 
 
 Complete task count: three (T001–T003). Strategy: one fresh async sequential worker, same checkout, no parallel writer; context-headroom metrics unavailable in parent, fresh bounded handoff preferred. Shared routing seam couples three skills to one checker; splitting writers would overlap ownership. T002 consumes T001; T003 consumes both. Parent does not mutate while worker runs. Independent final reviewer uses fresh context and read-only tools; reviewer receives full implementation range/patch, not a clean-tree diff.
 
-- [x] Batch 1 — T001–T003: worker-verified task/evidence checkpoints complete; coordinator boundary audit pending.
-- [ ] Final independent review — pending coordinator launch/inspection over complete committed range; feature acceptance pending.
+- [x] Batch 1 — T001–T003: focused task/evidence commits and REQUIRED-item union audited/accepted.
+- [x] Final independent review — fresh read-only review inspected; no issues, notes accepted as explicit limitations.
 
 | Batch | Tasks | Scope | Dependencies | Integration | Verification | Selected profile | Mode | Initial status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | T001–T003 | Skills/checks → normative docs → acceptance scenarios | Internal T001 → T002 → T003 | Planner, brainstorming, helper/shared rubric, tests/docs | Whole approved REQUIRED item union; per-task and evidence commits; parent audit; final review | openai-codex/gpt-6.1-sol:medium | fresh async single writer | worker verified; coordinator audit/review pending |
+| 1 | T001–T003 | Skills/checks → normative docs → acceptance scenarios | Internal T001 → T002 → T003 | Planner, brainstorming, helper/shared rubric, tests/docs | Whole approved REQUIRED item union; per-task and evidence commits; parent audit; final review | openai-codex/gpt-6.1-sol:medium | fresh async single writer | completed and accepted (static/manual scope) |
 
 Assessment: moderate residual cross-contract reasoning; bounded local tool chain; weakest blind spot semantic contradictions/model obedience; tightly coupled producer/consumer prose/checker/docs; reversible owned changes with approval weakening risk; approved guidance none. Implementation Family rationale: Sol for cross-consumer inference and semantic blind spots, not fixed planning exception. Effort rationale: medium for settled design and bounded remaining inference. Reviewer Family rationale: same usable Sol with independent fresh context for adversarial semantic comparison. Reviewer Effort rationale: medium for bounded complete-diff review, no escalation to high. Conditional repair: inspect failed run/invocation/check/partial commit evidence; retain valid work; unknown cause stops; any profile change requires verified support and owner selection.
 
@@ -97,4 +97,17 @@ not learned project guidance; final reflection/reviewer disposition remains coor
 **No guideline update proposed.** All requested implementation tasks have focused task commits
 and separate evidence-only checkpoints; independent review is deliberately pending, not waived.
 
-Limits: baseline checks do not accept the proposed implementation; static/simulated checks cannot prove model obedience; no paid/live probes. Untracked .env and docs/plans/mandatory-task-commits.md untouched. No delegated attempt or failed child. Reflection: no guideline update proposed; semantic validation limits are explicit source constraints, not newly learned project policy.
+## Coordinator acceptance / reflection
+
+| Checkpoint | Evidence | Outcome |
+| --- | --- | --- |
+| Batch boundary audit | Complete 91d560d..07fcea3 operational/test/doc diffs and six actual task/evidence commits; exact approved digests and historical fixture rechecked; empty index and only two original untracked exclusions | PASS: explicit owned paths/checkpoints, whole REQUIRED union consistent; no correction needed |
+| Independent review | Workflow eb9e143f-0214-4b23-a667-e77586c61297; fresh reviewer 0de14e60-d8ac-466a-b7a8-a154967e94a4; complete range 91d560d..07fcea3; durable disposition in validation artifact | No issues; OK with notes. Reviewer no-execution-tool and static-obedience limits acknowledged, not waived requirements |
+| Coordinator reruns | /tmp/active-routing-coordinator-checks.log; lint 22 skills/0 failures, 283 embedded tests/two checkers; coordination 21; range diff check | PASS; optional live/provider exercises NOT RUN |
+| Acceptance documentation | 07fcea3 → c76239908ada645f2b68f45d3072a6b1491d5268; existing validation artifact only | PASS: final independent-review/T003/V3/A5 disposition and scoped links; this separate factual evidence checkpoint follows |
+
+Later runtime status files for worker e911942e-8d2e-4587-8cce-7ef7ac8c22c7 and reviewer 0de14e60-d8ac-466a-b7a8-a154967e94a4 report exact model `openai-codex/gpt-6.1-sol:medium`, thinking `medium`, both complete. This appends runtime-setting observations with status provenance; original unknown reports above remain intact and no provider attestation is inferred. Successful actual child edit/write/checkpoint routes establish mutation capability for this run; no live provider smoke test was performed.
+
+Reflection: cross-consumer mutations caught a masked whole-pass condition, showing useful verification-contract sensitivity, but no general model-capability attribution or durable project-specific lesson is established. No contradicting/ reinforcing approved guideline exists; manual inspection and fresh review found no additional defect. General prose/obedience blind spots are already documented requirements, not new gotchas. Scope/reuse/manual/delegation questions reviewed: evidence-only, no historical synthesis needed, **no guideline update proposed**. No gotcha writes or compaction needed. Existing docs owners/discovery checked; no unresolved issue candidate or deployment-relevant evidence, no temporary execution-state owner. No deployment investigation, settings changes, external operations or unrelated file reads/edits. `/reload` remains required after these global skill changes.
+
+Limits: static/simulated/manual evidence and review cannot prove live model obedience. Untracked .env and docs/plans/mandatory-task-commits.md remain preserved. No failed child or blind retry; inspected test corrections are retained above. Feature acceptance is limited to approved criteria, not runtime/provider guarantees.
