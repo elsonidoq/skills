@@ -7,6 +7,7 @@ source of authority. [Review records](reviews/index.md) are in the direct child 
 - [Active planning routing — TinySpec](active-planning-routing-tinyspec.md): active class removal, Sol/medium Standard planning exception and verification bounds.
 - [Active planning routing — tasks](active-planning-routing-tasks.md): separate contract, documentation and acceptance work units; implementation approval pending.
 - [Coordinator approval and cadence — TinySpec](coordinator-approval-cadence-tinyspec.md): coordinator-only batch approval and bounded persistence; worker checkpoints unchanged.
+- [Coordinator approval and cadence — tasks](coordinator-approval-cadence-tasks.md): separate instruction/test and documentation/acceptance work units; implementation approval pending.
 - [Coherence initialization — TinySpec](coherence-initialization.md): source and adoption bounds.
 - [Coherence initialization — tasks](coherence-initialization-tasks.md): implementation task contracts.
 - [Coherence initialization — execution](coherence-initialization-execution.md): task checkpoints and review disposition.
