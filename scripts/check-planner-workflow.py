@@ -25,10 +25,11 @@ PATHS = {
 # Deliberately updated for owner-requested healthy internal-batch autonomy:
 # subagents verify/commit without routine supervisor waits; coordinator audits on return.
 # Per-task commits, failure stops, model selection and owner gates remain protected.
-# Deliberate routing-migration freeze renewal: the execution carrier is unchanged,
-# including approvals, sequential batches, failure inspection, task commits and review.
-# Retain this digest until an authorized coordinator change compares those safeguards.
-EXECUTION_SHA256 = "ef21eb994d430aa213c6ea75833ae03a8db68ff84e284f78a7f7b50d3bd304b4"
+# T005 deliberate routing-carrier renewal from ef21eb99...: exact binding/effort
+# replaces classes. Compared unchanged intake, completion scope, Execute/Integrate,
+# final review and guideline gates; async order, inspection and checkpoints preserved.
+# Retain the freeze; recovery exception remains owned by later T008/T009.
+EXECUTION_SHA256 = "d80611aa7b80f5a0d2c6e410ba44bb8d087ad2e938caf7d09dcfb1ebc1ad169f"
 
 
 def section(text, heading):
@@ -241,10 +242,26 @@ def check_contracts(texts):
             "checkpoint early", "After a\n  timeout, inspect", "retain valid completed\n  evidence",
             "narrow the remaining step instead of restarting the entire batch",
             "timeout alone is not retry authority")
+    require("execution-routing", c,
+            "provider-documented supported effort", "permitted usable runtime capability",
+            "task-specific writer/reviewer role, actual tools, permissions and observed context",
+            "complete approved task/reviewer assignment snapshot", "single combined final approval",
+            "no routine second assignment-approval question", "Immediately before each dispatch",
+            "Drift or unusable selection stops", "never substitution",
+            "least provider-documented usable supported effort justified as adequate after decomposition",
+            "Higher effort needs concrete residual reasoning or lower-setting counterevidence",
+            "reviewer role, family name or spare budget alone never justify high/max",
+            "no qualifying row is not automatically excluded", "explicit bounded owner uncertainty disposition",
+            "Luna → Terra → Sol", "Do not skip an unavailable next family",
+            "Astra is never an automatic fourth attempt", "least adequate supported retry effort",
+            "within existing owner-selected routing authority", "no preselected retry effort",
+            "automatic effort increment or blanket per-retry owner question",
+            "grants no failed-attempt commit/inverse or real rollback authority",
+            "approved compatible exact binding/effort and context")
     marker = "## Execution Capability Preflight"
     body = c[c.index(marker):] if marker in c else ""
     if hashlib.sha256(body.encode()).hexdigest() != EXECUTION_SHA256:
-        errors.append("execution-freeze: coordinator execution differs from pre-refactor baseline")
+        errors.append("execution-freeze: coordinator execution differs from verified routing baseline")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
@@ -401,7 +418,7 @@ def check_contracts(texts):
         checkpoint = ""
     require("coordination-checkpoint", checkpoint,
             "At each task/attempt checkpoint", "failed, blocked or partial work and manual/user",
-            "task/type, areas/tags", "approved class", "role/model/reasoning effort (or `unknown`)",
+            "task/type, areas/tags", "approved family/binding/effort", "role/model/reasoning effort (or `unknown`)",
             "individual attempt/check results, reviewer findings, inspected failure cause",
             "escalation outcomes, surprises and manual findings", "Unknown is not success",
             "reuse on resume, never overwrite another run", "separate summary/task records",
@@ -411,14 +428,20 @@ def check_contracts(texts):
             "Evidence-write failures stop", "never a no-write fallback")
     capability = section(c, "## Select Execution Capability")
     require("coordination-routing", capability,
-            "usable owner-selected options", "Low favors a cheaper",
-            "strong executable acceptance oracle", "stronger verification/review",
-            "not forced opus", "reclassification or share-gate bypass",
-            "Never silently\nreplace selected models, weaken approved classes",
-            "inspect the child run and failed invocation first", "Preserve valid",
-            "unrelated workspace changes", "architecture and authority permit",
-            "verified stronger capability and owner-selection gates",
-            "Unknown cause", "unestablished clean state stops", "Record both attempts")
+            "approved assignment\nsnapshot, including the independent reviewer",
+            "Recheck exact selected binding/effort", "never substitution",
+            "Family suitability and effort adequacy require separate rationales",
+            "Risk strengthens decomposition, checks and applicable owner/review safeguards",
+            "returns for decomposition/stronger observable acceptance, not reflexive max",
+            "Inspect the failed run and tool invocation before retry or relaunch",
+            "Unknown invocation/cause stops", "established safe task state",
+            "within existing owner-selected routing authority", "Rotation is not a blind retry.",
+            "currently governing task-commit contract still requires verified checkpoints and safe",
+            "Unresolved failed task-owned changes stop dispatch for coordinator inspection",
+            "Record attempts, diagnosis, corrections and routing outcomes")
+    require("coordination-routing-safety", section(c, "## Execute and Integrate"),
+            "Preserve\nunrelated staged/unstaged work", "same-file ambiguity stops automatic staging",
+            "failed recovery stops dispatch", "evidence-only checkpoint before later task writes or handoff")
     reflection = section(c, "## Coordination reflection and guideline approval")
     if not (0 <= c.find("## Review and Acceptance") < c.find("## Coordination reflection and guideline approval")
             < c.find("## Maintaining this contract")):

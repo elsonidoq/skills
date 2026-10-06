@@ -178,17 +178,42 @@ class CoordinationContractTests(unittest.TestCase):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordination", "## Selective historical retrieval", clause, "coordination-selective")
 
-    def test_A11_routing_selection_class_and_inspected_cause_removals(self):
+    def test_A11_routing_selection_and_inspected_cause_removals(self):
         for clause in (
-            "usable owner-selected options", "Low favors a cheaper", "strong executable acceptance oracle",
-            "stronger verification/review", "not forced opus", "reclassification or share-gate bypass",
-            "Never silently\nreplace selected models, weaken approved classes",
-            "inspect the child run and failed invocation first", "unrelated workspace changes",
-            "architecture and authority permit", "verified stronger capability and owner-selection gates",
-            "Unknown cause", "unestablished clean state stops", "Record both attempts",
+            "approved assignment\nsnapshot, including the independent reviewer",
+            "Recheck exact selected binding/effort", "never substitution",
+            "Family suitability and effort adequacy require separate rationales",
+            "Risk strengthens decomposition, checks and applicable owner/review safeguards",
+            "returns for decomposition/stronger observable acceptance, not reflexive max",
+            "Inspect the failed run and tool invocation before retry or relaunch",
+            "Unknown invocation/cause stops", "established safe task state",
+            "within existing owner-selected routing authority", "Rotation is not a blind retry.",
+            "currently governing task-commit contract still requires verified checkpoints and safe",
+            "Unresolved failed task-owned changes stop dispatch for coordinator inspection",
+            "Record attempts, diagnosis, corrections and routing outcomes",
         ):
             with self.subTest(clause=clause):
                 self.assert_rejected("coordinator", "## Select Execution Capability", clause, "coordination-routing")
+        for clause in (
+            "provider-documented supported effort", "permitted usable runtime capability",
+            "complete approved task/reviewer assignment snapshot",
+        ):
+            with self.subTest(preflight=clause):
+                self.assert_rejected("coordinator", "## Execution Capability Preflight", clause, "execution-routing")
+        for clause in (
+            "reviewer role, family name or spare budget alone never justify high/max",
+            "no qualifying row is not automatically excluded", "explicit bounded owner uncertainty disposition",
+            "Do not skip an unavailable next family", "Astra is never an automatic fourth attempt",
+            "no preselected retry effort", "automatic effort increment or blanket per-retry owner question",
+        ):
+            with self.subTest(routing=clause):
+                self.assert_rejected("coordinator", "## Select Execution Capability", clause, "execution-routing")
+        for clause in (
+            "Preserve\nunrelated staged/unstaged work", "same-file ambiguity stops automatic staging",
+            "failed recovery stops dispatch", "evidence-only checkpoint before later task writes or handoff",
+        ):
+            with self.subTest(safety=clause):
+                self.assert_rejected("coordinator", "## Execute and Integrate", clause, "coordination-routing-safety")
 
     def test_unsafe_bulk_silent_drift_class_retry_and_single_outcome_policies(self):
         for policy in (
@@ -206,7 +231,7 @@ class CoordinationContractTests(unittest.TestCase):
     def test_A12_existing_execution_safeguards_survive_mutations(self):
         for clause in (
             "Commit each task's verified changes as one focused commit", "only asynchronously in the background",
-            "Run all batches sequentially", "never silently switch models or downgrade task classes",
+            "Run all batches sequentially", "never silently switch families, bindings or efforts",
             "Inspect the failed run and tool invocation before retry or relaunch", "fresh independent",
             "REQUIRED checks remain required",
         ):

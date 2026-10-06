@@ -40,11 +40,11 @@ class IntakeContractTests(unittest.TestCase):
 
     def test_local_suitability_and_common_graph(self):
         for phrase in (
-            "current owner-selected model/class matches",
+            "current owner-selected exact binding/effort matches",
             "observed context capacity is adequate",
             "delegate the affected task or segment",
             "Both routes use this single execution graph",
-            "never silently switch models or downgrade task classes",
+            "never silently switch families, bindings or efforts",
             "No unauthorized local fallback",
             "producing workflow's review gate",
         ):
@@ -55,7 +55,7 @@ class IntakeContractTests(unittest.TestCase):
     def test_capabilities_context_and_inspected_failures(self):
         for phrase in (
             "fresh independent reviewer",
-            "no forced one-session-per-class limit",
+            "no forced one-session-per-binding limit",
             "Inspect the failed run and tool invocation before retry or relaunch",
             "If context metrics are unavailable",
             "Agent/model selection: UNAVAILABLE",

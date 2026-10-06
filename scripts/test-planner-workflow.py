@@ -42,6 +42,22 @@ class ProportionateValidationTests(unittest.TestCase):
         self.assertTrue(any(e.startswith(diagnostic + ":")
                             for e in checker.check_contracts(texts)))
 
+    def test_coordinator_routing_guards_are_checked_beyond_digest(self):
+        for clause in (
+            "provider-documented supported effort", "permitted usable runtime capability",
+            "complete approved task/reviewer assignment snapshot", "single combined final approval",
+            "no routine second assignment-approval question", "Immediately before each dispatch",
+            "never substitution", "Higher effort needs concrete residual reasoning or lower-setting counterevidence",
+            "no qualifying row is not automatically excluded", "explicit bounded owner uncertainty disposition",
+            "Do not skip an unavailable next family", "Astra is never an automatic fourth attempt",
+            "within existing owner-selected routing authority", "no preselected retry effort",
+            "automatic effort increment or blanket per-retry owner question",
+            "grants no failed-attempt commit/inverse or real rollback authority",
+            "approved compatible exact binding/effort and context",
+        ):
+            with self.subTest(clause=clause):
+                self.assert_clause_required("coordinator", clause, "execution-routing")
+
     def test_selection_wiring_gets_focused_check_not_automatic_matrix(self):
         for clause in (
             "lowest validation layer", "smallest sufficient check",
