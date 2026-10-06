@@ -12,6 +12,7 @@ source of authority. [Review records](reviews/index.md) are in the direct child 
 - [Library best-practices research — TinySpec](library-best-practices-research.md): approved research scope.
 - [Library best-practices research — tasks](library-best-practices-research-tasks.md): implementation tasks.
 - [Library best-practices research — execution](library-best-practices-research-execution.md): execution evidence.
+- [Mandatory task commits — original proposal](mandatory-task-commits.md): superseded historical input; runtime-enforcement proposal is not current policy.
 - [Mandatory task commits — TinySpec](mandatory-task-commits-tinyspec.md): checkpoint source requirements.
 - [Mandatory task commits — tasks](mandatory-task-commits-tasks.md): task contracts.
 - [Mandatory task commits — coverage](mandatory-task-commits-coverage.md): coverage inventory.
