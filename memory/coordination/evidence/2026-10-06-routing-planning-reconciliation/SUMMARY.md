@@ -10,7 +10,9 @@ Initial index empty of staged changes; unrelated untracked `.env` and `docs/plan
 
 1. Research/archive: baseline `30a30f4`; result `cab280c`. Changed only feature `research.md` and raw evidence CSV. Checks: byte `cmp`, SHA-256, CSV counts/unknown metadata/source labels, selected logical-row citations and local research/index links PASS; `git diff --check` PASS. Diff inspected before explicit-path commit. Public BenchLM page fetch returned HTTP 403 (no new source verification); prior inspected evidence reused with qualified owner-supplied high/max claim. No license restriction discovered in supplied file; no licensed MCP response archived.
 
-Pending design reconciliation and task-list reconciliation checkpoints. Each retained deliverable has a focused commit followed by a distinct factual evidence-only checkpoint before subsequent task writes.
+2. Design reconciliation: baseline `e1493be` (research evidence checkpoint); result `0d9de56`. Changed only `plan.md`, `data-model.md`, `quickstart.md`. Local links and focused advisory-versus-hard-gate assertions PASS; recovery transition/diff inspection preserves pre-mutation evidence, intermediate SHA/status checkpoint, ordinary inverse, exhausted-attempt safe recovery and separate dispatch guards. `git diff --check` PASS. Existing skill code/tests unchanged; proposed implementation fixtures not run.
+
+Pending task-list reconciliation checkpoint. Each retained deliverable has a focused commit followed by a distinct factual evidence-only checkpoint before subsequent task writes.
 
 ## Limits and reflection
 
