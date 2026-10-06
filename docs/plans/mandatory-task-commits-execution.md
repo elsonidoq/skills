@@ -20,7 +20,7 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001–T007 | Contract, coordinator, all consumers/prompts, fixtures, governing docs, integration evidence | Internal T001 → T007, approved order | Shared reference → consumer checkpoints → regression wiring/docs | Per-task required checks and commits; coordinator verifies each checkpoint; final full-range review | sonnet-class / Terra | async delegated, one writer | in_progress |
 
-- [ ] Batch 1 — in_progress; T001–T004 verified; next dependency-ready task T005. Initial child exited prematurely; retained-session continuation follows inspected failure and recovery evidence.
+- [ ] Batch 1 — in_progress; T001–T005 verified; next dependency-ready task T006. Initial child exited prematurely; retained-session continuation follows inspected failure and recovery evidence.
 
 ## Task checkpoints
 
@@ -30,7 +30,7 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 | T002 | completed | 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 / d2d1b2f7ac4c744337e2118922cf343b9345128f; coordinator evidence recovery committed separately | coordinator protocol; parent intake 7/batching 3/static workflow/diff checks PASS |
 | T003 | completed | b358b64344a0388328e2079a24fe2d1468e7024b / 65564a4e232872afa99762454754d7412b6f258c; correction bcfb7b3; evidence 251ad9c plus coordinator index recovery | workflow consumers; link/lint tests PASS; actual correction and task-relative clean state independently validated |
 | T004 | completed | 7f7ed1ae09b1f7d2751ab1b68809806414b0622a / 5e60119779596f03e0d31e478957cce650a1dbb4; evidence checkpoint pending | standalone skills/prompts; links/lint/diff PASS |
-| T005 | pending | not started | diagnostic mutations/Git fixtures |
+| T005 | completed | f33b2395c72a0d4e835123f0cfcdbf388f5764f0 / 0b26a28e31cb618656aaafc01b61ef169ebf0f71; evidence checkpoint pending | static mutations/Git fixtures PASS |
 | T006 | pending | not started | governing policy/documentation |
 | T007 | pending | not started | integrated validation/review packet |
 

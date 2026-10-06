@@ -16,3 +16,5 @@
 
 - T004 task `5e60119`: remaining nine skills and all active prompts aligned; runtime extension hook gate removed; focused assertion/lint/diff PASS; validation pending.
 - T004 correction `827b684`: restored existing SpecKit before/after hook semantics byte-for-byte; no new hook subsystem or bypass; validation pending.
+
+- T005 task `0b26a28`: static/mutation and temporary-Git fixtures added; fail-before fixture correction recorded; all focused checks PASS; validation pending.
