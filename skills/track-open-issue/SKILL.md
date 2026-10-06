@@ -46,3 +46,7 @@ Report one outcome: `created`, `updated`, `deduplicated`, `deferred`, or `not re
 - the `docs/open_issues.md` location and issue reference;
 - the primary evidence, status, and resumption condition; and
 - any required owner action.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). A verified local-register update is a bounded retained deliverable; investigation without such a write creates no empty commit.

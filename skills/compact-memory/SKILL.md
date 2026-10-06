@@ -92,3 +92,7 @@ then re-check the configured size target.
 Report the verified memory location, configured target, backup path, migrations, merges, drops, kept count, final
 index measurement, stale facts found, changed-link validation, audit findings and fixes, plus anything unavailable
 or not verified.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). After its existing explicit approval, retained compact-memory output is a bounded task; proposal/read-only phases create no empty commit.

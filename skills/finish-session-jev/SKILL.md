@@ -35,3 +35,7 @@ Jev is not an authority. It must not:
 Before writing, manually review every candidate against its primary artifact and the base workflow's routing table, including every `skip`, excluded candidate, and low-confidence or unavailable result. Jev may prioritize attention but cannot suppress a candidate or make the final routing decision.
 
 Report whether Jev was used, the eligible and submitted counts, the confidence threshold, how many classifications were manually overridden, how many `skip` results were retained or rerouted after review, and all excluded, unavailable, malformed, or low-confidence cases.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Jev triage is read-only unless an authorized retained repository deliverable exists; external routing permissions remain separate.

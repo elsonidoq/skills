@@ -89,3 +89,7 @@ settled decisions, trade-offs, intentional deferrals, uncertainties, and the nex
 readiness target. On resume, validate the bounded source and decision record; if owner
 answers are missing, re-present the saved agenda instead of regenerating decisions. If the
 source or decisions changed materially, re-run the gate before downstream production.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Preselection remains read-only and creates no empty commit; any authorized retained decision artifact is a bounded task and never adopts inherited work.

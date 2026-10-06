@@ -164,3 +164,7 @@ State separately whether the session's work is implemented, verified, and deploy
 - the temporary execution state document updated, or why it was not
 - changed-reference validation
 - deliberately skipped candidates, uncertain session attribution, and unverifiable claims
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Authorized retained closeout artifacts checkpoint as bounded tasks; reporting and read-only validation alone create no empty commit.

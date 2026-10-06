@@ -101,3 +101,7 @@ format supports it. Then manually inspect traceability, exclusions, documentatio
 integration, acceptance evidence, class share, implicit dependencies, and stage feasibility.
 Return defects to the producing workflow's review gate. Record the validation outcome and
 current content evidence with the task artifact so a later handoff can detect stale approval.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). The approved task list is a retained bounded deliverable; preserve source approval and dependency semantics while checkpointing it separately.

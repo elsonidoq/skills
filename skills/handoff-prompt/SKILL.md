@@ -88,3 +88,7 @@ file will be available in another checkout. If you record the current session, s
 only observable facts: the current pi session ID (`PI_SESSION_ID`) and session file
 (`PI_SESSION_FILE`) are available to commands run in this session and are not
 portable to another checkout.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). A retained handoff prompt is a bounded deliverable; a fresh agent returns unknown inherited state rather than committing it.

@@ -80,3 +80,6 @@ follow the shared owner.
 State the verified store location, the index state, the entries consulted and why,
 constraints applied from memory, and any writes or supersessions performed in this
 session.
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](references/task-commit-contract.md). Factual coordination evidence is retained under its existing authority and checkpointed; committing it does not authorize guideline mutation.

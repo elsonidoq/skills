@@ -140,3 +140,7 @@ research results with the plan path, architecture/dependency summary, capability
 requirements, corrections, explicit deferral bounds/validation, and
 open owner decisions. Stop after planning and wait for owner approval before
 implementation.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Only already-authorized planning/adaptation outputs may be retained; this contract never bypasses planner approval or grants broader writes.

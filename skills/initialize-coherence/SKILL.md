@@ -191,3 +191,5 @@ that work. Use `finish-session` for bounded initialization closeout.
 
 Offline source-ledger checks: [scripts/test_contract.py](scripts/test_contract.py).
 These static checks do not prove agent obedience; live behavior requires separate authorization.
+
+**Mandatory task checkpoint.** Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Focused, idempotent initialization and approved adoption outputs checkpoint only their owned paths; preserve concurrent/unrelated work and approval boundaries.

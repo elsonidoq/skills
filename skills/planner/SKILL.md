@@ -339,3 +339,7 @@ With Python 3 available run `python3 scripts/check-planner-workflow.py` and
 These are static/fixture checks, not model-obedience proof. If unavailable, report
 scripted checks `UNAVAILABLE` and inspect manually. Behavioral tests and limitations
 are documented in the repository's planner regression guide.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Retained TinySpec/Standard source and task artifacts are bounded deliverables; preserve preselection read-only and approval gates, then checkpoint authorized retained output before handoff.

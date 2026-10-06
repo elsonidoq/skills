@@ -7,18 +7,18 @@ the consumer is already wired; later task evidence changes rows only after verif
 | Consumer | Boundary / role | Status | Task evidence |
 | --- | --- | --- | --- |
 | coordinate-implementation | Coordinator/implementer checkpoints, recovery and final review | integrated | T002 static checks |
-| planner | Produces retained source/task artifacts and hands execution to coordinator | planned | T003 |
-| planning-brainstorming | Read-only preselection; no empty commit | planned | T003 |
-| tiny-spec | Retained source deliverable, separate from task-list deliverable | planned | T003 |
-| task-generation | Retained task-list deliverable and dependency order | planned | T003 |
-| delegating-architectural-planning | Approved planning artifacts only; no adaptation bypass | planned | T003 |
-| memory-handling | Factual evidence/checkpoint persistence, not guideline authority | planned | T003 |
-| compact-memory | Retained compact-memory output only after its approval boundary | planned | T003 |
-| initialize-coherence | Focused/idempotent initialization; preserve approval boundary | planned | T003 |
-| finish-session | Authorized retained closeout; read-only checks create no commit | planned | T003 |
-| finish-session-jev | Same closeout boundary; external routing remains authorized separately | planned | T003 |
-| track-open-issue | Bounded retained register update | planned | T003 |
-| handoff-prompt | Retained handoff deliverable, not unknown inherited work | planned | T003 |
+| planner | Produces retained source/task artifacts and hands execution to coordinator | integrated | T003 link/read-through |
+| planning-brainstorming | Read-only preselection; no empty commit | integrated | T003 link/read-through |
+| tiny-spec | Retained source deliverable, separate from task-list deliverable | integrated | T003 link/read-through |
+| task-generation | Retained task-list deliverable and dependency order | integrated | T003 link/read-through |
+| delegating-architectural-planning | Approved planning artifacts only; no adaptation bypass | integrated | T003 link/read-through |
+| memory-handling | Factual evidence/checkpoint persistence, not guideline authority | integrated | T003 link/read-through |
+| compact-memory | Retained compact-memory output only after its approval boundary | integrated | T003 link/read-through |
+| initialize-coherence | Focused/idempotent initialization; preserve approval boundary | integrated | T003 link/read-through |
+| finish-session | Authorized retained closeout; read-only checks create no commit | integrated | T003 link/read-through |
+| finish-session-jev | Same closeout boundary; external routing remains authorized separately | integrated | T003 link/read-through |
+| track-open-issue | Bounded retained register update | integrated | T003 link/read-through |
+| handoff-prompt | Retained handoff deliverable, not unknown inherited work | integrated | T003 link/read-through |
 | brainstorming | Analysis/read-only unless an authorized retained deliverable exists | planned | T004 |
 | using-git-worktrees | Workspace/ignore decisions stay gated; no commit waiver | planned | T004 |
 | requesting-code-review | Review request artifacts when retained; review scope stays bounded | planned | T004 |

@@ -96,3 +96,7 @@ Planner owns source/task review and
 one combined approval, including an executive brief before `ask_user`. A standalone
 TinySpec approval before task production is not required. Report source production,
 not readiness for implementation or feature acceptance.
+
+## Mandatory task checkpoint
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). The approved source is a retained bounded deliverable separate from task generation; do not infer implementation or guideline authority.
