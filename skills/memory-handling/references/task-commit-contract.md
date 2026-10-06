@@ -22,9 +22,10 @@ Before subsequent task writes, completion reporting, or handoff, the implementer
 1. establish a task baseline and allowed paths, and inspect the current index/worktree;
 2. make only assigned, understood changes and run the required verification;
 3. inspect the actual task diff and explicitly stage only task-owned paths; and
-4. create one focused task commit using compatible repository message, branch, sign-off and
-   signing conventions, then report the baseline/resulting SHA, changed files, checks, and
-   residual state.
+4. create one focused path-limited task commit (for example, `git commit --only -- <paths>`
+   where compatible) so unrelated staged changes are preserved, using compatible repository
+   message, branch, sign-off and signing conventions; then report the baseline/resulting SHA,
+   changed files, checks, and residual state.
 
 There is no skip/defer question, owner-exception record, no-Git fallback, or batch commit
 substitute. Missing Git, identity/signing/permission failure, a hook/check failure, policy

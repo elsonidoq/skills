@@ -56,6 +56,7 @@ if [ "$fail" -eq 0 ]; then
   selected_skills="$(cd "$SKILLS_DIR" && pwd)"
   if [ "$selected_skills" = "$suite_skills" ]; then
     python3 "$scripts_dir/check-planner-workflow.py" || fail=$((fail + 1))
+    python3 "$scripts_dir/check-task-commit-contract.py" || fail=$((fail + 1))
     python3 "$scripts_dir/test-planner-workflow.py" || fail=$((fail + 1))
     for focused in \
       "$scripts_dir/../skills/initialize-coherence/scripts/test_contract.py" \

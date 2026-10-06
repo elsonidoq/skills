@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Static contract mutations and temporary-Git protocol fixtures, not model-obedience tests."""
+import importlib.util
 import subprocess
 import tempfile
 import unittest
@@ -8,6 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "skills/memory-handling/references/task-commit-contract.md"
 COORDINATOR = ROOT / "skills/coordinate-implementation/SKILL.md"
+_spec = importlib.util.spec_from_file_location("task_commit_checker", ROOT / "scripts/check-task-commit-contract.py")
+checker = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(checker)
 
 
 def run(repo, *args, ok=True):
@@ -37,11 +41,16 @@ def focused_task_commit(repo, path="task.txt", message="task checkpoint"):
 
 
 def checkpoint_status(repo, expected_path, expected_parent):
-    """Protocol oracle: one focused child of baseline touching exactly expected path."""
+    """Protocol oracle: focused child, no task-owned residual changes, and known baseline."""
     head = run(repo, "rev-parse", "HEAD").stdout.strip()
-    parent = run(repo, "rev-parse", "HEAD^").stdout.strip()
+    if head == expected_parent:
+        return False
+    parent = run(repo, "rev-parse", "HEAD^", ok=False)
+    if parent.returncode:
+        return False
     files = set(run(repo, "diff-tree", "--no-commit-id", "--name-only", "-r", head).stdout.splitlines())
-    return parent == expected_parent and files == {expected_path}
+    residual = set(run(repo, "diff", "--name-only").stdout.splitlines()) | set(run(repo, "diff", "--cached", "--name-only").stdout.splitlines())
+    return parent.stdout.strip() == expected_parent and files == {expected_path} and expected_path not in residual
 
 
 class StaticContractMutationTests(unittest.TestCase):
@@ -56,25 +65,23 @@ class StaticContractMutationTests(unittest.TestCase):
 
     def test_operational_guards_are_present_and_waiver_mutations_fail(self):
         text = COORDINATOR.read_text()
-        for phrase in (
-            "no skip/defer question", "No-Git fallback", "never adopts or commits unknown work",
-            "coordinator alone may recover", "failed recovery stops dispatch", "evidence-only checkpoint",
-        ):
-            self.assertIn(phrase, text)
+        self.assertEqual(checker.check(), [])
         mutations = (
-            (text.replace("no skip/defer question", "ask whether to skip/defer"), "no skip/defer question"),
-            (text.replace("never adopts or commits unknown work", "may commit unknown inherited work"), "never adopts or commits unknown work"),
-            (text.replace("coordinator alone may recover", "implementer may recover"), "coordinator alone may recover"),
+            text.replace("no skip/defer question", "ask whether to skip/defer"),
+            text.replace("never adopts or commits unknown work", "may commit unknown inherited work"),
+            text.replace("coordinator alone may recover", "implementer may recover"),
         )
-        for mutation, removed_guard in mutations:
-            self.assertNotEqual(mutation, text)
-            self.assertNotIn(removed_guard, mutation)
+        for mutation in mutations:
+            errors = checker.check(coordinator_text=mutation)
+            self.assertTrue(errors)
+            self.assertTrue(any("coordinator checkpoint" in error for error in errors), errors)
 
-    def test_existing_speckit_hooks_remain_and_additive_prompt_link_exists(self):
+    def test_existing_speckit_hook_operations_and_additive_prompt_link_are_protected(self):
         prompt = (ROOT / ".pi/prompts/speckit.implement.md").read_text()
-        self.assertIn("## Pre-Execution Checks", prompt)
-        self.assertIn("## Mandatory Post-Execution Hooks", prompt)
-        self.assertIn("task-commit-contract.md", prompt)
+        self.assertEqual(checker.check(), [])
+        for phrase in ("hooks.before_implement", "hooks.after_implement", "MUST actually invoke the hook"):
+            errors = checker.check(prompt_text=prompt.replace(phrase, "REMOVED"))
+            self.assertIn(f"SpecKit hook operational guard missing: {phrase!r}", errors)
 
 
 class GitProtocolFixtureTests(unittest.TestCase):
@@ -98,7 +105,7 @@ class GitProtocolFixtureTests(unittest.TestCase):
             baseline = run(repo, "rev-parse", "HEAD").stdout.strip()
             (repo / "task.txt").write_text("task\n")
             if mode == "absent":
-                self.assertNotEqual(run(repo, "status", "--porcelain").stdout, "")
+                self.assertFalse(checkpoint_status(repo, "task.txt", baseline))
                 continue
             if mode == "incorrect":
                 (repo / "unrelated.txt").write_text("wrong\n")
@@ -120,6 +127,15 @@ class GitProtocolFixtureTests(unittest.TestCase):
         result = run(repo, "commit", "-m", "must fail", ok=False)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("task.txt", run(repo, "diff", "--cached", "--name-only").stdout)
+
+    def test_residual_task_change_rejects_an_otherwise_valid_checkpoint(self):
+        holder, repo = fixture_repo()
+        self.addCleanup(holder.cleanup)
+        baseline = run(repo, "rev-parse", "HEAD").stdout.strip()
+        (repo / "task.txt").write_text("task\n")
+        focused_task_commit(repo)
+        (repo / "task.txt").write_text("residual task change\n")
+        self.assertFalse(checkpoint_status(repo, "task.txt", baseline))
 
     def test_interrupted_metadata_recovers_existing_sha_without_duplicate_task_commit(self):
         holder, repo = fixture_repo()
