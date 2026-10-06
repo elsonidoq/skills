@@ -13,8 +13,8 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 | 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | completed: 7c6bdad; parent audit PASS |
 | 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | completed: bb4d5fa, 01e86f3; RF001 868f20e; parent audit PASS |
 | 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | completed: fa6a343; parent audit PASS |
-| 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | completed: b487e60; parent audit pending |
-| 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
+| 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | completed: b487e60; parent audit PASS |
+| 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | in_progress |
 | 6 | T007–T010 | 5 | Luna brief → safe recovery → temp-Git oracle → memory; per-task commits | Sol 6.1/medium | delegated | pending: 5 |
 | 7 | T011 | 6 | remaining active consumers; focused suite checks | Terra 5.6/medium | delegated | pending: 6 |
 | 8 | T012 | 7 | integration, suite/lint, fresh independent reviewer | Sol 6.1/medium writer; Astra 6/medium reviewer | delegated | pending: 7 |
@@ -72,6 +72,4 @@ No suppression or bypass. Final coordinator 4/7, planner static/85, memory 25, t
 workflow fixtures) PASS; whitespace and complete six-path diff inspected. Freeze deliberately
 renewed from `ef21eb99...` to `d80611aa...` after exact unchanged safety-section comparison.
 Six approved artifact identities still match; guidelines/protected untracked files untouched.
-Distinct T005/SUMMARY/INDEX evidence-only checkpoint precedes return. Parent audit and final
-independent review pending; T006 remains unreleased and was not started. Static checks are not
-provider-internal effort or live obedience evidence. `/reload` remains required after acceptance.
+Distinct evidence-only checkpoint `efed03a6523f97199d13be018b74d1c1138fee09` followed the focused T005 product. Parent audited exact commit parents/scopes, the entire six-path diff and [T005.md](T005.md); independently rechecked coordinator (4/7), planner static/85, memory 25, carrier SHA-256 `d80611aa7b80f5a0d2c6e410ba44bb8d087ad2e938caf7d09dcfb1ebc1ad169f` and scoped whitespace: PASS. Tracked tree/index clean, only protected unrelated untracked paths. T006 is released after this additional audit/index checkpoint. Fresh independent final review still pending; static checks are not provider-internal effort or live obedience evidence. `/reload` remains required after acceptance.
