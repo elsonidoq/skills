@@ -11,7 +11,7 @@ Count: twelve approved implementation tasks; all pending at start. Strategy: seq
 | Batch | Tasks | Prerequisite | Surface/checks | Selected binding | Mode | State |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T001 | none | read-only inventory + evidence; baseline scripts | Terra 5.6/medium | delegated | completed: 7c6bdad; parent audit PASS |
-| 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | in_progress |
+| 2 | T002–T003 | 1 | memory/support rubric → planner producers; focused mutations | Sol 6.1/medium | delegated | locally verified; parent audit/reviewer pending |
 | 3 | T004 | 2 | task adapters/validator; format fixtures | Terra 5.6/medium | delegated | pending: 2 |
 | 4 | T005 | 3 | coordinator/batching; negative fixtures | Sol 6.1/medium | delegated | pending: 3 |
 | 5 | T006 | 4 | docs/archive discovery; selective-read fixture | Terra 5.6/medium | delegated | pending: 4 |
@@ -28,3 +28,7 @@ Worker run `c60908b1-1653-4566-94b0-eeb3931c7e1b` resolved to `openai-codex/gpt-
 ## T002 checkpoint
 
 [T002.md](T002.md): baseline `8ffdf0c`; VERIFIED product `bb4d5fa4a2c5ad3f1a3559bc193cc45bbccf78ae`; three owned paths, 25 memory tests and diff/link checks PASS. Bounded seven obsolete planner coordination-class diagnostics await T003 checker migration; no other discrepancy. Sol 6.1/medium runtime label attested; no internal effort/cost/obedience claim. Evidence-only checkpoint precedes T003.
+
+## T003 checkpoint / batch return
+
+[T003.md](T003.md): baseline evidence `e98b68d`; VERIFIED product `01e86f35cdc083888efe24db7dfd151de625b512`; six paths (bounded brainstorming regression overlap authorized), 84 planner / 25 memory / 4 brainstorming tests and 22-skill lint PASS. T002 bounded shared-checker seam resolved; coordinator bytes/digest deliberately unchanged with safety comparison. Product/evidence ordering: T002 `bb4d5fa` → evidence `e98b68d` → T003 `01e86f3` → distinct evidence checkpoint. Tracked worktree/index clean after checkpoints; protected untracked paths untouched. Parent audit and independent reviewer pending; T004 not started. `/reload` required after accepting skill updates.
