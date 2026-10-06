@@ -17,7 +17,14 @@ Read repository instructions, governing principles, linked contracts, research,
 decisions, and source constraints. In projects declaring the memory contract, verify
 `memory-handling` is discoverable and load the project memory store, index, and
 trigger-matching entries; missing required memory capability stops with a report.
-Treat verified trigger-first gotchas as implementation constraints.
+Treat verified trigger-first gotchas as implementation constraints. Apply the shared
+[task-commit contract](../memory-handling/references/task-commit-contract.md) as the
+canonical checkpoint owner; this skill supplies coordinator/implementer execution only.
+
+Before the first retained task write, establish the task baseline, allowed paths, HEAD,
+index/worktree ownership, usable Git/identity/signing/permission prerequisites and required
+check baseline. On every fresh/resumed implementer, compare the supplied baseline and repository state
+before writing. Unexpected changes or an unresolved checkpoint means no edits, cleanup, or commits: return the blocker. A fresh implementer never adopts or commits unknown work.
 Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md):
 ensure the mandatory project-local store exists, including direct/resumed execution.
 Automatically initialize missing files, notify the user and commit only initialization files
@@ -296,17 +303,20 @@ For each task, whether local or inside a delegated batch:
    Task commits are required checkpoints, not a reason to split a coherent batch or launch a
    new session.
 
-Prefer a project's documented commit message and commit-workflow convention when one
-exists. Before the first commit, verify the workspace is a version-control repository
-and that committing is permitted. If repository instructions, governing principles,
-or policy forbid or constrain committing (for example, a different message format,
-branch, squash, sign-off, or a deferred-commit review gate), do not silently skip,
-defer, or reshape the commit: call the runtime's `ask_user` question tool, state the
-contradicting directive and the requested per-task commit, and let the owner decide.
-Record the decision in the execution tracker and apply it consistently to later
-batches. If the workspace has no usable version-control or commit capability, report
-the observed condition and ask the owner whether to proceed without per-task
-commits. Never omit a required task commit without an explicit owner decision.
+Prefer compatible documented message, branch, sign-off and signing conventions. There is
+no skip/defer question and no No-Git fallback: missing Git, identity/signing/permission,
+policy conflict, failed hook/check/commit, uncertain ownership or missing verification stops
+with the exact reason. Never auto-configure identity, disable hooks/signing, initialize a
+repository, push, rewrite history, or broadly stage work to make a checkpoint pass.
+
+The implementer explicitly stages only assigned, understood paths and reports baseline/result
+SHA, changed files, checks and residual state. The coordinator independently checks the actual
+diff, focused SHA, check evidence and residual task-owned changes; a report, clean tree or
+commit existence is insufficient. It rejects combined, empty-success or unauthorized commits.
+Only the coordinator alone may recover understood verified contextual uncommitted changes. If
+context/evidence is insufficient or recovery fails, failed recovery stops dispatch. Preserve
+unrelated staged/unstaged work; same-file ambiguity stops automatic staging. After the task
+commit, record its SHA and commit factual tracker/evidence changes as a separate evidence-only checkpoint before later task writes or handoff.
 
 Do not push, deploy, send external messages, run paid services, or perform
 irreversible operations unless the owner requested that operation and repository
@@ -401,8 +411,7 @@ the contract manually rather than claiming automated validation.
 
 ## Finish
 
-Return completed and pending tasks, changed files, per-task commits (or the owner's
-recorded decision to skip or defer them), checks and results, integration
+Return completed and pending tasks, changed files, per-task commits, checks and results, integration
 status, unresolved owner gates, unavailable capabilities, and the next
 dependency-ready action. State separately whether implementation is complete and
 whether feature acceptance is verified. Agent completion and checked boxes alone

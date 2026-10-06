@@ -22,10 +22,10 @@ PATHS = {
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
 }
-# Deliberately updated for the owner's mandatory auto-initialization correction:
-# project-local persistence replaces optional/handoff-only coordination paths.
-# Model selection, batching, task commits and guideline approval remain protected.
-EXECUTION_SHA256 = "e14b7f7eeb12ca05a32d08e1011193f333f5e0b10552a265d57e06581b8a3bc9"
+# Deliberately updated for the reviewed mandatory per-task commit protocol:
+# coordinator recovery/fresh-implementer stops replace waiver/no-Git paths while preserving
+# model selection, batching, evidence, and guideline approval boundaries.
+EXECUTION_SHA256 = "55c3db49b560a0c08faf5e37b53d69febfc7afffdac6cdfc7b4ee8cdb6c4d95c"
 
 
 def section(text, heading):

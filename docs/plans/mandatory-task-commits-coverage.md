@@ -6,7 +6,7 @@ the consumer is already wired; later task evidence changes rows only after verif
 
 | Consumer | Boundary / role | Status | Task evidence |
 | --- | --- | --- | --- |
-| coordinate-implementation | Coordinator/implementer checkpoints, recovery and final review | planned | T002 |
+| coordinate-implementation | Coordinator/implementer checkpoints, recovery and final review | integrated | T002 static checks |
 | planner | Produces retained source/task artifacts and hands execution to coordinator | planned | T003 |
 | planning-brainstorming | Read-only preselection; no empty commit | planned | T003 |
 | tiny-spec | Retained source deliverable, separate from task-list deliverable | planned | T003 |

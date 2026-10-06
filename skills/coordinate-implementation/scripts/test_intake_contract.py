@@ -70,6 +70,15 @@ class IntakeContractTests(unittest.TestCase):
         self.assertIn("not merely a clean working-tree diff", TEXT)
         self.assertNotIn("per-batch commit", TEXT)
 
+    def test_mandatory_checkpoint_recovery_and_fresh_implementer_guard(self):
+        for phrase in (
+            "Before the first retained task write", "supplied baseline and repository state",
+            "no edits, cleanup, or commits", "never adopts or commits unknown work",
+            "no skip/defer question", "No-Git fallback", "coordinator alone may recover",
+            "failed recovery stops dispatch", "evidence-only checkpoint",
+        ):
+            self.assertIn(phrase, TEXT)
+
     def test_origin_neutral_downstream_references(self):
         self.assertIn("applicable source/supporting artifacts", TEXT)
         self.assertNotIn("Review accumulated changes against the spec, plan, tasks", TEXT)
