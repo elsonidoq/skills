@@ -65,6 +65,7 @@ if [ "$fail" -eq 0 ]; then
       "$scripts_dir/../skills/task-generation/scripts/test_check_task_order.py" \
       "$scripts_dir/../skills/coordinate-implementation/scripts/test_batching_contract.py" \
       "$scripts_dir/../skills/coordinate-implementation/scripts/test_intake_contract.py" \
+      "$scripts_dir/../skills/coordinate-implementation/scripts/test_state_contract.py" \
       "$scripts_dir/test-task-commit-contract.py"; do
       python3 "$focused" || fail=$((fail + 1))
     done

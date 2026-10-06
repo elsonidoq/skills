@@ -563,9 +563,11 @@ implementation review or required acceptance checks.
 ## Maintaining this contract
 
 With Python 3 available, run `python3 scripts/test_intake_contract.py` and
-`python3 scripts/test_batching_contract.py` from this skill directory. These static
-checks cover authorization/strategy and preserved batching instructions, not runtime
-model obedience. If Python is unavailable, report checks `UNAVAILABLE` and inspect
+`python3 scripts/test_batching_contract.py` and `python3 scripts/test_state_contract.py`
+from this skill directory, with `PYTHONDONTWRITEBYTECODE=1`. These checks cover
+intake/batching and snapshot/recovery wiring, targeted mutations and seven bounded Git-backed
+walkthroughs. Child status/compaction are symbolic, not live runtime events; these demonstrate
+instruction consistency and recovery examples, not actual compaction robustness or model obedience. If Python is unavailable, report checks `UNAVAILABLE` and inspect
 the contract manually rather than claiming automated validation.
 
 ## Finish
