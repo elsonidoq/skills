@@ -1,6 +1,6 @@
 # Mandatory task commits — TinySpec planning review
 
-Producer: planner; depth: TinySpec. Review is planner-owned; no independent planning reviewer is required for this path. Combined implementation authorization is **pending**.
+Producer: planner; depth: TinySpec. Review is planner-owned; no independent planning reviewer is required for this path. Combined implementation authorization is **approved**, as recorded below.
 
 ## Current-content evidence
 
@@ -42,4 +42,4 @@ These checks validate current baseline instructions and planning dependency stru
 
 ## Approval gate
 
-Pending owner approval of exactly the source/tasks above and implementation scope T001–T007. Approval starts `coordinate-implementation` preflight in the same session unless the owner explicitly chooses planning-only. The coordinator must obtain implementation/reviewer mappings and preserve actual workspace changes; approval does not waive these gates, authorize external operations or change learned guidelines.
+Owner answered the combined `ask_user` gate: **“Approve implementation”**. This approves exactly the source/task SHA-256 identities above and implementation scope T001–T007. Coordinator preflight starts in this session. The coordinator must obtain implementation/reviewer mappings and preserve actual workspace changes; approval does not waive these gates, authorize external operations or change learned guidelines. Planning task checkpoint: `f86a70d`; approval itself is recorded afterward to avoid self-reference.
