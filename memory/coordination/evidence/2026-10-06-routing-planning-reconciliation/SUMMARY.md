@@ -28,4 +28,19 @@ Full-range output inspection confirms exactly 370 warnings, all on `specs/001-mo
 
 ## Limits and reflection
 
-No approved local guidelines exist. Actual model/binding/effort for this writer is unknown; no routing dispatch performed. No reusable guideline update proposed. Provider callability/effort and final owner routing authority remain unresolved hard gates. Public BenchLM Sol page refresh returned HTTP 403; no numerical claim was independently reverified from that fetch. No paid/provider probe, implementation, rollback, settings change, push or new agent launch.
+No approved local guidelines exist. At the original planning checkpoint, actual writer binding/effort was unverified from provider telemetry; no implementation routing dispatch occurred. No reusable guideline update proposed. Public BenchLM Sol page refresh returned HTTP 403; no numerical claim was independently reverified from that fetch. No paid/provider probe, implementation, rollback, settings change, push or new agent launch occurred *during that original planning writer run*. Subsequent read-only probes and their limits are separately recorded below.
+
+## Post-review capability probes (bounded owner authorization)
+
+After independent planning review identified missing basic usable binding/effort evidence, the owner explicitly authorized **four minimal read-only live provider checks**, not implementation or benchmark execution. Workflow `2c96b673-de73-4062-b744-c3069f0021ac` launched four fresh `reviewer` children, each reading only `AGENTS.md` and returning its first heading. Runtime status and outputs were inspected, not just child prose:
+
+| Pair and run ID | Observed check | Acceptance reporting |
+| --- | --- | --- |
+| Terra 5.6 / medium — `8a544bd5-c90e-454f-b9c8-bc0795879374` | Resolved `openai-codex/gpt-5.6-terra:medium`; one successful `read`; process exit 0. | **Rejected** inferred attestation: no structured acceptance report. The provider/tool invocation itself completed; do not misreport acceptance as PASS. |
+| Terra 5.6 / high — `2ea6a4de-68ff-41a7-9245-3d9e67a46256` | Resolved `openai-codex/gpt-5.6-terra:high`; one successful `read`; process exit 0. | **Rejected** inferred attestation for the same missing structured report; not a call failure. No blind retry. |
+| Sol 6.1 / medium — `1617946c-6041-4ae6-8b3a-6bac5df3c89a` | Resolved `openai-codex/gpt-6.1-sol:medium`; one successful `read`; process exit 0. | Attested. |
+| Astra 6 / high — `30bc9fe2-1343-4fd1-879f-3c403e46c43e` | Resolved `openai-codex/gpt-6-astra:high`; one successful `read`; process exit 0. | Attested. |
+
+Earlier planning writer `3343ca6c-458a-445f-8e9c-63c6e832ddbc` completed with resolved `openai-codex/gpt-6.1-sol:high` and used read/bash/edit/write tools to produce focused commits. These observations support **basic callable binding and accepted requested effort label**, not independent provider-internal reasoning telemetry, cost, task success, current context capacity, or a live mutation demonstration for Terra/Astra/Sol-medium. The installed worker declares edit/write tools; check exact task/role needs and current usability again before dispatch. Luna remains out of observed model scope. No project guideline or model ranking is inferred from the probe outcomes.
+
+Post-review artifact correction `43045b7` updates only feature `plan.md` and `tasks.md` with these five distinct-pair observations and removes the blanket non-dispatchable claim. Checks: task-order PASS, scoped diff whitespace PASS, all 12 proposal rows and five evidence tags present; unrelated untracked paths remain untouched. The four read-only calls and this planning correction do not authorize T001–T012 implementation. Independent targeted planning recheck, owner acknowledgment of bounded advisory uncertainties (notably Terra's weak terminal signals and unknown cost), and the one combined current-content task/model approval remain pending.
