@@ -32,7 +32,7 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 | T004 | completed | 7f7ed1ae09b1f7d2751ab1b68809806414b0622a / 5e60119779596f03e0d31e478957cce650a1dbb4; evidence checkpoint pending | standalone skills/prompts; links/lint/diff PASS |
 | T005 | completed | f33b2395c72a0d4e835123f0cfcdbf388f5764f0 / 0b26a28e31cb618656aaafc01b61ef169ebf0f71; evidence checkpoint pending | static mutations/Git fixtures PASS |
 | T006 | completed | a67497b0f879442f64ee9a2d781851da226d8b81 / e7db4ec2dea26e4c25567352850cb29f2087f8ea; evidence checkpoint pending | governing docs/link checks PASS |
-| T007 | completed | 8b2faaafcd353538ca2dff19c4d628ba9058a81e / pending task SHA; evidence checkpoint pending | integrated checks PASS; review packet pending export |
+| T007 | completed | 8b2faaafcd353538ca2dff19c4d628ba9058a81e / f701e697a485b13b0223cd900bf62b9afb3c43d2; evidence checkpoint pending | integrated checks PASS; review packet pending export |
 
 Writer owns task commits and evidence-only metadata checkpoints. After each task, provide exact baseline/task commit/evidence checkpoint and check outcomes via supervisor, then wait for coordinator validation before next-task writes. Coordinator independently inspects actual Git/diff/required checks; unknown or failing state is not commit authority. If a missing commit is recoverable, coordinator alone commits understood verified changes; otherwise stop. Fresh implementers must not commit inherited unknown changes.
 

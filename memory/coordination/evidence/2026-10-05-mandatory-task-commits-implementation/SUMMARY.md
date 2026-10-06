@@ -21,3 +21,4 @@
 - T005 follow-up `b1b6da4`: routine diagnostic oracle and actual mutation tests added; hook operational guards and residual-task fixture now covered; validation pending.
 - T005 second follow-up `d2262dd`: consumer-link, independent waiver/recovery, and heading-preserving hook-body mutations now diagnostic; validation pending.
 - T006 task `e7db4ec`: governing/user documentation and constitution 2.1.0 aligned; checker/lint/diff PASS; validation pending.
+- T007 task `f701e69`: integrated required checks PASS, coverage reconciled, full-range packet pending evidence checkpoint/export; fresh final review remains pending.
