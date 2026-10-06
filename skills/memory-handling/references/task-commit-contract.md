@@ -57,10 +57,19 @@ If understood, verified task changes remain uncommitted, only the coordinator ma
 with a focused commit. Insufficient context/ownership/evidence, or a failed recovery commit,
 stops dispatch; retain recoverable state and do not bounce a fresh implementer.
 
-A coherent sequential batch still checkpoints every internal task before the next one. A batch
-whose implementer commits may continue after its direct Git/check checkpoint; the coordinator
-audits returned checkpoints before releasing external dependents. This is instruction-managed
-execution, not an interception guarantee.
+A coherent sequential batch still checkpoints every internal task before the next one. The
+subagent owns verification, task commits and evidence-only checkpoints inside its run. Once
+these succeed and task-relative state is clean, it continues to the next authorized internal
+task without routine coordinator approval. Do not insert a per-task supervisor message or
+acknowledgment wait into a healthy batch. Keep the task baseline, SHA and check results in
+local durable evidence; return the full ordered checkpoint list when the batch returns.
+
+The coordinator audits every returned task checkpoint at the batch boundary before accepting
+the batch or releasing external dependents, not between healthy internal tasks. Failed checks,
+commits or evidence persistence, unexpected changes, and genuine owner/dependency gates still
+stop the subagent and return the blocker to the coordinator. Coordinator commit recovery is
+exceptional, never the normal internal-task path. This is instruction-managed execution, not
+an interception guarantee.
 
 ## Evidence, interruption, and limits
 

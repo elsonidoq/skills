@@ -265,9 +265,10 @@ Record both attempts, corrections and escalation outcomes at the evidence checkp
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 required model class, selected model, allowed files, dependencies, acceptance
 criteria, baseline failures, exclusions, authorization limits, the per-task commit
-convention and whether the delegate or the coordinator performs it, the selected
+convention and delegate ownership of internal task/evidence commits, the selected
 agent's verified file-mutation tool when file changes are needed, and required
-return evidence. Include the verified origin, source/supporting artifacts, current
+return evidence. Briefs must permit healthy internal-task continuation without routine
+coordinator approval; do not request per-task supervisor acknowledgment waits. Include the verified origin, source/supporting artifacts, current
 approval/review locations, internal task sequence, shared context, producer checks,
 and integration checkpoints. Ask for changed files, checks, incomplete work, and
 non-obvious handoff context.
@@ -309,10 +310,17 @@ policy conflict, failed hook/check/commit, uncertain ownership or missing verifi
 with the exact reason. Never auto-configure identity, disable hooks/signing, initialize a
 repository, push, rewrite history, or broadly stage work to make a checkpoint pass.
 
-The implementer explicitly stages only assigned, understood paths and reports baseline/result
-SHA, changed files, checks and residual state. The coordinator independently checks the actual
-diff, focused SHA, check evidence and residual task-owned changes; a report, clean tree or
-commit existence is insufficient. It rejects combined, empty-success or unauthorized commits.
+The implementer explicitly stages only assigned, understood paths and records baseline/result
+SHA, changed files, checks and residual state. In a delegated batch, the subagent verifies and
+commits each internal task and its evidence, then continues when task-relative state is clean;
+no routine coordinator pause or per-task completion message is required. Return the complete
+ordered checkpoint list at batch completion. At the batch boundary, the coordinator independently
+checks every task's actual diff, focused SHA, check evidence and residual task-owned changes
+before accepting the batch or releasing external dependents; a report, clean tree or commit
+existence is insufficient. It rejects combined, empty-success or unauthorized commits.
+Failed checks/commits/evidence persistence, unexpected changes and genuine owner/dependency
+gates still stop internal continuation and return a blocker. Local execution keeps the same
+per-task commit and verification boundary without adding a supervisor round trip.
 Only the coordinator alone may recover understood verified contextual uncommitted changes. If
 context/evidence is insufficient or recovery fails, failed recovery stops dispatch. Preserve
 unrelated staged/unstaged work; same-file ambiguity stops automatic staging. After the task

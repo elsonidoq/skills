@@ -13,12 +13,12 @@ SKILLS = (
 ).split()
 
 
-def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text=None):
+def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text=None, contract_text=None):
     errors = []
     contract = root / "skills/memory-handling/references/task-commit-contract.md"
     if not contract.is_file():
         return ["task-commit contract: canonical owner missing"]
-    contract_text = contract.read_text()
+    contract_text = contract.read_text() if contract_text is None else contract_text
     for phrase in ("no skip/defer question", "fresh implementer", "path-limited task commit", "evidence-only checkpoint"):
         if phrase not in contract_text:
             errors.append(f"task-commit contract: missing {phrase!r}")
@@ -31,6 +31,12 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text
             errors.append(f"coordinator checkpoint guard missing: {phrase!r}")
     if "ask whether to skip/defer" in coordinator or "proceed without per-task commits" in coordinator:
         errors.append("coordinator checkpoint waiver reintroduced")
+    for location, text in (("contract", contract_text), ("coordinator", coordinator)):
+        normalized = " ".join(text.split())
+        if "without routine coordinator approval" not in normalized:
+            errors.append(f"{location} batch autonomy guard missing")
+        if "wait for coordinator validation before next-task writes" in normalized:
+            errors.append("routine per-task coordinator barrier reintroduced")
     for skill in SKILLS:
         if "task-commit-contract.md" not in (root / "skills" / skill / "SKILL.md").read_text():
             errors.append(f"consumer link missing: {skill}")

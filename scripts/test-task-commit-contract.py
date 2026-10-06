@@ -78,6 +78,24 @@ class StaticContractMutationTests(unittest.TestCase):
             errors = checker.check(coordinator_text=mutation)
             self.assertTrue(any(diagnostic in error for error in errors), errors)
 
+    def test_internal_batch_commits_do_not_require_routine_coordinator_approval(self):
+        contract = " ".join(CONTRACT.read_text().split())
+        coordinator = " ".join(COORDINATOR.read_text().split())
+        self.assertIn("without routine coordinator approval", contract)
+        self.assertIn("without routine coordinator approval", coordinator)
+        self.assertEqual(checker.check(), [])
+        barrier = "wait for coordinator validation before next-task writes"
+        for location in ("contract", "coordinator"):
+            overrides = {f"{location}_text": (contract if location == "contract" else coordinator) + "\n" + barrier}
+            errors = checker.check(**overrides)
+            self.assertIn("routine per-task coordinator barrier reintroduced", errors)
+        for location in ("contract", "coordinator"):
+            text = contract if location == "contract" else coordinator
+            mutated = text.replace("without routine coordinator approval", "with routine coordinator approval")
+            self.assertNotEqual(mutated, text)
+            errors = checker.check(**{f"{location}_text": mutated})
+            self.assertIn(f"{location} batch autonomy guard missing", errors)
+
     def test_architectural_planning_commit_opt_in_mutation_is_diagnostic(self):
         text = (ROOT / "skills/delegating-architectural-planning/SKILL.md").read_text()
         self.assertEqual(checker.check(), [])

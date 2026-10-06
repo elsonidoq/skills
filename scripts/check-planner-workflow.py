@@ -22,10 +22,10 @@ PATHS = {
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
 }
-# Deliberately updated for the reviewed mandatory per-task commit protocol:
-# coordinator recovery/fresh-implementer stops replace waiver/no-Git paths while preserving
-# model selection, batching, evidence, and guideline approval boundaries.
-EXECUTION_SHA256 = "55c3db49b560a0c08faf5e37b53d69febfc7afffdac6cdfc7b4ee8cdb6c4d95c"
+# Deliberately updated for owner-requested healthy internal-batch autonomy:
+# subagents verify/commit without routine supervisor waits; coordinator audits on return.
+# Per-task commits, failure stops, model selection and owner gates remain protected.
+EXECUTION_SHA256 = "ef21eb994d430aa213c6ea75833ae03a8db68ff84e284f78a7f7b50d3bd304b4"
 
 
 def section(text, heading):
