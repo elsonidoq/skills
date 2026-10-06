@@ -8,7 +8,7 @@ Preflight baseline: HEAD `4aaab3325b93705ad3665741e926de189a9f8742`, index and w
 
 | Batch | Tasks | Status | Dependency | Selected profile | Notes |
 | --- | --- | --- | --- | --- | --- |
-| B1 | T001–T002 | in_progress | none | gpt-6.1-sol / medium | T001 verified after authorized correction; T002 ready |
+| B1 | T001–T002 | in_progress | none | gpt-6.1-sol / medium | T001/T002 locally verified; parent return-boundary audit pending |
 | B2 | T003–T004 | pending | B1 | gpt-6.1-sol / medium | planner handoffs/routing |
 | B3 | T005–T006 | pending | B2 | gpt-6.1-sol / medium | union/acceptance |
 | B4 | T007–T009 | pending | B3 | gpt-6.1-sol / medium | diagnosis/feedback/docs |
@@ -19,3 +19,5 @@ Sequential only; one in-progress batch. Batch briefs carry full task verificatio
 B1 attempt evidence: [T001](T001.md). Baseline `65333dc`; unverified T001 commit `29ea330e637f497618e18ffa403fd8e645379e5e` followed a case-sensitive assertion failure because a semicolon command chain did not block commit. V1 blocked; V2 manual inspection PASS. Supervisor authorized narrow same-session test correction with preserved history and separate checkpoints. Selected invocation `openai-codex/gpt-6.1-sol:medium`, actual unknown. Attribution `verification_contract_gap`, not model capability; no guideline update.
 
 T001 correction `91cbe7ea4ecad02fb01aae64ee208a11642569e1` after failed-attempt evidence `1a81f1ae5c5020ca020f904b78ddfe8592b1dec1`: full batching script 5 tests OK, diff check PASS, V1/V2 PASS. Failed attempt retained. T002 may proceed after this separate evidence checkpoint; parent acceptance audit remains pending.
+
+T002 [item evidence](T002.md), baseline `1dce4ed35c6a835a14fc5f14bc89ed6f702eaae2`, implementation `31f48aef4b322706f60f9d16514abdd0f651eae0`: V1 producer red 4 tests/16 subtest failures then green 4 OK; V2 order 7 OK and manual adapter/checkpoint/legacy inspection PASS. Order scripts unchanged; diff check PASS. B1 worker verification complete, parent audit pending before B2 release; tracker stays B1 in_progress until parent acceptance. Selected invocation unchanged; actual unknown. No live/performance claim, guideline update or additional task work. Ordered commits: unverified T001 `29ea330`, failed-attempt evidence `1a81f1a`, verified T001 correction `91cbe7e`, verified-T001 evidence `1dce4ed`, T002 `31f48ae`, followed by this evidence-only checkpoint (discover SHA in Git; no self-referential record).
