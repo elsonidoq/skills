@@ -20,3 +20,4 @@
 - T005 task `0b26a28`: static/mutation and temporary-Git fixtures added; fail-before fixture correction recorded; all focused checks PASS; validation pending.
 - T005 follow-up `b1b6da4`: routine diagnostic oracle and actual mutation tests added; hook operational guards and residual-task fixture now covered; validation pending.
 - T005 second follow-up `d2262dd`: consumer-link, independent waiver/recovery, and heading-preserving hook-body mutations now diagnostic; validation pending.
+- T006 task `e7db4ec`: governing/user documentation and constitution 2.1.0 aligned; checker/lint/diff PASS; validation pending.
