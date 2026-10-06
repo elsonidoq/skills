@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import re
 import unittest
 from unittest import mock
 
@@ -137,7 +138,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "Do not end the turn merely to report approval", "End the turn after approval", "continuation:"),
             ("planner", "automatically invoke `coordinate-implementation`", "wait for a separate execution request", "final-continuation:"),
             ("approval", "inside tasks", "separate new source", "legacy:"),
-            ("tasks", "30%", "100%", "task-contract:"),
+            ("tasks", "stable task-local references", "unstable references", "task-contract:"),
             ("brainstorm", "no more than three items", "unbounded agenda", "brainstorm:"),
             ("brainstorm", "Only in selected-production", "In any mode", "brainstorm:"),
             ("coordinator", "Commit each task's verified changes as one focused commit", "Commit each batch", "execution-freeze:"),
@@ -205,8 +206,28 @@ class InstructionTests(unittest.TestCase):
         for name in ("tiny-tasks.md", "standard-tasks.md"):
             source = (HERE / "fixtures/planner" / name).read_text()
             self.assertEqual(validator.check(source), [], name)
-            for field in ("Outcome", "Files/interfaces", "Acceptance", "Capabilities", "Model class"):
+            for field in ("Outcome", "Files/interfaces", "Acceptance", "Capabilities"):
                 self.assertIn(f"**{field}**", source)
+
+    def test_batch_handoff_mutations_and_adapter_items(self):
+        for key, clause, diagnostic in (
+            ("planner", "stable task-local REQUIRED", "batch-handoff:"),
+            ("approval", "inadequate REQUIRED contracts", "batch-legacy:"),
+            ("tiny", "stable task-local REQUIRED", "batch-source:"),
+            ("helper", "not model-class labeling", "batch-helper:"),
+            ("brainstorm", "not implementation-task assignments", "batch-brainstorm:"),
+        ):
+            with self.subTest(carrier=key):
+                self.assertIn(clause, self.texts[key])
+                changed = dict(self.texts)
+                changed[key] = changed[key].replace(clause, "removed", 1)
+                self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
+        for name in ("tiny-tasks.md", "standard-tasks.md"):
+            source = (HERE / "fixtures/planner" / name).read_text()
+            self.assertNotIn("Model class", source)
+            for ident in re.findall(r"^- \[ \] (T\d+)", source, re.M):
+                self.assertIn(f"REQUIRED {ident}/V1", source)
+                self.assertIn("Evidence:", source)
 
     def test_custom_lint_is_not_coupled_to_suite(self):
         with tempfile.TemporaryDirectory() as directory:

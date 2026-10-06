@@ -141,9 +141,16 @@ def check_contracts(texts):
     require("legacy", a, "inside tasks", "approved spec awaiting plan", "earliest affected Standard",
             "Other documented producer", "Ambiguous/conflicting origin", "retired skills",
             "Missing runtime capabilities")
+    require("batch-handoff", production, "stable task-local REQUIRED", "qualified seed rubric", "canonical research", "not implementation-task assignments")
+    require("batch-tiny", tiny, "verification item completeness")
+    require("batch-standard", review, "verification item completeness")
+    require("batch-legacy", a, "inadequate REQUIRED contracts", "producing review/approval gate", "renewed affected approval")
+    require("batch-helper", texts["helper"], "not model-class labeling", "applicable guidelines")
+    require("batch-source", texts["tiny"], "stable task-local REQUIRED")
+    require("batch-brainstorm", texts["brainstorm"], "not implementation-task assignments")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
-            "authorization to\n**prepare** tasks", "30%", "Number in execution order from T001",
+            "authorization to\n**prepare** tasks", "stable task-local references", "Number in execution order from T001",
             "explicit `Depends`", "earlier task", "implicit dependencies", "manually inspect",
             "coherent sequential work", "do not reorder dependencies or pad", "lockstep documentation")
     require("adapter", texts["helper"], "Planner Standard adapter", "`planner`", "same-session pass",
@@ -311,7 +318,7 @@ def check_contracts(texts):
             "both TinySpec and Standard stage briefs", "source observables/acceptance",
             "task dependencies, checkpoints, verification and coordinator handoff",
             "Memory cannot override source requirements or owner authority",
-            "absence requires no migration and changes no class/share/approval rule")
+            "absence requires no migration and changes no approval rule")
     require("coordination-tiny", section(texts["tiny"], "## Inputs and preflight"),
             link, "including direct/standalone entry", "not index/history by default",
             "ensure the mandatory project-local store", "initialize missing files, notify the user",
@@ -325,7 +332,7 @@ def check_contracts(texts):
             "initialization files before proceeding", "without a setup approval gate",
             "checkpoints and REQUIRED verification/acceptance", "source/owner authority",
             "required gotcha-memory stops remain distinct", "No default index/history intake",
-            "index-first relevant-only", "does not alter classes, share or approval rules")
+            "index-first relevant-only", "does not alter approval rules")
     require("coordination-memory", section(texts["memory"], "## Required project coordination memory"),
             "[project coordination contract](references/project-coordination.md)",
             "Required gotcha-memory rules above remain", "never go into this gotcha index",
