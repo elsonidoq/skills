@@ -33,7 +33,7 @@ Excluded files `.env` and `docs/plans/mandatory-task-commits.md` were not read a
 
 | Task | Owned deliverable | Required checks / acceptance | Status |
 | --- | --- | --- | --- |
-| S1 | Coordinator snapshot/recovery instructions; minimum shared references; initialize/finish alignment; README/requirements/index; local AGENTS.md/STATE.md adoption; directly affected fixture expectation | Smallest failing snapshot check; existing coordinator/intake/batching, initialization, planner and checkpoint checks; lint; scoped diff inspection. Brief project-owned current truth, all recovery/lifecycle/persistence safeguards, no routing changes. | in_progress |
+| S1 | Coordinator snapshot/recovery instructions; minimum shared references; initialize/finish alignment; README/requirements/index; local AGENTS.md/STATE.md adoption; directly affected fixture expectation | Smallest failing snapshot check; existing coordinator/intake/batching, initialization, planner and checkpoint checks; lint; scoped diff inspection. Brief project-owned current truth, all recovery/lifecycle/persistence safeguards, no routing changes. | verified: 4f8bc9a |
 | S2 | Focused coordinator snapshot test plus necessary lint/check wiring | Contract tests and targeted mutations for absent recovery, duplicate dispatch, stale trust, historical accumulation. Bounded simulations/manual scenarios: checkpoint compaction, running child, lagging committed work, partial dirty task, missing/conflicting authority/evidence, custom/dirty state, terminal closeout. Relevant existing checks/lint; no runtime-obedience claim. | pending |
 
 All incomplete tasks authorized; S2 depends on S1. Fresh independent final read-only review covers the complete
@@ -63,3 +63,12 @@ Baseline checks PASS with PYTHONDONTWRITEBYTECODE=1: planner checker/test (87); 
 coordinator intake (9), batching (25); initialization (135); suite lint (22 skills, 0 failed plus its tests).
 Baseline is not snapshot acceptance. Live compaction/provider/runtime obedience: NOT RUN, not authorized.
 No learned guideline update proposed.
+
+| Task/attempt | Baseline → result | Verification / evidence | Outcome |
+| --- | --- | --- | --- |
+| Initial snapshot | 3d9cf20 → ca1c853 | 9-line state, approval pointer resolves, scoped diff/ownership checked | PASS; initial bounded state checkpoint established while authoring its new lifecycle (no worker dispatch) |
+| S1 first/final | ca1c853 → 4f8bc9a | Smallest missing-section assertion failed before edit and passed afterward. Existing initialization initially failed on its obsolete conditional-state expectation; amended only that ledger row under approved scope, preserving immutable source bytes. Planner 87, checkpoint 12, intake 9, batching 25, initialization 135 and lint PASS; post-final wording intake/batching/checkers rerun PASS; actual ten-path diff inspected. | PASS; contract consistency only, runtime obedience unknown; attribution verification_contract_gap for outdated fixture, not model failure |
+
+S1 evidence checkpoint updates this summary/index and STATE.md separately from its contract commit.
+S2 next: focused recovery/mutation/scenario checks, with no runtime/provider exercise.
+
