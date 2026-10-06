@@ -9,4 +9,14 @@ Producer: planner; depth: Standard. This record documents the owner answer at th
 - Authorization: start Standard planning from exactly the approved specification above, including targeted benchmark research and capability/write-authority preflight before consequential routing decisions. This approval does not authorize implementation, deployment, live rollback, benchmark fabrication, a new project guideline without its own approval, or skipping subsequent task/review/final approval gates.
 - Scope status at approval: checklist 16/16 specification-quality items, focused structural/link and `git diff --check` checks passed; real benchmark research, plan, tasks, implementation and live model-obedience checks NOT RUN.
 
-If the specification content changes, compare against the recorded digest and renew specification approval before leaving the affected planning stage. This decision record is external to the specification so it does not change the approved specification bytes.
+## Renewal after benchmark-only eligibility change
+
+The owner answered **“Approve corrected specification”** at the planner's renewed current-content `ask_user` gate on 2026-10-06, following a new executive brief. This supersedes the earlier digest for subsequent planning without erasing the original approval history.
+
+- Current specification: `specs/001-model-family-routing/spec.md`, SHA-256 `48dd80c9ada5e2e1ab87c9f2eb042b8e876da2ac6687eb57ba46a6695534d99d`.
+- Current quality checklist: `specs/001-model-family-routing/checklists/requirements.md`, SHA-256 `1bc66c98fe2c68f60eb05fe136f810bf9193b06bcacd2505068a2410c338a855`.
+- Correction checkpoint: `32caa85`; focused checks PASS, specification-quality checklist 16/16.
+- Deliberate change: initial routing is limited to configurations with an inspected task-relevant benchmark for the exact selected model version and reported effort. Unsupported/missing combinations remain ineligible; a research deferral cannot waive this rule. Other settled safeguards and approval stages remain in force.
+- Next authorized phase: resume Standard planning with the recorded benchmark evidence and this eligibility restriction. This renewal does not approve implementation, model deployment, automatic project-guideline mutation, or an unverified score.
+
+If the specification changes again, compare against the renewed digest and obtain another approval before leaving the affected planning stage. This external decision record does not change approved specification bytes.
