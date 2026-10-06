@@ -100,6 +100,11 @@ not implementation-model classes or shares. Normally 2–5 consecutive related t
 exact binding plus independently justified effort per invocation when feasible; this is not a quota.
 The [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md) and relevant
 approved project guidelines inform owner selection; empty guidelines invent no success history.
+Before implementation, coordinator presents the complete batch table with one/two-sentence batch
+descriptions, exact proposed model/effort and separate family/effort rationales, then obtains
+explicit approval of batch boundaries and profiles. Implementation approval alone does not approve
+routing. Reuse verified unchanged routing approval on resume; approve changed rows before execution.
+No universal Sol/medium default or forced model diversity applies.
 Verify permitted callable binding, supported effort, tools and owner gates at assignment/dispatch,
 and ensure settings do not silently override actual dispatch arguments. Actual profile stays
 unknown when unobservable, never inferred from selection.
@@ -123,6 +128,11 @@ This is a **brief snapshot**, not a coordinator-owned tracker: short current-wor
 authorization/checkpoint/evidence pointers, active workers, blocker and exact next action.
 Replace current truth; no transcripts, logs, completed-task ledger or accumulated history.
 Preserve custom/unrelated content and coordinate write boundaries with other workflows.
+Coordinator writes only at approved start/imminent dispatch, child-ID capture, audited batch or
+local task checkpoint, genuine blockers, final review/closeout, or materially changed recovery truth.
+Capture child IDs immediately and commit safely later; coalesce same-boundary changes and skip
+unchanged status. Polling and healthy internal worker progress do not trigger coordinator writes.
+Worker per-task commits/evidence remain unchanged; reflection occurs at closeout or a genuine pause.
 `finish-session` reconciles the same snapshot, retaining only a concise terminal disposition
 and next action when complete. Task artifacts, approvals, Git and coordination evidence stay
 authoritative; state confers no authorization or acceptance.
