@@ -1,0 +1,9 @@
+# Batch routing — overall implementation approval
+
+Producer: planner; depth: Standard. Owner answered **Approve implementation** through `ask_user` on 2026-10-06 after the five-bullet executive brief and fresh independent overall review READY in [overall-review.md](overall-review.md).
+
+Current-content approval: [spec.md](spec.md) SHA-256 `1b4d5b90ac1e1429739e5260d0955716d125a1b4ae8430141e89b610eacd9895`, [plan.md](plan.md) SHA-256 `fa76289f4bbbb25bc51975b2d55491030c8b158cb449de2c7379e2118bcbe6e0`, [tasks.md](tasks.md) SHA-256 `71c4e3c785fa3be822d73c3f83db39c31fd4c9e78ecf5e8faea5ccdb00f8728f`. Prior specification approval remains [spec-approval.md](spec-approval.md). Source provenance: initiating owner request in this conversation; Standard selected through `ask_user` and new batch-only scope explicitly selected over historical per-task proposal.
+
+Authorized scope: coordinator preflight followed by implementation/verification of T001–T010 with focused per-task commits, separate evidence-only checkpoints and one fresh independent final reviewer, subject to runtime, ownership, permission and required-check gates. Owner approved transitional assignment `openai-codex/gpt-6.1-sol:medium` for this feature's implementation batches and fresh final reviewer at the same concrete profile, conditional on usable verified binding/effort; do not silently substitute. This transitional choice is not a permanent global routing rule or the future feature's acceptance-test result. If the exact profile is unavailable, stop for an owner decision instead of reverting to old class assignments. No user-defined partial boundary was approved.
+
+No live model comparison, deployment, push, paid service, automatic guideline mutation or change to historical specifications is authorized. Current review fixes were incorporated before this approval. Any changed approved source/acceptance/plan/task scope requires affected re-review and renewed approval.
