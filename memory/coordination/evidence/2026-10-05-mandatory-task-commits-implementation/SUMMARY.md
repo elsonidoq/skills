@@ -9,3 +9,5 @@
 - T002 task commit `d2d1b2f` independently inspected; parent intake (7)/batching (3)/planner static/diff checks PASS. Child then returned an incomplete final report rather than continue; acceptance rejected full-batch criterion. Exact status/output/session events inspected, no timeout/tool-infrastructure error reported. Model's reason for premature finalization is unknown.
 - Coordinator recovered missing T002 factual evidence before targeted same-session continuation; no task replay/rollback or inferred model escalation. T003–T007 and final review pending.
 - No guideline update proposed; `GUIDELINES.md` remains unchanged.
+
+- T003 task `65564a4`: 12 workflow consumers linked with bounded role text; focused link assertion, skill lint and diff check PASS; coordinator validation pending.

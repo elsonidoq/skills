@@ -28,7 +28,7 @@ Coordination store `memory/coordination/`; no approved guidelines. Use run ID `2
 | --- | --- | --- | --- |
 | T001 | completed | 4781969baa8be02f939fbaaf31f8fc3d70cb8ff3 / f49113d5b6dd5f926c2ecea5fb9780562342a0b8; evidence checkpoint 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 | shared contract/inventory; parent checkpoint validated; lint/diff checks PASS |
 | T002 | completed | 5021e0ec8b4ca7c2ac2b1f8553d4b59d7e7da0f4 / d2d1b2f7ac4c744337e2118922cf343b9345128f; coordinator evidence recovery committed separately | coordinator protocol; parent intake 7/batching 3/static workflow/diff checks PASS |
-| T003 | pending | not started | workflow consumers |
+| T003 | completed | b358b64344a0388328e2079a24fe2d1468e7024b / 65564a4e232872afa99762454754d7412b6f258c; evidence checkpoint pending | workflow consumers; link/lint tests PASS |
 | T004 | pending | not started | standalone skills/prompts |
 | T005 | pending | not started | diagnostic mutations/Git fixtures |
 | T006 | pending | not started | governing policy/documentation |
