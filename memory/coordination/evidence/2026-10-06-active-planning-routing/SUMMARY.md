@@ -67,4 +67,15 @@ These are inspected instruction/test-contract causes, not model-capability evide
 | Task checkpoints/retries/final review | Shared task-commit link unchanged; coordinator contract unchanged and causal mutation coverage retained for checkpoints, inspected failure and fresh final review |
 | Six factors/profile evidence | Shared seed's original table unchanged: residual reasoning; agentic/tool depth; verification blind spots (weakest unobservable failure); scope/coupling; failure cost/reversibility; approved guidance or none. All three consumers link this owner and require independent family/effort rationale, exact owner selection, runtime support, unchanged dispatch and unknown observed values. Planning never inherits implementation quotas/REQUIRED rules |
 
+### T002 documentation checkpoint
+
+T001 evidence-only checkpoint: `eae54d671f09f52304b8f1092b710f11b1a43207` (SUMMARY/index).
+T002 baseline: that SHA; result: `0fd2c67499e94827173bf672e3d3d98f52519163`.
+
+| Item | Evidence / bounded document-to-contract comparison | Outcome |
+| --- | --- | --- |
+| T002/V1 | REQUIREMENTS Planning/advisory selection ↔ planner Shared routing selection/Standard plan_create and helper adapter (A1–A3/A5); settings prose ↔ exact selection/observed gates; docs routing owner/link ↔ existing shared seed; constitution Project Constraints ↔ REQUIREMENTS owner terminology | PASS manual: entire same-session Sol/medium direct/helper pass, unavailable stop/no substitution, other six-factor selections, examples not selections/support proof. README inspected for contradictions: none requiring change |
+| T002/V2 | Python local Markdown resolution across four owned docs: 66 links PASS; scoped active contract/docs obsolete-label search: zero; shared reference table/options unchanged | PASS: no replacement router; preserved Claude example ID and configuration decision attribution; intentional negative mutations and historical source-contract snapshot remain attributable, not normative authority |
+| T002/V3 | `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` and `scripts/test-planner-workflow.py`: PASS, 87; `git diff --check`, four-path diff/show/status/index audit; exact constitution substitution comparison | PASS: only owner-reference phrase changed in constitution, no principle/version amendment; no settings/runtime/history writes; no staged/task-owned residual files |
+
 Limits: baseline checks do not accept the proposed implementation; static/simulated checks cannot prove model obedience; no paid/live probes. Untracked .env and docs/plans/mandatory-task-commits.md untouched. No delegated attempt or failed child. Reflection: no guideline update proposed; semantic validation limits are explicit source constraints, not newly learned project policy.
