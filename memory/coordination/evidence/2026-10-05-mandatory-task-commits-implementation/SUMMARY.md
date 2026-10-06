@@ -13,3 +13,5 @@
 - T003 task `65564a4`: 12 workflow consumers linked with bounded role text; focused link assertion, skill lint and diff check PASS; coordinator validation pending.
 - T003 correction `bcfb7b3`: TinySpec/task-generation wording now explicitly checkpoints authorized production before combined approval; T001/T002 parent validation retained.
 - Parent inspected correction `bcfb7b3` and evidence `251ad9c`: source wording fixed and task-relative clean state confirmed, but the claimed INDEX update was absent (row still said T003–T007 pending). Coordinator repaired exact factual index/tracker metadata while child remained blocked; no source reimplementation. T003 validated; next T004. The inaccurate claim is preserved as an inspected evidence discrepancy, not inferred model causation.
+
+- T004 task `5e60119`: remaining nine skills and all active prompts aligned; runtime extension hook gate removed; focused assertion/lint/diff PASS; validation pending.
