@@ -34,7 +34,7 @@ class SeedRubricTests(unittest.TestCase):
         for term in (
             "different harnesses", "Do not average", "benchmark-only eligibility",
             "empty guidelines", "override the seed", "owner/source authority",
-            "unresolved architecture", "weak oracles", "deep tool use",
+            "unresolved architecture", "weak oracles", "Deep tool use",
             "high failure cost", "repeated negative guidance", "supported effort",
             "callable binding", "unknown", "diagnose", "invalidated",
         ):
