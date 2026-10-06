@@ -84,9 +84,12 @@ Scenario/manual read-through disposition (PASS means bounded example consistency
 | Custom/dirty state | test_existing_custom_dirty_and_concurrent_state: preserve bytes until exact bounds/overlap approval, drift stops; scoped state update preserves custom header and unrelated staged index |
 | Completion/closeout | test_completion_closeout_replaces_without_history: pending review stays gated; terminal replacement is brief/idempotent, no accumulated ledger |
 
-Final review dispatch intent: fresh read-only reviewer, selected openai-codex/gpt-6.1-sol:medium,
-complete baseline-to-current committed range; snapshot records returned identity immediately. No worker
-is running. Live compaction/provider exercises remain NOT RUN. No guideline update proposed.
+Final review: fresh read-only reviewer `59dd8e54-6e82-444d-a837-bee832e91378` dispatched on selected
+openai-codex/gpt-6.1-sol:medium over `5eb57af..acba264` (complete change range). Runtime launch accepted;
+observed provider/profile remains unknown until further evidence. Output binding:
+`/tmp/brief-current-state-independent-review.md`. Returned identity recorded immediately in STATE.md;
+coordinator-only evidence checkpoint is safe with this read-only reviewer. No worker is running.
+Live compaction/provider exercises remain NOT RUN. No guideline update proposed.
 Evidence-checkpoint deviation: 8df4127 was committed despite diff-check reporting an extra EOF blank
 line because the shell command did not chain that check to commit. Remove only that blank, validate
 and checkpoint the correction before S2. No task verification or source scope is invalidated.
