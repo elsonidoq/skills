@@ -45,9 +45,9 @@ separate verified task/evidence checkpoints and affected recheck. Retained close
 Owner selected implementation `openai-codex/gpt-6.1-sol:medium` (local) and separately selected fresh reviewer
 `openai-codex/gpt-6.1-sol:medium`. Current session model/medium observed in session header; review observation
 unknown until runtime evidence. pi 0.87.1; callable ask_user/subagent management; native fresh read-only reviewer
-registered; external CLI reviewers unavailable and unused. Reviewer runtime preflight still required; no provider
-probe performed. Git identity present, no signing requirement observed; filesystem/read/edit/write/Python/Git
-usable. No applicable approved guidelines or gotchas. Context inspection supports two bounded local tasks;
+registered; external CLI reviewers unavailable and unused. Reviewer runtime preflight was pending at
+assignment and later accepted the selected launch; no provider probe performed. Git identity present,
+no signing requirement observed; filesystem/read/edit/write/Python/Git usable. No applicable approved guidelines or gotchas. Context inspection supports two bounded local tasks;
 no worker dispatch. Stop rather than substitute if selected review capability fails.
 
 Six factors: moderate residual recovery/commit-order reasoning; bounded multi-file tool depth; weakest oracle
@@ -68,9 +68,9 @@ No learned guideline update proposed.
 | --- | --- | --- | --- |
 | Initial snapshot | 3d9cf20 → ca1c853 | 9-line state, approval pointer resolves, scoped diff/ownership checked | PASS; initial bounded state checkpoint established while authoring its new lifecycle (no worker dispatch) |
 | S1 first/final | ca1c853 → 4f8bc9a | Smallest missing-section assertion failed before edit and passed afterward. Existing initialization initially failed on its obsolete conditional-state expectation; amended only that ledger row under approved scope, preserving immutable source bytes. Planner 87, checkpoint 12, intake 9, batching 25, initialization 135 and lint PASS; post-final wording intake/batching/checkers rerun PASS; actual ten-path diff inspected. | PASS; contract consistency only, runtime obedience unknown; attribution verification_contract_gap for outdated fixture, not model failure |
-
-S1 evidence checkpoint updates this summary/index and STATE.md separately from its contract commit.
 | S2 first/final | ff6bf27 → 94b3f83 | test_state_contract.py: 12 tests PASS, 58 guard deletions + 4 contradictory permissions + removed/reordered recovery; seven Git-backed symbolic walkthroughs. First test pass exposed mutation deleting an earlier unrelated authorization mention; confined mutations to their carrying section, then all PASS. Planner checker/test 87, task-commit checker/test 12, lint 22 skills/0 failures plus all focused consumers PASS; staged diff/ownership inspected. | PASS; instruction/simulated Git evidence only; runtime child status/compaction symbolic; attribution verification_contract_gap for mutation targeting, corrected before commit |
+
+S1/S2 evidence checkpoints update this summary/index and STATE.md separately from their task commits.
 
 Scenario/manual read-through disposition (PASS means bounded example consistency, not live compaction):
 
@@ -84,12 +84,34 @@ Scenario/manual read-through disposition (PASS means bounded example consistency
 | Custom/dirty state | test_existing_custom_dirty_and_concurrent_state: preserve bytes until exact bounds/overlap approval, drift stops; scoped state update preserves custom header and unrelated staged index |
 | Completion/closeout | test_completion_closeout_replaces_without_history: pending review stays gated; terminal replacement is brief/idempotent, no accumulated ledger |
 
-Final review: fresh read-only reviewer `59dd8e54-6e82-444d-a837-bee832e91378` dispatched on selected
-openai-codex/gpt-6.1-sol:medium over `5eb57af..acba264` (complete change range). Runtime launch accepted;
-observed provider/profile remains unknown until further evidence. Output binding:
-`/tmp/brief-current-state-independent-review.md`. Returned identity recorded immediately in STATE.md;
-coordinator-only evidence checkpoint is safe with this read-only reviewer. No worker is running.
-Live compaction/provider exercises remain NOT RUN. No guideline update proposed.
-Evidence-checkpoint deviation: 8df4127 was committed despite diff-check reporting an extra EOF blank
-line because the shell command did not chain that check to commit. Remove only that blank, validate
-and checkpoint the correction before S2. No task verification or source scope is invalidated.
+## Independent review and terminal disposition
+
+Fresh read-only reviewer `59dd8e54-6e82-444d-a837-bee832e91378`, selected
+openai-codex/gpt-6.1-sol:medium, reviewed `5eb57af..acba264` (complete implementation range), actual
+changed files and governing context. Output binding `/tmp/brief-current-state-independent-review.md`;
+persisted session `c3ab4cc6-5e00-4f30-bf03-a20088fc6a83/run-0/session.jsonl` under the parent session.
+Runtime status inspected: complete, process terminal observed; runtime reports gpt-6.1-sol/thinking
+medium. Provider/internal profile observation remains unknown, not inferred from the selected profile.
+Returned identity was recorded immediately in STATE.md; no worker was running.
+
+Findings: **No issues found. Verdict: OK — ready within approved instruction-contract scope.**
+Reviewer confirmed brief project ownership/custom preservation; state-first authority/Git/evidence/child
+recovery; immediate IDs/safe commits/uninterrupted worker checkpoints; shared closeout and acceptance
+gates; no routing/settings/dependency/source-snapshot change. No open questions affecting verdict.
+Tests inspected, not independently executed. Full committed-range patch remained the review basis
+when its worktree-diff tool could not operate after parent operational evidence changed HEAD.
+Operational state/evidence updates after acba264 were outside the frozen semantic review scope;
+parent inspected these bounded updates separately. No source/test change after review was needed.
+
+Evidence-checkpoint deviation: 8df4127 committed an extra EOF blank despite diff-check failure because
+the shell did not chain that check to commit. Corrected/validated in ff6bf27 before S2; no task/source
+verification invalidated. Subsequent checkpoints require passing chained diff checks.
+
+Terminal: S1/S2 verified and independently accepted; snapshot closes out without accumulated history.
+No unresolved in-scope work, issue candidate, deployment-relevant finding, learned-guideline update or
+gotcha-memory write. Nine reflection dimensions considered: observations describe this bounded change,
+not reusable project guidance; no reinforcement/contradiction/delegation/manual surprise warrants a
+candidate. No update proposed; existing guidelines remain unchanged.
+Final closeout PASS: required owner/index existence, 11 introduced links, terminal state 7 lines/<100
+words, clean ownership/scoped diffs; focused 12 tests and full lint/consumer suites rerun PASS. Live compaction/provider exercises remain NOT RUN; instruction/symbolic Git results
+do not establish actual compaction robustness or model obedience. Next owner action: `/reload` in pi.
