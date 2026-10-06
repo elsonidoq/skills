@@ -104,4 +104,4 @@ current content evidence with the task artifact so a later handoff can detect st
 
 ## Mandatory task checkpoint
 
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). The approved task list is a retained bounded deliverable; preserve source approval and dependency semantics while checkpointing it separately.
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). An authorized task-list production is a retained bounded deliverable and checkpoints before combined artifact approval; preserve source approval and dependency semantics while checkpointing it separately.

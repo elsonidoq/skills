@@ -99,4 +99,4 @@ not readiness for implementation or feature acceptance.
 
 ## Mandatory task checkpoint
 
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). The approved source is a retained bounded deliverable separate from task generation; do not infer implementation or guideline authority.
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). An authorized TinySpec source is a retained bounded deliverable separate from task generation and checkpoints before combined artifact approval; do not infer implementation or guideline authority.
