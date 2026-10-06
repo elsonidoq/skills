@@ -1,6 +1,6 @@
 # Active planning routing — preparation
 
-Producer planner; owner-selected TinySpec. Status: source and separate tasks checkpointed; planner review and combined approval pending. Areas/tags: planning, routing, skill contracts, semantic validation.
+Producer planner; owner-selected TinySpec. Status: source, tasks and planner review checkpointed; combined owner approval pending. No operational implementation authorized. Areas/tags: planning, routing, skill contracts, semantic validation.
 
 Owner bounds: active contracts only; Sol/medium for the entire Standard plan_create pass, direct/helper; all other selections use existing routing criteria. Historical records, broad draft 001 retry/assignment changes, runtime/settings changes and live probes excluded. Owner selected current Sol/medium for local preparation; no implementation or reviewer selection inferred. Applicable approved coordination guidance: none; gotcha index empty.
 
@@ -11,6 +11,8 @@ Selected preparation profile: `openai-codex/gpt-6.1-sol`, medium. Observed: sess
 | Source production | b2cf4d2890d0bdecd543737a3fc74c87c82e78af | b1391477ed2d0d4d823847cb03e2e8cb5f1fe697; docs/plans/active-planning-routing-tinyspec.md and plans index | PASS: source completeness/discovery, diff check; unchanged baseline checker PASS and 80 planner tests PASS |
 
 | Task-list production | 94f99c4 | 8c2bed24f1b693cf6e96bb6b97611cdfdf0a1655; docs/plans/active-planning-routing-tasks.md and plans index | PASS: source digest binding, required-item/path inspection, task-order validator and diff check |
+
+| Planner review | 495e6dd | 6f21f2c36614a3adae720ca81da2b83c14058df3; docs/plans/reviews/active-planning-routing-planning-review.md and review index | PASS: A1–A5/task traceability, exclusions, gates, producer order, scoped links/discovery, exact digests and diff check; combined approval pending |
 
 Preparation exception: initial task-order check FAIL because heading-based task format was not supported by the bundled validator. Inspected its TASK/DEPENDS patterns, changed only this new task list to the repository checkbox/Depends format, then reran PASS. No delegated/model failure; no escalation or acceptance waiver.
 
