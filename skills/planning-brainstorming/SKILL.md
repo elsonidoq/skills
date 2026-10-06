@@ -14,12 +14,20 @@ Before using this skill, verify that the runtime can ask the owner questions and
 planner can retain the selected source bounds, decisions, deferrals and handoff. In
 preselection mode use available session history only; in selected-production or legacy
 repair mode use established project artifacts. Verify a usable
-owner-selected `sonnet-class` binding before assigning gate assessment or decision
+owner-selected family/binding/effort before assigning gate assessment or decision
 application. If a required capability is unavailable, report the
 missing capability and stop before downstream production. When the runtime's permitted fallback
 is prose interaction, ask in prose and end the turn; do not continue downstream or infer an
 answer. A manager's explicit mandatory preflight may instead stop before the question is posed.
 Do not substitute an unavailable interactive dialogue with guessed decisions.
+
+Apply the shared [family/effort rubric](../memory-handling/references/project-coordination.md#family-and-effort-routing):
+verify provider-documented permitted usable exact binding/effort and task-specific tools/context,
+with current owner authorization. Family suitability and least-adequate effort after decomposition
+need separate rationale; risk/role does not force high effort or strongest family. Weak oracles
+return for decomposition, not max. Supported no-row pairings need targeted research or an explicit
+bounded owner uncertainty decision, never automatic exclusion or fabricated exact-pair evidence.
+Drift/unavailability stops for renewed affected owner selection; never silently switch models.
 
 The caller supplies the request or bounded source, mode, and next-stage readiness target.
 Read applicable repository instructions, principles, source evidence and applicable memory.
@@ -38,7 +46,7 @@ the planner's mandatory user choice.
 
 ## 1. Gate assessment
 
-Have bounded `sonnet-class` work return a first line that is exactly one of:
+Have bounded owner-selected family/effort work return a first line that is exactly one of:
 
 - `NO_BRAINSTORM_NEEDED` — direction is settled, or remaining ambiguity is mechanical or
   answerable from the source/evidence. State why the target is ready for the next stage.
@@ -72,7 +80,7 @@ is never permission to infer a material decision.
 
 ## 3. Apply decisions
 
-Only in selected-production or legacy-repair mode, use bounded `sonnet-class` work to
+Only in selected-production or legacy-repair mode, use bounded owner-selected family/effort work to
 apply exactly the recorded owner decisions to the supplied bounded source. Update only
 claims affected by those decisions: settled decisions, outcome,
 acceptance criteria, exclusions, and open questions as applicable. Preserve the source's

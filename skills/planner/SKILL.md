@@ -8,7 +8,7 @@ description: Use when a structured requirement needs scope assessment, reviewed 
 Prepare work, never implement it. One entry point owns understanding, proportional
 brainstorming, scope assessment, the owner's TinySpec/Standard choice, review,
 approvals, and the handoff to `coordinate-implementation`. Depth is the owner's
-choice, not an admission threshold or a model-class choice.
+choice, not an admission threshold or a model-family/effort choice.
 
 ## Discovery and capability boundary
 
@@ -42,13 +42,13 @@ index/history. Justified clarification uses index-first relevant-only retrieval;
 retains uncertainty.
 
 Verify callable question capability before owner gates, and permitted usable
-owner-selected class bindings before assigning work. The suite runtime requirements
+owner-selected family/binding/effort before assigning work. The suite runtime requirements
 are in the global configuration repository's `REQUIREMENTS.md`; configuration names
 alone are not availability evidence. `ask_user` unavailable or failing at a route or
 artifact-approval gate reports `question: UNAVAILABLE` and stops. No inferred answer
 or prose approval substitutes for those tool gates. Verify async delegation and its
 observed budgets before delegating, and inspect failures before retry/resume/relaunch.
-Never silently change selected models, weaken classes, or install missing capabilities.
+Never silently change selected models, infer unsupported effort, or install missing capabilities.
 Standard-only SpecKit/reviewer/constitution checks happen after Standard is selected,
 not as prerequisites for considering TinySpec.
 
@@ -203,30 +203,77 @@ Memory cannot override source requirements or owner authority. Preselection stay
 except bounded coordination-store initialization/commit and factual evidence/index/reflection
 persistence for all runs, including blocked preselection;
 no default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
-(low/medium/high with rationale) may inform later class-compatible owner-selected routing;
-absence requires no migration and changes no class/share/approval rule.
+(low/medium/high with rationale) describe residual ambiguity, not provider effort settings;
+absence supplies no guessed routing and does not change approval rules.
+
+## Stage family and effort selection
+
+Before each source, specification, planning, task-production or review stage, apply the
+shared [family/effort rubric](../memory-handling/references/project-coordination.md#family-and-effort-routing).
+Record independent family suitability and least-adequate supported effort after decomposition,
+with residual reasoning/oracle/context and relevant local/comparable evidence, not stage labels.
+Risk strengthens safeguards, not high effort or strongest-family selection; fresh reviewer role
+does not justify high. Weak oracles return for decomposition and stronger observable acceptance,
+not reflexive max. Higher effort requires concrete remaining reasoning or lower-setting
+counterevidence; no unconditional low/medium default or fabricated savings.
+
+Verify provider documentation, permitted usable exact binding/effort, task/role-specific
+mutation or read tools, observed context capacity, question/delegation/reviewer capability
+and current owner authorization. Catalog names alone are not usability. Unsupported runtime
+effort or missing hard capability stops the affected stage; never silently switch models.
+Supported no-row pairings require adequate targeted research or explicit bounded owner
+uncertainty disposition (gap, rationale, allowed scope, remaining validation) before selection;
+absence alone never bars support. Do not fabricate exact-pair measurements or rank different
+harnesses. Unknown snapshot/mode/date/cost remains unknown. Carry compact source citations,
+not automatic whole-CSV intake or full-dataset prompts; keep provenance separate from outcomes.
+
+Depth is separate: TinySpec and Standard retain their approval and artifact gates regardless
+of selected family/effort. Every numbered stage below rechecks this boundary before assignment;
+changed or unusable selections stop for renewed affected owner decision, not a silent substitute.
+A historical class label is provenance, never current selection authority or a guessed mapping.
+
+## Assignment preview and combined final approval
+
+Before the single final implementation-approval question in either route, prepare and show a
+complete task-by-task assignment preview plus independent final implementation reviewer.
+For every task/reviewer list proposed family, exact concrete binding/version, independent
+effort (or verified nonadjustable behavior), provider/runtime/tool/context capability evidence,
+benchmark citations/coverage gaps, task-specific family and residual-effort rationale,
+uncertainty disposition and bounded retry authority. These are proposed, not approved selections.
+The owner may request changes before answering; revise/review the preview and scope together.
+Missing proposals, missing reviewer or unresolved hard capability gates stop readiness.
+Advisory gaps require targeted research or an explicit bounded uncertainty decision recorded
+in the same final approval, never hidden or fabricated benchmark coverage.
+
+One affirmative current-content answer approves task scope and listed task/reviewer selections
+as distinct decisions. Persist both with current artifact/preview revision evidence and bounded
+uncertainty disposition. No routine second assignment-approval question after approval:
+preflight rechecks support/content, not new choices. Changed preview, scope or selected
+binding/effort/reviewer, drift or unavailability renews only affected approvals before dispatch.
+Routing approval never authorizes synthesized guideline changes or bypasses REQUIRED checks.
 
 ### TinySpec path
 
-1. **Source creation — `sonnet-class`:** invoke `tiny-spec` with verified request,
+1. **Source creation — owner-selected family/effort:** invoke `tiny-spec` with verified request,
    decisions, source bounds, observed destination, and preparation authorization.
    Supply the shared research contract, findings/capability evidence and bounded
    canonical-owner/discovery writes before consequential approach decisions; inspect
    returned research traceability and persistence with the source.
    Inspect returned compact source and blockers. No SpecKit prerequisite or standalone
    TinySpec approval is required before task production.
-2. **Tasks — `sonnet-class`:** invoke `task-generation` direct adapter with TinySpec and
+2. **Tasks — owner-selected family/effort:** invoke `task-generation` direct adapter with TinySpec and
    applicable source links. Create separate tasks using its full contract. Derive docs
    from inspected effects/requirement, not an absent plan. Keep context-coherent work
    consecutive without reordering dependencies or padding distant tasks.
 3. **Review — planner-owned:** review source-to-task traceability, in-scope coverage,
    exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
-   class share, explicit and implicit dependencies, and stage feasibility. Record
+   routing evidence/uncertainty, explicit and implicit dependencies, and stage feasibility. Record
    fixes, validation results and current content evidence. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
    Apply the dependency evidence/permission review above before combined approval.
-4. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
-   obtain explicit approval of current TinySpec/source, tasks, and implementation scope,
+4. **Combined approval:** complete the assignment preview and combined final approval
+   boundary above; present a brief bullet-list executive summary BEFORE `ask_user`;
+   obtain explicit approval of current TinySpec/source, tasks, implementation scope and listed task/reviewer selections,
    stating that approval starts the coordinator next unless planning-only was requested.
    Persist that answer against current content, then immediately proceed to handoff and
    coordinator preflight under the continuation rule. Denial returns to review/correction,
@@ -244,7 +291,7 @@ Missing repair capability, principles, or failed verification stops. Do not reop
 valid settled principles. Verify permitted usable owner-selected stage bindings and
 an independent reviewer before assigning their work.
 
-1. **`spec_create` — `sonnet-class`:** follow observed specification instructions and
+1. **`spec_create` — owner-selected family/effort:** follow observed specification instructions and
    SDD reference using request/provenance and shared gate result. Supply research
    triggers/context and apply the shared research contract before consequential dependency constraints
    are chosen; carry evidence-backed constraints/checks, not invented dependency rules.
@@ -255,11 +302,11 @@ an independent reviewer before assigning their work.
    results BEFORE
    `ask_user`. Durably record current specification approval before `plan_create`, then
    immediately continue to `plan_create` without another continuation question.
-2. **`plan_create` — `opus-class`:** from current approved specification, in one
+2. **`plan_create` — owner-selected family/effort:** from current approved specification, in one
    same-session pass review/fix the specification, create one plan through the observed
    capability, then review/fix the produced plan. Cover contracts, architecture,
    integration, sequencing, migration/rollback, risks, docs, verification, and coherent
-   consecutive same-class work. Do not reorder dependencies or pad distant tasks.
+   consecutive compatible selected-binding/effort work. Do not reorder dependencies or pad distant tasks.
    Before consequential plan decisions, complete required shared-contract research and
    durable guidance. For helper invocation or the direct Standard pass, the brief must
    identify canonical research-document and necessary discovery-link destinations,
@@ -269,12 +316,12 @@ an independent reviewer before assigning their work.
    When approved work calls for `delegating-architectural-planning`, verify and invoke
    it as the planner Standard adapter for this ENTIRE pass. Inspect its returned
    evidence; do not create the plan again. Only when no adapter is invoked perform
-   the pass directly through the selected permitted binding. Manager-governed fixed
-   class, capability stops and approval renewal supersede helper standalone fallbacks.
+   the pass directly through the selected permitted binding. Manager-governed selected
+   family/effort, capability stops and approval renewal supersede helper standalone fallbacks.
    Any approved specification content change requires renewed specification approval
    with a new executive brief in short bullets before leaving this stage. After renewal,
    continue the affected stage immediately. Material choices remain gates.
-3. **`tasks_create` — `sonnet-class`:** follow observed SpecKit tasks capability under
+3. **`tasks_create` — owner-selected family/effort:** follow observed SpecKit tasks capability under
    `task-generation`. Supply authorization to prepare tasks and already-applicable
    approvals; final implementation approval is not a prerequisite to creation.
    This stage is create-only: no producer self-review/correction. Defects belong to
@@ -282,7 +329,7 @@ an independent reviewer before assigning their work.
    checks without breaking prerequisite order or story acceptance boundaries.
 4. **`overall_review` — independent owner-selected reviewer:** follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
-   coverage, dependencies, class share, documentation, integration and approvals.
+   coverage, dependencies, routing evidence/uncertainty, documentation, integration and approvals.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
    Fix mechanical task-level issues and record evidence. Flag only material
@@ -291,9 +338,11 @@ an independent reviewer before assigning their work.
    file choice, batch size, naming and single-option mechanics are internally resolved,
    not routine owner questions. Material upstream changes return to the affected gate
    and renew affected approvals. Preserve pending questions and correction contexts.
-   Missing independent reviewer/review evidence stops. Present a bullet-list executive
+   Missing independent reviewer/review evidence stops. Complete the assignment preview
+   and combined final approval boundary above. Present a bullet-list executive
    brief including review outcome and plan-phase implications BEFORE `ask_user`; obtain
-   current overall approval for source, spec, plan, tasks and implementation scope,
+   current overall approval for source, spec, plan, tasks, implementation scope and
+   listed task/reviewer selections,
    explicitly stating the next phase. After approval, immediately proceed to handoff
    and coordinator preflight under the continuation rule.
 
@@ -322,12 +371,14 @@ and applicable approved content/revisions for:
 - Review and validation evidence, decisions/deferrals and pending blockers.
 - TinySpec combined approval or Standard specification and overall approvals.
 - Explicit approved implementation scope/authorization and source provenance.
+- Current approved task/reviewer assignment preview, independent family/effort rationale,
+  exact bindings and capability evidence, benchmark citations/gaps and bounded uncertainty disposition.
 
 Use established artifact/decision conventions; no mandatory new state/handoff file.
 After final approval, supply this complete handoff and automatically invoke `coordinate-implementation`
 in the same session, unless the owner explicitly requested planning-only or a separate-session
 handoff. Do not stop at a readiness summary or require a second execution request. Planner
-never executes tasks itself; Coordinator alone selects models/strategy/batches and verifies
+never executes tasks itself; Coordinator alone verifies approved routing/strategy/batches and
 its execution preflight. If a capability/gate blocks continuation, report the precise blocker
 and preserve the handoff rather than silently stopping. For an explicitly bounded planning-only
 request report readiness, not implementation completion or feature acceptance.

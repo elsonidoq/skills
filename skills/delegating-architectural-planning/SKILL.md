@@ -46,6 +46,14 @@ and outstanding validation. The standalone local fallback cannot bypass required
 Research-driven approved-specification changes require renewed approval through the
 existing owner gate, including standalone entry; return them rather than assume approval.
 
+Apply the shared [family/effort rubric](../memory-handling/references/project-coordination.md#family-and-effort-routing).
+Verify provider-documented permitted usable exact binding/effort, tools/context and current owner
+selection for the planning pass and its reviewer. Independently justify family and least-adequate
+effort after decomposition; risk/role does not force high or strongest family. Weak oracles return
+for decomposition, not max. Supported no-row pairings need targeted research or an explicit bounded
+owner uncertainty decision, never automatic exclusion or fabricated exact-pair measurements.
+Drift or unusable selection stops for renewed affected owner choice; never silently switch models.
+
 Verify that the planning capability is available to the planner in the
 delegated context. If it is missing or cannot be used there, report
 `SpecKit planning: UNAVAILABLE` and stop; do not write a generic plan or
@@ -54,8 +62,8 @@ claim that the planning stage ran.
 Inspect the runtime for an allowed delegation tool (the `subagent` tool from the
 `pi-subagents` package is the suite's pinned delegation mechanism; see the global
 configuration repository's `REQUIREMENTS.md`) and configured planning-capable
-agents. Use an owner-selected agent when available; otherwise choose from observed
-capabilities and report the choice. Never invent an agent, model, command, or
+agents. Use the current owner-selected family/binding/effort; missing selection stops for
+owner choice from verified usable options, never an automatic fallback. Never invent an agent, model, command, or
 configuration. If delegation is unavailable, state
 `Architectural delegation: UNAVAILABLE` and offer to run the installed SpecKit
 planning stage locally with a separate review pass.
@@ -69,7 +77,7 @@ below supplement the generated artifacts and do not replace the SpecKit stage.
 ## Planner Standard adapter contract
 
 When `planner` invokes this helper from its Standard `plan_create` stage, it is not a standalone
-fallback. Use the manager's observed owner-selected binding, fixed `opus-class`, mandatory stops,
+fallback. Use the manager's observed owner-selected family/binding/effort, mandatory stops,
 owner gates, approval renewal, and upstream context-coherent brief/handoff constraints. In that
 one same-session pass, review/fix the approved specification, run the detected planning capability
 once to create the plan, then review/fix the produced plan. Return evidence and resulting artifacts
@@ -111,7 +119,7 @@ Ensure the SpecKit plan covers:
 - Security, privacy, migration, rollback, and authorization gates where relevant.
 - Documentation scope and specialized capabilities needed for implementation.
 
-Leave implementation task breakdown and model-class labeling to the SpecKit
+Leave implementation task breakdown and independent family/effort proposals to the SpecKit
 tasks stage; do not use the plan as a substitute for it.
 
 ## Owner Gates

@@ -93,6 +93,73 @@ class InstructionTests(unittest.TestCase):
     def test_candidate_contract(self):
         self.assertEqual(checker.check_contracts(self.texts), [])
 
+    def test_stage_routing_is_independent_not_fixed_class(self):
+        self.assertIn("## Stage family and effort selection", self.texts["planner"])
+        self.assertNotIn("— `opus-class`", self.texts["planner"])
+
+    def test_stage_rubric_capability_and_combined_preview_guard_deletions(self):
+        cases = (
+            ("planner", "## Stage family and effort selection", "independent family suitability and least-adequate supported effort after decomposition", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "permitted usable exact binding/effort", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "Unsupported runtime\neffort or missing hard capability stops", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "Risk strengthens safeguards, not high effort or strongest-family selection", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "fresh reviewer role\ndoes not justify high", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "Weak oracles return for decomposition", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "targeted research or explicit bounded owner", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "gap, rationale, allowed scope, remaining validation", "stage-routing"),
+            ("planner", "## Stage family and effort selection", "never silently switch models", "stage-routing"),
+            ("planner", "## Assignment preview and combined final approval", "complete task-by-task assignment preview plus independent final implementation reviewer", "assignment-preview"),
+            ("planner", "## Assignment preview and combined final approval", "exact concrete binding/version", "assignment-preview"),
+            ("planner", "## Assignment preview and combined final approval", "independent\neffort", "assignment-preview"),
+            ("planner", "## Assignment preview and combined final approval", "benchmark citations/coverage gaps", "assignment-preview"),
+            ("planner", "## Assignment preview and combined final approval", "in the same final approval", "assignment-preview"),
+            ("planner", "## Assignment preview and combined final approval", "current artifact/preview revision evidence", "assignment-preview"),
+            ("planner", "## Assignment preview and combined final approval", "No routine second assignment-approval question", "assignment-preview"),
+            ("brainstorm", "## Capability preflight", "provider-documented permitted usable exact binding/effort", "helper-routing"),
+            ("helper", "## Preflight", "Supported no-row pairings", "helper-routing"),
+        )
+        for key, heading, guard, label in cases:
+            with self.subTest(guard=guard):
+                changed = dict(self.texts)
+                body = checker.section(changed[key], heading)
+                self.assertEqual(body.count(guard), 1)
+                changed[key] = changed[key].replace(body, body.replace(guard, "", 1), 1)
+                self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+    def test_risk_role_unsupported_effort_no_row_and_second_gate_negative_policies(self):
+        for policy in (
+            "Risk always selects high effort", "Reviewer role always selects high effort",
+            "Weak oracles select maximum effort", "Always default to medium effort",
+            "No benchmark row forbids a supported pairing", "Unsupported runtime effort may proceed",
+            "Catalog presence authorizes execution", "Ask a second routine assignment question",
+            "Silently switch the selected model",
+        ):
+            with self.subTest(policy=policy):
+                changed = dict(self.texts); changed["planner"] += "\n" + policy
+                self.assertTrue(any(e.startswith("family-effort-unsafe:") for e in checker.check_contracts(changed)))
+
+    def test_preview_moved_after_routes_is_rejected(self):
+        changed = dict(self.texts)
+        p = changed["planner"]
+        start = p.index("## Assignment preview and combined final approval")
+        end = p.index("### TinySpec path", start)
+        preview = p[start:end]
+        changed["planner"] = p[:start] + p[end:] + "\n" + preview
+        self.assertTrue(any(e.startswith("assignment-preview:") for e in checker.check_contracts(changed)))
+
+    def test_supported_no_row_uncertainty_and_non_escalation_examples(self):
+        # Labelled instruction walkthrough, not a model allocation or provider run.
+        routing = checker.section(self.texts["planner"], "## Stage family and effort selection")
+        for profile, obligations in (
+            ("simulated high-risk strong-oracle lower effort", ("Risk strengthens safeguards, not high effort", "least-adequate supported effort after decomposition")),
+            ("simulated fresh reviewer lower effort", ("fresh reviewer role\ndoes not justify high",)),
+            ("simulated weak-oracle work returned to decomposition", ("Weak oracles return for decomposition", "not reflexive max")),
+            ("simulated supported no-row pairing with bounded owner disposition", ("Supported no-row pairings", "gap, rationale, allowed scope, remaining validation", "absence alone never bars support")),
+        ):
+            with self.subTest(profile=profile):
+                for obligation in obligations:
+                    self.assertIn(obligation, routing)
+
     def test_route_sections_do_not_overlap(self):
         tiny = checker.section(self.texts["planner"], "### TinySpec path")
         standard = checker.section(self.texts["planner"], "### Standard path")
@@ -122,7 +189,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "No independent planning", "Mandatory independent planning", "tiny-flow:"),
             ("planner", "template-only", "generic", "standard-preflight:"),
             ("planner", "verify repaired output", "assume valid output", "standard-preflight:"),
-            ("planner", "**`spec_create` — `sonnet-class`", "**`spec_create` — `opus-class`", "spec:"),
+            ("planner", "**`spec_create` — owner-selected family/effort", "**`spec_create` — unsupported runtime effort", "spec:"),
             ("planner", "specification approval before `plan_create`", "approval later", "spec:"),
             ("planner", "Only when no adapter is invoked", "After the adapter returns", "plan:"),
             ("planner", "do not create the plan again", "create the plan again", "plan:"),
@@ -655,6 +722,19 @@ class TraceTests(unittest.TestCase):
         self.assertTrue(trace.check(events, self.contract))
         events = scenario(); events.pop(5)
         self.assertTrue(trace.check(events, self.contract))
+
+    def test_combined_assignment_preview_is_content_bound_in_both_routes(self):
+        # Generic artifact-drift oracle also binds the reviewed assignment preview.
+        # No new production approval engine; events are simulated offline.
+        for depth in ("TinySpec", "Standard"):
+            with self.subTest(depth=depth):
+                events = scenario()
+                events[2] = end("choose", depth)
+                events.insert(4, {"type": "artifact_snapshot", "path": "assignments.md", "digest": "reviewed-pairs-and-uncertainty"})
+                contract = {**self.contract, "expected_depth": depth}
+                self.assertEqual(trace.check(events, contract), [])
+                events.insert(-1, {"type": "artifact_snapshot", "path": "assignments.md", "digest": "changed-pair"})
+                self.assertTrue(any("changed" in e for e in trace.check(events, contract)))
 
     def test_standard_override(self):
         events = scenario(); events[2] = end("choose", "Standard")

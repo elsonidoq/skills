@@ -33,7 +33,9 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
         self.assertIn("Record owner deferrals", self.text)
 
     def test_capability_stop_and_portable_binding(self):
-        self.assertIn("owner-selected `sonnet-class` binding", self.text)
+        self.assertIn("owner-selected family/binding/effort", self.text)
+        self.assertIn("provider-documented permitted usable exact binding/effort", self.text)
+        self.assertIn("Family suitability and least-adequate effort after decomposition", self.text)
         self.assertIn("missing capability and stop before downstream production", self.text)
         self.assertIn("ask in prose and end the turn", self.text)
         self.assertIn("do not continue downstream or infer an", self.text)

@@ -25,6 +25,9 @@ PATHS = {
 # Deliberately updated for owner-requested healthy internal-batch autonomy:
 # subagents verify/commit without routine supervisor waits; coordinator audits on return.
 # Per-task commits, failure stops, model selection and owner gates remain protected.
+# Deliberate routing-migration freeze renewal: the execution carrier is unchanged,
+# including approvals, sequential batches, failure inspection, task commits and review.
+# Retain this digest until an authorized coordinator change compares those safeguards.
 EXECUTION_SHA256 = "ef21eb994d430aa213c6ea75833ae03a8db68ff84e284f78a7f7b50d3bd304b4"
 
 
@@ -91,11 +94,61 @@ def check_contracts(texts):
     require("handoff", p, "constraints **verbatim**", "prior-stage handoff", "Resume originating",
             "Re-present unanswered questions", "selected depth", "current content/revision evidence",
             "Explicit approved implementation scope", "Coordinator alone")
+    routing = section(p, "## Stage family and effort selection")
+    require("stage-routing", routing, "shared [family/effort rubric]",
+            "independent family suitability and least-adequate supported effort after decomposition",
+            "Risk strengthens safeguards, not high effort or strongest-family selection",
+            "fresh reviewer role\ndoes not justify high", "Weak oracles return for decomposition",
+            "Higher effort requires concrete remaining reasoning or lower-setting",
+            "no unconditional low/medium default", "provider documentation",
+            "permitted usable exact binding/effort", "mutation or read tools",
+            "observed context capacity", "current owner authorization",
+            "Unsupported runtime\neffort or missing hard capability stops",
+            "never silently switch models", "Supported no-row pairings",
+            "targeted research or explicit bounded owner", "gap, rationale, allowed scope, remaining validation",
+            "absence alone never bars support", "Do not fabricate exact-pair measurements",
+            "Unknown snapshot/mode/date/cost remains unknown", "not automatic whole-CSV intake",
+            "Every numbered stage below rechecks this boundary", "renewed affected owner decision")
+    preview = section(p, "## Assignment preview and combined final approval")
+    require("assignment-preview", preview,
+            "Before the single final implementation-approval question in either route",
+            "complete task-by-task assignment preview plus independent final implementation reviewer",
+            "every task/reviewer", "proposed family", "exact concrete binding/version",
+            "independent\neffort", "provider/runtime/tool/context capability evidence",
+            "benchmark citations/coverage gaps", "task-specific family and residual-effort rationale",
+            "uncertainty disposition and bounded retry authority", "proposed, not approved selections",
+            "owner may request changes before answering", "Missing proposals, missing reviewer",
+            "hard capability gates stop readiness", "explicit bounded uncertainty decision recorded",
+            "in the same final approval", "One affirmative current-content answer",
+            "task scope and listed task/reviewer selections", "as distinct decisions",
+            "current artifact/preview revision evidence", "No routine second assignment-approval question",
+            "Changed preview, scope or selected", "renew", "before dispatch")
+    if not (0 <= p.find("## Stage family and effort selection")
+            < p.find("## Assignment preview and combined final approval")
+            < p.find("### TinySpec path") < p.find("### Standard path")):
+        errors.append("assignment-preview: routing/preview must precede both final approval routes")
+    # Route stages must invoke the shared boundary; merely having a summary is insufficient.
+    for key in ("planner", "brainstorm", "helper"):
+        reject("family-effort-unsafe", texts[key], "sonnet-class", "opus-class",
+               "Risk always selects high effort", "Reviewer role always selects high effort",
+               "Weak oracles select maximum effort", "Always default to medium effort",
+               "No benchmark row forbids a supported pairing", "Unsupported runtime effort may proceed",
+               "Catalog presence authorizes execution", "Estimated scores prove exact-pair success",
+               "Owner preference is a measured advantage", "Rank all harness percentages together",
+               "Automatically load the whole CSV", "Ask a second routine assignment question",
+               "Silently switch the selected model")
+    for key in ("brainstorm", "helper"):
+        require("helper-routing", section(texts[key], "## Capability preflight" if key == "brainstorm" else "## Preflight"),
+                "shared [family/effort rubric]", "provider-documented permitted usable exact binding/effort",
+                "tools/context", "owner", "least-adequate", "after decomposition",
+                "risk/role does not force high", "Weak oracles", "Supported no-row pairings",
+                "targeted research or an explicit", "bounded", "owner uncertainty decision",
+                "never silently switch models")
     tiny = section(p, "### TinySpec path")
-    require("tiny-flow", tiny, "**Source creation — `sonnet-class`", "**Tasks — `sonnet-class`",
+    require("tiny-flow", tiny, "**Source creation — owner-selected family/effort", "**Tasks — owner-selected family/effort",
             "invoke `tiny-spec`", "invoke `task-generation` direct adapter",
             "Create separate tasks", "No independent planning", "**Combined approval:**",
-            "BEFORE `ask_user`", "Denial returns to review", "No SpecKit prerequisite",
+            "BEFORE `ask_user`", "assignment preview and combined final approval", "listed task/reviewer selections", "Denial returns to review", "No SpecKit prerequisite",
             "standalone\n   TinySpec approval", "Record\n   fixes",
             "brief bullet-list executive summary", "immediately proceed to handoff")
     std = section(p, "### Standard path")
@@ -106,26 +159,27 @@ def check_contracts(texts):
             "verify repaired output", "Missing repair capability", "Do not reopen",
             "never install, simulate slash commands", "Required absent\ncapability stops")
     spec = stage(std, "spec_create")
-    require("spec", spec, "— `sonnet-class`", "Clarify only when requested or required",
+    require("spec", spec, "— owner-selected family/effort", "Clarify only when requested or required",
             "BEFORE\n   `ask_user`", "specification approval before `plan_create`",
             "bullet-list executive brief", "immediately continue to `plan_create`")
     plan = stage(std, "plan_create")
-    require("plan", plan, "— `opus-class`", "same-session pass", "review/fix the specification",
+    require("plan", plan, "— owner-selected family/effort", "same-session pass", "review/fix the specification",
             "create one plan", "review/fix the produced plan", "ENTIRE pass",
             "do not create the plan again", "Only when no adapter is invoked",
             "renewed specification approval", "new executive brief", "do not reorder".capitalize())
     tasks = stage(std, "tasks_create")
-    require("task-stage", tasks, "— `sonnet-class`", "authorization to prepare tasks",
+    require("task-stage", tasks, "— owner-selected family/effort", "authorization to prepare tasks",
             "create-only", "no producer self-review/correction", "`overall_review`")
     review = stage(std, "overall_review")
     require("review", review, "independent owner-selected reviewer", "observed analysis",
             "never apply unresolved material defaults", "renew affected approvals",
             "BEFORE `ask_user`", "plan-phase implications", "Missing independent reviewer",
-            "bullet-list executive", "immediately proceed to handoff")
+            "bullet-list executive", "assignment preview", "combined final approval boundary",
+            "listed task/reviewer selections", "immediately proceed to handoff")
     b = texts["brainstorm"]
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
             "one material item", "recorded owner decisions", "preselection", "read-only",
-            "session history", "Only in selected-production", "owner's rationale", "sonnet-class")
+            "session history", "Only in selected-production", "owner's rationale", "owner-selected family/binding/effort")
     require("tiny-source", texts["tiny"], "explicit TinySpec selection/preparation authorization",
             "Context/outcome", "Scope", "Decisions/constraints", "Approach", "Acceptance/validation",
             "Risks/dependencies/notes", "Do not embed an implementation task checklist",
@@ -311,7 +365,7 @@ def check_contracts(texts):
             "both TinySpec and Standard stage briefs", "source observables/acceptance",
             "task dependencies, checkpoints, verification and coordinator handoff",
             "Memory cannot override source requirements or owner authority",
-            "absence requires no migration and changes no class/share/approval rule")
+            "absence supplies no guessed routing and does not change approval rules")
     require("coordination-tiny", section(texts["tiny"], "## Inputs and preflight"),
             link, "including direct/standalone entry", "not index/history by default",
             "ensure the mandatory project-local store", "initialize missing files, notify the user",
@@ -437,10 +491,20 @@ def check_contracts(texts):
             "Rejection leaves guidelines byte-identical", "re-read\n`GUIDELINES.md`",
             "compare with the approved baseline", "drift stops", "renewed review/approval",
             "Re-check", "acceptance separately")
-    require("coordination-class", section(q, "## Class-compatible routing experiment"),
-            "compatible with the approved class", "strong executable acceptance oracle",
-            "owner-selection gates", "Inspect the failed child run and invocation",
-            "unknown cause", "Record both attempts", "not provider names or permanent rules")
+    require("coordination-family-effort", section(q, "## Family and effort routing"),
+            "separate family suitability and effort rationale", "provider-documented options",
+            "permitted usable exact runtime", "unsupported runtime effort blocks",
+            "current owner selection before execution", "Catalog-only availability does not prove callability",
+            "least\nsupported effort justified as adequate after decomposition",
+            "Risk strengthens decomposition", "Weak-oracle work returns for decomposition",
+            "supported no-row pairing is not automatically excluded",
+            "explicit bounded owner uncertainty decision", "gap, rationale, allowed scope",
+            "never fabricated exact-pair measurements", "do not rank noncomparable percentages",
+            "Unknown snapshot, mode, evaluation date", "owner preference is a choice, not a measured score",
+            "Guideline supersession/removal must not erase original source",
+            "no automatic whole-CSV loading or full-dataset prompts",
+            "Routing approval and exact-content guideline approval are distinct",
+            "Inspect the failed child run and invocation", "Unknown cause", "Record both attempts")
     for key in ("planner", "tiny", "tasks", "coordinator", "coordination"):
         reject("coordination-unsafe", texts.get(key, ""),
                "Always read the entire evidence directory", "Read coordination history on every request",
