@@ -4,7 +4,7 @@
 
 TinySpec selected by owner; preparation of source, separate tasks and planner-owned review
 only. Source/tasks produced and planner-owned review complete with no blockers/fixes.
-Combined source/task/scope approval is pending; no implementation or proof execution authorized. Original request and exact bounded paths supplied in this planning session.
+Combined source/task/scope approval received; coordinator preflight underway. Execution routing pending; no implementation dispatched. Original request and exact bounded paths supplied in this planning session.
 Gate: `NO_BRAINSTORM_NEEDED` — settled detailed owner direction; mechanics resolved locally.
 Baseline HEAD: `63804165e0d9b285501daad65215ac9b0fadc33e`, clean index/worktree.
 Allowed writes: source/tasks/discovery in `docs/plans/`, this SUMMARY and its index row only.
@@ -114,4 +114,19 @@ No update proposed. No reusable project gotcha or guideline inferred from planni
 Static/fixture success cannot prove real-agent obedience. Implementation and live/provider
 checks NOT RUN; no real library experiment performed. Future owner approval and coordinator
 preflight/routing gates remain required. No global skill edits; `/reload` only after future
-skill implementation. Bounded planning run complete; current-content combined approval pending.
+skill implementation. Bounded planning preparation complete; current-content combined approval received below.
+
+## Combined approval and coordinator intake
+
+Owner answered `Approve and proceed to implementation preflight` through ask_user after
+an executive brief and exact source/task digests above. Approval covers current R1–R5,
+AC1–AC8 and T001–T002 bounded implementation scope; excludes runtime/settings/production,
+live/provider operations and guideline/policy changes. Coordinator starts immediately;
+execution routing remains a separate owner gate. Parent compared current digests and
+inspected focused source/task commits, clean HEAD `68d8a40`, task-order PASS. Planning
+child terminal status confirms gpt-6.1-sol / thinking medium (runtime status); full provider
+observation remains qualified. No active writer. Existing baseline lint 324 tests remains
+applicable: planning-only commits did not change checked code. Memory/guidelines unchanged.
+Proposed strategy: one fresh delegated sequential batch T001→T002; bounded child context
+preferred to accumulated parent context. Fresh reviewer capability registered, exact profile
+selection pending. Repairs require inspected failure and renewed affected routing, no blind retry.
