@@ -2,7 +2,7 @@
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
-Inspected same-profile continuation verified/checkpointed T001; T002/T003 dependency-ready.
+Inspected same-profile continuation verified/checkpointed T001 and T002; T003 dependency-ready.
 Attempt 1 retained below. Coordinator batch audit and independent final review PENDING;
 no feature acceptance inferred.
 Planner-owned review is not independent final review. Original source/task checkpoints and
@@ -373,3 +373,24 @@ symbolic oracles, not runtime obedience/performance proof. Manual artifact trace
 no actual runtime manual gate applicable. First attempt blocked, final T001 verified after
 inspected correction; model-only attribution unknown. No remaining T001 gap found. Separate
 SUMMARY/index checkpoint follows before T002; its SHA is read from Git, not self-hashed.
+
+## T002 — lockstep documentation verified
+
+Baseline/T001 evidence `5b55801dd3f1a7d299544275145d2a477d874258` → focused docs commit
+`7488b8dbe96b9979ce9f2faf9b1d383423cadda2` (REQUIREMENTS.md, README.md,
+docs/pi-settings-sample.md only). Selected profile unchanged; THIS observation unknown.
+Practical baseline gap confirmed in all three docs: no explicit three-disposition guidance.
+Local comparison first found a line-wrap-sensitive literal assertion, not a semantic defect;
+normalizing whitespace retained the same criterion and passed. No acceptance weakening.
+
+| Original item | Executor / disposition | Bounded doc → owner → named proof comparison |
+| --- | --- | --- |
+| T002/V1 | pass / satisfied | REQUIREMENTS Implementation batch selection, README Planning and Implementation, settings sample existing union/audit/repair paragraphs → task-generation Task contract + coordinator graph/selection/integration → T001 ordinary/routing/shared/disposition/sample/repair named cases (A1–A13). REQUIREMENTS Memory contract and README Project coordination memory/settings feedback → shared evidence/feedback owner → T001 factual first/final/unknown examples (A14); preserved final review/static limits (A15). All compare unchanged criteria, original union, cheap relevance/revision/environment, defect vs insufficient proof, manual STOP vs ordinary, exact-gap implementation continuation/exceptional gated retry/valid work and factual escalation. |
+| T002/V2 | pass / satisfied | Inline Python comparison PASS: 23 local links/anchors; outside allowed REQUIREMENTS/README sections identical; runtime table/pins and Planning/advisory bindings unchanged; settings JSON/default blocks and Compact output/Configuration decisions byte-identical; docs/index.md unchanged existing canonical owner pointers. Planner checker static PASS; diff/staged whitespace PASS; actual scoped diff inspected, explicit three-path commit, only parent STATE dirt. |
+
+Proof environment Python 3.12.3/local offline at exact T002 content; valid T001 named semantic
+outputs reused because prose-only changes do not alter fixture/operational content. Manual
+artifact comparison completed, no live/user/provider gate applicable; permission/owner/support,
+sole routing owner/guideline approval/final independence retained. T002 first/final verified,
+no model attribution or escalation. Separate SUMMARY/index evidence checkpoint before T003;
+no duplicate report or source/task checkbox edits.
