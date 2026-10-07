@@ -4,8 +4,9 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
-- [Early risk reduction — TinySpec](early-risk-reduction-tinyspec.md): selective early executable implementation proof, dependent consumption and disproof replanning; preparation only.
-- [Early risk reduction — tasks](early-risk-reduction-tasks.md): atomic contract/regression work then lockstep assurance documentation; combined owner approval pending.
+- [Early risk reduction — TinySpec](early-risk-reduction-tinyspec.md): selective early executable implementation proof, dependent consumption and disproof replanning; approval and acceptance evidence linked below.
+- [Early risk reduction — tasks](early-risk-reduction-tasks.md): atomic contract/regression work then lockstep assurance documentation; current approval/checkpoints belong to run evidence.
+- [Early risk reduction — coordination evidence](../../memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md): authoritative exact-content approval, verification and independent acceptance dispositions.
 - [Coordinator dispatch readiness — TinySpec](coordinator-dispatch-readiness-tinyspec.md): finite existing preparation transition; planning-only, combined approval pending.
 - [Coordinator dispatch readiness — tasks](coordinator-dispatch-readiness-tasks.md): separate producer-first instruction, offline trace and bounded consumer/acceptance work; no execution authorization.
 - [Task verification contracts — TinySpec](task-verification-contracts-tinyspec.md): task-level proof and actionable batch routing/repair; current-content approval belongs to the linked planning review.
