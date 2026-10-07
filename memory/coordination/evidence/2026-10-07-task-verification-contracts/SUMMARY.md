@@ -5,7 +5,7 @@ Current source/tasks and reviewed implementation scope APPROVED through parent `
 Inspected same-profile continuation completed T001–T003; integrated reviewer packet prepared.
 Attempt 1 retained below. Coordinator batch audit ACCEPTED all 12 original REQUIRED items;
 fresh independent final review found R001 mandatory-escalation wording contradiction; focused
-F001 correction verified/checkpointed below, independent recheck PENDING. User requested
+F001 correction verified/checkpointed and coordinator-audited, independent recheck PENDING. User requested
 finish-session/commit/push; worker performed correction only, no closeout/push or self-acceptance.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
@@ -598,3 +598,21 @@ ba7bd35 through this checkpoint, includes prior task/evidence chain + parent rev
 against corrected full scope, then authorized closeout/push only if accepted. Static/symbolic
 checks do not prove runtime obedience/callability/performance; no external/live/user gate exercised.
 No guideline change or model lesson proposed. Run `/reload` inside pi after global skill changes.
+
+## Coordinator F001 audit / independent recheck intent
+
+Parent inspected actual dbeb020 four-path diff, separate evidence95cde22 and scoped clean state;
+conditional stronger-capability/sufficient same-profile clauses agree with unchanged source and
+existing MAY-repair rule. New checker/mutation tests reject unconditional restoration rather than
+weaken approval or add a stage. Affected original item evidence revalidated as F001 records;
+other unchanged proofs retained, no missing REQUIRED item observed. Source/tasks digests checked
+unchanged; `git diff --check` PASS. Runtime F001 status observes gpt-6.1-sol thinking medium;
+original worker unknown preserved. F001 accepted by coordinator audit, feature acceptance pending.
+
+Resume retained independent reviewer b2992601-6b18-493f-be9c-9dbaf26a1fac for exact R001 recheck
+on ba7bd35..95cde22, focusing dbeb020 and guards while retaining original review conclusions.
+This is correction revalidation under existing final review, not a new routine stage/mandatory
+extra reviewer. Same approved profile unchanged; read-only reviewer, no active writer. Next
+safe action: checkpoint recheck intent/state, resume reviewer, capture ID; inspect verdict and
+finish closeout/push on acceptance. User's no-extra-overhead constraint means no new workflow
+stage/gate; bounded recheck only verifies the discovered concrete contradiction is resolved.
