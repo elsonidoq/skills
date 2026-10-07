@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [Coordinator dispatch readiness — planning review](coordinator-dispatch-readiness-planning-review.md): planner-owned digest-bound TinySpec/task review; combined approval pending, planning-only boundary.
 - [Task verification contracts — TinySpec planning review](task-verification-contracts-planning-review.md): exact source/task digests, causal coverage/proportionality, baseline limits and recorded current-content combined approval.
 - [Coordinator approval/cadence — planning review](coordinator-approval-cadence-planning-review.md): exact TinySpec/task identities and combined approval gate; coordinator-only scope.
 - [Coordinator approval/cadence — implementation validation](coordinator-approval-cadence-validation.md): item-mapped local instruction/Git evidence and independent review disposition; live obedience NOT RUN.
