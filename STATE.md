@@ -1,8 +1,8 @@
 # Current state
 
-- Run: `2026-10-07-early-risk-reduction`; B01 T001→T002 implemented and audited; F01 fresh independent review imminent.
-- Authority: [TinySpec](docs/plans/early-risk-reduction-tinyspec.md), [tasks](docs/plans/early-risk-reduction-tasks.md); exact-content approval, routing and checkpoints in [run evidence](memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md).
-- Verified: T001 `74fb1ce` / evidence `e3c4ddd`; T002 `5e2d13c` / evidence `ba280fb`; six REQUIRED items satisfied. Parent checker and 96 planner tests PASS; worker lint 331 PASS.
-- Worker `984ae4ff-0c8b-42bf-988a-73c47d1922d6` terminal and audited; no active writer. F01 selected `openai-codex/gpt-6.1-sol:medium`, fresh read-only review over `9b966ae..ba280fb`.
-- Boundaries: static/fixture acceptance only; live obedience NOT RUN. No push/deploy, production/runtime/settings or guideline changes authorized.
-- Next: dispatch F01, capture identity, inspect findings and reconcile terminal acceptance. `/reload` required after final acceptance.
+- Run: `2026-10-07-early-risk-reduction`; T001→T002 implemented, audited and independently accepted.
+- Authority: [TinySpec](docs/plans/early-risk-reduction-tinyspec.md), [tasks](docs/plans/early-risk-reduction-tasks.md); exact-content approval, routing and checkpoint/review dispositions in [run evidence](memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md).
+- Verified: T001 `74fb1ce` / evidence `e3c4ddd`; T002 `5e2d13c` / evidence `ba280fb`; audit `b97f6e4`; six REQUIRED items satisfied. Planner 96 tests PASS, lint 331 PASS.
+- Independent F01 `cc4a89f6-4ab3-443b-8b7a-5e314489c907`: Ready / merge OK over `9b966ae..ba280fb`, no issues. Active children: none; blockers: none.
+- Limits: static/illustrative acceptance only; live model/library/system behavior NOT RUN. No push/deploy or guideline mutation authorized/performed.
+- Next: run `/reload` inside pi to load changed global skills. No implementation tasks pending; live canary or publication requires separate authorization.
