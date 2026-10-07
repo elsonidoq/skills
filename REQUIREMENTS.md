@@ -46,14 +46,33 @@ observed: actual binding or effort remains unknown when unobservable. The settin
 [sample](docs/pi-settings-sample.md) contains no unconditional implementation-worker override.
 Seed examples are provisional, not hard-coded provider defaults or a universal repair ladder.
 
-Dispatch supplies the whole REQUIRED union and returns concrete item-mapped evidence and
-per-task checkpoints. The coordinator inspects every task diff/checkpoint, outputs, scope
-and manual gates before accepting/releasing dependents. Missing/contradictory/unrun proof
-blocks acceptance; passing contracts need no mandatory strong per-batch reviewer. Preserve
-focused per-task implementation commits, separate evidence-only checkpoints and one fresh
-independent final review over the complete committed range. Diagnose failures from child
-run/invocation/partial commits before authorized targeted repair; preserve valid work and
-prior attempts, supply the full contract and rerun invalidated items.
+Verification per task; execution per coherent batch. Practical contracts preserve task/item IDs,
+criterion/check/evidence/gates and optional distinction through both adapters. Compare closed
+design and implementation difficulty with weakest oracle quality, check cost and observability
+in the sole six-factor rubric; feasible combined verification and attributable failures inform
+consecutive batching, with each producer checked before consumer work.
+Dispatch supplies the whole unchanged REQUIRED union before coding and returns concrete
+item-mapped evidence and per-task checkpoints; a shared check runs once with every mapping.
+The coordinator cheaply audits coverage, criterion relevance, current revision/environment,
+consistency, every actual task diff/checkpoint and owned scope/gates, not a full rereview.
+Executor pass/fail/not_verified maps through proof to satisfied/failed/insufficient-evidence:
+failed requires objectively demonstrated criterion violation; missing/irrelevant/stale/conflicting/
+unrun proof is insufficient unless valid observations independently prove a defect. Retain
+both proven defects and evidence limitations. Only satisfied REQUIRED items and fulfilled gates
+release dependents; optional green cannot compensate. Required representative-sample manual
+STOP needs inspectable sample and explicit user approval before downstream/full expensive
+operation; approval permits only scoped continuation, never LLM self-review. Ordinary tasks
+use practical observables without invented ceremony; inadequate approved/legacy contracts
+return to producing review/renewal, not executor-defined weaker success.
+Passing contracts need no mandatory strong per-batch reviewer. Preserve focused per-task
+implementation commits, separate evidence-only checkpoints and one fresh independent final
+review over the complete committed range. Inspect failed run/invocation/partial commits and
+proof before authorized stronger implementation continuation for exact gaps under the same
+original contracts, not generic strong review. Carry current SHA/state, prior proof, dependencies
+and invalidations; preserve valid work/attempts and rerun invalidated items, reuse only confirmed
+valid evidence. Unknown/non-model/manual/permission/contract gaps do not automatically escalate.
+Clean retry is exceptional: documented justification, ownership/safe repository mechanics and
+required owner/project gates first; no automatic reset/discard or batch rollback.
 
 Static assertions and symbolic fixtures check instructions and sample artifacts, not live
 model performance or runtime obedience. Live/provider checks require separate authorization
@@ -113,7 +132,10 @@ implementation approval never grants synthesized guideline mutation.
 Optional `residual_reasoning: low|medium|high` notes describe task/oracle conditions,
 not assignments. Existing indexed attempts retain exact selected/observed profiles or unknown,
 assessment factors, contract strength, first/final outcome, diagnosed attribution and repair
-references. Environment/tooling or other non-model causes do not penalize capability; weak or
+references, batch/task item dispositions with proof references, reused/invalidated items,
+exact escalation reason and next selected profile or pending selection. First/final selected
+versus observed attempts and original unknowns remain attributable in the same SUMMARY/index.
+Environment/tooling or other non-model causes do not penalize capability; weak or
 invalidated successes cannot become strong positive guidance. Approved applicable guidelines
 may override the seed, never source/owner permissions; raw outcomes never mutate guidelines.
 No new store, schema, ML or automatic model optimization is introduced. Runtime pins and

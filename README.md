@@ -109,11 +109,30 @@ Verify permitted callable binding, supported effort, tools and owner gates at as
 and ensure settings do not silently override actual dispatch arguments. Actual profile stays
 unknown when unobservable, never inferred from selection.
 
-Dispatch supplies the whole REQUIRED union; concrete returned item evidence and every focused
-task diff/checkpoint are audited before acceptance or dependent release. Missing, contradictory,
-unrun or unauthorized evidence blocks; a passing contract needs no mandatory strong per-batch
-reviewer. Diagnose failures before authorized targeted repair, retain valid work/prior attempts,
-supply the full contract and rerun invalidated items without a fixed model/effort ladder.
+Verification per task; execution per coherent batch. Practical producer contracts retain
+criterion/check/evidence/gates and optional distinction through both adapters. In the sole
+six-factor rubric compare closed design/implementation difficulty with weakest oracle quality,
+check cost and observability; combined verification must be feasible and failures attributable.
+Preserve consecutive order and producer verification before consumer work.
+Dispatch supplies the whole unchanged REQUIRED union before coding; shared checks run once
+with every distinct task/item mapping. Cheap audit checks coverage, relevance to each original
+criterion, current revision/environment, consistency, every actual task diff/checkpoint and
+owned scope/gates, not general full rereview. Executor pass/fail/not_verified maps through proof
+to satisfied/failed/insufficient-evidence: failed needs demonstrated criterion violation;
+missing/irrelevant/stale/conflicting/unrun proof is insufficient unless valid observations
+independently prove a defect. Retain defect and evidence limitation together. Only satisfied
+REQUIRED items and gates release dependents; optional green cannot compensate. Source-required
+representative-sample manual STOP needs inspectable sample and explicit user approval before
+downstream/full expensive operation, permitting only scoped continuation; LLM self-review
+cannot replace it. Ordinary tasks need no invented manual ceremony. Inadequate approved/legacy
+contracts return to producing review/renewal, never weaker post-hoc acceptance.
+A passing contract needs no mandatory strong per-batch reviewer. Inspect failure/run/invocation/
+partial commits and proof before authorized stronger implementation continuation for exact gaps
+under the same original contracts, not generic strong review. Carry current SHA/state, prior
+proof, dependencies and invalidations, retain valid work/attempts, rerun invalidated checks and
+reuse only confirmed-valid evidence without a fixed ladder. Unknown/non-model/manual/permission/
+contract gaps do not automatically escalate. Clean retry is exceptional: documented justification,
+ownership/safe repository mechanics and required owner/project gates, never automatic reset/discard.
 Each task has its own implementation commit followed by a separate factual evidence checkpoint;
 one fresh independent final review covers the complete committed range. Planning depth and
 unrelated planning/reviewer selections remain separate from implementation selection.
@@ -182,7 +201,10 @@ initialization is not permission to add or rewrite learned guidance.
 
 Indexed attempts record exact selected/observed profile or unknown, assessment factors, contract
 strength, first/final outcome, diagnosis and repair/checkpoint references, preserving partial,
-escalated and blocked work. Non-model causes (including unavailable tools/environments) do not
+escalated and blocked work. The same SUMMARY/index retains batch/task item dispositions and
+proof references, reused/invalidated checks, exact escalation reason and next selected profile
+or pending selection; first/final selected versus observed attempts preserve original unknowns.
+Non-model causes (including unavailable tools/environments) do not
 count as capability failure; weak/invalidated success is not strong guidance. Residual-reasoning
 notes inform batch assessment, not task assignments. No automatic model replacement or permanent
 rule from one outcome; only relevant approved guidelines may override the seed within owner/source gates.
