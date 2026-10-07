@@ -422,8 +422,10 @@ boundary and keep dependents blocked until all REQUIRED evidence is valid. Retai
 corrections and outcomes at separate evidence checkpoints. Repair success alone does not prove
 model-only attribution.
 
-Repair is stronger implementation continuation for exact gaps under the same original contracts,
-not generic strong-model review. Carry the current implementation SHA/state, original task contracts,
+Where diagnosed and authorized, stronger-capability repair is implementation continuation
+for exact gaps under the same original contracts, not generic strong-model review.
+Same-profile targeted repair remains appropriate when sufficient; escalation is not mandatory.
+Carry the current implementation SHA/state, original task contracts,
 prior proof and precise gaps; never let a repair executor redefine weaker success. Environment,
 manual, permission and contract-definition gaps do not automatically create a stronger dispatch.
 Clean retry is exceptional: document fundamental unsoundness, contamination, safe repository

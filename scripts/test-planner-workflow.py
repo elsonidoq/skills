@@ -106,6 +106,19 @@ class ProportionateValidationTests(unittest.TestCase):
 
 
 class VerificationCarrierTests(unittest.TestCase):
+    def test_unconditional_escalation_restoration_rejected_with_summaries_intact(self):
+        texts = checker.load_texts()
+        conditional = "Where diagnosed and authorized, stronger-capability repair is implementation continuation"
+        heading = "## Select Execution Capability"
+        carrier = checker.section(texts["coordinator"], heading)
+        self.assertIn(conditional, carrier)
+        self.assertIn("Same-profile targeted repair remains appropriate when sufficient", carrier)
+        texts["coordinator"] = texts["coordinator"].replace(
+            carrier, carrier.replace(conditional, "Repair is stronger implementation continuation", 1), 1)
+        texts["coordinator"] += "\n## Conditional repair summary only\n" + conditional
+        errors = checker.check_contracts(texts)
+        self.assertTrue(any(e.startswith("verification-repair:") and conditional in e for e in errors), errors)
+
     def test_named_section_removals_fail_even_with_summary_intact(self):
         texts = checker.load_texts()
         self.assertEqual(checker.check_contracts(texts), [])

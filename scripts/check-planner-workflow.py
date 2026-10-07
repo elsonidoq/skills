@@ -559,6 +559,8 @@ VERIFICATION_CARRIERS = (
       "inspectable sample and explicit user approval", "Ordinary no-special-gate")),
     ("verification-repair", "coordinator", "## Select Execution Capability",
      ("Inspect the failed child run, invocation, partial commits and check evidence",
+      "Where diagnosed and authorized, stronger-capability repair is implementation continuation",
+      "Same-profile targeted repair remains appropriate when sufficient",
       "current implementation SHA/state", "same original contracts", "Clean retry is exceptional",
       "safe repository", "ownership and required owner/project gates")),
     ("verification-feedback", "coordinator", "### Coordination evidence checkpoint",

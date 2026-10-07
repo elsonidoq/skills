@@ -69,8 +69,9 @@ Inadequate approved/legacy contracts return to producing review/renewal, not wea
 Passing contracts allow cheap acceptance without a strong per-batch reviewer, while one fresh
 independent final review remains required. Empty project guidelines use the qualified seed
 without invented success history; relevant approved guidance cannot override source/owner gates.
-Inspected diagnosed repair is authorized stronger implementation continuation for exact gaps under
-the same original contracts, not generic strong review. Carry current SHA/state, prior proof,
+Where diagnosed and authorized, stronger-capability repair is implementation continuation for
+exact gaps under the same original contracts, not generic strong review. Same-profile targeted
+repair remains appropriate when sufficient; escalation is not mandatory. Carry current SHA/state, prior proof,
 dependencies and invalidations; preserve attempts/valid work, rerun invalidated checks and reuse
 only confirmed-valid evidence through the same gates, not a fixed ladder. Unknown/non-model/manual/
 permission/contract gaps do not automatically escalate. Clean retry is exceptional: documented
