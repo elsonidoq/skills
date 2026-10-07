@@ -2,9 +2,9 @@
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
-B01 attempt 1 blocked at required planner tests; coordinator inspected exact failures and retained
-partial owned work. Same-profile targeted continuation authorized below; T002/T003 not started.
-No implementation accepted yet; independent final review PENDING.
+Inspected same-profile continuation verified/checkpointed T001; T002/T003 dependency-ready.
+Attempt 1 retained below. Coordinator batch audit and independent final review PENDING;
+no feature acceptance inferred.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
 
@@ -336,3 +336,40 @@ Next safe action: checkpoint this exception/resume intent, resume originating ex
 failures, original full union/current state and unchanged profile; once repaired/verified, continue
 T001 commit/evidence → T002 → T003 without routine task pauses. Capture returned continuation ID
 immediately outside worker paths; audit complete returned checkpoints at batch boundary.
+
+## B01 originating-context continuation — T001 verified
+
+Reconciled `0163eaef94a74e5da1f2647dd8625241a83e50ef`, empty index, exact 11-path partial
+diff hash `af5e9531d647e97fe8262877bc674e71459157b438bbce6ee21b51bde16b69b7`;
+parent-only `a10d6f9`/`0163eae` changes understood; source/task digests unchanged. Selected
+exact `openai-codex/gpt-6.1-sol:medium` retained. Parent-attributed runtime observation for
+attempt-1 run `9734ad8e-90e0-4ca7-812c-4e38635c9d57`: `gpt-6.1-sol` thinking medium;
+original unknown preserved. THIS continuation observation unknown, no probe. Safe missing
+lookup now preserves missing-reference diagnosis; bounded mutation removes all duplicate
+matches while summary survives. No escalation/discard/weaker acceptance.
+
+T001 baseline `0163eae` (original `ba7bd35` plus attributable evidence) → focused 11-path
+implementation `e7e3844856f87a4344ed4b51906b281dc318ec38`. All six REQUIRED commands rerun
+with `PYTHONDONTWRITEBYTECODE=1`, Python 3.12.3/local offline, on exactly that content:
+producer **5**, planner tests **88**, batching **38**, intake **10**, coordination **23** PASS
+(**164 unittest tests**); planner checker static PASS. Diff/staged whitespace PASS; actual
+owned diff inspected, empty index and only parent STATE dirt afterward. No source/task,
+settings/pins/guideline/STATE writes. Rows below supersede, not erase, attempt-1 outcomes;
+original criterion pointers are approved tasks' matching REQUIRED paragraphs. Dispositions
+are executor proof proposals subject to parent audit, not independent self-review.
+
+| Item | Executor / disposition | Concrete named proof at T001 revision |
+| --- | --- | --- |
+| T001/V1 | pass / satisfied | Producer ordinary chosen-7 vs default-1/no manual; planner `VerificationCarrierTests` practical/item/legacy bounded removals rejected. Existing both-adapter/create-only/separate-source/legacy guards PASS. |
+| T001/V2 | pass / satisfied | `test_oracle_sensitive_routing_cases`: moderate strong-cheap→symbolic Luna/max; weak-hidden adequate→Sol/medium; inadequate→producing gate, separate family/effort. Planner cost/weakest/producer removals rejected; existing exact dispatch/max/support/owner/unknown tests PASS. |
+| T001/V3 | pass / satisfied | `test_shared_check_two_distinct_items`: one output, exported/preserved [V1,V2], fixture-task-006/offline-python, both satisfied. `test_task_specific_evidence_dispositions`: removed/irrelevant/stale/wrong-environment/missing/conflicting/unrun/confidence→insufficient; dropped V2→failed; incomplete report retains defect+limitation. Pending producer blocks, full proof releases; scope/checkpoint/optional guards PASS. |
+| T001/V4 | pass / satisfied | `test_representative_sample_stop_and_ordinary_path`: pending/rejected/absent/LLM/outside-scope blocked; sample-1 explicit approval permits approved-scope only; ordinary accepted without sample. STOP/approval removal rejected. Symbolic gates, no actual user/provider exercise. |
+| T001/V5 | pass / satisfied | `SimulatedRepairTests`: SHA/prior proof/consumer-drops-V2 gap, original contract equality, implementation continuation, failed/stale proof blocked, invalidated item rerun at fixture-repair-006/offline-python accepted; producer work/checkpoint/attempt preserved. Unknown/uninspected/support/owner/non-model gaps stop. Unjustified retry denied; documented safe gated exceptional retry allowed symbolically; inspection/SHA/same-contract/safe-gate removals rejected. |
+| T001/V6 | pass / satisfied | Feedback first failed proof→satisfied correction retains unknowns/exact next selection/reused-invalidated refs. Coordination bounded same-summary example retains prior text/one row/guideline bytes; disposition/escalation removals rejected. Initialization/retrieval/approval/drift/no-penalty guards PASS. |
+| T001/V7 | pass / satisfied | Six commands/counts above, scoped task SHA and distinct evidence checkpoint; manual diff trace retains pins/owner/support/order/sole rubric/final review/task checkpoints. |
+
+All three failing-before `VerificationGapTests` now PASS. Strong local task-specific static/
+symbolic oracles, not runtime obedience/performance proof. Manual artifact trace complete;
+no actual runtime manual gate applicable. First attempt blocked, final T001 verified after
+inspected correction; model-only attribution unknown. No remaining T001 gap found. Separate
+SUMMARY/index checkpoint follows before T002; its SHA is read from Git, not self-hashed.
