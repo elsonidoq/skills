@@ -1,8 +1,8 @@
 # Current state
 
-- Run: `2026-10-07-task-verification-contracts`; implementation complete and independently accepted, finish-session reconciled.
-- Authority: [combined approval](docs/plans/reviews/task-verification-contracts-planning-review.md); [source](docs/plans/task-verification-contracts-tinyspec.md), [tasks](docs/plans/task-verification-contracts-tasks.md).
-- Verified checkpoint: F001 `dbeb020`, evidence `95cde22`; [run evidence/accepted review disposition](memory/coordination/evidence/2026-10-07-task-verification-contracts/SUMMARY.md).
-- Independent acceptance: `cd2ffbe9-1029-4d0d-9745-3dd4697f2291` ready/OK over `ba7bd35..95cde22`; R001 resolved, no new stage/gate. Active children: none; blockers: none.
-- Limits: static/symbolic verification only; live provider obedience/performance NOT RUN. Guidelines unchanged.
-- Next: run `/reload` in pi. Normal main→origin push authorized by owner; Git owns publication status.
+- Run: `2026-10-07-coordinator-dispatch-readiness`; implementation/routing approved, B01 imminent direct dispatch.
+- Authority: [source](docs/plans/coordinator-dispatch-readiness-tinyspec.md), [tasks](docs/plans/coordinator-dispatch-readiness-tasks.md), [review](docs/plans/reviews/coordinator-dispatch-readiness-planning-review.md); exact-content approval and execution routing in [run evidence](memory/coordination/evidence/2026-10-07-coordinator-dispatch-readiness/SUMMARY.md).
+- Baseline: `ecf8def`; intake/batching/state checks PASS (10/38/14). B01 T001→T002→T003 selected `openai-codex/gpt-6.1-sol:medium`; no implementation checkpoint accepted yet.
+- Active children: none at preflight; no blockers. F01 fresh independent review with same approved profile follows B01 audit.
+- Limits: static/symbolic acceptance only; live obedience/performance NOT RUN. No push/deploy/guideline change authorized by this run.
+- Next: dispatch B01 directly after intent checkpoint; capture child ID, inspect that run and audit returned task/evidence checkpoints.
