@@ -5,7 +5,7 @@
 TinySpec selected by owner; preparation of source, separate tasks and planner-owned review
 only. Source/tasks produced and planner-owned review complete with no blockers/fixes.
 Combined source/task/scope approval and B01/F01 routing received below. B01 worker tasks
-checkpointed; coordinator audit and independent F01 acceptance pending. Original request
+checkpointed and coordinator-audited; independent F01 acceptance pending. Original request
 and exact bounded paths supplied in this planning session; planning evidence retained below.
 Gate: `NO_BRAINSTORM_NEEDED` — settled detailed owner direction; mechanics resolved locally.
 Baseline HEAD: `63804165e0d9b285501daad65215ac9b0fadc33e`, clean index/worktree.
@@ -149,8 +149,8 @@ in tasks (contract bytes unchanged), this SUMMARY/index for internal task/eviden
 STATE.md is coordinator-only and excluded. Current clean baseline `230d9f0`; dispatch-intent
 checkpoint precedes launch. No generic fallback, new profiles or scope without affected gates.
 
-- B01: worker T001 and T002 checkpointed below; coordinator audit/F01 pending.
-- F01: pending B01 audit; full committed range and approved digests required.
+- B01: completed; coordinator six-item audit satisfied below.
+- F01: in_progress / imminent fresh review dispatch over 9b966ae..ba280fb.
 - Actual worker/reviewer binding/effort: UNKNOWN until runtime evidence; selection is not observation.
 
 ## B01 internal implementation checkpoints — worker
@@ -280,4 +280,21 @@ Residual worker-owned changes: none. Unstaged coordinator-owned STATE.md preserv
 read as task authority, written, staged or committed. No staged files left by the worker.
 Selected profile unchanged, observed full binding/effort UNKNOWN. Six items PASS for bounded
 offline scope; runtime-obedience limitation persists. No guideline update proposed.
-Next: coordinator whole-range audit and fresh F01 reviewer; tell owner to run `/reload` in pi.
+Next: fresh F01 reviewer; tell owner to run `/reload` in pi.
+
+## Coordinator B01 audit / F01 dispatch intent
+
+Parent inspected actual T001/T002 and distinct evidence commit diffs, worker terminal status
+`984ae4ff-0c8b-42bf-988a-73c47d1922d6`, transcript check outputs and six item mappings.
+T001/V1–V4 and T002/V1–V2: **satisfied** for approved offline scope, with criterion-relevant
+proof pointers in internal rows above; no failed or insufficient REQUIRED item. Parent reran
+checker PASS and planner 96 tests PASS, verified source/task digests unchanged and whitespace
+clean. Four operational consumers explicitly apply the shared owner; artifact test/run/use,
+all-consumer lifetime, disproof routing and selective/no-forced-spike choices match requirements.
+Only pending STATE.md run capture is coordinator-owned; worker commits preserved it. Worker
+runtime status observes gpt-6.1-sol / thinking medium; full provider observation remains qualified.
+T001 evidence e3c4ddd, T002 evidence ba280fb independently scoped; no combined-task commit.
+B01 accepted; final acceptance awaits F01. Approved fresh reviewer `openai-codex/gpt-6.1-sol:medium`
+will read full 9b966ae..ba280fb committed implementation range, approved source/tasks and
+review contract. Review is read-only, no live tests or new writes. No active worker, no retry.
+Dispatch intent checkpoint precedes F01; reviewer result persisted only at terminal disposition.

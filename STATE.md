@@ -1,8 +1,8 @@
 # Current state
 
-- Run: `2026-10-07-early-risk-reduction`; B01 (T001→T002) approved, imminent dispatch.
-- Authority: [TinySpec](docs/plans/early-risk-reduction-tinyspec.md), [tasks](docs/plans/early-risk-reduction-tasks.md); exact-content approval, review and routing in [run evidence](memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md).
-- Baseline: clean `230d9f0`; planning reviewed/checkpointed; implementation tasks pending. Selected worker and fresh final reviewer: `openai-codex/gpt-6.1-sol:medium`.
-- Active children: none; approved native async worker launch next. STATE.md remains coordinator-owned, excluded from worker writes.
-- Boundaries: no live/provider experiments, runtime/settings/production edits, push/deploy or guideline mutation. Static checks cannot prove live obedience.
-- Next: dispatch B01, capture run ID, then inspect terminal output and audit each task/REQUIRED item before fresh independent final review.
+- Run: `2026-10-07-early-risk-reduction`; B01 T001→T002 implemented and audited; F01 fresh independent review imminent.
+- Authority: [TinySpec](docs/plans/early-risk-reduction-tinyspec.md), [tasks](docs/plans/early-risk-reduction-tasks.md); exact-content approval, routing and checkpoints in [run evidence](memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md).
+- Verified: T001 `74fb1ce` / evidence `e3c4ddd`; T002 `5e2d13c` / evidence `ba280fb`; six REQUIRED items satisfied. Parent checker and 96 planner tests PASS; worker lint 331 PASS.
+- Worker `984ae4ff-0c8b-42bf-988a-73c47d1922d6` terminal and audited; no active writer. F01 selected `openai-codex/gpt-6.1-sol:medium`, fresh read-only review over `9b966ae..ba280fb`.
+- Boundaries: static/fixture acceptance only; live obedience NOT RUN. No push/deploy, production/runtime/settings or guideline changes authorized.
+- Next: dispatch F01, capture identity, inspect findings and reconcile terminal acceptance. `/reload` required after final acceptance.
