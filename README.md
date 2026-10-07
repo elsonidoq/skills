@@ -108,6 +108,11 @@ No universal Sol/medium default or forced model diversity applies.
 Verify permitted callable binding, supported effort, tools and owner gates at assignment/dispatch,
 and ensure settings do not silently override actual dispatch arguments. Actual profile stays
 unknown when unobservable, never inferred from selection.
+The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#select-execution-capability)
+ends preparation once mandatory conditions and committed intent are satisfied, reopening only
+for concrete affected invalidation. One worker implementing one batch normally uses direct
+asynchronous delegation, including multiple internal sequential tasks; a workflow needs a
+concrete orchestration reason in the existing brief/tracker, not merely a batch label.
 
 Verification per task; execution per coherent batch. Practical producer contracts retain
 criterion/check/evidence/gates and optional distinction through both adapters. In the sole

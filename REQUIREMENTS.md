@@ -37,6 +37,11 @@ Reuse verified unchanged approval on resume; changed boundaries/profiles need af
 There is no universal Sol/medium default and no forced model diversity. Select one exact binding
 and independently justified reasoning effort per invocation through owner choice; task assignments
 never silently select a different profile inside that invocation.
+For one worker implementing one batch, normally use direct asynchronous delegation, even
+with sequential internal tasks; workflow orchestration needs a concrete reason in the existing
+brief/tracker. The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#select-execution-capability)
+owns this launch choice and the finite preparation rule: satisfied mandatory conditions and
+committed intent lead to dispatch; only concrete invalidation reopens affected preparation.
 
 At assignment and dispatch verify permissions, tools, callable binding and supported effort
 through the installed runtime. Registry entries, thinking flags and suffix syntax alone
