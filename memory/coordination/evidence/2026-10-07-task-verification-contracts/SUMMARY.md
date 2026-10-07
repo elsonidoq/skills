@@ -2,7 +2,8 @@
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
-coordinator preflight begun, batch/profile routing approval pending. No implementation dispatched.
+coordinator preflight completed and B01/profile routing APPROVED. Dispatch intent recorded below;
+no implementation accepted yet.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
 
@@ -169,9 +170,53 @@ runs on selected Sol/medium succeeded; final reviewer role is registered with re
 but no final reviewer invocation or implementation profile selection is inferred. Assignment and
 dispatch must recheck binding/effort/tools and selection. No live provider probe authorized.
 
-Next safe action: coordinator presents the complete proposed coherent execution plan with
-separate family/effort rationales, obtains exact batch/profile routing and fresh reviewer selection,
-then establishes snapshot/baselines before dispatch. Existing terminal STATE belongs to the prior
-run and is not current authorization; reconcile and update only under coordinator snapshot rules.
-Implementation/final independent review remain NOT RUN. No routing lesson or guideline update
-proposed from approval-only activity.
+Intake next action was complete routing-plan approval; that gate completed below. No routing
+lesson or guideline update proposed from approval-only activity.
+
+## Approved execution plan and B01 dispatch intent
+
+Owner selected **Approve batch and profiles** via parent `ask_user` after the complete table:
+B01 contains all three approved tasks T001–T003, one sequential delegated invocation using exact
+`openai-codex/gpt-6.1-sol:medium`; separate fresh read-only final reviewer uses that same exact
+profile. Source/tasks digests and scope are unchanged. This is routing selection, not permission
+for unrelated operations or acceptance waiver. Implementation baseline is the imminent-dispatch
+evidence commit (obtain from Git after this checkpoint); allowed task paths are exactly the
+approved list. Worker owns internal task/evidence commits, excludes STATE.md and approval/source
+artifacts; parent owns snapshot and audited-batch/final-review evidence boundaries.
+
+| Batch | Tasks / work | Dependencies / checks | Exact selected profile | Family rationale | Effort rationale | Mode / state |
+| --- | --- | --- | --- | --- | --- | --- |
+| B01 | T001 operational contracts/fixtures; T002 active prose; T003 integrated packet | Internal T001 → T002 → T003; all 12 REQUIRED refs; producer-before-consumer and per-task/evidence checkpoints | `openai-codex/gpt-6.1-sol:medium` | Sol justified for coupled semantic instruction changes with runtime-obedience blind spots | Medium for settled design, bounded local tools and focused fixtures | Delegated / in_progress (dispatch intent) |
+
+Complete approved implementation count: 3, including evidence-only T003. Delegate instead of
+local because current parent context is accumulated from planning and occupied headroom is not
+sufficiently observable; fresh bounded executor is safer. This is not one-agent-per-task dispatch.
+One writer, same clean main workspace, no concurrent worktree or separate isolation needed.
+
+Six-factor assessment: residual reasoning medium (proof relevance/dispositions and consistent
+cross-owner wording); shallow local tool chain plus Git/checkpoints; weakest oracle is static/
+symbolic evidence's inability to prove runtime instruction obedience, so no optimistic smaller
+family claim; scope/coupling is coherent producer/audit/repair/evidence with active docs; failure
+cost is reversible local owned files, with valid work preserved; guidance none. No scoring or
+fixed ladder. Conditional repair: inspect failure/invocation/partial checkpoints, diagnose exact
+gap, preserve valid work and original contracts, then seek any changed profile/boundary approval;
+unknown cause or unavailable authority/support stops, not blind retry.
+
+Fresh reviewer selection is independent of implementation session. Family rationale: Sol for
+cross-owner semantic diff/approved acceptance consistency; effort rationale: medium for bounded
+committed range and focused existing check evidence. Runtime reviewer role/tools available;
+launch preflight remains authoritative, no settings/default override allowed. Selected versus
+actual model/effort stays distinct. Actual B01/reviewer observations unknown until runtime evidence.
+
+Baseline checks: Python 3.12.3 and clean Git/usable identity observed; planning review passed
+producer 4 + batching 28 baseline tests, planner checker and ordering. These unchanged baselines
+are not future feature acceptance. Delegate has verified edit/write mutation tools used successfully
+by same-profile source/task preparation, plus read/bash; async usable, session budget unlimited,
+per-run fan-out 64, active capacity empty. Required scope/support/profile preflight rechecked at
+dispatch; missing capability stops rather than switching. No external, provider, installation,
+push, deployment, guideline edit, historical rewrite or reset permitted.
+
+Current next safe action: checkpoint this plan/snapshot intent, dispatch fresh B01 with the full
+approved task union and constraints, capture returned run ID immediately without racing worker
+Git; wait native completion then audit every actual task diff/SHA/checkpoint and item evidence
+before release/final review. Final independent review and implementation acceptance remain NOT RUN.
