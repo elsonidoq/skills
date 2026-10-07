@@ -362,10 +362,18 @@ never per-task assignments. A mismatch or unsupported argument blocks launch and
 capability/owner selection, not automatic substitution. Record selected and observed profiles
 separately in the tracker; unknown observation stays unknown.
 
+Normally use direct `subagent({agent,task,...})` for one worker implementing one batch,
+even multiple internal sequential tasks, with async/background mode and the unchanged exact
+approved model/effort arguments. A batch alone does not justify a workflow wrapper.
+A concrete named continuation/recovery, branching/aggregation or reusable orchestration need
+may justify a workflow; record a terse reason in the existing dispatch brief/tracker,
+not a new artifact, gate, approval or persistence boundary. Justified one-child workflows
+remain allowed; do not migrate existing runs. Direct delegated launch is not local execution.
+Both shapes retain the same approval, strategy, capability, tool, budget, permission,
+ownership, REQUIRED/manual verification, sequential batch, worker task/evidence checkpoint,
+return-audit and recovery gates above and below.
+
 - Delegate a task or safe batch only when write scope and dependencies are clear.
-- Run conflicting or dependent work sequentially.
-- Run all batches sequentially, including independent batches with isolated write
-  surfaces.
 - Verify and stay within observed per-run and session-wide delegation budgets;
   stop rather than exceeding them or assuming historical runtime limits.
 - If required delegation is unavailable, stop before implementation and report
@@ -450,6 +458,19 @@ smallest sufficient check, manual/permission gates and optional checks separatel
 task's baseline and owned paths, internal producer checks before consumer use, and the per-task
 commit followed by separate evidence checkpoint convention. Missing or ambiguous REQUIRED contracts
 return to the producing review/approval gate before dispatch; never retrofit approved tasks.
+
+Existing preparation has a definite end: once its required conditions and dispatch-intent
+checkpoint are satisfied, dispatch; reopen only for concrete invalidating evidence.
+This follows completion of Load and Verify, preflight, approved graph/profile, full brief/REQUIRED
+union, child reconciliation where applicable, committed intent and final argument validation;
+it substitutes for none of them. Missing conditions stop with the condition, concrete gap,
+affected action and smallest resolution. On changed content/scope/acceptance/boundary/profile,
+relevant Git/ownership/environment/tool/budget drift, failed/partial producer proof, unmet
+permission/manual gate, interrupted persistence or uncertain execution/child status,
+reopen only affected preparation under its existing owner. A passing unchanged check, prose
+polishing, generic history search or healthy worker progress is not invalidation. Administrative
+checkpoints alone do not invalidate task proof: compare relevant scope/revision/environment,
+reuse compatible evidence and refresh only affected proof, without extra unchanged persistence.
 
 Require the implementer return to identify actual profile or unknown separately from selection,
 and pass/fail/not_verified for every REQUIRED reference with concrete command/output or bounded

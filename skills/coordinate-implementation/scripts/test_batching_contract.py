@@ -112,6 +112,72 @@ class ApprovalGateTests(unittest.TestCase):
             self.assertIn(label, approval_errors(" ".join(TEXT.split()).replace(phrase, "REMOVED", 1)))
 
 
+def dispatch_seam_errors(text):
+    """Check actual launch carrier; footer repetitions cannot supply missing rules."""
+    carrier = " ".join(text.split("## Select Execution Capability", 1)[-1].split(
+        "## Execute and Integrate", 1)[0].split())
+    errors = [phrase for phrase in (
+        "once its required conditions and dispatch-intent checkpoint are satisfied, dispatch",
+        "reopen only for concrete invalidating evidence",
+        "condition, concrete gap, affected action and smallest resolution",
+        "reopen only affected preparation",
+        "healthy worker progress is not invalidation",
+        "Normally use direct `subagent({agent,task,...})`",
+        "even multiple internal sequential tasks",
+        "A batch alone does not justify a workflow wrapper",
+        "named continuation/recovery, branching/aggregation or reusable orchestration",
+        "terse reason in the existing dispatch brief/tracker",
+        "Justified one-child workflows remain allowed; do not migrate existing runs",
+        "Direct delegated launch is not local execution",
+        "Both shapes retain the same approval",
+    ) if phrase not in carrier]
+    for unsafe in ("Use workflowScript merely because it is a batch", "Ban all one-child workflows",
+                   "Migrate existing runs to direct launch", "Direct delegation counts as local execution",
+                   "Skip profile validation for direct launch", "Skip approval gates for workflow launch"):
+        if unsafe in carrier:
+            errors.append(unsafe)
+    return errors
+
+
+class DispatchSeamTests(unittest.TestCase):
+    def test_actual_carrier_terminates_preparation(self):
+        self.assertEqual(dispatch_seam_errors(TEXT), [])
+
+    def test_removal_is_not_rescued_by_footer(self):
+        for phrase in dispatch_seam_errors(""):
+            with self.subTest(phrase=phrase):
+                normalized = " ".join(TEXT.split())
+                self.assertIn(phrase, normalized)
+                altered = normalized.replace(phrase, "REMOVED", 1)
+                self.assertIn(phrase, dispatch_seam_errors(altered + " ## Execute and Integrate Footer: " + phrase))
+
+    def test_launch_shortcuts_and_categorical_bans_are_rejected(self):
+        for unsafe in ("Use workflowScript merely because it is a batch", "Ban all one-child workflows",
+                       "Migrate existing runs to direct launch", "Direct delegation counts as local execution",
+                       "Skip profile validation for direct launch", "Skip approval gates for workflow launch"):
+            with self.subTest(unsafe=unsafe):
+                altered = TEXT.replace("## Execute and Integrate", unsafe + "\n\n## Execute and Integrate", 1)
+                self.assertIn(unsafe, dispatch_seam_errors(altered))
+
+    def test_symbolic_direct_multitask_and_justified_workflow_arguments(self):
+        self.assertEqual(dispatch_seam_errors(TEXT), [])
+        selected = "symbolic/sol:medium"
+        for shape, reason in (("direct", None), ("workflow", "named continuation: inspect retained child on recovery")):
+            with self.subTest(shape=shape):
+                args = {"agent": "worker", "task": "T001→T002→T003 sequentially", "model": selected, "async": True}
+                brief = {"strategy": "delegated", "orchestration_reason": reason}
+                invocation = args if shape == "direct" else {"workflowScript": {"child": args}}
+                child = invocation if shape == "direct" else invocation["workflowScript"]["child"]
+                self.assertEqual(child["model"], selected)
+                self.assertTrue(child["async"])
+                self.assertEqual(brief["strategy"], "delegated")
+                if shape == "workflow":
+                    self.assertTrue(brief["orchestration_reason"].startswith("named continuation:"))
+                self.assertEqual(approval_errors(TEXT), [])
+                for gate in ("permission", "binding", "effort", "tools", "owner", "manual"):
+                    self.assertIsNone(SimulatedProfileTraceTests.simulated_dispatch(selected, **{gate: False})["args"])
+
+
 class BatchingContractTests(unittest.TestCase):
     def test_coherent_sequential_work_is_not_split_by_incidental_boundaries(self):
         self.assertIn("amortize startup and retain\n   useful context", TEXT)
