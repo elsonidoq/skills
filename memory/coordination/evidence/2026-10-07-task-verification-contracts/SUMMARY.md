@@ -1,8 +1,10 @@
-# Task verification contracts — source preparation
+# Task verification contracts — source and task preparation
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
-TinySpec source prepared and checkpointed; not artifact-approved or implementation-authorized.
-No tasks, coordinator execution or review dispatch performed.
+Separate TinySpec source and implementation tasks prepared and checkpointed; planner-owned
+review/current-content combined approval pending. Not artifact-approved or implementation-authorized.
+No implementation, coordinator launch or review dispatch performed. Original source checkpoint
+and observation below are preserved; the task-stage update is separately attributable.
 
 ## Authority and profile
 
@@ -46,9 +48,58 @@ Actual source invocation effort remains unobserved; future runtime callability/r
 owner gates must be verified at their applicable stages. No new routing lesson is supported
 by this preparation-only run: **no update proposed**, guidelines unchanged.
 
-Next safe action: planner consumes source/bounds/digest and A1–A15 plus traceability, obtains
-an exact profile for task generation under existing selection gates, and uses the separate
-TinySpec task adapter with practical REQUIRED items. Then review and current-content combined
-approval precede any coordinator preflight. No implementation approval may be inferred from
-this source or its commit. Global skill assets were not changed; no new `/reload` action from
-this source-only checkpoint.
+Source-stage next action (at its checkpoint): separate task production, then planner review
+and current-content combined approval before coordinator preflight. No implementation approval
+may be inferred from source or preparation commits. Global skill assets were not changed;
+no new `/reload` action from these preparation-only checkpoints.
+
+## Task-stage update (2026-10-07)
+
+Preparation authorization: owner selected TinySpec direct task adapter, separate tasks only,
+exact `openai-codex/gpt-6.1-sol:medium` for assessment/source/tasks/planner-owned review, unchanged.
+This task invocation separately observes environment `PI_MODEL=gpt-6.1-sol`; actual provider/effort
+observation is unavailable, not inferred from selection. New attributable source observation:
+parent supplied status `547eabef-a497-436f-a735-b1c15e9ae6ba`, which showed `gpt-6.1-sol` thinking
+medium for source invocation. This later correction does not overwrite the original source's
+unavailable effort observation or alter its bytes/digest. No delegation, repair or escalation.
+
+Task-preparation assessment: residual reasoning medium (cross-owner contract/proof decomposition);
+tool depth bounded local reads/checks/Git; weakest blind spot is semantic completeness and future
+runtime obedience, handled by manual trace with honest static/simulated limits; scope/coupling is
+one operational/fixture increment plus lockstep docs and integrated packet; failure cost is
+reversible preparation content with focused checkpoints; approved guidance none. Family rationale:
+owner-selected Sol retained for coupled producer/coordinator evidence contracts. Effort rationale:
+owner-selected medium retained for bounded decomposition and manual completeness inspection.
+These rationales do not allocate implementation models or select batches.
+
+| Deliverable / attempt | Baseline → result | Item outcomes / evidence |
+| --- | --- | --- |
+| P1 separate tasks/discovery link, first/final attempt | `e83e1bec10bb27d664b785b361189217b9c8c578` → `e9d830843c5be9e61352d884aa236e4a0edf13a0` | Preparation checks PASS: Python 3.12.3; `PYTHONDONTWRITEBYTECODE=1 python3 skills/task-generation/scripts/check-task-order.py docs/plans/task-verification-contracts-tasks.md` reports earlier prerequisites/contiguous stories; local Python inspection finds 9 resolved task links, 3 ordered tasks, 12 unique REQUIRED refs and complete A1–A15 mapping; worktree/staged whitespace and explicit two-path inventory PASS. Manual inspection confirms source authority/exclusions, concrete named negative proof scenarios, causal documentation consumers, implicit producer dependencies, item evidence/gates, stage feasibility and later-review-not-precheckpoint-review boundary. Focused task/index commit succeeded; clean before evidence writes. |
+
+Tasks: [task-verification-contracts-tasks.md](../../../../docs/plans/task-verification-contracts-tasks.md).
+SHA-256: `db1c467a93f89dede0e2d0501f4e4bb4fc499d6967fe4e6000b259822d1d0a2c`.
+Source digest remains `266820b3b8aa8dfe8b2322f315659bf8b91fc4f6b5352c0d68a251316cc247ef`.
+Source evidence checkpoint: `e83e1bec10bb27d664b785b361189217b9c8c578` (task baseline).
+Task checkpoint changes only the new task file and one `docs/plans/index.md` link; this update
+and one existing evidence INDEX row form the distinct evidence-only checkpoint, whose SHA is
+obtained from Git after commit (not recursively written into itself).
+
+Contract strength: bounded preparation structure/link/scope checks plus manual semantic trace;
+future tasks specify strong task-local proof dispositions and focused fixture oracles. Existing
+implementation fixtures/checkers were read to select exact causal surfaces, not executed or edited
+in this preparation stage. Implementation and fresh independent final review remain NOT VERIFIED;
+fixture success cannot demonstrate live obedience/callability or cheaper-model performance.
+
+Manual traceability/stage notes: T001 supplies producer/routing/union/audit/repair/feedback contracts
+and affected fixtures; T002 depends on T001 and compares only inspected active REQUIREMENTS/README/
+settings-sample prose; T003 consumes both verified increments and prepares the full-range reviewer
+packet in existing SUMMARY/index. Unchanged docs routing/index and task-order behavior need no
+arbitrary edits. All 15 source criteria map to 12 REQUIRED items; optional hardening/live permission
+is separate. Existing legacy/current approval gates, sample STOP and per-task/evidence commits
+are retained. Three causal units reflect inspected seams, not local/delegated quota manipulation.
+No implementation paths, source, STATE.md, guidelines, runtime, settings or historical files changed.
+
+Reflection: preparation outcomes support no new routing lesson; **no update proposed**.
+Current next safe action: planner reviews exact source/task digests and current contracts under
+the unchanged selected preparation profile, resolves defects through producing review, then obtains
+combined current-content approval before any coordinator preflight. No approval or launch inferred.
