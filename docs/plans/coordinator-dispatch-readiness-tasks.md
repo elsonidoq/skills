@@ -59,7 +59,7 @@ Apply [checkpoint owner](../../skills/memory-handling/references/task-commit-con
 
 ## Integration: necessary consumers and reviewer packet
 
-- [ ] T003 — Align only necessary active prose and prepare full-range acceptance evidence
+- [x] T003 — Align only necessary active prose and prepare full-range acceptance evidence
   - **Depends**: T001, T002
 
 - **Outcome/source:** one operational owner, necessary consumer consistency and complete acceptance/reviewer packet (A5, integrated A1–A4,A6), without self-certifying independent review.
