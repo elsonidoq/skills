@@ -22,10 +22,10 @@ Record ordered task IDs and the weakest material condition, not an average acros
 
 | Factor | Inspect before proposing a profile |
 | --- | --- |
-| Residual reasoning | What design is closed, what inference remains, and whether ambiguity requires an owner/design decision. |
+| Residual reasoning | Compare closed design and implementation difficulty with remaining inference; ambiguity still requires an owner/design decision. |
 | Agentic/tool depth | Tool-chain length, environment exploration, stateful interactions and long-horizon recovery. |
-| Verification blind spots | REQUIRED contract strength, concrete executable oracles, manual gates and the weakest material unobservable failure. |
-| Scope/coupling | Shared files/interfaces, producer/consumer checks, integration reach and context fit. |
+| Verification blind spots | REQUIRED contract strength, oracle quality, check cost and observability, manual gates and the weakest material unobservable failure; cheap reliable proof can offset moderate implementation complexity, never missing criteria. |
+| Scope/coupling | Shared files/interfaces, producer/consumer checks, practical combined verification feasibility, attributable failures, integration reach and context fit. |
 | Failure cost/reversibility | Blast radius, durable/security effects, rollback permission and cost of preserving/recovering valid work. |
 | Applicable approved guidance | Exact relevant project guideline, applicability and evidence pointer, or explicit none with uncertainty. |
 
@@ -47,6 +47,11 @@ supported pairs; there is no universal ladder.
 | Luna/max | A bounded multi-file batch with moderate residual reasoning and strong oracles may justify a Luna experiment. | Max must have an explicit extra-reasoning rationale and remain recorded as max, never renamed medium. |
 | Sol/low or Sol/medium | Stronger reasoning or deeper tool use may justify Sol, subject to the actual task blind spots and evidence. | Low can suffice when residual inference is tightly bounded; medium requires its own rationale for greater reasoning/tool demands. |
 | Astra or Terra | Other stronger agentic options only when permitted, supported and justified for this batch. | Select supported effort independently; neither family implies a fixed effort or mandatory step in a ranking. |
+
+Moderate complexity with closed design and strong cheap reliable oracles can justify a smaller
+supported symbolic proposal, with separate family/effort rationales. Weak oracle/hidden coupling
+favors a justified stronger option only while contracts remain adequate; inadequate contracts
+stop at producing review/renewal. Evaluate the weakest condition, not an average or score.
 
 Deep tool use, weak oracles, unresolved architecture, high failure cost and relevant
 repeated negative guidance defeat optimistic Luna routing. Choose a justified supported

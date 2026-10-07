@@ -215,11 +215,13 @@ class SimulatedProfileTraceTests(unittest.TestCase):
 def sample_batch_contract(selected="symbolic/luna:medium"):
     tasks = [
         {"id": "T005", "baseline": "fixture-base", "owned_paths": ["fixture/producer.md"],
-         "required": [{"ref": "T005/V1", "criterion": "shared check passes",
+         "required": [{"ref": "T005/V1", "criterion": "producer exports stable item IDs",
+                       "observable_key": "producer_ids", "expected": ["V1", "V2"],
                        "check": "fixture shared-check", "expected_evidence": "shared-output",
                        "manual_gate": "scope inspection", "permission_gate": "local only"}]},
         {"id": "T006", "baseline": "fixture-task-005", "owned_paths": ["fixture/consumer.md"],
-         "required": [{"ref": "T006/V1", "criterion": "shared check passes",
+         "required": [{"ref": "T006/V1", "criterion": "consumer preserves every producer ID",
+                       "observable_key": "consumer_ids", "expected": ["V1", "V2"],
                        "check": "fixture shared-check", "expected_evidence": "shared-output",
                        "manual_gate": "scope inspection", "permission_gate": "local only"}]},
     ]
@@ -231,8 +233,12 @@ def sample_batch_contract(selected="symbolic/luna:medium"):
         "observed_profile": "unknown",
         "items": {item["ref"]: {"status": "pass", "evidence": "shared-output", "reason": None}
                   for item in brief["required_union"]},
+        "revision": "fixture-task-006", "environment": "offline-python",
+        "item_revisions": {"T005/V1": "fixture-task-006", "T006/V1": "fixture-task-006"},
         "outputs": {"shared-output": {"command": "fixture shared-check", "exit": 0,
-                                      "observable": "both invariants satisfied"}},
+                                      "revision": "fixture-task-006", "environment": "offline-python",
+                                      "observations": {"producer_ids": ["V1", "V2"],
+                                                       "consumer_ids": ["V1", "V2"]}}},
         "files": ["fixture/producer.md", "fixture/consumer.md"],
         "checkpoints": [
             {"task": "T005", "baseline": "fixture-base", "result": "fixture-task-005",
@@ -287,21 +293,51 @@ class SimulatedUnionReturnTests(unittest.TestCase):
         self.assertTrue(returned["items"]["T006/V1"]["reason"])
 
 
+def item_dispositions(brief, returned):
+    """Illustrative task-specific proof oracle, not a runtime schema or policy engine."""
+    dispositions = {}
+    for item in brief["required_union"]:
+        ref = item["ref"]
+        result = returned["items"].get(ref, {})
+        pointer = result.get("evidence")
+        output = returned["outputs"].get(pointer, {})
+        limitations = []
+        if not result:
+            limitations.append("missing item mapping")
+        if result.get("status") not in ("pass", "fail"):
+            limitations.append(result.get("reason") or "unrun or confidence-only report")
+        if not output:
+            limitations.append("missing output")
+        if output.get("command") != item["check"]:
+            limitations.append("irrelevant command")
+        if output.get("revision") != returned["item_revisions"][ref]:
+            limitations.append("stale revision")
+        if output.get("environment") != returned["environment"]:
+            limitations.append("wrong environment")
+        observations = output.get("observations", {})
+        if item["observable_key"] not in observations:
+            limitations.append("irrelevant observable")
+        valid_observation = not any(l in limitations for l in (
+            "missing output", "irrelevant command", "stale revision", "wrong environment", "irrelevant observable"))
+        violates = valid_observation and observations[item["observable_key"]] != item["expected"]
+        if output.get("exit") != 0 or (result.get("status") == "fail" and not violates):
+            limitations.append("conflicting proof/report")
+        if not all(returned["gates"].get(ref, {}).get(g) for g in ("manual", "permission")):
+            limitations.append("unmet original gate")
+        disposition = "failed" if violates else "insufficient-evidence" if limitations else "satisfied"
+        dispositions[ref] = {"disposition": disposition, "proof": pointer,
+                             "reason": "criterion violated" if violates else "; ".join(limitations) or "relevant IDs match",
+                             "limitations": limitations}
+    return dispositions
+
+
 def simulated_audit(brief, returned):
     """Bounded acceptance oracle for sample artifacts, not production enforcement."""
     expected = {item["ref"] for item in brief["required_union"]}
     if set(returned["items"]) != expected:
         return "blocked"
-    for item in brief["required_union"]:
-        result = returned["items"][item["ref"]]
-        output = returned["outputs"].get(result.get("evidence"))
-        if (result.get("status") != "pass" or not output
-                or output.get("command") != item["check"]
-                or output.get("exit") != 0
-                or output.get("observable") != "both invariants satisfied"
-                or not all(returned["gates"].get(item["ref"], {}).get(gate)
-                           for gate in ("manual", "permission"))):
-            return "blocked"
+    if any(i["disposition"] != "satisfied" for i in item_dispositions(brief, returned).values()):
+        return "blocked"
     allowed = {path for task in brief["tasks"] for path in task["owned_paths"]}
     if not set(returned["files"]).issubset(allowed):
         return "blocked"
@@ -398,7 +434,8 @@ def failed_capability_sample():
                            "recovery": "cheap", "guidance": "none"}
     returned["items"]["T006/V1"].update(status="fail", evidence="consumer-failed")
     returned["outputs"]["consumer-failed"] = {
-        "command": "fixture shared-check", "exit": 1, "observable": "compatibility invariant failed"}
+        "command": "fixture shared-check", "exit": 1, "revision": "fixture-task-006",
+        "environment": "offline-python", "observations": {"consumer_ids": ["V1"]}}
     return brief, returned
 
 
@@ -414,6 +451,10 @@ def simulated_repair_brief(brief, failed, diagnosis, *, inspected=True,
             "passed": ["T005/V1"], "failed": ["T006/V1"],
             "affected_dependencies": ["T006 consumer and external dependents"],
             "invalidated": ["T006/V1"], "reusable": ["T005/V1"],
+            "current_sha": failed["revision"], "exact_gaps": {"T006/V1": "consumer drops V2"},
+            "inspected_run": "fixture-run", "inspected_invocation": "fixture-invocation",
+            "operation": "implementation continuation under same original contracts",
+            "prior_proof": deepcopy(failed["outputs"]),
             "current_state": deepcopy(failed), "complete_contract": deepcopy(brief)}
 
 
@@ -450,8 +491,14 @@ class SimulatedRepairTests(unittest.TestCase):
         repaired["items"]["T006/V1"]["status"] = "pass"
         self.assertEqual(simulated_audit(brief, repaired), "blocked")
         repaired["outputs"]["repair-output"] = {
-            "command": "fixture shared-check", "exit": 0, "observable": "both invariants satisfied"}
+            "command": "fixture shared-check", "exit": 0, "revision": "fixture-repair-006",
+            "environment": "offline-python", "observations": {"consumer_ids": ["V1", "V2"]}}
+        repaired["revision"] = "fixture-repair-006"
+        repaired["item_revisions"]["T006/V1"] = "fixture-repair-006"
         repaired["items"]["T006/V1"]["evidence"] = "repair-output"
+        repaired["outputs"]["repair-output"]["revision"] = "fixture-task-006"
+        self.assertEqual(simulated_audit(brief, repaired), "blocked")  # unchanged stale proof cannot release
+        repaired["outputs"]["repair-output"]["revision"] = repaired["revision"]
         repaired["checkpoints"][1].update(result="fixture-repair-006",
                                             evidence_checkpoint="fixture-repair-evidence-006")
         self.assertEqual(repair["invalidated"], ["T006/V1"])
@@ -478,11 +525,30 @@ def simulated_feedback(selected, observed, outcome, diagnosis, *, strong=True, i
     return {"selected": selected, "observed": observed, "first_outcome": outcome,
             "final_outcome": outcome, "diagnosis": diagnosis,
             "contract_strength": "strong" if strong else "weak",
+            "batch": "B01", "task_items": {"T006/V1": {"disposition": "satisfied" if outcome == "accepted" else "insufficient-evidence",
+                                                          "proof": "fixture-output"}},
+            "escalation_reason": "consumer drops V2" if diagnosis == "model_capability" else "no capability escalation; " + diagnosis,
+            "next_selected": "symbolic/sol:medium" if diagnosis == "model_capability" else "pending selection",
             "capability_penalty": outcome == "blocked" and diagnosis == "model_capability",
             "qualified_positive": outcome == "accepted" and strong and not invalidated}
 
 
 class SimulatedFeedbackTests(unittest.TestCase):
+    def test_factual_first_final_attempts_and_unknown_preserved(self):
+        first = simulated_feedback("symbolic/luna:max", "unknown", "blocked", "model_capability")
+        first["task_items"]["T006/V1"] = {"disposition": "failed", "proof": "consumer-failed"}
+        original = deepcopy(first)
+        final = simulated_feedback("symbolic/sol:medium", "unknown", "accepted", "model_capability")
+        record = {"summary": "fixture/SUMMARY.md", "index_rows": 1, "attempts": [first, final],
+                  "reused": ["T005/V1"], "invalidated_rerun": ["T006/V1"]}
+        self.assertEqual(record["index_rows"], 1)
+        self.assertEqual(first, original)
+        self.assertEqual([a["observed"] for a in record["attempts"]], ["unknown", "unknown"])
+        self.assertEqual(first["task_items"]["T006/V1"]["proof"], "consumer-failed")
+        self.assertEqual(final["task_items"]["T006/V1"]["disposition"], "satisfied")
+        self.assertEqual(first["escalation_reason"], "consumer drops V2")
+        self.assertEqual(first["next_selected"], final["selected"])
+
     def test_feedback_instruction_carriers(self):
         memory = " ".join(COORDINATION_PATH.read_text().split())
         coordinator = " ".join(TEXT.split())
@@ -556,5 +622,144 @@ class SimulatedFeedbackTests(unittest.TestCase):
                 self.assertIn(phrase, memory)
 
 
+class PracticalVerificationTests(unittest.TestCase):
+    """Named offline examples; no runtime obedience, paid operation or real user gate."""
+
+    def test_oracle_sensitive_routing_cases(self):
+        rubric = RUBRIC_PATH.read_text()
+        for case, adequate, coupling, oracle, expected in (
+            ("moderate_complexity_strong_cheap_oracle", True, "bounded", "strong cheap", "symbolic/luna:max"),
+            ("weak_oracle_hidden_coupling", True, "hidden", "weak", "symbolic/sol:medium"),
+            ("inadequate_contract_producing_gate", False, "hidden", "missing", None),
+        ):
+            with self.subTest(case=case):
+                # Explicit contrasting proposals, not a production selection algorithm.
+                proposal = None if not adequate else "symbolic/sol:medium" if coupling == "hidden" else "symbolic/luna:max"
+                family = "closed design, moderate difficulty, strong cheap oracle" if oracle == "strong cheap" else "hidden coupling and weakest oracle"
+                effort = "bounded extra inference" if adequate else "producing review/renewal required"
+                self.assertEqual(proposal, expected)
+                self.assertTrue(family and effort)
+                self.assertNotEqual(family, effort)
+                self.assertIn("strong cheap reliable oracles", rubric)
+                self.assertIn("inadequate contracts", rubric)
+
+    def test_shared_check_two_distinct_items(self):
+        brief, returned = audited_sample()
+        actual = item_dispositions(brief, returned)
+        self.assertEqual([i["disposition"] for i in actual.values()], ["satisfied", "satisfied"])
+        self.assertEqual(len(returned["outputs"]), 1)
+        self.assertNotEqual(brief["required_union"][0]["observable_key"], brief["required_union"][1]["observable_key"])
+        self.assertEqual(returned["outputs"]["shared-output"]["observations"]["consumer_ids"], ["V1", "V2"])
+        self.assertEqual(simulated_audit(brief, returned), "accepted")
+
+    def test_task_specific_evidence_dispositions(self):
+        cases = ("removed_mapping", "green_but_irrelevant", "stale_revision", "wrong_environment",
+                 "missing_output", "conflicting_proof", "unrun_required", "confidence_only",
+                 "demonstrated_criterion_violation", "defect_with_evidence_limitation")
+        for case in cases:
+            with self.subTest(case=case):
+                brief, returned = audited_sample()
+                result = returned["items"]["T006/V1"]
+                output = returned["outputs"]["shared-output"]
+                if case == "removed_mapping":
+                    del returned["items"]["T006/V1"]
+                elif case == "green_but_irrelevant":
+                    output["observations"] = {"broad_suite": "green"}
+                elif case == "stale_revision":
+                    output["revision"] = "old-sha"
+                elif case == "wrong_environment":
+                    output["environment"] = "other-platform"
+                elif case == "missing_output":
+                    returned["outputs"].clear()
+                elif case == "conflicting_proof":
+                    output["exit"] = 1  # no demonstrated criterion violation
+                elif case == "unrun_required":
+                    result.update(status="not_verified", reason="tool unavailable; not run", evidence=None)
+                elif case == "confidence_only":
+                    result.clear()
+                    result["confidence"] = "high"
+                else:
+                    output["observations"]["consumer_ids"] = ["V1"]  # concrete dropped ID
+                    if case == "defect_with_evidence_limitation":
+                        result.update(status="not_verified", reason="separate report incomplete")
+                returned["optional"] = {"broad-suite": "green"}
+                actual = item_dispositions(brief, returned)["T006/V1"]
+                expected = "failed" if case.startswith("demonstrated") or case.startswith("defect_") else "insufficient-evidence"
+                self.assertEqual(actual["disposition"], expected)
+                self.assertTrue(actual["reason"])
+                self.assertEqual(simulated_audit(brief, returned), "blocked")
+                if expected == "failed":
+                    self.assertEqual(output["observations"]["consumer_ids"], ["V1"])
+                if case == "defect_with_evidence_limitation":
+                    self.assertIn("separate report incomplete", actual["limitations"])
+
+    def test_producer_pending_blocks_consumer_release(self):
+        brief, returned = audited_sample()
+        returned["items"]["T005/V1"].update(status="not_verified", reason="producer pending")
+        self.assertEqual(simulated_audit(brief, returned), "blocked")
+        returned["items"]["T005/V1"].update(status="pass", reason=None)
+        self.assertEqual(simulated_audit(brief, returned), "accepted")
+
+    def test_representative_sample_stop_and_ordinary_path(self):
+        for case, sample, decision, scope, allowed in (
+            ("pending", "sample-1", "pending", "approved-scope", False),
+            ("rejected", "sample-1", "reject", "approved-scope", False),
+            ("absent_sample", None, "approve", "approved-scope", False),
+            ("llm_self_review", "sample-1", "LLM-pass", "approved-scope", False),
+            ("approved_sample", "sample-1", "approve", "approved-scope", True),
+            ("outside_sample_scope", "sample-1", "approve", "full-unapproved", False),
+        ):
+            with self.subTest(case=case):
+                brief, returned = audited_sample()
+                gate = {"sample": sample, "user_decision": decision, "operation": scope,
+                        "blocked_operation": "downstream/full expensive operation"}
+                returned["gates"]["T006/V1"]["manual"] = bool(sample) and decision == "approve" and scope == "approved-scope"
+                self.assertEqual(simulated_audit(brief, returned) == "accepted", allowed)
+                self.assertEqual(gate["sample"], sample)
+        # Original ordinary contract has no representative-sample gate.
+        brief, returned = audited_sample()
+        self.assertEqual(simulated_audit(brief, returned), "accepted")
+        self.assertNotIn("sample", returned)
+
+    def test_unjustified_clean_retry_and_exceptional_safe_clean_retry(self):
+        def permitted(reason, ownership, mechanics, owner, project_gate):
+            return bool(reason) and all((ownership, mechanics, owner, project_gate))
+        for case, reason, ownership, mechanics, owner, project_gate, expected in (
+            ("unjustified_clean_retry", None, True, True, True, True, False),
+            ("exceptional_safe_clean_retry", "documented contaminated task output", True, True, True, True, True),
+            ("unsafe_mechanics", "fundamental unsoundness", True, False, True, True, False),
+            ("unknown_ownership", "contamination", False, True, True, True, False),
+            ("missing_owner_gate", "project rule", True, True, False, True, False),
+            ("missing_project_gate", "project rule", True, True, True, False, False),
+        ):
+            with self.subTest(case=case):
+                self.assertEqual(permitted(reason, ownership, mechanics, owner, project_gate), expected)
+        # Symbolic only: no reset/discard or repository operation is executed.
+        brief, failed = failed_capability_sample()
+        for diagnosis in ("unknown", "environment_or_tooling", "manual", "permission", "verification_contract_gap", "planning_or_spec_gap"):
+            self.assertIsNone(simulated_repair_brief(brief, failed, diagnosis))
+        repair = simulated_repair_brief(brief, failed, "model_capability")
+        self.assertEqual(repair["current_sha"], failed["revision"])
+        self.assertEqual(repair["exact_gaps"], {"T006/V1": "consumer drops V2"})
+        self.assertEqual(repair["complete_contract"], brief)
+        self.assertEqual(repair["prior_proof"], failed["outputs"])
+        self.assertIn("implementation continuation", repair["operation"])
+
+
+class VerificationGapTests(unittest.TestCase):
+    def test_practical_distinct_criteria_before_generic_green(self):
+        brief, _ = sample_batch_contract()
+        criteria = [i["criterion"] for i in brief["required_union"]]
+        self.assertEqual(criteria, ["producer exports stable item IDs", "consumer preserves every producer ID"])
+
+    def test_explicit_item_dispositions_and_revision_proof(self):
+        brief, returned = audited_sample()
+        self.assertIn("revision", returned["outputs"]["shared-output"])
+        self.assertIn("insufficient-evidence", TEXT)
+
+    def test_exceptional_retry_is_not_automatic_discard(self):
+        self.assertIn("Clean retry is exceptional", TEXT)
+
+
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)

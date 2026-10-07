@@ -99,7 +99,9 @@ During assessment and selected production/review, identify the actual changed se
 and its concrete failure before choosing checks. Choose the lowest validation layer
 that can detect that failure; use the smallest sufficient check, not the broadest
 available suite. Carry this rationale into source/task acceptance and the handoff
-using existing artifact fields, not a new task schema.
+using existing artifact fields, not a new task schema. Prefer practical observables tied to the
+criterion over a generic green suite. Ordinary tasks need no invented manual ceremony; source-
+required representative samples retain STOP and explicit user approval before full/downstream work.
 
 For a small selection/query or wiring change, prefer a focused check showing the
 selected result or argument reaches the intended consumer. Do not automatically add
@@ -230,7 +232,9 @@ absence requires no migration and changes no approval rule.
 Pass source constraints, canonical research links, applicable guidelines and stable task-local REQUIRED
 verification needs through both adapters to task generation and coordinator. Each item retains
 its pass criterion, smallest sufficient check, expected evidence and manual/permission gates;
-optional checks stay distinct. The [qualified seed rubric](../coordinate-implementation/references/batch-routing.md)
+optional checks stay distinct. Preserve item mappings unchanged into the whole batch union before
+coding, including both adapters and legacy producing review/renewal when contracts are inadequate.
+The [qualified seed rubric](../coordinate-implementation/references/batch-routing.md)
 also informs planning selection under Shared routing selection; planning-stage bindings are
 not implementation-task assignments. Its implementation batching rules remain coordinator-only.
 Missing or ambiguous contracts, including old approved tasks, return to the producing review/approval

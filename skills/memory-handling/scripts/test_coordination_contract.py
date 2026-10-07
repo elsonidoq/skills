@@ -71,6 +71,15 @@ class CoordinationContractTests(unittest.TestCase):
         for clause in ("Evidence is factual and append-oriented:", "run record before its index entry", "Keep one row per run", "sensitive payloads"):
             self.assert_rejected("coordination", "## Separate factual evidence", clause, "coordination-evidence")
 
+    def test_item_disposition_and_escalation_removals(self):
+        for key, heading, clause, label in (
+            ("coordinator", "### Coordination evidence checkpoint", "batch/task item dispositions and proof references", "verification-feedback"),
+            ("coordinator", "### Coordination evidence checkpoint", "exact escalation reason", "verification-feedback"),
+            ("coordination", "## Separate factual evidence", "batch/task item dispositions and proof references", "verification-feedback-owner"),
+            ("coordination", "## Separate factual evidence", "next selected profile or pending selection", "verification-feedback-owner"),
+        ):
+            self.assert_rejected(key, heading, clause, label)
+
     def test_A6_reflection_uncertainty_and_no_update_removals(self):
         for clause in (
             "nine reflection questions", "project-specific versus general", "reusable versus incidental",
@@ -300,6 +309,23 @@ class SimulatedFilesystemExamples(unittest.TestCase):
         for fact in ("Attempt 1: FAIL", "Attempt 2:", "effort: unknown", "Manual validation: FAIL", "outcome: partial", "no permanent routing rule"):
             self.assertIn(fact, first)
         self.assertNotIn("Attempt 1", self.index.read_text())
+        self.assertEqual(self.guidelines.read_bytes(), self.baseline)
+
+    def test_bounded_same_summary_item_attempt_record(self):
+        before = self.summary.read_text()
+        self.summary.write_text(before +
+            "B01/T001/V1 first: failed; proof fixture-output@sha-1/offline\n"
+            "B01/T001/V1 final: satisfied; proof fixture-correction@sha-2/offline\n"
+            "Exact escalation reason: inspected missing boundary; next selected profile fictional-option-B\n"
+            "Reused: T001/V2@sha-1; invalidated/rerun: T001/V1@sha-2\n"
+            "First/final observed effort: unknown; contract strength: concrete manual oracle\n")
+        self.index.write_text(self.index.read_text().replace("manual checkpoint", "item dispositions; exact-gap repair"))
+        record = self.summary.read_text()
+        self.assertTrue(record.startswith(before))
+        for proof in ("fixture-output@sha-1/offline", "fixture-correction@sha-2/offline", "invalidated/rerun: T001/V1@sha-2", "observed effort: unknown"):
+            self.assertIn(proof, record)
+        self.assertEqual(self.index.read_text().count("](simulated-2026-01-01-heuristic/SUMMARY.md)"), 1)
+        self.assertEqual(list(self.run.glob("*.md")), [self.summary])
         self.assertEqual(self.guidelines.read_bytes(), self.baseline)
 
     def test_A5_simulated_resume_interrupted_record_then_index_repair(self):

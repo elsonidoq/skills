@@ -105,6 +105,21 @@ class ProportionateValidationTests(unittest.TestCase):
                 self.assert_clause_required("planner", clause, "validation-reuse")
 
 
+class VerificationCarrierTests(unittest.TestCase):
+    def test_named_section_removals_fail_even_with_summary_intact(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, heading, clauses in checker.VERIFICATION_CARRIERS:
+            for clause in clauses:
+                with self.subTest(case=label, removed=clause):
+                    changed = dict(texts)
+                    body = checker.section(changed[key], heading)
+                    self.assertIn(clause, body)
+                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    changed[key] += "\n## Summary mention only\n" + clause
+                    self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+
 class InstructionTests(unittest.TestCase):
     def setUp(self):
         self.texts = checker.load_texts()

@@ -62,6 +62,13 @@ independently observable acceptance evidence, required capabilities and shared c
 lockstep documentation whose evidence compares documentation with implemented behavior.
 Record exclusions so tasking cannot reintroduce them.
 
+Use practical observables, not generic green output: an ordinary wiring task might require
+`T001/V1`: the selected ID reaches the consumer unchanged, checked by the existing argument
+fixture with its captured ID as evidence; local permission, no special manual gate. Both adapters
+carry these same item mappings through handoff. A representative-sample manual STOP belongs
+only to tasks whose actual risk/source requires explicit user approval before downstream/full
+expensive operation; do not invent that ceremony for ordinary tasks.
+
 Acceptance evidence uses the smallest sufficient check at the lowest layer that can
 observe the changed seam's concrete failure. Use stable task-local references such as
 `T001/V1` in existing acceptance/observable/invariant/test fields, not a new schema. Each
@@ -106,7 +113,8 @@ Before approval, validate explicit dependencies and story continuity with
 `python3 scripts/check-task-order.py /path/to/tasks.md` from this skill directory when the
 format supports it. Then manually inspect traceability, exclusions, documentation,
 integration, item completeness/evidence/gates, implicit dependencies, and stage feasibility.
-Missing or ambiguous REQUIRED contracts block dispatch and return to the producing review/approval gate,
+For inadequate approved/legacy contracts, stop at producing review/renewal; an executor cannot
+define replacement criteria or weaken acceptance post hoc. Missing or ambiguous REQUIRED contracts block dispatch and return to the producing review/approval gate,
 including existing approved tasks with inadequate contracts. Do not fabricate historical contracts,
 retrofit new requirements into legacy approvals, or waive checks; obtain affected review and renewed
 approval before dispatch. Preserve original source provenance and legacy task-embedded requirements.

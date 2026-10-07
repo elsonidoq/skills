@@ -9,6 +9,23 @@ TEXT = (Path(__file__).parents[1] / "SKILL.md").read_text(encoding="utf-8")
 
 
 class TaskGenerationContractTests(unittest.TestCase):
+    def test_practical_ordinary_contract_and_named_removals(self):
+        contract = TEXT.split("## Task contract", 1)[1].split("## Review and handoff", 1)[0]
+        review = TEXT.split("## Review and handoff", 1)[1].split("## Mandatory", 1)[0]
+        for carrier, clause in ((contract, "Use practical observables"), (contract, "item mappings"),
+                                (review, "inadequate approved/legacy contracts"),
+                                (review, "producing review/renewal")):
+            self.assertIn(clause, carrier)
+            self.assertNotIn(clause, carrier.replace(clause, "REMOVED"))
+        # Concrete ordinary wiring oracle: optional green cannot conceal changed IDs.
+        ordinary = {"ref": "T001/V1", "criterion": "ID reaches consumer unchanged",
+                    "expected": "chosen-7", "check": "existing argument fixture",
+                    "evidence": "captured consumer ID", "manual": None, "permission": "local"}
+        self.assertEqual(ordinary["expected"], "chosen-7")
+        self.assertNotEqual(ordinary["expected"], "default-1")
+        self.assertIsNone(ordinary["manual"])
+        self.assertIn("Both adapters", contract)
+
     def test_direct_and_speckit_adapters(self):
         self.assertIn("SpecKit adapter", TEXT)
         self.assertIn("direct adapter", TEXT)

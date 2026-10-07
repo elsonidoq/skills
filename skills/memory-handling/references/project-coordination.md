@@ -123,7 +123,9 @@ individual attempt/check results, reviewer findings, surprises and manual/user v
 unknown observation is never overwritten by the requested/selected profile.
 Include failed, blocked and partial work; unknown outcomes are explicitly unknown,
 not inferred successes. Link bounded check/review evidence; do not copy raw logs,
-credentials, tokens, personal data, secrets or sensitive payloads.
+credentials, tokens, personal data, secrets or sensitive payloads. Retain batch/task item dispositions and proof references, exact escalation
+reason and next selected profile or pending selection, first/final selected versus observed
+attempts, reused and invalidated items in the same SUMMARY/index; preserve original unknowns.
 
 Create/update the run record before its index entry. Every new evidence write refreshes
 that run's compact row: linked summary, date, areas/tags, relevant patterns and concise
@@ -141,6 +143,12 @@ Relevant approved guidance may override the seed when its scope and evidence app
 owner/source authority, permissions, supported-effort/callability or REQUIRED acceptance gates.
 Empty guidelines invent no project success history. This evidence owner is not a second router,
 store, schema, score or automatic learner.
+
+Feedback is factual: satisfied/failed/insufficient-evidence dispositions refer to original item
+criteria and relevant revision/environment proof, not model confidence. Record exact gaps and
+escalation reasons rather than attribute environment/manual/permission/contract gaps to capability.
+Stronger implementation continuation uses the same original contracts and preserves valid work;
+exceptional clean retry justification/ownership/owner gates must remain inspectable, not automatic.
 
 Retain each attempt's exact selected and observed profile separately, original assessment,
 contract strength, first/final outcome and repair/checkpoint references without erasing failures.

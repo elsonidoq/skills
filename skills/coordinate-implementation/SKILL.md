@@ -290,6 +290,8 @@ follow the same ordered task contracts; delegation uses the following shared bat
    is valid when justified; headings, overlapping files, or internal dependencies alone are not.
 5. Keep contract producers before consumers and preserve explicit owner gates. The batch brief
    states its internal task sequence, shared context, producer checks, and integration checkpoints.
+   Consider practical combined verification feasibility and attributable failures across the whole
+   union; preserve every task/item ID and producer-before-consumer checks, not generic batch green.
 6. Execute every batch sequentially and delegate only asynchronously in the background; never
    run implementation batches in parallel. Re-evaluate the execution graph after each batch
    completes without changing approved task order.
@@ -333,7 +335,11 @@ model diversity. Record ordered task IDs, assessment of residual reasoning, agen
 depth, weakest material blind spot, scope/coupling, failure cost/reversibility and relevant
 guidance. Record applicable approved evidence or explicit none, proposed versus owner-selected
 exact binding and effort, separate Family rationale and Effort rationale, and a conditional
-repair option in the existing brief/tracker. Empty guidelines invent no success history.
+repair option in the existing brief/tracker. Compare closed design and implementation difficulty
+with weakest oracle quality, check cost and observability under all six factors in the sole rubric;
+strong cheap reliable proof can justify smaller capability for moderate complexity, while hidden
+coupling/weak oracles require justified stronger capability or producing review/renewal if inadequate.
+Empty guidelines invent no success history.
 Deep tools, weak oracles, unresolved design or costly failure defeat optimistic Luna routing;
 use the seed's stronger-option or owner/design gates, not a universal ranking.
 
@@ -416,6 +422,15 @@ boundary and keep dependents blocked until all REQUIRED evidence is valid. Retai
 corrections and outcomes at separate evidence checkpoints. Repair success alone does not prove
 model-only attribution.
 
+Repair is stronger implementation continuation for exact gaps under the same original contracts,
+not generic strong-model review. Carry the current implementation SHA/state, original task contracts,
+prior proof and precise gaps; never let a repair executor redefine weaker success. Environment,
+manual, permission and contract-definition gaps do not automatically create a stronger dispatch.
+Clean retry is exceptional: document fundamental unsoundness, contamination, safe repository
+mechanics or an applicable project rule, establish ownership and required owner/project gates
+before any authorized retry. No automatic reset/discard or batch rollback; preserve valid work,
+unrelated changes, checkpoints and prior attempts. Unknown cause still stops blind retries.
+
 Every brief includes the exact outcome, task IDs, workspace and artifact paths,
 owner-selected exact binding and effort, allowed files, dependencies, acceptance
 criteria, baseline failures, exclusions, authorization limits, the per-task commit
@@ -428,7 +443,7 @@ and integration checkpoints. Ask for changed files, checks, incomplete work, and
 non-obvious handoff context.
 
 Aggregate the whole union of REQUIRED task-local references from the approved producer
-contract in the brief/tracker. For every reference retain the expected evidence and pass criterion,
+contract in the brief/tracker before coding, unchanged. For every reference retain the expected evidence and pass criterion,
 smallest sufficient check, manual/permission gates and optional checks separately. Include each
 task's baseline and owned paths, internal producer checks before consumer use, and the per-task
 commit followed by separate evidence checkpoint convention. Missing or ambiguous REQUIRED contracts
@@ -494,6 +509,20 @@ and inspected per-task diffs stay within owned scope. Missing, failed, contradic
 or unrun REQUIRED evidence blocks acceptance; unmet manual/permission gates block acceptance and
 dependent release. Optional checks cannot compensate for missing required proof. Keep affected
 external dependents pending until the invalid evidence or gate is resolved and reverified.
+For each item record `satisfied`, `failed` or `insufficient-evidence` with reason and proof pointer,
+independently of executor pass/fail/not_verified. Audit relevance to the original criterion,
+current revision/environment and consistency, coverage and owned scope, not confidence or a
+zero exit alone. `failed` requires objectively demonstrated criterion violation; missing, irrelevant,
+stale, conflicting, unavailable or unrun proof is `insufficient-evidence` unless valid observations
+independently prove failure. Retain both proven defects and evidence limitations when they coexist.
+Only satisfied REQUIRED items and fulfilled original gates release dependents; a shared check
+runs once with distinct relevant item mappings, never releasing a consumer before producer proof.
+This cheap audit is not a general full rereview.
+
+Where required, representative-sample manual STOP blocks downstream/full expensive operation:
+retain an inspectable sample and explicit user approval at the original gate. Pending, rejected,
+absent sample or LLM self-review cannot release; approval permits only scoped continuation.
+Ordinary no-special-gate tasks instead use practical observables without invented ceremony.
 A passing contract needs no mandatory strong-model per-batch reviewer; the fresh independent final
 review over the complete committed range below remains required and is not replaced by this audit.
 Failed checks/commits/evidence persistence, unexpected changes and genuine owner/dependency
@@ -533,6 +562,9 @@ not_verified and acceptance blocked without a model penalty. Complete meaningful
 success supports qualified positive feedback; weak or invalidated successes are not strong positive
 guidance. An unknown observation is never overwritten by selection; append later supported observations
 with provenance, preserving original uncertainty and every prior attempt. Unknown is not success.
+Retain batch/task item dispositions and proof references, exact escalation reason and next selected
+profile or pending selection, first/final selected versus observed attempts, reused and invalidated
+items in the same SUMMARY/index. No automatic model penalty or learning follows an outcome.
 Keep bounded evidence links, not raw logs/secrets; distinguish attempts and preserve corrections.
 Relevant approved guidelines may override the seed based on scope/evidence, never owner/source or
 permission gates; selective reflection, exact owner approval and drift checks remain the only

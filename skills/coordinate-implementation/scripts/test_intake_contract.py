@@ -93,6 +93,16 @@ class IntakeContractTests(unittest.TestCase):
         self.assertIn("full committed revision range", normalized)
         self.assertIn("not an implementation session", normalized)
 
+    def test_practical_audit_keeps_original_authority_and_review_boundary(self):
+        normalized = " ".join(TEXT.split())
+        for phrase in ("before coding, unchanged", "relevance to the original criterion",
+                       "current revision/environment", "same original contracts",
+                       "Only satisfied REQUIRED items", "Clean retry is exceptional",
+                       "representative-sample manual STOP"):
+            self.assertIn(phrase, normalized)
+        self.assertIn("never retrofit approved tasks", normalized)
+        self.assertIn("one fresh independent final review", normalized)
+
     def test_origin_neutral_downstream_references(self):
         self.assertIn("applicable source/supporting artifacts", TEXT)
         self.assertNotIn("Review accumulated changes against the spec, plan, tasks", TEXT)

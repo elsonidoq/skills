@@ -533,7 +533,39 @@ def check_contracts(texts):
                "Retry without inspecting the failed invocation", "One failure permanently bans a model",
                "Without association/write authority", "offer future bounded setup",
                "Undeclared optional memory preserves existing behavior")
+    # Bounded checks of changed instruction carriers, not a production audit/router.
+    for label, key, heading, clauses in VERIFICATION_CARRIERS:
+        require(label, section(texts.get(key, ""), heading), *clauses)
     return errors
+
+
+VERIFICATION_CARRIERS = (
+    ("verification-practical", "tasks", "## Task contract",
+     ("Use practical observables", "Both adapters", "item mappings", "no special manual gate")),
+    ("verification-legacy", "tasks", "## Review and handoff",
+     ("inadequate approved/legacy contracts", "producing review/renewal", "weaken acceptance post hoc")),
+    ("verification-planner", "planner", "## Proportionate validation",
+     ("practical observables", "generic green suite", "STOP and explicit user approval")),
+    ("verification-handoff", "planner", "## Selected production and stage handoffs",
+     ("item mappings unchanged", "whole batch union before", "legacy producing review/renewal")),
+    ("verification-oracle", "routing", "## Assess all six factors",
+     ("implementation difficulty", "oracle quality, check cost and observability", "weakest material", "practical combined verification feasibility")),
+    ("verification-graph", "coordinator", "## Build the Execution Graph",
+     ("practical combined verification feasibility", "attributable failures", "producer-before-consumer checks")),
+    ("verification-audit", "coordinator", "## Execute and Integrate",
+     ("`satisfied`, `failed` or `insufficient-evidence`", "relevance to the original criterion",
+      "current revision/environment", "objectively demonstrated criterion violation",
+      "both proven defects and evidence limitations", "representative-sample manual STOP",
+      "inspectable sample and explicit user approval", "Ordinary no-special-gate")),
+    ("verification-repair", "coordinator", "## Select Execution Capability",
+     ("Inspect the failed child run, invocation, partial commits and check evidence",
+      "current implementation SHA/state", "same original contracts", "Clean retry is exceptional",
+      "safe repository", "ownership and required owner/project gates")),
+    ("verification-feedback", "coordinator", "### Coordination evidence checkpoint",
+     ("batch/task item dispositions and proof references", "exact escalation reason", "next selected")),
+    ("verification-feedback-owner", "coordination", "## Separate factual evidence",
+     ("batch/task item dispositions and proof references", "exact escalation", "next selected profile or pending selection")),
+)
 
 
 def load_texts(root=ROOT):
