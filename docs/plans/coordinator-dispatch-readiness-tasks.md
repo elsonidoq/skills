@@ -46,7 +46,7 @@ Apply [checkpoint owner](../../skills/memory-handling/references/task-commit-con
 
 ## Consumer: observable offline action/persistence examples
 
-- [ ] T002 — Extend existing bounded traces at the changed seam
+- [x] T002 — Extend existing bounded traces at the changed seam
   - **Depends**: T001
 
 - **Outcome/source:** tests reject redundant post-readiness preparation while retaining targeted reopen and recovery/persistence safety (A1–A4). Consume verified T001 rule, not a second definition.
