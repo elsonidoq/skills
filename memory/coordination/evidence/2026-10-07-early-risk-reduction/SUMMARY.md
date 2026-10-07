@@ -127,6 +127,26 @@ inspected focused source/task commits, clean HEAD `68d8a40`, task-order PASS. Pl
 child terminal status confirms gpt-6.1-sol / thinking medium (runtime status); full provider
 observation remains qualified. No active writer. Existing baseline lint 324 tests remains
 applicable: planning-only commits did not change checked code. Memory/guidelines unchanged.
-Proposed strategy: one fresh delegated sequential batch T001→T002; bounded child context
+Approved strategy: one fresh delegated sequential batch T001→T002; bounded child context
 preferred to accumulated parent context. Fresh reviewer capability registered, exact profile
-selection pending. Repairs require inspected failure and renewed affected routing, no blind retry.
+selected below. Repairs require inspected failure and renewed affected routing, no blind retry.
+
+## Approved execution routing / dispatch intent
+
+Owner answered `Approve B01 and final-review routing` via ask_user. B01 is T001→T002,
+one fresh worker, `openai-codex/gpt-6.1-sol:medium`; F01 is a separate fresh read-only
+reviewer with the same exact binding/effort. Family rationale: cross-consumer semantic
+consistency and weakest model-obedience blind spot; Effort rationale: closed requirements,
+bounded local edits and existing checks. Six factors retained from intake above; no approved
+guidance. Native async Sol/medium launch demonstrated in planning; worker edit/write and
+reviewer read-only capabilities registered. No hard tool budget; timeout leaves checkpoint
+margin; observed fanout 1/64, async capacity 0/unlimited. Dispatch acceptance covers the
+whole unchanged REQUIRED union T001/V1–V4, T002/V1–V2 by approved task reference.
+Worker allowed paths are T001/T002 listed implementation files, checked status markers
+in tasks (contract bytes unchanged), this SUMMARY/index for internal task/evidence checkpoints.
+STATE.md is coordinator-only and excluded. Current clean baseline `230d9f0`; dispatch-intent
+checkpoint precedes launch. No generic fallback, new profiles or scope without affected gates.
+
+- B01: in_progress / imminent dispatch; T001 and T002 pending.
+- F01: pending B01 audit; full committed range and approved digests required.
+- Actual worker/reviewer binding/effort: UNKNOWN until runtime evidence; selection is not observation.
