@@ -150,3 +150,87 @@ checkpoint precedes launch. No generic fallback, new profiles or scope without a
 - B01: in_progress / imminent dispatch; T001 and T002 pending.
 - F01: pending B01 audit; full committed range and approved digests required.
 - Actual worker/reviewer binding/effort: UNKNOWN until runtime evidence; selection is not observation.
+
+## B01 internal implementation checkpoints — worker
+
+Selected `openai-codex/gpt-6.1-sol / medium`, unchanged; actual full binding/effort UNKNOWN
+in this worker's available evidence. Local Python/bash/edit/write/Git capabilities usable.
+Verified gotcha index `memory/MEMORY.md` empty and coordination guidance empty; no historical
+runs consulted. Approved source/task digests verified unchanged. Coordinator-owned dirty
+`STATE.md` understood and excluded from every worker write/stage/commit. No staged work at
+baseline. No task-status edits: approved task contracts and REQUIRED criteria/checks/evidence/
+gates remain byte-identical; dispositions below supplement, never replace, that contract.
+
+| Task/attempt | Baseline | Result SHA | Checks / disposition |
+| --- | --- | --- | --- |
+| T001 / B01 worker | `9b966ae23753badc94bcd1937c204ba1b9afb960` | `74fb1ce2e7c46e532322f68f49a3d151e6dacf56` | PASS 10 owned files; one canonical reference, four operational consumers, scoped sensitivity and illustrative A–E fixtures; no task-owned residual changes |
+| T001 evidence | `74fb1ce2e7c46e532322f68f49a3d151e6dacf56` | distinct evidence-only checkpoint (Git) | SUMMARY and existing index row only; follows verified task before T002 writes |
+
+T001 verification (criterion-relevant offline proof; final independent acceptance pending):
+- Baseline planner suite rerun PASS 89. First new targeted `test_shared_risk_owner_is_required`
+  failed as expected (`risk` absent from checker PATHS) before contract edits. Candidate PASS
+  96 tests (7 added). Intermediate test-development failures inspected: duplicate carrier
+  phrases and a relocated same-heading summary defeated the test mutation, not a provider
+  failure. Scoped unique clauses, renamed summary headings and bounded Authority heading
+  corrected that oracle; no safety mutation weakened, no expensive run retried.
+- `python3 scripts/check-planner-workflow.py`: PASS (static instructions only).
+- `python3 scripts/test-planner-workflow.py`: PASS 96; `EarlyRiskReductionTests` covers
+  clause removals, whole-carrier deletion/summary replacement, absent/wrong/distributed links,
+  both adapters, A/D/E and four semantic negative variants.
+- `python3 skills/task-generation/scripts/test_contract.py`: PASS 5 (unchanged coverage).
+- `python3 skills/task-generation/scripts/test_check_task_order.py`: PASS 7.
+- Existing `check-task-order.py` on tiny-tasks.md, standard-tasks.md, risk-tiny-tasks.md and
+  risk-standard-tasks.md: PASS each (earlier prerequisites and contiguous stories).
+- `bash scripts/check-skills-lint.sh`: PASS 22 skills / 0 failed, both static checks PASS,
+  331 tests across nine suites (96/135/4/5/7/47/10/15/12), up from baseline 324.
+- `git diff --check`, scoped staged diff check and actual owned diff inspection: PASS.
+  Focused commit includes no STATE, policy, runtime, schema, templates or dependency changes.
+
+Manual semantic mapping / quoted bounded spans:
+- AC1/AC7 → four skills' new operational sections and reviews/returns. Planner Proportionate
+  validation says “Planning schedules executable proofs, not execution without separate
+  authority”; TinySpec Compact source, helper Preflight/Boundary/Completion and task-generation
+  Task contract/Review explicitly apply the readable reference, direct/standalone coverage,
+  consumption and approval boundaries. Reference Authority and scope: “missing packaging
+  stops affected planning with a missing-install report”. Packaging tests resolve all four.
+- A (AC2) → risk-walkthroughs.md A: “No executable spike merely to print names/types”;
+  reference Select for leverage: “Easy names/types/methods resolve by inspection”.
+- B (AC3) → risk-tiny-tasks.md T001: real dependency/runtime target version, representative/
+  adversarial executable assertions and command `python proof.py --cases representative,adversarial`,
+  completion-before-close observable, objective loss/duplicate failure, artifact/findings/
+  applicability and separate execution gates. This is synthetic shape, not a library result.
+- C (AC4) → risk-standard-tasks.md T001: minimal canonical transformation executable before
+  plumbing; nested/empty/conflicting inputs, exact round-trip/rejection assertions and
+  `python transform-proof.py --cases representative,adversarial`, same evidence/gates.
+- B/C → T002 explicitly Depends T001 and requires “inspect and run applicable” reference,
+  “use it as implementation reference”, preserved behavior with production tests and remaining
+  integration checks. T003 Depends T001,T002, cleanup “only after all applicable consumers
+  and production validation pass”; reproducible commands/findings/limits preserved. Reference
+  Consume section retains proof for all consumers and invalidates changed applicability.
+- D (AC5) → risk-walkthroughs.md D: real-system failover validation, topology/deployment/fault
+  controls/monitoring prerequisites, acknowledged-write observable, environment permissions;
+  unrun REQUIRED remains NOT VERIFIED, cannot release dependent reliance; no forced script.
+- E (AC6) → risk-walkthroughs.md E: hypothetical lost-write disproof retained, assumed T002
+  blocked, correct/replan and affected existing review/approval renewal; first failure retained.
+  Reference Disproof: “Never label a failed technique proven”; no capability-gap-as-disproof.
+- Negative semantic fixture variants reject early deletion, report-only consumption, missing
+  producer Depends and failed-as-proven for both adapters. Actual diagnostic samples:
+  `risk-lifetime: missing 'inspect and run'`; `risk-lifetime: missing 'cleanup only after all
+  applicable consumers and production validation pass'`; `risk-tasks: missing 'explicitly
+  depend on the earlier'`; `risk-disproof: missing 'Never label a failed technique proven'`.
+  Parser PASS alone is not semantic consumption proof.
+
+Six unchanged REQUIRED item dispositions:
+- T001/V1: PASS — readable/resolved owner and four operational/review/handoff carriers;
+  named carrier/removal/summary/link/distributed sensitivity above; gates preserved.
+- T001/V2: PASS — labelled A–E with objective fields, actual behavioral oracles where selected,
+  non-isolatable prerequisites and disproof/renewal; manual spans plus named tests above.
+- T001/V3: PASS — B/C T001→T002→T003 producer/consumer/production-tests/cleanup mapping,
+  retained applicability/commands/findings; four rejected negatives and parser output above.
+- T001/V4: PASS — shared-task/order tests, lint 331, diff and no widened scope above.
+- T002/V1: NOT VERIFIED — documentation task not yet begun.
+- T002/V2: NOT VERIFIED — pending documentation comparison to committed T001 evidence.
+
+No live/provider/real-library proof performed or claimed; model obedience NOT RUN. No
+learned guidance/gotcha mutation. T001 first/final outcome: expected red → offline PASS;
+no model-capability failure inferred. Remaining gate: T002 then fresh independent F01 review.
