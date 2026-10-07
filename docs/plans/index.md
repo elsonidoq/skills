@@ -5,6 +5,7 @@ subject-specific record for its approval and currentness; this index is a map, n
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
 - [Task verification contracts — TinySpec](task-verification-contracts-tinyspec.md): task-level proof and actionable batch routing/repair clarification; preparation only, not approved.
+- [Task verification contracts — tasks](task-verification-contracts-tasks.md): separate operational/fixture, documentation and acceptance work units; preparation only, combined approval pending.
 - [Active planning routing — TinySpec](active-planning-routing-tinyspec.md): active class removal, Sol/medium Standard planning exception and verification bounds.
 - [Active planning routing — tasks](active-planning-routing-tasks.md): separate contract, documentation and acceptance work units; implementation approval pending.
 - [Coordinator approval and cadence — TinySpec](coordinator-approval-cadence-tinyspec.md): coordinator-only batch approval and bounded persistence; worker checkpoints unchanged.
