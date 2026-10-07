@@ -4,8 +4,9 @@ Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
 Inspected same-profile continuation completed T001–T003; integrated reviewer packet prepared.
 Attempt 1 retained below. Coordinator batch audit ACCEPTED all 12 original REQUIRED items;
-fresh independent final review found R001 mandatory-escalation wording contradiction; affected
-acceptance invalidated pending in-scope correction/recheck. User requested finish-session/commit/push.
+fresh independent final review found R001 mandatory-escalation wording contradiction; focused
+F001 correction verified/checkpointed below, independent recheck PENDING. User requested
+finish-session/commit/push; worker performed correction only, no closeout/push or self-acceptance.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
 
@@ -542,3 +543,58 @@ origin remote is git@github.com:elsonidoq/skills.git; ls-remote main equals orig
 baseline8832a4c, so ahead commits are session-attributable. No new issue/gotcha/deployment steps
 identified; no compaction or guideline mutation. Push remains pending valid correction/review
 and terminal closeout checkpoint. Known parent STATE returned-ID dirt only; no active writer.
+
+## F001 — source-aligned conditional repair correction
+
+Baseline `77b8f1cf06df55c223803ab2d55eeebc01d9f1c1`, main, empty index, only anticipated
+parent STATE dirt; usable author/committer identity inspected, source/task digests unchanged.
+Selected exact `openai-codex/gpt-6.1-sol:medium` retained, no escalation or delegation.
+Parent-attributed observation for previous continuation `e3eb8952-2951-4cd5-8327-4124a7a44457`:
+runtime reported `gpt-6.1-sol` thinking medium; original worker unknown preserved above.
+THIS F001 observation unknown, no probe. R001 remains an independent semantic finding despite
+previous green checks; not a tooling failure or family-performance lesson.
+
+R001 → source Scope/approach “Where diagnosed and authorized” (A10–A13) → coordinator repair
+now conditionally describes stronger-capability implementation continuation under same original
+contracts and explicitly retains same-profile targeted repair when sufficient. Settings sample
+aligned; existing MAY raise effort/change model, inspection/owner/support/original-contract gates
+unchanged. README/REQUIREMENTS inspected: contextual “before authorized stronger” descriptions
+do not mandate escalation; no contradiction requiring out-of-scope writes found.
+Focused four-path implementation commit: `dbeb020f7c9399860fddd88672d23c763a671796`
+(coordinator repair paragraph, settings existing repair prose, checker verification-repair carrier,
+planner focused regression). Actual scoped diff inspected, explicit path commit/staged whitespace
+PASS; only excluded parent STATE dirt afterward, empty index.
+
+Failing-before: after adding the narrow guard, before wording fix,
+`PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` exited 1 with two
+`verification-repair` missing diagnostics: conditional stronger-capability clause and sufficient
+same-profile clause. Post-change same command static PASS; planner tests **89 PASS**, batching
+**38 PASS**, coordination **23 PASS** (150), all with PYTHONDONTWRITEBYTECODE=1 and Python
+3.12.3/local offline at exact correction content. New named regression
+`VerificationCarrierTests.test_unconditional_escalation_restoration_rejected_with_summaries_intact`
+rejects restoration of unconditional sentence even with conditional summary/same-profile clause
+retained; existing bounded removal test rejects removal of either new obligation despite summaries.
+Relevant comparison PASS: source qualification/owner MAY rule/same-profile sufficiency, only
+specified repair prose changed, **9 local links/anchors** resolve, JSON/default blocks and
+unowned/immutable content unchanged, whitespace PASS. An initial inline JSON comparison mistakenly
+included following prose and failed; corrected comparison bounds actual fenced JSON blocks,
+which are unchanged. No semantic failure or acceptance weakening hidden by that correction.
+
+| Affected original criterion pointer | Executor proof / proposed disposition after F001 |
+| --- | --- |
+| T001/V5 (A10–A13) | pass / satisfied: conditional original-contract implementation continuation and sufficient same-profile repair guarded; original exact-gap/SHA/prior-proof/reuse/invalidated-rerun/manual/permission/unknown/retry cases rerun in batching38. |
+| T001/V7 | pass / satisfied: affected planner checker/tests and batching/coordination rerun; producer5/intake10 and prior packaging evidence reused after confirming unchanged relevant criteria/assertion carriers and environment. Full lint not rerun solely for bounded wording; prior integration remains attributable at 32a56c8, not misreported at F001. Scoped correction + distinct evidence checkpoint retained. |
+| T002/V1 | pass / satisfied: repaired settings paragraph matches conditional coordinator/source; unchanged README/REQUIREMENTS contextual authorized-stronger prose inspected, original doc/owner/case evidence remains applicable. |
+| T002/V2 | pass / satisfied: changed-owner link/scope/JSON/default/immutable checks and planner static PASS; original 23 doc links reused, no links added. |
+| T003/V1,V3 | pass / satisfied for revised trace/packet: source A10–A13 → R001 → conditional/same-profile clauses → named restoration/removal proof → dbeb020 correction/current evidence; original A1–A15 trace otherwise unchanged. Independent recheck PENDING, no final acceptance. |
+
+Other original items retain confirmed-valid unchanged outputs/limits; F001 creates no weaker
+contracts/new gates/router/history rewrite. R001 correction is implemented and locally verified,
+independent reviewer disposition still pending. No residual task-owned changes or staged files;
+parent STATE excluded. This SUMMARY/one INDEX row is the separate evidence checkpoint, SHA read
+from Git after commit without recursive self-hash. Reviewer packet extends original full baseline
+ba7bd35 through this checkpoint, includes prior task/evidence chain + parent review/intent commits
++ dbeb020; preserve all attempts/findings/unknowns. Next parent action: independent R001 recheck
+against corrected full scope, then authorized closeout/push only if accepted. Static/symbolic
+checks do not prove runtime obedience/callability/performance; no external/live/user gate exercised.
+No guideline change or model lesson proposed. Run `/reload` inside pi after global skill changes.
