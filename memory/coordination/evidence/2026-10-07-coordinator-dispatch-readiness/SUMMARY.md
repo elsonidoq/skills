@@ -1,6 +1,6 @@
 # Coordinator dispatch readiness — planning evidence
 
-Current disposition: owner-accepted direct single-batch clarification source checkpointed; affected tasks/review refresh pending. Planning-only, combined approval PENDING; no implementation authorized even on artifact approval. Run `2026-10-07-coordinator-dispatch-readiness`.
+Current disposition: owner-accepted direct single-batch clarification source checkpointed; source/tasks corrections checkpointed; affected review refresh pending. Planning-only, combined approval PENDING; no implementation authorized even on artifact approval. Run `2026-10-07-coordinator-dispatch-readiness`.
 
 Profile for assessment/source/tasks/planner-owned review: proposed and owner-selected `openai-codex/gpt-6.1-sol:medium`. Separate observation: child session `01a116cc-7401-737c-ad50-73bbf52fc9c4` launch records `model_change` provider openai-codex/model gpt-6.1-sol and `thinking_level_change` medium; environment PI_MODEL agrees. Local observation, not independent provider telemetry or performance proof. No substitution/delegation/probe.
 
@@ -29,5 +29,7 @@ Local installed `/home/dev/.pi/agent/npm/node_modules/pi-subagents/docs/workflow
 | Correction | Baseline → result | Verification / disposition |
 | --- | --- | --- |
 | P004 source correction | 4f72e70 → 80aeaf1 | PASS links/A1–A6, manual direct-default/justified-exception/delegated-not-local/protected-gates scope review and diff --check; new source digest c042f3b486f60cc44d73f73d2a9a5a82224496f50b6180ee39fb4269cc0e7017; prior tasks/review identities above historical, refresh pending |
+| P004 evidence | 80aeaf1 → f76ec4b | distinct SUMMARY/index; PASS scope/diff check |
+| P005 task correction | f76ec4b → 0643630 | PASS order/static checker/89 planner tests rerun, links/current source digest/A1–A6/nine stable REQUIRED IDs, manual exclusions/gates/implicit dependency/feasibility/proportionality and diff --check; current tasks digest 12c6ada7527fb12b56fd0698cce1a29a96f099b370b9cfcf796def89a25fe61a; review refresh pending |
 
 Reflection: no update proposed. This is bounded planning evidence, not observed launch-delay diagnosis or reusable routing-performance guidance. GUIDELINES, gotchas, STATE and normative implementation owners unchanged. Future implementation must preserve worker checkpoints and request /reload after actual global skill changes; planning-only artifacts add no reload requirement.
