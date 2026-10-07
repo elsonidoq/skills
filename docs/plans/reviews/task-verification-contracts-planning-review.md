@@ -2,7 +2,7 @@
 
 ## Verdict and current content
 
-**READY for planner's combined current-content approval; approval PENDING.** No material
+**Combined current-content source/task/scope approval RECORDED below.** No material
 planning blocker found. This is planner-owned source/task review, not independent
 implementation/final review, implementation authorization or feature acceptance.
 No source/task correction was necessary; unchanged artifacts create no empty commit.
@@ -112,13 +112,19 @@ No implementation/model-performance claim, install, push, external probe, operat
 STATE/guideline/history edit or guideline proposal. No new `/reload` obligation from preparation;
 implementation closeout must request it after actual global skill changes.
 
-## Combined approval — PENDING
+## Combined approval — recorded owner decision
 
-No answer or owner approval is invented here. Planner must present 4–6 bullets before its
-ask_user combined current-source/task/scope gate and bind the answer to the digests above.
-With affirmative implementation-scope approval, planner immediately starts coordinator preflight;
-that preflight still owns routing approval, usable exact profiles, Git/context and fresh independent
-reviewer checks. This review does not launch it or reinterpret earlier preparation-only authority.
+On 2026-10-07 the parent planner presented six scope/review/authorization bullets, then
+`ask_user` asked: “Do you approve the reviewed TinySpec, tasks, and implementation scope?”
+The owner selected **Approve**. The question bound the exact source and task SHA-256 values
+listed above and explicitly authorized implementation of this reviewed scope, with coordinator
+preflight starting immediately. Those digests were rechecked unchanged before recording this
+answer. This is the current combined approval, not an inference from earlier scope approval.
+
+Coordinator still owns separate batch-boundary/exact-profile routing approval, usable tools,
+supported efforts, Git/context and fresh independent reviewer checks. This answer does not
+select implementation/reviewer profiles, waive manual gates, authorize external operations or
+guideline changes, or establish feature acceptance. Next phase: coordinator preflight.
 
 Proposed gate brief:
 
