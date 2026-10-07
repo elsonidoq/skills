@@ -28,7 +28,7 @@ source of authority. [Review records](reviews/index.md) are in the direct child 
 - [Mandatory task commits — execution](mandatory-task-commits-execution.md): execution tracker.
 - [Planner approval UX follow-up](planner-approval-ux.md): owner-observed behavior and corrective scope.
 - [Unified Planner refactor](planner-refactor.md): planner redesign record.
-- [Planner regression guide](planner-regression.md): offline and separately authorized live scenarios.
+- [Planner regression guide](planner-regression.md): offline and separately authorized live scenarios, including illustrative early-risk A–E and proof-consumption/lifetime sensitivity.
 - [Project coordination memory — TinySpec](project-coordination-memory.md): source requirements.
 - [Project coordination memory — tasks](project-coordination-memory-tasks.md): implementation tasks.
 - [Project coordination memory — execution](project-coordination-memory-execution.md): approval and execution evidence.

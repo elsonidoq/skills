@@ -81,6 +81,68 @@ source→constraint→validation correspondence across managed and standalone en
 local reuse/trivial skip, changed-version refresh, unavailable/insufficient evidence and
 explicit bounded deferral; deterministic PASS is not behavioral acceptance.
 
+## Early technical risk reduction assurance
+
+The [shared owner](../../skills/planner/references/early-risk-reduction.md) schedules
+selective early **implementation** proof of a difficult isolatable core, not merely
+research before planning. Its Select for leverage section distinguishes substantial
+leverage/cheap isolation/executable oracle from easy inspection and whole-environment
+risks. Produce a minimal executable reference requires real dependency/runtime/version
+where relevant, representative/adversarial observables, objective success/failure criteria,
+commands actually run, findings, applicability, limits and capability/permission gates.
+No obligatory prototype, production-quality abstraction, new schema or approval stage.
+Planning schedules this work; execution still requires separate authority.
+
+Consume, validate, then clean up requires explicit earlier producer dependencies and
+consumer acceptance to inspect/run the applicable executable reference, use it for production,
+and preserve proven behavior with production tests plus remaining integration-risk checks.
+A report link alone does not consume proof. Artifact, commands and findings survive until
+**all** applicable consumers and production validation pass; only then clean disposable
+material while preserving reproducible evidence. Revision/environment changes invalidate
+affected evidence. Disproof and return retains failures/limits, blocks assumed consumers,
+corrects/replans and renews affected existing reviews/approvals when required. Failed or
+unrun experiments cannot release assumed dependents; unavailable REQUIRED evidence is
+NOT VERIFIED, not a pass or technical disproof.
+
+Operational carriers are planner Proportionate validation, stage handoffs, both path reviews
+and final handoff; TinySpec Compact source/Boundary and return; helper Preflight, Standard
+adapter, Planner Boundary and Completion; task-generation Task contract/Review and handoff.
+They apply the owner through managed TinySpec/Standard, direct TinySpec/tasking and
+standalone/helper planning without assuming planner already did. TinySpec carries approach
+and evidence needs without a task checklist; Standard/helper preserves installed task
+production. Missing/unreadable packaging stops affected planning with a missing-install
+report. Existing depth/model routing, approvals and task/evidence/release gates are unchanged.
+
+`EarlyRiskReductionTests` in `scripts/test-planner-workflow.py` provides bounded offline
+sensitivity and illustrative examples (not executed library proofs):
+
+| Source acceptance / case | Implemented span and named evidence |
+| --- | --- |
+| AC1, AC7: carriers and entry paths | Authority and scope / Review and handoff; `test_shared_risk_owner_is_required`, `test_risk_clause_removals_have_named_diagnostics`, `test_risk_carrier_removal_and_summary_only_replacement`, `test_risk_missing_wrong_reference_and_distributed_links` cover all four owners, operational/review/return deletion, summary-only replacements and missing/wrong/distributed links |
+| AC2 / A: easy name/type | Select for leverage; risk-walkthroughs.md A resolves by inspected source/documentation, no name-print spike; `test_A_D_E_labelled_walkthroughs_and_operational_mapping` and selection/boundary clause mutations |
+| AC3 / B: subtle library core | Produce / Consume sections; risk-tiny-tasks.md T001 real-runtime queued-write/close assertion shape, command/applicability/gates; T002 Depends T001, inspect/run/use reference and preserve completion-before-close with production tests; T003 cleanup last; `test_B_C_both_adapter_producer_consumer_lifetime` |
+| AC4 / C: hard transformation | Produce / Consume sections; risk-standard-tasks.md T001 representative/adversarial canonical round-trip/rejection executable before plumbing; T002 preserves behavior with production tests; T003 cleanup after validation; same named B/C test |
+| AC5 / D: non-isolatable risk | Select / Produce sections; risk-walkthroughs.md D real-system failover observables and topology/deployment/fault-control/monitoring prerequisites, explicit environment permissions, NOT VERIFIED if unrun; A/D/E test and selection/producer mutations |
+| AC6 / E: disproof | Disproof and return; risk-walkthroughs.md E hypothetical loss retains failed attempt, blocks assumed T002, corrects/replans and renews affected approvals; A/D/E test and disproof mutations |
+| AC3, AC4, AC7: semantic negatives | `test_early_deletion_report_only_missing_dependency_failed_as_proven_rejected` rejects each variant in both B/C adapters; lifetime/task/disproof clause mutations provide named diagnostics |
+| AC8: documentation truth | Manual comparison of this mapping to committed reference, operational consumers and actual test definitions; current task/check evidence in the run SUMMARY, not a new operational owner |
+
+Existing tiny-tasks.md and standard-tasks.md remain unchanged; new risk-tiny-tasks.md and
+risk-standard-tasks.md use the same numbered Markdown/Depends fields. Run the existing
+`skills/task-generation/scripts/check-task-order.py` on all four numbered fixtures.
+Parser PASS proves syntax/order only, **not semantic consumption**. Manually inspect A–E,
+real-executable versus trivial/mock substitutions, actual task criterion/check/evidence/gates,
+producer-to-consumer transfer, multi-consumer lifetime, cleanup and failed/unrun release.
+
+The assertions compare fixture-defined expected fields and scoped instruction phrases;
+they are not a generic semantic validator, runtime enforcement or an agent-produced plan.
+Offline static/fixture PASS does **not** establish real-library behavior or model obedience.
+Live/provider/real-library/real-system experiments for these scenarios are **NOT RUN** and
+require separate authorization, applicable dependencies/runtime, isolated execution and
+collected commands/observations. No such operation is authorized by the offline suite.
+Global skill changes require `/reload` in pi. Fresh independent final implementation review
+remains required under the existing workflow, separate from this bounded documentation check.
+
 ## Project coordination memory assurance
 
 The [canonical contract](../../skills/memory-handling/references/project-coordination.md)
