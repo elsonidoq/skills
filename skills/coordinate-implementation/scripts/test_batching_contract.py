@@ -178,6 +178,77 @@ class DispatchSeamTests(unittest.TestCase):
                     self.assertIsNone(SimulatedProfileTraceTests.simulated_dispatch(selected, **{gate: False})["args"])
 
 
+def preparation_trace_errors(text, trace):
+    """Validate bounded offline action sequences against the real carrier, not execute routing."""
+    errors = dispatch_seam_errors(text) + approval_errors(text)
+    recovery = " ".join(text.split("### Recovery before continuation", 1)[-1].split(
+        "### Writes and checkpoint ordering", 1)[0].split())
+    for phrase in ("running child means inspect/wait, not duplicate dispatch",
+                   "unknown status or a dispatch intent without a recorded ID requires runtime reconciliation"):
+        if phrase not in recovery:
+            errors.append(phrase)
+    for event in trace:
+        action, reason = event["action"], event["reason"]
+        if event.get("child") in ("running", "unknown"):
+            required = "inspect/wait" if event["child"] == "running" else "reconcile"
+            if action != required or reason != "existing child":
+                errors.append("child reconciliation")
+        elif event.get("gap"):
+            if action != "blocked" or reason != event["gap"] or not event.get("resolution"):
+                errors.append("precise missing condition")
+        elif event.get("changed"):
+            if action != "reopen" or reason != event["changed"] or event.get("affected") != event["changed"]:
+                errors.append("affected-only reopen")
+        elif event.get("ready"):
+            if action != "dispatch" or reason != "mandatory preparation and committed intent complete":
+                errors.append("redundant post-ready preparation")
+    return errors
+
+
+class PreparationTraceTests(unittest.TestCase):
+    """Explicit events/actions are symbolic observations, never child/runtime evidence."""
+    def test_ready_dispatch_and_redundant_preparation_rejected(self):
+        ready = {"ready": True, "action": "dispatch", "reason": "mandatory preparation and committed intent complete"}
+        for ordinary in ("initial readiness", "unchanged passing check", "prose polish"):
+            with self.subTest(event=ordinary):
+                trace = [dict(ready, event=ordinary)]
+                self.assertEqual(preparation_trace_errors(TEXT, trace), [])
+                trace[0]["action"] = "prepare again"
+                self.assertIn("redundant post-ready preparation", preparation_trace_errors(TEXT, trace))
+
+    def test_concrete_invalidation_reopens_only_affected_preparation(self):
+        trace = []
+        for changed in ("profile", "content", "workspace ownership"):
+            trace.append({"changed": changed, "action": "reopen", "reason": changed, "affected": changed})
+        self.assertEqual(preparation_trace_errors(TEXT, trace), [])
+        for event in trace:
+            with self.subTest(changed=event["changed"]):
+                self.assertIn("affected-only reopen", preparation_trace_errors(TEXT, [dict(event, affected="all preparation")]))
+
+    def test_missing_gates_have_precise_stop_and_smallest_resolution(self):
+        for gap, resolution in (("approval", "obtain current routing approval"),
+                                ("profile support", "verify selected effort support"),
+                                ("ownership", "reconcile affected dirty path"),
+                                ("REQUIRED manual proof", "supply original required manual evidence")):
+            with self.subTest(gap=gap):
+                event = {"gap": gap, "action": "blocked", "reason": gap, "resolution": resolution}
+                self.assertEqual(preparation_trace_errors(TEXT, [event]), [])
+                self.assertIn("precise missing condition", preparation_trace_errors(TEXT, [dict(event, action="dispatch")]))
+
+    def test_running_inspect_wait_and_unknown_reconcile_never_replace(self):
+        for child, action in (("running", "inspect/wait"), ("unknown", "reconcile")):
+            with self.subTest(child=child):
+                event = {"child": child, "action": action, "reason": "existing child", "event": "healthy worker progress"}
+                self.assertEqual(preparation_trace_errors(TEXT, [event]), [])
+                self.assertIn("child reconciliation", preparation_trace_errors(TEXT, [dict(event, action="replacement dispatch")]))
+
+    def test_ready_trace_cannot_pass_missing_actual_carrier(self):
+        trace = [{"ready": True, "action": "dispatch", "reason": "mandatory preparation and committed intent complete"}]
+        phrase = "reopen only for concrete invalidating evidence"
+        altered = TEXT.replace(phrase, "REMOVED", 1) + "\n## Footer\n" + phrase
+        self.assertIn(phrase, preparation_trace_errors(altered, trace))
+
+
 class BatchingContractTests(unittest.TestCase):
     def test_coherent_sequential_work_is_not_split_by_incidental_boundaries(self):
         self.assertIn("amortize startup and retain\n   useful context", TEXT)

@@ -201,11 +201,38 @@ class CadenceTests(unittest.TestCase):
             ({"local-task"}, True, True, 1),
             ({"poll", "wait", "passing-check", "worker-task"}, True, False, 0),
             ({"audit"}, False, False, 0),
+            ({"blocker"}, False, False, 0),  # unchanged blocker is not another checkpoint
+            ({"healthy-worker-progress"}, True, False, 0),
         ):
             with self.subTest(events=events, changed=changed):
                 boundary = bool(events & checkpoints)
                 self.assertEqual(changed and (boundary or "child-id" in events), state_write)
                 self.assertEqual(int(changed and boundary), evidence_checkpoints)
+
+    def test_relevant_proof_reuse_and_affected_invalidation(self):
+        from test_batching_contract import dispatch_seam_errors
+        self.assertEqual(dispatch_seam_errors(TEXT), [])
+        carrier = section(TEXT, "Select Execution Capability")
+        for phrase in ("compare relevant scope/revision/environment", "refresh only affected proof"):
+            self.assertIn(phrase, norm(carrier))
+            altered = norm(TEXT).replace(phrase, "REMOVED", 1)
+            # Explicit carrier check; unchanged valid examples cannot rescue a removed instruction.
+            self.assertNotIn(phrase, norm(section(altered, "Select Execution Capability")).split(
+                "## Execute and Integrate", 1)[0])
+        proof = {"scope": "dispatch carrier", "revision": "carrier-r1", "environment": "python-local-1"}
+        for event, current, refresh in (
+            ("unchanged pass", dict(proof), False),
+            ("administrative evidence commit", dict(proof), False),
+            ("affected revision", dict(proof, revision="carrier-r2"), True),
+            ("affected environment", dict(proof, environment="python-local-2"), True),
+            ("unrelated revision", dict(proof), False),
+        ):
+            with self.subTest(event=event):
+                invalidated = [key for key in proof if proof[key] != current[key]]
+                self.assertEqual(bool(invalidated), refresh)
+                outputs = {"dispatch proof": "refresh" if invalidated else "reuse", "unaffected intake proof": "reuse"}
+                self.assertEqual(outputs["unaffected intake proof"], "reuse")
+                self.assertEqual(outputs["dispatch proof"], "refresh" if refresh else "reuse")
 
 
 # Deliberately symbolic: represents a manual rule-to-action walkthrough, NOT real runtime.
