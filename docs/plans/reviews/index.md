@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [Task verification contracts — TinySpec planning review](task-verification-contracts-planning-review.md): exact source/task digests, causal coverage/proportionality and baseline limits; combined approval pending.
 - [Coordinator approval/cadence — planning review](coordinator-approval-cadence-planning-review.md): exact TinySpec/task identities and combined approval gate; coordinator-only scope.
 - [Coordinator approval/cadence — implementation validation](coordinator-approval-cadence-validation.md): item-mapped local instruction/Git evidence and independent review disposition; live obedience NOT RUN.
 - [Active planning routing — TinySpec planning review](active-planning-routing-planning-review.md): exact source/task identities, coverage, validation limits and combined approval gate.
