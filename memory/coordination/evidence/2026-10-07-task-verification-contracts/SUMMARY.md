@@ -2,8 +2,9 @@
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
-coordinator preflight completed and B01/profile routing APPROVED. Dispatch intent recorded below;
-no implementation accepted yet.
+coordinator preflight completed and B01/profile routing APPROVED. B01 attempt 1 STOPPED at
+T001 required planner-test failure; partial owned changes retained, T002/T003 not started.
+No implementation accepted yet; independent final review PENDING.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
 
@@ -216,7 +217,91 @@ per-run fan-out 64, active capacity empty. Required scope/support/profile prefli
 dispatch; missing capability stops rather than switching. No external, provider, installation,
 push, deployment, guideline edit, historical rewrite or reset permitted.
 
-Current next safe action: checkpoint this plan/snapshot intent, dispatch fresh B01 with the full
+Dispatch-boundary next safe action was: checkpoint this plan/snapshot intent, dispatch fresh B01 with the full
 approved task union and constraints, capture returned run ID immediately without racing worker
 Git; wait native completion then audit every actual task diff/SHA/checkpoint and item evidence
 before release/final review. Final independent review and implementation acceptance remain NOT RUN.
+
+## B01 implementation attempt 1 — blocked T001 checkpoint
+
+Baseline `ba7bd35464cfe32efa9b6b3942b313952e627617`, main; Git author/committer identity
+usable, empty index, only understood parent-owned STATE.md pending dirt at preflight.
+Approved source/task digests rechecked unchanged. Owned task paths match T001's 11 listed
+paths; no T002 prose, source/task/approval, guideline, settings or STATE writes by worker.
+Selected profile unchanged `openai-codex/gpt-6.1-sol:medium`; actual model/provider/effort
+unknown (no runtime/environment probe performed). Guidance none; original B01 assessment above
+retained. No repair profile selected; next selection pending any required parent gate.
+
+Concrete failing-before proof: `PYTHONDONTWRITEBYTECODE=1 python3
+skills/coordinate-implementation/scripts/test_batching_contract.py` ran 31 tests: original
+28 passed, three new `VerificationGapTests` failed. `test_practical_distinct_criteria_before_generic_green`
+found two `shared check passes` criteria instead of producer export/consumer preservation;
+`test_explicit_item_dispositions_and_revision_proof` found missing output revision;
+`test_exceptional_retry_is_not_automatic_discard` found no exceptional retry carrier.
+These are baseline defects, not capability/performance outcomes.
+
+Partial change: practical producer/handoff/routing/audit/manual/repair/feedback carriers added;
+existing batching fixture now uses distinct exported/preserved IDs and revision/environment
+observations, with named disposition/manual/retry/feedback examples; affected checker/tests
+extended only. These partial artifacts are NOT VERIFIED and no implementation commit exists.
+
+Post-change required checks, Python 3.12.3/local offline environment, baseline plus current
+uncommitted T001 diff (not an accepted revision): producer `test_contract.py` PASS **5 tests**;
+`check-planner-workflow.py` PASS static; `test-planner-workflow.py` FAIL **88 tests**, one error
+and one failing subtest. Exact gaps:
+- `ProjectCoordinationWiringTests.test_shared_reference_is_required_not_summary_only`:
+  new `check_contracts` verification-carrier loop indexes `texts[key]`; existing negative
+  missing-coordination fixture raises `KeyError: coordination` instead of named diagnostic.
+- `VerificationCarrierTests.test_named_section_removals_fail_even_with_summary_intact`,
+  `verification-oracle/weakest material`: clause occurs twice in the actual rubric section;
+  removing only its first occurrence leaves the second, so the expected diagnostic is absent.
+Required-check failure stops continuation under the brief; no silent correction/retry performed.
+Remaining batching/intake/coordination commands and T003 lint NOT RUN after that stop.
+`git diff --check` PASS; inventory inspected: 11 owned partial implementation files plus
+parent STATE.md dirt, no staged paths. Temporary command output under /tmp is auxiliary only;
+the named failures/counts above are retained evidence, not dependence on temporary logs.
+
+### Original REQUIRED item return (attempt 1)
+
+All criterion pointers refer to the immutable task file's matching **REQUIRED Tnnn/Vn** paragraph;
+original criteria/checks/gates are unchanged. Coordinator dispositions below are provisional
+proof classifications, not acceptance/self-review. Shared offline limits apply to every row.
+
+| Task/item | Executor result / proof disposition | Concrete proof or exact missing reason |
+| --- | --- | --- |
+| T001/V1 (A1,A9) | not_verified / insufficient-evidence | Producer 5 PASS + static checker PASS; planner mutations command failed; full adapter/legacy trace not accepted. |
+| T001/V2 (A2,A3,A13) | not_verified / insufficient-evidence | Oracle-sensitive/graph cases added but post-change batching NOT RUN; weakest-removal mutation objectively fails in planner suite. |
+| T001/V3 (A4–A7) | not_verified / insufficient-evidence | Distinct-ID/revision/disposition fixture added; failing-before generic oracle demonstrated; post-change named batching cases NOT RUN. |
+| T001/V4 (A8) | not_verified / insufficient-evidence | Symbolic sample STOP/decision/scoped continuation cases added but NOT RUN; no real manual/provider gate applicable or exercised. |
+| T001/V5 (A10–A13) | not_verified / insufficient-evidence | Same-contract/current-SHA/exact-gap/invalidated rerun/retry examples added but NOT RUN; no actual repair or clean retry. |
+| T001/V6 (A14) | not_verified / insufficient-evidence | Factual first/final/unknown/item/escalation examples added; batching and coordination tests NOT RUN. |
+| T001/V7 (preservation/checkpoint) | fail / failed | Required planner tests failed concretely (88, 1 failure + 1 error); remaining three focused commands NOT RUN; missing verified implementation SHA/checkpoint. |
+| T002/V1 (A15 docs) | not_verified / insufficient-evidence | T001 prerequisite blocked; documentation comparison NOT RUN, docs untouched. |
+| T002/V2 (A15 compatibility) | not_verified / insufficient-evidence | T001 prerequisite blocked; doc links/settings comparison/checkpoint NOT RUN. |
+| T003/V1 (A1–A15 integrated trace) | not_verified / insufficient-evidence | T001/T002 blocked; complete integrated trace/reviewer packet not prepared. |
+| T003/V2 (integration) | not_verified / insufficient-evidence | Lint/coordination/link integration NOT RUN; whitespace only PASS cannot compensate. |
+| T003/V3 (packet) | not_verified / insufficient-evidence | No implementation task SHA or complete range packet; final independent review PENDING, not self-certified. |
+
+Source coverage remains original mappings: A1→V1/V7; A2,A3→V2; A4–A7→V3;
+A8→V4; A9→V1; A10–A12→V5 (A12 also V7); A13→V2/V5; A14→V6;
+A15→T002/V1–V2/T003/V1–V3, with T003/V1 integrated coverage for A1–A14.
+Coverage is planned, NOT VERIFIED; optional green cannot release blocked producers/dependents.
+
+Checkpoint: this blocked-attempt SUMMARY and its single INDEX row alone are committed as
+factual evidence; SHA obtained from Git after checkpoint, no recursive self-hash. T001's
+11 task-owned files remain uncommitted and unverified; no task result SHA, no T002/T003
+checkpoint. Parent STATE dirt remains excluded/unstaged. This is not T003 completion.
+Diagnosis: implementation/checker gap with concrete errors above; model-only attribution
+unknown. Valid producer/static outputs retained, but completion checks must run after any
+correction; rerun planner suite and all remaining required commands, checking revised scope/
+environment applicability. Preserve original contracts, partial work and attempt evidence.
+
+Blocked-pause reflection: this is a local semantic checker issue, not cheaper-model evidence
+or an automatic family penalty; no general routing lesson justified, **no update proposed**.
+Guidelines remain unchanged. Static/symbolic examples cannot prove runtime obedience,
+callability or performance. No external operation, install, delegation, reset or paid probe.
+Next safe action: parent inspect failed run/invocation and this partial diff, then authorize
+same-context exact-gap continuation if appropriate (fix missing-carrier lookup and target the
+unique weakest-oracle clause); rerun invalidated planner proof and remaining T001 requirements,
+then focused T001 commit + distinct evidence checkpoint before T002 and T003. Independent
+final review remains parent-owned PENDING. Run `/reload` in pi after retained global skill changes.
