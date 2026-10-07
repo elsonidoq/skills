@@ -45,10 +45,14 @@ Historical summaries were not read; evidence index read only to preserve rows fo
 | Deliverable | Baseline | Result commit | Verification / disposition |
 | --- | --- | --- | --- |
 | S1 source, this child | `63804165e0d9b285501daad65215ac9b0fadc33e` | `3b5cc95562489db0e21d671a67f2380fbfde022e` | PASS source links (SUMMARY reserved until this checkpoint), R1–R5 / AC1–AC8 and pending-approval boundary; manual source/scope review; diff whitespace PASS; source-only commit inspected |
+| S1 evidence | `3b5cc95562489db0e21d671a67f2380fbfde022e` | `24d4cba935518d039e3803ccfa6a390ec4ccbfc6` | SUMMARY/index only; unique row, source SHA and whitespace PASS; clean before tasks |
+| S2 tasks/discovery, this child | `24d4cba935518d039e3803ccfa6a390ec4ccbfc6` | `c851724255445c521b3c073eede70f67d720c811` | Existing task-order validator PASS; local link/six REQUIRED ID checks PASS; criterion/check/evidence/gates manually inspected; whitespace PASS; tasks/index-only commit inspected |
 
 S1 SHA-256: `0eff1e06af653c8bb5b60236da617097ea6cb37ab0dfd2b69a90a2ff6ea29578`.
-Evidence-only commit follows source commit before task writes; its SHA is obtained from Git
-rather than recursively stored in its own content.
+S2 SHA-256: `0e163b2e571d0a1a1079ea166ac247d7fdacaad1283c22000e0d928c739ae432`.
+Tasks: [separate implementation list](../../../../docs/plans/early-risk-reduction-tasks.md).
+Distinct evidence-only checkpoints follow each retained deliverable before subsequent writes;
+the current evidence commit's SHA comes from Git, not recursive self-content.
 
 Baseline checks: `python3 scripts/check-planner-workflow.py` PASS (static instructions only);
 `python3 scripts/test-planner-workflow.py` PASS, 89 tests; `git diff --check` PASS.
