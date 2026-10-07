@@ -2,8 +2,8 @@
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
-coordinator preflight completed and B01/profile routing APPROVED. B01 attempt 1 STOPPED at
-T001 required planner-test failure; partial owned changes retained, T002/T003 not started.
+B01 attempt 1 blocked at required planner tests; coordinator inspected exact failures and retained
+partial owned work. Same-profile targeted continuation authorized below; T002/T003 not started.
 No implementation accepted yet; independent final review PENDING.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
@@ -300,8 +300,39 @@ Blocked-pause reflection: this is a local semantic checker issue, not cheaper-mo
 or an automatic family penalty; no general routing lesson justified, **no update proposed**.
 Guidelines remain unchanged. Static/symbolic examples cannot prove runtime obedience,
 callability or performance. No external operation, install, delegation, reset or paid probe.
-Next safe action: parent inspect failed run/invocation and this partial diff, then authorize
-same-context exact-gap continuation if appropriate (fix missing-carrier lookup and target the
-unique weakest-oracle clause); rerun invalidated planner proof and remaining T001 requirements,
-then focused T001 commit + distinct evidence checkpoint before T002 and T003. Independent
-final review remains parent-owned PENDING. Run `/reload` in pi after retained global skill changes.
+Attempt-1 next action was inspection before continuation; completed below. Independent final
+review remains parent-owned PENDING. Run `/reload` in pi after retained global skill changes.
+
+## Coordinator inspected failure / targeted continuation intent
+
+Parent inspected terminal run `9734ad8e-90e0-4ca7-812c-4e38635c9d57`, its transcript and failed
+`PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py` invocation (88 tests,
+1 failure + 1 error), actual changed checker/mutation code, rubric clause and owned diff inventory.
+Runtime reports actual `gpt-6.1-sol` thinking medium for this invocation; selected exact profile
+remains `openai-codex/gpt-6.1-sol:medium`, prior worker unknown observation preserved above.
+Evidence checkpoint `a10d6f9e69c056b963b5c97dabcdd339f9f6d48a` contains only SUMMARY/index.
+No implementation commit exists; all 11 changed T001 paths are understood originating-worker
+partial work, not accepted or adopted by a fresh implementer. Diff SHA-256 before continuation:
+`af5e9531d647e97fe8262877bc674e71459157b438bbce6ee21b51bde16b69b7`
+(over the 11 owned paths' `git diff`); parent STATE remains separate. Whitespace check passes.
+
+Concrete diagnosis: implementation/test-harness defects, with model-capability attribution unknown.
+New carrier loop `texts[key]` raises KeyError for the intentional absent coordination key; preserve
+existing missing-reference diagnostic and safely inspect absent carriers instead of crashing.
+The weakest-material mutation removes only one of two matches in its target section; target a
+unique operational clause or remove all occurrences inside the bounded section, preserving summary
+mentions and the actual weakest-oracle requirement. Do not weaken assertions or rewrite the
+approved contract. Rerun failed planner proof and every unrun/invalidated T001 check; producer/static
+passes alone do not establish full acceptance. All dependents remain blocked until T001 verified.
+
+Same originating session retains causal analysis and all partial work; narrow exact-gap resume
+is preferred to reset/fresh writer. Occupied context headroom is unobservable; the narrow repair
+brief avoids equating cumulative billed tokens with capacity, and must checkpoint/stop if context
+becomes unsafe. No changed profile or boundaries: existing owner routing approval retained.
+This is inspected same-protocol in-scope continuation, not a stronger-model escalation or generic
+review. Unknown failures still stop; no model lesson or guideline update follows.
+
+Next safe action: checkpoint this exception/resume intent, resume originating executor with exact
+failures, original full union/current state and unchanged profile; once repaired/verified, continue
+T001 commit/evidence → T002 → T003 without routine task pauses. Capture returned continuation ID
+immediately outside worker paths; audit complete returned checkpoints at batch boundary.
