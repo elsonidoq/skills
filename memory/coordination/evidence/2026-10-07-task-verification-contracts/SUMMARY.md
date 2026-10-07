@@ -1,12 +1,12 @@
-# Task verification contracts — source and task preparation
+# Task verification contracts — coordination evidence
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
-Inspected same-profile continuation completed T001–T003; integrated reviewer packet prepared.
-Attempt 1 retained below. Coordinator batch audit ACCEPTED all 12 original REQUIRED items;
-fresh independent final review found R001 mandatory-escalation wording contradiction; focused
-F001 correction verified/checkpointed and coordinator-audited, independent recheck PENDING. User requested
-finish-session/commit/push; worker performed correction only, no closeout/push or self-acceptance.
+Implementation T001–T003 and F001 complete, all 12 original REQUIRED items coordinator-accepted;
+fresh independent review/recheck **READY / OK**, R001 resolved against approved A1–A15.
+Initial failures/findings and inspected corrections retained below; live obedience/performance
+not claimed. User-authorized finish-session completed with documentation/state reconciliation;
+publication uses the requested normal main→origin push, not deployment or acceptance waiver.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
 
@@ -616,3 +616,46 @@ extra reviewer. Same approved profile unchanged; read-only reviewer, no active w
 safe action: checkpoint recheck intent/state, resume reviewer, capture ID; inspect verdict and
 finish closeout/push on acceptance. User's no-extra-overhead constraint means no new workflow
 stage/gate; bounded recheck only verifies the discovered concrete contradiction is resolved.
+
+## Independent acceptance, terminal reflection and finish-session
+
+Retained independent reviewer recheck `cd2ffbe9-1029-4d0d-9745-3dd4697f2291` is terminal:
+**No issues found; R001 resolved; ready / merge OK** over corrected range ba7bd35..95cde22,
+retaining original full-scope conclusions. Reviewer inspected dbeb020 conditional/same-profile
+clauses and regression; independently passed static checker, both focused VerificationCarrierTests
+and complete-range whitespace. No new workflow stage/gate or conflicting mandatory escalation
+found. Source/task digests unchanged. Parent inspected verdict, concrete correction and raw scope;
+all original REQUIRED evidence remains relevant or revalidated as F001 records. Feature acceptance
+VERIFIED for approved instruction/fixture scope; not a live model-performance/obedience claim.
+Runtime status observes gpt-6.1-sol thinking medium for recheck; original reviewer observation
+unknown preserved. No active child/worker and no task-owned/staged residual changes.
+
+Terminal reflection: useful evidence is the verified instruction contradiction escaping earlier
+keyword/fixture checks and its precise correction; it is a local contract issue, not sufficient
+project-specific model capability evidence. Existing same-profile continuation was preserved;
+manual gate scenarios are symbolic and actual required artifact inspections completed. First
+failure and review correction retained without universal family guidance. No new surprising
+gotcha beyond inspected contracts/docs, no supporting repeated pattern or competing learned
+rule: **no update proposed**, GUIDELINES and gotcha index unchanged. No compaction threshold
+configured/breached for empty gotcha index; compaction not needed.
+
+Finish-session existence gate: AGENTS/README/REQUIREMENTS/constitution, docs routing and all three
+discovered documentation directory indexes exist; no persistent database/schema owner applies.
+Affected authoritative README/REQUIREMENTS/settings prose already aligned by T002/F001. Closeout
+corrected only this subject's stale discovery descriptions and linked existing run evidence in
+plans index (1a33d9801c0ab131970fe03cba60284e7483be64); changed references verified to resolve,
+whitespace passed. Approved source/tasks/historical artifacts untouched. No documentation generator
+needed; no verified unresolved issue candidate (issue tracking not needed), no memory write,
+deployment investigation or deployment procedure. No deployment-relevant attributable evidence;
+/reload is required for actual global skill edits, not a service deployment. Runtime/live tests
+remain NOT RUN by design, not an unresolved promised check.
+
+Parent reconciled existing understood STATE block to brief terminal truth with approval/evidence
+pointers and accepted checkpoint, no growing task ledger. Finish-session overlap is limited to
+same coordinator-owned returned-ID state, authorized by user's closeout request; no competing
+writer. Closing evidence/index/state checkpoint validates only changed references/whitespace and
+unchanged approved digests, references already verified commits, never its own SHA. User explicitly
+authorized commit/push; origin/main rechecked at original session baseline8832a4c and all ahead
+commits attributable to this session. Publish only main→origin main using normal non-force push;
+Git/tool result owns publication evidence, no extra recursive metadata commit. Next operational
+action after publication: owner runs `/reload` in pi. No guideline approval or live acceptance inferred.
