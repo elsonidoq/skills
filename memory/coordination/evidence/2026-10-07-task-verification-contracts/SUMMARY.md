@@ -1,10 +1,10 @@
 # Task verification contracts — source and task preparation
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
-Separate TinySpec source/tasks and planner-owned review prepared and checkpointed; review READY,
-current-content combined approval PENDING. Not artifact-approved or implementation-authorized.
-No implementation or coordinator launch performed. Planner-owned review is not independent final
-review. Original source/task checkpoints and observations below remain separately attributable.
+Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
+coordinator preflight begun, batch/profile routing approval pending. No implementation dispatched.
+Planner-owned review is not independent final review. Original source/task checkpoints and
+observations below remain separately attributable.
 
 ## Authority and profile
 
@@ -143,9 +143,35 @@ Task-stage evidence checkpoint/preparation review baseline is `692ea3e53671f3a92
 This SUMMARY and the same single index row form R1's distinct evidence-only checkpoint; its SHA
 is obtained from Git after commit, not recursively inserted into itself.
 
-Current next safe action: parent planner presents the R1 five-bullet brief and conducts ask_user
-combined current-content source/task/implementation-scope approval. Approval is PENDING; no answer
-fabricated. On affirmative scope approval planner starts coordinator preflight immediately;
-coordinator still verifies Git/context/capabilities/reviewer and owns separate routing/profile
-gates. This review neither asks the owner nor launches coordinator. No new /reload obligation
-from preparation-only files; request /reload after actual global skill implementation changes.
+R1 next action at its checkpoint was parent combined approval; that gate was subsequently
+completed as recorded below. No new /reload obligation from preparation-only files; request
+/reload after actual global skill implementation changes.
+
+## Combined approval and coordinator intake (2026-10-07)
+
+Parent presented six executive bullets, then `ask_user` asked approval of the reviewed TinySpec,
+tasks and implementation scope, binding source digest
+`266820b3b8aa8dfe8b2322f315659bf8b91fc4f6b5352c0d68a251316cc247ef` and task digest
+`db1c467a93f89dede0e2d0501f4e4bb4fc499d6967fe4e6000b259822d1d0a2c`.
+Owner selected **Approve**. Parent rechecked unchanged digests, inspected the one-path approval
+record diff, and passed `git diff --check`; approval checkpoint
+`d8a90b308bb7172d5fa12aa83767cc27d178ad7f` →
+`4957570e221f7ae530704938875f3601baef3efe` owns only R1's approval record.
+This authorizes reviewed implementation scope and coordinator preflight, not batch/profile
+selection, guideline mutation, live operations, waived manual gates or feature acceptance.
+
+Coordinator intake uses planner/TinySpec origin, the source/tasks/R1 pointers above, all three
+implementation tasks (T001–T003), twelve REQUIRED items and their ordered prerequisites.
+Preserve the approved artifact bytes/digests and narrow owned paths. Verified preparation Git
+state is clean after scoped checkpoints; native async delegation is usable with unlimited session
+spawn/active capacity and 64 per-run fan-out ceiling observed by doctor. Delegate/task-generation
+runs on selected Sol/medium succeeded; final reviewer role is registered with read-only tools,
+but no final reviewer invocation or implementation profile selection is inferred. Assignment and
+dispatch must recheck binding/effort/tools and selection. No live provider probe authorized.
+
+Next safe action: coordinator presents the complete proposed coherent execution plan with
+separate family/effort rationales, obtains exact batch/profile routing and fresh reviewer selection,
+then establishes snapshot/baselines before dispatch. Existing terminal STATE belongs to the prior
+run and is not current authorization; reconcile and update only under coordinator snapshot rules.
+Implementation/final independent review remain NOT RUN. No routing lesson or guideline update
+proposed from approval-only activity.
