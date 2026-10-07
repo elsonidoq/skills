@@ -1,0 +1,83 @@
+# Tasks: Coordinator dispatch readiness
+
+Producer: planner TinySpec **direct adapter**. Status: prepared for planner-owned review; combined approval **PENDING**. Planning-only: artifacts/approval do not authorize implementation or coordinator invocation.
+
+Source: [TinySpec](coordinator-dispatch-readiness-tinyspec.md), SHA-256 `41eb6d0d16ccbf2f5d64e2cfb3c77ab1e59c22824858ae988562dab29d7447f3`; A1–A5, approach, exclusions and verified baseline spans are authoritative. Task-production baseline: clean `19a0298` after source/evidence checkpoints. Primary advisory input provenance survives in source, not a second copied report.
+
+## Shared constraints and execution boundary
+
+Read [AGENTS](../../AGENTS.md), [constitution](../../.specify/memory/constitution.md), full [gotcha index](../../memory/MEMORY.md) and compact [guidelines](../../memory/coordination/GUIDELINES.md): none applicable. Existing local dependency owners suffice; no library/runtime/version change or internet research. Preparation profile selected/observed and six-factor rationales are carried unchanged from source for this task-generation invocation: owner-selected `openai-codex/gpt-6.1-sol:medium`; separately child session launch observed provider/model and medium thinking level. Bounded inference, local tool depth, weakest static oracle, narrow contract coupling, reversible prose/costly omission, guidance none; Sol reconciles contracts, medium fits bounded inference/tool depth. No implementation-task profile assignment.
+
+Settled constraints, verbatim:
+
+> Existing preparation has a definite end: once its required conditions and dispatch-intent checkpoint are satisfied, dispatch; reopen only for concrete invalidating evidence.
+>
+> Do not yet change all-batch approval, worker checkpoints, baseline authority, or the persistence architecture.
+>
+> No new persisted artifact, approval, or commit category.
+>
+> Do not broadly extract recovery sections yet.
+>
+> Do not edit AGENTS, constitution, worker policy, or historical approvals simply to make wording uniform.
+>
+> Actual improvement remains unverified until an affected trace or separately authorized behavioral canary supports it.
+
+Preserve entire-plan routing approval, current source/approval authority and completion scope, assignment/dispatch exact-profile/tools/support/permission/budget gates, reviewer readiness, coordinator baseline/Git/ownership, full unchanged REQUIRED union/manual gates, active/unrecorded-child reconciliation, committed intent/immediate ID/safe deferred commit, internal worker autonomy and distinct task/evidence checkpoints/no STATE writes, independent return audit, fresh independent final review and exact guideline approval. No new readiness checklist/score/file/approval, incremental routing, baseline reassignment, combined commits, broad extraction, history migration, AGENTS/constitution/worker-policy edits, runtime/settings/dependencies, live/external/provider probes, push/deploy/reset, guideline changes or unrelated fixes.
+
+All REQUIRED items below need local read/edit tools, Python 3 and usable Git. Manual checks are bounded semantic/diff inspections, not a new owner ceremony. Existing source/manual/permission gates remain unchanged; missing required proof/capability is NOT VERIFIED, not passed. Expected evidence includes command output and named fixture/section references at the actual revision/environment. Shared checks may run once with all item mappings after confirming scope/revision/environment; rerun invalidated proof only. Whole unchanged item union must reach the executor before coding. Producer verification precedes consumer use.
+
+Apply [checkpoint owner](../../skills/memory-handling/references/task-commit-contract.md) and [coordination owner](../../skills/memory-handling/references/project-coordination.md): coordinator establishes actual baseline/allowed paths/ownership and required check baselines; implementer compares before writing, verifies/diff-inspects/commits explicit owned paths, then distinct existing-run SUMMARY/index evidence checkpoint before next task. Future task baselines derive from actual preceding commits, not invented SHAs. Unknown work/failed commit/hook/ownership/evidence persistence stops. Inspect failed run/invocation/partial checkpoints before authorized repair; unknown cause stops. Worker never writes STATE; coordinator audits every returned task/checkpoint independently. Source/task changes return to producing review/renewal, never weakened executor acceptance.
+
+## Producer: operational termination and safety wiring
+
+- [ ] T001 — Clarify the existing preparation-to-dispatch seam and subtract redundant prose
+  - **Depends**: none
+
+- **Outcome/source:** finite preparation termination with precise stop/affected-only reopen, no weakened gate or competing checklist (A1–A3; reuse rule of A4).
+- **Owned surfaces:** `skills/coordinate-implementation/SKILL.md` only Load and Verify, existing dispatch-intent ordering text, Execution Capability Preflight, Build the Execution Graph and Select Execution Capability/brief seam as necessary; retain recovery structure/anchors, worker/return/final-review semantics. `skills/coordinate-implementation/scripts/test_batching_contract.py` for minimal section-bound termination/reopen/preserved-gate assertions; `test_intake_contract.py` only directly invalidated assertions, if any. No unrelated carrier edits.
+- **Context/capabilities:** source evidence table/current shared owners; Markdown/Python editing, local checks and Git. Residual reasoning medium: preserving obligation coverage while replacing repetition, not new architecture.
+- **Steps:** expose absence of termination in a focused failing carrier assertion before editing; implement one short rule at the existing seam referencing existing required conditions/committed intent. Remove superseded repetition only with retained-authority/redundancy mapping; do not count fewer lines as success. Final profile/argument validation remains mandatory before dispatch, not deferred until afterward.
+- **REQUIRED T001/V1 (A1,A2):** pass criterion: termination/precise-stop/concrete-invalidation text is in the actual dispatch carrying section; removal there fails even when repeated in a footer. A ready unchanged preparation has dispatch next; absence of any mandatory condition cannot be interpreted as permission. Smallest check: section-bound new assertions/mutations in batching harness plus bounded manual seam inspection. Evidence: pre-change failure, post-change named tests/output and carrier section pointers. Gates: local only; no runtime callability/obedience claimed.
+- **REQUIRED T001/V2 (A3,A4):** pass criterion: each removed/replaced passage maps to a retained authoritative obligation or proven redundancy; no lost protected gate/worker role/commit/persistence category and reuse requires relevant scope/revision/environment compatibility. Smallest check: baseline-to-diff obligation map covering shared checkpoint/coordination owners, approval graph, exact-profile/union/active-child/audit/final-review carriers; run `PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_intake_contract.py` and batching harness. Evidence: bounded removal→retained-owner map and named preserved guards/output. Gates: no waiver of any original manual/permission condition; missing evidence stops.
+- **REQUIRED T001/V3 (checkpoint):** pass criterion: `git diff --check`, explicit owned diff/commit audit, actual baseline/result SHA and clean task-relative state, followed by distinct evidence checkpoint before T002. Evidence: existing implementation-run SUMMARY/index pointers and ordered SHAs; no new report. Required Git/hook/ownership failures stop.
+- **Verification effort:** focused existing carrier/approval/intake checks plus bounded semantic mapping; no broad baseline suite or new framework.
+
+## Consumer: observable offline action/persistence examples
+
+- [ ] T002 — Extend existing bounded traces at the changed seam
+  - **Depends**: T001
+
+- **Outcome/source:** tests reject redundant post-readiness preparation while retaining targeted reopen and recovery/persistence safety (A1–A4). Consume verified T001 rule, not a second definition.
+- **Owned surfaces:** `skills/coordinate-implementation/scripts/test_batching_contract.py`, `skills/coordinate-implementation/scripts/test_state_contract.py`; no new fixture framework/file or production runtime router. T001 discovered instruction defects require separate authorized corrections/checkpoints, not silently editing its completed contract.
+- **Context/capabilities:** verified T001 carrier/removal mapping and existing `ApprovalGateTests`, symbolic dispatch examples, `CadenceTests`, `GitScenarioTests`; Python 3/local Git fixtures. Residual reasoning medium: adversarial useful observables while retaining explicit simulation limits.
+- **REQUIRED T002/V1 (A1,A2,A3):** pass criterion: minimal event sequences with named observable actions/reasons accept ready→dispatch and reject redundant post-ready preparation; concrete changed profile/content or relevant workspace condition reopens only affected preparation; missing approval/profile support/ownership/manual REQUIRED proof yields precise blocked action; running child gives inspect/wait and unknown child gives reconciliation, never replacement. Healthy worker progress/unchanged check/polish alone cannot reopen. Smallest check: bounded cases in existing batching/state harness with actual-carrier section-bound mutations, not a helper that merely returns expected labels. Evidence: named input/actions/expected-versus-actual outcomes and mutations showing missing carrier rule is detected; no exhaustive matrix. Gates: symbolic only, no live/provider/runtime permission exercised.
+- **REQUIRED T002/V2 (A4,A3):** pass criterion: existing start+dispatch/audit+next-intent coalescing, immediate child-ID/pending-safe-commit, worker task/evidence ordering, unknown/active-child and dirty ownership fixtures remain valid; unchanged-blocker/healthy-worker events cause no extra coordinator persistence; changed relevant revision/environment invalidates affected proof, unchanged proof reuses without rerun. Smallest check: extend only missing bounded reuse/event examples and run state plus batching harnesses. Evidence: named `CadenceTests`/`GitScenarioTests` output and targeted event/proof references, honest real-Git versus symbolic-child distinction. Gates: local temporary Git only; no project STATE writes, runtime/probes or fixture success treated as behavior proof.
+- **REQUIRED T002/V3 (checkpoint):** pass criterion: run `PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_batching_contract.py`, same prefix for `test_state_contract.py`, `git diff --check` and explicit task-owned diff audit; individual task then separate evidence commit precede T003. Evidence: output, task/evidence SHAs, retained T001 mappings and current environment. No passing generic suite substitutes for named cases.
+- **Verification effort:** small existing symbolic/mutation additions, existing seven bounded Git scenarios; no external execution or new enforcement infrastructure.
+
+## Integration: necessary consumers and reviewer packet
+
+- [ ] T003 — Align only necessary active prose and prepare full-range acceptance evidence
+  - **Depends**: T001, T002
+
+- **Outcome/source:** one operational owner, necessary consumer consistency and complete acceptance/reviewer packet (A5, integrated A1–A4), without self-certifying independent review.
+- **Owned surfaces:** `REQUIREMENTS.md` Implementation batch selection / Brief current-state contract and `README.md` implementation/current-state descriptions only if actual changed behavior requires alignment; `docs/index.md` only an existing coordinator-owner description/link if discovery changes. `skills/memory-handling/references/project-coordination.md` and `task-commit-contract.md` only a necessary coordinator-qualified reference/clarification if actual contradiction is demonstrated; worker semantics, baseline authority and cadence unchanged. Existing `skills/memory-handling/scripts/test_coordination_contract.py`, `scripts/check-task-commit-contract.py`, `scripts/test-task-commit-contract.py` only directly invalidated wording assertions, not guard deletion. Existing implementation-run SUMMARY/one INDEX row for packet/evidence. No new acceptance report/file, history edits or worker STATE ownership.
+- **Context/capabilities:** verified T001/T002 commits and item proof; Markdown/Python/local link inspection/Git. Residual reasoning low-to-medium: bounded consumer comparison and relevant proof validity.
+- **REQUIRED T003/V1 (A5,A3):** pass criterion: necessity table documents changed or verified-unchanged active consumers; shared-owner changes, if any, are linked coordinator-only clarifications with worker/checkpoint policy equivalent. Local changed links/anchors resolve; no competing gate/checklist/new persisted category. Smallest check: exact changed paragraphs→operational owner→fixture comparison, scoped baseline diff and local link scan. Evidence: bounded table and link output; unchanged files create no empty commit. All exclusions/pins/settings/AGENTS/constitution/history/guidelines remain intact.
+- **REQUIRED T003/V2 (A1–A5):** pass criterion: complete source criterion→item→actual proof/revision/environment map; reuse valid T001/T002 outputs, refreshing only invalidations. One integrated `PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh` and `PYTHONDONTWRITEBYTECODE=1 python3 skills/memory-handling/scripts/test_coordination_contract.py` plus local changed links and `git diff --check` pass. Existing lint integrates checkpoint/planner/intake/batching/state consumers, so run once at final packaging boundary, not each task. Evidence: actual commands/counts and distinct named seam evidence; unrelated failures stop/report, no unauthorized fix.
+- **REQUIRED T003/V3 (packet/checkpoint):** pass criterion: existing SUMMARY/index packet names current source/tasks/approval, complete implementation baseline→HEAD range, owned-path inventory, ordered task/evidence SHAs, every item disposition/proof, findings/invalidation/gates and honest static/symbolic/Git limits. If prose changed, focused task commit precedes separate evidence checkpoint; if evidence-only/no prose needed, make only its focused evidence checkpoint under shared owner, no empty task commit or recursive SHA chase. Tell owner `/reload` after actual global asset changes. Coordinator obtains a **later fresh independent final implementation review** of entire committed range, resolves findings in separate checkpoints and blocks final acceptance if missing; packet preparation does not require that future review first. Gates: reviewer usable/owner-selected at coordinator preflight and final review; approval not fabricated, review pending clearly recorded.
+- **Verification effort:** bounded doc comparison, reused producer evidence and one existing packaging integration; no broad implementation baseline suite for current planning production.
+
+## Coverage and optional work
+
+| Source criterion | REQUIRED mapping |
+| --- | --- |
+| A1 | T001/V1, T002/V1, T003/V2 |
+| A2 | T001/V1, T002/V1, T003/V2 |
+| A3 | T001/V2, T002/V1–V2, T003/V1–V2 |
+| A4 | T001/V2, T002/V2, T003/V2 |
+| A5 | T003/V1–V3 |
+
+Optional, not a REQUIRED blocker: affected-trace analysis or separately authorized behavioral canary, additional hardening/regression. No call/probe/child launch is authorized by these tasks. Actual improvement and runtime cause remain unverified; no performance promise. A canary would need separate exact profiles, usable permissions/budgets/disposable workspace and failure-inspection gates; do not add it to the current task sequence.
+
+Preparation validation: task-order checker, local links, item completeness, source coverage/exclusions, implicit dependency/manual-gate/feasibility review and `git diff --check`; planner maintenance checker/tests as applicable. Current digests and actual output belong to planning review/evidence, not self-hashes. Source→T001 carrier→T002 trace→T003 consumers/packet is producer-first and feasible; no invented implementation routing/profile or mandatory split. Planner-owned review and parent-owned combined approval remain pending; no coordinator invocation even if planning artifacts are approved under this planning-only request.
