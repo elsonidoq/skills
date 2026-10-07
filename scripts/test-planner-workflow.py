@@ -32,6 +32,128 @@ links = load("links", "install-links.py")
 rpc = load("rpc", "planner-rpc-smoke.py")
 
 
+class EarlyRiskReductionTests(unittest.TestCase):
+    """Offline instruction sensitivity; no real library or model-obedience proof."""
+
+    def test_shared_risk_owner_is_required(self):
+        self.assertIn("risk", checker.PATHS)
+        texts = checker.load_texts()
+        del texts["risk"]
+        self.assertTrue(any(e.startswith("risk-reference:") for e in checker.check_contracts(texts)))
+
+    def test_risk_clause_removals_have_named_diagnostics(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, heading, clauses in checker.RISK_CARRIERS:
+            for clause in clauses:
+                with self.subTest(diagnostic=label, removed=clause):
+                    changed = dict(texts)
+                    body = checker.section(changed[key], heading)
+                    self.assertIn(clause, body)
+                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED", 1), 1)
+                    errors = checker.check_contracts(changed)
+                    self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
+
+    def test_risk_carrier_removal_and_summary_only_replacement(self):
+        texts = checker.load_texts()
+        for label, key, heading, _ in checker.RISK_CARRIERS:
+            for replacement in ("", heading + "\n"):
+                with self.subTest(carrier=label, replacement=replacement):
+                    changed = dict(texts)
+                    body = checker.section(changed[key], heading)
+                    changed[key] = changed[key].replace(body, replacement, 1) + "\n## Summary only\n" + body.replace(heading, "Summary of removed carrier", 1)
+                    self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+    def test_risk_missing_wrong_reference_and_distributed_links(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for path in set(checker.PATHS.values()):
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text((ROOT / path).read_text())
+            for key in ("planner", "tiny", "helper", "tasks"):
+                target = root / checker.PATHS[key]
+                original = target.read_text()
+                for wrong in ("absent.md", "dependency-research.md"):
+                    target.write_text(original.replace("early-risk-reduction.md", wrong))
+                    with self.assertRaisesRegex(ValueError, "risk-reference: " + key):
+                        checker.load_texts(root)
+                target.write_text(original)
+            (root / checker.PATHS["risk"]).unlink()
+            with self.assertRaisesRegex(ValueError, "risk-reference:"):
+                checker.load_texts(root)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("planner", "tiny-spec", "delegating-architectural-planning", "task-generation"):
+                (root / name).symlink_to(ROOT / "skills" / name, target_is_directory=True)
+                relative = ("references/early-risk-reduction.md" if name == "planner"
+                            else "../planner/references/early-risk-reduction.md")
+                self.assertEqual((root / name / relative).resolve(), (ROOT / checker.PATHS["risk"]).resolve())
+                self.assertIn("# Early technical risk reduction", (root / name / relative).read_text())
+
+    def assert_risk_adapter_semantics(self, source):
+        # Bounded expected-fixture assertions, not a generic semantic task validator.
+        blocks = re.split(r"(?m)^- \[ \] T\d+", source)[1:]
+        self.assertEqual(len(blocks), 3)
+        producer, consumer, cleanup = blocks
+        for block in blocks:
+            for field in ("Outcome", "Files/interfaces", "Acceptance", "Capabilities", "Depends"):
+                self.assertIn(f"**{field}**", block)
+            for field in ("REQUIRED", "Pass:", "Smallest check:", "Evidence:", "Gate:"):
+                self.assertIn(field, block)
+        for phrase in ("real dependency/runtime", "representative and adversarial", "failure rejects the technique",
+                       "Commands:", "commands actually run", "observed findings", "version/runtime/revision applicability",
+                       "NOT VERIFIED, not PASS", "blocks dependent reliance", "retain executable artifact, commands and findings"):
+            self.assertIn(phrase, producer)
+        for phrase in ("**Depends**: T001", "inspect and run applicable", "use it as implementation reference",
+                       "behavior with production tests", "a report-only link is insufficient", "remaining integration risks",
+                       "T001 passed and still-applicable", "failed/unrun producer cannot release"):
+            self.assertIn(phrase, consumer)
+        for phrase in ("**Depends**: T001, T002", "cleanup only after all applicable consumers and production validation pass",
+                       "preserve reproducible evidence, commands, findings and limits", "otherwise retain proof"):
+            self.assertIn(phrase, cleanup)
+
+    def test_B_C_both_adapter_producer_consumer_lifetime(self):
+        validator = load("risk_order", "../skills/task-generation/scripts/check-task-order.py")
+        for name in ("risk-tiny-tasks.md", "risk-standard-tasks.md"):
+            source = (HERE / "fixtures/planner" / name).read_text()
+            self.assertEqual(validator.check(source), [], name)
+            self.assert_risk_adapter_semantics(source)
+        self.assertIn("before production lifecycle plumbing", (HERE / "fixtures/planner/risk-tiny-tasks.md").read_text())
+        self.assertIn("before integration plumbing", (HERE / "fixtures/planner/risk-standard-tasks.md").read_text())
+
+    def test_early_deletion_report_only_missing_dependency_failed_as_proven_rejected(self):
+        for name in ("risk-tiny-tasks.md", "risk-standard-tasks.md"):
+            source = (HERE / "fixtures/planner" / name).read_text()
+            for old, new in (
+                ("cleanup only after all applicable consumers and production validation pass", "delete immediately after producer"),
+                ("inspect and run applicable", "link a report about"),
+                ("**Depends**: T001\n", "**Depends**: none\n"),
+                ("failure rejects the technique", "failed technique is proven"),
+            ):
+                with self.subTest(adapter=name, negative=new):
+                    self.assertIn(old, source)
+                    with self.assertRaises(AssertionError):
+                        self.assert_risk_adapter_semantics(source.replace(old, new, 1))
+
+    def test_A_D_E_labelled_walkthroughs_and_operational_mapping(self):
+        source = (HERE / "fixtures/planner/risk-walkthroughs.md").read_text()
+        for heading, phrases in (
+            ("## A", ("source/documentation", "No executable spike", "name/type", "Evidence:", "Gate:")),
+            ("## D", ("real-system validation", "not a forced", "Prerequisites:", "Criterion:", "Check:",
+                      "Evidence:", "Gate:", "NOT VERIFIED", "cannot release dependent")),
+            ("## E", ("Retain observed disproof", "not proven", "Block the assumed T002", "correct/replan",
+                      "Renew affected existing", "retains the first failure", "Gate:")),
+        ):
+            for phrase in phrases:
+                self.assertIn(phrase, checker.section(source, heading))
+        texts = checker.load_texts()
+        for label in ("risk-selection", "risk-producer", "risk-disproof", "risk-boundary"):
+            _, key, heading, clauses = next(c for c in checker.RISK_CARRIERS if c[0] == label)
+            for clause in clauses:
+                self.assertIn(clause, checker.section(texts[key], heading))
+
+
 class ProportionateValidationTests(unittest.TestCase):
     """Instruction-removal regressions, not behavioral/model evaluations."""
 

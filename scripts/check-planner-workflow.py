@@ -18,6 +18,7 @@ PATHS = {
     "memory": "skills/memory-handling/SKILL.md",
     "guidance": "docs/best_practices_spec_driven_development.md",
     "requirements": "REQUIREMENTS.md",
+    "risk": "skills/planner/references/early-risk-reduction.md",
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
     "routing": "skills/coordinate-implementation/references/batch-routing.md",
@@ -536,7 +537,105 @@ def check_contracts(texts):
     # Bounded checks of changed instruction carriers, not a production audit/router.
     for label, key, heading, clauses in VERIFICATION_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
+    for label, key, heading, clauses in RISK_CARRIERS:
+        require(label, section(texts.get(key, ""), heading), *clauses)
+    if not texts.get("risk"):
+        errors.append("risk-reference: required shared carrier missing or empty")
     return errors
+
+
+RISK_CARRIERS = (
+    ("risk-selection", "risk", "## Select for leverage",
+     ("hardest core", "disproportionate technical uncertainty", "cheaply isolated",
+      "meaningful executable oracle", "substantial downstream leverage", "expected value relative to effort",
+      "No universal", "Easy names/types/methods resolve by inspection", "Non-isolatable uncertainty needs",
+      "real-system validation", "actual prerequisites", "not a forced isolated script")),
+    ("risk-producer", "risk", "## Produce a minimal executable reference",
+     ("before plumbing/integration", "smallest disposable", "not production-quality abstractions",
+      "real dependency/runtime", "applicable version", "a mock or trivial script",
+      "representative/adversarial assertions", "objective success/failure criteria", "reproducible commands",
+      "capability/permission gates", "actually run", "observed findings", "applicability and limitations",
+      "NOT VERIFIED and cannot release dependents", "tested bounds only")),
+    ("risk-lifetime", "risk", "## Consume, validate, then clean up",
+     ("Retain executable artifact, commands and findings", "all applicable production consumers",
+      "explicit earlier producer dependency", "inspect and run", "implementation reference",
+      "preserve proven behavior", "production tests", "Merely linking a report is not consumption",
+      "remaining", "integration-risk checks", "changes invalidate affected evidence",
+      "cleanup only after all applicable consumers and production validation pass",
+      "preserve reproducible evidence", "no fixed global proof directory")),
+    ("risk-disproof", "risk", "## Disproof and return",
+     ("block downstream reliance", "Retain", "disproof and limits", "correct/replan",
+      "renew affected existing producing reviews/approvals", "Never label a failed technique proven",
+      "erase an", "weaken criteria post hoc", "blindly retry", "evidence gap, not technical disproof",
+      "Unrun experiments also cannot release", "no automatic approval")),
+    ("risk-boundary", "risk", "## Authority and scope",
+     ("missing packaging stops", "missing-install report", "Direct/standalone", "Planning schedules proofs",
+      "without separate execution authority", "not a new workflow, schema or approval stage")),
+    ("risk-review", "risk", "## Review and handoff",
+     ("Both TinySpec and Standard", "selection/omission", "explicit production consumption/dependencies",
+      "retention through", "production tests before cleanup", "disproof routing", "feasibility/gates",
+      "without embedding a task checklist", "without replacing installed task production",
+      "Direct TinySpec/tasking", "standalone/helper-managed", "not real-library or model-obedience proof")),
+    ("risk-planner", "planner", "## Proportionate validation",
+     ("[early risk reduction](references/early-risk-reduction.md)", "missing-install report",
+      "leverage, not ceremony", "easy names/types use inspection", "real-system validation",
+      "Planning schedules executable proofs", "separate authority", "explicit production consumption",
+      "production tests before cleanup", "retained disproof")),
+    ("risk-stage-handoff", "planner", "## Selected production and stage handoffs",
+     ("Apply the early risk reduction contract in stage briefs", "return justified selection/omission", "executable criteria and applicability",
+      "producer → consumer → production validation → cleanup", "all consumers", "NOT VERIFIED",
+      "affected approval renewal")),
+    ("risk-tiny-review", "planner", "### TinySpec path",
+     ("Review early risk reduction selection/omission", "real-runtime executable criteria",
+      "explicit consumption/dependencies", "all-consumer retention", "production tests before",
+      "cleanup, disproof/renewal and feasibility")),
+    ("risk-standard-review", "planner", "### Standard path",
+     ("Review early risk reduction selection/omission", "explicit consumption/dependencies",
+      "all-consumer retention", "production tests before", "cleanup, disproof/renewal and feasibility",
+      "direct Standard and managed/helper plans")),
+    ("risk-final-handoff", "planner", "## Handoff, not execution",
+     ("early risk reduction", "current proof applicability", "inspect/run", "production tests",
+      "cleanup waits for all consumers", "Failed/unrun proofs cannot release assumed dependents")),
+    ("risk-tiny", "tiny", "## Compact source contract",
+     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "missing-install report",
+      "direct/standalone", "selection/omission", "minimal real-runtime executable proof",
+      "easy names/types", "real-system validation", "representative/adversarial", "applicability",
+      "production tests before", "all-consumer retention", "disproof/renewal",
+      "Planning schedules proofs", "separate authority")),
+    ("risk-tiny-return", "tiny", "## Boundary and return",
+     ("early risk reduction", "explicit dependencies and inspect/run consumption",
+      "commands/findings/applicability", "all-consumer retention", "failed/unrun reliance blockers",
+      "affected existing approval renewal", "direct entry")),
+    ("risk-helper-preflight", "helper", "## Preflight",
+     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "verify it is readable or stop with a missing-install report.",
+      "Standalone entry applies", "Planning schedules proofs", "separate authority")),
+    ("risk-helper-adapter", "helper", "## Planner Standard adapter contract",
+     ("early risk reduction", "managed pass", "review/handoff", "selection/omission",
+      "producer/consumer sequencing", "do not execute scheduled proofs")),
+    ("risk-helper-plan", "helper", "## Planner Boundary",
+     ("early risk reduction", "selection/omission", "substantial leverage", "easy names/types use inspection",
+      "non-isolatable risks", "real-system validation", "minimal", "real-runtime executable proof",
+      "representative/adversarial", "explicit production", "consumption/dependencies",
+      "all-consumer retention", "production tests before cleanup", "disproof/renewal")),
+    ("risk-helper-return", "helper", "## Completion",
+     ("early risk reduction", "executable criteria/applicability", "inspect/run",
+      "preserved behavior", "all-consumer retention", "disproof/NOT VERIFIED", "standalone entry",
+      "Failed/unrun proofs cannot", "release assumed dependents")),
+    ("risk-tasks", "tasks", "## Task contract",
+     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "missing-install report",
+      "Both adapters and direct entry", "Planning schedules proofs", "separate authority",
+      "selection/omission", "easy names/types use inspection", "real-system", "actual prerequisites/gates",
+      "minimal real-runtime", "representative/adversarial", "commands/artifact/findings",
+      "applicability", "explicitly depend on the earlier", "inspect/run/use",
+      "preserving proven", "production tests", "not a report-only link", "all consumers",
+      "cleanup last", "Failed/unrun proofs cannot release", "retain disproof/limits", "correct/replan",
+      "renew affected existing approvals")),
+    ("risk-task-review", "tasks", "## Review and handoff",
+     ("early risk reduction selection/omission", "explicit consumption/dependencies",
+      "all-consumer retention", "production tests before cleanup", "disproof/renewal",
+      "both adapters/direct entry", "applicability", "blocked reliance",
+      "syntax/order validation alone cannot prove consumption")),
+)
 
 
 VERIFICATION_CARRIERS = (
@@ -571,6 +670,9 @@ VERIFICATION_CARRIERS = (
 
 
 def load_texts(root=ROOT):
+    risk_path = root / PATHS["risk"]
+    if not risk_path.is_file():
+        raise ValueError("risk-reference: required shared reference unavailable")
     research_path = root / PATHS["research"]
     if not research_path.is_file():
         raise ValueError("research-reference: required shared reference unavailable")
@@ -578,6 +680,10 @@ def load_texts(root=ROOT):
     if not coordination_path.is_file():
         raise ValueError("coordination-reference: required shared reference unavailable")
     texts = {key: (root / path).read_text() for key, path in PATHS.items()}
+    for key in ("planner", "tiny", "helper", "tasks"):
+        destinations = re.findall(r"\[early risk reduction\]\(([^)]+)\)", texts[key])
+        if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != risk_path.resolve():
+            raise ValueError(f"risk-reference: {key} shared link missing/unresolvable or wrong owner")
     for key in ("memory", "planner", "tiny", "tasks", "coordinator"):
         destinations = re.findall(r"\[project coordination contract\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != coordination_path.resolve():

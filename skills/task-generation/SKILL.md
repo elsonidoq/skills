@@ -57,6 +57,20 @@ as unavailable.
 
 ## Task contract
 
+Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
+verify it is readable or stop with a missing-install report. Both adapters and direct entry
+apply it without assuming planner already did. Planning schedules proofs, not execution
+without separate authority. Justify selection/omission: difficult isolatable cores need
+substantial leverage, easy names/types use inspection, non-isolatable risks use real-system
+validation with actual prerequisites/gates. Use existing fields for a minimal real-runtime
+executable producer with representative/adversarial criteria, commands/artifact/findings,
+applicability and permission gates. Production consumers explicitly depend on the earlier
+producer; acceptance requires inspect/run/use of the reference and preserving proven
+behavior with production tests, not a report-only link. Retain proof until all consumers
+and production validation pass; schedule cleanup last and preserve reproducible evidence.
+Failed/unrun proofs cannot release assumed dependents: retain disproof/limits, correct/replan
+and renew affected existing approvals rather than label failed techniques proven.
+
 Every task records an outcome, explicit prerequisites, likely files or interfaces,
 independently observable acceptance evidence, required capabilities and shared context. Cover all in-scope work, integration/acceptance checks, and
 lockstep documentation whose evidence compares documentation with implemented behavior.
@@ -108,6 +122,12 @@ context and integration checkpoints so the execution coordinator can make an evi
 batch decision.
 
 ## Review and handoff
+
+Review early risk reduction selection/omission, real-runtime executable criteria,
+explicit consumption/dependencies, all-consumer retention, production tests before cleanup,
+disproof/renewal and feasibility through both adapters/direct entry. Return producer → consumer
+→ production validation → cleanup mapping, applicability and blocked reliance to existing
+producing review and coordinator handoff; syntax/order validation alone cannot prove consumption.
 
 Before approval, validate explicit dependencies and story continuity with
 `python3 scripts/check-task-order.py /path/to/tasks.md` from this skill directory when the

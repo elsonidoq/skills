@@ -56,6 +56,15 @@ impact, allowed bounds and outstanding validation, never automatic deferral.
 
 ## Compact source contract
 
+Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
+verify it is readable or stop with a missing-install report, including direct/standalone
+entry. In approach/acceptance, justify selection/omission: difficult isolatable cores
+need leverage-bearing minimal real-runtime executable proof, easy names/types need
+inspection, non-isolatable risks need real-system validation. Carry explicit production
+consumption, representative/adversarial criteria, applicability, production tests before
+cleanup, all-consumer retention and disproof/renewal. Planning schedules proofs, not
+execution without separate authority; this source describes needs, not work-unit checklists.
+
 Include these semantics, using only relevant detail rather than empty ceremony:
 
 - **Context/outcome:** beneficiary, desired behavior and source provenance.
@@ -81,6 +90,11 @@ speculatively. Resolve scope-affecting UNVERIFIED claims or retain explicit owne
 deferral. Do not reintroduce excluded work.
 
 ## Boundary and return
+
+Return the early risk reduction rationale and producer → consumer → production validation
+→ cleanup needs for source/task review: explicit dependencies and inspect/run consumption,
+commands/findings/applicability, all-consumer retention, and failed/unrun reliance blockers
+with affected existing approval renewal. Do not assume planner applied this on direct entry.
 
 Do not embed an implementation task checklist. A separate task file is mandatory:
 planner invokes `task-generation`'s direct adapter after this artifact. Acceptance

@@ -11,6 +11,11 @@ planner owns architectural decomposition, not implementation or product scope.
 
 ## Preflight
 
+Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
+verify it is readable or stop with a missing-install report. Standalone entry applies
+it locally, not an assumption that planner applied it. Planning schedules proofs, not
+execution without separate authority; preparation and installed SpecKit gates remain.
+
 Verify and provide:
 
 - The approved specification and evidence of approval.
@@ -76,6 +81,9 @@ below supplement the generated artifacts and do not replace the SpecKit stage.
 
 ## Planner Standard adapter contract
 
+Apply early risk reduction throughout the managed pass and its review/handoff, including
+justified selection/omission and producer/consumer sequencing; do not execute scheduled proofs.
+
 When `planner` invokes this helper from its Standard `plan_create` stage, it is not a standalone
 fallback. Select the Sol family with exactly **medium** supported effort for the ENTIRE
 Standard direct/helper pass. Use the manager's exact selected Sol/medium binding and effort
@@ -115,6 +123,13 @@ For already-authorized planning outputs within the bounded write permission abov
 make the focused path-limited task checkpoint required by the shared contract before completion or handoff. This mandatory checkpoint needs no separate commit opt-in; it does not authorize
 new writes, specification/adaptation changes, pushes, or additional delegation.
 
+Apply early risk reduction to plan sequencing/verification: justify selection/omission
+for a difficult isolatable core with substantial leverage; easy names/types use inspection,
+non-isolatable risks use real-system validation with prerequisites/gates. Specify minimal
+real-runtime executable proof with representative/adversarial criteria, explicit production
+consumption/dependencies, all-consumer retention, production tests before cleanup and
+disproof/renewal. These needs feed task generation, not an embedded substitute task list.
+
 Ensure the SpecKit plan covers:
 
 - Architecture, contracts, and relevant files or interfaces when knowable;
@@ -152,6 +167,12 @@ itself a planning blocker: represent it as an explicit authorization gate unless
 the required runtime policy is undefined.
 
 ## Completion
+
+Review and return early risk reduction rationale, executable criteria/applicability and
+producer → consumer → production validation → cleanup mapping. Check explicit inspect/run
+consumption and preserved behavior, all-consumer retention and disproof/NOT VERIFIED blockers;
+renew affected existing approvals, including standalone entry. Failed/unrun proofs cannot
+release assumed dependents. No new gate or execution authority is implied.
 
 Verify that the detected SpecKit planning stage ran and inspect its outputs
 against the approved spec and planner boundary. Verify shared-link resolution,

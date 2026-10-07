@@ -95,6 +95,13 @@ hard-coded here. This exception does not assign implementation-task profiles.
 
 ## Proportionate validation
 
+Read and apply [early risk reduction](references/early-risk-reduction.md); verify it is
+readable or stop with a missing-install report. Select a difficult isolatable core by
+leverage, not ceremony; easy names/types use inspection, non-isolatable risks use
+real-system validation. Planning schedules executable proofs, not execution without
+separate authority. Carry minimal real-runtime proof, explicit production consumption,
+production tests before cleanup and retained disproof into selected work.
+
 During assessment and selected production/review, identify the actual changed seam
 and its concrete failure before choosing checks. Choose the lowest validation layer
 that can detect that failure; use the smallest sufficient check, not the broadest
@@ -189,6 +196,11 @@ new material owner gates and explicit stop boundaries still prevent unsafe conti
 
 ## Selected production and stage handoffs
 
+Apply the early risk reduction contract in stage briefs and source/task handoffs:
+return justified selection/omission, executable criteria and applicability, explicit
+producer → consumer → production validation → cleanup dependencies, retention through
+all consumers, and disproof/NOT VERIFIED blockers with affected approval renewal.
+
 After choice, persist the selected source/provenance, evidence, decisions/deferrals,
 and depth using established project conventions. Preserve the original request by
 reference when durable; capture necessary context when it exists only in the session.
@@ -259,6 +271,9 @@ gate for affected review and renewed approval, never fabricated historical requi
    fixes, validation results and current content evidence. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
    Apply the dependency evidence/permission review above before combined approval.
+   Review early risk reduction selection/omission, real-runtime executable criteria,
+   explicit consumption/dependencies, all-consumer retention, production tests before
+   cleanup, disproof/renewal and feasibility; source carries needs, separate tasks carry work.
 4. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
    obtain explicit approval of current TinySpec/source, tasks, and implementation scope,
    stating that approval starts the coordinator next unless planning-only was requested.
@@ -324,6 +339,9 @@ an independent reviewer before assigning their work.
    follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
    coverage, dependencies, verification item completeness, documentation, integration and approvals.
+   Review early risk reduction selection/omission, real-runtime executable criteria,
+   explicit consumption/dependencies, all-consumer retention, production tests before
+   cleanup, disproof/renewal and feasibility in direct Standard and managed/helper plans.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
    Fix mechanical task-level issues and record evidence. Flag only material
@@ -352,6 +370,10 @@ or fabricated historical depth choice. Other documented origins keep their own g
 ambiguous origin stops. Never invoke a retired manager to repair its handoff.
 
 ## Handoff, not execution
+
+Revalidate the early risk reduction mapping and blockers against current proof applicability:
+explicit consumers must inspect/run the reference and preserve behavior with production tests;
+cleanup waits for all consumers. Failed/unrun proofs cannot release assumed dependents.
 
 Revalidate paths, source/task consistency, ordering, current review/approval evidence,
 required upstream outputs, and unresolved material gates. Provide explicit locations
