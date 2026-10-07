@@ -4,7 +4,9 @@
 
 TinySpec selected by owner; preparation of source, separate tasks and planner-owned review
 only. Source/tasks produced and planner-owned review complete with no blockers/fixes.
-Combined source/task/scope approval received; coordinator preflight underway. Execution routing pending; no implementation dispatched. Original request and exact bounded paths supplied in this planning session.
+Combined source/task/scope approval and B01/F01 routing received below. B01 worker tasks
+checkpointed; coordinator audit and independent F01 acceptance pending. Original request
+and exact bounded paths supplied in this planning session; planning evidence retained below.
 Gate: `NO_BRAINSTORM_NEEDED` — settled detailed owner direction; mechanics resolved locally.
 Baseline HEAD: `63804165e0d9b285501daad65215ac9b0fadc33e`, clean index/worktree.
 Allowed writes: source/tasks/discovery in `docs/plans/`, this SUMMARY and its index row only.
@@ -147,7 +149,7 @@ in tasks (contract bytes unchanged), this SUMMARY/index for internal task/eviden
 STATE.md is coordinator-only and excluded. Current clean baseline `230d9f0`; dispatch-intent
 checkpoint precedes launch. No generic fallback, new profiles or scope without affected gates.
 
-- B01: in_progress / imminent dispatch; T001 and T002 pending.
+- B01: worker T001 and T002 checkpointed below; coordinator audit/F01 pending.
 - F01: pending B01 audit; full committed range and approved digests required.
 - Actual worker/reviewer binding/effort: UNKNOWN until runtime evidence; selection is not observation.
 
@@ -228,9 +230,54 @@ Six unchanged REQUIRED item dispositions:
 - T001/V3: PASS — B/C T001→T002→T003 producer/consumer/production-tests/cleanup mapping,
   retained applicability/commands/findings; four rejected negatives and parser output above.
 - T001/V4: PASS — shared-task/order tests, lint 331, diff and no widened scope above.
-- T002/V1: NOT VERIFIED — documentation task not yet begun.
-- T002/V2: NOT VERIFIED — pending documentation comparison to committed T001 evidence.
+- T002/V1: PASS — completed documentation comparison, resolved links and AC/test mapping below.
+- T002/V2: PASS — inspected committed T001 SHA/diff/checks and current applicability; all six
+  item criteria have mapped offline proof, static/fixture limits and pending independent gate retained.
 
 No live/provider/real-library proof performed or claimed; model obedience NOT RUN. No
 learned guidance/gotcha mutation. T001 first/final outcome: expected red → offline PASS;
-no model-capability failure inferred. Remaining gate: T002 then fresh independent F01 review.
+no model-capability failure inferred. Remaining gate: fresh independent F01 review.
+
+## T002 internal checkpoint — worker
+
+| Task/attempt | Baseline | Result SHA | Checks / disposition |
+| --- | --- | --- | --- |
+| T002 / B01 worker | `e3c4dddca7b79019ae98b1b904bb943353f0b297` | `5e2d13c9393d393a57b531e317632f9523e98b83` | PASS guide + necessary existing discovery entry only; manual actual-contract/test comparison and local links/diff; no task-owned residual changes |
+| T002 evidence | `5e2d13c9393d393a57b531e317632f9523e98b83` | distinct evidence-only checkpoint (Git) | this SUMMARY/index row only; worker handoff follows this checkpoint |
+
+Inspected T001 `74fb1ce` actual commit/diff and committed shared owner plus consumer/test
+spans before T002 writes. T001 code/fixtures/skills stayed unchanged during T002; its
+Python/bash results remain applicable at T002 revision. Neither checker nor planner test
+suite reads planner-regression.md or docs/plans/index.md (verified actual source references),
+so documentation edits invalidate no documentation-dependent test coverage and require no
+redundant suite rerun. Existing offline T001 checks are reused, not newly claimed executions.
+
+T002/V1 evidence: new guide section “Early technical risk reduction assurance” explicitly
+maps AC1/AC7 to Authority and scope, all operational consumer/review/return carriers and four
+named sensitivity tests; AC2/A to Select and easy inspection; AC3/B and AC4/C to Produce /
+Consume and both numbered adapter lifetimes; AC5/D to real-system prerequisites/gates;
+AC6/E to Disproof and retained correction/renewal; AC8 to manual truth comparison. All seven
+named EarlyRiskReductionTests methods verified present in actual test source. Guide accurately
+requires inspect/run/use → production tests plus integration checks → all-consumer cleanup,
+not report-only reuse; direct/standalone and planning-not-execution stops preserved.
+
+T002/V2 evidence: T001/V1–V4 proof remains scoped/current; manual B/C fields and A/D/E spans
+above match the guide, which says “Offline static/fixture PASS does not establish real-library
+behavior or model obedience” and “NOT RUN” for unauthorized live/provider/real-system proofs.
+No operational ownership duplicated, new gate or defect masked. Fresh independent final
+implementation acceptance remains parent-owned and pending, not claimed by these PASS items.
+
+Commands/checks: local Python Markdown-link/test-name/AC mapping check PASS: 39 document
+links resolved, 7 named risk tests exist, AC1–AC8 mapped. `git diff --check` and staged scoped
+diff check PASS; actual guide/index diff manually inspected. T002 focused commit has only
+its two approved paths. Both source/task SHA256 digests remain unchanged; no status checkbox
+changes were needed. Evidence index keeps one row for this run; memory/guidelines unchanged.
+
+Ordered B01 checkpoints: T001 `74fb1ce2e7c46e532322f68f49a3d151e6dacf56` → evidence
+`e3c4dddca7b79019ae98b1b904bb943353f0b297` → T002
+`5e2d13c9393d393a57b531e317632f9523e98b83` → T002 evidence (current Git checkpoint).
+Residual worker-owned changes: none. Unstaged coordinator-owned STATE.md preserved, not
+read as task authority, written, staged or committed. No staged files left by the worker.
+Selected profile unchanged, observed full binding/effort UNKNOWN. Six items PASS for bounded
+offline scope; runtime-obedience limitation persists. No guideline update proposed.
+Next: coordinator whole-range audit and fresh F01 reviewer; tell owner to run `/reload` in pi.
