@@ -321,3 +321,23 @@ corrections remain attributable above; no model failure or automatic guidance in
 index and guidelines unchanged. Live model/library/system scenarios NOT RUN and outside scope.
 Next owner action: `/reload` in pi to load global skill changes. Future live canary/publication
 requires separate authority. Final coordinator snapshot reconciles these same pointers.
+
+## Finish-session closeout
+
+Owner subsequently requested `commit and push`: push `6380416..5a82419` to origin/main
+succeeded. Owner invoked finish-session and explicitly requested another commit/push after
+closeout. Initial status/index/worktree clean at 5a82419; all required documentation owners,
+routing guide and docs directory indexes exist. No persistent database/schema owner applies.
+Read affected operational reference, regression guidance, README workflow, documentation
+indexes and existing snapshot; no generator relevant, no broad documentation audit.
+Verified discovery-only fixes: docs/index links canonical risk owner; plans index removes
+stale pending-approval descriptions and points to this canonical approval/acceptance evidence.
+Closeout C1 baseline 5a82419 → `f6877fa`, two owned index files; four added/changed links
+resolve, whitespace/scoped diff PASS. Implementation artifacts/tests and approved source/task
+bytes unchanged; existing offline acceptance remains applicable. No issue candidate, no issue
+register change; deployment not examined (no deployment-relevant evidence). Gotcha index
+rechecked, no entries or writes; compaction not needed. No guideline update proposed.
+STATE reconciled with verified acceptance/publication and next safe push/reload action;
+no active child or ownership conflict. C1 factual evidence and snapshot checkpoint is separate
+from C1 documentation commit. User-authorized final closeout push follows this checkpoint;
+its command outcome is reported directly, not fabricated before execution. Live behavior NOT RUN.
