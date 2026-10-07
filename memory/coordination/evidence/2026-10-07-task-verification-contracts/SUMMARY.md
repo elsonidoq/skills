@@ -2,7 +2,7 @@
 
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
-Inspected same-profile continuation verified/checkpointed T001 and T002; T003 dependency-ready.
+Inspected same-profile continuation completed T001–T003; integrated reviewer packet prepared.
 Attempt 1 retained below. Coordinator batch audit and independent final review PENDING;
 no feature acceptance inferred.
 Planner-owned review is not independent final review. Original source/task checkpoints and
@@ -394,3 +394,82 @@ artifact comparison completed, no live/user/provider gate applicable; permission
 sole routing owner/guideline approval/final independence retained. T002 first/final verified,
 no model attribution or escalation. Separate SUMMARY/index evidence checkpoint before T003;
 no duplicate report or source/task checkbox edits.
+
+## T003 — integrated proof loop / independent-review packet prepared
+
+Baseline/T002 evidence `32a56c8bd97539ceede02f635b5900ca1ab0f366`; evidence-only task,
+no empty implementation commit. Same selected profile; continuation actual observation unknown.
+Reusable T001 semantic outputs remain applicable: no operational/fixture changes since e7e3844;
+T002 changed only scoped prose, T003 only this evidence/index. Cross-owner packaging warrants
+one existing full lint integration, not a new matrix or repeated intermediate broad checks.
+
+| Original item | Executor / disposition | Concrete integrated evidence |
+| --- | --- | --- |
+| T003/V1 | pass / satisfied | A1–A15 trace below reuses relevant T001/T002 named oracles at their exact content; TinySpec/direct and Standard/legacy/create-only carriers and ordinary/sample STOP, producer/shared mappings, cheaper symbolic acceptance without strong per-batch review, inadequate-contract producing return, original-contract repair/invalidated reruns and exceptional safe retry all traced. |
+| T003/V2 | pass / satisfied | `PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh`: 22 skills/0 failed; planner+commit static PASS, planner 88/initialization 135/brainstorm 4/producer 5/order 7/batching 38/intake 10/state 14/commit 12 tests PASS (313). Separate `PYTHONDONTWRITEBYTECODE=1 python3 skills/memory-handling/scripts/test_coordination_contract.py`: 23 PASS. Inline local changed-owner links/anchors: 56 PASS; immutable source/task/approval/guideline unchanged; diff whitespace PASS. Python 3.12.3/local offline at 32a56c8 content. |
+| T003/V3 | pass / satisfied (packet only) | Authority/digests/approvals/complete committed range and ordered task/evidence pointers below; retained attempts/diagnosis/invalidations/manual limits, explicit task-owned clean state and evidence-only checkpoint. Independent review PENDING, never self-certified. |
+
+### A1–A15 → task proof trace
+
+Criterion pointers: approved TinySpec A rows → approved tasks' original REQUIRED paragraphs.
+Owner shorthand: TG=task-generation Task contract/Review; P=planner two changed handoff/validation
+sections; C=coordinator graph/selection/union/integration/evidence; R=sole batch-routing rubric;
+M=shared coordination evidence/feedback. Output shorthand: producer5/planner88/batch38/
+coord23 are the concrete T001 command counts above, rerun where relevant in T003. All rows
+have executor pass / proposed satisfied at the cited revisions/local environment; no missing
+or unrun original REQUIRED proof remains. Symbolic fixture SHA/environment are not live claims.
+
+| Source | Task items | Owner → specific oracle/output |
+| --- | --- | --- |
+| A1 | T001/V1,V7; T003/V1 | TG/P both adapters → ordinary captured chosen-7/no manual + practical/item removal diagnostics, producer5/planner88. |
+| A2 | T001/V2; T003/V1 | R/C selection → moderate_complexity_strong_cheap_oracle vs weak_oracle_hidden_coupling/inadequate_contract_producing_gate, separate rationales/cost/weakest removals, batch38/planner88. |
+| A3 | T001/V2; T003/V1 | C graph → consecutive coherent order/producer-before-consumer/combined feasibility carrier mutations and ordered fixture checkpoints, batch38/planner88. |
+| A4 | T001/V3; T003/V1 | C union → two distinct REQUIRED mappings before coding, one shared output; removed_mapping blocks, batch38. |
+| A5 | T001/V3,V7; T003/V1 | C audit → concrete exported/preserved IDs, green_but_irrelevant/stale_revision/wrong_environment plus owned-diff/checkpoint negatives, batch38. |
+| A6 | T001/V3; T003/V1 | C audit → missing_output/conflicting_proof/unrun_required/confidence_only insufficient vs demonstrated_criterion_violation failed and defect_with_evidence_limitation retains both, batch38. |
+| A7 | T001/V3; T003/V1 | C integration → optional green never compensates, producer pending blocks/complete REQUIRED releases, batch38. |
+| A8 | T001/V4; T003/V1 | C manual gate → sample-1 pending/rejected/absent/LLM/outside-scope blocks, explicit approved scoped continuation; ordinary no sample passes, batch38/planner88 STOP mutation. |
+| A9 | T001/V1; T003/V1 | TG/P/C → inadequate approved/legacy producing renewal, original provenance/no retrofit/create-only guards, producer5/planner88/intake10. |
+| A10 | T001/V5; T003/V1 | C repair → exact consumer-drops-V2 implementation continuation, original contract equality/current SHA/prior proof/dependencies/invalidations, batch38. |
+| A11 | T001/V5; T003/V1 | C repair → valid producer work/checkpoint/attempt retained; unjustified_clean_retry denied, exceptional_safe_clean_retry requires documented reason/ownership/mechanics/owner/project gate, batch38/planner88. |
+| A12 | T001/V5,V7; T003/V1 | C selection → unknown/uninspected/support/owner stops and non-model gaps no stronger dispatch; inspected attempt-1 failure above preserves cause/limits, batch38/planner88. |
+| A13 | T001/V2,V5; T003/V1 | R/C dispatch → exact owner-selected profile/max retained, supported effort/tool/permission/owner guards, separate selected/unknown observation and changed repair gate, batch38. |
+| A14 | T001/V6; T003/V1 | C/M → first failure/final correction/item proof/escalation/next selection/reused-invalidated refs/unknowns in one SUMMARY/index; exact approval/drift and no penalty retained, batch38/coord23. |
+| A15 | T002/V1,V2; T003/V1–V3 | Three active doc consumers → bounded owner/case comparison, 23 docs links then 56 integrated links, 313+23 integrated tests, complete-range packet; fresh independent review later. |
+
+### Reviewer packet / ordered checkpoints
+
+Use original implementation baseline `ba7bd35464cfe32efa9b6b3942b313952e627617` through
+this packet's evidence commit (resolve HEAD after checkpoint, never its recursive self-hash).
+Authority: [source](../../../../docs/plans/task-verification-contracts-tinyspec.md),
+[tasks](../../../../docs/plans/task-verification-contracts-tasks.md),
+[current combined approval](../../../../docs/plans/reviews/task-verification-contracts-planning-review.md);
+exact digests and unchanged B01/profile approval above. Source/task checkboxes/status prose remain
+original approval-bound content, not edited to report execution. Git inventory commands:
+`git diff --name-only ba7bd35..HEAD` for complete range, and `git show --stat <task-SHA>`
+for each focused scope. Range contains parent-only state/diagnosis checkpoints; worker never
+adopted STATE. Worker inventory: T001's original 11 allowed paths, T002's original three docs,
+and this sole SUMMARY/one INDEX row; no other task writes.
+
+| Checkpoint | Baseline → result / purpose |
+| --- | --- |
+| Attempt-1 blocked evidence | ba7bd35 → a10d6f9e69c056b963b5c97dabcdd339f9f6d48a; no implementation success |
+| Parent inspection/intent | a10d6f9 → 0163eaef94a74e5da1f2647dd8625241a83e50ef; parent-only evidence/state |
+| T001 task | 0163eae → e7e3844856f87a4344ed4b51906b281dc318ec38; 11 scoped operational/checker paths |
+| T001 distinct evidence | e7e3844 → 5b55801dd3f1a7d299544275145d2a477d874258; before T002 |
+| T002 task | 5b55801 → 7488b8dbe96b9979ce9f2faf9b1d383423cadda2; three scoped docs |
+| T002 distinct evidence | 7488b8d → 32a56c8bd97539ceede02f635b5900ca1ab0f366; before T003 |
+| T003 evidence-only task | 32a56c8 → packet commit SHA from Git after checkpoint; no empty implementation commit |
+
+No task-owned residual changes, no staged files; parent STATE pending dirt remains excluded.
+Original failure retained; known defects corrected and invalidated planner proof rerun, every
+unrun T001 check executed, current integrated proof checked. No outstanding task proof gap or
+material owner decision found. All manual checks here are bounded artifact inspection/symbolic
+sample gates, not real user/provider approvals. Runtime obedience/callability/model performance,
+actual continuation binding/effort and future independent acceptance remain unproved, not waived.
+Independent review PENDING: parent audits actual focused diffs/SHAs/evidence and then dispatches
+the already owner-selected fresh reviewer `openai-codex/gpt-6.1-sol:medium`; no reviewer launched
+by worker. Feature acceptance and terminal reflection remain parent-owned later. No learned
+guideline changes authorized/proposed; attempt-1 evidence-only reflection retained.
+Implementation and packet preparation complete, feature acceptance not self-certified.
+Run `/reload` inside pi after these actual global skill changes.
