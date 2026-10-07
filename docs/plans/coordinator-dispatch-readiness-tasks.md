@@ -32,7 +32,7 @@ Apply [checkpoint owner](../../skills/memory-handling/references/task-commit-con
 
 ## Producer: operational termination and safety wiring
 
-- [ ] T001 — Clarify the existing preparation-to-dispatch seam and subtract redundant prose
+- [x] T001 — Clarify the existing preparation-to-dispatch seam and subtract redundant prose
   - **Depends**: none
 
 - **Outcome/source:** finite preparation termination with precise stop/affected-only reopen, no weakened gate or competing checklist, plus proportionate direct single-batch default/justified workflow exception (A1–A3,A6; reuse rule of A4).
