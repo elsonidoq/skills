@@ -3,8 +3,8 @@
 Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
 Inspected same-profile continuation completed T001–T003; integrated reviewer packet prepared.
-Attempt 1 retained below. Coordinator batch audit and independent final review PENDING;
-no feature acceptance inferred.
+Attempt 1 retained below. Coordinator batch audit ACCEPTED all 12 original REQUIRED items;
+fresh independent final review dispatch intent below, feature acceptance PENDING.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
 
@@ -473,3 +473,38 @@ by worker. Feature acceptance and terminal reflection remain parent-owned later.
 guideline changes authorized/proposed; attempt-1 evidence-only reflection retained.
 Implementation and packet preparation complete, feature acceptance not self-certified.
 Run `/reload` inside pi after these actual global skill changes.
+
+## Coordinator audited batch / final review dispatch intent
+
+At terminal return `e3eb8952-2951-4cd5-8327-4124a7a44457`, parent audited actual focused task
+commits e7e3844 (11 authorized operational/checker paths) and 7488b8d (three scoped docs), each
+separate evidence checkpoint 5b55801/32a56c8, and T003 evidence-only packet 9dd2254. Ordered
+baselines match the returned chain; no combined/empty-success/unauthorized task checkpoint.
+Residual task-owned changes/staging: none; only anticipated parent STATE ID capture. Approved
+source/tasks digests rechecked unchanged. Parent inspected actual operational/task-doc diffs for
+scope/contract mapping and summary's 12 original item proof pointers, revision/environment and
+manual limits, not a broad second implementation. Raw originating-continuation command output
+confirms 5+88+38+10+23 tests/static PASS, then lint 313 + coordination 23 and 56 links PASS.
+Parent independently reran batching verbose: 38 named tests PASS and planner static checker PASS;
+`git diff --check` PASS. Optional checks did not compensate for required proof.
+
+Coordinator disposition: T001/V1–V7, T002/V1–V2 and T003/V1–V3 **satisfied** against the original
+contracts (T003/V3 is packet preparation, not independent acceptance). Original failed planner
+attempt retained; corrected invalidated proof rerun. Named cases demonstrate task-specific proof,
+all states/limitations, shared mappings, manual STOP/ordinary path, exact-gap same-contract repair,
+conditional safe retry and oracle-sensitive routing. All actual manual artifact inspections
+required by these tasks reported with bounded owner/case pointers; no runtime/provider manual gate
+applies to this instruction-only work. Symbolic examples and local checks do not prove live model
+performance/obedience. No remaining required item gap observed in cheap audit; B01 completed.
+Runtime continuation status newly observes actual gpt-6.1-sol thinking medium; prior worker
+unknown preserved, exact requested binding remains selected rather than inferred provider fact.
+
+Next: launch fresh read-only owner-selected `reviewer` on exact
+`openai-codex/gpt-6.1-sol:medium`, over full committed implementation range
+`ba7bd35464cfe32efa9b6b3942b313952e627617..9dd2254e94e7ba3d00248b35c1dab65014705ba5`,
+with source/tasks/R1 current approval, all constraints/required evidence, actual task/checkpoint
+chain and failure/repair dispositions. Fresh context independent from executor; no writes,
+new scope/waivers or automatic second implementation. Final reviewer verifies semantics/test quality
+and preserved safeguards, not just green summary. Already approved exact profile unchanged;
+role/read-only tools and async usable, launch preflight authoritative. Capture returned ID; final
+feature acceptance remains pending review and any verified correction. No guideline change proposed.
