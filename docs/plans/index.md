@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Coordinator dispatch readiness — TinySpec](coordinator-dispatch-readiness-tinyspec.md): finite existing preparation transition; planning-only, combined approval pending.
 - [Task verification contracts — TinySpec](task-verification-contracts-tinyspec.md): task-level proof and actionable batch routing/repair; current-content approval belongs to the linked planning review.
 - [Task verification contracts — tasks](task-verification-contracts-tasks.md): separate operational/fixture, documentation and acceptance contracts; retain approved source/task digests.
 - [Task verification contracts — coordination evidence](../../memory/coordination/evidence/2026-10-07-task-verification-contracts/SUMMARY.md): authoritative verification, repair and independent-review dispositions.

@@ -1,0 +1,71 @@
+# TinySpec: Coordinator preparation has a definite end
+
+Producer: `planner`; depth: TinySpec. Preparation authorized; combined approval **PENDING**. Planning-only: even artifact approval does not authorize implementation or coordinator invocation.
+
+## Outcome and durable provenance
+
+Owner request: “Use TinySpec to plan the coordinator-only improvements in /tmp/coordinator-bookkeeping-critical-review-plan.md. Do not implement changes yet.” Beneficiary: owners and coordinators using the existing suite; desired instruction behavior is to stop discretionary preparation and dispatch once existing mandatory preparation is complete, without relaxing safety.
+
+Primary advisory input: `/tmp/coordinator-bookkeeping-critical-review-plan.md`, SHA-256 `bf3261f037845d6d8bc1bb75e3c0ab1959a33f031a2f650bca33c0880cc89616`, reviewed/current baseline `c59e6985041d5062b2bc40affb6084fac7b8905f` (clean main). Its original parent proposal was blocked for potentially incomplete gates and reassigned baseline duties; its corrected recommendation, not the blocked proposal, is this source's input. This compact source preserves the necessary context if /tmp disappears; it does not adopt the report as approval or copy its historical narrative.
+
+Settled constraints, verbatim:
+
+> Existing preparation has a definite end: once its required conditions and dispatch-intent checkpoint are satisfied, dispatch; reopen only for concrete invalidating evidence.
+>
+> Do not yet change all-batch approval, worker checkpoints, baseline authority, or the persistence architecture.
+>
+> No new persisted artifact, approval, or commit category.
+>
+> Do not broadly extract recovery sections yet.
+>
+> Do not edit AGENTS, constitution, worker policy, or historical approvals simply to make wording uniform.
+>
+> Actual improvement remains unverified until an affected trace or separately authorized behavioral canary supports it.
+
+## Verified evidence and classification
+
+References below are inspected at the baseline above; line numbers describe that revision, not future edits. No historical coordination evidence was needed/read for diagnosis.
+
+| Classification / supporting evidence | Derived constraint → observable |
+| --- | --- |
+| Repository fact: [coordinator](../../skills/coordinate-implementation/SKILL.md):304–319 says “Before execution, assess all batches” and “Implementation authorization is not execution-routing approval”; unchanged routing approval is reused. [Cadence source](coordinator-approval-cadence-tinyspec.md):9,19–21 records the intentional shift from before-each-batch assessment to entire-plan assessment/approval. | Preserve complete-plan approval; do not optimize through incremental routing. Diff review and existing `ApprovalGateTests`/intake assertions retain these obligations. |
+| Repository fact: [checkpoint owner](../../skills/memory-handling/references/task-commit-contract.md):44–70 assigns coordinator prewrite verification, implementer comparison, worker internal checkpoints and coordinator batch audit; :76–81 requires distinct evidence commits. | Reuse valid proof, not reassign responsibility. Bounded baseline-to-diff comparison and existing checkpoint/intake guards demonstrate preserved role semantics. |
+| Repository fact: coordinator :134–157 already gives exclusive write boundaries, “No coordinator persistence for polling”, coalescing and unchanged worker checkpoints; :184–194 requires committed dispatch intent and immediate ID capture with safe deferred commit. [Coordination owner](../../skills/memory-handling/references/project-coordination.md):85–134 separates records and forbids duplicate worker ledgers. | Apply existing record owners; subtraction must not add a readiness artifact or extra persistence boundary. Existing state cadence/Git fixtures plus diff review retain intent/ID/ownership ordering. |
+| Repository fact: coordinator :161–180 requires active/unrecorded-child reconciliation; :209–219 reviewer/runtime readiness; :346–366 exact binding/support/dispatch argument comparison; :436–459 complete brief and whole unchanged REQUIRED union; :500–538 independent return audit; :600–611 fresh independent final review. | Termination follows, never substitutes for, these gates. Removal mapping and section-bound negatives must show preserved stops. |
+| Repository fact: coordinator :259–262 already prohibits routine intermediate pauses; :469–470 reuses valid unchanged evidence; :553–554 records assessment once. | Missing seam is a clear initial preparation termination rule, not wholly absent anti-bookkeeping policy. Add it at existing dispatch-intent/brief boundary and subtract duplicate explanations rather than another competing checklist. |
+| Test evidence: `test_batching_contract.py:47–112` section-bound phrase/mutation/approval checks; :159–167 symbolic dispatch gates; `test_state_contract.py:181–231` symbolic write schedule/walkthrough and :234–355 real isolated Git fixtures with symbolic child status; `test_intake_contract.py:11–116` origin/profile/checkpoint/audit/final-review guards. Coordinator :645–650 states these limitations. | Extend existing harnesses narrowly with action traces and section-bound mutations; symbolic output cannot establish runtime obedience or latency. |
+| Assumption / unverified: the termination clarification may reduce discretionary preparation. No affected trace, loaded-skill evidence or causal action sequence is supplied. | Optional affected trace or separately authorized canary could assess actual improvement. Neither is REQUIRED for narrow instruction acceptance; no performance promise. |
+
+## Scope, approach and exclusions
+
+Local coordinator-only instruction/test seam. No API, data, runtime, dependency, deployment or schema change. Main owner: `skills/coordinate-implementation/SKILL.md`; relevant existing tests: intake, batching, state. Preserve readable safety triggers and all existing recovery anchors. Prefer one short termination/reopen statement at the existing dispatch seam referencing existing required preparation; eliminate superseded redundant coordinator prose, with each removed obligation mapped to its retained owner. No duplicate five-part gate.
+
+Readiness is completion of existing current authority/scope, completion-scope selection, complete routing approval, coordinator baseline/Git/ownership, runtime/reviewer/exact-profile/tools/budget/permission gates, active-child reconciliation where applicable, full next brief with unchanged REQUIRED union/manual gates, and committed dispatch intent. Final dispatch argument validation still occurs before dispatch; “next action dispatch” starts only after mandatory actions are complete. Missing conditions produce a precise stop naming condition, concrete gap, affected action and smallest resolution. They do not invite repeated unchanged persistence or unauthorized probes.
+
+Reopen only the affected preparation on concrete invalidation: changed content/scope/acceptance/boundary/profile, relevant Git/ownership/environment/tool/budget drift, failed/partial producer proof or unmet permission/manual gate, interrupted persistence or restart/compaction/uncertain child requiring reconciliation. A passing unchanged check, prose polishing, generic history search or healthy worker progress is not invalidation. An administrative checkpoint alone does not invalidate task proof; reuse still compares relevant scope/revision/environment and refreshes affected evidence only.
+
+Producer-first implementation shape: instruction and its minimal fail-before/pass-after carrier assertions together; then bounded action-sequence/persistence fixtures consuming the verified rule; finally necessary active consumer alignment and integrated reviewer packet. Actual task count/batching/profile assignments are coordinator-owned. Workers retain autonomy, distinct task/evidence commits, producer checks, no STATE writes, and full return mapping. Coordinator retains independent audit and fresh final review. Exact guideline approval remains separate.
+
+Necessary future prose-only consumer edits may touch REQUIREMENTS Implementation batch selection / Brief current-state contract and README implementation/current-state descriptions if genuinely contradicted by the changed instruction. `docs/index.md` may only adjust an existing operational owner link/description if discovery changes. Shared checkpoint/coordination references may receive only a narrowly coordinator-qualified link/clarification if necessary to avoid an actual contradiction; worker semantics and checkpoint cadence cannot change. Inspect before deciding; verified no-change creates no empty commit. No broad reference extraction.
+
+Excluded: incremental routing; baseline reassignment; combined commits; new readiness file/checklist/score/approval, persistence framework or record schema; history migration/rewrites; worker-policy, AGENTS or constitution changes; unrelated skills/legacy repairs; settings/runtime/dependency changes; installations, external/live/provider/paid probes, push/deploy/reset; learned-guideline mutation; speculative performance claims. No STATE writes in these worker tasks. Future actual global asset changes require telling the owner `/reload` in pi; planning artifacts alone do not.
+
+## Observable acceptance
+
+- **A1 — Finite transition:** actual dispatch seam says existing mandatory preparation and committed intent end preparation; unchanged ready scenario's next action is dispatch, not discretionary re-preparation. Section-bound instruction mutation rejects removal even if a summary repeats it; minimal ready and redundant-post-ready symbolic traces expose the concrete failure.
+- **A2 — Targeted reopen/stop:** concrete invalidation reopens only affected conditions; blocked condition gives precise stop; running/unknown child yields inspect/wait/reconcile, never duplicate dispatch. Irrelevant polish/healthy progress/unchanged passing checks do not reopen. Bounded positive/negative action sequences and actual instruction carrier checks show these distinctions.
+- **A3 — Protected obligations:** diff-to-owner mapping retains every mandatory condition named above, original whole REQUIRED union/manual gates, exact selected-versus-observed separation, worker/internal commit autonomy, independent return audit and fresh final review. Existing intake/batching/state and checkpoint guards remain equivalent in meaning; no new gate/record/commit category or coordinator baseline reassignment.
+- **A4 — Existing persistence/reuse:** same-safe-boundary start+dispatch and audit+next-intent coalesce; returned ID is immediate with safe deferred commit; no healthy-worker mirroring or unchanged-blocker write loop. Proof reuse checks relevant scope/revision/environment and refreshes only invalidations. Existing state cadence and Git-backed ownership/checkpoint fixtures plus focused symbolic reuse cases provide evidence, not runtime proof.
+- **A5 — Integration and honest acceptance:** necessary active consumers agree with sole operational owner, links resolve, affected focused checks and one final relevant integration pass succeed. Each removed passage has retained-authority or redundancy evidence. Complete committed-range/task/evidence packet supports later fresh independent implementation review. Static/symbolic/Git acceptance is separate from actual improvement, NOT VERIFIED absent optional authorized observation; `/reload` follows actual skill changes.
+
+Verification effort: bounded local Markdown/Python work, existing harnesses and manual semantic/diff mapping; no new infrastructure or exhaustive matrix. Reuse valid producer outputs with attributable mappings rather than repeat suites per checkpoint. Missing REQUIRED evidence/permission remains NOT VERIFIED and blocks affected acceptance; optional trace/canary does not. Implementation review is a later coordinator gate, not a prerequisite for source/task production.
+
+## Planning assessment and dependency boundary
+
+Assessment result **NO_BRAINSTORM_NEEDED**: settled direction, remaining mechanical discovery, no material open design question. TinySpec is proportionate for localized reversible instructions with narrow shared-contract coupling; Standard would separate specification/architecture but adds little here. The owner explicitly chose TinySpec; no new choice is inferred.
+
+For assessment, source, tasks and planner-owned review, proposed/owner-selected exact profile is unchanged `openai-codex/gpt-6.1-sol:medium`. Separate observation: this child session `01a116cc-7401-737c-ad50-73bbf52fc9c4` records provider `openai-codex`, model `gpt-6.1-sol`, `thinkingLevel: medium` at launch; environment also reports model. This is local session binding/effort evidence, not live provider-performance proof. No override, child launch or profile substitution. Parent owns question/approval capability; no approval gate is exercised by this bounded helper.
+
+Six factors at each of these stages: bounded remaining inference in reconciling settled contracts; local read/edit/Python/Git tool depth; weakest oracle is static/symbolic evidence incapable of proving model behavior; narrow but load-bearing instruction/shared-owner coupling; reversible prose with costly gate omission; applicable approved coordination guidance **none** and gotchas **none**. Family rationale: Sol for reconciling protected contracts. Effort rationale: medium for bounded inference and local tool depth, independently of family. No implementation-task profiles. Repair only after inspecting failed invocation/partial work; unknown cause stops.
+
+Dependency research: reuse inspected local skill/reference/test owners and REQUIREMENTS runtime pins (pi 0.87.x tested 0.87.1, subagents 0.73.1, ask-user 0.15.1); no new dependency/version-sensitive API decision, so skip internet audit. No canonical dependency guidance update is needed. No affected runtime trace; cause remains unverified, not a material scope blocker for this clarification. Rollback, if needed, is separately authorized focused correction preserving evidence, not reset/history rewrite.
