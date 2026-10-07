@@ -4,7 +4,8 @@ Run: `2026-10-07-task-verification-contracts`, 2026-10-07. Current disposition:
 Current source/tasks and reviewed implementation scope APPROVED through parent `ask_user`;
 Inspected same-profile continuation completed T001–T003; integrated reviewer packet prepared.
 Attempt 1 retained below. Coordinator batch audit ACCEPTED all 12 original REQUIRED items;
-fresh independent final review dispatch intent below, feature acceptance PENDING.
+fresh independent final review found R001 mandatory-escalation wording contradiction; affected
+acceptance invalidated pending in-scope correction/recheck. User requested finish-session/commit/push.
 Planner-owned review is not independent final review. Original source/task checkpoints and
 observations below remain separately attributable.
 
@@ -508,3 +509,36 @@ new scope/waivers or automatic second implementation. Final reviewer verifies se
 and preserved safeguards, not just green summary. Already approved exact profile unchanged;
 role/read-only tools and async usable, launch preflight authoritative. Capture returned ID; final
 feature acceptance remains pending review and any verified correction. No guideline change proposed.
+
+## Final review R001 / verified correction intent
+
+Fresh independent reviewer `b2992601-6b18-493f-be9c-9dbaf26a1fac` inspected
+ba7bd35..9dd2254 and reported **not ready / BLOCK**, one important finding R001:
+coordinator Select Execution Capability unconditionally says “Repair is stronger implementation
+continuation”; settings-sample repair prose repeats it. Source Scope/approach instead says
+“Where diagnosed and authorized”, and retained coordinator rule says repair MAY raise effort/
+change model. Parent inspected those primary spans: finding VALID. Unconditional wording risks
+unnecessary escalation/reapproval/cost and contradicts approved same-profile diagnosis-first repair.
+Reviewer independently passed batching38/planner88/static checker; current guards miss this defect.
+Runtime status observes gpt-6.1-sol thinking medium; original reviewer unknown report preserved.
+
+F001 scope: qualify stronger-capability continuation as diagnosed/authorized, explicitly preserve
+same-profile targeted repair when sufficient in coordinator + scoped settings-sample prose;
+extend existing planner verification-repair carrier and its bounded mutation guard to reject
+mandatory escalation. Original source/task acceptance/scope/profile unchanged, correction lies
+inside approved T001/T002 paths; no new feature/router/approval gate. Allowed fix paths: those two
+Markdown files plus scripts/check-planner-workflow.py and scripts/test-planner-workflow.py only
+(if focused guard requires latter), existing SUMMARY/index internal evidence. STATE parent-only.
+Reproduce missing guard before behavior fix; rerun relevant planner/batching/coordination and
+source-contract/doc/link/diff checks, then focused F001 commit + separate evidence checkpoint.
+Affected T001/V5,V7 and T002/V1,V2 and integrated trace are pending renewed proof; other unchanged
+evidence reusable after applicability check. Resume originating executor on exact R001, same
+approved Sol/medium; then retained independent reviewer rechecks correction + original full scope.
+No blind failure restart: reviewer was a successful read-only invocation finding a concrete defect.
+
+User explicitly requested finish-session, commit and push. Closeout existence gate passed:
+required owners and all docs directory indexes present; no persistent database. Current main
+origin remote is git@github.com:elsonidoq/skills.git; ls-remote main equals original session
+baseline8832a4c, so ahead commits are session-attributable. No new issue/gotcha/deployment steps
+identified; no compaction or guideline mutation. Push remains pending valid correction/review
+and terminal closeout checkpoint. Known parent STATE returned-ID dirt only; no active writer.
