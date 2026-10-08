@@ -171,8 +171,15 @@ Present BOTH options, even against your recommendation:
 Explain why one appears proportionate, then call `ask_user` and STOP until the owner
 explicitly selects TinySpec or Standard. Either choice is valid regardless of scope
 recommendation. Denial/cancellation/ambiguous selection grants no production authority.
-Selection authorizes planning preparation only, never implementation. Preserve the
-selected depth on resume; resolved uncertainty alone does not reroute. Substantive
+Selection authorizes planning preparation only, never implementation. This includes
+writing and committing the selected path's bounded planning artifacts and required
+factual evidence under the shared task-commit contract. Do not ask for separate
+planning-commit authorization or defer these checkpoints until artifact approval.
+Artifact approvals govern content and downstream progression, not permission to
+commit already-authorized preparation. Pass this commit authority unchanged to
+planning delegates. Genuine Git, policy, verification or ownership conflicts stop
+with the exact blocker; they do not create a routine commit-permission gate.
+Preserve the selected depth on resume; resolved uncertainty alone does not reroute. Substantive
 scope change or explicit owner direction may reopen choice, with recorded rationale.
 
 ## Approval-driven continuation

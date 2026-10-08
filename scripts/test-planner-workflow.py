@@ -32,6 +32,30 @@ links = load("links", "install-links.py")
 rpc = load("rpc", "planner-rpc-smoke.py")
 
 
+class PlanningCommitAuthorityTests(unittest.TestCase):
+    """Static regression guard, not proof of runtime model compliance."""
+
+    def test_planning_commit_authority_is_explicit_and_required(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        clauses = (
+            "writing and committing the selected path's bounded planning artifacts",
+            "Do not ask for separate\nplanning-commit authorization",
+            "or defer these checkpoints until artifact approval",
+            "Artifact approvals govern content and downstream progression",
+            "Pass this commit authority unchanged to\nplanning delegates",
+            "Genuine Git, policy, verification or ownership conflicts stop",
+        )
+        for clause in clauses:
+            with self.subTest(removed=clause):
+                changed = dict(texts)
+                changed["planner"] = changed["planner"].replace(clause, "REMOVED", 1)
+                self.assertTrue(any(
+                    error.startswith("planning-commit-authority:")
+                    for error in checker.check_contracts(changed)
+                ))
+
+
 class EarlyRiskReductionTests(unittest.TestCase):
     """Offline instruction sensitivity; no real library or model-obedience proof."""
 

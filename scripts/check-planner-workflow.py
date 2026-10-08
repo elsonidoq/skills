@@ -63,6 +63,13 @@ def check_contracts(texts):
             "BOTH options", "TinySpec → Tasks → Implement", "Specify → Plan → Tasks",
             "call `ask_user` and STOP", "Either choice is valid", "preparation only",
             "resolved uncertainty alone does not reroute")
+    require("planning-commit-authority", pre,
+            "writing and committing the selected path's bounded planning artifacts",
+            "Do not ask for separate\nplanning-commit authorization",
+            "or defer these checkpoints until artifact approval",
+            "Artifact approvals govern content and downstream progression",
+            "Pass this commit authority unchanged to\nplanning delegates",
+            "Genuine Git, policy, verification or ownership conflicts stop")
     continuation = section(p, "## Approval-driven continuation")
     require("continuation", continuation, "immediately start the next authorized phase",
             "Do not end the turn merely to report approval", "dispatch it",
