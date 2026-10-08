@@ -160,9 +160,12 @@ later runtime observation matches selection without rewriting that uncertainty.
 Implementation evidence checkpoint `b9d04c7`. Final V6 coordinator reconciliation:
 only attributable pending child-ID STATE diff existed, no unrelated dirtiness/staged paths;
 re-read exact known block and removed it after acceptance, leaving `# Current state` and
-its blank line. No other current item/custom content existed; no terminal placeholder or
+its terminating newline. No other current item/custom content existed; no terminal placeholder or
 /reload next-action record retained there. Source/task contracts unchanged; task checkbox
-only marked complete. Final diff/links/order and header-only STATE validation PASS.
+only marked complete. Closeout checkpoint `1d72484` retained an EOF blank line: diff-check
+reported it, and shell sequencing incorrectly continued to commit before later validations.
+Bounded correction removes that surplus blank line; final diff/links/order and header-only
+STATE validation are rerun before its focused commit. No history rewrite or skill change.
 
 Closeout documentation owners/indexes exist, no schema/deployment implication. Operational
 owners and README reflect verified implementation; no issue candidate, generated docs or
