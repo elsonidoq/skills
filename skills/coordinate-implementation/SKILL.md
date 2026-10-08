@@ -117,7 +117,15 @@ tasks and current approval references; current batch/task and concise progress; 
 checkpoint SHA and evidence pointer; active delegated run IDs/status or explicit none/unknown;
 current blocker/owner gate; and the exact next safe action. Reference the authoritative execution
 plan/task artifacts, approvals, Git and coordination evidence instead of copying their contents.
-The snapshot conveys no authorization or acceptance. Replace current truth in place; never
+The snapshot conveys no authorization or acceptance. Every current item represents ongoing
+concurrent work: active, paused, blocked or pending review/acceptance/owner gates. Update ongoing
+items in place and remove verified finished items, never retain terminal dispositions. Finished
+planning/specification state is removed without deleting durable artifacts or fabricating an
+implementation successor; a distinct authorized successor must be independently current.
+Preserve unrelated concurrent items and custom structure. An empty current block is valid when
+nothing remains; preserve the file without completed/idle-history placeholders or next actions
+solely for finished work. Unknown completion/runtime/ownership, partial work, active children or
+missing acceptance proof cannot authorize deletion. Never clear the whole file as a shortcut; never
 append historical ledgers, transcripts, completed-task history, full check logs or duplicate evidence.
 
 Establish the snapshot after authorization/preflight and before execution, including before
@@ -141,7 +149,7 @@ These are the exclusive coordinator write boundaries for `STATE.md` and coordina
 | returned run identity | Record a returned child ID immediately; checkpoint at the next safe coordinator boundary without racing an active writer. | No extra summary/index write solely for child-ID capture. |
 | audited batch completion / verified local task checkpoint | Update verified progress and exact next safe action, including next dispatch intent when known. | Record one audit disposition pointing to worker checkpoints, not a duplicate internal-task ledger. Local implementer task/evidence duties still apply. |
 | genuine blocked pause / failed attempt requiring repair or owner decision | Record blocker, active run and safe next action; checkpoint when safe. Repair launch uses imminent dispatch after diagnosis and profile gates. | Record bounded exception/diagnosis and decision disposition; do not repeatedly record an unchanged blocker. |
-| final review dispatch and terminal closeout | Use the same dispatch-intent/returned-ID safety rules for review, then replace with terminal disposition. | Consolidate findings, dispositions, reflection and outcome at closeout; a genuine blocked pause may retain its own exception/reflection. |
+| final review dispatch and terminal closeout | Use the same dispatch-intent/returned-ID safety rules for review, then remove only verified finished items; retain unresolved gates and unrelated concurrent work. | Consolidate findings, dispositions, reflection and outcome at closeout; a genuine blocked pause may retain its own exception/reflection. |
 | materially changed recovery truth | Refresh reconciled facts once before continuation when the stored snapshot is materially stale. | Recover only verified missing facts or exceptions, never replay history or repeat checkpoints. |
 
 No coordinator persistence for polling, waiting, ordinary tool calls/progress messages,
@@ -195,8 +203,11 @@ permit coordinator-only evidence commits when no other writer owns those paths/i
 
 No state commit after every tool call and no new per-task tracker or Git-policy exception. At a
 blocked pause, review/repair transition or completion, verify and checkpoint the state with bounded
-evidence before handoff/reporting; completion replaces active progress with a short terminal
-disposition and next action, not a completed-work summary. Preserve existing dirty state unless its
+evidence before handoff/reporting; at completion remove only the verified finished current item,
+not replace it with a terminal disposition or completed-work summary; retain paused, blocked or
+review/acceptance-pending work and unrelated concurrent items. Completion outcomes and evidence
+stay in their durable owners. Skip unchanged empty-current-content writes/checkpoints.
+Preserve existing dirty state unless its
 exact ownership/content is established and overlap authorized; never adopt another writer's edits.
 Re-read/compare the intended block before each update and inspect diff/ownership before staging;
 concurrent drift, same-file ambiguity, write/check/commit failure stops affected work with the exact
@@ -673,8 +684,9 @@ the contract manually rather than claiming automated validation.
 
 ## Finish
 
-Reconcile and checkpoint the brief snapshot's terminal disposition or precise blocker and next
-safe action under Brief Current State and Recovery; `finish-session` preserves that same lifecycle.
+Reconcile and checkpoint selective removal of verified finished current items, or update ongoing
+work's precise blocker and next safe action under Brief Current State and Recovery; preserve other
+concurrent work and custom structure. `finish-session` uses that same current-only lifecycle.
 Return completed and pending tasks, changed files, per-task commits, checks and results, integration
 status, unresolved owner gates, unavailable capabilities, and the next
 dependency-ready action. State separately whether implementation is complete and

@@ -41,7 +41,10 @@ GUARDS = {
               "current batch/task", "latest verified checkpoint SHA and evidence pointer",
               "active delegated run IDs/status", "current blocker/owner gate",
               "exact next safe action", "conveys no authorization or acceptance",
-              "never append historical ledgers"),
+              "never append historical ledgers", "remove verified finished items",
+              "Preserve unrelated concurrent items", "An empty current block is valid",
+              "Unknown completion/runtime/ownership", "without deleting durable artifacts",
+              "successor must be independently current"),
     "lifecycle": ("before execution, including before any delegated dispatch",
                   "returned run identity", "Record a returned child ID immediately",
                   "Delegated briefs exclude snapshot writes", "review/repair transition and completion",
@@ -65,7 +68,8 @@ GUARDS = {
                     "without coordinator waits", "after the writer is terminal",
                     "Read-only review runs", "No state commit after every tool call",
                     "no new per-task tracker or Git-policy exception",
-                    "short terminal disposition and next action",
+                    "remove only the verified finished current item",
+                    "retain paused, blocked or review/acceptance-pending work",
                     "Preserve existing dirty state", "overlap authorized",
                     "Re-read/compare", "concurrent drift, same-file ambiguity, write/check/commit failure stops",
                     "arrange a safe pause", "reconcile pending state/evidence"),
@@ -75,6 +79,7 @@ UNSAFE = {
     "stale-trust": r"trust (?:the )?snapshot without (?:git|evidence) reconciliation",
     "history": r"append (?:a )?(?:completed-task|historical) ledger to (?:the )?snapshot",
     "exclusive-owner": r"state\.md is (?:exclusively )?coordinator-owned",
+    "terminal-retention": r"(?<!never )(?:replace (?:with|active progress with)|retain(?:ing)?(?: only)?) (?:a )?(?:short |concise )?terminal disposition",
 }
 
 
@@ -138,12 +143,28 @@ class ContractTests(unittest.TestCase):
                 for target in re.findall(r"\]\(([^)]+" + re.escape(LINK) + r")\)", content):
                     self.assertEqual(((ROOT / path).parent / target.split("#")[0]).resolve(), COORD)
         finish = section((ROOT / "skills/finish-session/SKILL.md").read_text(), "Step 6: Reconcile Brief Current State")
-        for clause in ("Keep the current block BRIEF", "concise terminal disposition", "exact next safe action",
+        for clause in ("Keep the current block BRIEF", "remove the verified finished item",
+                       "finished planner spec", "empty current block", "exact next safe action",
                        "Reconcile any active child", "unresolved review/acceptance remains a gate",
                        "Preserve custom headers", "no commands/results catalogue", "never its own commit",
                        "never compete to write", "Do not append history"):
             self.assertIn(clause, norm(finish))
         self.assertNotIn("commands actually run", finish)
+        self.assertIsNone(re.search(UNSAFE["terminal-retention"], norm(finish).lower()))
+
+    def test_closeout_mutations_are_section_bound(self):
+        text = (ROOT / "skills/finish-session/SKILL.md").read_text()
+        heading = "Step 6: Reconcile Brief Current State"
+        for phrase in ("remove the verified finished item", "finished planner spec",
+                       "unrelated concurrent current-state content", "empty current block",
+                       "cannot authorize deletion"):
+            with self.subTest(phrase=phrase):
+                body = section(text, heading)
+                altered = norm(body).replace(phrase, "REMOVED", 1)
+                mutated = text.replace(body, altered, 1) + "\n## Footer\n" + phrase
+                self.assertNotIn(phrase, norm(section(mutated, heading)))
+        mutated = section(text, heading) + "\nRetain a concise terminal disposition."
+        self.assertIsNotNone(re.search(UNSAFE["terminal-retention"], norm(mutated).lower()))
 
     def test_deleted_recovery_not_rescued_by_summary(self):
         body = section(TEXT, "Brief Current State and Recovery")
@@ -166,6 +187,7 @@ class ContractTests(unittest.TestCase):
             ("stale-trust", "Trust the snapshot without Git reconciliation."),
             ("history", "Append a completed-task ledger to the snapshot."),
             ("exclusive-owner", "STATE.md is exclusively coordinator-owned."),
+            ("terminal-retention", "Replace active progress with a short terminal disposition."),
         ):
             with self.subTest(diagnostic=diagnostic):
                 mutated = TEXT.replace("### Recovery before continuation", unsafe + "\n### Recovery before continuation", 1)
@@ -254,7 +276,7 @@ def walkthrough(*, authority=True, evidence=True, partial=False, runtime="idle",
     if state in ("missing", "lagging"):
         return "RECONCILE: authoritative checkpoints, then refresh state"
     if all_done:
-        return "TERMINAL: next action /reload" if reviewed else "REVIEW: acceptance remains gated"
+        return "REMOVE: verified finished item" if reviewed else "REVIEW: acceptance remains gated"
     return "CONTINUE: verified dependency-ready action"
 
 
@@ -369,18 +391,59 @@ class GitScenarioTests(unittest.TestCase):
         self.assertIn("Custom owner map: docs/", (self.root / "STATE.md").read_text())
         self.assertEqual(self.git("diff", "--cached", "--name-only"), "unrelated.txt\n")
 
-    def test_completion_closeout_replaces_without_history(self):
+    def test_completion_closeout_removes_without_history(self):
         self.assert_contract()
         self.assertEqual(walkthrough(all_done=True), "REVIEW: acceptance remains gated")
-        self.assertEqual(walkthrough(all_done=True, reviewed=True), "TERMINAL: next action /reload")
-        terminal = "# Current state\n\n- Disposition: accepted (symbolic review).\n- Evidence: SUMMARY.md\n- Next: /reload\n"
-        self.put("STATE.md", terminal)
-        first = self.commit("STATE.md", message="terminal closeout")
-        self.put("STATE.md", terminal)  # Repeated closeout is replacement, not accumulation.
+        self.assertEqual(walkthrough(all_done=True, reviewed=True), "REMOVE: verified finished item")
+        empty = "# Current state\n\n"
+        self.put("STATE.md", empty)
+        first = self.commit("STATE.md", message="remove verified finished item")
+        count = self.git("rev-list", "--count", "HEAD")
+        self.put("STATE.md", empty)  # Repeat: unchanged bytes, no extra checkpoint.
         self.assertEqual(self.git("status", "--short"), "")
         self.assertEqual(self.git("rev-parse", "HEAD").strip(), first)
-        self.assertEqual((self.root / "STATE.md").read_text(), terminal)
-        self.assertLessEqual(len(terminal.splitlines()), 6)
+        self.assertEqual(self.git("rev-list", "--count", "HEAD"), count)
+        self.assertEqual((self.root / "STATE.md").read_text(), empty)
+
+    def test_finished_spec_removal_preserves_concurrent_and_durable_work(self):
+        self.assert_contract()
+        header = "# Project state\n\nCustom owner map: docs/\n\n"
+        finished = "- Spec A: planning, pending review\n"
+        concurrent = "- Implementation B: active, separately authorized\n- Investigation C: blocked\n"
+        for path in ("source.md", "tasks.md", "SUMMARY.md"):
+            self.put(path, "durable " + path + "\n")
+        durable = {p: (self.root / p).read_bytes() for p in ("source.md", "tasks.md", "SUMMARY.md")}
+        self.put("STATE.md", header + finished + concurrent)
+        self.commit("STATE.md", "source.md", "tasks.md", "SUMMARY.md", message="mixed current work")
+        before = (self.root / "STATE.md").read_text()
+        # Explicit symbolic rule-to-action walkthrough, not a production state reconciler.
+        self.assertEqual(walkthrough(all_done=True, reviewed=True), "REMOVE: verified finished item")
+        self.put("STATE.md", before.replace(finished, "", 1))
+        self.commit("STATE.md", message="finished spec removed")
+        self.assertEqual((self.root / "STATE.md").read_text(), header + concurrent)
+        self.assertEqual({p: (self.root / p).read_bytes() for p in durable}, durable)
+        self.assertNotIn("Implementation A", (self.root / "STATE.md").read_text())
+        # No successor is invented when the spec was the only current item.
+        self.put("STATE.md", header + finished)
+        self.put("STATE.md", (self.root / "STATE.md").read_text().replace(finished, "", 1))
+        self.assertEqual((self.root / "STATE.md").read_text(), header)
+
+    def test_unfinished_or_uncertain_items_cannot_be_removed(self):
+        self.assert_contract()
+        for label, context in (
+            ("paused", {}), ("blocked", {}), ("review-pending", {"all_done": True}),
+            ("acceptance-pending", {"all_done": True, "reviewed": False}),
+            ("runtime-unknown", {"runtime": "unknown"}),
+            ("running-child", {"runtime": "running"}),
+            ("ownership-unknown", {"custom": True}),
+            ("drift", {"concurrent": True}), ("partial", {"partial": True}),
+            ("completion-unknown", {"evidence": False}),
+        ):
+            with self.subTest(label=label):
+                current = "# Current state\n\n- Spec A: " + label + "\n"
+                self.put("STATE.md", current)
+                self.assertNotEqual(walkthrough(**context), "REMOVE: verified finished item")
+                self.assertEqual((self.root / "STATE.md").read_text(), current)
 
 
 if __name__ == "__main__":

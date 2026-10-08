@@ -157,9 +157,12 @@ local task checkpoint, genuine blockers, final review/closeout, or materially ch
 Capture child IDs immediately and commit safely later; coalesce same-boundary changes and skip
 unchanged status. Polling and healthy internal worker progress do not trigger coordinator writes.
 Worker per-task commits/evidence remain unchanged; reflection occurs at closeout or a genuine pause.
-`finish-session` reconciles the same snapshot, retaining only a concise terminal disposition
-and next action when complete. Task artifacts, approvals, Git and coordination evidence stay
-authoritative; state confers no authorization or acceptance.
+`finish-session` reconciles the same snapshot: update ongoing items in place and remove verified
+finished items, including finished planner specs, without terminal dispositions or fabricated
+successor work. Preserve other concurrent work, paused/blocked items and pending review/approval
+gates. When nothing remains, preserve the file/custom structure with empty current content;
+repeated unchanged closeout adds no checkpoint. Task artifacts, approvals, Git and coordination
+evidence stay authoritative; state confers no authorization or acceptance.
 
 After compaction/restart/uncertainty, read state and revalidate approval, Git/ownership,
 verification evidence and recorded children before continuing. Stale/missing state requires

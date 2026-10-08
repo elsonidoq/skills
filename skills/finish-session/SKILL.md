@@ -38,7 +38,7 @@ documentation owners and indexes exist.
 4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
 5. The memory index remains usable.
 6. A project with a persistent database has authoritative schema documentation that describes its current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable.
-7. The project's temporary current-execution state document holds only temporary truth about the current execution and is replaced, not appended; it is never a home for durable facts, completed-work summaries, file inventories, or per-task ledgers.
+7. The project's temporary current-state document holds only ongoing concurrent work: active, paused, blocked or pending review/acceptance/owner gates. Update current items in place and remove verified finished items; never retain terminal dispositions, durable facts, completed-work summaries, file inventories or per-task ledgers.
 
 ## Safety Rules
 
@@ -150,13 +150,21 @@ and no project instruction requires one, report `not needed`; closeout alone doe
 implementation progress or initialize a competing file. If required state is missing, reconcile
 authoritative artifacts/Git/runtime evidence first or report the exact blocker.
 
-Keep the current block BRIEF: replace active progress with a concise terminal disposition and exact
-next safe action, or retain paused work, active run/child IDs and its blocker/gate. Link approved
-source/tasks/approval and latest verified checkpoint/evidence where relevant; no commands/results
+Keep the current block BRIEF: update ongoing items and their exact next safe action in place;
+remove the verified finished item rather than replace it with a terminal disposition. This includes
+a finished planner spec: remove its planning state, not its durable source/tasks/approval/evidence.
+Do not fabricate implementation as its successor; retain a distinct successor only when it is
+independently current and authorized. Retain paused/blocked work, active run/child IDs and pending
+gates. Link authoritative artifacts/checkpoints only for work still current; no commands/results
 catalogue. Record unknowns honestly; unrun checks never pass. Reconcile any active child before
-claiming completion; unresolved review/acceptance remains a gate, not a successful terminal state.
-Preserve custom headers, unrelated current-state content and durable-owner pointers. Do not erase
-surplus historical content or migrate it into docs/memory without separately approved scope.
+claiming completion; unresolved review/acceptance remains a gate. Unknown completion, runtime or
+ownership, partial work or missing acceptance proof cannot authorize deletion.
+Preserve custom headers, unrelated concurrent current-state content and durable-owner pointers.
+Remove only the understood attributable finished item, never clear the whole file. An empty current
+block is valid when nothing remains; preserve the file/custom structure without completed/idle-history
+placeholders or a next action solely for finished work. Repeated closeout with unchanged content
+requires no write or extra checkpoint. Do not erase surplus historical content outside that bounded
+item or migrate it into docs/memory without separately approved scope.
 
 Apply the base dirty-target, concurrent-edit and unrelated-target protections. Coordinate explicit
 non-overlapping write responsibility with any active coordinator; never compete to write the file.
