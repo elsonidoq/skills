@@ -4,7 +4,8 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
-- [STATE current-only — TinySpec](state-current-only-tinyspec.md): concurrent current-work lifecycle, verified finished-item removal and bounded closeout; planning-only, tasks and combined approval pending.
+- [STATE current-only — TinySpec](state-current-only-tinyspec.md): concurrent current-work lifecycle, verified finished-item removal and bounded closeout; planning-only, combined approval pending.
+- [STATE current-only — tasks](state-current-only-tasks.md): coupled lifecycle/fixture/documentation task with A1–A6 verification and bounded STATE closeout gates; no implementation authorization.
 - [Planner job-first — TinySpec](planner-job-first-tinyspec.md): bookkeeping remains a small fraction of effort; advance authorized stages without administrative loops.
 - [Planner job-first — tasks](planner-job-first-tasks.md): bounded operational wording and focused regression; approval/checkpoints in [run evidence](../../memory/coordination/evidence/2026-10-08-planner-job-first/SUMMARY.md).
 - [Early risk reduction — TinySpec](early-risk-reduction-tinyspec.md): selective early executable implementation proof, dependent consumption and disproof replanning; approval and acceptance evidence linked below.
