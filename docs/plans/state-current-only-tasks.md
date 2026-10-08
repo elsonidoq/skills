@@ -37,7 +37,7 @@ root STATE's completed previous run is motivation, not advance cleanup permissio
 
 ## Implementation task
 
-- [ ] T001 Align the shared current-only lifecycle, closeout, focused fixture and active documentation
+- [x] T001 Align the shared current-only lifecycle, closeout, focused fixture and active documentation
   - **Depends**: none
   - **Outcome / source**: source A1–A6 are implemented as one coherent independently verifiable unit: coordinator produces current-only truth, finish-session selectively removes verified finished items, and tests/docs reflect the same lifecycle. Coupled operational wording and its assertions stay in lockstep, not artificial separate tasks.
   - **Files / interfaces**: `skills/coordinate-implementation/SKILL.md` (Brief Current State and Recovery table, Writes and checkpoint ordering, Finish); `skills/finish-session/SKILL.md` (Core Invariant 7, Step 6); `skills/coordinate-implementation/scripts/test_state_contract.py`; `README.md` (Brief current state). Bounded inspect-only carrier inventory: `REQUIREMENTS.md`, `skills/initialize-coherence/SKILL.md`, `skills/finish-session-jev/SKILL.md`, `AGENTS.md`, `docs/index.md`, shared checkpoint/coordination references. Leave compatible references unchanged; any necessary clarification is limited to the approved lifecycle, not policy/guideline changes. Coordinator-owned project STATE application and run evidence are separate exclusive-boundary closeout outputs, never worker-owned paths.

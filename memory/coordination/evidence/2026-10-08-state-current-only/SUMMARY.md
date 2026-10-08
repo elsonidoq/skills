@@ -5,8 +5,10 @@
 Run `2026-10-08-state-current-only`; owner selected TinySpec preparation and exact
 `openai-codex/gpt-6.1-sol:medium` for all planning stages. Source and separate task production complete;
 combined review READY; after the recorded stop, owner approved unchanged T001 scope and
-requested local self-execution. Routing approved; T001 implemented, independent review pending.
-No implementation/STATE/guideline/runtime writes authorized or performed. No push, deployment, installation, live provider exercise or child delegation.
+requested local self-execution. T001 `4c52bd6` independently accepted; B01 complete.
+Verified current item removed from STATE at closeout; no remaining current items.
+Only approved implementation/STATE/evidence changes performed; no push, deployment,
+installation, live exercise, runtime or guideline changes.
 
 Source: [TinySpec](../../../../docs/plans/state-current-only-tinyspec.md), A1–A6;
 tasks: [implementation task](../../../../docs/plans/state-current-only-tasks.md), T001/V1–V6;
@@ -147,3 +149,24 @@ no active runtime fleet and known clean block; custom header retained. Current T
 because final acceptance is pending; final verified removal awaits independent review.
 Fresh reviewer intent: read-only `openai-codex/gpt-6.1-sol:medium`, range `17fa64a..4c52bd6`,
 unchanged approved source/tasks and V1–V6, no edits or live calls. No actual obedience claim.
+
+## Final acceptance and closeout
+
+Fresh reviewer `428169f4-9c69-41ce-a600-d0c1b89d06ba`: READY / Merge OK, no findings.
+Independently reran 18 focused / 75 related tests and whitespace: PASS; V1–V5 satisfied,
+V6 initial bounded replacement verified. Runtime status confirms complete/process-terminal,
+model gpt-6.1-sol and medium effort; reviewer originally reported observation unknown,
+later runtime observation matches selection without rewriting that uncertainty.
+Implementation evidence checkpoint `b9d04c7`. Final V6 coordinator reconciliation:
+only attributable pending child-ID STATE diff existed, no unrelated dirtiness/staged paths;
+re-read exact known block and removed it after acceptance, leaving `# Current state` and
+its blank line. No other current item/custom content existed; no terminal placeholder or
+/reload next-action record retained there. Source/task contracts unchanged; task checkbox
+only marked complete. Final diff/links/order and header-only STATE validation PASS.
+
+Closeout documentation owners/indexes exist, no schema/deployment implication. Operational
+owners and README reflect verified implementation; no issue candidate, generated docs or
+gotcha update needed. Gotcha index remains empty. No live obedience claim. Reflection:
+no update proposed; this general lifecycle correction is approved global work, not learned
+project guidance. No active child, unresolved finding or acceptance gate remains.
+Owner should run `/reload` in pi; that instruction is reported, not stored as finished work.
