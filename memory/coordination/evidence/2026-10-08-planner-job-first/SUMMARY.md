@@ -1,7 +1,8 @@
 # Planner job-first
 
 - Origin: planner / owner-selected TinySpec; approved five-bullet scope in session
-  `01a118db-6b6a-720e-aeba-d44864cafd38`. Combined artifact approval pending.
+  `01a118db-6b6a-720e-aeba-d44864cafd38`. Owner answered `Approve` at the
+  combined current-source/tasks/implementation gate; authority covers the digests below.
 - Routing: owner answered `Approve` to local T001 and fresh read-only final reviewer,
   both `openai-codex/gpt-6.1-sol:medium`; same profile approved for planning records.
   Observed parent binding/effort: session model/thinking events confirm Sol/medium.
@@ -19,8 +20,11 @@
 | Task preparation | eb4f882 → e9391e5 | Task-order validator PASS after correcting unsupported heading format; one task, no implicit producers |
 
 Planner review: A1–A5 map to T001/V1–V3; scope/exclusions, gates and source/task
-consistency inspected, no material open questions. Combined artifact approval pending.
+consistency inspected, no material open questions. Combined artifact approval obtained.
 Source SHA256: `977661847b5d5fa9cc34f3b49fed1a0d8345c0794a95c854f0bd70679ec32be2`.
 Tasks SHA256: `3efb61e53f17395fc6b54d07b52d54706fc0ecc0bc0ae4a93f34f228aa66497a`.
 No guideline mutation; actual model time allocation NOT RUN. Reflection deferred to
-terminal review. Next: combined artifact approval, then approved local T001.
+terminal review. B01: T001 in_progress, local Sol/medium; one implementation task,
+adequate bounded context, reviewed source and full V1–V3 union above-linked. Preflight
+complete; T001 owned paths are the skill, checker/tests and plans index. Next: execute
+T001, then dispatch fresh read-only Sol/medium final review; no active child.
