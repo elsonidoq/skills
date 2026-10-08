@@ -4,8 +4,8 @@
 
 Run `2026-10-08-state-current-only`; owner selected TinySpec preparation and exact
 `openai-codex/gpt-6.1-sol:medium` for all planning stages. Source and separate task production complete;
-combined review READY; owner selected Stop here at combined approval. Planning-only stop;
-implementation is not authorized.
+combined review READY; after the recorded stop, owner approved unchanged T001 scope and
+requested local self-execution. Routing gate approved; B01/T001 in progress.
 No implementation/STATE/guideline/runtime writes authorized or performed. No push, deployment, installation, live provider exercise or child delegation.
 
 Source: [TinySpec](../../../../docs/plans/state-current-only-tinyspec.md), A1–A6;
@@ -113,3 +113,19 @@ STATE and operational skills remain untouched. A later continuation requires exp
 combined approval of the exact current source/tasks before coordinator preflight and its
 separate routing gate. No push/deployment/live exercise or guideline change. No review
 fixes or additional task production needed. Reflection: no update proposed.
+
+## Execution approval and preflight
+
+Owner subsequently: “I approve. Execute the task yourself.” This authorizes the unchanged
+source/task digests above and T001 implementation scope. Separate `ask_user` routing answer:
+Approve B01/T001 local `openai-codex/gpt-6.1-sol:medium` and fresh read-only final reviewer
+with the same exact profile. One bounded task; current context supports local execution.
+Observed parent session model/thinking events confirm Sol/medium. No approved guidance;
+six factors/rationales above remain applicable; no automatic retry or profile substitution.
+Baseline `1beab9b`, clean worktree/index; existing state fixture 15 tests PASS. V1–V6 union
+is the unchanged REQUIRED list in tasks. Owned implementation paths: two operational skills,
+state fixture and README; compatible carrier inspection only. STATE and SUMMARY/index are
+coordinator-only evidence paths. No push/deploy/runtime/guideline/live exercise authorized.
+Runtime fleet: no active children. Previous STATE item verified accepted from its linked
+planner-job-first final evidence and replaced by current T001 work; header preserved.
+B01 in progress, next: local red/green implementation, focused checkpoint, evidence, review.

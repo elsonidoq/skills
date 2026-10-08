@@ -1,7 +1,6 @@
 # Current state
 
-- Run: `2026-10-08-planner-job-first`; B01/T001 complete and independently accepted.
-- Authority: [TinySpec](docs/plans/planner-job-first-tinyspec.md), [tasks](docs/plans/planner-job-first-tasks.md); exact approval, routing and checks in [run evidence](memory/coordination/evidence/2026-10-08-planner-job-first/SUMMARY.md).
-- Verified: T001 `012c61b`; planner checker PASS / 98 tests PASS, V1–V3 satisfied. Review range: `016c87c..012c61b`.
-- Routing: local T001 and fresh final reviewer, owner-selected `openai-codex/gpt-6.1-sol:medium`. Review `db07af7d-c1a8-4aa1-920b-f88e2a3eba25`: READY / Merge OK, no findings. Active children: none; blockers: none.
-- Evidence checkpoint: `2bb3de0`; next owner action: `/reload` in pi. No push, deployment or guideline changes authorized; runtime time allocation NOT RUN.
+- Run: `2026-10-08-state-current-only`; B01/T001 in progress locally.
+- Authority: [TinySpec](docs/plans/state-current-only-tinyspec.md), [tasks](docs/plans/state-current-only-tasks.md); approval/routing in [run evidence](memory/coordination/evidence/2026-10-08-state-current-only/SUMMARY.md).
+- Checkpoint: `1beab9b`; baseline state tests PASS (15), implementation not yet verified.
+- Active children: none; next: implement and verify T001/V1–V6, then obtain fresh independent review.
