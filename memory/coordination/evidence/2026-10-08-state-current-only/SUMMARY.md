@@ -4,7 +4,8 @@
 
 Run `2026-10-08-state-current-only`; owner selected TinySpec preparation and exact
 `openai-codex/gpt-6.1-sol:medium` for all planning stages. Source and separate task production complete;
-combined review READY; owner approval and implementation remain pending.
+combined review READY; owner selected Stop here at combined approval. Planning-only stop;
+implementation is not authorized.
 No implementation/STATE/guideline/runtime writes authorized or performed. No push, deployment, installation, live provider exercise or child delegation.
 
 Source: [TinySpec](../../../../docs/plans/state-current-only-tinyspec.md), A1–A6;
@@ -106,7 +107,9 @@ Exact content presented for combined approval (SHA-256):
 - Source `docs/plans/state-current-only-tinyspec.md`: `9e4b58c36c28fad426582118180a069907232086e29db68d5c4238a1139b4bba`.
 - Tasks `docs/plans/state-current-only-tasks.md`: `bf9cfb96e800f927f610a60aea30ba8dcf0142c3451bc982bd46a88abe1c5a05`.
 
-Owner answer pending. Approval authorizes the reviewed T001 lifecycle/fixture/documentation
-scope and bounded coordinator STATE reconciliation; next phase is coordinator preflight,
-including separate implementation routing approval. No push/deployment/live exercise or
-guideline change. No review fixes or additional task production needed.
+Owner answer via `ask_user`: **Stop here** — keep planning artifacts; do not authorize
+implementation. No combined implementation approval granted; coordinator not started,
+STATE and operational skills remain untouched. A later continuation requires explicit
+combined approval of the exact current source/tasks before coordinator preflight and its
+separate routing gate. No push/deployment/live exercise or guideline change. No review
+fixes or additional task production needed. Reflection: no update proposed.
