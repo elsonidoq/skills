@@ -1,7 +1,7 @@
 # Ephemeral recovery state
 
-Run: 2026-10-08-ephemeral-recovery-state. Disposition: source/tasks prepared and reviewed; combined approval pending,
-no implementation or child dispatch.
+Run: 2026-10-08-ephemeral-recovery-state. Disposition: combined source/task/scope approval granted through ask_user against
+the exact identities below; coordinator preflight/routing next. No child dispatched.
 
 Owner selected TinySpec and direct planning `openai-codex/gpt-6.1-sol:medium` through
 ask_user in this session. Observed PI provider/model/effort agree. Six factors: settled
