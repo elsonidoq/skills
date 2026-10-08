@@ -31,6 +31,15 @@ Approval content identities (SHA-256):
 - Tasks: 03fb426a2be101f0d2edbdd77a6f5acbf39112d1c4d44fc5536c5b7bf7071271
 
 Source: docs/plans/ephemeral-recovery-state-tinyspec.md. Preparation is not implementation
-approval. Native reviewer/delegate capabilities registered; runtime exercise and independent
+approval. Owner approved B1 local T001 and separately both fresh-context roles at exact
+openai-codex/gpt-6.1-sol:medium through ask_user. Implementation selection has the same
+six-factor bounds as planning: medium reconciliation/tool work, weakest live-obedience
+blind spot, shared contract coupling, reversible changes, no project guidance. Family and
+effort rationales independently given in execution table. Complete task count one; bounded
+local strategy, exact context telemetry unavailable; observed difficulty requires gated
+strategy revision. B1 in_progress. Preflight at 5ffdd7b: state 18, task-commit 12,
+coordination 23 tests PASS, static commit checker PASS; clean worktree, usable existing
+Git identity proven by preparation commits. V1–V6 unchanged; owned paths per task.
+Native reviewer/delegate capabilities registered; runtime exercise and independent
 review not launched. Planned fresh-context reconstruction is not actual automatic compaction
 or sustained cadence proof. No guideline mutation or proposal.
