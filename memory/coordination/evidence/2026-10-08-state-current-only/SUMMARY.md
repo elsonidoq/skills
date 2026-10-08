@@ -5,7 +5,7 @@
 Run `2026-10-08-state-current-only`; owner selected TinySpec preparation and exact
 `openai-codex/gpt-6.1-sol:medium` for all planning stages. Source and separate task production complete;
 combined review READY; after the recorded stop, owner approved unchanged T001 scope and
-requested local self-execution. Routing gate approved; B01/T001 in progress.
+requested local self-execution. Routing approved; T001 implemented, independent review pending.
 No implementation/STATE/guideline/runtime writes authorized or performed. No push, deployment, installation, live provider exercise or child delegation.
 
 Source: [TinySpec](../../../../docs/plans/state-current-only-tinyspec.md), A1–A6;
@@ -129,3 +129,21 @@ coordinator-only evidence paths. No push/deploy/runtime/guideline/live exercise 
 Runtime fleet: no active children. Previous STATE item verified accepted from its linked
 planner-job-first final evidence and replaced by current T001 work; header preserved.
 B01 in progress, next: local red/green implementation, focused checkpoint, evidence, review.
+
+## T001 implementation / final review intent
+
+Local task checkpoint `17fa64a` → `4c52bd675e02fca43de7d06c696c009c8afd729a`:
+only README, coordinator/finish-session skills and existing state fixture changed.
+V1–V5 satisfied within offline bounds: section-bound removal/retention mutations, finished-spec
+and no-synthetic-successor scenario, durable/concurrent bytes preserved, gated/unknown stops,
+header-only repeat with unchanged commit count; focused 18 tests and related 75 tests PASS.
+Sixteen local links/anchors and whitespace PASS. Actual task diff inspected; compatible
+REQUIREMENTS/initialize-coherence/Jev/AGENTS/docs-index/shared references left unchanged.
+Red/green: updated tests first failed (15 failures, missing new removal obligations);
+first integration exposed phrase/negative-regex mismatches, corrected locally; final PASS.
+No child failure, escalation or scope change. Observed local profile remains Sol/medium.
+V6 bounded initial STATE reconciliation verified prior finished run via linked final evidence,
+no active runtime fleet and known clean block; custom header retained. Current T001 retained
+because final acceptance is pending; final verified removal awaits independent review.
+Fresh reviewer intent: read-only `openai-codex/gpt-6.1-sol:medium`, range `17fa64a..4c52bd6`,
+unchanged approved source/tasks and V1–V6, no edits or live calls. No actual obedience claim.
