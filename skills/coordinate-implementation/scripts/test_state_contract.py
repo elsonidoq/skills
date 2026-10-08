@@ -36,38 +36,36 @@ GUARDS = {
     "ownership": ("not a coordinator-owned tracker", "other authorized workflows",
                   "Preserve unrelated/custom content", "obtain owner approval",
                   "outside the selected project", "symlink escapes"),
-    "brief": ("snapshot BRIEF", "normally no more than ten", "omitting inactive/irrelevant",
-              "active execution/run ID", "tasks and current approval references",
-              "current batch/task", "latest verified checkpoint SHA and evidence pointer",
-              "active delegated run IDs/status", "current blocker/owner gate",
-              "exact next safe action", "conveys no authorization or acceptance",
+    "brief": ("snapshot BRIEF", "roughly five short bullets", "omitting irrelevant fields",
+              "ephemeral recovery bookmark", "goal", "source/tasks/approval links",
+              "active execution/run identity", "No mandatory Git SHA", "material blocker",
+              "next safe action", "conveys no authorization or acceptance",
               "never append historical ledgers", "remove verified finished items",
               "Preserve unrelated concurrent items", "An empty current block is valid",
               "Unknown completion/runtime/ownership", "without deleting durable artifacts",
               "successor must be independently current"),
-    "lifecycle": ("before execution, including before any delegated dispatch",
-                  "returned run identity", "Record a returned child ID immediately",
-                  "Delegated briefs exclude snapshot writes", "review/repair transition and completion",
+    "lifecycle": ("before execution", "recovery-relevant boundaries", "Record a returned child ID immediately",
+                  "Delegated briefs exclude snapshot writes", "not every dispatch or audited task/batch",
                   "Do not depend on advance compaction notification"),
     "recovery": ("After compaction, restart or uncertain execution context",
-                 "Read the current snapshot", "Locate and validate approved source/tasks",
-                 "current authorization", "actual diffs, index/worktree ownership",
-                 "verification/evidence references", "State may lag committed work",
-                 "Inspect every recorded delegated run and invocation",
+                 "Read the current snapshot", "Selectively open linked source/tasks", "current authorization",
+                 "actual diffs and index/worktree ownership",
+                 "verification before acceptance", "State may lag committed work",
+                 "Inspect recorded delegated runs", "Do not replay every historical approval",
                  "running child means inspect/wait, not duplicate dispatch",
                  "Check for unrecorded active dispatches too",
-                 "Missing runtime evidence stops replacement",
+                 "Missing runtime evidence stops replacement", "missing child ID requires runtime reconciliation",
                  "exact next action supported by reconciled current state",
                  "partial task-owned changes", "never guessed completion, blind retry or cleanup",
                  "Missing state never means no progress or no active child",
                  "Do not fabricate progress"),
-    "persistence": ("initial state as a bounded evidence checkpoint",
-                    "focused task commit → separate run-summary/index evidence checkpoint",
-                    "not the commit containing their own update", "Never chase a snapshot's own SHA",
+    "persistence": ("No state-specific commit or evidence checkpoint is required",
+                    "not a retained implementation/evidence task", "otherwise-required commit",
+                    "may remain uncommitted across closeout", "Task-relative cleanliness excludes",
+                    "task commit → separate run-summary/index evidence checkpoint",
                     "explicitly outside worker task/evidence paths", "Do not race Git/index commits",
-                    "without coordinator waits", "after the writer is terminal",
-                    "Read-only review runs", "No state commit after every tool call",
-                    "no new per-task tracker or Git-policy exception",
+                    "without coordinator waits", "safe index access",
+                    "No worker task/evidence checkpoint or failure stop is waived",
                     "remove only the verified finished current item",
                     "retain paused, blocked or review/acceptance-pending work",
                     "Preserve existing dirty state", "overlap authorized",
@@ -75,6 +73,9 @@ GUARDS = {
                     "arrange a safe pause", "reconcile pending state/evidence"),
 }
 UNSAFE = {
+    "heavy-dispatch": r"dispatch intent is checkpointed before launch|commit state before every dispatch",
+    "routine-state": r"update state after every (?:task|batch|check|commit|poll)",
+    "forced-refresh": r"always refresh state after recovery",
     "duplicate-dispatch": r"dispatch (?:a )?(?:new|replacement) worker while (?:the )?child is running",
     "stale-trust": r"trust (?:the )?snapshot without (?:git|evidence) reconciliation",
     "history": r"append (?:a )?(?:completed-task|historical) ledger to (?:the )?snapshot",
@@ -84,15 +85,14 @@ UNSAFE = {
 
 
 CADENCE_GUARDS = (
-    "exclusive coordinator write boundaries", "approved execution start", "imminent dispatch",
-    "returned run identity", "audited batch completion", "verified local task checkpoint",
-    "genuine blocked pause", "final review dispatch and terminal closeout",
-    "materially changed recovery truth", "No coordinator persistence for polling",
+    "Only these recovery-relevant events", "authorized work starts", "returned run identity",
+    "materially changed next safe action", "verified completion",
+    "Routine task or batch completion", "commits, polling", "do not trigger STATE writes",
     "healthy internal worker progress", "Skip byte-identical writes",
-    "Coalesce events at the same safe boundary", "one summary/index/state evidence checkpoint",
-    "No extra summary/index write solely for child-ID capture",
+    "coalesce available facts", "State edits never trigger summary/index writes",
+    "audited outcomes referencing worker checkpoints", "meaningful exceptions",
     "Reflection occurs once at terminal closeout or a genuine blocked pause",
-    "Worker task/evidence checkpoints remain unchanged",
+    "worker task/evidence checkpoints remain unchanged",
 )
 
 
@@ -146,7 +146,7 @@ class ContractTests(unittest.TestCase):
         for clause in ("Keep the current block BRIEF", "remove the verified finished item",
                        "finished planner spec", "empty current block", "exact next safe action",
                        "Reconcile any active child", "unresolved review/acceptance remains a gate",
-                       "Preserve custom headers", "no commands/results catalogue", "never its own commit",
+                       "Preserve custom headers", "no mandatory Git SHAs or commands/results catalogue", "Never chase its own commit",
                        "never compete to write", "Do not append history"):
             self.assertIn(clause, norm(finish))
         self.assertNotIn("commands actually run", finish)
@@ -182,7 +182,13 @@ class ContractTests(unittest.TestCase):
                 with self.subTest(group=group, phrase=phrase):
                     self.assertEqual(count, 1)
                     self.assertIn(group + ": " + phrase, contract_errors(mutated))
+        for event in ("task", "batch", "check", "commit", "poll"):
+            mutated = TEXT.replace("### Recovery before continuation", f"Update STATE after every {event}.\n### Recovery before continuation", 1)
+            self.assertIn("routine-state", contract_errors(mutated))
         for diagnostic, unsafe in (
+            ("heavy-dispatch", "Dispatch intent is checkpointed before launch."),
+            ("routine-state", "Update STATE after every task."),
+            ("forced-refresh", "Always refresh STATE after recovery."),
             ("duplicate-dispatch", "Dispatch a new worker while the child is running."),
             ("stale-trust", "Trust the snapshot without Git reconciliation."),
             ("history", "Append a completed-task ledger to the snapshot."),
@@ -194,7 +200,7 @@ class ContractTests(unittest.TestCase):
                 self.assertIn(diagnostic, contract_errors(mutated))
 
     def test_reordered_recovery_is_rejected(self):
-        mutated = TEXT.replace("2. Locate", "3. Locate", 1).replace("3. Reconcile", "2. Reconcile", 1)
+        mutated = TEXT.replace("2. Selectively", "3. Selectively", 1).replace("3. Inspect", "2. Inspect", 1)
         self.assertIn("recovery-order", contract_errors(mutated))
 
 
@@ -212,24 +218,25 @@ class CadenceTests(unittest.TestCase):
 
     def test_symbolic_write_schedule_coalesces_and_skips_routine_work(self):
         self.assertEqual(contract_errors(TEXT), [])
-        checkpoints = {"start", "dispatch", "audit", "local-task", "blocker", "review", "closeout", "recovery"}
-        for events, changed, state_write, evidence_checkpoints in (
-            ({"start", "dispatch"}, True, True, 1),
-            ({"child-id"}, True, True, 0),  # immediate ID; commit deferred safely
-            ({"audit", "dispatch"}, True, True, 1),
-            ({"blocker"}, True, True, 1),
-            ({"review", "closeout"}, True, True, 1),
-            ({"recovery"}, True, True, 1),
-            ({"local-task"}, True, True, 1),
-            ({"poll", "wait", "passing-check", "worker-task"}, True, False, 0),
-            ({"audit"}, False, False, 0),
-            ({"blocker"}, False, False, 0),  # unchanged blocker is not another checkpoint
-            ({"healthy-worker-progress"}, True, False, 0),
+        triggers = {"start", "child-id", "material-next-action", "completion"}
+        for events, changed, state_write in (
+            ({"start", "dispatch"}, True, True),
+            ({"child-id"}, True, True),
+            ({"audit", "dispatch"}, True, False),
+            ({"blocker", "material-next-action"}, True, True),
+            ({"review", "material-next-action"}, True, True),
+            ({"completion"}, True, True),
+            ({"recovery"}, True, False),
+            ({"local-task", "commit", "batch-complete"}, True, False),
+            ({"poll", "wait", "passing-check", "worker-task"}, True, False),
+            ({"material-next-action"}, False, False),
+            ({"blocker"}, False, False),
+            ({"healthy-worker-progress"}, True, False),
         ):
             with self.subTest(events=events, changed=changed):
-                boundary = bool(events & checkpoints)
-                self.assertEqual(changed and (boundary or "child-id" in events), state_write)
-                self.assertEqual(int(changed and boundary), evidence_checkpoints)
+                self.assertEqual(changed and bool(events & triggers), state_write)
+                # No dedicated commit/evidence cycle follows any bookmark edit.
+                self.assertIn("State edits never trigger summary/index writes", norm(section(TEXT, "Brief Current State and Recovery")))
 
     def test_relevant_proof_reuse_and_affected_invalidation(self):
         from test_batching_contract import dispatch_seam_errors
@@ -274,7 +281,7 @@ def walkthrough(*, authority=True, evidence=True, partial=False, runtime="idle",
     if partial:
         return "STOP: reconcile partial task diff/checks/checkpoint"
     if state in ("missing", "lagging"):
-        return "RECONCILE: authoritative checkpoints, then refresh state"
+        return "RECONCILE: necessary project/Git/runtime facts; update only changed next action"
     if all_done:
         return "REMOVE: verified finished item" if reviewed else "REVIEW: acceptance remains gated"
     return "CONTINUE: verified dependency-ready action"
@@ -290,7 +297,7 @@ class GitScenarioTests(unittest.TestCase):
         self.put("task.txt", "baseline\n")
         self.commit("task.txt", message="baseline")
         self.baseline = self.git("rev-parse", "HEAD").strip()
-        self.put("STATE.md", "# Current state\n\n- Checkpoint: " + self.baseline + "\n- Next: inspect task evidence\n")
+        self.put("STATE.md", "# Current state\n\n- Goal: finish task\n- Authority: tasks.md\n- Next: continue ready tasks\n")
         self.commit("STATE.md", message="initial state")
 
     def git(self, *args):
@@ -318,12 +325,17 @@ class GitScenarioTests(unittest.TestCase):
 
     def test_compaction_after_verified_checkpoint(self):
         self.assert_contract()
+        before = (self.root / "STATE.md").read_text()
+        initial_count = int(self.git("rev-list", "--count", "HEAD"))
         result, evidence = self.verified_task()
-        self.put("STATE.md", "# Current state\n\n- Checkpoint: " + result + "\n- Evidence: " + evidence + "\n- Next: S2\n")
-        state_commit = self.commit("STATE.md", message="state evidence boundary")
+        count = self.git("rev-list", "--count", "HEAD")
+        self.assertEqual(int(count), initial_count + 2)  # Task and evidence only.
+        # Task/evidence commits do not require a bookmark rewrite or state commit.
+        self.assertEqual((self.root / "STATE.md").read_text(), before)
+        self.assertEqual(self.git("rev-list", "--count", "HEAD"), count)
         self.assertEqual(self.git("show", result + ":task.txt"), "verified result\n")
         self.assertIn(result, self.git("show", evidence + ":SUMMARY.md"))
-        self.assertNotIn(state_commit, (self.root / "STATE.md").read_text())
+        self.assertNotIn(result, (self.root / "STATE.md").read_text())
         self.assertEqual(walkthrough(), "CONTINUE: verified dependency-ready action")
         self.assertEqual(self.git("status", "--short"), "")
 
@@ -340,17 +352,22 @@ class GitScenarioTests(unittest.TestCase):
         self.assertEqual(walkthrough(runtime="unknown"), "STOP: reconcile runtime before dispatch")
         self.assertEqual(walkthrough(persistence=False, runtime="running"),
                          "STOP: persistence failure; inspect/pause any active child")
-        self.commit("STATE.md", message="terminal worker audited; parent state checkpoint")
+        # Include pending state only in an otherwise-required owned evidence commit.
+        self.put("SUMMARY.md", "- Worker audit: " + result + "; satisfied\n")
+        self.commit("SUMMARY.md", "STATE.md", message="required audit evidence with pending bookmark")
+        self.assertEqual(self.git("status", "--short"), "")
 
     def test_state_lagging_committed_work(self):
         self.assert_contract()
         result, evidence = self.verified_task()
-        self.assertIn(self.baseline, (self.root / "STATE.md").read_text())
+        before = (self.root / "STATE.md").read_text()
+        self.assertNotIn(self.baseline, before)
         self.assertNotEqual(result, self.baseline)
         self.assertEqual(self.git("merge-base", "--is-ancestor", result, evidence), "")
         count = self.git("rev-list", "--count", "HEAD")
-        self.assertEqual(walkthrough(state="lagging"), "RECONCILE: authoritative checkpoints, then refresh state")
+        self.assertEqual(walkthrough(state="lagging"), "RECONCILE: necessary project/Git/runtime facts; update only changed next action")
         self.assertEqual(self.git("rev-list", "--count", "HEAD"), count)  # No duplicate task commit.
+        self.assertEqual((self.root / "STATE.md").read_text(), before)  # No forced recovery refresh.
 
     def test_partial_task_owned_changes_with_stale_state(self):
         self.assert_contract()
@@ -364,7 +381,7 @@ class GitScenarioTests(unittest.TestCase):
     def test_missing_state_or_conflicting_authority_evidence(self):
         self.assert_contract()
         (self.root / "STATE.md").unlink()
-        self.assertEqual(walkthrough(state="missing"), "RECONCILE: authoritative checkpoints, then refresh state")
+        self.assertEqual(walkthrough(state="missing"), "RECONCILE: necessary project/Git/runtime facts; update only changed next action")
         for gap in ({"authority": False}, {"evidence": False}, {"runtime": "unknown"}):
             with self.subTest(gap=gap):
                 self.assertTrue(walkthrough(state="missing", **gap).startswith("STOP:"))
@@ -387,7 +404,9 @@ class GitScenarioTests(unittest.TestCase):
         self.assertEqual(walkthrough(custom=True, owned=True, dirty=True, overlap=True),
                          "CONTINUE: verified dependency-ready action")
         self.put("STATE.md", dirty.replace("owner unsaved edit", "inspect verified checkpoint"))
-        self.commit("STATE.md", message="approved current block update")
+        count = self.git("rev-list", "--count", "HEAD")
+        # STATE-only update: no task/evidence checkpoint, unrelated index survives.
+        self.assertEqual(self.git("rev-list", "--count", "HEAD"), count)
         self.assertIn("Custom owner map: docs/", (self.root / "STATE.md").read_text())
         self.assertEqual(self.git("diff", "--cached", "--name-only"), "unrelated.txt\n")
 
@@ -397,10 +416,10 @@ class GitScenarioTests(unittest.TestCase):
         self.assertEqual(walkthrough(all_done=True, reviewed=True), "REMOVE: verified finished item")
         empty = "# Current state\n\n"
         self.put("STATE.md", empty)
-        first = self.commit("STATE.md", message="remove verified finished item")
+        first = self.git("rev-parse", "HEAD").strip()
         count = self.git("rev-list", "--count", "HEAD")
         self.put("STATE.md", empty)  # Repeat: unchanged bytes, no extra checkpoint.
-        self.assertEqual(self.git("status", "--short"), "")
+        self.assertEqual(self.git("status", "--short"), " M STATE.md\n")
         self.assertEqual(self.git("rev-parse", "HEAD").strip(), first)
         self.assertEqual(self.git("rev-list", "--count", "HEAD"), count)
         self.assertEqual((self.root / "STATE.md").read_text(), empty)
@@ -419,7 +438,8 @@ class GitScenarioTests(unittest.TestCase):
         # Explicit symbolic rule-to-action walkthrough, not a production state reconciler.
         self.assertEqual(walkthrough(all_done=True, reviewed=True), "REMOVE: verified finished item")
         self.put("STATE.md", before.replace(finished, "", 1))
-        self.commit("STATE.md", message="finished spec removed")
+        # Finished-entry removal alone does not create a commit.
+        self.assertIn("STATE.md", self.git("diff", "--name-only"))
         self.assertEqual((self.root / "STATE.md").read_text(), header + concurrent)
         self.assertEqual({p: (self.root / p).read_bytes() for p in durable}, durable)
         self.assertNotIn("Implementation A", (self.root / "STATE.md").read_text())

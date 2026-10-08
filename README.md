@@ -109,7 +109,7 @@ Verify permitted callable binding, supported effort, tools and owner gates at as
 and ensure settings do not silently override actual dispatch arguments. Actual profile stays
 unknown when unobservable, never inferred from selection.
 The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#select-execution-capability)
-ends preparation once mandatory conditions and committed intent are satisfied, reopening only
+ends preparation once mandatory conditions are satisfied (no state-specific intent commit), reopening only
 for concrete affected invalidation. One worker implementing one batch normally uses direct
 asynchronous delegation, including multiple internal sequential tasks; a workflow needs a
 concrete orchestration reason in the existing brief/tracker, not merely a batch label.
@@ -148,14 +148,17 @@ live support/callability checks require separate permission and usable runtime c
 
 During approved execution, coordinator maintains implementation-relevant current truth in
 project-owned root `STATE.md` (or an explicitly declared project-local equivalent).
-This is a **brief snapshot**, not a coordinator-owned tracker: short current-work/run,
-authorization/checkpoint/evidence pointers, active workers, blocker and exact next action.
-Replace current truth; no transcripts, logs, completed-task ledger or accumulated history.
+This is a **small ephemeral recovery bookmark**, not a checkpoint system or coordinator-owned
+tracker: roughly five bullets for goal, authority links, active run, next safe action and blocker.
+Its only purpose is recovering the big picture after auto-compaction using project files for
+details. No mandatory Git SHA, check results, completed-task ledger or accumulated history.
 Preserve custom/unrelated content and coordinate write boundaries with other workflows.
-Coordinator writes only at approved start/imminent dispatch, child-ID capture, audited batch or
-local task checkpoint, genuine blockers, final review/closeout, or materially changed recovery truth.
-Capture child IDs immediately and commit safely later; coalesce same-boundary changes and skip
-unchanged status. Polling and healthy internal worker progress do not trigger coordinator writes.
+Write only at authorized start, returned child ID, materially changed next safe action and
+verified completion. Routine task/batch/check/commit/poll events do not trigger updates.
+Capture IDs immediately, coalesce facts and skip unchanged content. No committed dispatch-intent
+prerequisite or state-specific commit/evidence cycle: state-only edits may remain owned dirtiness
+across closeout or join the next safe otherwise-required commit. State edits never trigger
+summary/index writes; audit outcomes and meaningful exceptions belong in existing evidence.
 Worker per-task commits/evidence remain unchanged; reflection occurs at closeout or a genuine pause.
 `finish-session` reconciles the same snapshot: update ongoing items in place and remove verified
 finished items, including finished planner specs, without terminal dispositions or fabricated
@@ -164,7 +167,7 @@ gates. When nothing remains, preserve the file/custom structure with empty curre
 repeated unchanged closeout adds no checkpoint. Task artifacts, approvals, Git and coordination
 evidence stay authoritative; state confers no authorization or acceptance.
 
-After compaction/restart/uncertainty, read state and revalidate approval, Git/ownership,
+After compaction/restart/uncertainty, read state once and selectively validate linked authority, Git/ownership,
 verification evidence and recorded children before continuing. Stale/missing state requires
 reconciliation or a precise stop, never fabricated progress or duplicate dispatch. See the
 [coordinator lifecycle and recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery)

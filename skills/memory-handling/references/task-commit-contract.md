@@ -12,6 +12,12 @@ required verification. A read-only, verified no-change, disposable-scratch, or e
 task creates no empty commit unless it retains a repository deliverable. Standalone writing
 skills treat their bounded deliverable as the task.
 
+Ephemeral recovery-state exception: a STATE-only bookmark edit or removal is not a
+retained task and requires no separate commit or evidence checkpoint. It may remain
+understood coordinator-owned dirtiness across closeout; include it in the next safe
+otherwise-required commit when appropriate, preserving explicit path ownership and index
+safety. This exception changes no implementation-task or worker evidence checkpoint.
+
 Existing authorization remains required for every write. This contract neither authorizes
 creation, uploads, external operations, guideline changes, adaptation, nor planning changes.
 
@@ -85,14 +91,14 @@ tasks, never automatic rollback.
 
 The brief project-owned current-state snapshot follows the
 [coordinator snapshot/recovery lifecycle](../../coordinate-implementation/SKILL.md#brief-current-state-and-recovery),
-not a new task ledger. Include coordinator state updates only at that owner's exclusive write
-boundaries, coalescing same-boundary evidence and skipping unchanged status; polling and healthy
-worker internal progress do not require coordinator writes or duplicate checkpoint records.
-Local implementer duties remain unchanged. Reference already verified task/evidence commits,
-never recursively commit a snapshot's own SHA.
-A returned child ID is written immediately; pending coordinator-owned state is explicitly excluded
-from worker paths and committed at the safe coordinator boundary, never by racing the worker's
-Git/index. This does not waive any internal task/evidence checkpoint, ownership check or failure stop.
+not a new task ledger. Only recovery-relevant start, returned child identity, materially
+changed next safe action and verified completion trigger state edits; routine task/batch/check/
+commit/poll events do not. State edits never trigger summary/index writes or state-specific
+commits. A returned child ID is written immediately; pending coordinator-owned state is
+explicitly excluded from worker paths and included only in a safe otherwise-required commit,
+never by racing the worker's Git/index. No SHA belongs in the bookmark by default. Local
+implementer duties, internal task/evidence checkpoints, ownership checks and failure stops
+remain unchanged.
 
 Operational assertions can check instructions, and temporary-Git fixtures can demonstrate Git
 protocol cases such as scoped commits, hook failures and unrelated-work preservation. Neither

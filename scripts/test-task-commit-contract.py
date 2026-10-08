@@ -96,6 +96,15 @@ class StaticContractMutationTests(unittest.TestCase):
             errors = checker.check(**{f"{location}_text": mutated})
             self.assertIn(f"{location} batch autonomy guard missing", errors)
 
+    def test_ephemeral_state_exception_is_narrow_and_required(self):
+        contract = " ".join(CONTRACT.read_text().split())
+        for phrase in ("STATE-only bookmark edit or removal", "requires no separate commit",
+                       "otherwise-required commit", "changes no implementation-task or worker evidence checkpoint"):
+            self.assertIn(phrase, contract)
+        self.assertEqual(checker.check(), [])
+        errors = checker.check(contract_text=CONTRACT.read_text().replace("Ephemeral recovery-state exception", "REMOVED"))
+        self.assertIn("ephemeral state exception missing", errors)
+
     def test_architectural_planning_commit_opt_in_mutation_is_diagnostic(self):
         text = (ROOT / "skills/delegating-architectural-planning/SKILL.md").read_text()
         self.assertEqual(checker.check(), [])

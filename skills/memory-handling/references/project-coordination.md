@@ -107,12 +107,14 @@ snapshot (`STATE.md` by default) is separate from this append-oriented factual e
 owns its execution update lifecycle. State links run/checkpoint evidence without copying it;
 it is neither another coordination store nor an authorization record. Exclude state writes
 from delegated worker evidence scope; coordinate explicit write boundaries with other workflows.
-State updates join only the exclusive coordinator write boundaries under that lifecycle;
-coalesce same-boundary changes and skip unchanged status. Returned child IDs still get immediate
-snapshot capture with safe deferred commit; polling and healthy internal worker progress do not
-trigger coordinator summary/index writes. The coordinator references worker evidence at the audited
-batch boundary instead of duplicating its task ledger. Internal worker task/evidence checkpoints
-remain uninterrupted and independently audited on return.
+State is an ephemeral recovery bookmark: start, returned child identity, materially changed
+next safe action and verified completion are its only update triggers. Routine task/batch/check/
+commit/poll events do not trigger state edits. Coalesce facts and skip unchanged content. Returned
+child IDs still get immediate capture, but state needs no dedicated commit and may remain owned
+working-tree dirtiness until a safe otherwise-required commit. State edits never trigger summary/
+index writes. The coordinator records audited outcomes and meaningful exceptions, referencing
+worker evidence rather than duplicating routine events or its task ledger. Internal worker task/
+evidence checkpoints remain uninterrupted and independently audited on return.
 
 At task/attempt checkpoints, record task ID/type, areas/tags, residual reasoning when
 assessed, selected capability role, exact selected and observed profile (binding plus

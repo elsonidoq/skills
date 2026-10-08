@@ -9,8 +9,9 @@ Implement reviewed tasks in dependency order while preserving artifact provenanc
 integration safety, and evidence. Work in the selected workspace; do not regenerate
 planning artifacts as a substitute for resolving implementation blockers.
 On compaction, restart or uncertain execution context, first read the project snapshot under
-Brief Current State and Recovery to locate intake pointers; then run Load and Verify and the
-full reconciliation below before continuation. Snapshot pointers are not authorization.
+Brief Current State and Recovery to locate intake pointers; then selectively validate linked
+authority and reconcile Git/runtime as needed for the next safe action under the recovery rules
+below before continuation. Snapshot pointers are not authorization.
 
 ## Load and Verify
 
@@ -111,12 +112,20 @@ bounds and obtain owner approval before using it; never silently repurpose it. R
 outside the selected project (including symlink escapes), unreadable/non-file collisions or
 unverified project roots; report the exact blocker rather than overwrite or choose a fallback.
 
-Keep the execution snapshot BRIEF: a handful of short bullets/pointers (normally no more than
-ten), omitting inactive/irrelevant fields. Include active execution/run ID; approved source,
-tasks and current approval references; current batch/task and concise progress; latest verified
-checkpoint SHA and evidence pointer; active delegated run IDs/status or explicit none/unknown;
-current blocker/owner gate; and the exact next safe action. Reference the authoritative execution
-plan/task artifacts, approvals, Git and coordination evidence instead of copying their contents.
+STATE is an ephemeral recovery bookmark, not a checkpoint system. Keep the execution
+snapshot BRIEF: roughly five short bullets per ongoing workstream, omitting irrelevant fields.
+Include the goal, authoritative source/tasks/approval links, active execution/run identity,
+next safe action and any material blocker. Its only purpose is to recover the big picture
+after auto-compaction and find details in project files. No mandatory Git SHA, check results,
+file inventory or progress ledger; Git, task artifacts and evidence already own those facts.
+For example (shape only, not a required schema):
+
+- Goal: implement the approved change.
+- Authority: source, tasks and approval-record links.
+- Execution: run identifier; active child ID or explicit none/unknown.
+- Next: inspect this child, then audit its returned work and continue ready tasks.
+- Blocker: required acceptance check awaits its environment (omit when absent).
+
 The snapshot conveys no authorization or acceptance. Every current item represents ongoing
 concurrent work: active, paused, blocked or pending review/acceptance/owner gates. Update ongoing
 items in place and remove verified finished items, never retain terminal dispositions. Finished
@@ -128,12 +137,11 @@ solely for finished work. Unknown completion/runtime/ownership, partial work, ac
 missing acceptance proof cannot authorize deletion. Never clear the whole file as a shortcut; never
 append historical ledgers, transcripts, completed-task history, full check logs or duplicate evidence.
 
-Establish the snapshot after authorization/preflight and before execution, including before
-any delegated dispatch. Reuse the coordination run ID. Refresh only at the exclusive boundaries
-below, including returned run identity; review/repair transition and completion use those same
-boundaries, not an extra write loop.
+Establish the bookmark after authorization/preflight and before execution. Reuse the
+coordination run ID. Update only at the recovery-relevant boundaries below, not every dispatch
+or audited task/batch. A broad accurate next action may span multiple batches.
 Do not depend on advance compaction notification.
-While a sequential worker runs, retain its ID, last audited checkpoint and the next action
+While a sequential worker runs, retain its ID and the next action
 "inspect this run, then audit its returned checkpoints"; do not imply its internal progress is
 already accepted. Record a returned child ID immediately, even while the child is running.
 Delegated briefs exclude snapshot writes to prevent competition; another authorized workflow
@@ -141,47 +149,49 @@ may update it only across an explicit non-overlapping write boundary, not by rac
 
 ### Coordinator write boundaries
 
-These are the exclusive coordinator write boundaries for `STATE.md` and coordination evidence:
+Only these recovery-relevant events trigger a STATE edit:
 
-| Boundary | Snapshot action | Summary/index action |
-| --- | --- | --- |
-| approved execution start / imminent dispatch | Establish current truth and checkpoint dispatch intent before launch; combine next intent with the just-audited boundary when known. | Record approved plan/approval pointers and baseline once, not copied task contracts or routing assessments. |
-| returned run identity | Record a returned child ID immediately; checkpoint at the next safe coordinator boundary without racing an active writer. | No extra summary/index write solely for child-ID capture. |
-| audited batch completion / verified local task checkpoint | Update verified progress and exact next safe action, including next dispatch intent when known. | Record one audit disposition pointing to worker checkpoints, not a duplicate internal-task ledger. Local implementer task/evidence duties still apply. |
-| genuine blocked pause / failed attempt requiring repair or owner decision | Record blocker, active run and safe next action; checkpoint when safe. Repair launch uses imminent dispatch after diagnosis and profile gates. | Record bounded exception/diagnosis and decision disposition; do not repeatedly record an unchanged blocker. |
-| final review dispatch and terminal closeout | Use the same dispatch-intent/returned-ID safety rules for review, then remove only verified finished items; retain unresolved gates and unrelated concurrent work. | Consolidate findings, dispositions, reflection and outcome at closeout; a genuine blocked pause may retain its own exception/reflection. |
-| materially changed recovery truth | Refresh reconciled facts once before continuation when the stored snapshot is materially stale. | Recover only verified missing facts or exceptions, never replay history or repeat checkpoints. |
+| Event | Bookmark action |
+| --- | --- |
+| authorized work starts | Establish goal, authority links and next safe action once. |
+| returned run identity | Record a returned child ID immediately, without an immediate commit. |
+| materially changed next safe action | Replace the next action/active identity/blocker, such as implementation becoming review or a genuine blocked pause needing owner direction. |
+| verified completion | Remove only verified finished items; preserve ongoing/gated/unrelated work. |
 
-No coordinator persistence for polling, waiting, ordinary tool calls/progress messages,
-individual passing checks, unchanged status, or healthy internal worker progress. Keep the active
-worker ID and last audited checkpoint until its terminal return; task activity is not accepted
-coordinator progress. Skip byte-identical writes. Coalesce events at the same safe boundary into
-one summary/index/state evidence checkpoint, including pending snapshot changes when safe;
-child-ID capture remains an immediate write, not an immediate competing commit. Reflect distinct
-attempts in the same bounded checkpoint rather than triggering a write per check or message.
+Routine task or batch completion, passing checks, commits, polling, waiting, ordinary tool
+calls and healthy internal worker progress do not trigger STATE writes. Recovering context
+alone does not require refreshing an accurate bookmark. Skip byte-identical writes and
+coalesce available facts into one small edit. Do not imply unverified worker progress is accepted.
+
+State edits never trigger summary/index writes. Coordination evidence records approved
+baseline/routing once, audited outcomes referencing worker checkpoints, meaningful exceptions
+and terminal review/reflection—not a duplicate routine event ledger. Local implementer
+and worker task/evidence checkpoints remain unchanged and independently auditable.
 Reflection occurs once at terminal closeout or a genuine blocked pause, never routine batch
-transitions. Worker task/evidence checkpoints remain unchanged and independently auditable.
-Existing initialization and exact guideline-approval authority remain separate; this cadence
-neither authorizes guideline mutation nor weakens required local implementer checkpoints.
+transitions. Initialization and exact guideline approval remain separate authorities.
 
 ### Recovery before continuation
 
-After compaction, restart or uncertain execution context, before any task write or dispatch:
+After compaction, restart or uncertain execution context, before any task write or dispatch
+(selective recovery, not a mandatory full-history reread):
 
-1. Read the current snapshot, including its custom ownership/location constraints.
-2. Locate and validate approved source/tasks, approval references and current authorization
-   through Load and Verify; state labels and a remembered approval are not proof.
-3. Reconcile its recorded checkpoint with current Git HEAD, actual diffs, index/worktree
-   ownership and verification/evidence references. State may lag committed work. Inspect task
-   and distinct evidence commits; recover missing evidence checkpoints only from verified facts.
-4. Inspect every recorded delegated run and invocation through the runtime before dispatching,
-   resuming or replacing work. A running child means inspect/wait, not duplicate dispatch;
-   unknown status or a dispatch intent without a recorded ID requires runtime reconciliation.
-   Check for unrecorded active dispatches too; a stale snapshot's "none" is not runtime proof.
-   Missing runtime evidence stops replacement. Failed runs retain the inspected-cause/profile gates.
-5. Continue only with the exact next action supported by reconciled current state, then refresh
-   the snapshot. Conflicts, missing evidence, partial task-owned changes or uncertain child status
-   require reconciliation or a precise stop, never guessed completion, blind retry or cleanup.
+1. Read the current snapshot once, including its custom ownership/location constraints.
+2. Selectively open linked source/tasks and approval records needed to establish current
+   authorization for the next action through Load and Verify. State labels are not proof;
+   validate permission before writes/dispatch and verification before acceptance. Do not replay
+   every historical approval, run summary or check unless relevant uncertainty requires it.
+3. Inspect current Git HEAD, actual diffs and index/worktree ownership; use task/check/evidence
+   owners to reconstruct only the progress needed for the next action. State may lag committed
+   work. Recover missing required evidence only from verified facts, never repeat task commits.
+4. Inspect recorded delegated runs and their relevant invocations through the runtime before
+   dispatching, resuming or replacing work. A running child means inspect/wait, not duplicate dispatch;
+   unknown status or a missing child ID requires runtime reconciliation. Check for unrecorded
+   active dispatches too; a stale bookmark's "none" is not runtime proof. Missing runtime evidence
+   stops replacement. Failed runs retain the inspected-cause/profile gates.
+5. Continue only with the exact next action supported by reconciled current state. Update the
+   bookmark only if its next safe action materially changed. Conflicts, missing evidence, partial
+   task-owned changes or uncertain child status require reconciliation or a precise stop,
+   never guessed completion, blind retry or cleanup.
 
 Missing state never means no progress or no active child. Recover from authoritative artifacts,
 Git, verification and runtime evidence where possible before establishing a snapshot; otherwise
@@ -189,24 +199,22 @@ report the exact blocker. Do not fabricate progress, repeat commits or redispatc
 
 ### Writes and checkpoint ordering
 
-Record the initial state as a bounded evidence checkpoint before retained task writes/dispatch.
-For local tasks, preserve focused task commit → separate run-summary/index evidence checkpoint;
-include the refreshed snapshot in the latter. Snapshot pointers name already verified task/evidence
-commits, not the commit containing their own update. Never chase a snapshot's own SHA with another
-commit. Dispatch intent is checkpointed before launch; the returned ID is written immediately and
-checkpointed at the next safe coordinator evidence boundary. A pending snapshot write is understood
-coordinator-owned dirtiness, explicitly outside worker task/evidence paths, not unknown task work.
-Do not race Git/index commits with an active writer: workers still make every internal task/evidence
-checkpoint without coordinator waits; the coordinator commits its pending snapshot at the batch
-boundary after the writer is terminal and its checkpoints have been audited. Read-only review runs
-permit coordinator-only evidence commits when no other writer owns those paths/index.
+No state-specific commit or evidence checkpoint is required, including before dispatch,
+at a pause, review/repair transition or state-only closeout. An ephemeral state-only edit is
+not a retained implementation/evidence task under the shared task-commit contract. Include
+pending owned state in the next safe otherwise-required commit when appropriate; do not invent
+a commit solely for the bookmark or chase its own SHA. It may remain uncommitted across closeout.
 
-No state commit after every tool call and no new per-task tracker or Git-policy exception. At a
-blocked pause, review/repair transition or completion, verify and checkpoint the state with bounded
-evidence before handoff/reporting; at completion remove only the verified finished current item,
-not replace it with a terminal disposition or completed-work summary; retain paused, blocked or
+A pending snapshot write is understood coordinator-owned dirtiness, explicitly outside worker
+task/evidence paths, not unknown task work. Do not race Git/index commits with an active writer:
+workers still make every internal task/evidence checkpoint without coordinator waits. Include
+state only with established ownership and safe index access. Task-relative cleanliness excludes
+this known state dirtiness; ordinary task commit → separate run-summary/index evidence checkpoint
+remains required. No worker task/evidence checkpoint or failure stop is waived.
+
+At completion remove only the verified finished current item; retain paused, blocked or
 review/acceptance-pending work and unrelated concurrent items. Completion outcomes and evidence
-stay in their durable owners. Skip unchanged empty-current-content writes/checkpoints.
+stay in their durable owners. Skip unchanged empty-current-content writes.
 Preserve existing dirty state unless its
 exact ownership/content is established and overlap authorized; never adopt another writer's edits.
 Re-read/compare the intended block before each update and inspect diff/ownership before staging;
@@ -470,10 +478,10 @@ task's baseline and owned paths, internal producer checks before consumer use, a
 commit followed by separate evidence checkpoint convention. Missing or ambiguous REQUIRED contracts
 return to the producing review/approval gate before dispatch; never retrofit approved tasks.
 
-Existing preparation has a definite end: once its required conditions and dispatch-intent
-checkpoint are satisfied, dispatch; reopen only for concrete invalidating evidence.
+Existing preparation has a definite end: once its required conditions are satisfied, dispatch;
+no state-specific dispatch-intent checkpoint is required; reopen only for concrete invalidating evidence.
 This follows completion of Load and Verify, preflight, approved graph/profile, full brief/REQUIRED
-union, child reconciliation where applicable, committed intent and final argument validation;
+union, child reconciliation where applicable and final argument validation;
 it substitutes for none of them. Missing conditions stop with the condition, concrete gap,
 affected action and smallest resolution. On changed content/scope/acceptance/boundary/profile,
 relevant Git/ownership/environment/tool/budget drift, failed/partial producer proof, unmet
@@ -684,7 +692,7 @@ the contract manually rather than claiming automated validation.
 
 ## Finish
 
-Reconcile and checkpoint selective removal of verified finished current items, or update ongoing
+Reconcile selective removal of verified finished current items, or update ongoing
 work's precise blocker and next safe action under Brief Current State and Recovery; preserve other
 concurrent work and custom structure. `finish-session` uses that same current-only lifecycle.
 Return completed and pending tasks, changed files, per-task commits, checks and results, integration

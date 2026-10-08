@@ -117,7 +117,8 @@ def dispatch_seam_errors(text):
     carrier = " ".join(text.split("## Select Execution Capability", 1)[-1].split(
         "## Execute and Integrate", 1)[0].split())
     errors = [phrase for phrase in (
-        "once its required conditions and dispatch-intent checkpoint are satisfied, dispatch",
+        "once its required conditions are satisfied, dispatch",
+        "no state-specific dispatch-intent checkpoint is required",
         "reopen only for concrete invalidating evidence",
         "condition, concrete gap, affected action and smallest resolution",
         "reopen only affected preparation",
@@ -184,7 +185,7 @@ def preparation_trace_errors(text, trace):
     recovery = " ".join(text.split("### Recovery before continuation", 1)[-1].split(
         "### Writes and checkpoint ordering", 1)[0].split())
     for phrase in ("running child means inspect/wait, not duplicate dispatch",
-                   "unknown status or a dispatch intent without a recorded ID requires runtime reconciliation"):
+                   "unknown status or a missing child ID requires runtime reconciliation"):
         if phrase not in recovery:
             errors.append(phrase)
     for event in trace:
@@ -200,7 +201,7 @@ def preparation_trace_errors(text, trace):
             if action != "reopen" or reason != event["changed"] or event.get("affected") != event["changed"]:
                 errors.append("affected-only reopen")
         elif event.get("ready"):
-            if action != "dispatch" or reason != "mandatory preparation and committed intent complete":
+            if action != "dispatch" or reason != "mandatory preparation complete; state commit not required":
                 errors.append("redundant post-ready preparation")
     return errors
 
@@ -208,7 +209,7 @@ def preparation_trace_errors(text, trace):
 class PreparationTraceTests(unittest.TestCase):
     """Explicit events/actions are symbolic observations, never child/runtime evidence."""
     def test_ready_dispatch_and_redundant_preparation_rejected(self):
-        ready = {"ready": True, "action": "dispatch", "reason": "mandatory preparation and committed intent complete"}
+        ready = {"ready": True, "action": "dispatch", "reason": "mandatory preparation complete; state commit not required"}
         for ordinary in ("initial readiness", "unchanged passing check", "prose polish"):
             with self.subTest(event=ordinary):
                 trace = [dict(ready, event=ordinary)]
@@ -243,7 +244,7 @@ class PreparationTraceTests(unittest.TestCase):
                 self.assertIn("child reconciliation", preparation_trace_errors(TEXT, [dict(event, action="replacement dispatch")]))
 
     def test_ready_trace_cannot_pass_missing_actual_carrier(self):
-        trace = [{"ready": True, "action": "dispatch", "reason": "mandatory preparation and committed intent complete"}]
+        trace = [{"ready": True, "action": "dispatch", "reason": "mandatory preparation complete; state commit not required"}]
         phrase = "reopen only for concrete invalidating evidence"
         altered = TEXT.replace(phrase, "REMOVED", 1) + "\n## Footer\n" + phrase
         self.assertIn(phrase, preparation_trace_errors(altered, trace))

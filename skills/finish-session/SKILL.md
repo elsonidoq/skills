@@ -144,7 +144,8 @@ with the measured threshold breach and leave compaction to the user. Never compa
 
 Use the same project-owned snapshot maintained by `coordinate-implementation`, not a closeout
 tracker. Follow its [Brief Current State and Recovery](../coordinate-implementation/SKILL.md#brief-current-state-and-recovery)
-contract for location, recovery, write bounds and checkpoint ordering. Reuse a declared project-local
+contract for location, selective recovery and recovery-relevant write bounds. STATE is a
+small ephemeral recovery bookmark, not a checkpoint system. Reuse a declared project-local
 equivalent; otherwise root `STATE.md` is the coordinator default. When no execution snapshot exists
 and no project instruction requires one, report `not needed`; closeout alone does not fabricate
 implementation progress or initialize a competing file. If required state is missing, reconcile
@@ -155,7 +156,7 @@ remove the verified finished item rather than replace it with a terminal disposi
 a finished planner spec: remove its planning state, not its durable source/tasks/approval/evidence.
 Do not fabricate implementation as its successor; retain a distinct successor only when it is
 independently current and authorized. Retain paused/blocked work, active run/child IDs and pending
-gates. Link authoritative artifacts/checkpoints only for work still current; no commands/results
+gates. Link authoritative artifacts only for work still current; no mandatory Git SHAs or commands/results
 catalogue. Record unknowns honestly; unrun checks never pass. Reconcile any active child before
 claiming completion; unresolved review/acceptance remains a gate. Unknown completion, runtime or
 ownership, partial work or missing acceptance proof cannot authorize deletion.
@@ -168,10 +169,12 @@ item or migrate it into docs/memory without separately approved scope.
 
 Apply the base dirty-target, concurrent-edit and unrelated-target protections. Coordinate explicit
 non-overlapping write responsibility with any active coordinator; never compete to write the file.
-Verify and checkpoint an authorized update with bounded closeout evidence before reporting/handoff,
-referencing already verified commits, never its own commit. Failed writes/checkpoints or ambiguous
-ownership stop affected closeout. Do not append history, completed-task ledgers, transcripts, full
-logs, file inventories or duplicate verification evidence.
+Verify an authorized update before reporting/handoff. A STATE-only edit/removal requires no
+separate commit or summary/index write; leave known owned dirtiness or include it in the next safe
+otherwise-required commit. Never chase its own commit. Required retained closeout documentation/
+evidence commits remain unchanged. Failed writes or ambiguous ownership stop affected closeout.
+Do not append history, completed-task ledgers, transcripts, full logs, file inventories or
+duplicate verification evidence.
 
 ## Step 7: Validate Only What You Changed
 

@@ -41,6 +41,10 @@ it. Authorized retained repository tasks MUST follow the shared
 [task-commit contract](../../skills/memory-handling/references/task-commit-contract.md): focused,
 path-limited verification commits precede subsequent task work, reporting, or handoff; read-only/no-change
 work makes no empty commit; ownership/Git/verification conflicts stop rather than waive the checkpoint.
+Ephemeral recovery bookmarks are the explicit narrow exception: STATE-only edits/removals
+require no separate task/evidence commit and may remain understood coordinator-owned dirtiness;
+include them only in a safe otherwise-required commit when appropriate. Implementation/worker
+checkpoints, ownership and index safety remain unchanged.
 This does not grant write, guideline, adaptation, external-operation, or runtime-extension authority. Inspect a
 failed delegated run and its invocation before retrying, resuming, or relaunching; unknown failures MUST be
 reported rather than blindly rerun.
@@ -97,7 +101,13 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 2.2.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-06
+**Version**: 2.3.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-08
+
+Amendment 2.3.0 records owner-approved ephemeral recovery-state semantics and the narrow
+STATE-only checkpoint exception in the [approved TinySpec](../../docs/plans/ephemeral-recovery-state-tinyspec.md).
+The rationale is lightweight recovery after auto-compaction, not weakened task verification.
+Retained implementation and worker evidence commits, approval authority and safety remain.
+MINOR reflects the scoped policy change.
 
 Amendment 2.2.0 records the owner's approval of compact one-file-per-run coordination
 evidence for future runs, with a bounded compaction of the two 2026-10-06 batch-routing

@@ -40,8 +40,8 @@ never silently select a different profile inside that invocation.
 For one worker implementing one batch, normally use direct asynchronous delegation, even
 with sequential internal tasks; workflow orchestration needs a concrete reason in the existing
 brief/tracker. The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#select-execution-capability)
-owns this launch choice and the finite preparation rule: satisfied mandatory conditions and
-committed intent lead to dispatch; only concrete invalidation reopens affected preparation.
+owns this launch choice and the finite preparation rule: satisfied mandatory conditions lead
+to dispatch without a state-specific intent commit; only concrete invalidation reopens affected preparation.
 
 At assignment and dispatch verify permissions, tools, callable binding and supported effort
 through the installed runtime. Registry entries, thinking flags and suffix syntax alone
@@ -151,15 +151,18 @@ stage workflow/approval boundaries remain unchanged.
 Coordinator maintains BRIEF implementation-relevant current truth in project-owned root
 `STATE.md`, or a declared project-local equivalent, through its
 [snapshot/recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery).
-It is not a coordinator-owned tracker or authorization record. Initialization records that
-lifecycle without fabricated progress; finish-session reconciles the same snapshot. Preserve
-custom content/write ownership, replace current truth rather than append history, and recover
-from authoritative approval/Git/evidence/runtime state before continuation. Updates use only the
-coordinator owner's exclusive write boundaries: approved start/imminent dispatch, immediate child-ID
-capture with safe deferred commit, audited batch/verified local task checkpoint, genuine blocker,
-final review/closeout, and materially changed recovery truth. Coalesce same-boundary changes and
-skip byte-identical writes; polling, ordinary progress and healthy internal worker activity cause
-no coordinator persistence. Reference worker evidence rather than duplicate its ledger. Reflection
+It is a small ephemeral recovery bookmark, not a checkpoint system, coordinator-owned tracker
+or authorization record: roughly five bullets for goal, authority links, active run, next safe
+action and blocker, with no mandatory SHA/check/history ledger. Initialization records that
+lifecycle without fabricated progress; finish-session reconciles the same bookmark and removes
+verified finished entries. Preserve custom/unrelated content and ownership. After compaction,
+read it once and selectively reconstruct necessary facts from project files/Git/runtime before
+acting. Only authorized start, returned child identity, materially changed next safe action and
+verified completion trigger edits; routine task/batch/check/commit/poll events do not. Coalesce
+facts and skip unchanged writes. No committed dispatch-intent prerequisite or state-specific
+commit/evidence cycle; pending owned state may remain across state-only closeout or join the next
+safe otherwise-required commit. State edits never trigger summary/index writes. Record audited
+outcomes and meaningful exceptions, referencing worker evidence rather than duplicating its ledger. Reflection
 occurs at terminal closeout or a genuine blocked pause, not routine batch transitions. Mandatory
 worker task/evidence commits and local implementer duties remain unchanged.
 Write/ownership/checkpoint failures stop affected work. No compaction hook, persistence framework,

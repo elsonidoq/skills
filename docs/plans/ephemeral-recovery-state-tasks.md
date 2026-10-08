@@ -25,7 +25,7 @@ changes are implemented. Independent review cannot be replaced with producer sel
 
 ## Implementation
 
-- [ ] T001 Replace heavyweight state protocol and validate its coupled consumers
+- [x] T001 Replace heavyweight state protocol and validate its coupled consumers
   - **Depends**: none
   - **Outcome**: source A1–A6 implemented coherently, including shared policy exceptions, focused regressions, lockstep active docs and bounded native recovery proof.
   - **Files / interfaces**: `skills/coordinate-implementation/SKILL.md` (snapshot/recovery and references to update cadence); `skills/finish-session/SKILL.md`; `skills/memory-handling/references/{task-commit-contract,project-coordination}.md`; `skills/coordinate-implementation/scripts/test_state_contract.py`; affected existing assertions in `scripts/{check,test}-task-commit-contract.py` and `skills/memory-handling/scripts/`; `README.md`, `REQUIREMENTS.md`, `AGENTS.md`, `docs/index.md`, `.specify/memory/constitution.md` for explicit scoped exception/alignment. Inspect `skills/{initialize-coherence,finish-session-jev}/SKILL.md` and coordinator related fixtures; change only demonstrated active contradictions or invalidated assertions. Leave historical sources/evidence unchanged. Project STATE/run evidence are coordinator-owned, not delegated implementation scope. Disposable runtime scenario lives outside retained repository output.

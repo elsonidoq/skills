@@ -22,6 +22,8 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text
     for phrase in ("no skip/defer question", "fresh implementer", "path-limited task commit", "evidence-only checkpoint"):
         if phrase not in contract_text:
             errors.append(f"task-commit contract: missing {phrase!r}")
+    if "Ephemeral recovery-state exception" not in contract_text:
+        errors.append("ephemeral state exception missing")
     coordinator = coordinator_text if coordinator_text is not None else (root / "skills/coordinate-implementation/SKILL.md").read_text()
     for phrase in (
         "no skip/defer question", "No-Git fallback", "never adopts or commits unknown work",
