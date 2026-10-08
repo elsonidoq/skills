@@ -3,12 +3,12 @@
 ## Current disposition and authority
 
 Run `2026-10-08-state-current-only`; owner selected TinySpec preparation and exact
-`openai-codex/gpt-6.1-sol:medium` for all planning stages. Source production complete;
-separate task generation, combined review/approval and implementation remain pending.
-No task list generated and no implementation/STATE/guideline/runtime writes authorized
-or performed. No push, deployment, installation, live provider exercise or child delegation.
+`openai-codex/gpt-6.1-sol:medium` for all planning stages. Source and separate task production complete;
+combined review/approval and implementation remain pending.
+No implementation/STATE/guideline/runtime writes authorized or performed. No push, deployment, installation, live provider exercise or child delegation.
 
 Source: [TinySpec](../../../../docs/plans/state-current-only-tinyspec.md), A1–A6;
+tasks: [implementation task](../../../../docs/plans/state-current-only-tasks.md), T001/V1–V6;
 discovery: [plans index](../../../../docs/plans/index.md).
 Baseline `6ef2acb3294404f7f5fe180f48fd771815ce6045`, clean index/worktree, usable Git identity.
 Owned source-production paths: only those two source/index files. Evidence-only owned paths:
@@ -20,8 +20,9 @@ this SUMMARY and the single run row in `../INDEX.md`; no separate task/reflectio
 | --- | --- | --- |
 | P01 TinySpec source production / 1 | `6ef2acb3294404f7f5fe180f48fd771815ce6045` → `7fc07816978c33cf4ca9ce94883d7e9e695a82e5` | PASS source sections, A1–A6 REQUIRED pass/check/evidence/gates, 18 source local links/anchors + new discovery link, exact two-path inventory and staged diff/whitespace inspection; focused source commit, clean residual state. Baseline existing state fixture PASS / 15 tests, not new behavior acceptance. |
 
-Distinct evidence-only checkpoint follows P01; its SHA is obtained from Git on return,
-not recursively inserted into its own record. Source was independently validated against
+P01 evidence-only checkpoint: `9008b5cedd0e3008b3058d751b1e47049feb6ac8`.
+Distinct evidence-only checkpoint follows each retained producer; its own SHA is obtained
+from Git on return, not recursively inserted into its own record. Source was independently validated against
 its retained-deliverable checks before this subsequent evidence write; parent audit and
 source/task planning review are still pending, not inferred from source production.
 
@@ -63,4 +64,31 @@ core. External research omitted: no dependency/API/version decision. Residual ri
 fixtures cannot establish live model obedience; no live exercise scheduled or claimed.
 Unknown runtime/ownership/completion must stop later deletion, not imply success.
 Reflection: evidence-only local contradiction observed; **no update proposed** to guidelines.
-No current source-production blocker. Next stage is separate task generation, not execution.
+No current source-production blocker. Task preparation proceeded under the owner-authorized
+direct adapter, not execution.
+
+## P02 task production
+
+| Item / attempt | Baseline → result SHA | Checks / disposition |
+| --- | --- | --- |
+| P02 separate tasks / 1 | `9008b5cedd0e3008b3058d751b1e47049feb6ac8` → `125465133e10fdc3b74d802250b09cf1e5f1ccd0` | PASS existing task-order validator; four task local links, unique discovery link, A1–A6 → T001/V1–V6 mappings and gates; actual staged two-path diff/whitespace inspected; path-limited task commit, clean residual state. |
+
+Owned task-production paths: `docs/plans/state-current-only-tasks.md` and
+`docs/plans/index.md`, verified/committed before this evidence-only update. Evidence ownership
+remains this SUMMARY and one existing run row in INDEX. Read INDEX only to update that row,
+not for historical intake. Store verification again found no gotchas/approved guidelines;
+required files exist, no initialization needed. Python 3.12.3 and existing validator available.
+Manual traceability/dependency/feasibility inspection: one coupled instruction/fixture/doc
+unit, explicit Depends none, stable REQUIRED V1–V6 pass/check/evidence/gates, bounded STATE
+application assigned to authorized coordinator closeout rather than worker. Shared checkpoint
+and fresh independent implementation review gates unchanged. No implementation profile assigned.
+
+Selected planning profile remains `openai-codex/gpt-6.1-sol:medium`. Observed task-producer
+session `01a118f1-e8c7-77d1-8488-8ee5e601aac5` header at 2026-10-08T00:37:49Z records
+`model_change` openai-codex/gpt-6.1-sol and `thinking_level_change` medium; PI_MODEL
+corroborates model only. Role: delegated task producer, no delegation. Six factors and family/
+effort rationales above remain applicable; low settled residual reasoning, no approved guidance.
+First/final P02 outcome verified/committed, no failed attempt/retry/repair/escalation or diagnosis.
+Implementation checks are scheduled, not run or accepted by this producer; source baseline 15
+state tests remains unchanged evidence. Static/symbolic limits apply; no live obedience claim.
+Reflection: no update proposed. No blocker; combined artifact review/owner approval is next.
