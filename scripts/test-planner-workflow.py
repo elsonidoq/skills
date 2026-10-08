@@ -350,6 +350,30 @@ class InstructionTests(unittest.TestCase):
                 errors = checker.check_contracts(changed)
                 self.assertTrue(any(e.startswith(diagnostic) for e in errors), errors)
 
+    def test_job_first_contract_and_targeted_mutations(self):
+        body = checker.section(self.texts["planner"], "## Job first; bookkeeping is subordinate")
+        self.assertTrue(body)
+        self.assertLess(self.texts["planner"].index(body),
+                        self.texts["planner"].index("## Discovery and capability boundary"))
+        obligations = (
+            "Bookkeeping must always remain a small fraction of total effort",
+            "Once required prerequisites are satisfied, advance the next authorized stage",
+            "Reuse applicable settled evidence and decisions",
+            "Keep required records terse",
+            "Do not substitute repeated record polishing, duplicate evidence",
+            "concrete invalidating evidence",
+            "Carry this rule into every stage brief",
+            "never waive required approvals, safety checks, permissions, reviews or commits",
+            "exact blocker and smallest required resolution",
+        )
+        for removed in (*obligations, body):
+            with self.subTest(removed=removed):
+                self.assertIn(removed, body)
+                changed = dict(self.texts)
+                changed["planner"] = changed["planner"].replace(removed, "", 1)
+                self.assertTrue(any(e.startswith("job-first:")
+                                    for e in checker.check_contracts(changed)))
+
     def test_bulleted_brief_and_automatic_continuation_contract(self):
         self.assertIn("4–6 short bullets", self.texts["approval"])
         self.assertIn("Do not end the turn merely to report approval", self.texts["planner"])

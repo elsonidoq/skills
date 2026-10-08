@@ -4,6 +4,8 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Planner job-first — TinySpec](planner-job-first-tinyspec.md): bookkeeping remains a small fraction of effort; advance authorized stages without administrative loops.
+- [Planner job-first — tasks](planner-job-first-tasks.md): bounded operational wording and focused regression; approval/checkpoints in [run evidence](../../memory/coordination/evidence/2026-10-08-planner-job-first/SUMMARY.md).
 - [Early risk reduction — TinySpec](early-risk-reduction-tinyspec.md): selective early executable implementation proof, dependent consumption and disproof replanning; approval and acceptance evidence linked below.
 - [Early risk reduction — tasks](early-risk-reduction-tasks.md): atomic contract/regression work then lockstep assurance documentation; current approval/checkpoints belong to run evidence.
 - [Early risk reduction — coordination evidence](../../memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md): authoritative exact-content approval, verification and independent acceptance dispositions.

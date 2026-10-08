@@ -58,6 +58,17 @@ def check_contracts(texts):
                 errors.append(f"{label}: contradictory {phrase!r}")
 
     p = texts["planner"]
+    job_first = section(p, "## Job first; bookkeeping is subordinate")
+    require("job-first", job_first,
+            "Bookkeeping must always remain a small fraction of total effort",
+            "Once required prerequisites are satisfied, advance the next authorized stage",
+            "Reuse applicable settled evidence and decisions",
+            "Keep required records terse",
+            "Do not substitute repeated record polishing, duplicate evidence",
+            "concrete invalidating evidence",
+            "Carry this rule into every stage brief",
+            "never waive required approvals, safety checks, permissions, reviews or commits",
+            "exact blocker and smallest required resolution")
     pre = section(p, "## Before selection:")
     require("choice", pre, "read-only until", "no source edits", "Session history",
             "BOTH options", "TinySpec → Tasks → Implement", "Specify → Plan → Tasks",

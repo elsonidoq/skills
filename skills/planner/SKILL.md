@@ -10,6 +10,30 @@ brainstorming, scope assessment, the owner's TinySpec/Standard choice, review,
 approvals, and the handoff to `coordinate-implementation`. Depth is the owner's
 choice, not an admission threshold or a model-family choice.
 
+## Job first; bookkeeping is subordinate
+
+The job is to resolve the request and advance planning toward an approved, executable
+handoff—not to perfect administrative records. Bookkeeping must always remain a small fraction of total effort.
+Spend the bulk of effort on understanding, consequential decisions, source/task production
+and substantive review. This applies to TinySpec, Standard and recovery.
+
+Once required prerequisites are satisfied, advance the next authorized stage.
+Preparation has an end: reopen only affected work on concrete invalidating evidence
+such as changed scope/content, stale approval, failed proof or capability/ownership drift.
+Do not substitute repeated record polishing, duplicate evidence, unchanged rechecks,
+status-only updates or generic history searches for stage progress.
+Reuse applicable settled evidence and decisions after checking they still apply;
+refresh only invalidated portions. Keep required records terse: record each fact once
+in its authoritative owner and link it elsewhere; coalesce updates within existing
+checkpoint boundaries and skip unchanged writes. Carry this rule into every stage brief.
+
+If administration starts dominating, stop optional bookkeeping, shorten remaining
+records to required facts and return to substantive stage work. Do not add time trackers,
+quota reports or another ceremony to enforce this rule. Efficiency is not a waiver:
+never waive required approvals, safety checks, permissions, reviews or commits.
+A genuine unmet gate stops the affected stage: report the exact blocker and smallest required resolution,
+not an open-ended administrative cleanup programme.
+
 ## Discovery and capability boundary
 
 Read repository instructions, the request or explicitly selected source/section,
