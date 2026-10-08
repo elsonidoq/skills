@@ -24,7 +24,15 @@ consistency inspected, no material open questions. Combined artifact approval ob
 Source SHA256: `977661847b5d5fa9cc34f3b49fed1a0d8345c0794a95c854f0bd70679ec32be2`.
 Tasks SHA256: `3efb61e53f17395fc6b54d07b52d54706fc0ecc0bc0ae4a93f34f228aa66497a`.
 No guideline mutation; actual model time allocation NOT RUN. Reflection deferred to
-terminal review. B01: T001 in_progress, local Sol/medium; one implementation task,
-adequate bounded context, reviewed source and full V1–V3 union above-linked. Preflight
-complete; T001 owned paths are the skill, checker/tests and plans index. Next: execute
-T001, then dispatch fresh read-only Sol/medium final review; no active child.
+terminal review. B01: T001 completed locally, Sol/medium; one implementation task,
+adequate bounded context, reviewed source and full V1–V3 union above-linked.
+
+| T001 | d0072a1 → 012c61b | V1 skill diff inspected: A1–A4 satisfied; V2 checker PASS / 98 tests PASS; V3 diff-check and discovery targets PASS |
+
+Red/green: new checker detected nine absent obligations before skill changes; new
+mutation test failed on absent section (suite 98 tests / 40 expected cascading failures).
+After adding the section all checks PASS. Task diff limited to four approved paths;
+coordinator audit confirms V1–V3 satisfied, no residual task dirtiness. Final acceptance
+pending fresh read-only reviewer over `016c87c..012c61b`, selected Sol/medium; next dispatch
+that review. No failed child or model escalation. One no-op edit mismatch was corrected
+without changing scope or losing content.
