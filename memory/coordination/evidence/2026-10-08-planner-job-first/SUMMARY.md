@@ -32,7 +32,22 @@ adequate bounded context, reviewed source and full V1–V3 union above-linked.
 Red/green: new checker detected nine absent obligations before skill changes; new
 mutation test failed on absent section (suite 98 tests / 40 expected cascading failures).
 After adding the section all checks PASS. Task diff limited to four approved paths;
-coordinator audit confirms V1–V3 satisfied, no residual task dirtiness. Final acceptance
-pending fresh read-only reviewer over `016c87c..012c61b`, selected Sol/medium; next dispatch
-that review. No failed child or model escalation. One no-op edit mismatch was corrected
-without changing scope or losing content.
+coordinator audit confirms V1–V3 satisfied, no residual task dirtiness. No failed child
+or model escalation. One no-op edit mismatch was corrected without changing scope or
+losing content.
+
+## Final acceptance
+
+Fresh read-only reviewer `db07af7d-c1a8-4aa1-920b-f88e2a3eba25` completed: no findings,
+READY / Merge OK over `016c87c..012c61b`; no open questions. Independently inspected
+A1–A4, approval digests, links and whitespace; checker, nine clause mutations, section
+deletion and baseline-skill RED independently verified. Full 98-test suite uses parent
+evidence (not rerun by reviewer). Report: `/tmp/planner-job-first-review-01a118db.md`.
+Selected Sol/medium; reviewer self-observation unknown retained. Parent runtime status
+subsequently reports `gpt-6.1-sol`, thinking medium, complete/process terminal observed.
+
+T001 and final acceptance complete within static instruction bounds; actual agent time
+allocation/obedience NOT RUN. Task evidence checkpoint `2bb3de0`. Reflection: no update
+proposed; general instruction improvement is the approved global change, not learned
+project guidance. No surprises requiring follow-up or unresolved findings. No active
+children, push/deployment or guideline mutation. Next owner action: `/reload` in pi.
