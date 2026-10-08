@@ -1,6 +1,7 @@
 # Ephemeral recovery state
 
-Run: 2026-10-08-ephemeral-recovery-state. Disposition: T001 c689a31 verified; B1 completed, independent acceptance pending.
+Run: 2026-10-08-ephemeral-recovery-state. Disposition: T001 c689a31 implemented, verified and independently accepted; B1 complete.
+No active children/blockers; finished attributable STATE entry removed, header preserved.
 Combined approval/routing granted through ask_user against the identities/bounds below.
 
 Owner selected TinySpec and direct planning `openai-codex/gpt-6.1-sol:medium` through
@@ -81,3 +82,30 @@ reordered-recovery mutation to the new verb. These are verification-contract upd
 model-capability failures. No failed child/relaunch. All REQUIRED evidence valid at c689a31;
 no task-owned residual changes. STATE is separately understood coordinator-owned dirtiness,
 included only in this otherwise-required evidence checkpoint. Guidelines unchanged.
+
+Final independent acceptance: reviewer 0e11a71e-e1be-491f-8860-1492b9e85528 inspected actual
+3f466e1..c689a31 diff, source/task approval hashes, unchanged task contract except checkbox,
+recovery inputs/result and clean workspace/whitespace. Verdict: no issues, no open questions,
+OK/ready. It specifically accepted small bookmark cadence/selective runtime recovery, narrow
+STATE-only exception preserving implementation/evidence commits, section-bound mutations/Git
+fixtures, and honest bounded-live-proof limits. Tests were not independently rerun; their observed
+outputs/item audit remain above. Report /tmp/ephemeral-recovery-proof-40wzUP/final-review.md;
+substantive verdict retained here so temp retention cannot erase acceptance. Selected profile
+openai-codex/gpt-6.1-sol:medium; runtime later confirms terminal process, model gpt-6.1-sol and
+thinking medium, provider binding not independently exposed. Workflow receipt:
+/tmp/pi-subagents-uid-1002/async-subagent-runs/1a4f0e68-cebd-44fe-a5c2-3d2ed49df2ed/workflow-receipt.json.
+
+Reflection: nine-question synthesis yields no project learned-guideline update. This is an
+approved global contract simplification, not an inferred project pattern; incidental fixture/link
+corrections remain evidence-only. Live reconstruction adds bounded delegation evidence but no
+actual-compaction or sustained-obedience claim. No update proposed; guidelines unchanged.
+
+Closeout: required documentation owners/indexes present; active docs already aligned in T001,
+no generator or extra documentation change needed. No verified issue/gotcha candidate, no memory
+write/compaction needed. Deployment not examined: no deployment-relevant evidence in attributable
+instruction/doc changes; no push/install/external operation. Reviewer/workflow terminal; actual
+STATE re-read, no drift/unrelated current content, remove only attributable finished bullets.
+Header-only STATE is valid; removal joins this required acceptance evidence commit, not a separate
+state-specific checkpoint. Scratch inputs/reports retained for audit; no cleanup needed.
+Implementation/feature acceptance verified within A1–A6 tested bounds. Actual auto-compaction and
+long-running obedience remain unverified. Run /reload in pi to load global skill changes.
