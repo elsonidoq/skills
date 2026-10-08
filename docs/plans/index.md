@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Ephemeral recovery state — TinySpec](ephemeral-recovery-state-tinyspec.md): lightweight recovery bookmark, material-change updates and no state-specific commit ceremony; approval/evidence in its linked run.
 - [STATE current-only — TinySpec](state-current-only-tinyspec.md): concurrent current-work lifecycle, verified finished-item removal and bounded closeout; planning-only, combined approval pending.
 - [STATE current-only — tasks](state-current-only-tasks.md): coupled lifecycle/fixture/documentation task with A1–A6 verification and bounded STATE closeout gates; no implementation authorization.
 - [Planner job-first — TinySpec](planner-job-first-tinyspec.md): bookkeeping remains a small fraction of effort; advance authorized stages without administrative loops.
