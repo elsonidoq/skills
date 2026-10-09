@@ -1,7 +1,7 @@
 # Comparative routing and actionable learning
 
 Disposition: combined scope APPROVED; coordinator capability preflight passed within
-smoke bounds. B1 coordinator-accepted; B2 ready under approved routing. No Cerca edits yet.
+smoke bounds. B1/B2 coordinator-accepted; B3 Cerca reset ready under approved routing.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -94,7 +94,7 @@ but static tests do not prove semantic obedience. All six original axes remain i
 B1 owns T001/V1–V3 + T002/V1–V4; B2 T003/V1–V3; B3 T004/V1–V3.
 All modes delegated. Owner selected **Approve routing and reviewer** via ask_user for
 exact boundaries/profiles in this table and the fresh reviewer. B1 completed/audited;
-B2 in_progress (dispatch next); B3 pending predecessor. Selection is not observation.
+B2 completed/audited; B3 in_progress (dispatch next). Selection is not observation.
 [Complete B1 brief](../../../../docs/plans/comparative-routing-learning-b1-brief.md)
 checkpoint11e088f, links/seven-item REQUIRED union/bounds PASS. Additional baseline
 planner98/brainstorming4/task-generation5 PASS; prior checker/coordination23/batching47
@@ -185,3 +185,17 @@ T003 task commit: `ff74a9e111d325ccc823cbbe6b93b408b3064077` →
 `4b4d440` (`docs: validate comparative routing and learning contracts`), four paths only;
 `git diff --cached --check` PASS. The separate evidence/index checkpoint follows this record.
 Final independent review over both repositories remains pending. No Cerca access.
+
+## B2 coordinator audit / B3 release
+
+Consumed actual report `outputs/c78989fa-e384-4c3d-91a7-f5400151001b/implementation/b2-docs-validation.md`;
+child/process terminal, runtime Luna/medium observed; worker self-observation stays unknown.
+Inspected task4b4d440 and evidencebe02cc1 actual diffs/paths, recipe, validation map and
+no-change normative docs rationale. Parent lint22/0 PASS (log `/tmp/routing-learning-parent-lint.log`),
+changed targets/normalized source-task identities PASS; empty index, only parent STATE dirt.
+T003/V1–V3 **satisfied within docs/local-fixture bounds**; live comparison NOT RUN.
+B2 accepted, B3 released under unchanged Luna/medium routing. Cerca now HEAD37d36db;
+unrelated concurrent feature commits/dirt are not adopted. Seven reset-policy hashes
+match inspected originals, targets/evidence index clean and staged index empty. T004
+must recheck before writing; source explicitly approves those policy paths/focused commits,
+superseding old no-commit request only for this reset, not other project work.
