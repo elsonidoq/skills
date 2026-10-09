@@ -1,7 +1,7 @@
 # Comparative routing and actionable learning
 
 Disposition: combined scope APPROVED; coordinator capability preflight passed within
-smoke bounds. Batch/reviewer routing APPROVED; B1 ready for dispatch; no implementation/Cerca edits.
+smoke bounds. B1 coordinator-accepted; B2 ready under approved routing. No Cerca edits yet.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -93,8 +93,8 @@ but static tests do not prove semantic obedience. All six original axes remain i
 
 B1 owns T001/V1–V3 + T002/V1–V4; B2 T003/V1–V3; B3 T004/V1–V3.
 All modes delegated. Owner selected **Approve routing and reviewer** via ask_user for
-exact boundaries/profiles in this table and the fresh reviewer. B1 in_progress (dispatch
-next); B2/B3 pending predecessors. Selection changes no observed implementation profile.
+exact boundaries/profiles in this table and the fresh reviewer. B1 completed/audited;
+B2 in_progress (dispatch next); B3 pending predecessor. Selection is not observation.
 [Complete B1 brief](../../../../docs/plans/comparative-routing-learning-b1-brief.md)
 checkpoint11e088f, links/seven-item REQUIRED union/bounds PASS. Additional baseline
 planner98/brainstorming4/task-generation5 PASS; prior checker/coordination23/batching47
@@ -148,3 +148,22 @@ store, schema, live experiment or actual learned-guideline mutation. Both task c
 updated; T003/T004/source/approval identities untouched. B1 ready for coordinator audit, not
 feature acceptance; final independent review still required. `/reload` required after global
 asset changes. Distinct T002 evidence checkpoint follows; Git history owns its SHA.
+
+## B1 coordinator audit
+
+Worker368bbb04 terminal/process observed; runtime observes gpt-6.1-sol/medium,
+worker self-observation remains unknown. Actual bound report consumed at session artifact
+`outputs/368bbb04-77c1-42f5-8e36-aebdd52452b5/implementation/b1-contracts.md`.
+Audit range b9040fe..13c484f: both actual task diffs/owned paths and separate evidence
+commits inspected; only authorized T001/T002 checkbox changes; source unchanged,
+normalized task contract byte-identical. Empty index; only known parent STATE dirt.
+Parent re-ran checker PASS, planner99/coordination26/batching50/task-generation6 PASS;
+logs `/tmp/routing-learning-parent-<script basename>.log`. Compared changed owner,
+consumer and mutation/fixture sections against the original seven item criteria.
+T001/V1–V3 and T002/V1–V4 **satisfied within local/simulated bounds**; no missing
+REQUIRED proof or permission gates. Earlier red/authoring failures remain attributable.
+Fresh final independent review still pending (runtime review-required is not acceptance).
+B1 accepted/B2 released; unchanged Luna/medium selection and T003/V1–V3 union apply.
+B2 may edit only its named doc/validation/index paths and T003 checkbox/evidence row;
+no Cerca access, contract rewrite, setting or live evaluation. Source/task approval
+remains valid after checkbox normalization; no renewed routing required.
