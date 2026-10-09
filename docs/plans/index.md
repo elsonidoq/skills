@@ -4,8 +4,8 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
-- [Comparative routing and actionable learning — tasks](comparative-routing-learning-tasks.md): four dependency-ordered tasks; focused reusable-contract validation followed by separate Cerca policy reset.
-- [Comparative routing and actionable learning — TinySpec](comparative-routing-learning-tinyspec.md): comparative profile selection, compact process learning and a bounded Cerca model-policy reset; implementation approval pending.
+- [Comparative routing and actionable learning — tasks](comparative-routing-learning-tasks.md): four dependency-ordered tasks; focused reusable-contract validation and bounded Cerca policy reset, accepted with disclosed preservation-proof limitation.
+- [Comparative routing and actionable learning — TinySpec](comparative-routing-learning-tinyspec.md): approved comparative profile selection, compact process learning and bounded Cerca model-policy reset; exact approval/acceptance belongs to the linked run.
 - [Ephemeral recovery state — tasks](ephemeral-recovery-state-tasks.md): coupled protocol/consumer/fixture/docs task and bounded fresh-context reconstruction proof.
 - [Ephemeral recovery state — TinySpec](ephemeral-recovery-state-tinyspec.md): lightweight recovery bookmark, material-change updates and no state-specific commit ceremony; approval/evidence in its linked run.
 - [STATE current-only — TinySpec](state-current-only-tinyspec.md): concurrent current-work lifecycle, verified finished-item removal and bounded closeout; planning-only, combined approval pending.

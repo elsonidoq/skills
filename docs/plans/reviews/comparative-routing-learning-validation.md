@@ -71,5 +71,13 @@ brainstorming 4, coordination 26, task-generation 6; existing shared lint/packag
 task-generation 6, batching 50 and remaining listed suite checks 10/18/13/7. The lint suite reports
 its internal checks; these counts are not unique tests across combined commands. `git diff --check`
 and changed-link inspection are required at checkpoint. These focused static/fixture checks do not
-measure model performance or prove obedience. Final independent review remains pending over the
-complete implementation range and both repositories.
+measure model performance or prove obedience. The fresh full independent review and retained rechecks are recorded in the linked run
+SUMMARY. R1's three contradictory mutants are independently rejected; corrected content
+has no remaining finding. Owner approved the exact T004/V3 alternate proof-method
+amendment at e7a68d7, then the reviewer accepted its trace/scoped-commit/correction-hash
+proof: **ready with disclosed limitations / OK with notes**. Original dirty-content byte
+baseline remains missing; unhashed untracked files and live model obedience remain
+unverified, not silently passed. All 13 REQUIRED items are accepted within their approved
+local/manual/simulated bounds and the explicit preservation amendment. Cerca's local
+checkpoint retains the original limitation; the later approval/acceptance belongs to the
+linked global source/task run, without editing its concurrently dirty shared index.

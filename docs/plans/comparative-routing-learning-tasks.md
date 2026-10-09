@@ -67,7 +67,7 @@ material source/acceptance changes return to planner review/renewed approval.
 - **REQUIRED T003/V3:** focused affected checks plus `PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh` pass. This existing packaging/link/consumer suite is justified by shared contracts, not new broad coverage. Record actual counts/failures, unchanged evidence reused and static/fixture/live distinctions. Inspect `git diff --check`, docs-to-contract semantics, focused commit/evidence checkpoint. Prepare complete skills implementation range for independent final review; review is coordinator-owned and must not be self-certified before task checkpoint.
 - **Effort:** focused documentation alignment and existing regression replay; no new harness or automatic decision engine.
 
-- [ ] T004 — Reset Cerca's project-local model and effort restrictions
+- [x] T004 — Reset Cerca's project-local model and effort restrictions
   - **Depends**: T001, T002, T003
 
 - **Outcome/source:** A7; implement exactly the source's proposed neutral routing rule, without changing global or product policy.
