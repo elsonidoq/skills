@@ -110,3 +110,22 @@ Shared limitations: all current validation is inspection/local fixtures, not mod
 obedience or comparative performance. Cerca has concurrent active/dirty work; read only
 named evidence, index first; no private artifacts. Task commits need fresh per-repository
 ownership checks. No guideline mutation or historical compaction.
+
+## B1 worker checkpoints
+
+Selection: approved B1 profile above; actual model/effort unknown to this worker.
+Launch HEAD b9040feb291fd068e3e6e484b763937caf8780a9 and empty index verified;
+only parent-owned STATE dirt, excluded. Source/tasks exact approved hashes matched.
+Local instruction/explicitly simulated fixture proof only; live obedience/performance NOT RUN.
+
+| Task | Baseline → result | REQUIRED / observable proof |
+| --- | --- | --- |
+| T001 | b9040fe → 32227744d30d875dd2703c401093619c59cbcc52 | V1/V2 PASS: ComparativeRoutingTests named closed/recovery/availability/policy/stop/override/Standard and batch trade-offs; V3 PASS: batching50/checker/planner99/brainstorming4; actual owned diff and diff-check inspected |
+
+T001 focused red: `/tmp/b1-t001-red.log`, 50 tests/two missing comparison/trade-off
+carrier failures before contract edits; inspected expected absent seam. Green commands:
+`PYTHONDONTWRITEBYTECODE=1 python3` with batching, checker, planner and brainstorming
+scripts from tasks; logs `/tmp/b1-t001-<script basename>.log`. Existing safety tests retained.
+Consumer inspection: planner/brainstorming/helper already resolve the shared rubric;
+Standard exception remains non-leaking. No contradictory duplicate requiring edits.
+Distinct evidence checkpoint follows this task; Git history owns its SHA.
