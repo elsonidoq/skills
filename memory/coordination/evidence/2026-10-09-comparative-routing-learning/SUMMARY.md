@@ -129,3 +129,22 @@ scripts from tasks; logs `/tmp/b1-t001-<script basename>.log`. Existing safety t
 Consumer inspection: planner/brainstorming/helper already resolve the shared rubric;
 Standard exception remains non-leaking. No contradictory duplicate requiring edits.
 Distinct evidence checkpoint follows this task; Git history owns its SHA.
+
+| T002 | 8118b2be28502979d984aebf56a299e0087183cb → 2e7acbd9a4a2171dee352cf3d4cf53ff99fd2d67 | V1 PASS: compact multi-checkpoint/index mutations preserve failed/partial unknowns; V2 PASS: three dispositions/non-model exact proposal plus approval/bytes/drift fixtures; V3 PASS: same-store manual source→C2 dependency/check→brief changes cleanup decision across adapters/direct entry; V4 PASS: coordination26/checker/planner99/task-generation6/batching50; owned diff/diff-check/local29 links/order PASS |
+
+T001 separate evidence checkpoint: 8118b2be28502979d984aebf56a299e0087183cb.
+T002 focused red: `/tmp/b1-t002-red.log`, coordination24/one missing Covered seam before
+contract edits. During consolidation, checker rejected duplicate canonical link ownership;
+renamed the anchored consumer link (kept the original canonical link). Intermediate coordination
+check exposed a missing checker assertion for retained reviewer/check facts and duplicate
+no-update wording; inspected causes, restored assertion and simplified wording. These were
+local authoring/check failures, not model-causality evidence or discarded child attempts.
+Final green logs `/tmp/b1-t002-final-<script basename>.log`; commands use
+`PYTHONDONTWRITEBYTECODE=1 python3` with the five task-specified scripts. Mutation checks
+moved from duplicate coordinator lists to the detailed owner; safety assertions retained.
+Architectural standalone entry had a propagation gap: now links the same coordination owner;
+planner/TinySpec/task-generation verify decision effect rather than link presence. No second
+store, schema, live experiment or actual learned-guideline mutation. Both task checkboxes alone
+updated; T003/T004/source/approval identities untouched. B1 ready for coordinator audit, not
+feature acceptance; final independent review still required. `/reload` required after global
+asset changes. Distinct T002 evidence checkpoint follows; Git history owns its SHA.
