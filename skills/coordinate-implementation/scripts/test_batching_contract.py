@@ -931,20 +931,41 @@ class ComparativeRoutingTests(unittest.TestCase):
             ("inadequate_contract", "missing consumer invariant despite available Sol", None,
              "stop: producing review/renewal, no model repairs criteria", "no effort can fix missing criteria"),
         )
+        # Independent expectations for these finite authored inputs, not routing rules.
+        expected = {
+            "closed_design_strong_cheap_oracle": ("symbolic/luna:low", "closed contract", "low:"),
+            "hidden_coupling_costly_recovery": ("symbolic/sol:medium", "Luna shortfall: hidden coupling", "medium:"),
+            "alternative_unavailable": ("symbolic/sol:low", "none is verified/permitted", "low:"),
+            "strict_medium": ("symbolic/luna:medium", "closed contract", "medium:"),
+            "default_medium_allows_low": ("symbolic/luna:low", "closed contract", "low:"),
+            "unsupported_effort": (None, "stop: effort support gate", "unsupported low blocks"),
+            "inadequate_contract": (None, "stop: producing review/renewal", "no effort can fix missing criteria"),
+        }
         for name, inputs, proposal, family, effort in cases:
             with self.subTest(case=name):
+                expected_profile, family_reason, effort_reason = expected[name]
                 self.assertTrue(inputs and family and effort)
                 self.assertNotEqual(family, effort)
-                self.assertEqual(proposal is None, name in ("unsupported_effort", "inadequate_contract"))
+                self.assertEqual(proposal, expected_profile, name + ": recommendation violates case constraints")
+                self.assertIn(family_reason, family, name + ": missing case-specific family reasoning")
+                self.assertTrue(effort.startswith(effort_reason), name + ": effort reasoning violates case constraints")
+        invalid_medium = {"case": "strict_medium", "proposal": "symbolic/luna:low",
+                          "effort": "medium: strict requirement, low not permitted"}
+        self.assertFalse(invalid_medium["proposal"] == expected[invalid_medium["case"]][0],
+                         "mandatory medium cannot permit low despite a medium rationale")
         # Small artifact oracle: suitability alone is insufficient when an alternative exists.
         rationale = {"proposal": "symbolic/sol:medium", "alternative": "symbolic/luna:low",
                      "family": "hidden coupling defeats the cheap oracle", "effort": "medium for recovery",
                      "comparison": "Luna shortfall: stateful recovery outside checks"}
         def complete(record):
+            # This recovery sample must explain its named alternative's concrete shortfall.
             return bool(record["family"] and record["effort"] and
-                        (not record["alternative"] or record["comparison"]))
-        self.assertTrue(complete(rationale))
+                        (not record["alternative"] or
+                         record["comparison"] == "Luna shortfall: stateful recovery outside checks"))
+        self.assertTrue(complete(rationale), "recovery comparison must explain the named alternative's shortfall")
         self.assertFalse(complete(dict(rationale, family="Sol is suitable", comparison="")))
+        self.assertFalse(complete(dict(rationale, comparison="Sol is suitable")),
+                         "suitability alone does not explain the verified alternative")
         override = dict(rationale, selected="symbolic/luna:medium", observed="unknown")
         self.assertEqual(override["proposal"], "symbolic/sol:medium")
         self.assertEqual(SimulatedProfileTraceTests.simulated_dispatch(override["selected"])["args"]["model"], override["selected"])
@@ -954,13 +975,19 @@ class ComparativeRoutingTests(unittest.TestCase):
         self.assertIn("This exception does not assign implementation-task profiles", (Path(__file__).parents[2] / "planner/SKILL.md").read_text())
 
     def test_batch_tradeoff_examples(self):
+        expected = {"docs_plus_final_recovery": "split consecutive tasks",
+                    "coherent_same_profile": "combine sequentially"}
         for name, saving, opportunity, decision in (
             ("docs_plus_final_recovery", "one intake saved", "docs can use verified smaller profile; recovery needs deeper tooling", "split consecutive tasks"),
             ("coherent_same_profile", "shared interface context and startup saved", "none: both need same recovery capability", "combine sequentially"),
         ):
             with self.subTest(case=name):
                 self.assertTrue(saving and opportunity)
-                self.assertIn(decision, ("split consecutive tasks", "combine sequentially"))
+                self.assertEqual(decision, expected[name], name + ": decision contradicts this trade-off")
+        swapped = {"docs_plus_final_recovery": "combine sequentially",
+                   "coherent_same_profile": "split consecutive tasks"}
+        for name, decision in swapped.items():
+            self.assertNotEqual(decision, expected[name], name + ": swapped decision must be rejected")
         self.assertIn("not force diversity or a split", TEXT)
         self.assertIn("commits each task separately", TEXT)
 
