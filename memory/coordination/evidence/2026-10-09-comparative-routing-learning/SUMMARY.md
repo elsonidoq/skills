@@ -263,3 +263,23 @@ path in initial reviewer packet; findings retained here because retained recheck
 managed report contents. Same-reviewer focused recheck next; no source/scope change from R1.
 T004/V3 needs a separately explicit producing approval for any alternate preservation
 verification basis; original byte snapshot cannot be recreated. No silent waiver.
+
+## Independent recheck and proposed verification amendment
+
+Retained reviewe6a9c70f report consumed: **R1 resolved, no correction issues**; independently
+all3 mutants rejected, normal batching50 and diff check PASS. Prior complete review reused;
+overall BLOCK solely because original T004/V3 snapshot is unavailable. No unrelated edit
+is demonstrated. Original review findings and checks remain preserved above.
+
+Planner-owned affected review proposes only T004/V3's preservation-proof-method amendment,
+commite7a68d7: original interval uses fully inspected mutation/commit trace + focused
+scope/index/status proof, retaining missing content baseline as explicit limitation; later
+correction uses14 captured dirty tracked-file hash comparisons. Unhashed untracked files
+remain outside byte identity. All scope/permission/review/checkpoint/source rules unchanged.
+Source hash remains f5d89ff5…fbdd568; prior approved normalized task hash f03394b8…6a8a5;
+proposed current task SHA256 `b45bf2723be039b3e21388457920077accd4df0bdf57876d2cd98c88d6f68960`.
+Only that exact clause changed besides approved execution checkboxes; order/diff PASS.
+Source A7 preservation intent unchanged; no new code or policy mutation authorized by
+proposal. Exact owner approval pending; T004 unchecked and V3 NOT VERIFIED until approval.
+Approval would permit audit/acceptance under the alternate disclosed proof, never imply
+historical byte-identity or erase the initial missed checkpoint/proof deficiency.
