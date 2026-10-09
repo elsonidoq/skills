@@ -167,3 +167,21 @@ B1 accepted/B2 released; unchanged Luna/medium selection and T003/V1–V3 union 
 B2 may edit only its named doc/validation/index paths and T003 checkbox/evidence row;
 no Cerca access, contract rewrite, setting or live evaluation. Source/task approval
 remains valid after checkbox normalization; no renewed routing required.
+
+## B2 / T003 documentation validation
+
+Selected `openai-codex/gpt-6-luna:medium`; worker-observed binding/effort unknown. Baseline
+ff74a9e; B1 source digest and normalized task contract rechecked unchanged before edits.
+T003 changed docs/plans/planner-regression.md and added the linked validation record/index
+entry; existing REQUIREMENTS.md/docs/index.md accurately describe B1 contracts and README
+has no contradiction. Recipe is four bounded before/after cases, read-only, exact-profile,
+permission/capability-gated, eight-run maximum with no retries; NOT RUN. See validation record
+for A1–A6 and T001/T002 item mapping to actual accepted fixture/check evidence.
+
+Focused checks: batching50, planner checker PASS, planner99, brainstorming4, coordination26,
+task-generation6; lint PASS (22 skills, 0 failed; included suites reported in validation
+record). These are local static/fixture checks only; live obedience/performance NOT RUN.
+T003 task commit: `ff74a9e111d325ccc823cbbe6b93b408b3064077` →
+`4b4d440` (`docs: validate comparative routing and learning contracts`), four paths only;
+`git diff --cached --check` PASS. The separate evidence/index checkpoint follows this record.
+Final independent review over both repositories remains pending. No Cerca access.
