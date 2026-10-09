@@ -1,7 +1,7 @@
 # Comparative routing and actionable learning
 
-Disposition: TinySpec source/tasks planner-reviewed; READY for combined owner approval.
-No implementation or Cerca edits performed.
+Disposition: combined source/task/implementation scope APPROVED; coordinator preflight
+started. No implementation or Cerca edits performed.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -50,9 +50,21 @@ These baseline checks validate existing contracts, not the future requested beha
 No independent planning review required for TinySpec; fresh independent implementation
 review is required over both repositories' committed ranges after execution.
 
-Approval pending: current source/tasks plus implementation scope, including bounded
-Cerca policy edits/focused commits. Approval starts coordinator preflight; routing and
-usable independent reviewer selection remain separate gates. No planning-only boundary.
+## Combined owner approval
+
+Initial artifact question was cancelled; no approval inferred from it. After task and
+routing clarification, owner confirmed through ask_user: **Approve; start coordinator
+preflight**. Covers current source/tasks at the SHA256 identities above and implementation
+scope, including bounded Cerca policy edits/focused commits. All six existing routing
+axes are preserved; comparison only improves the justification, not a new score/ladder.
+Current content hashes rechecked unchanged; skills HEAD432fdd8 clean, Cerca HEAD9308037
+with previously observed unrelated dirt preserved. No planning-only boundary.
+
+Coordinator handoff: planner/TinySpec; source dc3b2c0, tasks5da56a1, review432fdd8 and
+this exact-content approval. Four complete tasks/13 REQUIRED; no upstream producer
+missing. Implementation profiles/batches and usable independent reviewer selection
+remain separate gates. Runtime/settings, live model experiments and external operations
+remain excluded. Cerca reset paths remain clean at handoff, recheck before that task.
 
 Shared limitations: all current validation is inspection/local fixtures, not model
 obedience or comparative performance. Cerca has concurrent active/dirty work; read only
