@@ -1,7 +1,8 @@
 # Comparative routing and actionable learning
 
 Disposition: combined scope APPROVED; coordinator capability preflight passed within
-smoke bounds. B1/B2 coordinator-accepted; B3 Cerca reset ready under approved routing.
+smoke bounds. B1/B2 accepted; B3 policy corrections verified, original T004/V3 evidence
+gap unresolved. Fresh independent review next; no final acceptance.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -94,7 +95,7 @@ but static tests do not prove semantic obedience. All six original axes remain i
 B1 owns T001/V1–V3 + T002/V1–V4; B2 T003/V1–V3; B3 T004/V1–V3.
 All modes delegated. Owner selected **Approve routing and reviewer** via ask_user for
 exact boundaries/profiles in this table and the fresh reviewer. B1 completed/audited;
-B2 completed/audited; B3 in_progress (dispatch next). Selection is not observation.
+B2 completed/audited; B3 committed/corrected, original V3 blocked. Selection is not observation.
 [Complete B1 brief](../../../../docs/plans/comparative-routing-learning-b1-brief.md)
 checkpoint11e088f, links/seven-item REQUIRED union/bounds PASS. Additional baseline
 planner98/brainstorming4/task-generation5 PASS; prior checker/coordination23/batching47
@@ -199,3 +200,27 @@ unrelated concurrent feature commits/dirt are not adopted. Seven reset-policy ha
 match inspected originals, targets/evidence index clean and staged index empty. T004
 must recheck before writing; source explicitly approves those policy paths/focused commits,
 superseding old no-commit request only for this reset, not other project work.
+
+## B3 audit, correction and unresolved proof
+
+Original child2da2710a completed/runtime Luna/medium; actual report consumed. Task126ff766
+and evidence8ecb5fe inspected, six named policy files plus own summary/index row only.
+Audit found unrelated story-must weakened and historical rationales shortened; diagnosed
+bounded policy-preservation defects, not a generic capability claim. Original T004/V3
+missing unrelated dirty-content pre-snapshot means **insufficient-evidence**, not a proven
+unrelated edit and not satisfaction from clean staged paths. T004 remains unchecked.
+
+Retained correction child26716b51, same approved Luna/medium, terminal/process observed;
+correction80952cf/evidence2c87f74 inspected. Restored must-story safeguard and exact old
+body quotations under superseded headings. Parent original-body comparison (blank spacing
+normalized), scoped diff/links/index checks PASS. Correction-only14 dirty tracked hashes
+matched before/after; untracked briefs remain unhashed. This cannot supply the original
+missing snapshot. Original tool-invocation trace inspected: mutations/commits scoped to
+policy and evidence, no code/STATE/settings or untracked brief writes; no retroactive
+byte-identity proof claimed. T004/V1 satisfied; V2 bounded manual walkthrough adequate;
+V3 original proof gap requires owner resolution under producing approval, not silent waiver.
+
+Cross-repository independent review requested against skills b9040fe..681d66f and Cerca
+37d36db..2c87f74, source/tasks and all13 REQUIRED items, with V3 limitation visible.
+No final acceptance or lost-attempt rewrite; previous claims remain historical and are
+superseded here. Profiles/runtime settings unchanged; live comparison remains NOT RUN.
