@@ -1,8 +1,9 @@
 # Comparative routing and actionable learning
 
 Disposition: combined scope APPROVED; coordinator capability preflight passed within
-smoke bounds. B1/B2 accepted; B3 policy corrections verified, original T004/V3 evidence
-gap unresolved. Fresh independent review next; no final acceptance.
+smoke bounds. Historical B1/B2 acceptance qualified by fresh review finding 1; R1 comparative
+fixture correction locally verified, reviewer recheck pending. B3 policy corrections verified,
+original T004/V3 evidence gap unresolved; no final acceptance.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -224,3 +225,30 @@ Cross-repository independent review requested against skills b9040fe..681d66f an
 37d36db..2c87f74, source/tasks and all13 REQUIRED items, with V3 limitation visible.
 No final acceptance or lost-attempt rewrite; previous claims remain historical and are
 superseded here. Profiles/runtime settings unchanged; live comparison remains NOT RUN.
+
+## R1 comparative test-sensitivity correction
+
+Fresh independent review finding 1 supersedes the earlier unconditional T001/V1–V2 and
+corresponding T003/V1 coverage claims above, without erasing their attempts or checks.
+Diagnosis: verification/test-contract adequacy, not model incapability. Parent reproduction
+`/tmp/routing-learning-R1-mutants-before.log` and worker replay
+`/tmp/routing-learning-R1-worker-before.log` confirm all three contradictory output mutants
+survived all three comparative tests at launch HEAD1f853d0. Same approved Sol6.1/medium
+selection retained; worker-observed actual model/effort unknown. Only parent STATE dirt and
+empty index at launch; excluded from writes/commits.
+
+| Correction | Baseline → result | Concrete proof |
+| --- | --- | --- |
+| R1 | 1f853d0823ba8e900370d5770e57d2b9cb631a0f → fa78f85774939fbaf3286141fb1b24fdaaff2109 | T001/V1–V2: fixed independent finite expectations; output-only mandatory-low, suitability-only and swapped-batch mutants now rejected (1/1/2 assertion failures); T003/V1 historical evidence qualified; batching50/checker/planner99/coordination26/task-generation6 PASS; actual two-path diff/diff-check inspected |
+
+Replay command: `PYTHONDONTWRITEBYTECODE=1 python3 /tmp/pi-routing-learning-R1-replay.py`;
+after log `/tmp/routing-learning-R1-worker-after.log`. The same three output replacements
+leave independent expectations unchanged. Mandatory-low fails strict_medium profile equality;
+“Sol is suitable” fails the named alternative recovery-shortfall obligation; exchanged batch
+outputs fail both case-specific equality assertions. Normal suite logs
+`/tmp/routing-learning-R1-<script basename>.log` use the five existing Python scripts with
+PYTHONDONTWRITEBYTECODE=1. Validation record retains prior claims as historical and adds
+superseding bounded proof/recheck-pending qualification. No contract/source/tasks semantics,
+router, family ladder, model experiment, actual guideline mutation or Cerca work.
+Distinct summary/index evidence checkpoint follows this correction; Git owns its SHA.
+Final reviewer recheck remains pending; original T004/V3 gap unchanged and no final acceptance.
