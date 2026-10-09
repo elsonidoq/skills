@@ -1,7 +1,7 @@
 # Comparative routing and actionable learning
 
-Disposition: combined source/task/implementation scope APPROVED; coordinator preflight
-started. No implementation or Cerca edits performed.
+Disposition: combined scope APPROVED; coordinator capability preflight passed within
+smoke bounds. Batch/reviewer routing approval pending; no implementation/Cerca edits.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -65,6 +65,39 @@ this exact-content approval. Four complete tasks/13 REQUIRED; no upstream produc
 missing. Implementation profiles/batches and usable independent reviewer selection
 remain separate gates. Runtime/settings, live model experiments and external operations
 remain excluded. Cerca reset paths remain clean at handoff, recheck before that task.
+
+## Coordinator preflight and proposed execution routing
+
+Owner authorized exactly two capability checks via ask_user; workflow894810cb completed,
+all processes terminal observed. Worker0a76f27b runtime observes gpt-6-luna/medium;
+reviewer08cf2861 observes gpt-6.1-sol/medium; self-observations unknown retained.
+Actual bound capability reports consumed under this session's subagent-artifacts outputs
+`894810cb-c5f0-4da3-a211-2513b9348bbd/capability/{luna-worker,sol-reviewer}.md`.
+Luna used write/read/edit/read/bash-remove on exact `/tmp/pi-routing-capability-01a12176-luna.txt`;
+parent independently verified absence. No repo edits except known parent STATE bookmark.
+Async available; budgets unlimited session/active capacity, per-run64; no active fleet.
+User allowlist includes proposed native models; no role override or effort ceiling found.
+No setting modified. Git identity present in both repos; skills source/task hashes unchanged.
+Known Cerca dirty code/STATE/workflow excluded; six reset files+index currently clean.
+
+Four full implementation tasks require delegation. Proposed direct async fresh-context
+workers, sequential batches; parent excludes STATE from worker scopes. Shared assessment:
+no approved guidance; reversible owned documents/tests; adequate explicit item contracts,
+but static tests do not prove semantic obedience. All six original axes remain intact.
+
+| Batch | Tasks / dependencies | Proposed exact profile | Family / effort reasons |
+| --- | --- | --- | --- |
+| B1 | T001→T002 / none | openai-codex/gpt-6.1-sol:medium | Luna verified but shared semantic policy/approval attribution and weak prose oracle favor Sol; shared checker/context saves intake without dragging docs/reset into this profile. Medium for finite cross-contract reasoning, not high. |
+| B2 | T003 / B1 | openai-codex/gpt-6-luna:medium | Closed producer/doc comparison and cheap reversible checks justify Luna; no demonstrated Sol need. Medium for bounded evidence reconciliation. |
+| B3 | T004 / B2 | openai-codex/gpt-6-luna:medium | Exact policy text and clean owned paths justify Luna; concurrent dirt is an ownership gate, not inherent model difficulty. Medium for supersession/preservation checks. Separate repository merits separate batch. |
+
+B1 owns T001/V1–V3 + T002/V1–V4; B2 T003/V1–V3; B3 T004/V1–V3.
+All modes delegated, initial pending. Proposed fresh final reviewer
+`openai-codex/gpt-6.1-sol:medium`: verified read-only role; Luna worker capability is not
+review-role proof; semantic final oracle favors Sol, medium for bounded full-range review.
+Owner selection pending; proposed is not selected/observed execution. Conditional repair:
+inspect run/invocation/partial diffs/proof first; preserve attempts, no blind retries;
+same-profile scoped repair or newly approved profile only with diagnosed gap/support.
 
 Shared limitations: all current validation is inspection/local fixtures, not model
 obedience or comparative performance. Cerca has concurrent active/dirty work; read only
