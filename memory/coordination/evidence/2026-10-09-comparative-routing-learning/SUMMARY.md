@@ -1,7 +1,7 @@
 # Comparative routing and actionable learning
 
 Disposition: combined scope APPROVED; coordinator capability preflight passed within
-smoke bounds. Batch/reviewer routing approval pending; no implementation/Cerca edits.
+smoke bounds. Batch/reviewer routing APPROVED; B1 ready for dispatch; no implementation/Cerca edits.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -92,10 +92,17 @@ but static tests do not prove semantic obedience. All six original axes remain i
 | B3 | T004 / B2 | openai-codex/gpt-6-luna:medium | Exact policy text and clean owned paths justify Luna; concurrent dirt is an ownership gate, not inherent model difficulty. Medium for supersession/preservation checks. Separate repository merits separate batch. |
 
 B1 owns T001/V1–V3 + T002/V1–V4; B2 T003/V1–V3; B3 T004/V1–V3.
-All modes delegated, initial pending. Proposed fresh final reviewer
+All modes delegated. Owner selected **Approve routing and reviewer** via ask_user for
+exact boundaries/profiles in this table and the fresh reviewer. B1 in_progress (dispatch
+next); B2/B3 pending predecessors. Selection changes no observed implementation profile.
+[Complete B1 brief](../../../../docs/plans/comparative-routing-learning-b1-brief.md)
+checkpoint11e088f, links/seven-item REQUIRED union/bounds PASS. Additional baseline
+planner98/brainstorming4/task-generation5 PASS; prior checker/coordination23/batching47
+reused at unchanged relevant bytes. No blockers or missing producer contracts.
+Approved fresh final reviewer
 `openai-codex/gpt-6.1-sol:medium`: verified read-only role; Luna worker capability is not
 review-role proof; semantic final oracle favors Sol, medium for bounded full-range review.
-Owner selection pending; proposed is not selected/observed execution. Conditional repair:
+Owner selected exact proposed profiles; observed execution remains pending. Conditional repair:
 inspect run/invocation/partial diffs/proof first; preserve attempts, no blind retries;
 same-profile scoped repair or newly approved profile only with diagnosed gap/support.
 
