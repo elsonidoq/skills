@@ -252,3 +252,14 @@ superseding bounded proof/recheck-pending qualification. No contract/source/task
 router, family ladder, model experiment, actual guideline mutation or Cerca work.
 Distinct summary/index evidence checkpoint follows this correction; Git owns its SHA.
 Final reviewer recheck remains pending; original T004/V3 gap unchanged and no final acceptance.
+
+Coordinator consumed original independent reportc87e7475 (runtime Sol6.1/medium observed):
+BLOCK, R1 tests admit contradictory output and original T004/V3 baseline gap. Both VALID;
+corrected policy has no additional semantic defect reported. Parent re-reproduced all3
+mutant survivals before fix; audited R1 taskfa78f85/evidence6c79d5c paths/diff and
+independently replayed all3 rejections after (log `/tmp/routing-learning-R1-parent-after.log`),
+normal batching50 PASS (`/tmp/routing-learning-parent-final-batching.log`). Stored report
+path in initial reviewer packet; findings retained here because retained recheck may replace
+managed report contents. Same-reviewer focused recheck next; no source/scope change from R1.
+T004/V3 needs a separately explicit producing approval for any alternate preservation
+verification basis; original byte snapshot cannot be recreated. No silent waiver.
