@@ -56,7 +56,7 @@ material source/acceptance changes return to planner review/renewed approval.
 - **REQUIRED T002/V4:** focused coordination, planner checker/test, task-generation and batching tests pass with PYTHONDONTWRITEBYTECODE. Diff inspection confirms one detailed evidence/reflection owner, no nine-question duplicate checklist, preserved task/evidence commits, approval/drift/selective-retrieval/independent-review/permission gates and no second store. Include smallest failing check before edit, `git diff --check`, focused commit/evidence checkpoint.
 - **Effort:** focused existing Python tests and small temp-directory walkthrough; no historical migration or transcripts.
 
-- [ ] T003 — Align discovery/docs and reconcile bounded acceptance evidence
+- [x] T003 — Align discovery/docs and reconcile bounded acceptance evidence
   - **Depends**: T001, T002
 
 - **Outcome/source:** A1–A6 integrated; truthful validation and a permission-gated behavioral recipe.

@@ -183,6 +183,35 @@ for historical commands/results and completed review; the mandatory-initializati
 is documented in project-local execution evidence. Learned-guideline
 approval never substitutes for feature acceptance. After global skill changes run `/reload`.
 
+## Comparative routing and approved-learning evaluation (permission-gated, NOT RUN)
+
+This is a four-case before/after evaluation recipe, not permission to invoke a model. Preserve
+these fixed inputs and the baseline/candidate document revisions before any later authorized
+comparison:
+
+1. **Closed design:** bounded documentation task, strong deterministic oracle, no hidden recovery.
+2. **Recovery:** same-sized task with hidden coupling, multi-step recovery and costly failure.
+3. **Docs plus acceptance:** a documentation producer followed by its acceptance/cleanup consumer;
+   assess coherent grouping against the concrete smaller-profile opportunity.
+4. **Process lesson:** propose a non-model process lesson, require exact approval, then retrieve
+   approved guidance and show its effect on a source criterion, task dependency/check, brief and
+   routing decision. Pending/rejected/drifted content must not influence the decision.
+
+For each, record baseline and candidate input/artifact hashes, then obtain fresh read-only outputs
+from the exact owner-selected profile. Before invocation, a coordinator must obtain explicit
+permission for this live evaluation and verify the binding is callable/permitted, the requested
+and supported effort match, tools are read-only and usable, and a finite spend/run budget is set.
+The proposed limit is one baseline and one candidate run per case (eight total), no relaunches;
+if any capability, permission, support, isolation or budget gate fails, stop and mark NOT RUN.
+Record proposed, selected and observed binding/effort separately; unknown observations remain
+unknown. Record provider/runtime errors as such, not model failure. An independent reviewer,
+not the producing agent, applies the same prewritten case criteria to both outputs and records
+criterion-level evidence and disagreements.
+
+This small sample is not controlled performance evidence, a universal routing rule, or proof of
+model obedience. Provider observations are distinct from local static/fixture checks below.
+No live comparison has been authorized or performed for this task.
+
 ## Proportionate validation regression
 
 `ProportionateValidationTests` in `scripts/test-planner-workflow.py` removes operational
