@@ -283,3 +283,12 @@ Source A7 preservation intent unchanged; no new code or policy mutation authoriz
 proposal. Exact owner approval pending; T004 unchecked and V3 NOT VERIFIED until approval.
 Approval would permit audit/acceptance under the alternate disclosed proof, never imply
 historical byte-identity or erase the initial missed checkpoint/proof deficiency.
+
+Owner selected **Approve alternate verification** through ask_user for the exact e7a68d7
+T004/V3 clause/current task SHA256 above; source remains unchanged. This renews affected
+task/scope approval only for the disclosed proof-method substitution. Audit that proof next;
+no new policy/code/setting edits authorized. Original missing baseline remains a limitation.
+Cerca now HEAD30efd94 with unrelated constitution/docs/index dirt; reviewed policy files
+remain scope for read-only identity checks, not adoption of concurrent work. Do not edit
+its concurrently dirty shared index for closeout; global source/task approval and acceptance
+own the later decision, while Cerca's retained checkpoint records the original limitation.
