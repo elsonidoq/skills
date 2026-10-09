@@ -1,7 +1,8 @@
 # Comparative routing and actionable learning
 
-Disposition: TinySpec source checkpointed; tasks/review/combined approval pending.
-Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md).
+Disposition: TinySpec source and tasks checkpointed; planner review/combined approval pending.
+Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
+[tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
 requires final approval → coordinator preflight unless planning-only is explicitly selected.
 
@@ -23,6 +24,7 @@ or live operation authorized. Exact combined artifact/scope approval remains pen
 | Deliverable | Baseline → commit | Result / proof |
 | --- | --- | --- |
 | TinySpec source + discovery | 4f532ec → dc3b2c0 | Seven criteria/local links/boundaries PASS; diff/check/owned paths inspected; Cerca untouched |
+| Separate tasks + discovery | eca0936 → 5da56a1 | Order/local links/13 unique REQUIRED items/diff PASS; four tasks, Cerca reset last; no implementation |
 
 Shared limitations: all current validation is inspection/local fixtures, not model
 obedience or comparative performance. Cerca has concurrent active/dirty work; read only
