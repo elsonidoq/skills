@@ -1,9 +1,10 @@
 # Comparative routing and actionable learning
 
-Disposition: combined scope APPROVED; coordinator capability preflight passed within
-smoke bounds. Historical B1/B2 acceptance qualified by fresh review finding 1; R1 comparative
-fixture correction locally verified, reviewer recheck pending. B3 policy corrections verified,
-original T004/V3 evidence gap unresolved; no final acceptance.
+Disposition: **COMPLETE / accepted with disclosed limitations**. All four tasks and
+13 REQUIRED items accepted within local/manual/fixture bounds and the exact owner-approved
+T004/V3 alternate verification basis. Original missing dirty-content baseline remains a
+limitation, not historical byte-identity proof. Prior checkpoint dispositions below are
+attributable history; current acceptance/review is recorded at the end.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -96,7 +97,8 @@ but static tests do not prove semantic obedience. All six original axes remain i
 B1 owns T001/V1–V3 + T002/V1–V4; B2 T003/V1–V3; B3 T004/V1–V3.
 All modes delegated. Owner selected **Approve routing and reviewer** via ask_user for
 exact boundaries/profiles in this table and the fresh reviewer. B1 completed/audited;
-B2 completed/audited; B3 committed/corrected, original V3 blocked. Selection is not observation.
+B2/B3 completed/audited, B3 under the explicit verification amendment; all children terminal.
+Selection is not observation.
 [Complete B1 brief](../../../../docs/plans/comparative-routing-learning-b1-brief.md)
 checkpoint11e088f, links/seven-item REQUIRED union/bounds PASS. Additional baseline
 planner98/brainstorming4/task-generation5 PASS; prior checker/coordination23/batching47
@@ -292,3 +294,41 @@ Cerca now HEAD30efd94 with unrelated constitution/docs/index dirt; reviewed poli
 remain scope for read-only identity checks, not adoption of concurrent work. Do not edit
 its concurrently dirty shared index for closeout; global source/task approval and acceptance
 own the later decision, while Cerca's retained checkpoint records the original limitation.
+
+## Final independent acceptance and closeout
+
+Retained reviewa57fcd18 (same approved Sol6.1/medium, runtime/process terminal observed)
+consumed actual managed `review/final-cross-repository.md`: **No issues found; amended
+T004/V3 criterion met; ready with disclosed limitations / OK with notes**. Reused prior
+full review/R1 recheck and unchanged proof, no unchanged gate waived. Reviewer inspected
+all18 original supplied mutation/commit operations, scoped original commits, correction
+hash record and exact owner approval. Six current policy targets match reviewed2c87f74;
+R1 files matchfa78f85. Original findings and missing snapshot stay attributable above.
+
+Final item audit: T001/V1–V2 satisfied after R1's three independent output-only mutant
+rejections; V3 checks/checkpoints satisfied. T002/V1–V4 satisfied (compact attributable
+fixtures, non-model exact proposal/approval safety, same-store later source/task/brief
+and changed sequencing decision, preserved gates). T003/V1–V3 satisfied with corrected
+mapping/docs/permission-gated recipe and lint22/0. T004/V1–V2 satisfied corrected policy
+and conditional manual routing; V3 satisfied ONLY under exact approved narrower trace/
+scoped-commit/correction-hash verification, not original byte comparison.
+
+Acceptance metadata/docs checkpoint: b7ca52b → e3ea13b. Order, source identity, amended
+task-contract equivalence excluding permitted status metadata, changed doc targets and
+scoped diff PASS; four tasks checked, verified finished STATE bookmark removed only here.
+Cerca active STATE/code/constitution/docs and shared index dirt untouched; no later
+project changes adopted. Original Cerca checkpoint remains original-criterion evidence;
+this linked source/task run owns subsequent approval and acceptance. No push/deploy/
+settings/install/live experiment or actual learned-guideline mutation.
+
+Reflection (terminal, no new guideline proposal): **Covered** by writing-skills Validation
+and source A1/A2: initial fixtures needed realistic contradictory pressure cases; R1 now
+rejects them. **Covered** by task checkpoint/explicit T004/V3 proof rules: original worker
+missed pre-edit unrelated snapshot; preserve that limitation and apply the approved
+alternate method only to this task, never generalize a relaxed future rule. No model-causality
+claim follows either observation. Actual project GUIDELINES remain unchanged/empty.
+
+Remaining separately scoped work: optional four-case live comparison (explicit permission,
+exact usable profiles and budget first), broader runtime allowlist/preference changes and
+historical compaction. These are not pending acceptance blockers or implicit authority.
+Tell owner to run `/reload` inside pi after these reusable skill changes.

@@ -1,6 +1,6 @@
 # Tasks — comparative routing and actionable learning
 
-Producer: planner / TinySpec direct adapter. Preparation only; combined approval pending.
+Producer: planner / TinySpec direct adapter. Owner-approved; accepted with the explicitly approved T004/V3 preservation-proof limitation.
 Source: [TinySpec](comparative-routing-learning-tinyspec.md), A1–A7.
 Approval/routing/checkpoints: [run summary](../../memory/coordination/evidence/2026-10-09-comparative-routing-learning/SUMMARY.md).
 
