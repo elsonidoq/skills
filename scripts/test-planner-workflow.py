@@ -1223,5 +1223,21 @@ sys.stdin.buffer.read()
             rpc.answer_dialog(request, {"method": "input", "response": {"value": "TinySpec"}})
 
 
+class ComparativeCarrierTests(unittest.TestCase):
+    def test_owner_comparison_and_graph_tradeoff_mutations(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for key, clause, label in (
+            ("routing", "actual shortfall or select the smaller option", "routing-comparison:"),
+            ("routing", "none is verified/permitted", "routing-comparison:"),
+            ("routing", "strict requirement versus a default preference", "routing-comparison:"),
+            ("coordinator", "startup/context savings against losing a smaller-profile opportunity", "routing-tradeoff:"),
+        ):
+            with self.subTest(clause=clause):
+                changed = dict(texts)
+                changed[key] = changed[key].replace(clause, "REMOVED", 1)
+                self.assertTrue(any(e.startswith(label) for e in checker.check_contracts(changed)))
+
+
 if __name__ == "__main__":
     unittest.main()

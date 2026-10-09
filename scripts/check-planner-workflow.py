@@ -552,6 +552,12 @@ def check_contracts(texts):
                "Retry without inspecting the failed invocation", "One failure permanently bans a model",
                "Without association/write authority", "offer future bounded setup",
                "Undeclared optional memory preserves existing behavior")
+    require("routing-comparison", section(texts.get("routing", ""), "## Provisional family and effort choices"),
+            "suitable smaller verified, permitted alternative", "actual shortfall or select the smaller option",
+            "none is verified/permitted", "orchestration overhead", "stateful tooling/recovery",
+            "strict requirement versus a default preference")
+    require("routing-tradeoff", section(c, "## Build the Execution Graph"),
+            "startup/context savings against losing a smaller-profile opportunity", "not force diversity or a split")
     # Bounded checks of changed instruction carriers, not a production audit/router.
     for label, key, heading, clauses in VERIFICATION_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)

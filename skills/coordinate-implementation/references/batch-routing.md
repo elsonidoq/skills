@@ -37,9 +37,15 @@ Raw attempt outcomes are not approved guidance and never automatically mutate it
 ## Provisional family and effort choices
 
 Family and effort are independent dimensions: record a **Family rationale** for the selected
-capability and a separate **Effort rationale** for the remaining reasoning budget. Neither
-implies the other. The following are symbolic options, not provider bindings or guaranteed
-supported pairs; there is no universal ladder.
+capability and a separate **Effort rationale** for the remaining reasoning budget. Compare the
+recommendation with a suitable smaller verified, permitted alternative when one exists:
+explain the actual shortfall or select the smaller option. Suitability alone is not a comparison.
+If none is verified/permitted, say so without inventing inadequacy. Distinguish avoidable
+orchestration overhead from inherent reasoning; real stateful tooling/recovery still carries risk.
+Effort respects a strict requirement versus a default preference: mandatory medium excludes low;
+a default permitting low does not. Owner overrides retain the original proposal and reasons.
+Neither dimension implies the other. These symbolic options are not provider bindings or
+guaranteed supported pairs; there is no universal ladder.
 
 | Option | Family rationale | Effort rationale |
 | --- | --- | --- |

@@ -299,7 +299,11 @@ follow the same ordered task contracts; delegation uses the following shared bat
 1. Mark completed tasks only from inspected changes and verification evidence.
 2. Identify dependency-ready tasks and blocked tasks with their missing producers.
 3. Build batches only from consecutive task entries in the approved list and one exact profile per invocation. Keep coherent producer/consumer work together to amortize startup and retain
-   useful context. Internal dependencies, shared files, and phase/story headings do not require
+   useful context. Before combining materially different tasks, weigh concrete
+   startup/context savings against losing a smaller-profile opportunity; do not force diversity or a split.
+   Docs plus final recovery may merit separate consecutive profiles when recovery needs deeper tools;
+   coherent same-profile work can retain shared context without losing a smaller option.
+   Internal dependencies, shared files, and phase/story headings do not require
    a split when one writer executes tasks sequentially, verifies each producer before its
    consumer, preserves task acceptance boundaries, and commits each task separately. Never pull
    a distant producer forward or reorder a prerequisite to fill a batch.
@@ -358,7 +362,10 @@ repair option in the existing brief/tracker. Compare closed design and implement
 with weakest oracle quality, check cost and observability under all six factors in the sole rubric;
 strong cheap reliable proof can justify smaller capability for moderate complexity, while hidden
 coupling/weak oracles require justified stronger capability or producing review/renewal if inadequate.
-Empty guidelines invent no success history.
+Use the rubric's comparative Family rationale, not merely suitability: explain a suitable smaller
+verified/permitted alternative's shortfall or select it; if none exists, state the availability limit.
+Effort remains independent. Avoidable orchestration overhead is not inherent difficulty, while
+stateful tooling/recovery remains risk. Empty guidelines invent no success history.
 Deep tools, weak oracles, unresolved design or costly failure defeat optimistic Luna routing;
 use the seed's stronger-option or owner/design gates, not a universal ranking.
 

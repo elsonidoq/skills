@@ -899,5 +899,70 @@ class VerificationGapTests(unittest.TestCase):
         self.assertIn("Clean retry is exceptional", TEXT)
 
 
+class ComparativeRoutingTests(unittest.TestCase):
+    """Named manual recommendations and counterexamples, not a family-ranking engine."""
+    def test_comparison_carrier_and_mutations(self):
+        rubric = " ".join(RUBRIC_PATH.read_text().split())
+        for clause in ("suitable smaller verified, permitted alternative",
+                       "actual shortfall or select the smaller option", "none is verified/permitted",
+                       "orchestration overhead", "stateful tooling/recovery",
+                       "strict requirement versus a default preference"):
+            self.assertIn(clause, rubric)
+            self.assertNotIn(clause, rubric.replace(clause, "REMOVED", 1))
+        graph = " ".join(TEXT.split("## Build the Execution Graph", 1)[1].split("## Select Execution Capability", 1)[0].split())
+        self.assertIn("startup/context savings against losing a smaller-profile opportunity", graph)
+
+    def test_named_comparative_recommendations_and_suitability_only_rejected(self):
+        # Inputs and reasoned outputs are explicitly authored, not computed from a score.
+        cases = (
+            ("closed_design_strong_cheap_oracle", "bounded tools; cheap rollback; both verified/permitted",
+             "symbolic/luna:low", "Luna meets the closed contract; no Sol shortfall claim", "low: tightly bounded inference"),
+            ("hidden_coupling_costly_recovery", "adequate contract; weak oracle; stateful recovery; both verified/permitted",
+             "symbolic/sol:medium", "Luna shortfall: hidden coupling and long recovery escape cheap checks", "medium: recovery reasoning"),
+            ("alternative_unavailable", "only Sol verified/permitted; registry Luna is not callability",
+             "symbolic/sol:low", "none is verified/permitted; no invented Luna inadequacy", "low: closed inference"),
+            ("strict_medium", "owner policy requires medium; closed contract",
+             "symbolic/luna:medium", "Luna meets closed contract", "medium: strict requirement, low not permitted"),
+            ("default_medium_allows_low", "medium preference permits low; closed contract",
+             "symbolic/luna:low", "Luna meets closed contract", "low: bounded inference beats default preference"),
+            ("unsupported_effort", "selected Luna/low unsupported", None,
+             "stop: effort support gate, not family inadequacy", "unsupported low blocks"),
+            ("inadequate_contract", "missing consumer invariant despite available Sol", None,
+             "stop: producing review/renewal, no model repairs criteria", "no effort can fix missing criteria"),
+        )
+        for name, inputs, proposal, family, effort in cases:
+            with self.subTest(case=name):
+                self.assertTrue(inputs and family and effort)
+                self.assertNotEqual(family, effort)
+                self.assertEqual(proposal is None, name in ("unsupported_effort", "inadequate_contract"))
+        # Small artifact oracle: suitability alone is insufficient when an alternative exists.
+        rationale = {"proposal": "symbolic/sol:medium", "alternative": "symbolic/luna:low",
+                     "family": "hidden coupling defeats the cheap oracle", "effort": "medium for recovery",
+                     "comparison": "Luna shortfall: stateful recovery outside checks"}
+        def complete(record):
+            return bool(record["family"] and record["effort"] and
+                        (not record["alternative"] or record["comparison"]))
+        self.assertTrue(complete(rationale))
+        self.assertFalse(complete(dict(rationale, family="Sol is suitable", comparison="")))
+        override = dict(rationale, selected="symbolic/luna:medium", observed="unknown")
+        self.assertEqual(override["proposal"], "symbolic/sol:medium")
+        self.assertEqual(SimulatedProfileTraceTests.simulated_dispatch(override["selected"])["args"]["model"], override["selected"])
+        self.assertEqual(override["observed"], "unknown")
+        stage = {"Standard plan_create": "symbolic/sol:medium", "implementation": cases[0][2]}
+        self.assertNotEqual(stage["Standard plan_create"], stage["implementation"])
+        self.assertIn("This exception does not assign implementation-task profiles", (Path(__file__).parents[2] / "planner/SKILL.md").read_text())
+
+    def test_batch_tradeoff_examples(self):
+        for name, saving, opportunity, decision in (
+            ("docs_plus_final_recovery", "one intake saved", "docs can use verified smaller profile; recovery needs deeper tooling", "split consecutive tasks"),
+            ("coherent_same_profile", "shared interface context and startup saved", "none: both need same recovery capability", "combine sequentially"),
+        ):
+            with self.subTest(case=name):
+                self.assertTrue(saving and opportunity)
+                self.assertIn(decision, ("split consecutive tasks", "combine sequentially"))
+        self.assertIn("not force diversity or a split", TEXT)
+        self.assertIn("commits each task separately", TEXT)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

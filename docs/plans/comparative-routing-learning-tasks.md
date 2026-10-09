@@ -33,7 +33,7 @@ consumers. No prototype/cleanup producer needed: no new runtime algorithm; retai
 and reproducible outcomes through final review. Failed/unrun REQUIRED proof blocks reliance;
 material source/acceptance changes return to planner review/renewed approval.
 
-- [ ] T001 — Make routing genuinely comparative within the existing rubric
+- [x] T001 — Make routing genuinely comparative within the existing rubric
   - **Depends**: none
 
 - **Outcome/source:** A1–A2, routing portion of A6; concise comparison replaces suitability-only rationales.
