@@ -425,20 +425,12 @@ def check_contracts(texts):
         errors.append("coordination-checkpoint: checkpoint must be inside execution before review")
         checkpoint = ""
     require("coordination-checkpoint", checkpoint,
-            "At each task/attempt checkpoint", "failed, blocked or partial work and manual/user",
-            "task/type, areas/tags", "exact selected and observed profile", "binding plus effort or unknown",
-            "contract strength, first/final outcome", "diagnosis, repair/escalation",
-            "item check/checkpoint references", "individual check results, reviewer findings",
-            "accepted, partial, escalated", "`model_capability`", "`planning_or_spec_gap`",
-            "`verification_contract_gap`", "`batching_error`", "`environment_or_tooling`",
-            "`external_dependency`", "`unknown`", "Non-model causes never count as capability failure",
-            "weak or invalidated successes", "An unknown observation is never overwritten by selection",
-            "Unknown is not success",
-            "reuse on resume, never overwrite another run", "sole evidence file for each new run",
-            "before refreshing its index row after every evidence", "no duplicate rows",
-            "reconcile interrupted summary/index updates", "retaining prior attempts",
-            "never grants permission to mutate guidelines", "initialized project-local store",
-            "Evidence-write failures stop", "never a no-write fallback")
+            "[factual evidence lifecycle](../memory-handling/references/project-coordination.md#separate-factual-evidence)",
+            "At each task/attempt checkpoint", "ordinary rows terse", "run-wide assessment once",
+            "meaningful failed/partial/blocked attempts", "preserving original uncertainty",
+            "coordinator references returned", "same\nSUMMARY then its one compact index row",
+            "reconcile interrupted persistence", "Evidence-write failures stop",
+            "no guideline mutation authority")
     capability = section(c, "## Select Execution Capability")
     require("coordination-routing", capability,
             "usable owner-selected", "independent family/effort rationales",
@@ -459,24 +451,12 @@ def check_contracts(texts):
         reflection = ""
     require("coordination-reflection", reflection,
             "After implementation/verification and fresh independent review, or at a blocked pause",
-            "nine reflection questions", "project-specific versus general",
-            "reusable versus incidental", "reinforcement; contradiction",
-            "guideline support versus evidence-only", "delegation lessons; manual validation",
-            "surprises needing qualification/more evidence", "insufficient and conflicting",
-            "index-first and\nrelevant-only", "same run `SUMMARY.md`",
-            "Older runs with `REFLECTION.md` remain", "add/refine/supersede/remove",
-            "supporting/contradicting pointers", "no update proposed",
-            "not a universal ban or permanent routing rule")
+            "[reflection and exact approval lifecycle](../memory-handling/references/project-coordination.md#conservative-reflection)",
+            "covered/candidate/incidental", "not routine batch transitions", "same run SUMMARY")
     require("coordination-approval", reflection,
-            "executive brief and exact candidate diff", "existing `ask_user`",
-            "accept, edit, reject, or add", "approval is not guideline approval",
-            "Explicit accepted/edited/added resulting content", "comparable baseline/proposed content evidence",
-            "Pending, unavailable, cancelled or ambiguous answers leave guidelines unchanged",
-            "Rejection leaves guideline bytes identical", "rejection disposition",
-            "Immediately before applying only approved changes, re-read",
-            "compare with the approved baseline: concurrent drift stops application",
-            "renewed review/approval", "Re-check relevant guidance after",
-            "Report implementation/feature acceptance separately")
+            "exact accept/edit/add approval", "rejection/cancellation byte", "immediate baseline drift stop",
+            "re-read after approved writes", "implementation\napproval grants no guideline authority",
+            "feature acceptance separately", "independent final review")
     q = texts.get("coordination", "")
     if not q:
         errors.append("coordination-reference: required shared carrier missing or empty")
@@ -518,16 +498,18 @@ def check_contracts(texts):
             "initialized\nproject-local store", "never replace it", "If an evidence write\nfails",
             "exact selected and observed profile", "unknown observation is never overwritten",
             "contract strength, first/final outcome", "item check/checkpoint references",
-            "accepted, partial, escalated and blocked", "failed, blocked and partial",
-            "unknown outcomes are explicitly unknown",
+            "escalated and blocked attempts", "individual check results, reviewer findings", "failed, blocked and partial",
+            "Unknown is not success", "corrections link original proof",
             "sensitive payloads", "run record before its index entry", "Every new evidence write refreshes",
             "Keep one row per run", "Reconcile an\ninterrupted record/index update on resume")
     require("coordination-synthesis", section(q, "## Conservative reflection"),
-            "independent review", "evidence-only", "insufficient evidence and conflicting",
+            "independent review", "**Covered:**", "**Candidate:**", "**Incidental:**",
+            "name the existing rule", "narrower helper/fixture gap", "non-model process lesson",
+            "Model-specific claims need causal support", "evidence-only", "insufficient evidence and conflicting",
             "without numerical confidence", "One failure", "never a universal",
             "supporting\nand contradicting pointers", "no update proposed", "never automatic mutation")
     require("coordination-exact-write", section(q, "## Exact guideline approval"),
-            "executive brief and exact candidate diff before", "accept, edit, reject, or add",
+            "executive brief and exact candidate diff before", "existing `ask_user` gate", "accept, edit, reject, or add",
             "Implementation approval grants no guideline", "comparable baseline/proposed",
             "resulting content must be explicitly approved", "Pending, unavailable, cancelled or ambiguous",
             "Rejection leaves guidelines byte-identical", "re-read\n`GUIDELINES.md`",
@@ -558,6 +540,13 @@ def check_contracts(texts):
             "strict requirement versus a default preference")
     require("routing-tradeoff", section(c, "## Build the Execution Graph"),
             "startup/context savings against losing a smaller-profile opportunity", "not force diversity or a split")
+    require("coordination-compact", section(q, "## Separate factual evidence"),
+            "Ordinary successful checkpoint rows", "run-wide assessment, routing and", "not attempt chronology",
+            "corrections link original proof", "never erase or retroactively infer observations")
+    for key, heading in (("planner", "## Selected production and stage handoffs"),
+                         ("tiny", "## Inputs and preflight"),
+                         ("tasks", "## Preconditions and adapters"), ("helper", "## Preflight")):
+        require("coordination-decision-" + key, section(texts[key], heading), "relevant decision")
     # Bounded checks of changed instruction carriers, not a production audit/router.
     for label, key, heading, clauses in VERIFICATION_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
@@ -686,8 +675,6 @@ VERIFICATION_CARRIERS = (
       "Same-profile targeted repair remains appropriate when sufficient",
       "current implementation SHA/state", "same original contracts", "Clean retry is exceptional",
       "safe repository", "ownership and required owner/project gates")),
-    ("verification-feedback", "coordinator", "### Coordination evidence checkpoint",
-     ("batch/task item dispositions and proof references", "exact escalation reason", "next selected")),
     ("verification-feedback-owner", "coordination", "## Separate factual evidence",
      ("batch/task item dispositions and proof references", "exact escalation", "next selected profile or pending selection")),
 )
@@ -708,7 +695,7 @@ def load_texts(root=ROOT):
         destinations = re.findall(r"\[early risk reduction\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != risk_path.resolve():
             raise ValueError(f"risk-reference: {key} shared link missing/unresolvable or wrong owner")
-    for key in ("memory", "planner", "tiny", "tasks", "coordinator"):
+    for key in ("memory", "planner", "tiny", "tasks", "coordinator", "helper"):
         destinations = re.findall(r"\[project coordination contract\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != coordination_path.resolve():
             raise ValueError(f"coordination-reference: {key} shared link missing/unresolvable or wrong owner")

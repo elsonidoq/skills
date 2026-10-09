@@ -27,7 +27,8 @@ during initial understanding; empty guidelines invent no knowledge, not a nonper
 Initialization/commit failures stop; required gotcha-memory stops remain distinct.
 Carry exact applicable constraints and evidence references from source/handoff into task
 dependencies, delegation briefs, checkpoints and REQUIRED verification/acceptance. Do not
-treat a memory summary as downstream application or override source/owner authority.
+treat a memory summary as downstream application or override source/owner authority. Verify
+a relevant decision reaches the dependency/check and coordinator brief, not merely a link.
 No default index/history intake; justified clarification uses index-first relevant-only
 retrieval, retaining uncertainty on no match.
 Optional `residual_reasoning: low|medium|high` with a brief rationale fits existing notes;

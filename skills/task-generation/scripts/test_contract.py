@@ -26,6 +26,13 @@ class TaskGenerationContractTests(unittest.TestCase):
         self.assertIsNone(ordinary["manual"])
         self.assertIn("Both adapters", contract)
 
+    def test_guidance_changes_dependency_check_and_brief_in_both_adapters(self):
+        preflight = TEXT.split("## Preconditions and adapters", 1)[1].split("## Task contract", 1)[0]
+        for clause in ("including direct entry without planner", "relevant decision",
+                       "dependency/check and coordinator brief", "not merely a link"):
+            self.assertIn(clause, preflight)
+            self.assertNotIn(clause, preflight.replace(clause, "REMOVED", 1))
+
     def test_direct_and_speckit_adapters(self):
         self.assertIn("SpecKit adapter", TEXT)
         self.assertIn("direct adapter", TEXT)

@@ -264,7 +264,8 @@ and outstanding validation; never automatically defer or fabricate evidence.
 Carry exact applicable coordination guideline constraints and evidence references into
 both TinySpec and Standard stage briefs: source observables/acceptance, producer/consumer
 boundaries, task dependencies, checkpoints, verification and coordinator handoff. Verify
-these constraints reach tasks through the shared adapter, not just a memory summary.
+these constraints reach tasks through the shared adapter, not just a memory summary. Check that
+approved applicable guidance changes a relevant decision (or explain existing coverage), not merely a link.
 Memory cannot override source requirements or owner authority. Preselection stays read-only
 except bounded coordination-store initialization/commit and factual evidence/index/reflection
 persistence for all runs, including blocked preselection;

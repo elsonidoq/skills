@@ -690,10 +690,11 @@ class SimulatedFeedbackTests(unittest.TestCase):
     def test_feedback_instruction_carriers(self):
         memory = " ".join(COORDINATION_PATH.read_text().split())
         coordinator = " ".join(TEXT.split())
-        for text in (memory, coordinator):
+        self.assertIn("[factual evidence lifecycle]", coordinator)
+        for text in (memory,):
             for phrase in (
                 "exact selected and observed profile", "contract strength", "first/final outcome",
-                "accepted, partial, escalated and blocked", "model_capability",
+                "escalated and blocked attempts", "model_capability",
                 "planning_or_spec_gap", "verification_contract_gap", "batching_error",
                 "environment_or_tooling", "external_dependency", "unknown",
                 "Non-model causes never count as capability failure",

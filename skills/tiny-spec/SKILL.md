@@ -26,7 +26,8 @@ initial understanding, not index/history by default. Empty guidelines invent no 
 initialization/commit failures stop, separately from required gotcha-memory stops.
 Carry exact applicable constraints and evidence references into source observables,
 producer/consumer boundaries, checkpoints and acceptance/verification, then return them
-for tasking. Guidance never overrides source or owner authority. Justified historical
+for tasking. Check the relevant decision against approved guidance, not merely its presence
+in a link. Guidance never overrides source or owner authority. Justified historical
 clarification uses index-first relevant-only retrieval and retains uncertainty on no match.
 
 Use the owner's established source format where it is complete. Link authoritative

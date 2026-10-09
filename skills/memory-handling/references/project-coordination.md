@@ -49,6 +49,8 @@ and evidence references into either selected source route, task decomposition/de
 checkpoints, verification and coordinator briefs. Direct/standalone consumers discover
 through this same boundary; they must not assume planner invocation. Guidance informs
 owner choice and source observables, never overrides owner authority or source requirements.
+Verify application to a relevant decision through source criterion → task dependency/check →
+brief, not merely a memory link. Pending/rejected/drifted candidates are not approved guidance.
 
 Each compact guideline contains a scope/trigger, short actionable statement, qualitative
 status (`tentative`, `repeated`, `stable` or `owner-supplied`) and evidence pointers where
@@ -116,18 +118,23 @@ index writes. The coordinator records audited outcomes and meaningful exceptions
 worker evidence rather than duplicating routine events or its task ledger. Internal worker task/
 evidence checkpoints remain uninterrupted and independently audited on return.
 
-At task/attempt checkpoints, record task ID/type, areas/tags, residual reasoning when
-assessed, selected capability role, exact selected and observed profile (binding plus
-reasoning effort, or unknown observation), assessment factors, applicable approved guidance
-or none, contract strength, first/final outcome, diagnosis, repair/escalation and bounded
-item check/checkpoint references. Retain accepted, partial, escalated and blocked attempts,
-individual attempt/check results, reviewer findings, surprises and manual/user validation;
-unknown observation is never overwritten by the requested/selected profile.
-Include failed, blocked and partial work; unknown outcomes are explicitly unknown,
-not inferred successes. Link bounded check/review evidence; do not copy raw logs,
-credentials, tokens, personal data, secrets or sensitive payloads. Retain batch/task item dispositions and proof references, exact escalation
-reason and next selected profile or pending selection, first/final selected versus observed
-attempts, reused and invalidated items in the same SUMMARY/index; preserve original unknowns.
+Ordinary successful checkpoint rows contain task/item result, bounded proof pointer and
+baseline/result/evidence commit references. Link the run-wide assessment, routing and
+limitations once rather than repeating them per task. The index is discoverability only:
+one short run row (tags/pattern, concise outcome, summary link), not attempt chronology.
+
+Expand meaningful failed, blocked and partial attempts or contested exceptions enough to
+retain task/type, areas/tags, selected role, exact selected and observed profile (binding plus
+effort or unknown), original assessment/guidance, contract strength, first/final outcome,
+diagnosis, correction/repair and item check/checkpoint references. Retain accepted, partial,
+escalated and blocked attempts, individual check results, reviewer findings and manual/user
+validation where material. Unknown is not success; unknown observation is never overwritten
+by selection. Include batch/task item dispositions and proof references, exact escalation
+reason and next selected profile or pending selection, reused and invalidated items;
+corrections link original proof, never erase or retroactively infer observations.
+Keep failed, blocked and partial work attributable without duplicating authoritative logs,
+approvals or task contracts. Link bounded proof; never copy credentials, tokens, personal
+data, secrets or sensitive payloads.
 
 Create/update the run record before its index entry. Every new evidence write refreshes
 that run's compact row: linked summary, date, areas/tags, relevant patterns and concise
@@ -175,19 +182,19 @@ baseline drift checks below; raw attempt outcomes never automatically become gui
 ## Conservative reflection
 
 After implementation/verification and independent review, or when pausing with a blocker,
-ask whether the observation is:
+reflect once at terminal closeout or a genuine blocked pause, not routine batch transitions.
+Choose an actionable disposition for each meaningful observation:
 
-1. Useful to future planning?
-2. Project-specific versus general?
-3. Reusable versus incidental?
-4. Reinforcing existing guidance?
-5. Contradicting existing guidance?
-6. Supported enough for guidance or evidence-only?
-7. Informative about delegation?
-8. A manual-validation discovery automated checks missed?
-9. A surprising outcome requiring qualification or more evidence?
+- **Covered:** name the existing rule and explain its relevant coverage, including a missed
+  application. Refine only for an evidenced reusable gap. A covered cleanup rule does not
+  make a narrower helper/fixture gap incidental automatically.
+- **Candidate:** propose scoped reusable planning, scope, sequencing, fixture, tooling,
+  verification, cleanup or delegation guidance with support, contrary evidence and qualitative
+  uncertainty. A non-model process lesson does not require model-incapability proof.
+  Model-specific claims need causal support; one outcome alone is not that support.
+- **Incidental:** briefly explain why no reusable lesson follows; record `no update proposed`.
 
-Append attributable observations and concise candidates (or `no update proposed`) in the
+Append attributable observations and dispositions/candidates in the
 run's `SUMMARY.md`, then refresh the index separately. Older runs may retain separate task
 and `REFLECTION.md` files. Distinguish direct observation, tentative
 pattern, repeated pattern, stable guideline, insufficient evidence and conflicting
@@ -197,8 +204,8 @@ tentative caution, never a universal class/subsystem ban or permanent one-outcom
 
 Propose add/refine/supersede/remove changes with scope, qualitative status, supporting
 and contradicting pointers, plus evidence-only items. General lessons stay out unless
-explicitly project-scoped; global skill improvement is separately approved work. If no
-reusable lesson exists, record `no update proposed`. Synthesis is never automatic mutation.
+explicitly project-scoped; global skill improvement is separately approved work. Synthesis is
+never automatic mutation.
 
 ## Exact guideline approval
 

@@ -44,7 +44,7 @@ material source/acceptance changes return to planner review/renewed approval.
 - **REQUIRED T001/V3:** `PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_batching_contract.py`, `python3 scripts/check-planner-workflow.py`, `python3 scripts/test-planner-workflow.py`, `python3 skills/planning-brainstorming/scripts/test_contract.py` pass, using PYTHONDONTWRITEBYTECODE for all. Preserve safety assertions; demonstrate focused pre-change failure and post-change pass for the changed comparative seam. Inspect actual task diff/owned paths and `git diff --check`; record focused commit and evidence checkpoint.
 - **Effort:** existing harness and bounded examples, not live support probes or a benchmarking system.
 
-- [ ] T002 — Compact evidence and turn reflection into actionable approved learning
+- [x] T002 — Compact evidence and turn reflection into actionable approved learning
   - **Depends**: T001
 
 - **Outcome/source:** A3–A5 and memory/integration A6; shared owner replaces repeated lists.

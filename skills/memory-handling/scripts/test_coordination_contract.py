@@ -60,50 +60,45 @@ class CoordinationContractTests(unittest.TestCase):
 
     def test_A3_A4_A5_factual_checkpoint_and_index_removals(self):
         for clause in (
-            "failed, blocked or partial work and manual/user", "exact selected and observed profile",
-            "individual check results, reviewer findings", "Unknown is not success",
-            "reuse on resume, never overwrite another run", "sole evidence file for each new run",
-            "before refreshing its index row after every evidence", "no duplicate rows",
-            "reconcile interrupted summary/index updates", "retaining prior attempts", "never a no-write fallback",
+            "At each task/attempt checkpoint", "ordinary rows terse", "run-wide assessment once",
+            "meaningful failed/partial/blocked attempts", "preserving original uncertainty",
+            "same\nSUMMARY then its one compact index row", "reconcile interrupted persistence",
+            "Evidence-write failures stop", "no guideline mutation authority",
         ):
-            with self.subTest(clause=clause):
-                self.assert_rejected("coordinator", "### Coordination evidence checkpoint", clause, "coordination-checkpoint")
-        for clause in ("Evidence is factual and append-oriented:", "run record before its index entry", "Keep one row per run", "sensitive payloads"):
+            self.assert_rejected("coordinator", "### Coordination evidence checkpoint", clause, "coordination-checkpoint")
+        for clause in ("Evidence is factual and append-oriented:", "run record before its index entry",
+                       "Keep one row per run", "sensitive payloads", "exact selected and observed profile",
+                       "unknown observation is never overwritten", "contract strength, first/final outcome",
+                       "individual check results, reviewer findings", "Unknown is not success"):
             self.assert_rejected("coordination", "## Separate factual evidence", clause, "coordination-evidence")
 
     def test_item_disposition_and_escalation_removals(self):
-        for key, heading, clause, label in (
-            ("coordinator", "### Coordination evidence checkpoint", "batch/task item dispositions and proof references", "verification-feedback"),
-            ("coordinator", "### Coordination evidence checkpoint", "exact escalation reason", "verification-feedback"),
-            ("coordination", "## Separate factual evidence", "batch/task item dispositions and proof references", "verification-feedback-owner"),
-            ("coordination", "## Separate factual evidence", "next selected profile or pending selection", "verification-feedback-owner"),
-        ):
-            self.assert_rejected(key, heading, clause, label)
+        for clause in ("batch/task item dispositions and proof references", "exact escalation",
+                       "next selected profile or pending selection"):
+            self.assert_rejected("coordination", "## Separate factual evidence", clause, "verification-feedback-owner")
 
     def test_A6_reflection_uncertainty_and_no_update_removals(self):
-        for clause in (
-            "nine reflection questions", "project-specific versus general", "reusable versus incidental",
-            "reinforcement; contradiction", "guideline support versus evidence-only", "delegation lessons; manual validation",
-            "surprises needing qualification/more evidence", "insufficient and conflicting", "same run `SUMMARY.md`",
-            "Older runs with `REFLECTION.md` remain", "supporting/contradicting pointers",
-            "no update proposed", "not a universal ban or permanent routing rule",
-        ):
-            with self.subTest(clause=clause):
-                self.assert_rejected("coordinator", "## Coordination reflection and guideline approval", clause, "coordination-reflection")
+        for clause in ("**Covered:**", "**Candidate:**", "**Incidental:**", "name the existing rule",
+                       "narrower helper/fixture gap", "non-model process lesson",
+                       "Model-specific claims need causal support", "insufficient evidence and conflicting",
+                       "no update proposed", "never a universal", "supporting\nand contradicting pointers"):
+            self.assert_rejected("coordination", "## Conservative reflection", clause, "coordination-synthesis")
+        for clause in ("covered/candidate/incidental", "not routine batch transitions", "same run SUMMARY"):
+            self.assert_rejected("coordinator", "## Coordination reflection and guideline approval", clause, "coordination-reflection")
 
     def test_A7_A8_A9_exact_approval_rejection_and_drift_removals(self):
         for clause in (
-            "executive brief and exact candidate diff", "existing `ask_user`", "accept, edit, reject, or add",
-            "approval is not guideline approval", "Explicit accepted/edited/added resulting content",
-            "comparable baseline/proposed content evidence", "Pending, unavailable, cancelled or ambiguous answers leave guidelines unchanged",
-            "Rejection leaves guideline bytes identical", "rejection disposition",
-            "Immediately before applying only approved changes, re-read",
-            "compare with the approved baseline: concurrent drift stops application", "renewed review/approval",
-            "Re-check relevant guidance after", "Report implementation/feature acceptance separately",
+            "executive brief and exact candidate diff before", "existing `ask_user` gate", "accept, edit, reject, or add",
+            "Implementation approval grants no guideline", "comparable baseline/proposed",
+            "resulting content must be explicitly approved", "Pending, unavailable, cancelled or ambiguous",
+            "Rejection leaves guidelines byte-identical", "re-read\n`GUIDELINES.md`",
+            "compare with the approved baseline", "drift stops", "renewed review/approval",
+            "Re-check", "acceptance separately",
         ):
-            with self.subTest(clause=clause):
-                self.assert_rejected("coordinator", "## Coordination reflection and guideline approval", clause, "coordination-approval")
-        self.assert_rejected("coordination", "## Exact guideline approval", "resulting content must be explicitly approved", "coordination-exact-write")
+            self.assert_rejected("coordination", "## Exact guideline approval", clause, "coordination-exact-write")
+        for clause in ("exact accept/edit/add approval", "rejection/cancellation byte", "immediate baseline drift stop",
+                       "re-read after approved writes", "implementation\napproval grants no guideline authority"):
+            self.assert_rejected("coordinator", "## Coordination reflection and guideline approval", clause, "coordination-approval")
 
     def test_A10_selective_index_first_and_no_match_removals(self):
         for clause in (
@@ -163,7 +158,7 @@ class CoordinationContractTests(unittest.TestCase):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text((ROOT / path).read_text())
             checker.load_texts(root)
-            for key in ("memory", "planner", "tiny", "tasks", "coordinator"):
+            for key in ("memory", "planner", "tiny", "tasks", "coordinator", "helper"):
                 with self.subTest(consumer=key):
                     p = root / checker.PATHS[key]
                     original = p.read_text()
@@ -431,6 +426,122 @@ class SimulatedFilesystemExamples(unittest.TestCase):
             knowledge = "unknown — no relevant evidence"
         self.assertEqual(reads, [self.index])
         self.assertIn("unknown", knowledge)
+
+
+    def test_compact_multicheckpoint_and_attributable_exception_mutations(self):
+        # A bounded sample oracle, not a production schema or size/row quota.
+        assessment = "Run assessment: bounded tooling; approval oracle; selected fictional-A/medium; observed unknown\n"
+        limits = "Limits: offline fixtures, no model-obedience proof\n"
+        rows = ["| T001/V1 | PASS | output-a | base -> task-a -> evidence-a | run assessment |\n",
+                "| T002/V1 | PASS | output-b | evidence-a -> task-b -> evidence-b | run assessment |\n",
+                "| T003/V1 | PASS | output-c | evidence-b -> task-c -> evidence-c | run assessment |\n"]
+        exceptions = (
+            "Attempt failed: selected fictional-A/medium; observed unknown; proof fail-a; diagnosis verification_contract_gap\n"
+            "Attempt partial: selected fictional-A/medium; observed unknown; proof partial-b; diagnosis external_dependency; manual gate pending\n"
+            "Correction: fixture boundary added; invalidated T002/V1; proof rerun-b; prior fail-a retained\n")
+        sample = assessment + limits + "".join(rows) + exceptions
+        self.summary.write_text(sample)
+        self.index.write_text("# Simulated index\n" + self.row.replace("manual checkpoint", "fixture boundary; attributable repair"))
+        def inspect(summary, index):
+            errors = []
+            if summary.count(assessment) != 1 or summary.count(limits) != 1:
+                errors.append("duplicated run facts")
+            if any(row not in summary for row in rows):
+                errors.append("ordinary proof lost")
+            if any(line not in summary for line in exceptions.splitlines()):
+                errors.append("attempt erased or observation inferred")
+            if index.count("](simulated-2026-01-01-heuristic/SUMMARY.md)") != 1 or "Attempt " in index:
+                errors.append("index chronology/duplication")
+            return errors
+        self.assertEqual(inspect(self.summary.read_text(), self.index.read_text()), [])
+        for changed_summary, changed_index, expected in (
+            (sample + assessment, self.index.read_text(), "duplicated run facts"),
+            (sample + limits, self.index.read_text(), "duplicated run facts"),
+            (sample.replace(exceptions.splitlines()[0], ""), self.index.read_text(), "attempt erased or observation inferred"),
+            (sample.replace("observed unknown", "observed fictional-A/medium"), self.index.read_text(), "attempt erased or observation inferred"),
+            (sample, self.index.read_text() + exceptions, "index chronology/duplication"),
+            (sample, self.index.read_text() + self.row, "index chronology/duplication"),
+        ):
+            self.assertIn(expected, inspect(changed_summary, changed_index))
+
+    def test_process_reflection_exact_proposal_and_future_same_store_decision(self):
+        # Manually translated synthetic lesson: no model-causality claim or learner.
+        rule = "cleanup waits for all consumers and production validation"
+        candidate = ("- Scope: shared fixture cleanup; tentative: add a consumer-validation dependency "
+                     "before cleanup and retain the fixture through that check. "
+                     "Evidence: simulated partial-b; contrary: ordinary single-consumer cleanup passed.\n").encode()
+        dispositions = {
+            "covered": "Covered: " + rule + "; missed application requires using the existing rule",
+            "candidate": "Candidate: narrower helper/fixture gap: cleanup task omitted the second consumer check",
+            "incidental": "Incidental: unrelated temporary shell typo corrected; no reusable lesson; no update proposed",
+        }
+        self.reflection.write_text(self.reflection.read_text() + "\n" + "\n".join(dispositions.values()) +
+                                   "\nNon-model planning lesson; model attribution unknown\nExact proposed addition:\n" + candidate.decode())
+        approved = self.baseline + candidate
+        before = {"source": "ordinary cleanup criterion", "task": "cleanup after first consumer",
+                  "brief": "cleanup fixture after first check", "decision": "cleanup after C1"}
+        # Reject/cancel/pending candidates exist only in evidence; later planning reads guidelines.
+        for state in ("pending", "reject", "cancelled", "drifted"):
+            self.guidelines.write_bytes(self.baseline)
+            self.reflection.write_text(self.reflection.read_text() + "\nCandidate disposition: " + state)
+            self.assertNotIn(candidate, self.guidelines.read_bytes())
+            self.assertEqual(self.guidelines.read_bytes(), self.baseline)
+            unapproved_decision = dict(before)  # manually retain original decision: no approved lesson retrieved
+            self.assertEqual(unapproved_decision["decision"], "cleanup after C1")
+        # Exact accept/edit/add and concurrent drift cases are exercised by the existing fixtures.
+        self.reflection.write_text(self.reflection.read_text() + "\nDecision: approve exact resulting content\n" + approved.decode())
+        self.assertEqual(self.guidelines.read_bytes(), self.baseline)  # immediate drift check
+        self.guidelines.write_bytes(approved)
+        read_paths = []
+        original_read = Path.read_bytes
+        def observed_read(path):
+            read_paths.append(path)
+            return original_read(path)
+        def translation_errors(record):
+            return [field for field in ("source", "task", "brief") if "C2" not in record[field]] + (
+                [] if record["decision"] == "sequence C1 -> C2 -> cleanup" else ["decision"])
+        for route in ("TinySpec/direct", "Standard/SpecKit simulated", "standalone task consumer"):
+            with self.subTest(route=route):
+                with mock.patch.object(Path, "read_bytes", new=observed_read):
+                    retrieved = self.guidelines.read_bytes()
+                self.assertIn(candidate, retrieved)
+                # Explicit manual translation into existing source/task/brief fields, not auto application.
+                after = {"source": "cleanup criterion: both C1 and C2 validated before removal",
+                         "task": "cleanup depends on C2; check retained fixture through C2",
+                         "brief": "run C2 before cleanup; use fixture until both checks pass",
+                         "decision": "sequence C1 -> C2 -> cleanup", "guidance": str(self.guidelines)}
+                self.assertNotEqual(after["decision"], before["decision"])
+                for field in ("source", "task", "brief"):
+                    self.assertIn("C2", after[field])
+                self.assertEqual(after["guidance"], str(self.guidelines))
+                self.assertEqual(translation_errors(after), [])
+                for field in ("source", "task", "brief", "decision"):
+                    self.assertIn(field, translation_errors(dict(after, **{field: before[field]})))
+        self.assertEqual(read_paths, [self.guidelines] * 3)
+        self.assertEqual(self.guidelines.read_bytes(), approved)
+
+
+class ActionableLearningTests(unittest.TestCase):
+    def test_three_dispositions_and_consumer_decision_carriers(self):
+        texts = checker.load_texts()
+        owner = checker.section(texts["coordination"], "## Conservative reflection")
+        for clause in ("**Covered:**", "**Candidate:**", "**Incidental:**", "non-model process lesson",
+                       "narrower helper/fixture gap", "Model-specific claims need causal support"):
+            self.assertIn(clause, owner)
+        for key, heading in (("planner", "## Selected production and stage handoffs"),
+                             ("tiny", "## Inputs and preflight"),
+                             ("tasks", "## Preconditions and adapters"),
+                             ("helper", "## Preflight")):
+            self.assertIn("relevant decision", checker.section(texts[key], heading))
+            changed = dict(texts)
+            body = checker.section(changed[key], heading)
+            changed[key] = changed[key].replace(body, body.replace("relevant decision", "REMOVED", 1), 1)
+            self.assertTrue(any(e.startswith("coordination-decision-" + key + ":") for e in checker.check_contracts(changed)))
+        for clause in ("Ordinary successful checkpoint rows", "not attempt chronology",
+                       "never erase or retroactively infer observations"):
+            changed = dict(texts)
+            changed["coordination"] = changed["coordination"].replace(clause, "REMOVED", 1)
+            self.assertTrue(any(e.startswith("coordination-compact:") for e in checker.check_contracts(changed)))
 
 
 if __name__ == "__main__":

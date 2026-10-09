@@ -593,42 +593,15 @@ do not require owner escalation.
 
 ### Coordination evidence checkpoint
 
-At each task/attempt checkpoint, including failed, blocked or partial work and manual/user
-validation, record observed outcomes under the shared contract's associated write bounds.
-The implementer retains every internal task/attempt checkpoint; the coordinator writes only at
-Coordinator write boundaries, referencing returned evidence instead of duplicating its ledger.
-Batch assessment is recorded once in the approved brief/tracker; retain its pointer and expand
-only changed facts or exceptions, not repeated six-factor narratives at every tool/check event.
-Identify task/type, areas/tags, optional `residual_reasoning: low|medium|high` and rationale,
-selected capability role, exact selected and observed profile (binding plus effort or unknown),
-assessment factors and applicable approved guidance or none, contract strength, first/final outcome,
-diagnosis, repair/escalation and item check/checkpoint references. Retain accepted, partial, escalated
-and blocked attempts, individual check results, reviewer findings, surprises and manual findings.
-Use attribution `model_capability`, `planning_or_spec_gap`, `verification_contract_gap`, `batching_error`,
-`environment_or_tooling`, `external_dependency` or `unknown` with concrete diagnostic evidence.
-Non-model causes never count as capability failure; unavailable environments leave required items
-not_verified and acceptance blocked without a model penalty. Complete meaningful first-attempt
-success supports qualified positive feedback; weak or invalidated successes are not strong positive
-guidance. An unknown observation is never overwritten by selection; append later supported observations
-with provenance, preserving original uncertainty and every prior attempt. Unknown is not success.
-Retain batch/task item dispositions and proof references, exact escalation reason and next selected
-profile or pending selection, first/final selected versus observed attempts, reused and invalidated
-items in the same SUMMARY/index. No automatic model penalty or learning follows an outcome.
-Keep bounded evidence links, not raw logs/secrets; distinguish attempts and preserve corrections.
-Relevant approved guidelines may override the seed based on scope/evidence, never owner/source or
-permission gates; selective reflection, exact owner approval and drift checks remain the only
-route to learned guidelines.
-
-Reuse a safe project run ID or retain a unique filesystem-safe date/subject ID in the
-tracker; reuse on resume, never overwrite another run. Persist a compact `SUMMARY.md` as
-the sole evidence file for each new run before refreshing its index row after every evidence
-write; no duplicate rows, separate per-task files or monolithic task narrative. Keep a short
-current disposition, checkpoint/item-result pointers and exceptions; historical separate
-records remain valid. On resume reconcile interrupted summary/index updates before reporting
-successful persistence, retaining prior attempts and observations. Evidence recording
-never grants permission to mutate guidelines. Persist these factual observations in the
-initialized project-local store; handoffs link evidence rather than substitute for it.
-Evidence-write failures stop affected work with the exact blocker, never a no-write fallback.
+At each task/attempt checkpoint apply the shared
+[factual evidence lifecycle](../memory-handling/references/project-coordination.md#separate-factual-evidence).
+Keep ordinary rows terse: task/item result, proof and focused commit references; link the
+approved run-wide assessment once. Expand meaningful failed/partial/blocked attempts under
+that owner, preserving original uncertainty and correction/invalidated proof.
+The implementer writes internal task/evidence checkpoints; the coordinator references returned
+proof at Coordinator write boundaries, never duplicates the worker ledger. Update the same
+SUMMARY then its one compact index row; reconcile interrupted persistence before continuing.
+Evidence-write failures stop affected work; this grants no guideline mutation authority.
 
 ## Review and Acceptance
 
@@ -654,38 +627,13 @@ review gate, with renewed affected approval before dependents proceed.
 ## Coordination reflection and guideline approval
 
 After implementation/verification and fresh independent review, or at a blocked pause,
-reflect once at terminal closeout or that genuine pause, never at routine batch transitions or
-polling/progress events.
-Apply the shared contract's nine reflection questions: usefulness to future planning;
-project-specific versus general; reusable versus incidental; reinforcement; contradiction;
-guideline support versus evidence-only; delegation lessons; manual validation missed by
-automated checks; and surprises needing qualification/more evidence. Distinguish direct
-observation, tentative/repeated pattern, stable guidance, insufficient and conflicting
-evidence without scoring. Select prior evidence only when justified, index-first and
-relevant-only. A single failure is not a universal ban or permanent routing rule.
-
-Append attributable observations and concise candidate add/refine/supersede/remove changes
-with scope, status and supporting/contradicting pointers (or evidence-only items) in the
-same run `SUMMARY.md`; refresh the index separately. Older runs with `REFLECTION.md` remain
-valid. Record `no update proposed` when no reusable lesson exists. General lessons/global skill changes require
-separate approved scope; do not smuggle them into project guidelines.
-
-Before guideline mutation, show an executive brief and exact candidate diff, then use
-existing `ask_user` to allow accept, edit, reject, or add a guideline. Implementation
-approval is not guideline approval. Explicit accepted/edited/added resulting content,
-approved bounds, answer/disposition and comparable baseline/proposed content evidence
-must be persisted in the reflection record under verified write authority; refresh the
-index. Pending, unavailable, cancelled or ambiguous answers leave guidelines unchanged
-and proposals pending. Rejection leaves guideline bytes identical, retaining evidence
-and rejection disposition. Immediately before applying only approved changes, re-read
-guidelines and compare with the approved baseline: concurrent drift stops application
-and requires renewed review/approval, not overwrite. Re-check relevant guidance after
-approved writes. Persist candidates/observations in the initialized project-local store;
-if persistence fails, report the blocker, never replace it with a handoff-only path.
-
-Report implementation/feature acceptance separately from guideline approval that
-is pending or rejected; guideline approval never substitutes for independent
-implementation review or required acceptance checks.
+apply the shared [reflection and exact approval lifecycle](../memory-handling/references/project-coordination.md#conservative-reflection).
+Reflect once at terminal closeout or a genuine blocked pause, not routine batch transitions.
+Record covered/candidate/incidental dispositions in the same run SUMMARY and refresh its index.
+That owner governs candidate scope, exact accept/edit/add approval, rejection/cancellation byte
+preservation, immediate baseline drift stop and re-read after approved writes; implementation
+approval grants no guideline authority. Report feature acceptance separately from guideline
+approval; neither replaces required checks or independent final review.
 
 ## Maintaining this contract
 

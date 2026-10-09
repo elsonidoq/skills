@@ -11,6 +11,12 @@ planner owns architectural decomposition, not implementation or product scope.
 
 ## Preflight
 
+Apply the [project coordination contract](../memory-handling/references/project-coordination.md),
+including standalone entry: initialize missing store files with its notify/commit boundary,
+read approved compact guidelines and translate applicable constraints into plan observables,
+dependencies/checks and handoff. Verify their effect on a relevant decision, not merely a link;
+no default history intake or pending-candidate adoption. Initialization/persistence failures stop.
+
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
 verify it is readable or stop with a missing-install report. Standalone entry applies
 it locally, not an assumption that planner applied it. Planning schedules proofs, not

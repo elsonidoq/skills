@@ -202,10 +202,10 @@ class ProportionateValidationTests(unittest.TestCase):
     def test_batch_profile_feedback_and_diagnosed_repair_carriers(self):
         # Causal replacement coverage for obsolete implementation-class assertions.
         for key, clause, diagnostic in (
-            ("coordinator", "exact selected and observed profile", "coordination-checkpoint"),
-            ("coordinator", "contract strength, first/final outcome", "coordination-checkpoint"),
-            ("coordinator", "Non-model causes never count as capability failure", "coordination-checkpoint"),
-            ("coordinator", "An unknown observation is never overwritten by selection", "coordination-checkpoint"),
+            ("coordination", "exact selected and observed profile", "coordination-evidence"),
+            ("coordination", "contract strength, first/final outcome", "coordination-evidence"),
+            ("coordination", "Non-model causes never count as capability failure", "coordination-profile"),
+            ("coordination", "unknown observation is never overwritten", "coordination-evidence"),
             ("coordinator", "Inspect the failed child run, invocation, partial commits and check evidence", "coordination-routing"),
             ("coordinator", "rerun every invalidated item", "coordination-routing"),
             ("coordinator", "unknown cause stops blind restart", "coordination-routing"),
