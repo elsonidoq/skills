@@ -1,6 +1,7 @@
 # Comparative routing and actionable learning
 
-Disposition: TinySpec source and tasks checkpointed; planner review/combined approval pending.
+Disposition: TinySpec source/tasks planner-reviewed; READY for combined owner approval.
+No implementation or Cerca edits performed.
 Authority: [source](../../../../docs/plans/comparative-routing-learning-tinyspec.md),
 [tasks](../../../../docs/plans/comparative-routing-learning-tasks.md).
 Owner selected TinySpec through ask_user; authorized preparation only. Original request
@@ -25,6 +26,33 @@ or live operation authorized. Exact combined artifact/scope approval remains pen
 | --- | --- | --- |
 | TinySpec source + discovery | 4f532ec → dc3b2c0 | Seven criteria/local links/boundaries PASS; diff/check/owned paths inspected; Cerca untouched |
 | Separate tasks + discovery | eca0936 → 5da56a1 | Order/local links/13 unique REQUIRED items/diff PASS; four tasks, Cerca reset last; no implementation |
+
+## Planner review (TinySpec, owner-selected Sol6.1/medium)
+
+Source SHA256: `f5d89ff5dd4b4bf26628c05e21150213f3a8c07c8c975f61499d92233fbdd568`
+Tasks SHA256: `f03394b8695893dcb229b00d8e59034e14b56f8538ac1f213ef82b3befc6a8a5`
+
+Coverage inspected: A1/A2→T001 comparative routing/batching; A3/A4/A5→T002 compact
+attributed evidence, process proposal, approval safety and future consumption;
+A6→T003 docs/limits/behavioral recipe plus earlier integration; A7→T004 separate
+Cerca policy reset. Four tasks/13 REQUIRED items; backwards dependencies and producer
+proof preserved, no task model assignments. No architecture prototype justified;
+model obedience is non-isolatable and optional live evaluation remains separately gated.
+Exact reset rule is in source; six Cerca memory paths and index only, no settings,
+product rules, active approvals or dirty code/STATE/workflow. These targets currently
+clean, Cerca HEAD9308037; future preflight must recheck concurrent ownership.
+
+Checks: task order/local links/criteria/diff inspection PASS; planner static checker
+PASS; coordination23 and batching47 tests PASS. A local coverage helper initially
+FAILed because it searched for literal A4 despite the A3–A5 range; inspected cause,
+expanded range parser then PASS. Artifact coverage was intact; no criteria weakened.
+These baseline checks validate existing contracts, not the future requested behavior.
+No independent planning review required for TinySpec; fresh independent implementation
+review is required over both repositories' committed ranges after execution.
+
+Approval pending: current source/tasks plus implementation scope, including bounded
+Cerca policy edits/focused commits. Approval starts coordinator preflight; routing and
+usable independent reviewer selection remain separate gates. No planning-only boundary.
 
 Shared limitations: all current validation is inspection/local fixtures, not model
 obedience or comparative performance. Cerca has concurrent active/dirty work; read only
