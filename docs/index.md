@@ -51,6 +51,7 @@ legacy port retain their own documentation and memory boundaries.
 ## Implementation Plans
 
 - [Plans directory index](plans/index.md): Direct plan records and the nested review index.
+- [Planner delegation and complete approval briefs — TinySpec](plans/planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs without added gates; content approval pending.
 - [Mandatory Task Commits — TinySpec](plans/mandatory-task-commits-tinyspec.md): Authoritative pragmatic checkpoint scope and A1–A7 acceptance; no runtime extension gate.
 - [Mandatory Task Commits — Tasks](plans/mandatory-task-commits-tasks.md): Separate dependency-aware task contracts derived from the TinySpec.
 - [Mandatory Task Commits — Planning Review](plans/reviews/mandatory-task-commits-planning-review.md): Exact source/task approval identities and owner authorization.
