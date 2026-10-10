@@ -278,3 +278,30 @@ Same selected Sol/medium per parent; observed provider/effort limits unchanged. 
 delegation, installs or push. No material refresh blocker; existing planner review/combined approval
 pending and implementation unauthorized. Reflection covered by owner/source-authority and bounded
 task-generation/checkpoint rules; no guideline update proposed.
+
+## B01 / T001 — Operational carriers
+
+Baseline `60fd336a9b152df1410c2a067bbf7cf17e2c4939`; task commit
+`95018ea` (six owned files: planner SKILL/approval recovery, helper, tiny-spec,
+task-generation and compatible checker assertions). Parent-owned `STATE.md` is known dirty,
+excluded from edits/index/commits. No other ownership drift. Selected exact profile remains
+`openai-codex/gpt-6.1-sol:medium`; runtime provider/effort not independently observable.
+Before-change scratch `/tmp/planner-delegation-before.log` records A1/A2/A3/A7 FAIL;
+assertion exited 1 on legacy cap (expected disproof, not tool failure to retry).
+
+| REQUIRED item | Outcome | Bounded proof |
+| --- | --- | --- |
+| T001/V1 | pass | Planner TinySpec Source/Tasks each say “separate fresh … bounded-context … producer”; Review says “Delegate every source/task correction”. Standard spec/plan/tasks each delegate separately and stop missing/unusable/unauthorized delegation; overall review delegates mechanical/upstream repairs while independent reviewer never becomes producer. Approval Transition section covers legacy corrections; managed helper says “manager never authors or repairs artifacts” and stops without managed fallback. Shared handoff prohibits parent authoring, full transcripts and inline/local fallback; suitable originating correction context otherwise fresh bounded delegate. |
+| T001/V2 | pass | Approval Executive brief: “concrete included scope”, “Every actual ordered plan stage separately”, “Every actual task ID separately” and “No universal total-bullet cap”; current-artifact renewals before ask_user. Transition table unchanged: TinySpec combined only, Standard spec then overall, no invented TinySpec plan/tasks at spec-only gate. Static checker PASS `/tmp/planner-T001-check.log`. |
+| T001/V3 | pass | Actual diff `/tmp/planner-T001.diff`: Discovery and TinySpec/Standard source stages now apply quality guidance for specification creation only and capture complete behavior/approach/constraints/observable acceptance. TinySpec Compact source applies linked guidance. Plan/helper and both actual task adapters use source requirements truth, plan derived sequencing only, no direct SDD forwarding/rereading, while actor governance/memory/safety remain. Source A1/A2→creation/correction spans; A3→brief; A5→unchanged gate/profile/one-plan/renewal/commit and create-only independent-review spans; A7→source producers and consumer inputs. Changed shared/distributed file/heading targets PASS (22); diff whitespace PASS. |
+
+Manual route/correction/stops and authority table comparison PASS within local instruction
+bounds: before direct Standard pass/mechanical parent repair/capped brief/general SDD input;
+after delegated separate artifact passes/delegated corrections/content-first brief/source-only
+quality input. Exact runtime-resolved Sol/medium entire one-pass review/fix→one plan→review/fix,
+selected-vs-observed, tools/support/settings/failure/permission stops, owner dialogue and
+preparation/evidence commit authority preserved. Standalone helper local policy unchanged.
+Diagnostic suite ran 99 tests: 3 legacy cap-assertion failures, expected interim incompatibility
+owned by T002 (`/tmp/planner-T001-tests.log`), NOT integrated green. Live/provider/real-SpecKit,
+model obedience/context savings NOT RUN/NOT VERIFIED. Task diff inspected before focused commit;
+no task-owned dirt remained before this separate summary/index checkpoint. No guideline changes.
