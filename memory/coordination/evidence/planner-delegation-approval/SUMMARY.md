@@ -2,9 +2,10 @@
 
 ## Current disposition
 
-Source authority correction S2 retained; separate tasks require delegated refresh against
-current A1–A7/source digest before review/current-content combined approval. Implementation
-remains blocked. Task refresh may now proceed from the corrected authoritative source. Owner selected TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
+Source authority correction S2 and separate task refresh P4 complete against current A1–A7.
+Source-first hold resolved; parent planner review/current-content combined approval remain pending.
+Implementation remains blocked until existing approval/authorization. Owner selected
+TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
 source/task delegates, as supplied in their parent briefs. Source worker produced only TinySpec
 and discovery links; subsequent task worker produced only separate tasks/discovery and this
 bounded evidence update. Neither implemented operational changes or conducted owner dialogue.
@@ -16,23 +17,25 @@ Current source SHA-256: `4c621a985a4d3e4652182521cd3ea679a8c504baf7782243ab53a9b
 Scope: separate delegated artifact creation/correction; complete owner-visible scope and every
 applicable ordered stage/task before existing approval gates; preserved routing/safety/gates;
 specification-only quality guidance and downstream specification-as-requirements-truth boundary.
-Tasks still reference old source digest
-`c717cc033154a516e4998933f436b55fa5fc3ff6a6a8ee3e69095ea5865d0700`: stale for current source;
-task refresh/coverage review of A7 pending. Historical checks below retain their original bounds.
+Tasks now reference current source digest and A1–A7; P4 includes manual source-to-task coverage
+and feasible criterion/check/evidence mappings. Historical attempts/checks below retain their
+original bounds and do not imply current-content approval.
 No material decision gap or owner deferral. Planner review/combined approval remain outstanding,
 not an implementation-readiness claim.
 Tasks: [separate tasks](../../../../docs/plans/planner-delegation-approval-tasks.md), T001 contract/checker,
 T002 static/synthetic regression, T003 documentation/integrated acceptance.
-Current restored task SHA-256: `ba0514da3fa216f29e42493f38f581170e5d17d1c8936b6cf8180ab1fc504abd`.
+Current refreshed task SHA-256: `446e42ed6254f6b75cc7560e66644de14fde1ae2e34736c2a7a9a9a018503b14`.
+P1/P3 historical task digest: `ba0514da3fa216f29e42493f38f581170e5d17d1c8936b6cf8180ab1fc504abd`.
 P2 attempted task digest: `9c7dbc778d83a3260a9d7f52d98147a649feab13804e14524ac6f19aa728167b`;
-P2 reviewer request withdrawn by owner; P3 restores P1 content, not approval/readiness.
+P2 reviewer request withdrawn by owner; P4 does not restore its downstream SDD input/edit requirement.
 
 ## Attributable checkpoints
 
 | Item / producer | Baseline | Result | Checks / disposition | Evidence checkpoint |
 | --- | --- | --- | --- | --- |
 | S1 TinySpec / delegated source worker | `308a262d431fdc1e860637bdc48427b1704a2415` | `975adf9bde544d45f5e89b0901fe24094c44ea60` | Source A1–A6, local link targets and both discovery entries PASS; manual scope/gate comparison PASS; diff whitespace PASS | `b029b89e096869b50384cf914a4030bb585e138b` |
-| S2 source authority correction / resumed source worker | `58f43db32bed0f7b1f10f9fde2d95d35ebd1448d` | `c35791ebe616a6fa52228c5150c4f3b78bb2c6f3` | Bounded source diff, A1–A7, authority/gate/link inspection and whitespace PASS; tasks untouched, refresh pending | Distinct commit updating this summary/index; discover via path history, no self-hash |
+| S2 source authority correction / resumed source worker | `58f43db32bed0f7b1f10f9fde2d95d35ebd1448d` | `c35791ebe616a6fa52228c5150c4f3b78bb2c6f3` | Bounded source diff, A1–A7, authority/gate/link inspection and whitespace PASS; tasks untouched at S2, refresh followed in P4 | `716c4c58b6ea1d30446a14ed72e48a758398a5a8` |
+| P4 task refresh / resumed task worker | `716c4c58b6ea1d30446a14ed72e48a758398a5a8` | `f44ce657dbea9e2ea1966ece209c5995cacef7e0` | Order/IDs/dependencies/A1–A7 coverage/links/source digest/diff PASS; three tasks/ten item IDs preserved; source-only quality guidance boundary applied | Distinct evidence-only summary/index update, discover via path history, no self-hash |
 | P1 separate tasks / delegated task worker | `b029b89e096869b50384cf914a4030bb585e138b` | `3072ea3ea0b7778732bd0d8c09ff8b93c97fb2fa` | Three earlier-dependency units; order/fields/item IDs/links/discovery/source digest/diff PASS, manual A1–A6 coverage/gates/feasibility PASS; unchanged checker/99 tests PASS | Distinct evidence-only update to this summary/index; discover via Git path history, no recursive self-hash |
 
 Owned source paths: `docs/plans/planner-delegation-approval-tinyspec.md`,
@@ -185,3 +188,49 @@ restore P2's withdrawn T003 SDD input/update requirement. Parent owns dispatch/r
 approval; no task, skill, code, guide, discovery-link or STATE writes in S2. Selected Sol/medium
 unchanged per parent; actual provider/effort remain unobserved. Reflection: covered by existing
 owner/source-authority and focused checkpoint contracts; no guideline update proposed.
+
+## P4 — Task refresh from corrected authoritative source
+
+Parent source review cleared S2 for delegated refresh; source-first hold resolved. Exact applicable
+parent feedback: “Read revised source A7 as authoritative requirement; do NOT open/use best-practices
+doc itself as task-generation input.” “Keep source quality guidance spec-only, plan/tasks spec-as-truth,
+approved plan derived sequencing.” “Do not restore withdrawn T003 best-practices input/update requirement;
+task generator derives exact constraints from revised spec instead.” Applied in task shared context,
+actual carrier requirements, focused mutation checks and integration; no direct best-practices
+file read or write during P4, no source or operational implementation edits.
+
+All task IDs/outcomes (unchanged headings/dependencies, expanded only within revised source bounds):
+- T001 — Make delegated production/correction and complete approval coverage operational:
+  align mandatory delegated workflow/checker plus actual Discovery/source-stage/TinySpec/Standard
+  quality application and downstream plan/helper/direct/SpecKit task-adapter authority boundaries.
+- T002 — Make the existing static and synthetic oracles sensitive to delegation and all-item briefs:
+  retain full-brief regressions; scoped A7 positives/mutations require source quality application,
+  reject downstream SDD forwarding/rereading/competing truth, preserve governing constraints and tasks.
+- T003 — Align regression/workflow documentation with implemented contracts and verified limits:
+  current docs match committed workflow/tests and A7 authority; A1–A7 integrated comparison,
+  truthful static/live limits and historical preservation, without withdrawn SDD input/edit work.
+
+Checks actually run: Python 3.12.3; skill-directory task-order validator PASS (including final
+content); focused Python comparison PASS for three task headings/dependencies/ten REQUIRED IDs
+preserved, A7 present with evidence at T001/V3,T002/V1,T003/V1,V3, local linked file targets,
+no withdrawn document input and unchanged current source digest; owned task-only diff before
+refresh commit. `git diff --check` and committed diff whitespace PASS; complete refresh diff
+manually inspected including final wording changes. No operational checker/suite or live tests
+rerun; historical baseline results are not new implementation evidence.
+
+Manual A1–A7 criterion/check/evidence coverage PASS: A1/A2 → T001/V1,T002/V1; A3 → T001/V2,T002/V2;
+A4 → T002/V3; A5 → T001/V2–V3,T002/V1,V3–V4; A6 → T002/V4,T003/V1–V2;
+A7 → T001/V3,T002/V1,T003/V1; all A1–A7 → T003/V3 integration. Each item retains objective
+pass/smallest check/evidence/capability gates; local static/manual criteria distinct from excluded
+live checks. Producer → retained fixture consumer → doc/integration and earlier dependencies remain
+feasible; risk-proof omission/retention/disproof renewal unchanged. No new gates/infrastructure,
+implementation profiles, source scope or tasks. Applicable memory still empty, no history intake.
+
+Fresh baseline matched `716c4c58b6ea1d30446a14ed72e48a758398a5a8`, clean `main`; source correction
+and digest verified. Focused task refresh `f44ce657dbea9e2ea1966ece209c5995cacef7e0` inspected;
+worktree/index clean before separate evidence checkpoint. Owned retained paths only task file,
+this SUMMARY and `../INDEX.md`. Current source/task digests above; original attempts preserved.
+Same selected Sol/medium per parent; observed provider/effort limits unchanged. No dialogue,
+delegation, installs or push. No material refresh blocker; existing planner review/combined approval
+pending and implementation unauthorized. Reflection covered by owner/source-authority and bounded
+task-generation/checkpoint rules; no guideline update proposed.
