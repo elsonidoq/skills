@@ -18,7 +18,9 @@ No material decision gap or owner deferral. Planner review/combined approval rem
 not an implementation-readiness claim.
 Tasks: [separate tasks](../../../../docs/plans/planner-delegation-approval-tasks.md), T001 contract/checker,
 T002 static/synthetic regression, T003 documentation/integrated acceptance.
-Task SHA-256: `ba0514da3fa216f29e42493f38f581170e5d17d1c8936b6cf8180ab1fc504abd`.
+Current task SHA-256: `9c7dbc778d83a3260a9d7f52d98147a649feab13804e14524ac6f19aa728167b`.
+Original P1 task digest: `ba0514da3fa216f29e42493f38f581170e5d17d1c8936b6cf8180ab1fc504abd`;
+parent review correction P2 below supersedes it for current-content approval.
 
 ## Attributable checkpoints
 
@@ -92,3 +94,32 @@ before evidence update. Runtime handoff is `/tmp/planner-delegation-tasks-handof
 Task-worker reflection: covered by existing task-generation direct adapter, early-risk-reduction
 and task-commit contracts. Three causal units avoid a new infrastructure/prototype while retaining
 explicit evidence and shared-contract integration. No learned-guideline update proposed.
+
+## P2 — Parent review correction: current shared SDD brief carrier
+
+Parent finding: `docs/best_practices_spec_driven_development.md`, Common Authorization and
+Handoff, still requires “4–6 short bullets BEFORE calling `ask_user`”. This is a current shared
+operational documentation carrier, not historical evidence; omission from T003 contradicted
+source A3/A6 consistency. Disposition: corrected T003 Files/interfaces and REQUIRED T003/V1
+to explicitly compare/align that carrier with content-first complete scope/stage/task coverage,
+while preserving historical evidence. No implementation/document edit, new task/gate or unrelated
+criterion changes. Preparation remains authorized; planner review/combined approval pending.
+
+- Baseline `401676340827b8d375d63177e7b2b3838ea01e11`, supplied task digest matched, index/worktree
+  clean. Task-only correction result `ea866d90b42ef5a6d7c8448dc8f4e222c426a8e6`; evidence checkpoint
+  is the distinct commit updating this summary/index (discover via path history, no self-hash).
+- Selected profile remains parent-supplied `openai-codex/gpt-6.1-sol:medium`; observation limits
+  remain unchanged. Allowed retained writes: task file, this SUMMARY and `../INDEX.md` only.
+- Python 3.12.3 verified; task-order validator from skill directory PASS. Focused Python comparison
+  PASS: all three task headings and ten REQUIRED IDs preserved, T001/T002 byte-identical, SDD
+  carrier appears explicitly in T003 files and T003/V1, T003/V1 maps A3/A6, source digest unchanged,
+  only owned task path changed before correction commit. Manual source-to-task coverage PASS:
+  prior A1–A6 mappings retained, with A3 additionally covered by T003/V1. Dependencies, exclusions,
+  evidence/gates and history-preservation bounds remain unchanged.
+- `git diff --check` PASS; actual two-hunk task correction diff inspected. Focused task commit
+  inspected; clean before evidence writes. Current task digest recorded above. Source remains
+  `c717cc033154a516e4998933f436b55fa5fc3ff6a6a8ee3e69095ea5865d0700`.
+- Operational checker/suite not rerun for this task-contract-only correction; prior unchanged
+  baseline results remain historical. No live/provider/real-SpecKit checks or implementation.
+  Covered reflection: existing current-doc consistency and producing review/correction contracts;
+  no guideline update proposed. This review found a concrete missed carrier, not a new scope.
