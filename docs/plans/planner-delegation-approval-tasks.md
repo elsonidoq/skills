@@ -163,14 +163,18 @@ Independent final implementation review remains an existing requirement, not a n
 - **Outcome**: current user-facing regression guidance documents delegated creation/correction,
   complete current-content briefs and preserved gates, with accurate named offline checks and
   separately authorized live scenarios; integrated source-to-contract-to-test-to-doc evidence exists.
-- **Files/interfaces**: `docs/plans/planner-regression.md`; `REQUIREMENTS.md`, `README.md`,
+- **Files/interfaces**: `docs/plans/planner-regression.md` and the current Common Authorization
+  and Handoff carrier in `docs/best_practices_spec_driven_development.md`; `REQUIREMENTS.md`, `README.md`,
   `docs/index.md` and `docs/plans/index.md` only where inspected current claims/discovery conflict
   (including direct/helper phrasing). Preserve historical reviews/results as historical; never
   rewrite them as if this change had prior live validation. Shared context: T001 contracts,
   T002 actual test names/fixtures/trace input format, source A1–A6 and documentation routing guide.
 - **Acceptance**:
-  - REQUIRED **T003/V1** (A6): compare each changed documentation assertion to committed operational
-    spans and actual named tests. Current instructions/scenarios remove the 4–6 cap and managed
+  - REQUIRED **T003/V1** (A3/A6): compare each changed documentation assertion to committed operational
+    spans and actual named tests, explicitly including Common Authorization and Handoff in
+    `docs/best_practices_spec_driven_development.md`. Align that current carrier's 4–6-short-bullet
+    clause with complete content-first scope/stage/task coverage; preserve historical evidence.
+    Current instructions/scenarios remove the 4–6 cap and managed
     fallback, name all-stage/all-task coverage and delegated correction, preserve standalone and
     gate distinctions, and use actual `scripts/planner-trace.py` commands/contract examples.
     Smallest check: bounded contract/test/doc mapping with quoted spans. Evidence: comparison table
