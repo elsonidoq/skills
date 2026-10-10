@@ -6,7 +6,8 @@ Source authority correction S2 and separate task refresh P4 complete against cur
 Source-first hold resolved; parent review passed and owner approved current source/tasks and
 implementation scope through `ask_user` (answer: “Approve implementation”). Coordinator preflight
 started; owner approved execution routing through `ask_user` (answer: “Approve routing”).
-B01 T001–T003 implementation and offline/manual verification complete; independent final review remains required. Owner selected
+B01 T001–T003 implementation and offline/manual acceptance complete; fresh independent final
+review READY / merge OK, no findings, all ten REQUIRED items independently satisfied. Owner selected
 TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
 source/task delegates, as supplied in their parent briefs. Source worker produced only TinySpec
 and discovery links; subsequent task worker produced only separate tasks/discovery and this
@@ -61,10 +62,10 @@ is authorized fresh independent final review.
 
 ### Execution tracker and REQUIRED union
 
-- [x] **B01 — checked, pending independent acceptance:** T001→T002→T003, fresh delegated worker, selected
+- [x] **B01 — accepted within approved offline/manual scope:** T001→T002→T003, fresh delegated worker, selected
   `openai-codex/gpt-6.1-sol:medium`; selected/observed recorded separately. Internal dependencies
   preserved; no external prerequisite. Coordinator audited all six task/evidence checkpoints.
-- [ ] Fresh independent final review — ready for dispatch; selected
+- [x] Fresh independent final review — READY, no findings; selected
   `openai-codex/gpt-6.1-sol:medium`, read-only, never worker self-review.
 
 Whole B01 REQUIRED union: **T001/V1–V3, T002/V1–V4, T003/V1–V3**. Each item's pass criterion,
@@ -86,6 +87,31 @@ Parent rerun checker PASS, 111 tests PASS (`/tmp/planner-parent-audit.log`), ran
 161-target link output and focused/integration logs exist. Independent review still required;
 live semantics/obedience/context savings NOT VERIFIED. No external dependent released on live
 assumptions. Next review scope is exact `60fd336..f7281e7`, source/tasks/approval and all proof.
+
+## Independent final acceptance and closeout
+
+Fresh read-only reviewer `33442319-d8af-4c99-b3df-a3c2ca9224e8` inspected full committed
+`60fd336..f7281e7`, approved artifacts, actual carriers/oracles/fixtures/docs and item evidence.
+Verdict **READY / merge OK**, no issues/open acceptance questions/fixes. Report:
+`/tmp/planner-delegation-final-review.md`; persisted session/run identity supports provenance.
+Independent **T001/V1–V3, T002/V1–V4, T003/V1–V3: satisfied** at original offline/manual bounds,
+with precise carrier/test references in the report and B01 tables below. Reviewer reran checker,
+111 tests and range whitespace PASS; verified source/task digests and test hashes unchanged,
+six focused task/evidence checkpoints, empty index. Selected exact Sol/medium unchanged;
+observed environment model gpt-6.1-sol, provider/effort independently unknown. Runtime status
+confirmed reviewer complete; no active task or acceptance gate remains for approved work.
+
+Closeout: existing routing/docs owners present; current discovery/regression review status
+aligned with accepted evidence, historical unrelated claims unchanged. No new unresolved bug,
+issue candidate, deployment implication or gotcha; no issue/guideline/memory change proposed.
+Gotcha index rechecked empty, compaction not needed. STATE finished block removed only after
+verified implementation/audit/review; header preserved. `/reload` required in pi.
+Terminal reflection: delegation/input-boundary/brief failures are covered by the now-approved
+operational rules and focused regressions, not a new project routing lesson. Earlier mistaken
+reviewer input and owner withdrawal remain attributable above. No guideline update proposed.
+Live/model obedience, arbitrary-prose semantics, actual context savings and real-SpecKit remain
+NOT RUN / NOT VERIFIED; no deployment or push performed. Acceptance is bounded offline, not
+live planner performance certification.
 
 ## Attributable checkpoints
 
