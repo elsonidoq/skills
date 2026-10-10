@@ -2,8 +2,9 @@
 
 ## Current disposition
 
-Source and separate task preparation complete; planner review/current-content combined approval
-pending. Owner selected TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
+Source and separate tasks retained, but owner correction now requires source-delegate revision
+before task refresh/review/current-content combined approval. Implementation and task-refresh reliance
+are blocked pending the revised authoritative source. Owner selected TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
 source/task delegates, as supplied in their parent briefs. Source worker produced only TinySpec
 and discovery links; subsequent task worker produced only separate tasks/discovery and this
 bounded evidence update. Neither implemented operational changes or conducted owner dialogue.
@@ -18,9 +19,9 @@ No material decision gap or owner deferral. Planner review/combined approval rem
 not an implementation-readiness claim.
 Tasks: [separate tasks](../../../../docs/plans/planner-delegation-approval-tasks.md), T001 contract/checker,
 T002 static/synthetic regression, T003 documentation/integrated acceptance.
-Current task SHA-256: `9c7dbc778d83a3260a9d7f52d98147a649feab13804e14524ac6f19aa728167b`.
-Original P1 task digest: `ba0514da3fa216f29e42493f38f581170e5d17d1c8936b6cf8180ab1fc504abd`;
-parent review correction P2 below supersedes it for current-content approval.
+Current restored task SHA-256: `ba0514da3fa216f29e42493f38f581170e5d17d1c8936b6cf8180ab1fc504abd`.
+P2 attempted task digest: `9c7dbc778d83a3260a9d7f52d98147a649feab13804e14524ac6f19aa728167b`;
+P2 reviewer request withdrawn by owner; P3 restores P1 content, not approval/readiness.
 
 ## Attributable checkpoints
 
@@ -97,6 +98,7 @@ explicit evidence and shared-contract integration. No learned-guideline update p
 
 ## P2 — Parent review correction: current shared SDD brief carrier
 
+Historical attempt; reviewer request and downstream-input disposition withdrawn by owner in P3.
 Parent finding: `docs/best_practices_spec_driven_development.md`, Common Authorization and
 Handoff, still requires “4–6 short bullets BEFORE calling `ask_user`”. This is a current shared
 operational documentation carrier, not historical evidence; omission from T003 contradicted
@@ -123,3 +125,33 @@ criterion changes. Preparation remains authorized; planner review/combined appro
   baseline results remain historical. No live/provider/real-SpecKit checks or implementation.
   Covered reflection: existing current-doc consistency and producing review/correction contracts;
   no guideline update proposed. This review found a concrete missed carrier, not a new scope.
+
+## P3 — Owner withdrawal and source-first hold
+
+Owner correction supersedes P2: `docs/best_practices_spec_driven_development.md` is for specification
+creation ONLY; downstream plan/task creation must use the specification as source of truth, not
+consume best-practices guidance directly. Parent's addition request is withdrawn. Removed only
+P2's just-added T003 file/input and REQUIRED T003/V1 carrier requirement, restoring exact P1 task
+bytes. Preserve P2 commits/evidence as an attempted reviewer correction, not current guidance.
+No SDD/document-maintenance policy invented; any maintenance-versus-input distinction is left
+for source producer/review, not settled by this task worker.
+
+- Baseline `f0943e3b875a35bc9ad794c5b0cf27b014a02afa` (P2 evidence checkpoint), clean.
+  Restoration task result `f0095efd72f6faba536ef8a5ca10f8cc6fb83724`; separate evidence checkpoint
+  is this summary/index update, discoverable by path history. P2 task attempt remains
+  `ea866d90b42ef5a6d7c8448dc8f4e222c426a8e6`; no history rewrite.
+- Checks actually run: task-order validator from skill directory PASS; exact byte comparison with
+  task at `4016763` PASS; withdrawn best-practices input absent PASS; restored task digest and
+  unchanged source digest PASS; `git diff --check` PASS; actual reverse two-hunk diff inspected.
+  Task checkpoint clean before evidence update. No operational suite or live checks rerun.
+- Allowed writes remain task file, this SUMMARY and `../INDEX.md` only. Source and SDD document,
+  discovery, operational workflow and unrelated task criteria untouched; no owner dialogue or
+  further delegation. Three tasks/ten item IDs/dependencies and original source coverage restored.
+- BLOCKED NEXT: source must be revised by source delegate to carry spec-only guidance and downstream
+  specification-as-truth boundary; task refresh waits for that authoritative source. This worker
+  does not resolve TinySpec applicability or invent policy/source changes. Existing combined approval
+  remains pending; no implementation authority. Known-owner restoration is complete and checkpointed.
+
+Reflection: owner/source authority supersedes reviewer assumptions; retained attempted correction
+and explicit withdrawal distinguish historical evidence from applicable instructions. Covered by
+existing producing-review/source-authority contracts; no guideline change proposed.
