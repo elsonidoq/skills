@@ -2,9 +2,9 @@
 
 ## Current disposition
 
-Source and separate tasks retained, but owner correction now requires source-delegate revision
-before task refresh/review/current-content combined approval. Implementation and task-refresh reliance
-are blocked pending the revised authoritative source. Owner selected TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
+Source authority correction S2 retained; separate tasks require delegated refresh against
+current A1–A7/source digest before review/current-content combined approval. Implementation
+remains blocked. Task refresh may now proceed from the corrected authoritative source. Owner selected TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
 source/task delegates, as supplied in their parent briefs. Source worker produced only TinySpec
 and discovery links; subsequent task worker produced only separate tasks/discovery and this
 bounded evidence update. Neither implemented operational changes or conducted owner dialogue.
@@ -12,9 +12,13 @@ Selected is not observed: both workers' `PI_MODEL` reports `gpt-6.1-sol`; actual
 not independently observable here.
 
 Source: [TinySpec](../../../../docs/plans/planner-delegation-approval-tinyspec.md).
-SHA-256: `c717cc033154a516e4998933f436b55fa5fc3ff6a6a8ee3e69095ea5865d0700`.
+Current source SHA-256: `4c621a985a4d3e4652182521cd3ea679a8c504baf7782243ab53a9b957df38e1`.
 Scope: separate delegated artifact creation/correction; complete owner-visible scope and every
-applicable ordered stage/task before existing approval gates; preserved routing/safety/gates.
+applicable ordered stage/task before existing approval gates; preserved routing/safety/gates;
+specification-only quality guidance and downstream specification-as-requirements-truth boundary.
+Tasks still reference old source digest
+`c717cc033154a516e4998933f436b55fa5fc3ff6a6a8ee3e69095ea5865d0700`: stale for current source;
+task refresh/coverage review of A7 pending. Historical checks below retain their original bounds.
 No material decision gap or owner deferral. Planner review/combined approval remain outstanding,
 not an implementation-readiness claim.
 Tasks: [separate tasks](../../../../docs/plans/planner-delegation-approval-tasks.md), T001 contract/checker,
@@ -28,6 +32,7 @@ P2 reviewer request withdrawn by owner; P3 restores P1 content, not approval/rea
 | Item / producer | Baseline | Result | Checks / disposition | Evidence checkpoint |
 | --- | --- | --- | --- | --- |
 | S1 TinySpec / delegated source worker | `308a262d431fdc1e860637bdc48427b1704a2415` | `975adf9bde544d45f5e89b0901fe24094c44ea60` | Source A1–A6, local link targets and both discovery entries PASS; manual scope/gate comparison PASS; diff whitespace PASS | `b029b89e096869b50384cf914a4030bb585e138b` |
+| S2 source authority correction / resumed source worker | `58f43db32bed0f7b1f10f9fde2d95d35ebd1448d` | `c35791ebe616a6fa52228c5150c4f3b78bb2c6f3` | Bounded source diff, A1–A7, authority/gate/link inspection and whitespace PASS; tasks untouched, refresh pending | Distinct commit updating this summary/index; discover via path history, no self-hash |
 | P1 separate tasks / delegated task worker | `b029b89e096869b50384cf914a4030bb585e138b` | `3072ea3ea0b7778732bd0d8c09ff8b93c97fb2fa` | Three earlier-dependency units; order/fields/item IDs/links/discovery/source digest/diff PASS, manual A1–A6 coverage/gates/feasibility PASS; unchanged checker/99 tests PASS | Distinct evidence-only update to this summary/index; discover via Git path history, no recursive self-hash |
 
 Owned source paths: `docs/plans/planner-delegation-approval-tinyspec.md`,
@@ -155,3 +160,28 @@ for source producer/review, not settled by this task worker.
 Reflection: owner/source authority supersedes reviewer assumptions; retained attempted correction
 and explicit withdrawal distinguish historical evidence from applicable instructions. Covered by
 existing producing-review/source-authority contracts; no guideline change proposed.
+
+## S2 — Owner-clarified specification quality and downstream authority
+
+Resumed source worker inspected clean `main` at supplied baseline `58f43db`, with original
+source digest matching. Revised only authoritative TinySpec: explicit scope seams at planner
+discovery/source dispatch, TinySpec producer and task adapters; owner clarification verbatim;
+spec-only SDD quality input; specification contains complete relevant behavior/approach/acceptance;
+plan is derived sequencing input and separate tasks derive requirements from specification.
+A7 adds observable source-quality application and downstream-input exclusion checks while
+preserving actor-governing instructions, memory, operational/safety gates and separate tasks.
+No new decision, approval gate, task input or best-practices document-edit requirement invented.
+
+Actual checks: inline Python PASS for exact A1–A7 IDs, all local linked file targets, bounded
+source-only diff and explicit authority/gate-preservation clauses; manual complete four-hunk diff
+review PASS for scope/approach/acceptance and existing A1–A6 preservation; `git diff --check` PASS.
+Focused source commit `c35791e` succeeded, worktree/index clean before evidence writes. Operational
+checker/99-test suite not rerun for this source-only correction; prior results remain historical,
+not current implementation proof. Live/provider/model-obedience checks NOT RUN.
+
+Source-to-task implication: refresh the stale source digest and add A7 traceability for operational
+producer/consumer boundaries, focused negative carrier checks and integrated acceptance. Do not
+restore P2's withdrawn T003 SDD input/update requirement. Parent owns dispatch/review/combined
+approval; no task, skill, code, guide, discovery-link or STATE writes in S2. Selected Sol/medium
+unchanged per parent; actual provider/effort remain unobserved. Reflection: covered by existing
+owner/source-authority and focused checkpoint contracts; no guideline update proposed.
