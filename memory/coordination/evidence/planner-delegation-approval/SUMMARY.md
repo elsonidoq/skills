@@ -3,8 +3,9 @@
 ## Current disposition
 
 Source authority correction S2 and separate task refresh P4 complete against current A1–A7.
-Source-first hold resolved; parent planner review/current-content combined approval remain pending.
-Implementation remains blocked until existing approval/authorization. Owner selected
+Source-first hold resolved; parent review passed and owner approved current source/tasks and
+implementation scope through `ask_user` (answer: “Approve implementation”). Coordinator preflight
+started; execution routing approval remains required before implementation dispatch. Owner selected
 TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
 source/task delegates, as supplied in their parent briefs. Source worker produced only TinySpec
 and discovery links; subsequent task worker produced only separate tasks/discovery and this
@@ -20,14 +21,40 @@ specification-only quality guidance and downstream specification-as-requirements
 Tasks now reference current source digest and A1–A7; P4 includes manual source-to-task coverage
 and feasible criterion/check/evidence mappings. Historical attempts/checks below retain their
 original bounds and do not imply current-content approval.
-No material decision gap or owner deferral. Planner review/combined approval remain outstanding,
-not an implementation-readiness claim.
+No material decision gap or owner deferral. Combined approval binds the current source/task
+digests below; execution routing and independent implementation review remain separate gates.
 Tasks: [separate tasks](../../../../docs/plans/planner-delegation-approval-tasks.md), T001 contract/checker,
 T002 static/synthetic regression, T003 documentation/integrated acceptance.
 Current refreshed task SHA-256: `446e42ed6254f6b75cc7560e66644de14fde1ae2e34736c2a7a9a9a018503b14`.
 P1/P3 historical task digest: `ba0514da3fa216f29e42493f38f581170e5d17d1c8936b6cf8180ab1fc504abd`.
 P2 attempted task digest: `9c7dbc778d83a3260a9d7f52d98147a649feab13804e14524ac6f19aa728167b`;
 P2 reviewer request withdrawn by owner; P4 does not restore its downstream SDD input/edit requirement.
+
+## Combined approval and coordinator preflight
+
+Owner-visible scope and all T001–T003 outcomes were presented before `ask_user`.
+Owner answer: **Approve implementation**. Authority: implement all three tasks, then independent
+review; no live/provider evaluation, installation, push, guideline mutation or unrelated changes.
+Approved source SHA-256: `4c621a985a4d3e4652182521cd3ea679a8c504baf7782243ab53a9b957df38e1`.
+Approved task SHA-256: `446e42ed6254f6b75cc7560e66644de14fde1ae2e34736c2a7a9a9a018503b14`.
+Parent inspected source/task actual deltas/checkpoints, A1–A7 traceability, exclusions, stage/input
+authority, three earlier dependencies and ten REQUIRED items. Order/digests/diff PASS; clean HEAD
+`fc78d6560e098ce3cb05c968a894ad7fc7024d9a`. Preflight: usable Git author/committer, worker edit/write
+and read-only reviewer capabilities present; existing checker PASS and 99 offline tests PASS
+(`/tmp/planner-delegation-baseline.log`). Memory index/guidelines empty, no constraints invented.
+Three-task complete count. Proposed one delegated sequential batch T001→T002→T003: shared contracts,
+checker, trace tests and docs; internal verification and per-task/evidence commits preserved.
+Local context headroom not sufficiently observable and owner requested context isolation; fresh
+worker is appropriate. Six factors: bounded residual inference; moderate cross-file tool depth;
+weakest blind spot live semantic obedience (excluded, no invented proof); coupled instruction/oracle
+surfaces; reversible local Git changes; applicable approved guidance none. Proposed Sol/medium:
+family for cross-carrier authority and oracle reconciliation, effort for bounded multi-file reasoning.
+Smaller models listed but no verified usable alternative; this Sol/medium has successful prior
+child launches. Final review proposed same exact profile, fresh read-only context, independently
+assessing full range and REQUIRED evidence. Selection not yet approved for execution/review.
+Conditional repair only after inspected failure diagnosis, preserved valid proof and owner gates;
+unknown cause stops, no automatic substitution/relaunch. STATE is coordinator-owned, excluded
+from worker writes. No execution dispatch until exact batch/profile approval.
 
 ## Attributable checkpoints
 
