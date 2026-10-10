@@ -56,14 +56,15 @@ assessing full range and REQUIRED evidence. Owner selected the proposed exact `o
 independent reviewer through `ask_user`, answer **Approve routing**.
 Conditional repair only after inspected failure diagnosis, preserved valid proof and owner gates;
 unknown cause stops, no automatic substitution/relaunch. STATE is coordinator-owned, excluded
-from worker writes. Exact routing approval is recorded; next safe action is B01 dispatch.
+from worker writes. Exact routing approval is recorded; B01 return was audited, next safe action
+is authorized fresh independent final review.
 
 ### Execution tracker and REQUIRED union
 
 - [x] **B01 — checked, pending independent acceptance:** T001→T002→T003, fresh delegated worker, selected
   `openai-codex/gpt-6.1-sol:medium`; selected/observed recorded separately. Internal dependencies
-  preserved; no external prerequisite. Audit all checkpoints on return, then final review.
-- [ ] Fresh independent final review — pending B01 audit; selected
+  preserved; no external prerequisite. Coordinator audited all six task/evidence checkpoints.
+- [ ] Fresh independent final review — ready for dispatch; selected
   `openai-codex/gpt-6.1-sol:medium`, read-only, never worker self-review.
 
 Whole B01 REQUIRED union: **T001/V1–V3, T002/V1–V4, T003/V1–V3**. Each item's pass criterion,
@@ -72,6 +73,19 @@ approved task artifact's Acceptance fields (task digest above); worker must read
 every item. Local checks have no extra manual gates; live/provider proof excluded/NOT RUN.
 Full lint is optional hardening, not acceptance substitute. Each task independently verifies
 and commits before its consumer, then makes a distinct summary/index evidence checkpoint.
+
+## Coordinator B01 audit
+
+Worker `a51c4c90-0811-43b2-938e-5561bb28a4d8` returned ordered task/evidence commits recorded in
+B01 tables below, HEAD `f7281e745b20aa9420d74924dc1fe733ff07ed12`. Parent inspected owned task
+commit paths, actual operational/trace diffs, all ten item mappings and bounded proof tables/logs;
+source/task digests unchanged, index empty, only known coordinator STATE dirty. No combined-task
+or unowned writes found. **T001/V1–V3, T002/V1–V4, T003/V1–V3: satisfied** within approved
+local instruction/manual/synthetic bounds, each by referenced B01 proof (not model confidence).
+Parent rerun checker PASS, 111 tests PASS (`/tmp/planner-parent-audit.log`), range whitespace PASS;
+161-target link output and focused/integration logs exist. Independent review still required;
+live semantics/obedience/context savings NOT VERIFIED. No external dependent released on live
+assumptions. Next review scope is exact `60fd336..f7281e7`, source/tasks/approval and all proof.
 
 ## Attributable checkpoints
 
