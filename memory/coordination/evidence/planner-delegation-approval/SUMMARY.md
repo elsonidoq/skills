@@ -6,7 +6,7 @@ Source authority correction S2 and separate task refresh P4 complete against cur
 Source-first hold resolved; parent review passed and owner approved current source/tasks and
 implementation scope through `ask_user` (answer: “Approve implementation”). Coordinator preflight
 started; owner approved execution routing through `ask_user` (answer: “Approve routing”).
-B01 is authorized for fresh sequential execution; independent final review remains required. Owner selected
+B01 T001–T003 implementation and offline/manual verification complete; independent final review remains required. Owner selected
 TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
 source/task delegates, as supplied in their parent briefs. Source worker produced only TinySpec
 and discovery links; subsequent task worker produced only separate tasks/discovery and this
@@ -60,7 +60,7 @@ from worker writes. Exact routing approval is recorded; next safe action is B01 
 
 ### Execution tracker and REQUIRED union
 
-- [ ] **B01 — in_progress:** T001→T002→T003, fresh delegated worker, selected
+- [x] **B01 — checked, pending independent acceptance:** T001→T002→T003, fresh delegated worker, selected
   `openai-codex/gpt-6.1-sol:medium`; selected/observed recorded separately. Internal dependencies
   preserved; no external prerequisite. Audit all checkpoints on return, then final review.
 - [ ] Fresh independent final review — pending B01 audit; selected
@@ -335,3 +335,31 @@ Trace inventory is optional for backward-compatible format/lifecycle-only scenar
 cases perform exact fixture ID/outcome comparison, not arbitrary NLP or live semantic proof.
 Selected profile unchanged; actual provider/effort unknown. Live/model/real-SpecKit/context
 checks NOT RUN. Parent STATE excluded; no task-owned dirt/index entries before evidence.
+
+## B01 / T003 — Documentation and integrated checks
+
+Baseline `7681718`; verified T001/T002 committed carriers/oracles consumed; task commit `265f6f2`.
+Changed owned docs: regression guide, README, REQUIREMENTS and both docs indexes (inspected
+current cap/direct phrasing and this run's stale approval-discovery claims only). Source/tasks,
+SDD reference, historical review/results, settings/dependencies and other skills unchanged.
+Before-failure `/tmp/planner-T003-before.log` shows current guide's capped scenario contradicted
+A3, expected assertion failure. Actual five-file diff inspected `/tmp/planner-T003.diff`.
+
+| REQUIRED item | Outcome | Bounded proof |
+| --- | --- | --- |
+| T003/V1 | pass | Regression “Delegated artifacts, complete briefs and source authority” table maps A1–A7 to actual committed operational stages and named tests; quotes “never authors or repairs”, “one meaningful bullet per actual ordered plan stage … per actual task ID”, “source as requirements truth … plan as derived sequencing only”. Trace section documents actual planner-trace.py CLI/contract plus trusted fixture scope/stages/tasks/artifacts; current scenarios replace cap, distinguish standalone helper, require delegated corrections and no direct downstream SDD authority. README/REQUIREMENTS match delegate and whole-pass runtime gates; discovery rows link current approval evidence. Historical recorded commands/counts/install/review results preserved, not rewritten as new live proof. |
+| T003/V2 | pass | Guide states “NOT RUN / NOT VERIFIED” for live/provider/real-SpecKit/model/context, “not a general natural-language semantic engine”, independent final review pending; future capability/isolation/permission/profile/budget recipe remains separate authorization, no present new approval gate. Global change `/reload` notice included. Named static/mutation/exact synthetic fixture assertions only, no behavioral-success claim. |
+| T003/V3 | pass | Integrated checker PASS `/tmp/planner-T003-check.log`; full production suite PASS 111 tests, 13.481s `/tmp/planner-T003-tests.log`; changed documentation/shared targets and anchors PASS 161 `/tmp/planner-T003-links.log`; diff whitespace PASS. Concrete A1–A7 carrier/check/doc mapping in guide table and prior REQUIRED tables above. Optional full skills lint also PASS `/tmp/planner-integration-lint.log`: planner 111 plus other suites 135/4/6/7/50/10/18/13; no optional green substitutes for REQUIRED mappings. |
+
+B01 all ten REQUIRED items **pass** under bounded offline/manual contracts, not independently
+accepted yet. Ordered task/evidence checkpoints: T001 `95018ea` → evidence `e5d284a` →
+T002 `0de8784` → evidence `7681718` → T003 `265f6f2` → this distinct evidence-only checkpoint
+(discover by summary/index path history; no recursive self-hash). Independent final reviewer
+must audit actual diffs/checkpoints/mappings. Every task verified before its consumer; no other
+child/delegation, no installation/push/provider call or guideline mutation. Exact selected
+`openai-codex/gpt-6.1-sol:medium` unchanged; environment `PI_MODEL=gpt-6.1-sol`
+observed at closeout, actual provider/effort remain unknown. Empty gotcha index rechecked before
+handoff; coordination guidelines unchanged. Task-owned worktree and index clean before this
+checkpoint, parent-owned STATE remains excluded/known dirty. Source/task SHA-256 unchanged
+at approved digests. Retain fixtures and first failures; bounded exact outcome matching does
+not establish arbitrary prose semantics, obedience or context savings. Run /reload in pi.
