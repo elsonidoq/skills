@@ -41,10 +41,16 @@ Use the adapter matching the producing workflow:
 
 - A SpecKit adapter accepts planner's Standard specification/plan, first verifies the
   project's observed task-stage command and follows its instructions; unavailable required
-  stage capability is a stop. Keep the stage create-only when its producer requires it.
+  stage capability is a stop. Specification is requirements truth; approved plan is derived
+  sequencing only. No SDD forwarding/rereading as direct requirements input. Trace source
+  criteria into task checks. Governing instructions/contracts, memory and permission/safety
+  still apply. Keep the stage create-only when its producer requires it.
 - A direct adapter derives tasks from an owner-authorized durable TinySpec or legacy
   requirement/source and does not
-  require a plan or SpecKit; final approval follows the produced-artifact review.
+  require a plan or SpecKit; final approval follows the produced-artifact review. TinySpec/
+  legacy source is requirements truth. No SDD forwarding/rereading as direct requirements
+  input. Trace source criteria into task checks. Governing instructions/contracts, memory
+  and permission/safety still apply.
 
 New TinySpec work always has a separate source and tasks file. Reference source sections
 or acceptance criteria; put work-unit outcomes and task-specific checks in tasks, not a

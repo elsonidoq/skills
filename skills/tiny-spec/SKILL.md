@@ -66,6 +66,14 @@ consumption, representative/adversarial criteria, applicability, production test
 cleanup, all-consumer retention and disproof/renewal. Planning schedules proofs, not
 execution without separate authority; this source describes needs, not work-unit checklists.
 
+Read and apply the [SDD quality guidance](../../docs/best_practices_spec_driven_development.md)
+for specification creation only, including TinySpec; missing guidance stops with a
+missing-install report. Retain complete relevant behavior, approach, constraints and
+observable acceptance in this source, not merely in a guidance link. Unresolved material
+gaps return through existing gates. Downstream plans/tasks use this source as requirements
+truth, not the SDD reference; governing instructions/contracts, memory and permission/safety
+still apply and separate tasks remain mandatory.
+
 Include these semantics, using only relevant detail rather than empty ceremony:
 
 - **Context/outcome:** beneficiary, desired behavior and source provenance.

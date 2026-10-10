@@ -45,12 +45,15 @@ missing destinations only after depth selection. Do not assume paths or a state 
 In suite-adopting projects, verify discoverable `memory-handling` and read the whole
 project memory index, then trigger-matching entries. Missing required memory stops;
 do not substitute a global store. Read the distributed
-[SDD reference](../../docs/best_practices_spec_driven_development.md) and
+[SDD reference](../../docs/best_practices_spec_driven_development.md) for specification creation only, including TinySpec, and
 [approval/recovery contract](references/approval-and-recovery.md) and
 [dependency research contract](references/dependency-research.md). A missing required
 reference stops with a missing-install report. Verify discoverable
 `planning-brainstorming`, `tiny-spec`, `task-generation`, and `coordinate-implementation`
 before the stage that needs each; do not duplicate an unavailable skill.
+Use the SDD quality guidance to prepare source-producer briefs, not downstream requirements
+inputs. The source must retain complete relevant behavior, approach, constraints and observable
+acceptance; unresolved material gaps return through existing gates.
 
 Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
 during initial understanding: ensure the mandatory project-local store exists and read
@@ -238,14 +241,23 @@ reference when durable; capture necessary context when it exists only in the ses
 Apply recorded decisions through the shared mechanism inside selected bounds only.
 Do not create a redundant brief/Epic between request and selected planning source.
 
+Creation always uses a separate fresh bounded-context producer for each artifact. Loading
+a skill in the parent is not delegation. Planner owns dialogue, coordination, inspection,
+review and its own approval brief, never artifact authoring or repair. Do not forward full
+transcripts or unrelated history. Missing, unusable or unauthorized delegation stops the
+affected production/correction stage with the exact gap; no inline/local fallback.
+
 Before every delegated stage supply the bounded source, settled and non-obvious
 constraints **verbatim**, cited authorities, governing instructions/principles,
 applicable memory, prior-stage handoff, stage authorization, allowed writes, pending
 owner flags/answers/deferrals, and required evidence. Each stage reads the brief and
 returns updated handoff. Source references reduce artifact duplication; they do not
 replace necessary constraints in a fresh delegate's brief. Do not delegate owner dialogue.
-Resume originating correction context when supported and suitable; otherwise pass a
-durable correction handoff. Re-present unanswered questions before downstream work.
+Resume originating correction context when supported and suitable; otherwise use a
+fresh bounded correction delegate with a durable correction handoff. Delegate all artifact
+corrections, including mechanical, task-level and upstream changes; never edit them in the
+parent. Inspect returned artifacts/checkpoints; ownership or verification conflicts stop.
+Re-present unanswered questions before downstream work.
 
 Carry dependency research triggers, local/version findings, reuse/skip rationale,
 inspected supporting spans, capability evidence and gaps into selected production.
@@ -286,21 +298,33 @@ gate for affected review and renewed approval, never fabricated historical requi
 
 ### TinySpec path
 
-1. **Source creation — shared routing selection:** invoke `tiny-spec` with verified request,
+1. **Source creation — shared routing selection:** delegate `tiny-spec` to a separate fresh
+   bounded-context source producer; invoke `tiny-spec` with verified request,
    decisions, source bounds, observed destination, and preparation authorization.
    Supply the shared research contract, findings/capability evidence and bounded
    canonical-owner/discovery writes before consequential approach decisions; inspect
    returned research traceability and persistence with the source.
+   Supply SDD quality guidance for specification creation only. Require complete relevant
+   behavior, approach, constraints and observable acceptance in the source; unresolved
+   material gaps return through existing gates. Missing, unusable or unauthorized source
+   delegation stops; no parent creation/correction or inline/local fallback.
    Inspect returned compact source and blockers. No SpecKit prerequisite or standalone
    TinySpec approval is required before task production.
-2. **Tasks — shared routing selection:** invoke `task-generation` direct adapter with TinySpec and
-   applicable source links. Create separate tasks using its full contract. Derive docs
+2. **Tasks — shared routing selection:** delegate a separate fresh bounded-context task
+   producer; invoke `task-generation` direct adapter with TinySpec and
+   applicable source links. TinySpec is requirements truth; no SDD forwarding/rereading as
+   direct requirements input. Governing instructions/contracts, memory and permission/safety
+   still apply. Missing, unusable or unauthorized task delegation stops; no parent task
+   creation/correction or inline/local fallback. Create separate tasks using its full contract. Derive docs
    from inspected effects/requirement, not an absent plan. Keep context-coherent work
    consecutive without reordering dependencies or padding distant tasks.
 3. **Review — planner-owned, shared routing selection:** review source-to-task traceability, in-scope coverage,
    exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
    verification item completeness, explicit and implicit dependencies, and stage feasibility. Record
-   fixes, validation results and current content evidence. No independent planning
+   fixes, validation results and current content evidence. Delegate every source/task correction
+   to suitable originating context or a fresh bounded correction delegate; no parent mechanical
+   or upstream repair. Missing, unusable or unauthorized correction delegation stops; no
+   inline/local fallback. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
    Apply the dependency evidence/permission review above before combined approval.
    Review early risk reduction selection/omission, real-runtime executable criteria,
@@ -325,13 +349,18 @@ Missing repair capability, principles, or failed verification stops. Do not reop
 valid settled principles. Verify permitted usable owner-selected stage bindings and
 an independent reviewer before assigning their work.
 
-1. **`spec_create` — shared routing selection:** follow observed specification instructions and
-   SDD reference using request/provenance and shared gate result. Supply research
+1. **`spec_create` — shared routing selection:** delegate a separate fresh bounded-context
+   specification producer to follow observed specification instructions and
+   SDD reference for specification creation only using request/provenance and shared gate result.
+   Require complete relevant behavior, approach, constraints and observable acceptance in the
+   specification; unresolved material gaps return through existing gates. Missing, unusable or
+   unauthorized specification delegation stops; no parent creation/correction or inline/local
+   fallback. Supply research
    triggers/context and apply the shared research contract before consequential dependency constraints
    are chosen; carry evidence-backed constraints/checks, not invented dependency rules.
    Reflect settled
    decisions. Clarify only when requested or required by the detected workflow;
-   mechanical gaps are resolved directly, material choices go to the owner. Inspect
+   mechanical gaps are resolved by the delegate, material choices go to the owner. Inspect
    specification, then provide a bullet-list executive brief including clarification
    results BEFORE
    `ask_user`. Durably record current specification approval before `plan_create`, then
@@ -342,7 +371,11 @@ an independent reviewer before assigning their work.
    through the direct call or helper brief/dispatch. Unavailable Sol/medium stops with the precise
    binding/support gap; no substitution, settings/default override or standalone helper fallback
    may bypass this rule. Record observed binding/effort separately; unknown stays unknown.
-   From current approved specification, in one
+   Delegate a separate fresh bounded-context plan producer. The specification is requirements
+   truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct
+   requirements input; governing instructions/contracts, memory and permission/safety still
+   apply. Missing, unusable or unauthorized plan delegation stops; no parent production/repair
+   or inline/local fallback. From current approved specification, in one
    same-session pass review/fix the specification, create one plan through the observed
    capability, then review/fix the produced plan. Cover contracts, architecture,
    integration, sequencing, migration/rollback, risks, docs, verification, and coherent
@@ -355,14 +388,19 @@ an independent reviewer before assigning their work.
    or code writes; missing required evidence/authority stops the affected branch.
    When approved work calls for `delegating-architectural-planning`, verify and invoke
    it as the planner Standard adapter for this ENTIRE pass. Inspect its returned
-   evidence; do not create the plan again. Only when no adapter is invoked perform
-   the pass directly through the selected permitted Sol/medium profile. Manager-governed
+   evidence; do not create the plan again. Only when no adapter is invoked delegate
+   the ENTIRE pass to the separate fresh bounded-context selected permitted Sol/medium
+   producer. Never perform it in the parent. Manager-governed
    Sol/medium, capability stops and approval renewal supersede helper standalone fallbacks.
    Any approved specification content change requires renewed specification approval
    with a new executive brief in short bullets before leaving this stage. After renewal,
    continue the affected stage immediately. Material choices remain gates.
-3. **`tasks_create` — shared routing selection:** follow observed SpecKit tasks capability under
-   `task-generation`. Supply authorization to prepare tasks and already-applicable
+3. **`tasks_create` — shared routing selection:** delegate a separate fresh bounded-context
+   task producer to follow observed SpecKit tasks capability under
+   `task-generation`. Specification is requirements truth; approved plan is derived sequencing
+   only. No SDD forwarding/rereading as direct requirements input; governing instructions/
+   contracts, memory and permission/safety still apply. Missing, unusable or unauthorized task
+   delegation stops; no parent task creation/correction or inline/local fallback. Supply authorization to prepare tasks and already-applicable
    approvals; final implementation approval is not a prerequisite to creation.
    This stage is create-only: no producer self-review/correction. Defects belong to
    `overall_review`. Include documentation, acceptance, shared context and producer
@@ -376,7 +414,10 @@ an independent reviewer before assigning their work.
    cleanup, disproof/renewal and feasibility in direct Standard and managed/helper plans.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
-   Fix mechanical task-level issues and record evidence. Flag only material
+   Delegate mechanical task-level and upstream corrections to suitable originating producer
+   context or a fresh bounded correction delegate; record evidence. The independent reviewer
+   does not become the producer. No parent artifact edits. Missing, unusable or unauthorized
+   correction delegation stops; no inline/local fallback. Flag only material
    friction/complexity or genuine specification deviation with alternatives and a
    recommendation; never apply unresolved material defaults. Task ordering, grouping,
    file choice, batch size, naming and single-option mechanics are internally resolved,

@@ -90,6 +90,13 @@ below supplement the generated artifacts and do not replace the SpecKit stage.
 Apply early risk reduction throughout the managed pass and its review/handoff, including
 justified selection/omission and producer/consumer sequencing; do not execute scheduled proofs.
 
+The managed producer uses a separate fresh bounded context for the entire plan pass;
+the manager never authors or repairs artifacts. Delegate corrections to suitable originating
+producer context or a fresh bounded correction delegate. Missing, unusable or unauthorized
+delegation stops; no managed direct/inline/local fallback. The specification is requirements
+truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct
+requirements input. Governing instructions/contracts, memory and permission/safety still apply.
+
 When `planner` invokes this helper from its Standard `plan_create` stage, it is not a standalone
 fallback. Select the Sol family with exactly **medium** supported effort for the ENTIRE
 Standard direct/helper pass. Use the manager's exact selected Sol/medium binding and effort

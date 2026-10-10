@@ -128,7 +128,7 @@ def check_contracts(texts):
     plan = stage(std, "plan_create")
     require("plan", plan, "— Sol/medium",  "same-session pass", "review/fix the specification",
             "create one plan", "review/fix the produced plan", "ENTIRE pass",
-            "do not create the plan again", "Only when no adapter is invoked",
+            "do not create the plan again", "Only when no adapter is invoked delegate",
             "renewed specification approval", "new executive brief", "do not reorder".capitalize())
     tasks = stage(std, "tasks_create")
     require("task-stage", tasks, "— shared routing selection",  "authorization to prepare tasks",
@@ -202,7 +202,8 @@ def check_contracts(texts):
             "Risks", "Actual review/validation", "Exact artifacts/current content",
             "withhold", "cancelled", "renew", "external", "recursive self-hashes",
             "Approved specification content changes", "Plan/tasks change after final approval",
-            "4–6 short bullets", "name the next", "immediately continue to the next authorized phase",
+            "No universal\ntotal-bullet cap", "Every actual ordered plan stage separately",
+            "Every actual task ID separately", "name the next", "immediately continue to the next authorized phase",
             "same session unless the owner explicitly requested planning-only")
     require("legacy", a, "inside tasks", "approved spec awaiting plan", "earliest affected Standard",
             "Other documented producer", "Ambiguous/conflicting origin", "retired skills",

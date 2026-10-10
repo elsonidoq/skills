@@ -4,12 +4,18 @@
 
 At EVERY artifact-approval gate, including corrections/renewals and applicable
 adoption/documentation-plan approvals, present an owner-visible executive brief as
-4–6 short bullets in assistant text before calling `ask_user`. Do not
+concise content-first bullets in assistant text before calling `ask_user`. No universal
+total-bullet cap applies. Do not
 replace it with paragraphs, artifact links, a delegated report, or `ask_user.context`.
-A brief only in tool arguments or after the question is insufficient. Combine related
-items when useful, but cover all of:
+A brief only in tool arguments or after the question is insufficient. Cover all of:
 
-- Intended outcome and included scope.
+- Intended outcome and concrete included scope.
+- Every actual ordered plan stage separately with its identity and meaningful outcome,
+  when a plan is part of this approval.
+- Every actual task ID separately with its meaningful outcome in execution order,
+  when tasks are part of this approval. Never truncate beyond six, merge IDs/stages,
+  use catch-alls or empty headings. TinySpec has no plan; specification-only approval
+  requires no nonexistent tasks. This adds no plan approval gate.
 - Exclusions and implementation boundaries.
 - Important settled decisions and material alternatives resolved.
 - Risks, unresolved gates and intentional deferrals.
@@ -18,6 +24,7 @@ items when useful, but cover all of:
   specification-to-planning, or implementation of the reviewed scope; name the next
   phase that starts automatically after approval and any explicit planning-only boundary.
 
+Renewals regenerate the complete brief from current artifacts, not the previous brief.
 Be concise and accurate; headings alone are not evidence. Permit approve, withhold
 approval/request changes, and cancellation. Do not treat “looks good except…” as full
 approval. Missing question capability stops an artifact approval; do not substitute
@@ -58,6 +65,10 @@ acceptance, dependencies or instructions do. Do not waive drift merely by callin
 cosmetic: verify the authorized content remains equivalent and record that comparison.
 
 Unanswered questions retain their originating context, alternatives and owner rationale.
+Delegate artifact corrections to that originating producer context when supported and
+suitable; otherwise use a fresh bounded correction delegate. No parent artifact authoring
+or mechanical, task-level or upstream repair, including legacy recovery. Missing, unusable
+or unauthorized delegation stops; no inline/local fallback or full transcript handoff.
 Resume that correction context when supported; otherwise hand off durable answers and
 constraints. Do not regenerate answers or silently apply recommended defaults.
 
