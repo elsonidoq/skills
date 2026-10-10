@@ -305,3 +305,33 @@ Diagnostic suite ran 99 tests: 3 legacy cap-assertion failures, expected interim
 owned by T002 (`/tmp/planner-T001-tests.log`), NOT integrated green. Live/provider/real-SpecKit,
 model obedience/context savings NOT RUN/NOT VERIFIED. Task diff inspected before focused commit;
 no task-owned dirt remained before this separate summary/index checkpoint. No guideline changes.
+
+## B01 / T002 — Retained regression oracles
+
+Baseline `e5d284a` (verified T001 and separate evidence checkpoint); task commit `0de8784`.
+Owned paths: checker/test suite/actual planner-trace and retained
+`approval-artifacts.md`/`approval-inventory.json` fixtures. No numbered task fixture changed;
+task-order validator not applicable. Existing risk/task fixtures retained unchanged.
+Smallest before-failure `/tmp/planner-T002-before.log`: actual trace rejected complete eight
+bullets under legacy cap. Production suite now PASS, 111 tests, 13.766s
+(`/tmp/planner-T002-tests-3.log`); focused delegation/complete-brief/trace/link cases PASS,
+54 tests (`/tmp/planner-T002-focused.log`). Checker PASS `/tmp/planner-T002-check.log`.
+
+| REQUIRED item | Outcome | Bounded proof |
+| --- | --- | --- |
+| T002/V1 | pass | `DelegationAuthorityTests.test_creation_correction_stop_carrier_clause_removals`, `test_actual_stage_removal_leaving_summary_cannot_pass`, `test_parent_mechanical_upstream_task_and_managed_fallback_mutations`: each scoped creation/review/recovery/helper/handoff clause/stage removed and parent repairs/fallback introduced. `test_source_quality_and_downstream_truth_actual_inputs`, `test_downstream_sdd_forward_reread_and_competing_plan_authority`, `test_source_quality_distributed_links_and_actor_governance`: Discovery/source/TinySpec producer quality completeness and actual plan/helper/both adapters checked, no blanket ban on operational guidance; criterion trace, memory/safety/create-only preserved. Representative diagnostic: `delegate-plan: contradictory 'inline fallback is permitted'`. Unmutated checker PASS; all legacy profile/gate/permission/retry/renewal/commit/reviewer assertions retained. |
+| T002/V2 | pass | `CompleteBriefTests.test_trusted_artifacts_match_eight_stage_and_eight_task_inventory`, `test_missing_reordered_duplicate_collapsed_empty_truncated_and_wrong_outcomes`, `test_tiny_combined_spec_only_and_standard_overall_applicability`, `test_actual_trace_cli_with_trusted_inventory`: trusted fixture has eight separately ordered meaningful plan stages and eight tasks, independent of tested brief. Complete coverage accepted; each category omission/order/duplicate/merged IDs/empty/catch-all outcome/six-total truncation rejected, concrete scope omission rejected; no TinySpec plan or spec-only tasks. Manual artifact comparison: intake validates headers, recover safely replays; T001 header validation, T008 observable docs; all expected fixture bullets checked against artifact, not self-inventoried. |
+| T002/V3 | pass | `test_current_renewal_accepts_fresh_rejects_stale_inventory_and_brief` and `test_full_inventory_context_hidden_and_late_briefs_rejected`; v2 changes T008 to revised recovery limits with v2 snapshot, fresh brief passes/stale brief or inventory fails. Existing TraceTests cancellation/tagged response/lifecycle/drift/continuation all PASS; full suite 111 PASS. |
+| T002/V4 | pass | Actual T001 carriers consumed by `DELEGATION_CARRIERS`/`AUTHORITY_CARRIERS`, scoped operational selectors (not summary keywords), legacy assertions retained. Existing LinkTests and source-quality distributed targets PASS; changed shared links PASS 22 targets/anchors; diff whitespace PASS. Full script/test diffs inspected (`/tmp/planner-T002.diff`, `/tmp/planner-T002-tests.diff`); no extra harness/dependencies or numbered-task fixtures. |
+
+Diagnosed development failures retained: first run errors (357) from new helper function
+shadowed by existing local `carrier` string; fixed by specific `operational_carrier` name.
+Second run 11 failures: stage summary accidentally discoverable outside Standard section and
+removing only first repeated phrase left same carrier satisfied; bounded stage/item selectors
+to actual route/adapter sections and mutation removes repeated clause occurrences, sharpened
+risk missing-install phrase to its own reference. Logs `/tmp/planner-T002-tests.log` and
+`/tmp/planner-T002-tests-2.log` preserve disproof; targeted corrections then 111 PASS, no blind retry.
+Trace inventory is optional for backward-compatible format/lifecycle-only scenarios; inventory
+cases perform exact fixture ID/outcome comparison, not arbitrary NLP or live semantic proof.
+Selected profile unchanged; actual provider/effort unknown. Live/model/real-SpecKit/context
+checks NOT RUN. Parent STATE excluded; no task-owned dirt/index entries before evidence.
