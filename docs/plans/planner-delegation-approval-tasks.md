@@ -1,6 +1,6 @@
 # Planner delegation and complete approval briefs — tasks
 
-Source: [TinySpec](planner-delegation-approval-tinyspec.md), Scope, Approach and A1–A6.
+Source: [TinySpec](planner-delegation-approval-tinyspec.md), Scope, Approach and A1–A7.
 Authorization/evidence: [run SUMMARY](../../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
 Owner-selected TinySpec preparation is authorized; source/task review and current-content
 combined approval are pending. This separate deliverable grants no implementation authority.
@@ -8,9 +8,11 @@ Direct adapter applies; no plan artifact, SpecKit task-stage prerequisite or int
 
 ## Shared context, boundaries and sequencing
 
-Source checkpoint: `975adf9bde544d45f5e89b0901fe24094c44ea60`; task-production baseline:
-`b029b89e096869b50384cf914a4030bb585e138b` on `main`.
-Source SHA-256: `c717cc033154a516e4998933f436b55fa5fc3ff6a6a8ee3e69095ea5865d0700`.
+Current source correction: `c35791ebe616a6fa52228c5150c4f3b78bb2c6f3`; task-refresh baseline:
+`716c4c58b6ea1d30446a14ed72e48a758398a5a8` on `main`.
+Source SHA-256: `4c621a985a4d3e4652182521cd3ea679a8c504baf7782243ab53a9b957df38e1`.
+Source-first hold resolved by revised source A7; parent reviewed source delta and authorized this
+refresh. Original production and withdrawn reviewer attempt remain historical in run evidence.
 Read current source/contracts before execution and compare approval-bound content; stale or
 ambiguous REQUIRED acceptance returns to producing review/renewal, never executor-defined criteria.
 The gotcha index is empty and coordination guidelines contain no approved guidance.
@@ -32,6 +34,15 @@ All tasks retain these concrete constraints in delegation briefs and acceptance:
   in order, plus necessary boundaries/decisions/risks/check results/content/next-phase authority.
   No 4–6-total cap, catch-all, merged IDs/stages, fictitious TinySpec plan or invented tasks
   at specification-only approval. Renewals use current artifacts, not the previous brief.
+- Source A7 supplies this exact authority constraint: SDD quality guidance is for specification
+  creation only, including TinySpec. Source producers retain complete relevant behavior, approach,
+  constraints and observable acceptance in the specification; unresolved material gaps use existing
+  gates. Downstream plan/helper and direct/SpecKit task adapters use specification requirements
+  truth and approved Standard plan as derived sequencing only. Do not forward/reread the SDD
+  reference as downstream direct requirements input or restore withdrawn T003 input/update work.
+  Governing repository instructions, operational contracts, applicable memory and permission/safety
+  constraints still bind every actor; separate tasks remain mandatory. This task producer derives
+  these constraints from revised source A7, not from opening the best-practices reference.
 - No concrete provider/version or project destination in portable operational skills.
   Standalone helper authority is distinct; preserve its independently authorized local policy,
   but it must never bypass managed planner delegation or the Standard exception.
@@ -67,14 +78,19 @@ Independent final implementation review remains an existing requirement, not a n
 - **Depends**: none.
 - **Outcome**: actual TinySpec/Standard stage and recovery carriers forbid parent artifact
   production/repair and inline fallback; brief coverage is content-first without adding gates.
-  The operational checker accepts the new contracts instead of requiring contradictory legacy clauses.
+  Source-quality application and downstream specification authority are explicit in discovery,
+  source-stage and consumer carriers. The operational checker accepts the new contracts instead
+  of requiring contradictory legacy clauses.
 - **Files/interfaces**: `skills/planner/SKILL.md`,
   `skills/planner/references/approval-and-recovery.md`,
   `skills/delegating-architectural-planning/SKILL.md`, and compatible clause assertions in
-  `scripts/check-planner-workflow.py`; linked `skills/tiny-spec/SKILL.md` and
-  `skills/task-generation/SKILL.md` only where necessary to align managed producer boundaries.
+  `scripts/check-planner-workflow.py`; `skills/tiny-spec/SKILL.md` source-quality production and
+  `skills/task-generation/SKILL.md` direct/SpecKit authority boundaries. Planner Discovery and
+  TinySpec/Standard source-stage briefs apply quality guidance only at specification production;
+  plan/helper and both task-stage briefs carry specification requirements truth, with approved plan
+  as derived sequencing. No best-practices document is a task input/edit destination.
   Do not broaden independently authorized standalone behavior. Shared context: source Approach,
-  A1/A2/A3/A5, existing transition table and exact Standard plan-pass requirement.
+  A1/A2/A3/A5/A7, existing transition table and exact Standard plan-pass requirement.
 - **Acceptance**:
   - REQUIRED **T001/V1** (A1/A2): every selected-route production stage explicitly uses a
     separate fresh-context producer; inspection/review/recovery mechanics delegate corrections,
@@ -88,11 +104,17 @@ Independent final implementation review remains an existing requirement, not a n
     and renewed approvals; no nonexistent items are demanded. Smallest check: manual comparison
     of the brief carrier and transition/stage tables to source, plus `python3 scripts/check-planner-workflow.py`
     PASS against changed contracts. Evidence: carrier/checker diff and output; local Python 3.
-  - REQUIRED **T001/V3** (A5): route/gate and safety comparison confirms all shared constraints
-    above, including exact Sol/medium whole plan pass, one plan creation, independent review,
-    create-only Standard tasks, renewal, owner dialogue and preparation/evidence commits.
-    Smallest check: bounded before/after table for these seams; inspect any linked producer changes
-    and resolve their shared references. Evidence: table, link targets and `git diff --check` PASS;
+  - REQUIRED **T001/V3** (A5/A7): route/gate, authority and safety comparison confirms all shared
+    constraints above, including exact Sol/medium whole plan pass, one plan creation, independent
+    review, create-only Standard tasks, renewal, owner dialogue and preparation/evidence commits.
+    Planner Discovery/source-stage and TinySpec/Standard producers apply specification quality
+    guidance and retain complete behavioral/approach/acceptance information in the source. Actual
+    plan/helper and both task-adapter carriers derive requirements from that specification and
+    use its approved plan for sequencing only, without direct SDD forwarding/rereading or competing authority.
+    Preserve governing instructions/contracts/memory/safety and separate tasks, not a blanket reading
+    ban. Smallest check: bounded before/after table for these actual carrier seams, quoting quality
+    application, requirements inputs and criterion-to-consumer traces; resolve shared references.
+    Evidence: carrier/input table, source-criterion trace, link targets and `git diff --check` PASS;
     local Git/file tools, no additional owner gate.
 - **Capabilities/gates**: repository reads/edits, Python 3 and usable Git; current-content combined
   owner approval and coordinator execution authorization before implementation. Required missing
@@ -111,18 +133,26 @@ Independent final implementation review remains an existing requirement, not a n
 - **Depends**: T001.
 - **Outcome**: checker mutations, Python trace oracle and trusted synthetic examples detect
   direct creation/correction/fallback and incomplete, hidden, late or stale briefs, while accepting
-  complete >6-item coverage and preserving existing safety regressions.
+  complete >6-item coverage, specification-only quality application and downstream specification
+  truth, while preserving existing safety regressions.
 - **Files/interfaces**: `scripts/check-planner-workflow.py`, `scripts/test-planner-workflow.py`,
   `scripts/planner-trace.py`; bounded fixtures in `scripts/fixtures/planner/` only as needed,
   reusing existing test framework and event/contract format. There is no `check-planner-trace.py`.
-  Shared context: T001 carrying spans/checker changes; source A1–A5; current trace message-block,
+  Shared context: T001 carrying spans/checker changes; source A1–A5/A7; current trace message-block,
   gate lifecycle, snapshots and continuation mappings. Trusted expected inventory belongs to
   test supervisor/fixture, never to the tested brief. Extend existing format minimally as needed.
 - **Acceptance**:
-  - REQUIRED **T002/V1** (A1/A2/A5): mutations remove each actual creation/correction/stop carrier
+  - REQUIRED **T002/V1** (A1/A2/A5/A7): mutations remove each actual creation/correction/stop carrier
     or whole stage while leaving summary wording intact, and introduce parent mechanical/upstream/
     task fixes or managed direct/inline fallback. Each relevant mutation fails with a scoped diagnostic;
-    unmutated new contracts pass. Preserve gate/profile/permission/retry/renewal/commit/reviewer
+    unmutated new contracts pass. A7 cases remove quality application/completeness from actual
+    Discovery/source-stage/TinySpec/Standard producer carriers (summary left intact), forward the
+    SDD reference or instruct rereading it as direct requirements authority in plan/helper and both
+    task adapters, or promote approved plan to competing requirements truth; each fails a scoped
+    diagnostic. Positive carrier checks preserve specification-criterion-to-downstream traceability,
+    governing instructions/contracts/memory/permissions/safety and separate tasks. No blanket ban
+    on operational references and no withdrawn T003 reference-input/document-edit requirement.
+    Preserve gate/profile/permission/retry/renewal/commit/reviewer
     assertions rather than deleting safety checks to make text pass. Smallest check: focused named
     unittest cases in the existing suite, then `python3 scripts/check-planner-workflow.py` PASS.
     Evidence: named cases, representative negative diagnostics and output; local Python only.
@@ -162,17 +192,22 @@ Independent final implementation review remains an existing requirement, not a n
 - **Depends**: T001, T002.
 - **Outcome**: current user-facing regression guidance documents delegated creation/correction,
   complete current-content briefs and preserved gates, with accurate named offline checks and
-  separately authorized live scenarios; integrated source-to-contract-to-test-to-doc evidence exists.
+  separately authorized live scenarios and specification-only quality/downstream authority;
+  integrated source-to-contract-to-test-to-doc evidence exists.
 - **Files/interfaces**: `docs/plans/planner-regression.md`; `REQUIREMENTS.md`, `README.md`,
   `docs/index.md` and `docs/plans/index.md` only where inspected current claims/discovery conflict
   (including direct/helper phrasing). Preserve historical reviews/results as historical; never
   rewrite them as if this change had prior live validation. Shared context: T001 contracts,
-  T002 actual test names/fixtures/trace input format, source A1–A6 and documentation routing guide.
+  T002 actual test names/fixtures/trace input format, source A1–A7 and documentation routing guide.
+  Do not consume/update the best-practices document as task-generation guidance.
 - **Acceptance**:
-  - REQUIRED **T003/V1** (A6): compare each changed documentation assertion to committed operational
+  - REQUIRED **T003/V1** (A6/A7): compare each changed documentation assertion to committed operational
     spans and actual named tests. Current instructions/scenarios remove the 4–6 cap and managed
     fallback, name all-stage/all-task coverage and delegated correction, preserve standalone and
     gate distinctions, and use actual `scripts/planner-trace.py` commands/contract examples.
+    Current workflow/regression claims match A7's implemented source-quality and specification-as-
+    truth carriers, approved plan as derived sequencing, separate tasks and preserved actor-governing
+    constraints; no downstream best-practices input/update requirement is introduced.
     Smallest check: bounded contract/test/doc mapping with quoted spans. Evidence: comparison table
     and historical-content preservation diff; local file inspection, no live permission.
   - REQUIRED **T003/V2** (A6): docs call static/mutation/synthetic results sensitivity only; live
@@ -181,10 +216,10 @@ Independent final implementation review remains an existing requirement, not a n
     adding a present approval stage; tell users `/reload` after global skill changes. Smallest check:
     manual current-doc evidence-status/authority comparison to commands actually run and source.
     Evidence: status/gate excerpts and changed-file diff; local review only.
-  - REQUIRED **T003/V3** (A1–A6 integration): inspect/use retained T001/T002 contracts, fixtures and
+  - REQUIRED **T003/V3** (A1–A7 integration): inspect/use retained T001/T002 contracts, fixtures and
     evidence, rerun `python3 scripts/check-planner-workflow.py` and
     `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py`, resolve all changed
-    documentation/shared links and run `git diff --check`. All must pass; source A1–A6 has a
+    documentation/shared links and run `git diff --check`. All must pass; source A1–A7 has a
     concrete implemented carrier, check and accurate documentation mapping. Evidence: integrated
     coverage table, actual output/count and bounded link targets. Local Python/Git; unavailable
     REQUIRED evidence is NOT VERIFIED, not a pass. Existing independent final review audits these
@@ -204,11 +239,12 @@ Independent final implementation review remains an existing requirement, not a n
 
 Preparation validation: Python 3.12.3 available; numbered Markdown matches the existing parser.
 PASS from `skills/task-generation`: `python3 scripts/check-task-order.py ../../docs/plans/planner-delegation-approval-tasks.md`.
-Manual review PASS: A1–A6 mappings, exclusions, shared constraints in checks/briefs, earlier and
+Manual refresh review PASS: A1–A7 mappings, exclusions, shared constraints in checks/briefs, earlier and
 implicit producer dependencies, contiguous units, gates, documentation, integration and feasible
 local verification. Task fields/item IDs, local links/discovery and unchanged source digest PASS;
-`git diff --check` PASS. Unchanged operational checker and 99 offline planner tests PASS (baseline
-assurance only). Operational implementation/tests above are scheduled, not performed by this
-producer. Record actual order/link/diff results and this task file's digest in the linked SUMMARY
+`git diff --check` PASS. Prior unchanged operational checker/99-test PASS remains historical
+baseline evidence, not rerun/current implementation proof for this refresh. Operational
+implementation/tests above are scheduled, not performed by this producer. Record actual order/link/
+diff results and this task file's digest in the linked SUMMARY
 and handoff; digest is external to this file to avoid recursive self-hashing. Existing combined
 source/tasks approval is still pending and must bind the reviewed current content after planner review.
