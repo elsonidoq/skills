@@ -25,6 +25,12 @@ implementation seams are `skills/planner/SKILL.md`,
 `scripts/check-planner-workflow.py`, `scripts/test-planner-workflow.py`,
 `scripts/planner-trace.py`, and `docs/plans/planner-regression.md`. Update linked producer
 contracts or `REQUIREMENTS.md`/workflow documentation only where necessary for consistency.
+Also included: specification-quality guidance and downstream authority alignment at planner
+Discovery versus source-stage briefs, `skills/tiny-spec/SKILL.md` production, and
+`skills/task-generation/SKILL.md` direct/SpecKit adapter boundaries. The SDD best-practices
+reference is a specification-creation input only, not a downstream plan/task requirements
+input. No change to that reference is needed merely to make it a task input; align operational
+consumers and trace this source's criteria instead.
 
 Excluded: runtime SDK/enforcement implementation, dependencies or settings changes,
 installation, external research, live provider evaluation, product implementation,
@@ -65,6 +71,21 @@ handoff. TinySpec remains a combined what/how source followed by separate tasks;
 retains separate specification, plan and tasks. The planner continues to own understanding,
 dialogue, inspection, review, approval and coordination, including writing its own brief.
 
+Owner clarification (verbatim): “Tasks are not meant to use that document. That document
+is meant to be used for spec creation and just that the rest should. Use the spec as grand
+truth, and the spec should follow the best practices, that's the name of the file to make
+sure that every information required to be the good quality spec planned and done. tasks
+are in the spec.” Settled interpretation: the
+[SDD best-practices reference](../best_practices_spec_driven_development.md) guides
+**specification creation only**, including lightweight TinySpec creation. Its specification
+quality sections require explicit outcomes, scope, contracts, deterministic rules, exclusions,
+constraints and observable acceptance. The specification captures complete required behavioral,
+approach and acceptance information; downstream plans and separate tasks derive from it as
+requirements truth. An approved Standard plan is a derived sequencing input, not a competing
+requirements authority. “Tasks are in the spec” does not embed a work-unit checklist or remove
+the separate task artifact. Repository instructions, memory, operational stage contracts and
+permission/safety gates still govern every actor; specification authority never waives them.
+
 Dependency research: reuse adequate local runtime/package guidance in `REQUIREMENTS.md`;
 this is an instructions-only use of existing delegation, not new runtime API integration.
 No version-sensitive SDK decision or external refresh is required. Capability verification
@@ -94,6 +115,19 @@ focused task/evidence checkpoints. Standard's entire delegated plan pass still r
 same exact permitted Sol-family binding with medium effort, resolved from runtime options,
 not a provider/version hard-coded into portable operational instructions. Review-driven
 approved-specification changes still require renewed specification approval.
+
+Make the quality-guidance boundary explicit at discovery and dispatch: planner may inspect
+the SDD reference to prepare specification creation, but supplies it as guidance only to
+TinySpec/Standard source producers, not as general input to every stage. Source producers
+apply it and retain complete relevant behavior, approach, constraints and acceptance in the
+specification itself, with unresolved material gaps returned through existing gates. Subsequent
+plan/helper and task-adapter briefs use that specification as authoritative requirements input
+and the approved plan only for derived sequencing. Do not forward the SDD reference as their
+direct input, instruct those delegates to reread it for requirements, or require T003 to
+consume/update it merely as task-generation guidance. Keep their operational instructions,
+applicable memory and safety/permission constraints distinct from requirements authority.
+Checks compare actual scoped source/plan/task input carriers and source-criterion traceability,
+not a blanket ban on governing instructions or a new documentation-maintenance requirement.
 
 Replace the universal total-bullet cap with content-first concise coverage. Before each
 existing approval call, the planner emits assistant-text bullets with concrete included
@@ -141,6 +175,16 @@ planning-only boundaries and immediate approved continuation remain unchanged.
   actual named tests, calls offline results static/synthetic sensitivity rather than model
   obedience, and marks live/real-SpecKit checks NOT RUN unless separately authorized.
   Shared references/discovery links resolve. Global instruction changes require `/reload`.
+- **A7 — Specification-only quality guidance and downstream truth:** operational source-stage
+  briefs and TinySpec/Standard producers apply the SDD best-practices reference to produce
+  complete relevant behavioral/approach/acceptance information in the specification. Plan/helper
+  and both task adapters derive requirements from that specification, with approved plan as
+  derived sequencing only; their briefs do not use the SDD reference as a direct requirements
+  input. Focused carrier assertions/mutations reject forwarding it to plan/tasks, omission of
+  source-quality application or competing requirements authority. Manual review traces source
+  criteria into downstream checks, preserves separate tasks and actor-governing instructions,
+  memory, operational contracts and permission/safety gates, and confirms no added gate or
+  T003 best-practices input/document-edit requirement.
 
 Smallest sufficient verification for later implementation: focused instruction mutations
 and synthetic traces in the existing planner suite, manual route/gate/semantic comparison,
