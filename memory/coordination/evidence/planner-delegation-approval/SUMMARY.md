@@ -5,7 +5,8 @@
 Source authority correction S2 and separate task refresh P4 complete against current A1–A7.
 Source-first hold resolved; parent review passed and owner approved current source/tasks and
 implementation scope through `ask_user` (answer: “Approve implementation”). Coordinator preflight
-started; execution routing approval remains required before implementation dispatch. Owner selected
+started; owner approved execution routing through `ask_user` (answer: “Approve routing”).
+B01 is authorized for fresh sequential execution; independent final review remains required. Owner selected
 TinySpec/preparation and exact `openai-codex/gpt-6.1-sol:medium` for
 source/task delegates, as supplied in their parent briefs. Source worker produced only TinySpec
 and discovery links; subsequent task worker produced only separate tasks/discovery and this
@@ -51,10 +52,26 @@ surfaces; reversible local Git changes; applicable approved guidance none. Propo
 family for cross-carrier authority and oracle reconciliation, effort for bounded multi-file reasoning.
 Smaller models listed but no verified usable alternative; this Sol/medium has successful prior
 child launches. Final review proposed same exact profile, fresh read-only context, independently
-assessing full range and REQUIRED evidence. Selection not yet approved for execution/review.
+assessing full range and REQUIRED evidence. Owner selected the proposed exact `openai-codex/gpt-6.1-sol:medium` unchanged for B01 and fresh
+independent reviewer through `ask_user`, answer **Approve routing**.
 Conditional repair only after inspected failure diagnosis, preserved valid proof and owner gates;
 unknown cause stops, no automatic substitution/relaunch. STATE is coordinator-owned, excluded
-from worker writes. No execution dispatch until exact batch/profile approval.
+from worker writes. Exact routing approval is recorded; next safe action is B01 dispatch.
+
+### Execution tracker and REQUIRED union
+
+- [ ] **B01 — in_progress:** T001→T002→T003, fresh delegated worker, selected
+  `openai-codex/gpt-6.1-sol:medium`; selected/observed recorded separately. Internal dependencies
+  preserved; no external prerequisite. Audit all checkpoints on return, then final review.
+- [ ] Fresh independent final review — pending B01 audit; selected
+  `openai-codex/gpt-6.1-sol:medium`, read-only, never worker self-review.
+
+Whole B01 REQUIRED union: **T001/V1–V3, T002/V1–V4, T003/V1–V3**. Each item's pass criterion,
+smallest check, expected evidence and permission gates are incorporated unchanged from the
+approved task artifact's Acceptance fields (task digest above); worker must read and preserve
+every item. Local checks have no extra manual gates; live/provider proof excluded/NOT RUN.
+Full lint is optional hardening, not acceptance substitute. Each task independently verifies
+and commits before its consumer, then makes a distinct summary/index evidence checkpoint.
 
 ## Attributable checkpoints
 
