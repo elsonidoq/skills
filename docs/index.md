@@ -34,12 +34,12 @@ legacy port retain their own documentation and memory boundaries.
 
 - [Project Constitution](../.specify/memory/constitution.md): Portable global assets, mandatory project-local coordination persistence, exact guideline approval and pragmatic verification.
 - [Initialize Coherence](../skills/initialize-coherence/SKILL.md): Proposal-first suite adoption/memory and bounded documentation structural readiness.
-- [Planner](../skills/planner/SKILL.md): Single entry point, scope assessment, user-selected depth, approvals and handoff.
+- [Planner](../skills/planner/SKILL.md): Single coordination entry point, scope assessment, user-selected depth, mandatory delegated artifact creation/correction, complete approval briefs and handoff.
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
 - [Coordinator batch approval](../skills/coordinate-implementation/SKILL.md#build-the-execution-graph): Complete table with batch descriptions and exact model/effort requires explicit routing approval before implementation; unchanged verified approval is reusable, not a universal profile default.
-- [Qualified routing rubric](../skills/coordinate-implementation/references/batch-routing.md): Single six-factor planning/advisory and implementation selection prior; Standard `plan_create` requires Sol/medium for its entire direct/helper pass, with no unavailable-profile substitution. Implementation-only batching rules are not planning prerequisites.
+- [Qualified routing rubric](../skills/coordinate-implementation/references/batch-routing.md): Single six-factor planning/advisory and implementation selection prior; Standard `plan_create` requires Sol/medium for its entire delegated non-helper/helper pass, with no unavailable-profile substitution. Implementation-only batching rules are not planning prerequisites.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
 - [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Mandatory project-local files automatically initialized/notified/committed before choice, separate indexed evidence, selective reads and approval-controlled learned-guideline changes.
 - [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md): Mandatory focused checkpoints for authorized retained tasks, coordinator recovery/fresh-agent boundaries, and truthful static/Git-fixture limits.
@@ -51,8 +51,8 @@ legacy port retain their own documentation and memory boundaries.
 ## Implementation Plans
 
 - [Plans directory index](plans/index.md): Direct plan records and the nested review index.
-- [Planner delegation and complete approval briefs — TinySpec](plans/planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs without added gates; content approval pending.
-- [Planner delegation and complete approval briefs — tasks](plans/planner-delegation-approval-tasks.md): three causal units for contracts, static/synthetic regressions and truthful documentation; planner review/combined approval pending.
+- [Planner delegation and complete approval briefs — TinySpec](plans/planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs; current-content owner approval and execution evidence in [run SUMMARY](../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md), independent final review pending.
+- [Planner delegation and complete approval briefs — tasks](plans/planner-delegation-approval-tasks.md): three approved dependency-ordered contract, regression and documentation units; checkpoints and REQUIRED dispositions in the linked source's run evidence, not historical pending labels.
 - [Mandatory Task Commits — TinySpec](plans/mandatory-task-commits-tinyspec.md): Authoritative pragmatic checkpoint scope and A1–A7 acceptance; no runtime extension gate.
 - [Mandatory Task Commits — Tasks](plans/mandatory-task-commits-tasks.md): Separate dependency-aware task contracts derived from the TinySpec.
 - [Mandatory Task Commits — Planning Review](plans/reviews/mandatory-task-commits-planning-review.md): Exact source/task approval identities and owner authorization.

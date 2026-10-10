@@ -65,10 +65,22 @@ Request → Planner → Choose│                                               
   or unnecessary spec/plan/research hierarchy is required.
 - **Standard:** genuine installed SpecKit stages, separate what/how/task reasoning,
   specification approval before planning, independent overall review and final approval.
-- **Both:** shared `task-generation` contract and durable current-content approval evidence.
+- **Both:** planner delegates each source/specification, applicable Standard plan and separate
+  task artifact to its own fresh bounded-context producer. Corrections use suitable originating
+  producer context or a fresh bounded correction delegate; planner never authors/repairs artifacts
+  or falls back inline. Missing usable authorized delegation stops. Planner still owns dialogue,
+  inspection, review, coordination and its own approval brief. SDD quality guidance applies only
+  to specification creation (including TinySpec); downstream plans/tasks use the complete source
+  as requirements truth, approved Standard plan as derived sequencing, not direct SDD input.
+  Governing instructions, contracts, memory and permission/safety still apply. Both use the shared
+  `task-generation` contract and durable current-content approval evidence.
   Before every artifact approval or renewal, planner presents a brief bullet-list executive
   summary in the conversation, then calls `ask_user`. You may approve, request changes or
-  withhold approval. The brief states the next phase that approval will start.
+  withhold approval. The brief names concrete included scope, every actual ordered plan stage
+  separately when applicable, and every actual task ID/outcome separately in execution order,
+  with no total-count cap or catch-alls. TinySpec has no plan; specification-only approval has no
+  invented tasks or added plan gate. Renewals regenerate current coverage. Necessary boundaries,
+  decisions, risks and actual checks remain; the brief states exact content and next-phase authority.
 
 After approval, planner immediately starts the next authorized phase without another
 continuation prompt. Final approval automatically starts `coordinate-implementation` and

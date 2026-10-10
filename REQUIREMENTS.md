@@ -97,7 +97,10 @@ Implementation-only batching, task-count and REQUIRED-item rules are not plannin
 
 The explicit owner-required exception is Standard `plan_create`: **Sol with exactly medium
 supported effort** for the complete same-session specification review/fix → one plan creation →
-produced-plan review/fix, both direct and helper execution. Resolve its concrete binding from
+produced-plan review/fix, both delegated non-helper and helper execution. Planner never
+authors or repairs the artifacts: each artifact has a separate fresh bounded-context producer;
+corrections use suitable originating producer context or a fresh bounded delegate. Missing,
+unusable or unauthorized delegation stops with no parent inline/local fallback. Resolve its concrete binding from
 permitted usable runtime options, not a provider/version hard-coded into skills. Unavailable
 Sol/medium stops with the precise binding/support gap; no substitution, settings/default override
 or standalone helper fallback may bypass this rule. It is an owner preference, not a family

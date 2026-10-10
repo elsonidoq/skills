@@ -4,8 +4,8 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
-- [Planner delegation and complete approval briefs — TinySpec](planner-delegation-approval-tinyspec.md): mandatory separate delegated artifact production/corrections and every applicable stage/task before existing approval gates; content approval pending.
-- [Planner delegation and complete approval briefs — tasks](planner-delegation-approval-tasks.md): three dependency-ordered contract, regression and documentation units with REQUIRED evidence mappings; planner review/combined approval pending, no implementation authorization.
+- [Planner delegation and complete approval briefs — TinySpec](planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs; current-content owner approval and execution evidence in [run SUMMARY](../../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md), independent final review pending.
+- [Planner delegation and complete approval briefs — tasks](planner-delegation-approval-tasks.md): three approved dependency-ordered contract, regression and documentation units; checkpoints and REQUIRED dispositions in the linked source's run evidence, not historical pending labels.
 - [Comparative routing and actionable learning — tasks](comparative-routing-learning-tasks.md): four dependency-ordered tasks; focused reusable-contract validation and bounded Cerca policy reset, accepted with disclosed preservation-proof limitation.
 - [Comparative routing and actionable learning — TinySpec](comparative-routing-learning-tinyspec.md): approved comparative profile selection, compact process learning and bounded Cerca model-policy reset; exact approval/acceptance belongs to the linked run.
 - [Ephemeral recovery state — tasks](ephemeral-recovery-state-tasks.md): coupled protocol/consumer/fixture/docs task and bounded fresh-context reconstruction proof.

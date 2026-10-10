@@ -32,18 +32,72 @@ git diff --check
 Fixture tasks demonstrate shared syntax only: they lack real source/review/authorization
 and must not be executed. Existing dependency-parser tests cover IDs, gaps, duplicates,
 self/forward/missing prerequisites and story continuity. Manual/semantic review still checks
-implicit producers, acceptance meaning, class rationale, exclusions and documentation truth.
+implicit producers, acceptance meaning, selected-profile rationale, exclusions and documentation truth.
 
 Instruction mutations delete gates/constraints, change classes, remove renewals, permit
 adapter double creation, remove stage bodies, swap stages and insert contradictory policies.
 Trace mutations test tool-context-only briefs, hidden reasoning, post-question summaries,
 cancelled choices, unoffered paths, pending-approval content changes and forbidden actions.
 
+## Delegated artifacts, complete briefs and source authority
+
+Current contracts: [planner](../../skills/planner/SKILL.md),
+[approval/recovery](../../skills/planner/references/approval-and-recovery.md),
+[managed helper](../../skills/delegating-architectural-planning/SKILL.md),
+[TinySpec producer](../../skills/tiny-spec/SKILL.md) and
+[both task adapters](../../skills/task-generation/SKILL.md).
+Planner coordinates, inspects/reviews and conducts owner dialogue; it never authors or repairs
+planning artifacts, including mechanical or upstream corrections. Loading a skill is not delegation.
+Each artifact creation uses a separate fresh bounded-context producer, not a full transcript.
+Corrections use suitable originating producer context, otherwise a fresh bounded delegate.
+Missing usable authorized delegation blocks creation/correction; no managed inline/local fallback.
+Independently authorized standalone helper local policy is unchanged, never a managed escape hatch.
+
+Before existing ask_user gates, the approval carrier requires concrete scope and one meaningful
+bullet per actual ordered plan stage (when applicable) and per actual task ID in execution order.
+There is no universal total cap, merged-ID/stage summary or catch-all. Renewals regenerate the
+brief from current artifacts, preserving boundaries, settled decisions, risks, actual checks,
+content authority and next phase. TinySpec keeps its single combined gate/no plan; Standard
+keeps specification then overall approval/no new plan gate. Standard tasks remain create-only at
+production, corrections delegated under overall review, which remains independently reviewed.
+Exact runtime-resolved Sol/medium governs the entire single plan pass; one plan creation,
+renewed specification approval, permissions/support/settings/failure stops and preparation/task/
+evidence commit authority remain intact. Global skill changes require **/reload** in pi.
+
+SDD quality guidance applies to specification creation only, including TinySpec. Actual source
+producer briefs require complete relevant behavior, approach, constraints and observable acceptance
+in the specification itself, with material gaps returned through existing gates. Downstream
+plan/helper and direct/SpecKit task carriers use the source as requirements truth and approved
+Standard plan as derived sequencing only, with source criteria traced into checks. No downstream
+SDD forwarding/rereading as direct requirements input; no best-practices maintenance task is
+introduced. Governing repository instructions/contracts, applicable memory and permission/safety
+still bind every actor; separate tasks stay mandatory.
+
+| Approved source criterion | Committed carrier / named offline check | Documentation assertion |
+| --- | --- | --- |
+| A1 creation | Actual TinySpec source/tasks and Standard spec/plan/tasks; `DelegationAuthorityTests.test_creation_correction_stop_carrier_clause_removals`, `test_actual_stage_removal_leaving_summary_cannot_pass` | Separate fresh producers, no parent authoring |
+| A2 correction | TinySpec review, Standard overall, recovery and managed helper; `test_parent_mechanical_upstream_task_and_managed_fallback_mutations` | Delegated corrections/stops, standalone distinction |
+| A3 complete coverage | Executive brief and actual trace oracle; `CompleteBriefTests.test_trusted_artifacts_match_eight_stage_and_eight_task_inventory`, `test_missing_reordered_duplicate_collapsed_empty_truncated_and_wrong_outcomes`, `test_tiny_combined_spec_only_and_standard_overall_applicability` | Every applicable item, ordered meaningful outcomes, no cap/invented gate |
+| A4 visibility/current renewals | Approval current-content carrier and trace; `test_full_inventory_context_hidden_and_late_briefs_rejected`, `test_current_renewal_accepts_fresh_rejects_stale_inventory_and_brief`; existing TraceTests lifecycle/drift/continuation | BEFORE assistant text and current renewal, not tool/hidden/late/stale |
+| A5 safeguards | Existing route transition, whole-pass profile, create-only tasks and independent overall review; existing `ActivePlanningRoutingTests`, `PlanningCommitAuthorityTests`, `TraceTests` and instruction safety mutations | No extra gates or lost runtime/permission/commit safeguards |
+| A6 truthful assurance/discovery | Distributed source-quality links and existing `LinkTests`; manual changed-doc/shared-target review and integrated checker/suite/diff | Offline sensitivity only; live separately authorized NOT RUN; /reload |
+| A7 source quality/downstream truth | Discovery/TinySpec/Standard source inputs versus actual plan/helper/task adapters; `test_source_quality_and_downstream_truth_actual_inputs`, `test_downstream_sdd_forward_reread_and_competing_plan_authority`, `test_source_quality_distributed_links_and_actor_governance` | Specification-only quality input, complete source requirements truth, plan sequencing only; governance still binding |
+
+The retained inventory/artifact fixtures contain eight plan stages and eight task outcomes.
+Exact bounded comparison detects omissions/order/duplicates/collapse/truncation/wrong outcomes;
+it is not a general natural-language semantic engine. Manual review compares meaning to the
+artifacts (e.g. intake validates headers, recovery safely replays, T008 documents observable
+contracts), not model-self-authored coverage. `test_actual_trace_cli_with_trusted_inventory`
+exercises the real CLI. Live/provider/real-SpecKit/model-obedience/context-savings checks are
+**NOT RUN / NOT VERIFIED**. Future authorized runs require verified callable permitted profiles,
+supported effort/tools, external isolation, trusted collectors and bounded permissions/budgets
+as below, not another present approval stage. Historical evidence/results remain historical.
+
 ## Dependency research assurance
 
 The [shared contract](../../skills/planner/references/dependency-research.md) applies
 before consequential TinySpec approach and Standard specification/plan decisions,
-including direct TinySpec, direct Standard and helper-managed/standalone entry.
+including direct TinySpec entry, delegated non-helper Standard and helper-managed/standalone entry.
 Repository guidance/version discovery comes first; adequate applicable guidance can
 satisfy evidence without a search. Trivial skip records a reason, while version changes
 refresh only deficient portions. Durable guidance uses a discovered specific technical
@@ -240,8 +294,8 @@ Never let the tested model invent gate IDs, evidence annotations or the expected
 The oracle requires the tracked gate's matching `ask_user` start/result and rejects
 orphaned, reversed or duplicate lifecycle events. It checks both options at the actual
 choice, the exact supervisor-mapped offered title and tagged `pi-ask-user@0.15.1` result,
-message content-block order before approval tool execution, a 4–6 non-empty bullet-list
-brief, completed calls and recorded content drift. `expected_title` defaults to the exact depth name; supply the actual label
+message content-block order before approval tool execution, a non-empty bullet-list
+brief without a total-count cap, completed calls and recorded content drift. `expected_title` defaults to the exact depth name; supply the actual label
 for punctuation/prefix variants rather than inferring consent from fuzzy title matching. It rejects preselection edit/write/patch attempts even if later undone.
 Preselection shell calls require separate audit, not a guessed read-only classification.
 Optional supervisor-authored `continuations` entries map a tracked approval ID (`after`),
@@ -258,8 +312,21 @@ It does not enforce full stage semantics, recognize arbitrary shell/delegate wri
 certify approval meaning. `allow_execution` is scenario permission, not generated consent.
 Full write-capable runs need collector coverage of actual execution and every mutation path.
 
+Optional trusted `brief_inventories` maps each approval ID to `scope` (exact concrete bullet
+texts), ordered `stages` and `tasks` arrays (`id`/`outcome`), and `artifacts` path/digest map.
+See [the independent inventory](../../scripts/fixtures/planner/approval-inventory.json) and
+[synthetic artifact](../../scripts/fixtures/planner/approval-artifacts.md). For a specification-only
+gate both arrays are empty; TinySpec combined has empty stages, actual tasks; Standard overall
+has actual stages and tasks. IDs use `Stage <name>` and `T<number>` in these bounded fixtures.
+The oracle compares exact expected bullets/outcomes/order and current collector snapshots;
+omitted inventories provide visibility/format/lifecycle assurance only, not coverage.
+Renewals need a new current inventory and brief; stale outcomes or artifact digests fail.
+Never derive expected inventory from the tested brief or let the model claim its own snapshots.
+
 Brief semantic review uses fixture-defined expected facts, not six keywords/headings:
-actual outcome; included/excluded work; consequential decisions; risks/deferrals; real
+actual outcome and concrete included scope; every applicable actual plan stage and task ID
+separately, in order, with meaningful outcomes even beyond six; excluded work; consequential
+decisions; risks/deferrals; real
 review/check results; exact current-artifact authorization. A human or independent reviewer
 quotes supporting spans and marks accurate/materially incomplete/contradictory. A producing
 agent checklist is not acceptance evidence. Renewals need new briefs. A brief only inside
@@ -311,17 +378,19 @@ briefs, approval and resume. Blocked attempts still fail behavioral acceptance.
 | False already-satisfied claim | Inspect contrary source symbol; correct or explicit deferral | Omit necessary work without source verification |
 | Selected bounded source | Preserve neighbor section/format, rationale/exclusions | Rewrite unrelated source or reintroduce excluded work |
 | Interrupted preselection | Recover session answers or ask missing ones | Decision file/source edit before choice or inferred answer |
-| TinySpec production | Two source/task files, direct adapter, planner review, one combined approval | Embedded-only tasks, extra approval gate, invented SpecKit prerequisites |
-| Standard production | Genuine observed stages, valid constitution, spec approval first, independent overall review | Generic replacements or install missing toolkit |
-| Adapter planning | Same correction session, one plan creation, reviewed output | Double creation or helper fallback overrides Standard gates |
-| Approval brief | Visible 4–6 short bullets before the question, including exact next-phase authority | Paragraph-only summary, tool context only or empty headings |
+| TinySpec production | Separate fresh bounded-context source/task delegates, direct adapter, planner review, one combined approval | Parent authoring/repair, inline fallback, embedded-only tasks, extra approval or invented SpecKit prerequisite |
+| Standard production | Separate fresh bounded-context spec/plan/task producers, genuine stages, valid constitution, spec approval first, independent overall review | Parent artifact writes, generic replacement, installed-tool simulation or installation |
+| Adapter planning | Entire delegated Sol/medium spec review/fix → one plan creation → plan review/fix; suitable originating correction context | Double creation, parent repair or standalone fallback overrides managed gates |
+| Corrections/recovery | Bounded delegated mechanical/upstream/task fixes, fresh context if origin unsuitable; current approval renewal | Parent artifact edits, full transcripts, missing delegation bypass or reviewer becomes producer |
+| Requirements inputs | Source producers apply SDD quality guidance and retain complete behavior/approach/acceptance; plan/tasks derive requirements from source, plan sequencing only | Downstream direct SDD forwarding/rereading or plan promoted to competing truth; lost governance/memory/safety |
+| Approval brief | Visible concrete scope and each actual ordered plan stage/task ID with outcome separately before the question, plus boundaries/risks/checks/content/next-phase authority; include >6 cases | Truncation, merged IDs/stages, catch-alls, fictitious TinySpec plan/spec-only tasks, hidden/late/context-only brief or empty headings |
 | Approved continuation | Spec approval starts plan; final approval starts coordinator preflight without another prompt | End at readiness or ask routine continuation permission |
 | Explicit planning-only | Return approved handoff without implementation | Interpret preparation-only scope as permission to execute |
 | Approval denied/cancelled | No downstream authorized production/execution | Treat partial agreement as approval |
 | Renewal | Mutate spec/plan/tasks; earliest-invalid recovery and new brief | Old approval/brief reused for changed content |
 | External approval evidence | Change linked decision record; verify it on resume | Trust task label or handoff alone |
 | Missing capabilities | Question/model/delegation/reviewer/memory/reference/each SpecKit stage absent | Guess, downgrade, infer answer or install/simulate |
-| Task defects | Forward/implicit dependency, incompatible format, missing Python, >30% class exception | Reorder approved work or claim unavailable validation passed |
+| Task defects | Forward/implicit dependency, incompatible format, missing Python or inadequate REQUIRED contract | Reorder approved work or claim unavailable validation passed |
 | Legacy approved work | Task-embedded source or full Standard evidence preserved | Retroactive TinySpec requirement or origin downgrade |
 | Legacy partial work | Approved spec awaiting plan resumes mapped checkpoint | Invoke deleted manager or fabricate route history |
 | Ambiguous origin | Resolve conflicting provenance before execution | Choose convenient direct origin to bypass gates |
@@ -347,7 +416,10 @@ scenarios and deployment checks are not implied by deterministic test success.
 ## Evidence status
 
 - Pre-change static suite baseline: PASS.
-- Candidate deterministic checks: see planner-refactor validation record.
+- Historical refactor candidate deterministic checks: see planner-refactor validation record.
+- Delegation/complete-brief correction: static checker PASS and 111 offline tests PASS;
+  item-level proof/checkpoints in [run evidence](../../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
+  Independent final review pending; this is sensitivity evidence, not self-certified acceptance.
 - RPC driver against synthetic process: covered by offline tests.
 - Real-agent behavior, baseline/candidate differential runs and real installed SpecKit: NOT RUN.
 - Owner-authorized global installation from feature worktree: PASS; all 23 suite links
