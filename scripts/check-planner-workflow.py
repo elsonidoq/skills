@@ -46,6 +46,22 @@ def stage(text, name):
     return text[start:next_stage + end.start()] if end else section(text[start:], marker)
 
 
+
+def operational_carrier(text, selector):
+    """Bound an actual operational stage/adapter; summary wording cannot satisfy it."""
+    if selector.startswith("stage:"):
+        return stage(section(text, "### Standard path"), selector[6:])
+    if selector.startswith("item:"):
+        marker = selector[5:]
+        text = section(text, "### TinySpec path" if marker[0].isdigit() else "## Preconditions and adapters")
+        start = text.find(marker)
+        if start < 0:
+            return ""
+        tail = text[start + len(marker):]
+        end = re.search(r"\n(?:\d+\. \*\*|##|- A (?:direct|SpecKit) adapter|New TinySpec)", tail)
+        return text[start:] if not end else text[start:start + len(marker) + end.start()]
+    return section(text, selector)
+
 def check_contracts(texts):
     errors = []
     def require(label, text, *phrases):
@@ -555,6 +571,14 @@ def check_contracts(texts):
         require(label, section(texts.get(key, ""), heading), *clauses)
     if not texts.get("risk"):
         errors.append("risk-reference: required shared carrier missing or empty")
+    for label, key, selector, clauses in DELEGATION_CARRIERS + AUTHORITY_CARRIERS:
+        body = operational_carrier(texts.get(key, ""), selector)
+        require(label, body, *clauses)
+        reject(label, body, "parent may create artifacts", "parent may fix mechanical issues",
+               "parent may fix upstream artifacts", "parent may fix tasks",
+               "managed direct fallback is permitted", "inline fallback is permitted",
+               "forward SDD guidance as requirements input", "reread SDD guidance for requirements",
+               "approved plan is requirements truth")
     return errors
 
 
@@ -611,7 +635,7 @@ RISK_CARRIERS = (
      ("early risk reduction", "current proof applicability", "inspect/run", "production tests",
       "cleanup waits for all consumers", "Failed/unrun proofs cannot release assumed dependents")),
     ("risk-tiny", "tiny", "## Compact source contract",
-     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "missing-install report",
+     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "verify it is readable or stop with a missing-install report",
       "direct/standalone", "selection/omission", "minimal real-runtime executable proof",
       "easy names/types", "real-system validation", "representative/adversarial", "applicability",
       "production tests before", "all-consumer retention", "disproof/renewal",
@@ -649,6 +673,35 @@ RISK_CARRIERS = (
       "all-consumer retention", "production tests before cleanup", "disproof/renewal",
       "both adapters/direct entry", "applicability", "blocked reliance",
       "syntax/order validation alone cannot prove consumption")),
+)
+
+
+# Actual producer/consumer inputs, not incidental summary keywords.
+DELEGATION_CARRIERS = (
+    ("delegate-source", "planner", "item:1. **Source creation", ("delegate `tiny-spec`", "separate fresh", "bounded-context source producer", "unauthorized source", "delegation stops", "no parent creation/correction or inline/local fallback")),
+    ("delegate-tiny-tasks", "planner", "item:2. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/correction or inline/local fallback")),
+    ("delegate-tiny-correction", "planner", "item:3. **Review", ("Delegate every source/task correction", "originating context or a fresh bounded correction delegate", "no parent mechanical", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
+    ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "unauthorized specification delegation stops", "no parent creation/correction or inline/local", "mechanical gaps are resolved by the delegate")),
+    ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "unauthorized plan delegation stops", "no parent production/repair", "inline/local fallback", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
+    ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "unauthorized task", "delegation stops", "no parent task creation/correction or inline/local fallback")),
+    ("delegate-overall-correction", "planner", "stage:overall_review", ("Delegate mechanical task-level and upstream corrections", "originating producer", "fresh bounded correction delegate", "independent reviewer", "does not become the producer", "No parent artifact edits", "unauthorized", "correction delegation stops", "no inline/local fallback")),
+    ("delegate-recovery", "approval", "## Transition and invalidation table", ("Delegate artifact corrections", "originating producer context", "fresh bounded correction delegate", "No parent artifact authoring", "mechanical, task-level or upstream repair, including legacy recovery", "unauthorized delegation stops", "no inline/local fallback or full transcript handoff")),
+    ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors or repairs artifacts", "Delegate corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "no managed direct/inline/local fallback")),
+    ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent is not delegation", "never artifact authoring or repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate all artifact", "corrections, including mechanical, task-level and upstream changes")),
+)
+
+AUTHORITY_CARRIERS = (
+    ("quality-discovery", "planner", "## Discovery and capability boundary", ("for specification creation only, including TinySpec", "Use the SDD quality guidance to prepare source-producer briefs", "not downstream requirements", "complete relevant behavior, approach, constraints and observable", "unresolved material gaps return through existing gates")),
+    ("quality-tiny-stage", "planner", "item:1. **Source creation", ("Supply SDD quality guidance for specification creation only", "complete relevant", "behavior, approach, constraints and observable acceptance in the source", "material gaps return through existing gates")),
+    ("quality-spec-stage", "planner", "stage:spec_create", ("SDD reference for specification creation only", "complete relevant behavior, approach, constraints and observable acceptance", "unresolved material gaps return through existing gates")),
+    ("quality-tiny-producer", "tiny", "## Compact source contract", ("Read and apply the [SDD quality guidance]", "for specification creation only, including TinySpec", "missing guidance stops", "Retain complete relevant behavior, approach, constraints", "observable acceptance in this source", "gaps return through existing gates", "governing instructions/contracts, memory and permission/safety", "separate tasks remain mandatory")),
+    ("truth-plan", "planner", "stage:plan_create", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "governing instructions/contracts, memory and permission/safety")),
+    ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
+    ("truth-tiny-task-stage", "planner", "item:2. **Tasks", ("TinySpec is requirements truth", "no SDD forwarding/rereading", "direct requirements input", "Governing instructions/contracts, memory and permission/safety")),
+    ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Specification is requirements truth", "approved plan is derived sequencing", "No SDD forwarding/rereading as direct requirements input", "contracts, memory and permission/safety still apply")),
+    ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "No SDD forwarding/rereading as direct requirements input", "Trace source", "criteria into task checks", "Governing instructions/contracts, memory and permission/safety", "create-only")),
+    ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "No SDD forwarding/rereading as direct requirements", "input", "Trace source criteria into task checks", "Governing instructions/contracts, memory", "permission/safety still apply")),
+    ("brief-coverage", "approval", "## Executive brief before approval", ("concrete included scope", "Every actual ordered plan stage separately", "meaningful outcome", "Every actual task ID separately", "execution order", "Never truncate beyond six, merge IDs/stages", "catch-alls or empty headings", "TinySpec has no plan; specification-only approval", "This adds no plan approval gate", "Renewals regenerate the complete brief from current artifacts", "before calling `ask_user`")),
 )
 
 
@@ -710,6 +763,10 @@ def load_texts(root=ROOT):
         if not destinations or any((root / PATHS[key]).parent.joinpath(dest).resolve() != routing_path.resolve()
                                    for dest in destinations):
             raise ValueError(f"routing-reference: {key} shared link missing/unresolvable or wrong owner")
+    for key, title in (("planner", "SDD reference"), ("tiny", "SDD quality guidance")):
+        destinations = re.findall(r"\[" + title + r"\]\(([^)]+)\)", texts[key])
+        if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != (root / PATHS["guidance"]).resolve():
+            raise ValueError(f"quality-reference: {key} source guidance link wrong or missing")
     # Check operational carriers, not incidental mentions in a combined summary.
     for key, stages in {
         "adoption": ("Preflight", "Approval", "Adoption"),

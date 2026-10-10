@@ -1,0 +1,24 @@
+{
+  "scope": ["Scope: preserve ordered imports and explicit error recovery."],
+  "stages": [
+    {"id": "Stage intake", "outcome": "validate incoming batch headers."},
+    {"id": "Stage parse", "outcome": "decode each bounded record."},
+    {"id": "Stage normalize", "outcome": "canonicalize record identifiers."},
+    {"id": "Stage validate", "outcome": "reject conflicting record versions."},
+    {"id": "Stage persist", "outcome": "atomically retain accepted records."},
+    {"id": "Stage recover", "outcome": "replay interrupted batches safely."},
+    {"id": "Stage report", "outcome": "expose accepted and rejected counts."},
+    {"id": "Stage document", "outcome": "describe import and recovery contracts."}
+  ],
+  "tasks": [
+    {"id": "T001", "outcome": "add bounded header validation."},
+    {"id": "T002", "outcome": "implement deterministic record decoding."},
+    {"id": "T003", "outcome": "normalize identifiers without collisions."},
+    {"id": "T004", "outcome": "reject conflicting versions explicitly."},
+    {"id": "T005", "outcome": "persist accepted records atomically."},
+    {"id": "T006", "outcome": "replay interrupted batches idempotently."},
+    {"id": "T007", "outcome": "test import counts and recovery failures."},
+    {"id": "T008", "outcome": "document observable import contracts."}
+  ],
+  "artifacts": {"approval-artifacts.md": "fixture-v1"}
+}

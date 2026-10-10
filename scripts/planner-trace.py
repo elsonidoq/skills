@@ -8,21 +8,46 @@ import re
 MUTATIONS = {"edit", "write", "patch", "apply_patch"}
 
 
-def last_bullet_count(visible):
-    """Last bullet block's non-empty items; format only, not semantic completeness."""
-    count, last, in_block = 0, 0, False
+def last_bullets(visible):
+    """Last visible bullet block, including empty items so old progress cannot stand in."""
+    block, last = [], []
     for line in visible.splitlines():
         marker = re.match(r"^\s*[-*+](?:\s+|$)(.*)$", line)
         if marker:
-            if not in_block:
-                count = 0
-            in_block = True
-            count += bool(marker.group(1).strip())
+            block.append(marker.group(1).strip())
         elif line.strip() and not line.startswith((" ", "\t")):
-            if in_block:
-                last = count
-            count, in_block = 0, False
-    return count if in_block else last
+            if block:
+                last = block
+            block = []
+    return block or last
+
+
+def check_inventory(brief, inventory, snapshots):
+    """Exact bounded fixture comparison, NOT a general natural-language oracle.
+
+    Trusted supervisor inventory supplies concrete scope bullets, ordered stage/task
+    IDs and expected outcome text, plus current artifact digests, per actual gate.
+    Neither inventory nor expected outcomes are inferred from the tested brief.
+    """
+    errors, bullets = [], last_bullets(brief)
+    for expected in inventory.get("scope", []):
+        if bullets.count(expected) != 1:
+            errors.append(f"scope coverage missing/duplicated: {expected}")
+    for kind in ("stages", "tasks"):
+        entries = inventory.get(kind, [])
+        expected = [f"{item['id']}: {item['outcome']}" for item in entries]
+        ids = [item["id"] for item in entries]
+        if len(ids) != len(set(ids)) or any(not item["outcome"].strip() for item in entries):
+            errors.append(f"invalid trusted {kind} inventory")
+        # Fixture IDs use Stage <name> and T<number>. Detect invented/nonapplicable
+        # items too, not just absence of expected text. One ID/outcome per bullet.
+        pattern = r"\bStage [\w-]+\b" if kind == "stages" else r"\bT\d+\b"
+        actual = [b for b in bullets if re.search(pattern, b)]
+        if actual != expected:
+            errors.append(f"{kind} coverage/outcome/order differs from trusted inventory")
+    if any(snapshots.get(path) != digest for path, digest in inventory.get("artifacts", {}).items()):
+        errors.append("brief inventory does not match current artifact content")
+    return errors
 
 
 def check_continuations(events, contract):
@@ -83,6 +108,8 @@ def check(events, contract):
     title (defaults to expected_depth); no title-prefix convention or fuzzy consent.
     require_choice defaults true. Optional continuations map approval IDs, exact
     approved_response and next_tool/next_args to actual next-phase tool actions.
+    brief_inventories optionally maps gate IDs to trusted scope/stages/tasks/artifacts.
+    Without inventory, only visibility/format/lifecycle are checked, not coverage.
     Supplementary artifact_snapshot events are supplied by a trusted collector.
     """
     errors, visible, briefs, calls = [], "", {}, {}
@@ -141,8 +168,12 @@ def check(events, contract):
                     errors.append(f"approval is not ask_user: {ident}")
                 if not briefs.get(ident):
                     errors.append(f"no owner-visible brief BEFORE approval: {ident}")
-                elif not 4 <= last_bullet_count(briefs[ident]) <= 6:
-                    errors.append(f"approval brief must use 4–6 non-empty bullets: {ident}")
+                elif not last_bullets(briefs[ident]) or any(not b for b in last_bullets(briefs[ident])):
+                    errors.append(f"approval brief must use non-empty bullets: {ident}")
+                inventory = contract.get("brief_inventories", {}).get(ident)
+                if inventory is not None:
+                    errors.extend(f"{ident}: {error}" for error in
+                                  check_inventory(briefs.get(ident, ""), inventory, snapshots))
                 if not selected:
                     errors.append(f"approval before explicit depth choice: {ident}")
                 at_approval[ident] = snapshots.copy()

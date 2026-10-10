@@ -74,7 +74,7 @@ class EarlyRiskReductionTests(unittest.TestCase):
                     changed = dict(texts)
                     body = checker.section(changed[key], heading)
                     self.assertIn(clause, body)
-                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED", 1), 1)
+                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
                     errors = checker.check_contracts(changed)
                     self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
 
@@ -323,7 +323,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "no producer self-review/correction", "self-review permitted", "task-stage:"),
             ("planner", "independent owner-selected reviewer", "implementer reviewer", "review:"),
             ("approval", "before calling `ask_user`", "after calling `ask_user`", "approval:"),
-            ("approval", "4–6 short bullets", "unstructured paragraphs", "approval:"),
+            ("approval", "Every actual task ID separately", "unstructured paragraphs", "approval:"),
             ("planner", "brief bullet-list executive summary", "summary in tool context", "tiny-flow:"),
             ("planner", "immediately continue to `plan_create`", "wait for another prompt", "spec:"),
             ("planner", "immediately proceed to handoff", "report readiness and stop", "tiny-flow:"),
@@ -375,7 +375,7 @@ class InstructionTests(unittest.TestCase):
                                     for e in checker.check_contracts(changed)))
 
     def test_bulleted_brief_and_automatic_continuation_contract(self):
-        self.assertIn("4–6 short bullets", self.texts["approval"])
+        self.assertIn("Every actual task ID separately", self.texts["approval"])
         self.assertIn("Do not end the turn merely to report approval", self.texts["planner"])
         self.assertIn("automatically invoke `coordinate-implementation`", self.texts["planner"])
         self.assertIn("explicitly requested planning-only", self.texts["planner"])
@@ -989,6 +989,185 @@ class TraceTests(unittest.TestCase):
     def test_standard_override(self):
         events = scenario(); events[2] = end("choose", "Standard")
         self.assertEqual(trace.check(events, {**self.contract, "expected_depth": "Standard"}), [])
+
+
+class DelegationAuthorityTests(unittest.TestCase):
+    """Named operational-carrier mutations; not live model obedience."""
+
+    def test_creation_correction_stop_carrier_clause_removals(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, selector, clauses in checker.DELEGATION_CARRIERS:
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    body = checker.operational_carrier(texts[key], selector)
+                    self.assertIn(clause, body)
+                    changed = dict(texts)
+                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+    def test_actual_stage_removal_leaving_summary_cannot_pass(self):
+        texts = checker.load_texts()
+        for label, key, selector, _ in checker.DELEGATION_CARRIERS + checker.AUTHORITY_CARRIERS:
+            with self.subTest(carrier=label):
+                body = checker.operational_carrier(texts[key], selector)
+                self.assertTrue(body)
+                changed = dict(texts)
+                changed[key] = changed[key].replace(body, "", 1) + "\n## Summary only\n" + body.replace(selector.removeprefix("item:"), "Summary", 1)
+                self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+    def test_parent_mechanical_upstream_task_and_managed_fallback_mutations(self):
+        texts = checker.load_texts()
+        for label, key, selector, _ in checker.DELEGATION_CARRIERS:
+            for forbidden in ("parent may create artifacts", "parent may fix mechanical issues",
+                              "parent may fix upstream artifacts", "parent may fix tasks",
+                              "managed direct fallback is permitted", "inline fallback is permitted"):
+                with self.subTest(carrier=label, forbidden=forbidden):
+                    body = checker.operational_carrier(texts[key], selector)
+                    changed = dict(texts)
+                    changed[key] = changed[key].replace(body, body + "\n" + forbidden + "\n", 1)
+                    self.assertTrue(any(e.startswith(label + ": contradictory") for e in checker.check_contracts(changed)))
+
+    def test_source_quality_and_downstream_truth_actual_inputs(self):
+        texts = checker.load_texts()
+        for label, key, selector, clauses in checker.AUTHORITY_CARRIERS:
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    body = checker.operational_carrier(texts[key], selector)
+                    self.assertIn(clause, body)
+                    changed = dict(texts)
+                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+    def test_downstream_sdd_forward_reread_and_competing_plan_authority(self):
+        texts = checker.load_texts()
+        for label, key, selector, _ in checker.AUTHORITY_CARRIERS:
+            if not label.startswith("truth-"):
+                continue
+            for forbidden in ("forward SDD guidance as requirements input",
+                              "reread SDD guidance for requirements", "approved plan is requirements truth"):
+                with self.subTest(carrier=label, forbidden=forbidden):
+                    body = checker.operational_carrier(texts[key], selector)
+                    changed = dict(texts)
+                    changed[key] = changed[key].replace(body, body + "\n" + forbidden + "\n", 1)
+                    self.assertTrue(any(e.startswith(label + ": contradictory") for e in checker.check_contracts(changed)))
+
+    def test_source_quality_distributed_links_and_actor_governance(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for key, title in (("planner", "SDD reference"), ("tiny", "SDD quality guidance")):
+            destination = re.search(r"\[" + title + r"\]\(([^)]+)\)", texts[key]).group(1)
+            owner = (ROOT / checker.PATHS[key]).parent / destination
+            self.assertEqual(owner.resolve(), (ROOT / checker.PATHS["guidance"]).resolve())
+            self.assertTrue(owner.is_file())
+        for selector in ("item:- A SpecKit adapter", "item:- A direct adapter"):
+            body = checker.operational_carrier(texts["tasks"], selector)
+            self.assertIn("Trace source", body)
+            self.assertIn("permission/safety", body)
+        self.assertIn("separate source and tasks file", texts["tasks"])
+
+
+class CompleteBriefTests(unittest.TestCase):
+    """Trusted exact fixture outcomes, not a generic semantic/NLP oracle."""
+
+    def setUp(self):
+        self.inventory = json.loads((HERE / "fixtures/planner/approval-inventory.json").read_text())
+
+    def brief(self, inventory):
+        return "\n".join("- " + item for item in inventory["scope"] +
+                         [f"{i['id']}: {i['outcome']}" for kind in ("stages", "tasks") for i in inventory[kind]])
+
+    def run_brief(self, brief, inventory=None):
+        inventory = self.inventory if inventory is None else inventory
+        events = scenario()
+        events[3] = {"type": "artifact_snapshot", "path": "approval-artifacts.md", "digest": "fixture-v1"}
+        events[4] = message(text(brief), call("approve"))
+        contract = {**TraceTests.contract, "brief_inventories": {"approve": inventory}}
+        return trace.check(events, contract)
+
+    def test_trusted_artifacts_match_eight_stage_and_eight_task_inventory(self):
+        artifact = (HERE / "fixtures/planner/approval-artifacts.md").read_text()
+        for bullet in self.brief(self.inventory).splitlines():
+            self.assertIn(bullet, artifact)
+        self.assertGreater(len(self.inventory["stages"]), 6)
+        self.assertGreater(len(self.inventory["tasks"]), 6)
+        self.assertEqual(self.run_brief(self.brief(self.inventory)), [])
+
+    def test_missing_reordered_duplicate_collapsed_empty_truncated_and_wrong_outcomes(self):
+        original = self.brief(self.inventory).splitlines()
+        for kind, first, last in (("stages", 1, 8), ("tasks", 9, 16)):
+            variants = {}
+            variants["omitted"] = original[:last] + original[last + 1:]
+            swapped = original.copy(); swapped[first], swapped[first + 1] = swapped[first + 1], swapped[first]
+            variants["reordered"] = swapped
+            variants["duplicate"] = original + [original[first]]
+            collapsed = original.copy(); collapsed[first:first + 2] = [original[first] + " and " + original[first + 1]]
+            variants["collapsed catch-all"] = collapsed
+            empty = original.copy(); empty[first] = "- " + self.inventory[kind][0]["id"] + ":"
+            variants["empty outcome"] = empty
+            wrong = original.copy(); wrong[first] = "- " + self.inventory[kind][0]["id"] + ": do the rest."
+            variants["wrong outcome"] = wrong
+            variants["six total truncation"] = original[:6]
+            for name, lines in variants.items():
+                with self.subTest(kind=kind, case=name):
+                    self.assertTrue(any(kind + " coverage" in e for e in self.run_brief("\n".join(lines))))
+        self.assertTrue(any("scope coverage" in e for e in self.run_brief("\n".join(original[1:]))))
+
+    def test_tiny_combined_spec_only_and_standard_overall_applicability(self):
+        for route in ("tiny-combined", "standard-spec-only", "standard-overall"):
+            inventory = copy.deepcopy(self.inventory)
+            if route != "standard-overall": inventory["stages"] = []
+            if route == "standard-spec-only": inventory["tasks"] = []
+            with self.subTest(route=route):
+                self.assertEqual(self.run_brief(self.brief(inventory), inventory), [])
+                if not inventory["stages"]:
+                    self.assertTrue(self.run_brief(self.brief(inventory) + "\n- Stage invented: no plan.", inventory))
+                if not inventory["tasks"]:
+                    self.assertTrue(self.run_brief(self.brief(inventory) + "\n- T001: nonexistent task.", inventory))
+
+    def test_current_renewal_accepts_fresh_rejects_stale_inventory_and_brief(self):
+        events = scenario()
+        events[3] = {"type": "artifact_snapshot", "path": "approval-artifacts.md", "digest": "fixture-v1"}
+        events[4] = message(text(self.brief(self.inventory)), call("approve"))
+        renewed = copy.deepcopy(self.inventory)
+        renewed["tasks"][-1]["outcome"] = "document revised recovery limits."
+        renewed["artifacts"]["approval-artifacts.md"] = "fixture-v2"
+        events += [{"type": "artifact_snapshot", "path": "approval-artifacts.md", "digest": "fixture-v2"},
+                   message(text(self.brief(renewed)), call("renew")), start("renew"), end("renew", "Approve")]
+        contract = {**TraceTests.contract, "approvals": ["approve", "renew"],
+                    "brief_inventories": {"approve": self.inventory, "renew": renewed}}
+        self.assertEqual(trace.check(events, contract), [])
+        stale = copy.deepcopy(events); stale[-3] = message(text(self.brief(self.inventory)), call("renew"))
+        self.assertTrue(any("renew: tasks coverage" in e for e in trace.check(stale, contract)))
+        stale_contract = copy.deepcopy(contract); stale_contract["brief_inventories"]["renew"] = self.inventory
+        self.assertTrue(any("current artifact content" in e for e in trace.check(events, stale_contract)))
+
+    def test_full_inventory_context_hidden_and_late_briefs_rejected(self):
+        for placement in ("context", "hidden", "late"):
+            events = scenario(); brief = self.brief(self.inventory)
+            events[3] = {"type": "artifact_snapshot", "path": "approval-artifacts.md", "digest": "fixture-v1"}
+            if placement == "context":
+                events[4] = message(call("approve")); events[5]["args"]["context"] = brief
+            elif placement == "hidden":
+                events[4] = message({"type": "thinking", "thinking": brief}, call("approve"))
+            else:
+                events[4] = message(call("approve"), text(brief))
+            contract = {**TraceTests.contract, "brief_inventories": {"approve": self.inventory}}
+            with self.subTest(placement=placement):
+                self.assertTrue(any("BEFORE" in e for e in trace.check(events, contract)))
+
+    def test_actual_trace_cli_with_trusted_inventory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            events = scenario()
+            events[3] = {"type": "artifact_snapshot", "path": "approval-artifacts.md", "digest": "fixture-v1"}
+            events[4] = message(text(self.brief(self.inventory)), call("approve"))
+            contract = {**TraceTests.contract, "brief_inventories": {"approve": self.inventory}}
+            (path / "contract.json").write_text(json.dumps(contract))
+            for expected, body in ((0, events), (1, [*events[:4], message(text("- Scope only."), call("approve")), *events[5:]])):
+                (path / "trace.jsonl").write_text("\n".join(map(json.dumps, body)))
+                result = subprocess.run([sys.executable, str(HERE / "planner-trace.py"), str(path / "trace.jsonl"), str(path / "contract.json")], capture_output=True, text=True)
+                self.assertEqual(result.returncode, expected, result.stdout)
 
 
 class LinkTests(unittest.TestCase):
