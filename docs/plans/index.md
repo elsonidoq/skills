@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Coordinator delivery without automatic bookkeeping — TinySpec](coordinator-no-bookkeeping-tinyspec.md): owner-selected feedback-only coordination, context-first recovery and preserved substantive verification; preparation only, combined source/task approval pending.
 - [Planner delegation and complete approval briefs — TinySpec](planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs; current-content owner approval and execution evidence in [run SUMMARY](../../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md), independent final review accepted within documented offline limits.
 - [Planner delegation and complete approval briefs — tasks](planner-delegation-approval-tasks.md): three approved dependency-ordered contract, regression and documentation units; checkpoints and REQUIRED dispositions in the linked source's run evidence, not historical pending labels.
 - [Comparative routing and actionable learning — tasks](comparative-routing-learning-tasks.md): four dependency-ordered tasks; focused reusable-contract validation and bounded Cerca policy reset, accepted with disclosed preservation-proof limitation.
