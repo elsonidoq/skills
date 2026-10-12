@@ -10,9 +10,8 @@ gotchas**: non-obvious, durable guidance that would surprise an agent who read t
 and authoritative documentation. Documentation describes current state; memory warns an
 agent *before* an action could trigger a non-obvious problem.
 
-First ensure the mandatory coordination store through the shared contract below, even
-when no gotcha-memory adoption exists. The gotcha discovery rules that follow do not
-create an optional or nonpersistent coordination branch.
+Coordination feedback follows the separate shared contract below; missing coordination
+storage is nonblocking and never weakens required adopted gotcha-memory discovery.
 
 ## Discovering The Store
 
@@ -62,18 +61,16 @@ similarly named index as project association without repository evidence.
 - Classify surplus entries per `compact-memory`: `KEEP`, `MIGRATE` (to an authoritative
   document), `MERGE`, or `DROP` with a recorded reason.
 
-## Required project coordination memory
+## Project coordination feedback
 
-Apply the shared [project coordination contract](references/project-coordination.md)
-for project-local compact `GUIDELINES.md` and indexed run/task evidence. Automatically
-initialize missing files, notify the user and commit only initialization files before
-proceeding; no separate setup approval or handoff-only alternative. Use the declared
-project-local root or default `<project-root>/memory/coordination/` through one lifecycle.
-Required gotcha-memory rules above remain unchanged and are a separate store contract;
-coordination initialization does not require or establish gotcha-memory adoption.
-Coordination records never go into this gotcha index or its entries. Read guidelines
-early, not execution history; selective history and approval-controlled guideline writes
-follow the shared owner.
+Apply the shared [project coordination contract](references/project-coordination.md).
+Read relevant existing compact guidance; missing coordination store or STATE is nonblocking.
+No auto-initialization, routine summaries/index updates, reflection or inferred lessons.
+Only explicit user future-directed feedback permits bounded project-local guideline changes;
+ambiguity asks before writes, explanation-only/no feedback/no-write boundaries write nothing.
+Keep path/symlink, sensitive-data and dirty/concurrent ownership protections. Required
+gotcha-memory rules above remain separate; do not disguise inferred coordination lessons
+as gotchas or put coordination records into this gotcha index.
 
 ## Report
 
@@ -82,4 +79,4 @@ constraints applied from memory, and any writes or supersessions performed in th
 session.
 ## Mandatory task checkpoint
 
-Apply the shared [task-commit contract](references/task-commit-contract.md). Factual coordination evidence is retained under its existing authority and checkpointed; committing it does not authorize guideline mutation.
+Apply the shared [task-commit contract](references/task-commit-contract.md). Explicitly authorized retained feedback is a substantive deliverable, not routine evidence persistence.

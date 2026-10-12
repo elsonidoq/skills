@@ -56,17 +56,16 @@ inputs. The source must retain complete relevant behavior, approach, constraints
 acceptance; unresolved material gaps return through existing gates.
 
 Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
-during initial understanding: ensure the mandatory project-local store exists and read
-`GUIDELINES.md` before brainstorming, scope assessment and depth choice. Automatically
-initialize missing files, notify the user and commit only initialization files before
-proceeding, without a setup approval gate. Reuse the declared project-local root or default
-`<project-root>/memory/coordination/`; preserve existing files and unrelated staged changes.
-Empty guidelines mean no invented project knowledge, not a nonpersistent execution path.
-Creation/commit failures stop with the exact blocker; required gotcha-memory stops remain
-separate. Report applicable guidance, exact constraints and evidence references without
-changing owner choice or source authority. Ordinary planning does not read the evidence
-index/history. Justified clarification uses index-first relevant-only retrieval; no match
-retains uncertainty.
+during initial understanding, including standalone/direct entry: consult relevant existing
+compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
+routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
+future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
+explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
+sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
+and evidence references through source observables → dependencies/REQUIRED checks → brief;
+verify their effect on a relevant decision, never override source/owner authority. No default
+history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
+on no match. Required gotcha-memory gates remain separate.
 
 Verify callable question capability before owner gates, and permitted usable
 owner-selected exact profiles before assigning work. Apply the shared routing selection
@@ -170,9 +169,7 @@ mandated independent reviews or honest PASS/FAIL/NOT RUN reporting.
 
 ## Before selection: understand → brainstorm → assess → ask
 
-Fresh planning is read-only until the owner selects depth, except the shared contract's
-bounded coordination-store initialization/commit and factual evidence/index/reflection
-persistence, including blocked runs before depth selection: no source edits, decision
+Fresh planning is read-only until the owner selects depth: no source edits, decision
 files, TinySpec, specification, plan, or tasks. Session history carries request bounds,
 evidence, answers/rationale, and deferrals. If interrupted, recover those records;
 if unavailable, ask for missing answers, never invent a durable preselection artifact.
@@ -247,6 +244,15 @@ review and its own approval brief, never artifact authoring or repair. Do not fo
 transcripts or unrelated history. Missing, unusable or unauthorized delegation stops the
 affected production/correction stage with the exact gap; no inline/local fallback.
 
+Default to direct asynchronous single-stage dispatch with the selected profile unchanged.
+Inspect the returned artifact/checkpoint and resolve substantive blockers before the next
+authorized stage. Never prewire dependent source→tasks stages without parent inspection.
+A workflow needs concrete branching, parallel independent work or another earned orchestration
+need that direct delegation cannot adequately serve; a single child, convenience wrapper or
+stage sequence alone is insufficient. State a terse reason in the existing brief. Earned
+workflows preserve parent inspection, stage authority, approvals and reviewer independence;
+they do not authorize parallel implementation batches.
+
 Before every delegated stage supply the bounded source, settled and non-obvious
 constraints **verbatim**, cited authorities, governing instructions/principles,
 applicable memory, prior-stage handoff, stage authorization, allowed writes, pending
@@ -278,10 +284,8 @@ both TinySpec and Standard stage briefs: source observables/acceptance, producer
 boundaries, task dependencies, checkpoints, verification and coordinator handoff. Verify
 these constraints reach tasks through the shared adapter, not just a memory summary. Check that
 approved applicable guidance changes a relevant decision (or explain existing coverage), not merely a link.
-Memory cannot override source requirements or owner authority. Preselection stays read-only
-except bounded coordination-store initialization/commit and factual evidence/index/reflection
-persistence for all runs, including blocked preselection;
-no default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
+Memory cannot override source requirements or owner authority. Preselection stays read-only;
+no routine coordination persistence, default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
 (low/medium/high with rationale) may inform later owner-selected batch routing;
 absence requires no migration and changes no approval rule.
 

@@ -73,8 +73,9 @@ class EarlyRiskReductionTests(unittest.TestCase):
                 with self.subTest(diagnostic=label, removed=clause):
                     changed = dict(texts)
                     body = checker.section(changed[key], heading)
-                    self.assertIn(clause, body)
-                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    self.assertIn(" ".join(clause.split()), " ".join(body.split()))
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, "REMOVED", body), 1)
                     errors = checker.check_contracts(changed)
                     self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
 
@@ -185,7 +186,7 @@ class ProportionateValidationTests(unittest.TestCase):
         texts = checker.load_texts()
         self.assertEqual(checker.check_contracts(texts), [])
         self.assertIn(clause, texts[key])
-        texts[key] = texts[key].replace(clause, "", 1)
+        texts[key] = texts[key].replace(clause, "")
         self.assertTrue(any(e.startswith(diagnostic + ":")
                             for e in checker.check_contracts(texts)))
 
@@ -200,22 +201,14 @@ class ProportionateValidationTests(unittest.TestCase):
                 self.assert_clause_required("planner", clause, "validation-focused")
 
     def test_batch_profile_feedback_and_diagnosed_repair_carriers(self):
-        # Causal replacement coverage for obsolete implementation-class assertions.
         for key, clause, diagnostic in (
-            ("coordination", "exact selected and observed profile", "coordination-evidence"),
-            ("coordination", "contract strength, first/final outcome", "coordination-evidence"),
-            ("coordination", "Non-model causes never count as capability failure", "coordination-profile"),
-            ("coordination", "unknown observation is never overwritten", "coordination-evidence"),
-            ("coordinator", "Inspect the failed child run, invocation, partial commits and check evidence", "coordination-routing"),
-            ("coordinator", "rerun every invalidated item", "coordination-routing"),
-            ("coordinator", "unknown cause stops blind restart", "coordination-routing"),
-            ("coordination", "unknown observation is never overwritten", "coordination-evidence"),
-            ("coordination", "Relevant approved guidance may override the seed", "coordination-profile"),
-            ("coordination", "weak or\ninvalidated successes are not strong positive guidance", "coordination-profile"),
-            ("coordination", "`environment_or_tooling`", "coordination-profile"),
+            ("coordination", "explicit user corrective/future-round direction", "coordination-feedback"),
+            ("coordination", "No feedback means no write", "coordination-feedback"),
+            ("coordinator", "inspect run/invocation, partial commits and check evidence", "coordination-routing"),
+            ("coordinator", "reruns invalidated", "coordination-routing"),
+            ("coordinator", "Unknown cause blocks blind restart", "coordination-routing"),
         ):
-            with self.subTest(clause=clause):
-                self.assert_clause_required(key, clause, diagnostic)
+            self.assert_clause_required(key, clause, diagnostic)
 
     def test_schema_security_durability_retain_necessary_checks(self):
         self.assert_clause_required("planner", "migration, authorization or persistence", "validation-risk")
@@ -224,7 +217,7 @@ class ProportionateValidationTests(unittest.TestCase):
         for key, clause, diagnostic in (
             ("planner", "Optional checks are not acceptance blockers", "validation-authority"),
             ("tasks", "Optional checks do not become blockers", "validation-tasks"),
-            ("coordinator", "optional hardening/broader regression is not a blocker", "validation-execution"),
+            ("coordinator", "optional checks cannot compensate", "validation-execution"),
         ):
             with self.subTest(key=key):
                 self.assert_clause_required(key, clause, diagnostic)
@@ -233,17 +226,13 @@ class ProportionateValidationTests(unittest.TestCase):
         self.assert_clause_required("planner",
             "Never drop an owner-required check or approved\nsafety criterion without explicit authority",
             "validation-authority")
-        self.assert_clause_required("coordinator", "leave acceptance blocked", "validation-execution")
+        self.assert_clause_required("coordinator", "manual/permission gates block reliance", "validation-execution")
         self.assert_clause_required("tasks", "owner-required criteria", "validation-tasks")
 
     def test_timeout_narrows_remaining_work_without_blind_retry(self):
-        for clause in (
-            "checkpoint early", "retain valid completed\n  evidence",
-            "narrow the remaining step instead of restarting the entire batch",
-            "timeout alone is not retry authority",
-        ):
-            with self.subTest(clause=clause):
-                self.assert_clause_required("coordinator", clause, "validation-timeout")
+        for clause in ("On timeout inspect the checkpoint and failed", "preserve completed proof",
+                       "narrow only the diagnosed remaining work", "Rotation is not retry authority"):
+            self.assert_clause_required("coordinator", clause, "validation-timeout")
 
     def test_reuse_and_causal_repairs_avoid_repeated_intake(self):
         for clause in ("Reuse valid unchanged evidence", "Avoid repeated historical intake", "actually blocks"):
@@ -254,16 +243,13 @@ class ProportionateValidationTests(unittest.TestCase):
 class VerificationCarrierTests(unittest.TestCase):
     def test_unconditional_escalation_restoration_rejected_with_summaries_intact(self):
         texts = checker.load_texts()
-        conditional = "Where diagnosed and authorized, stronger-capability repair is implementation continuation"
-        heading = "## Select Execution Capability"
-        carrier = checker.section(texts["coordinator"], heading)
+        conditional = "Targeted repair retains"
+        carrier = checker.section(texts["coordinator"], "## Execute and Integrate")
         self.assertIn(conditional, carrier)
-        self.assertIn("Same-profile targeted repair remains appropriate when sufficient", carrier)
         texts["coordinator"] = texts["coordinator"].replace(
-            carrier, carrier.replace(conditional, "Repair is stronger implementation continuation", 1), 1)
-        texts["coordinator"] += "\n## Conditional repair summary only\n" + conditional
-        errors = checker.check_contracts(texts)
-        self.assertTrue(any(e.startswith("verification-repair:") and conditional in e for e in errors), errors)
+            carrier, carrier.replace(conditional, "Always use stronger repair", 1), 1)
+        texts["coordinator"] += "\n## Footer\n" + conditional
+        self.assertTrue(any(e.startswith("verification-repair:") for e in checker.check_contracts(texts)))
 
     def test_named_section_removals_fail_even_with_summary_intact(self):
         texts = checker.load_texts()
@@ -273,8 +259,9 @@ class VerificationCarrierTests(unittest.TestCase):
                 with self.subTest(case=label, removed=clause):
                     changed = dict(texts)
                     body = checker.section(changed[key], heading)
-                    self.assertIn(clause, body)
-                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    self.assertIn(" ".join(clause.split()), " ".join(body.split()))
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, "REMOVED", body), 1)
                     changed[key] += "\n## Summary mention only\n" + clause
                     self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
 
@@ -333,20 +320,20 @@ class InstructionTests(unittest.TestCase):
             ("tasks", "stable task-local references", "unstable references", "task-contract:"),
             ("brainstorm", "no more than three items", "unbounded agenda", "brainstorm:"),
             ("brainstorm", "Only in selected-production", "In any mode", "brainstorm:"),
-            ("coordinator", "Commit each task's verified changes as one focused commit", "Commit each batch", "execution-checkpoints:"),
-            ("coordinator", "only asynchronously in the background", "foreground is fine", "execution-sequential:"),
-            ("coordinator", "separate TinySpec/source and tasks", "source checklist only", "intake:"),
-            ("coordinator", "Copy the owner-selected binding and effort unchanged", "Use an agent default", "execution-selection:"),
-            ("coordinator", "at assignment and again at dispatch", "at assignment only", "execution-selection:"),
-            ("coordinator", "Retain the recorded strategy on resume", "Recount incomplete tasks", "execution-strategy:"),
+            ("coordinator", "Commit each task's verified changes as one focused owned-path commit", "Commit each batch", "execution-checkpoints:"),
+            ("coordinator", "sequentially, never in parallel", "foreground is fine", "execution-sequential:"),
+            ("coordinator", "TinySpec needs separate source/tasks", "source checklist only", "intake:"),
+            ("coordinator", "Copy the owner-selected exact profile", "Use an agent default", "execution-selection:"),
+            ("coordinator", "at assignment and dispatch", "at assignment only", "execution-selection:"),
+            ("coordinator", "Completing tasks does not change that strategy", "Recount incomplete tasks", "execution-strategy:"),
             ("adoption", "every unrelated byte", "custom content", "adoption:"),
             ("docs", "not substantive implementation authorization", "implementation authorization", "docs:"),
         ]
         for key, old, new, diagnostic in mutations:
             with self.subTest(mutation=old):
-                self.assertIn(old, self.texts[key])
+                self.assertIn(" ".join(old.split()), " ".join(self.texts[key].split()))
                 changed = dict(self.texts)
-                changed[key] = changed[key].replace(old, new, 1)
+                changed[key] = re.sub(r"\s+".join(re.escape(w) for w in old.split()), new, changed[key])
                 errors = checker.check_contracts(changed)
                 self.assertTrue(any(e.startswith(diagnostic) for e in errors), errors)
 
@@ -766,12 +753,17 @@ class ProjectCoordinationWiringTests(unittest.TestCase):
         del texts["coordination"]
         self.assertTrue(any(e.startswith("coordination-reference:") for e in checker.check_contracts(texts)))
 
-    def test_lost_coordinator_reflection_fails_with_shared_summary_intact(self):
+    def test_routine_consumer_bookkeeping_resurrection_fails(self):
         texts = checker.load_texts()
-        body = checker.section(texts["coordinator"], "## Coordination reflection and guideline approval")
-        texts["coordinator"] = texts["coordinator"].replace(body, "", 1) + "\n## Summary only\n" + body
-        self.assertIn("Exact guideline approval", texts["coordination"])
-        self.assertTrue(any(e.startswith("coordination-approval:") for e in checker.check_contracts(texts)))
+        for key in ("planner", "tiny", "tasks", "helper", "memory", "coordinator", "adoption"):
+            for clause in ("Automatically initialize coordination memory", "Write a run SUMMARY on completion",
+                           "Refresh the coordination index after every task", "Reflect at blocked pause",
+                           "Commit evidence separately before the next task", "Infer lessons from failed runs",
+                           "Automatically create STATE.md", "Update STATE after child-ID return", "Remove finished STATE items"):
+                with self.subTest(consumer=key, clause=clause):
+                    changed = dict(texts)
+                    changed[key] += "\n" + clause
+                    self.assertTrue(any(e.startswith("coordination-unsafe-" + key + ":") for e in checker.check_contracts(changed)))
 
     def test_all_distributed_consumers_resolve_coordination_owner(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -784,11 +776,65 @@ class ProjectCoordinationWiringTests(unittest.TestCase):
                 self.assertEqual((target / name / relative).resolve(), owner.resolve())
                 self.assertIn("# Project coordination memory", (target / name / relative).read_text())
 
-    def test_reflection_phase_after_review_and_checkpoint_inside_execution(self):
-        text = checker.load_texts()["coordinator"]
-        self.assertLess(text.index("## Execute and Integrate"), text.index("### Coordination evidence checkpoint"))
-        self.assertLess(text.index("### Coordination evidence checkpoint"), text.index("## Review and Acceptance"))
-        self.assertLess(text.index("## Review and Acceptance"), text.index("## Coordination reflection and guideline approval"))
+    def test_no_reflection_or_extra_checkpoint_and_feedback_guards(self):
+        texts = checker.load_texts()
+        text = texts["coordinator"]
+        self.assertNotIn("### Coordination evidence checkpoint", text)
+        self.assertNotIn("## Coordination reflection and guideline approval", text)
+        self.assertIn("No extra\nevidence-only checkpoint", text)
+        for clause in ("No feedback means no write", "without a routine second exact-content approval", "never history/index/run scaffolding"):
+            changed = dict(texts)
+            changed["coordination"] = re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", changed["coordination"])
+            self.assertTrue(any(e.startswith("coordination-feedback:") for e in checker.check_contracts(changed)))
+
+
+class StageDispatchTests(unittest.TestCase):
+    """Authored symbolic direct/earned-workflow cases, not a provider/tool invocation."""
+    def test_stage_dispatch_guards_are_scoped_and_not_footer_rescuable(self):
+        texts = checker.load_texts()
+        clauses = ("direct asynchronous single-stage dispatch", "selected profile unchanged",
+                   "Inspect the returned artifact/checkpoint", "before the next authorized stage",
+                   "Never prewire dependent source→tasks", "direct delegation cannot adequately serve",
+                   "stage sequence alone is insufficient", "do not authorize parallel implementation batches")
+        for clause in clauses:
+            changed = dict(texts)
+            body = checker.section(changed["planner"], "## Selected production and stage handoffs")
+            pattern = r"\s+".join(re.escape(w) for w in clause.split())
+            self.assertRegex(body, pattern)
+            changed["planner"] = changed["planner"].replace(body, re.sub(pattern, "REMOVED", body))
+            changed["planner"] += "\n## Footer\n" + clause
+            self.assertTrue(any(e.startswith("stage-dispatch:") for e in checker.check_contracts(changed)))
+
+    def test_direct_async_parent_inspection_then_next_authorized_stage(self):
+        trace = ["direct-async-source", "parent-artifact-checkpoint-inspection", "direct-async-tasks"]
+        self.assertLess(trace.index("parent-artifact-checkpoint-inspection"), trace.index("direct-async-tasks"))
+        for inspected, authorized, unchanged_profile, allowed in (
+            (True, True, True, True), (False, True, True, False),
+            (True, False, True, False), (True, True, False, False),
+        ):
+            self.assertEqual(inspected and authorized and unchanged_profile, allowed)
+
+    def test_earned_workflow_not_convenience_or_sequential_wrapper(self):
+        for reason, direct_insufficient, inspected, authorized, expected in (
+            ("branching", True, True, True, True),
+            ("parallel-independent", True, True, True, True),
+            ("earned-orchestration", True, True, True, True),
+            ("single-child", True, True, True, False),
+            ("convenience", True, True, True, False),
+            ("sequential-only", True, True, True, False),
+            ("branching", False, True, True, False),
+            ("branching", True, False, True, False),
+            ("branching", True, True, False, False),
+        ):
+            self.assertEqual(reason in ("branching", "parallel-independent", "earned-orchestration")
+                             and direct_insufficient and inspected and authorized, expected)
+        texts = checker.load_texts()
+        for unsafe in ("Default to a single-child workflow wrapper", "Prewire source→tasks without parent inspection",
+                       "Sequential convenience justifies workflows"):
+            changed = dict(texts)
+            changed["planner"] = changed["planner"].replace("## Selected production and stage handoffs",
+                                                          "## Selected production and stage handoffs\n" + unsafe)
+            self.assertTrue(any(e.startswith("stage-dispatch:") for e in checker.check_contracts(changed)))
 
 
 BRIEF = "\n".join((
@@ -1003,7 +1049,7 @@ class DelegationAuthorityTests(unittest.TestCase):
                     body = checker.operational_carrier(texts[key], selector)
                     self.assertIn(clause, body)
                     changed = dict(texts)
-                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    changed[key] = changed[key].replace(body, re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", body), 1)
                     self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
 
     def test_actual_stage_removal_leaving_summary_cannot_pass(self):
@@ -1036,7 +1082,7 @@ class DelegationAuthorityTests(unittest.TestCase):
                     body = checker.operational_carrier(texts[key], selector)
                     self.assertIn(clause, body)
                     changed = dict(texts)
-                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    changed[key] = changed[key].replace(body, re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", body), 1)
                     self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
 
     def test_downstream_sdd_forward_reread_and_competing_plan_authority(self):
@@ -1410,7 +1456,7 @@ class ComparativeCarrierTests(unittest.TestCase):
             ("routing", "actual shortfall or select the smaller option", "routing-comparison:"),
             ("routing", "none is verified/permitted", "routing-comparison:"),
             ("routing", "strict requirement versus a default preference", "routing-comparison:"),
-            ("coordinator", "startup/context savings against losing a smaller-profile opportunity", "routing-tradeoff:"),
+            ("coordinator", "separate comparative Family and Effort rationales", "routing-tradeoff:"),
         ):
             with self.subTest(clause=clause):
                 changed = dict(texts)

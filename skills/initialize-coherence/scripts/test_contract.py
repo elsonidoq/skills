@@ -21,6 +21,12 @@ SKILL = HERE.parent / "SKILL.md"
 SCENARIOS = json.loads((HERE / "fixtures/scenarios.json").read_text())
 ROWS = {row["id"]: row for row in BASELINE["ledger"]}
 STAGES = ("Preflight", "Discovery", "Investigation", "Approval", "Adoption", "Documentation", "Validation")
+BOOKKEEPING_UNSAFE = {
+    "permission-auto-state": r"automatically (?:create|update|remove) state\.md",
+    "permission-auto-coordination": r"automatically initialize coordination memory",
+    "permission-routine-reflection": r"reflect at blocked pause",
+    "permission-summary": r"write a run summary on completion",
+}
 UNSAFE = {
     "permission-unapproved": r"\bwrite any target without approval\b",
     "permission-denial": r"\bdenial grants writes\b",
@@ -67,7 +73,7 @@ def check_contract(text):
     errors = []
     if re.findall(r"^## (.+)$", text, re.M) != list(STAGES):
         errors.append("stage-order: missing, duplicated or reordered carrying stages")
-    for diagnostic, pattern in UNSAFE.items():
+    for diagnostic, pattern in (UNSAFE | BOOKKEEPING_UNSAFE).items():
         if re.search(pattern, normalized(text)):
             errors.append(f"{diagnostic}: contradictory permission")
     for row in BASELINE["ledger"]:
@@ -79,6 +85,16 @@ def check_contract(text):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_adoption_cannot_seed_removed_bookkeeping(self):
+        text = SKILL.read_text()
+        for clause, diagnostic in (
+            ("Automatically create STATE.md", "permission-auto-state"),
+            ("Automatically initialize coordination memory", "permission-auto-coordination"),
+            ("Reflect at blocked pause", "permission-routine-reflection"),
+            ("Write a run SUMMARY on completion", "permission-summary"),
+        ):
+            self.assertTrue(any(e.startswith(diagnostic + ":") for e in check_contract(text + "\n" + clause)))
+
     def test_original_sources_are_attributed_and_immutable(self):
         self.assertEqual(BASELINE["revision"], "7f6c0cb0cbdd15967d91c84b2295a45f3c64a2d3")
         for path, digest in SOURCE_HASHES.items():

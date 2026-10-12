@@ -39,7 +39,7 @@ and independently justified reasoning effort per invocation through owner choice
 never silently select a different profile inside that invocation.
 For one worker implementing one batch, normally use direct asynchronous delegation, even
 with sequential internal tasks; workflow orchestration needs a concrete reason in the existing
-brief/tracker. The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#select-execution-capability)
+brief. The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#delegate)
 owns this launch choice and the finite preparation rule: satisfied mandatory conditions lead
 to dispatch without a state-specific intent commit; only concrete invalidation reopens affected preparation.
 
@@ -70,7 +70,7 @@ operation; approval permits only scoped continuation, never LLM self-review. Ord
 use practical observables without invented ceremony; inadequate approved/legacy contracts
 return to producing review/renewal, not executor-defined weaker success.
 Passing contracts need no mandatory strong per-batch reviewer. Preserve focused per-task
-implementation commits, separate evidence-only checkpoints and one fresh independent final
+implementation commits, concrete task/runtime proof and one fresh independent final
 review over the complete committed range. Inspect failed run/invocation/partial commits and
 proof before authorized stronger implementation continuation for exact gaps under the same
 original contracts, not generic strong review. Carry current SHA/state, prior proof, dependencies
@@ -125,51 +125,24 @@ policy. Retrieval and write rules live in `memory-handling`; `compact-memory`, `
 `planner`, `tiny-spec`, `coordinate-implementation`, and `initialize-coherence` reference it.
 A missing required gotcha association routes to `initialize-coherence`, never a guessed global store.
 
-Coordination memory is mandatory and project-local, separate from adopted gotcha memory.
-Its [shared contract](skills/memory-handling/references/project-coordination.md) owns compact
-`GUIDELINES.md`, one compact evidence file per new run with a shared index (older task files remain valid), selective history retrieval
-and explicit accept/edit/reject/add guideline approval with current-content drift protection.
-Every entry point automatically initializes missing files, notifies the user and commits
-only those files before proceeding. The default root is `<project-root>/memory/coordination/`;
-existing declared project-local layouts use the same lifecycle. No setup approval, opt-out or
-handoff-only persistence path. Existing files/staged work are preserved; failures to initialize,
-commit or persist evidence stop with the exact blocker. Planner reads guidelines before depth
-choice and carries constraints into both routes. Empty initialization invents no knowledge;
-implementation approval never grants synthesized guideline mutation.
+Coordination memory is project-local explicit feedback only, separate from adopted gotchas.
+The [shared contract](skills/memory-handling/references/project-coordination.md) owns relevant
+existing guideline consultation and bounded user-feedback writes. Missing store/STATE is
+nonblocking; no auto-init, routine summaries/index updates, evidence-only commits, reflection
+or inferred lessons. Clear future corrective feedback can authorize a minimal guideline
+without routine second approval; ambiguity asks, explanation-only/no feedback/no-write writes
+nothing. Preserve local ownership/path/symlink, sensitive-data and dirty/concurrent safeguards.
+Only a needed guidelines owner may be created, never history/index/run scaffolding.
 
-Optional `residual_reasoning: low|medium|high` notes describe task/oracle conditions,
-not assignments. Existing indexed attempts retain exact selected/observed profiles or unknown,
-assessment factors, contract strength, first/final outcome, diagnosed attribution and repair
-references, batch/task item dispositions with proof references, reused/invalidated items,
-exact escalation reason and next selected profile or pending selection. First/final selected
-versus observed attempts and original unknowns remain attributable in the same SUMMARY/index.
-Environment/tooling or other non-model causes do not penalize capability; weak or
-invalidated successes cannot become strong positive guidance. Approved applicable guidelines
-may override the seed, never source/owner permissions; raw outcomes never mutate guidelines.
-No new store, schema, ML or automatic model optimization is introduced. Runtime pins and
-stage workflow/approval boundaries remain unchanged.
+## Context-first recovery
 
-## Brief current-state contract
-
-Coordinator maintains BRIEF implementation-relevant current truth in project-owned root
-`STATE.md`, or a declared project-local equivalent, through its
-[snapshot/recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery).
-It is a small ephemeral recovery bookmark, not a checkpoint system, coordinator-owned tracker
-or authorization record: roughly five bullets for goal, authority links, active run, next safe
-action and blocker, with no mandatory SHA/check/history ledger. Initialization records that
-lifecycle without fabricated progress; finish-session reconciles the same bookmark and removes
-verified finished entries. Preserve custom/unrelated content and ownership. After compaction,
-read it once and selectively reconstruct necessary facts from project files/Git/runtime before
-acting. Only authorized start, returned child identity, materially changed next safe action and
-verified completion trigger edits; routine task/batch/check/commit/poll events do not. Coalesce
-facts and skip unchanged writes. No committed dispatch-intent prerequisite or state-specific
-commit/evidence cycle; pending owned state may remain across state-only closeout or join the next
-safe otherwise-required commit. State edits never trigger summary/index writes. Record audited
-outcomes and meaningful exceptions, referencing worker evidence rather than duplicating its ledger. Reflection
-occurs at terminal closeout or a genuine blocked pause, not routine batch transitions. Mandatory
-worker task/evidence commits and local implementer duties remain unchanged.
-Write/ownership/checkpoint failures stop affected work. No compaction hook, persistence framework,
-runtime/settings change, dependency, automatic restart or live provider exercise is required.
+No automatic STATE creation/edit/removal. Preserve existing STATE/custom content. Start with
+available conversation summary/recent context and selectively reconstruct uncertain approvals,
+completion, Git ownership/checkpoints and actual child status under the
+[recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
+Unknown authority/completion blocks affected actions; active children mean inspect/wait,
+unknown child status blocks replacement. Inspect failures before targeted retry; unknown
+cause stops blind relaunch. No guessed completion, duplicate dispatch or repeated commits.
 
 ## Project docs
 

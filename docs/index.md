@@ -18,30 +18,30 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Verified unresolved bug, risk or investigation | [Open Issues](open_issues.md), via `track-open-issue` |
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
 | Model-routing benchmark evidence and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md); keep the source record discoverable as project guidelines evolve. [Batch Routing Contracts Research](../specs/002-batch-routing-contracts/research.md) owns the newer batch-only seed evidence and runtime limitations |
-| Required project-local coordination guidelines, selective history and reviewed feedback | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
+| Project-local explicit feedback guidance and selective history | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
-| Brief project-owned current state and implementation recovery | [Coordinator snapshot/recovery contract](../skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery) owns small ephemeral recovery bookmarks, material-change writes and no state-specific commit ceremony; worker checkpoints remain unchanged. This project's snapshot is root [STATE.md](../STATE.md), not a history/authorization owner |
+| Context-first implementation recovery | [Coordinator recovery contract](../skills/coordinate-implementation/SKILL.md#recover-context); summary/recent context then selective artifact/Git/check/runtime reconstruction, no automatic STATE writes |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
 
 This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
 [gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
-Coordination memory remains a separate mandatory project-local store at
-`memory/coordination/`; initialize its missing files through the shared contract. No
+Coordination memory remains a separate project-local explicit-feedback store at
+`memory/coordination/`; consult relevant existing guidance without auto-initialization. No
 suite-level persistent database/schema owner is declared. Unrelated projects and the
 legacy port retain their own documentation and memory boundaries.
 
 ## Project Guidance
 
-- [Project Constitution](../.specify/memory/constitution.md): Portable global assets, mandatory project-local coordination persistence, exact guideline approval and pragmatic verification.
+- [Project Constitution](../.specify/memory/constitution.md): Portable global assets, feedback-only coordination memory and current-content approval and pragmatic verification.
 - [Initialize Coherence](../skills/initialize-coherence/SKILL.md): Proposal-first suite adoption/memory and bounded documentation structural readiness.
 - [Planner](../skills/planner/SKILL.md): Single coordination entry point, scope assessment, user-selected depth, mandatory delegated artifact creation/correction, complete approval briefs and handoff.
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
-- [Coordinator batch approval](../skills/coordinate-implementation/SKILL.md#build-the-execution-graph): Complete table with batch descriptions and exact model/effort requires explicit routing approval before implementation; unchanged verified approval is reusable, not a universal profile default.
+- [Coordinator batch approval](../skills/coordinate-implementation/SKILL.md#prepare-approved-execution): Complete table with batch descriptions and exact model/effort requires explicit routing approval before implementation; unchanged verified approval is reusable, not a universal profile default.
 - [Qualified routing rubric](../skills/coordinate-implementation/references/batch-routing.md): Single six-factor planning/advisory and implementation selection prior; Standard `plan_create` requires Sol/medium for its entire delegated non-helper/helper pass, with no unavailable-profile substitution. Implementation-only batching rules are not planning prerequisites.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
-- [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Mandatory project-local files automatically initialized/notified/committed before choice, separate indexed evidence, selective reads and approval-controlled learned-guideline changes.
+- [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Relevant existing guidance, selective history and explicit future-directed user feedback; no routine persistence or inferred learning.
 - [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md): Mandatory focused checkpoints for authorized retained tasks, coordinator recovery/fresh-agent boundaries, and truthful static/Git-fixture limits.
 - [Early Risk Reduction](../skills/planner/references/early-risk-reduction.md): Selective early tested executable proofs, explicit production consumption, evidence lifetime and disproof replanning.
 - [Dependency Research](../skills/planner/references/dependency-research.md): Shared repository-first evidence, proportional reuse/version refresh, discoverable technical ownership and bounded persistence for TinySpec and Standard, including direct/standalone entry.

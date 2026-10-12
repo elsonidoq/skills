@@ -75,18 +75,14 @@ rules above for reusable skills and commands.
 - Gotcha memory: this repository's associated store is `memory/`, with `MEMORY.md` as
   its index and optional trigger-first entries. Follow `memory-handling`: read the whole
   index first, then only matching entries; recheck it after writes. Do not substitute
-  global memory. The separate mandatory coordination store is `memory/coordination/`:
-  its approved guidelines and indexed factual run evidence obey their own shared contract.
-- State: project-root `STATE.md` holds a small ephemeral recovery bookmark, not a
-  checkpoint system or coordinator-owned tracker. Remove verified finished entries; routine
-  progress causes no writes and STATE-only edits need no separate commit/evidence cycle.
-  Coordinator maintains implementation-relevant current state;
-  `finish-session` reconciles the same snapshot. Follow the coordinator's
-  [snapshot/recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery):
-  replace current truth, link authoritative source/tasks/approval records, preserve
-  custom/unrelated content, and reconcile Git/ownership/active runs before continuation.
-  No growing ledger or duplicate evidence. Pi sessions record the conversation;
-  `docs/open_issues.md` is the canonical unresolved-work register via `track-open-issue`.
+  global memory. Relevant existing coordination feedback guidance is in
+  `memory/coordination/`; missing store is nonblocking. Only explicit future-directed user
+  feedback authorizes guideline changes, never agent-inferred lessons or routine records.
+- Recovery: no automatic STATE maintenance, summaries/index updates, evidence-only commits
+  or reflection. Preserve existing STATE/custom content. Use available conversation summary/
+  recent context, selective artifact/Git/check reconstruction and active-child reconciliation
+  under the coordinator's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
+  Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
 - Documentation: `docs/index.md` is the routing guide and root directory index;
   `docs/plans/index.md` and `docs/plans/reviews/index.md` map their direct files.
   `README.md` owns setup/workflow, `REQUIREMENTS.md` runtime requirements,

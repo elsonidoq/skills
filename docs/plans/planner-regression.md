@@ -6,12 +6,10 @@
 checks, negative mutations, synthetic trace fixtures, isolated installation-link tests,
 a fake RPC process test, existing shared task-order units and coordinator contracts.
 These checks make known regressions observable; they do not prove arbitrary natural-language
-completeness or live model obedience. The coordinator execution section is checked against
-a SHA-256 freeze, deliberately updated for owner-authorized proportionality and additive
-coordination-memory T003–T004 hooks and the owner's mandatory project-local initialization
-correction (replacing optional/handoff-only persistence). Safety mutations remain intact:
-acceptance boundaries, evidence reuse, early checkpoints, narrowed timeout
-recovery, sequential batches, per-task commits and fresh independent final review.
+completeness or live model obedience. Changed coordinator carriers use scoped semantic
+assertions and mutations, not a verbosity-preserving SHA freeze. Safeguards remain sensitive:
+current-content approvals, REQUIRED item/diff/SHA audit, sequential per-task commits,
+selected/observed truthfulness, inspected retries and fresh independent final review.
 
 The source-first [preservation ledger](planner-refactor.md) maps preserved and deliberately
 changed behaviors. Historical coverage/reviews remain historical. Unmapped behaviors or a
@@ -179,7 +177,7 @@ sensitivity and illustrative examples (not executed library proofs):
 | AC5 / D: non-isolatable risk | Select / Produce sections; risk-walkthroughs.md D real-system failover observables and topology/deployment/fault-control/monitoring prerequisites, explicit environment permissions, NOT VERIFIED if unrun; A/D/E test and selection/producer mutations |
 | AC6 / E: disproof | Disproof and return; risk-walkthroughs.md E hypothetical loss retains failed attempt, blocks assumed T002, corrects/replans and renews affected approvals; A/D/E test and disproof mutations |
 | AC3, AC4, AC7: semantic negatives | `test_early_deletion_report_only_missing_dependency_failed_as_proven_rejected` rejects each variant in both B/C adapters; lifetime/task/disproof clause mutations provide named diagnostics |
-| AC8: documentation truth | Manual comparison of this mapping to committed reference, operational consumers and actual test definitions; current task/check evidence in the run SUMMARY, not a new operational owner |
+| AC8: documentation truth | Manual comparison of this mapping to committed reference, operational consumers and actual test definitions; concrete task/runtime check and commit evidence, not a routine run SUMMARY |
 
 Existing tiny-tasks.md and standard-tasks.md remain unchanged; new risk-tiny-tasks.md and
 risk-standard-tasks.md use the same numbered Markdown/Depends fields. Run the existing
@@ -197,45 +195,29 @@ collected commands/observations. No such operation is authorized by the offline 
 Global skill changes require `/reload` in pi. Fresh independent final implementation review
 remains required under the existing workflow, separate from this bounded documentation check.
 
-## Project coordination memory assurance
+## Project coordination feedback and context-first recovery assurance
 
-The [canonical contract](../../skills/memory-handling/references/project-coordination.md)
-owns mandatory project-local storage, compact guidelines before planner choice, separate
-factual evidence and conservative exact approval. Every entry point automatically creates
-missing files, notifies the user and commits only initialization files before proceeding;
-there is no setup approval, opt-out or handoff-only path. Default `memory/coordination/`
-is relative to the current project, not global skill installation. Existing files and staged
-work survive; repeated/partial initialization is idempotent. Creation/commit/persistence
-failures stop. Blocked preselection runs may persist factual evidence/index/reflection;
-that bounded exception grants no source/decision artifact or unapproved guideline authority.
-Learned guidelines still require exact approval; no bulk history intake or fabricated lessons. Required adopted gotcha-memory gates remain distinct.
+The [canonical feedback contract](../../skills/memory-handling/references/project-coordination.md)
+owns relevant existing guidance and explicit future-directed user feedback only. Missing
+store/STATE is nonblocking. No auto-init, routine summaries/index updates, reflection,
+evidence-only checkpoints or automatic STATE maintenance. Existing records/custom content
+stay unchanged. Required adopted gotcha-memory gates remain separate.
 
-`python3 skills/memory-handling/scripts/test_coordination_contract.py` runs 21 tests;
-`ProjectCoordinationWiringTests` adds 4 tests to the existing planner suite (78 total).
-The instruction checks read actual operational carriers and required shared links;
-removal/unsafe-policy mutations require named diagnostics, not surviving summary words.
-
-| Source | Named offline evidence (fixtures explicitly simulated) |
+| Acceptance seam | Named offline evidence |
 | --- | --- |
-| A1–A2 | `test_A1_A2_early_association_and_both_route_direct_constraints`, late-read rejection, required-link negatives; simulated fictional heuristic/manual-checkpoint handoff, empty initialized store, initialization clause removals and temporary-Git create/commit/preservation/repeat/partial checks |
-| A3–A5 | `test_A3_A4_A5_factual_checkpoint_and_index_removals`; simulated two runs/multiple tasks with failed/partial/manual/unknown, resume/interrupted record-before-index repair retaining prior records and a unique row |
-| A6 | `test_A6_reflection_uncertainty_and_no_update_removals`; simulated separate evidence-only/tentative/contrary/insufficient/no-update reflection |
-| A7–A9 | `test_A7_A8_A9_exact_approval_rejection_and_drift_removals`; prescribed pending/unavailable/cancelled/ambiguous/reject byte identity, exact accept/edit/add content and baseline record, concurrent-drift preservation/renewal |
-| A10 | `test_A10_selective_index_first_and_no_match_removals`; observed simulated index-first selected reads with unrelated records unread and no-match uncertainty; bulk-read policy rejection |
-| A11 | `test_A11_routing_selection_class_and_inspected_cause_removals`; fictional selected compatible options, both attempts/manual failure, no permanent provider rule; class/retry/one-outcome policy rejection |
-| A12 | `test_A12_existing_execution_safeguards_survive_mutations`, existing planner/coordinator/task checks, frozen execution preservation and both-route packaging/phase checks |
+| Feedback decisions/safety | `test_clear_future_feedback_needs_no_second_approval`, `test_explanation_no_feedback_approval_observation_and_no_write`, `test_dirty_concurrent_path_symlink_sensitive_and_owner_safety_stops`, guidelines-only temporary storage and scoped removal/resurrection mutations in `test_coordination_contract.py` |
+| Context-first recovery | `test_summary_insufficient_fresh_and_uncertain_context`, `test_active_unrecorded_unknown_and_inspected_failure`, seven `GitScenarioTests` in `test_state_contract.py`; no snapshot writes or duplicated commits |
+| Cheap plan trust | `test_administrative_loops_and_trust_only_acceptance_fail`, scoped actionable-guard mutations in `test_intake_contract.py`; `PreparationTraceTests` and item-specific acceptance/repair cases in `test_batching_contract.py` |
+| Substantive checkpoints | `scripts/check-task-commit-contract.py` and `scripts/test-task-commit-contract.py`: real temporary-Git scoped commits, unrelated staged/unstaged preservation, hook failures, ambiguous ownership and existing-SHA recovery without evidence-only commits |
+| Consumer/stage convergence | `scripts/check-planner-workflow.py` and `scripts/test-planner-workflow.py`: consumer resurrection, direct/earned workflow and parent-inspection negatives; onboarding immutable historical-source and bounded-refresh fixtures |
 
-The temporary filesystem examples carry out prescribed operations directly. They are **not**
-a production persistence/approval engine, a fake `ask_user` implementation or proof that an
-agent obeys these instructions. No persistence helper was introduced. Offline PASS means
-contract sensitivity, link/stage wiring and illustrative file/byte checks only. Real model
-read/write/approval adherence and actual SpecKit production are **NOT RUN** and require
-separate authorization with attributable collected events/artifact snapshots. Review actual
-scope/unknowns, row refresh/reconciliation, exact diff/answer/baseline drift and selected
-class/capability handling manually. See the [execution record](project-coordination-memory-execution.md)
-for historical commands/results and completed review; the mandatory-initialization correction
-is documented in project-local execution evidence. Learned-guideline
-approval never substitutes for feature acceptance. After global skill changes run `/reload`.
+Run the existing suite entry plus the separate feedback test:
+`PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh` and
+`PYTHONDONTWRITEBYTECODE=1 python3 skills/memory-handling/scripts/test_coordination_contract.py`.
+Static mutations and symbolic scenarios show instruction consistency, not live obedience,
+provider execution or compaction fidelity. Live checks are NOT RUN and require separate
+permission. Fresh independent final review over the committed range remains required.
+Global asset changes require `/reload` in pi.
 
 ## Comparative routing and approved-learning evaluation (permission-gated, NOT RUN)
 
@@ -247,8 +229,8 @@ comparison:
 2. **Recovery:** same-sized task with hidden coupling, multi-step recovery and costly failure.
 3. **Docs plus acceptance:** a documentation producer followed by its acceptance/cleanup consumer;
    assess coherent grouping against the concrete smaller-profile opportunity.
-4. **Process lesson:** propose a non-model process lesson, require exact approval, then retrieve
-   approved guidance and show its effect on a source criterion, task dependency/check, brief and
+4. **User feedback:** supply explicit future-directed corrective feedback, then retrieve
+   authorized compact guidance and show its effect on a source criterion, task dependency/check, brief and
    routing decision. Pending/rejected/drifted content must not influence the decision.
 
 For each, record baseline and candidate input/artifact hashes, then obtain fresh read-only outputs

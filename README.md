@@ -48,9 +48,7 @@ Use planner for this requirement:
 ```
 
 Planner inspects the requirement/codebase, brainstorms unresolved material choices, and
-presents an approximate scope assessment. This phase is read-only except mandatory
-project-local coordination-store initialization/commit and factual evidence/index/reflection
-persistence, including runs blocked before depth selection. It always presents both
+presents an approximate scope assessment. This phase is read-only. It always presents both
 paths and stops for your explicit choice; the recommendation does not choose for you.
 
 ```text
@@ -120,11 +118,11 @@ No universal Sol/medium default or forced model diversity applies.
 Verify permitted callable binding, supported effort, tools and owner gates at assignment/dispatch,
 and ensure settings do not silently override actual dispatch arguments. Actual profile stays
 unknown when unobservable, never inferred from selection.
-The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#select-execution-capability)
+The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#delegate)
 ends preparation once mandatory conditions are satisfied (no state-specific intent commit), reopening only
 for concrete affected invalidation. One worker implementing one batch normally uses direct
 asynchronous delegation, including multiple internal sequential tasks; a workflow needs a
-concrete orchestration reason in the existing brief/tracker, not merely a batch label.
+concrete orchestration reason in the existing brief, not merely a batch label.
 
 Verification per task; execution per coherent batch. Practical producer contracts retain
 criterion/check/evidence/gates and optional distinction through both adapters. In the sole
@@ -150,90 +148,39 @@ proof, dependencies and invalidations, retain valid work/attempts, rerun invalid
 reuse only confirmed-valid evidence without a fixed ladder. Unknown/non-model/manual/permission/
 contract gaps do not automatically escalate. Clean retry is exceptional: documented justification,
 ownership/safe repository mechanics and required owner/project gates, never automatic reset/discard.
-Each task has its own implementation commit followed by a separate factual evidence checkpoint;
+Each task has its own verified focused commit with concrete task/runtime proof;
 one fresh independent final review covers the complete committed range. Planning depth and
 unrelated planning/reviewer selections remain separate from implementation selection.
 Static/symbolic fixtures demonstrate contracts, not live model performance or obedience;
 live support/callability checks require separate permission and usable runtime capabilities.
 
-## Brief current state
+## Context-first recovery and coordination feedback
 
-During approved execution, coordinator maintains implementation-relevant current truth in
-project-owned root `STATE.md` (or an explicitly declared project-local equivalent).
-This is a **small ephemeral recovery bookmark**, not a checkpoint system or coordinator-owned
-tracker: roughly five bullets for goal, authority links, active run, next safe action and blocker.
-Its only purpose is recovering the big picture after auto-compaction using project files for
-details. No mandatory Git SHA, check results, completed-task ledger or accumulated history.
-Preserve custom/unrelated content and coordinate write boundaries with other workflows.
-Write only at authorized start, returned child ID, materially changed next safe action and
-verified completion. Routine task/batch/check/commit/poll events do not trigger updates.
-Capture IDs immediately, coalesce facts and skip unchanged content. No committed dispatch-intent
-prerequisite or state-specific commit/evidence cycle: state-only edits may remain owned dirtiness
-across closeout or join the next safe otherwise-required commit. State edits never trigger
-summary/index writes; audit outcomes and meaningful exceptions belong in existing evidence.
-Worker per-task commits/evidence remain unchanged; reflection occurs at closeout or a genuine pause.
-`finish-session` reconciles the same snapshot: update ongoing items in place and remove verified
-finished items, including finished planner specs, without terminal dispositions or fabricated
-successor work. Preserve other concurrent work, paused/blocked items and pending review/approval
-gates. When nothing remains, preserve the file/custom structure with empty current content;
-repeated unchanged closeout adds no checkpoint. Task artifacts, approvals, Git and coordination
-evidence stay authoritative; state confers no authorization or acceptance.
+No automatic STATE maintenance or routine coordination summaries/index updates,
+evidence-only commits or reflection. Existing STATE/custom content and historical evidence
+stay untouched. Recovery begins with available conversation summary/recent context, then
+selectively reconstructs uncertain authority, completion, Git/check/commit and child status.
+Active/unknown children require reconciliation before replacement; inspect failures before
+retry, never guess completion, repeat commits or blindly relaunch. See the
+[recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
 
-After compaction/restart/uncertainty, read state once and selectively validate linked authority, Git/ownership,
-verification evidence and recorded children before continuing. Stale/missing state requires
-reconciliation or a precise stop, never fabricated progress or duplicate dispatch. See the
-[coordinator lifecycle and recovery contract](skills/coordinate-implementation/SKILL.md#brief-current-state-and-recovery)
-for bounded evidence commits, safe active-worker persistence and failure handling. No runtime
-compaction hook or live robustness claim is implied.
+Consult relevant existing project-local guidance through the
+[feedback contract](skills/memory-handling/references/project-coordination.md).
+Missing store/STATE is nonblocking. Only explicit user corrective/future-round feedback
+permits compact guideline changes; clear feedback needs no routine second approval,
+ambiguity asks and explanation-only/no feedback/explicit no-write means no write.
+Respect local ownership/path/symlink, sensitive-data and dirty/concurrent protections;
+create only needed guidelines storage, never history/index/run scaffolding.
+Required adopted gotcha-memory discovery/retrieval stays separate.
 
-## Project coordination memory
-
-Every run uses project-local coordination files through the
-[shared contract](skills/memory-handling/references/project-coordination.md). Before planning
-or direct task/execution work, skills automatically create missing `GUIDELINES.md` and
-`evidence/INDEX.md`, tell the user and commit only the initialization files, then proceed.
-No setup approval or opt-out/handoff-only path. Use a declared project-local coordination
-root if present; otherwise the default is `<project-root>/memory/coordination/`. Existing
-files and unrelated staged work are preserved; repeat entry needs no initialization commit.
-Initialization/write/commit failures stop with a precise blocker, not nonpersistent execution.
-Empty guidelines invent no lessons. Required adopted gotcha-memory rules remain separate.
-This repository's coordination store is `memory/coordination/`.
-
-Compact `GUIDELINES.md` is read during initial understanding, **before Planner → Choose**,
-and exact applicable constraints/evidence references reach TinySpec or Standard, tasks and
-coordinator briefs. Ordinary planning does not read execution history. Only justified
-clarification/synthesis (tentative/conflicting guidance, user justification or contrary
-observations) reads the compact evidence index, then selected relevant records.
-
-One compact `evidence/<run-id>/SUMMARY.md` per new run holds the current disposition, short
-task/checkpoint references, exceptions and reflection or proposed guidance; no separate task
-or reflection files are created. Older multi-file runs remain readable. Factual attempts,
-checks, failures/partial work, unknowns and manual validation stay outside approved guidelines
-and the gotcha `MEMORY.md` index. The run record precedes refresh of its one compact index row;
-resume retains attempts and reconciles interrupted updates. Every run persists observations
-locally; execution handoffs link evidence rather than replace it.
-
-After verification and independent review (or a blocked pause), conservative reflection
-proposes scoped guidance or evidence-only/no update. An executive brief and exact candidate
-diff precede `ask_user`: **accept, edit, reject, or add**. Implementation approval grants no
-guideline authority. Only explicitly approved resulting content may be applied after an
-immediate baseline re-read; drift requires renewed approval. Reject preserves guideline
-bytes; pending/unavailable/cancelled/ambiguous decisions change no learned guidelines.
-Guideline approval is reported separately from implementation acceptance; automatic empty
-initialization is not permission to add or rewrite learned guidance.
-
-Indexed attempts record exact selected/observed profile or unknown, assessment factors, contract
-strength, first/final outcome, diagnosis and repair/checkpoint references, preserving partial,
-escalated and blocked work. The same SUMMARY/index retains batch/task item dispositions and
-proof references, reused/invalidated checks, exact escalation reason and next selected profile
-or pending selection; first/final selected versus observed attempts preserve original unknowns.
-Non-model causes (including unavailable tools/environments) do not
-count as capability failure; weak/invalidated success is not strong guidance. Residual-reasoning
-notes inform batch assessment, not task assignments. No automatic model replacement or permanent
-rule from one outcome; only relevant approved guidelines may override the seed within owner/source gates.
-For example, a **fictional project** might scope a manual output checkpoint to heuristic
-implementation. That example is neither real evidence nor a global heuristic policy.
-After changing these global skills, run `/reload` inside pi.
+Planner defaults to direct async stage → parent artifact/checkpoint inspection → next
+authorized stage with selected profile unchanged. A workflow needs earned branching,
+parallel independent work or other orchestration beyond convenience/single-child/sequential
+wrapping; stage authority/reviewer independence remain. Implementation batches stay sequential.
+Coordinator trusts settled approved design, cheaply audits actual diffs/focused commits/
+REQUIRED outputs, then advances ready tasks. Only concrete invalidation reopens affected
+work; no routine replanning or unchanged preflight loops. Independent final review remains.
+After changing global assets, run `/reload` in pi.
 
 ## Supporting Skills
 
@@ -255,7 +202,7 @@ are not proof of model obedience; live tests require separate authorization.
 
 Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
 describes current behavior, gotcha memory contains only verified non-obvious warnings,
-project-local coordination memory separates reusable guidelines from factual run/task evidence, and
+project-local coordination memory records only explicit future-directed user feedback, and
 `docs/open_issues.md` is the canonical unresolved-work register. Global assets must not assume
 project paths, branch, deployment state, named models or an invented artifact/state schema.
 
@@ -269,5 +216,5 @@ or incompatible policy stops rather than waives the checkpoint. Coordinators ind
 and may recover only understood verified contextual changes; fresh implementers never commit unknown work. Subagents
 verify and commit each internal task and continue without routine coordinator pauses; the coordinator audits all task
 checkpoints when the batch returns, before acceptance or external dependents. Failed checkpoints and genuine owner
-gates still stop execution. Evidence updates remain separate evidence-only checkpoints. This is instruction-managed with static/Git-fixture evidence, not
+gates still stop execution. No routine evidence-only checkpoints are required. This is instruction-managed with static/Git-fixture evidence, not
 runtime proof that a model obeys it. After these global skill changes, run `/reload` in pi.

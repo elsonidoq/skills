@@ -1,6 +1,6 @@
 ---
 name: finish-session
-description: Use when closing a working session that may need documentation, unresolved-work, deployment, memory, or temporary current-execution state closeout.
+description: Use when closing a working session that may need documentation, unresolved-work, deployment, memory, or explicit feedback.
 ---
 
 You are closing a working session. Preserve durable knowledge without turning closeout into a repository audit.
@@ -38,13 +38,15 @@ documentation owners and indexes exist.
 4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
 5. The memory index remains usable.
 6. A project with a persistent database has authoritative schema documentation that describes its current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable.
-7. The project's temporary current-state document holds only ongoing concurrent work: active, paused, blocked or pending review/acceptance/owner gates. Update current items in place and remove verified finished items; never retain terminal dispositions, durable facts, completed-work summaries, file inventories or per-task ledgers.
+7. No automatic STATE maintenance or coordination summaries/index updates/reflection.
+   Coordination memory stores only explicit user feedback intended to change future rounds,
+   never agent-inferred lessons (including lessons disguised as gotchas).
 
 ## Safety Rules
 
 - Start with `git status --short`, `git diff --name-status`, and `git diff --cached --name-status`. From those summaries, inspect full diffs and relevant untracked files only for paths attributable to this session; neither diff command includes untracked contents. Treat pre-existing or unattributable changes as out of scope and report the uncertainty.
 - Record each prospective target's initial dirty state and content before editing. Do not edit a target that was already dirty unless the user explicitly approves that overlap. Re-read and compare it with the recorded content immediately before applying a patch; if it changed concurrently, stop and report the conflict.
-- Do not discard, stage, commit, or rewrite unrelated work. Limit edits to closeout documentation, issue or deployment records, a verified project memory store, and the attributable current-state block in Step 6. Do not modify application code, tests, generated application assets, or completed implementation artifacts.
+- Do not discard, stage, commit, or rewrite unrelated work. Limit edits to closeout documentation, issue or deployment records, a verified project memory store, and explicit feedback under Step 6. Do not modify application code, tests, generated application assets, or completed implementation artifacts.
 - Verify a durable claim against its primary artifact: code, configuration, schema, generator output, or external source explicitly configured by the repository. Never record an unverified claim as current truth.
 - Do not write credentials, tokens, personal data, or sensitive payloads. Use redacted placeholders such as `$SERVICE_TOKEN`.
 - Do not execute deployment procedures. Do not invent deployment commands, rollback steps, or environment state. Record an unknown or verification gap instead.
@@ -140,41 +142,18 @@ has been inspected for dirty-target and concurrent-edit protection. Record its p
 and compare them immediately before invoking it. When no such compactor is available, report `compaction needed`
 with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
 
-## Step 6: Reconcile Brief Current State
+## Step 6: Explicit Feedback Only
 
-Use the same project-owned snapshot maintained by `coordinate-implementation`, not a closeout
-tracker. Follow its [Brief Current State and Recovery](../coordinate-implementation/SKILL.md#brief-current-state-and-recovery)
-contract for location, selective recovery and recovery-relevant write bounds. STATE is a
-small ephemeral recovery bookmark, not a checkpoint system. Reuse a declared project-local
-equivalent; otherwise root `STATE.md` is the coordinator default. When no execution snapshot exists
-and no project instruction requires one, report `not needed`; closeout alone does not fabricate
-implementation progress or initialize a competing file. If required state is missing, reconcile
-authoritative artifacts/Git/runtime evidence first or report the exact blocker.
-
-Keep the current block BRIEF: update ongoing items and their exact next safe action in place;
-remove the verified finished item rather than replace it with a terminal disposition. This includes
-a finished planner spec: remove its planning state, not its durable source/tasks/approval/evidence.
-Do not fabricate implementation as its successor; retain a distinct successor only when it is
-independently current and authorized. Retain paused/blocked work, active run/child IDs and pending
-gates. Link authoritative artifacts only for work still current; no mandatory Git SHAs or commands/results
-catalogue. Record unknowns honestly; unrun checks never pass. Reconcile any active child before
-claiming completion; unresolved review/acceptance remains a gate. Unknown completion, runtime or
-ownership, partial work or missing acceptance proof cannot authorize deletion.
-Preserve custom headers, unrelated concurrent current-state content and durable-owner pointers.
-Remove only the understood attributable finished item, never clear the whole file. An empty current
-block is valid when nothing remains; preserve the file/custom structure without completed/idle-history
-placeholders or a next action solely for finished work. Repeated closeout with unchanged content
-requires no write or extra checkpoint. Do not erase surplus historical content outside that bounded
-item or migrate it into docs/memory without separately approved scope.
-
-Apply the base dirty-target, concurrent-edit and unrelated-target protections. Coordinate explicit
-non-overlapping write responsibility with any active coordinator; never compete to write the file.
-Verify an authorized update before reporting/handoff. A STATE-only edit/removal requires no
-separate commit or summary/index write; leave known owned dirtiness or include it in the next safe
-otherwise-required commit. Never chase its own commit. Required retained closeout documentation/
-evidence commits remain unchanged. Failed writes or ambiguous ownership stop affected closeout.
-Do not append history, completed-task ledgers, transcripts, full logs, file inventories or
-duplicate verification evidence.
+Do not create, edit or remove STATE during closeout; leave custom/concurrent content untouched.
+Do not create routine coordination summaries, refresh indexes, reflect or commit evidence-only
+records. Only explicit future-directed user feedback follows the
+[project coordination contract](../memory-handling/references/project-coordination.md): clear
+bounded feedback may authorize a project-local guideline write without a routine second gate;
+ambiguous feedback asks, explanation-only/no feedback/no-write boundaries write nothing.
+Keep local path/symlink, sensitive-data and dirty/concurrent ownership protections.
+Missing coordination store or STATE is nonblocking. Recovery starts with available summary/
+recent context and selective authoritative artifact/Git/check/runtime reconstruction; reconcile
+active/unknown children before replacement, never guess completion or blindly retry.
 
 ## Step 7: Validate Only What You Changed
 
@@ -189,7 +168,7 @@ State separately whether the session's work is implemented, verified, and deploy
 - unresolved items and the issue-tracking result
 - deployment state and prerequisites added, or why none were added
 - memories written or updated and compaction status
-- the temporary execution state document updated, or why it was not
+- any explicitly authorized feedback write, or `not needed`; STATE remains untouched
 - changed-reference validation
 - deliberately skipped candidates, uncertain session attribution, and unverifiable claims
 

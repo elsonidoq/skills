@@ -66,7 +66,7 @@ def check_contracts(texts):
     errors = []
     def require(label, text, *phrases):
         for phrase in phrases:
-            if phrase not in text:
+            if " ".join(phrase.split()) not in " ".join(text.split()):
                 errors.append(f"{label}: missing {phrase!r}")
     def reject(label, text, *phrases):
         for phrase in phrases:
@@ -239,11 +239,10 @@ def check_contracts(texts):
     require("adapter", texts["helper"], "Planner Standard adapter", "`planner`", "same-session pass",
             "do not direct it to create the plan again", "standalone local\nfallback")
     c = texts["coordinator"]
-    require("intake", c, "Standard depth", "both current approvals", "required SpecKit stage evidence",
-            "TinySpec depth", "separate TinySpec/source and tasks", "legacy `requirements-manager`",
-            "embedded in tasks", "partially planned legacy work", "For other documented origins",
-            "Ambiguous origin is a blocker", "Missing/conflicting depth", "Installation alone",
-            "external", "approval/recovery mapping")
+    require("intake", section(c, "## Load and Verify"), "TinySpec needs separate source/tasks",
+            "Standard needs", "both current approvals", "required SpecKit stage evidence",
+            "legacy source shape", "Resolve ambiguous", "conflicting planning depth",
+            "Missing, stale or unverifiable approval", "approval/recovery mapping")
     validation = section(p, "## Proportionate validation")
     require("validation-focused", validation,
             "actual changed seam", "concrete failure", "lowest validation layer",
@@ -267,27 +266,22 @@ def check_contracts(texts):
             "Optional checks do not become blockers", "owner-required criteria",
             "expected verification\neffort", "valid unchanged evidence")
     require("validation-execution", section(c, "## Execute and Integrate"),
-            "REQUIRED checks remain required", "optional hardening/broader regression is not a blocker",
-            "explicit permissions", "leave acceptance blocked", "renewed approval",
-            "Reuse valid unchanged evidence", "lowest sufficient layer")
-    require("validation-timeout", section(c, "## Select Execution Capability"),
-            "checkpoint early", "After a\n  timeout, inspect", "retain valid completed\n  evidence",
-            "narrow the remaining step instead of restarting the entire batch",
-            "timeout alone is not retry authority")
+            "REQUIRED checks", "optional checks cannot compensate", "manual/permission gates block reliance",
+            "smallest sufficient layer", "same original contracts")
+    require("validation-timeout", section(c, "## Delegate"), "On timeout inspect the checkpoint and failed",
+            "preserve completed proof", "narrow only the diagnosed remaining work", "Rotation is not retry authority")
     require("execution-checkpoints", section(c, "## Execute and Integrate"),
-            "Commit each task's verified changes as one focused commit", "separate evidence-only checkpoint",
-            "failed recovery stops dispatch", "coordinator independently", "no routine coordinator pause")
-    require("execution-sequential", section(c, "## Build the Execution Graph"),
-            "only asynchronously in the background", "never\n   run implementation batches in parallel",
-            "Never pull\n   a distant producer forward or reorder a prerequisite", "commits each task separately")
-    require("execution-selection", section(c, "## Select Execution Capability"),
-            "one exact profile", "proposed versus owner-selected", "Family rationale", "Effort rationale",
-            "at assignment and again at dispatch", "supported effort", "callable binding",
-            "Copy the owner-selected binding and effort unchanged", "no silent settings/agent override",
-            "actual model or effort remains unknown")
-    require("execution-strategy", section(c, "## Select Execution Strategy"),
-            "Up to three bounded implementation tasks", "More than three implementation tasks require delegation",
-            "Retain the recorded strategy on resume", "current owner-selected exact profile fits")
+            "Commit each task's verified changes as one focused owned-path commit",
+            "No extra evidence-only checkpoint", "failed recovery stops dispatch", "Healthy internal tasks continue")
+    require("execution-sequential", section(c, "## Prepare Approved Execution"),
+            "sequentially, never in parallel", "never silently reorder", "One writer verifies and commits each producer")
+    require("execution-selection", section(c, "## Prepare Approved Execution"),
+            "one exact profile per invocation", "Family and Effort rationales", "at assignment and dispatch",
+            "supported effort", "callable binding", "Copy the owner-selected exact profile",
+            "no silent settings/agent override", "binding/effort is unknown")
+    require("execution-strategy", section(c, "## Prepare Approved Execution"),
+            "Up to three bounded tasks", "More than three require delegation", "Completing tasks does not change that strategy",
+            "current owner-selected exact profile", "observed context")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
@@ -395,175 +389,62 @@ def check_contracts(texts):
             "explicit bounded owner deferral through existing gates", "Record impact, allowed bounds and outstanding validation",
             "not fabricate evidence or waive unrelated gates")
     reject("research-failure", failure, "Use model recollection when required research is unavailable")
-    # Coordination boundaries belong in operational phases, never summary mentions.
-    link = "[project coordination contract](../memory-handling/references/project-coordination.md)"
-    discovery = section(p, "## Discovery and capability boundary")
-    require("coordination-early", discovery, link, "during initial understanding",
-            "`GUIDELINES.md` before brainstorming, scope assessment and depth choice",
-            "ensure the mandatory project-local store exists",
-            "initialize missing files, notify the user and commit only initialization files",
-            "without a setup approval gate", "Creation/commit failures stop",
-            "required gotcha-memory stops remain", "no invented project knowledge",
-            "Ordinary planning does not read", "index-first relevant-only retrieval",
-            "retains uncertainty")
-    require("coordination-handoff", production,
-            "Carry exact applicable coordination guideline constraints and evidence references",
-            "both TinySpec and Standard stage briefs", "source observables/acceptance",
-            "task dependencies, checkpoints, verification and coordinator handoff",
-            "Memory cannot override source requirements or owner authority",
-            "absence requires no migration and changes no approval rule")
-    require("coordination-tiny", section(texts["tiny"], "## Inputs and preflight"),
-            link, "including direct/standalone entry", "not index/history by default",
-            "ensure the mandatory project-local store", "initialize missing files, notify the user",
-            "commit only initialization", "without a setup approval gate",
-            "Carry exact applicable constraints and evidence references",
-            "acceptance/verification", "required gotcha-memory stops",
-            "index-first relevant-only retrieval", "retains uncertainty on no match")
-    require("coordination-tasks", section(t, "## Preconditions and adapters"),
-            link, "including direct entry without planner", "dependencies, delegation briefs",
-            "ensure the mandatory project-local", "initialize missing files, notify the user",
-            "initialization files before proceeding", "without a setup approval gate",
-            "checkpoints and REQUIRED verification/acceptance", "source/owner authority",
-            "required gotcha-memory stops remain distinct", "No default index/history intake",
-            "index-first relevant-only", "does not alter approval rules")
-    require("coordination-memory", section(texts["memory"], "## Required project coordination memory"),
-            "[project coordination contract](references/project-coordination.md)",
-            "Required gotcha-memory rules above remain", "never go into this gotcha index",
-            "initialize missing files, notify the user", "commit only initialization files",
-            "no separate setup approval or handoff-only alternative")
-    require("coordination-intake", section(c, "## Load and Verify"), link,
-            "applicable constraints/evidence references", "mandatory project-local store exists",
-            "initialize missing files, notify the user and commit only initialization files",
-            "without a setup approval gate", "never a handoff-only alternative",
-            "No default evidence-history intake")
-    checkpoint = section(c, "### Coordination evidence checkpoint")
-    if not (0 <= c.find("## Execute and Integrate") < c.find("### Coordination evidence checkpoint")
-            < c.find("## Review and Acceptance")):
-        errors.append("coordination-checkpoint: checkpoint must be inside execution before review")
-        checkpoint = ""
-    require("coordination-checkpoint", checkpoint,
-            "[factual evidence lifecycle](../memory-handling/references/project-coordination.md#separate-factual-evidence)",
-            "At each task/attempt checkpoint", "ordinary rows terse", "run-wide assessment once",
-            "meaningful failed/partial/blocked attempts", "preserving original uncertainty",
-            "coordinator references returned", "same\nSUMMARY then its one compact index row",
-            "reconcile interrupted persistence", "Evidence-write failures stop",
-            "no guideline mutation authority")
-    capability = section(c, "## Select Execution Capability")
-    require("coordination-routing", capability,
-            "usable owner-selected", "independent family/effort rationales",
-            "Strong contracts and cheap recovery", "missing requirements or permissions",
-            "Never silently replace selected models",
-            "Inspect the failed child run, invocation, partial commits and check evidence", "Preserve valid",
-            "unrelated\nchanges and prior attempt evidence", "affected dependencies and invalidated REQUIRED items",
-            "raise effort, change model or both", "no fixed profile ladder",
-            "permitted callable binding, supported effort, tools and owner-selection gates",
-            "safe task-owned state stops", "unknown cause stops blind restart",
-            "original assessment and selected/observed profile", "complete batch contract",
-            "rerun every invalidated item", "reuse only confirmed-valid evidence",
-            "Retain both attempts", "Repair success alone does not prove")
-    reflection = section(c, "## Coordination reflection and guideline approval")
-    if not (0 <= c.find("## Review and Acceptance") < c.find("## Coordination reflection and guideline approval")
-            < c.find("## Maintaining this contract")):
-        errors.append("coordination-approval: reflection must follow review before closeout")
-        reflection = ""
-    require("coordination-reflection", reflection,
-            "After implementation/verification and fresh independent review, or at a blocked pause",
-            "[reflection and exact approval lifecycle](../memory-handling/references/project-coordination.md#conservative-reflection)",
-            "covered/candidate/incidental", "not routine batch transitions", "same run SUMMARY")
-    require("coordination-approval", reflection,
-            "exact accept/edit/add approval", "rejection/cancellation byte", "immediate baseline drift stop",
-            "re-read after approved writes", "implementation\napproval grants no guideline authority",
-            "feature acceptance separately", "independent final review")
+    # Feedback-only obligations belong at actual entry boundaries, not a footer.
     q = texts.get("coordination", "")
     if not q:
         errors.append("coordination-reference: required shared carrier missing or empty")
-    require("coordination-initialization", section(q, "## Project-local initialization"),
-            "one mandatory lifecycle in every entry point", "no opt-out or handoff-only",
-            "current project root", "never the global", "explicitly declared",
-            "<project-root>/memory/coordination/", "no adoption or association ceremony",
-            "inside\nthe current project", "automatically\ncreate only missing",
-            "No approved project coordination guidelines yet", "Preserve every existing file byte-for-byte",
-            "partial stores get only their missing files", "Repeated entry is idempotent",
-            "Tell the user", "commit only those new files", "path-limited commit",
-            "Preserve unrelated working-tree and staged", "No separate setup approval is required",
-            "report the exact blocker and stop", "finish its missing commit",
-            "preselection read-only rule permits only bounded coordination-store",
-            "initialization/commit and factual evidence/index/reflection persistence",
-            "blocked before depth selection", "unavailable question capability",
-            "no source, planning-artifact/decision-file or",
-            "unapproved learned-guideline write authority")
-    require("coordination-preselection", pre,
-            "factual evidence/index/reflection", "including blocked runs before depth selection",
-            "no source edits, decision")
-    require("coordination-preselection", production,
-            "factual evidence/index/reflection", "including blocked preselection")
-    require("coordination-guidelines", section(q, "## Compact guidelines"),
-            "before brainstorming", "exact constraints", "scope/trigger", "qualitative",
-            "Owner-supplied entries name their origin", "Preserve uncertainty and contrary",
-            "run evidence and reflection are not planner guidance")
-    require("coordination-selective", section(q, "## Selective historical retrieval"),
-            "Ordinary planning reads guidelines, not", "justified only",
-            "ambiguous/tentative/conflicting", "user request", "new contradictory",
-            "read the compact evidence index first", "only those selected records",
-            "Do not recursively", "Unrelated records\nstay unread",
-            "no relevant evidence means proceed retaining uncertainty")
-    require("coordination-evidence", section(q, "## Separate factual evidence"),
-            "one compact evidence file per run", "SUMMARY.md", "Do not create separate task",
-            "short attributable checkpoint/attempt ledger", "Older runs with separate task",
-            "Reuse that ID on resume", "never\noverwrite another run",
-            "Evidence is factual and append-oriented:", "without erasing observations or prior runs",
-            "initialized\nproject-local store", "never replace it", "If an evidence write\nfails",
-            "exact selected and observed profile", "unknown observation is never overwritten",
-            "contract strength, first/final outcome", "item check/checkpoint references",
-            "escalated and blocked attempts", "individual check results, reviewer findings", "failed, blocked and partial",
-            "Unknown is not success", "corrections link original proof",
-            "sensitive payloads", "run record before its index entry", "Every new evidence write refreshes",
-            "Keep one row per run", "Reconcile an\ninterrupted record/index update on resume")
-    require("coordination-synthesis", section(q, "## Conservative reflection"),
-            "independent review", "**Covered:**", "**Candidate:**", "**Incidental:**",
-            "name the existing rule", "narrower helper/fixture gap", "non-model process lesson",
-            "Model-specific claims need causal support", "evidence-only", "insufficient evidence and conflicting",
-            "without numerical confidence", "One failure", "never a universal",
-            "supporting\nand contradicting pointers", "no update proposed", "never automatic mutation")
-    require("coordination-exact-write", section(q, "## Exact guideline approval"),
-            "executive brief and exact candidate diff before", "existing `ask_user` gate", "accept, edit, reject, or add",
-            "Implementation approval grants no guideline", "comparable baseline/proposed",
-            "resulting content must be explicitly approved", "Pending, unavailable, cancelled or ambiguous",
-            "Rejection leaves guidelines byte-identical", "re-read\n`GUIDELINES.md`",
-            "compare with the approved baseline", "drift stops", "renewed review/approval",
-            "Re-check", "acceptance separately")
-    require("coordination-profile", section(q, "## Qualified batch routing feedback"),
-            "Family and effort have independent", "one exact permitted owner-selected profile",
-            "Relevant approved guidance may override the seed", "owner/source authority",
-            "contract strength, first/final outcome", "`model_capability`", "`planning_or_spec_gap`",
-            "`verification_contract_gap`", "`batching_error`", "`environment_or_tooling`",
-            "`external_dependency`", "`unknown`", "Non-model causes never count as capability failure",
-            "weak or\ninvalidated successes are not strong positive guidance",
-            "Unknown actual model/effort stays unknown", "Inspect failed child run, invocation, partial commits",
-            "permitted binding/support and owner gates", "unknown cause or unavailable/unauthorized repair stops",
-            "full contract", "rerunning all invalidated checks", "selective/index-first retrieval",
-            "exact owner approval", "baseline drift checks", "never automatically become guidance")
-    for key in ("planner", "tiny", "tasks", "coordinator", "coordination"):
-        reject("coordination-unsafe", texts.get(key, ""),
-               "Always read the entire evidence directory", "Read coordination history on every request",
-               "Automatically apply guideline proposals", "Implementation approval authorizes guideline writes",
-               "Ignore concurrent guideline drift", "Automatically downgrade approved classes",
-               "Retry without inspecting the failed invocation", "One failure permanently bans a model",
-               "Without association/write authority", "offer future bounded setup",
-               "Undeclared optional memory preserves existing behavior")
+    entries = (("planner", "## Discovery and capability boundary", "coordination-early"),
+               ("tiny", "## Inputs and preflight", "coordination-tiny"),
+               ("tasks", "## Preconditions and adapters", "coordination-tasks"),
+               ("helper", "## Preflight", "coordination-helper"),
+               ("memory", "## Project coordination feedback", "coordination-memory"))
+    for key, heading, label in entries:
+        body = section(texts[key], heading)
+        require(label, body, "project coordination contract", "missing", "nonblocking",
+                "future-directed feedback" if key != "memory" else "future-directed feedback",
+                "dirty/concurrent", "no-write")
+    require("coordination-handoff", production, "both TinySpec and Standard stage briefs",
+            "source observables/acceptance", "task dependencies, checkpoints, verification and coordinator handoff",
+            "Memory cannot override source requirements or owner authority")
+    require("coordination-guidelines", section(q, "## Read existing guidance"),
+            "Missing store or STATE is nonblocking", "do not auto-initialize",
+            "source criteria → task dependencies/REQUIRED checks → worker brief", "explicit relevant need",
+            "read it first and open only matching records", "Missing relevant evidence retains uncertainty")
+    require("coordination-feedback", section(q, "## Explicit feedback only"),
+            "explicit user corrective/future-round direction", "without a routine second exact-content approval",
+            "user provenance", "No feedback means no write", "Materially ambiguous", "no-write boundary",
+            "symlink escapes", "dirty and concurrent content", "Concurrent drift", "secrets/sensitive payloads",
+            "never history/index/run scaffolding", "one focused owned-path commit")
+    require("coordination-nonpersistence", section(q, "## No routine bookkeeping"),
+            "do not authorize STATE creation/edit/removal", "history/index updates", "reflection",
+            "evidence-only commits", "No renamed durable snapshot")
+    require("coordination-routing", section(c, "## Execute and Integrate"),
+            "inspect run/invocation, partial commits and check evidence", "reruns invalidated",
+            "Unknown cause blocks blind restart", "Preserve valid work and prior attempts")
+    require("coordination-intake", section(c, "## Load and Verify"),
+            "Missing coordination store or STATE is nonblocking", "No automatic STATE creation, editing or removal")
     require("routing-comparison", section(texts.get("routing", ""), "## Provisional family and effort choices"),
             "suitable smaller verified, permitted alternative", "actual shortfall or select the smaller option",
             "none is verified/permitted", "orchestration overhead", "stateful tooling/recovery",
             "strict requirement versus a default preference")
-    require("routing-tradeoff", section(c, "## Build the Execution Graph"),
-            "startup/context savings against losing a smaller-profile opportunity", "not force diversity or a split")
-    require("coordination-compact", section(q, "## Separate factual evidence"),
-            "Ordinary successful checkpoint rows", "run-wide assessment, routing and", "not attempt chronology",
-            "corrections link original proof", "never erase or retroactively infer observations")
-    for key, heading in (("planner", "## Selected production and stage handoffs"),
-                         ("tiny", "## Inputs and preflight"),
-                         ("tasks", "## Preconditions and adapters"), ("helper", "## Preflight")):
-        require("coordination-decision-" + key, section(texts[key], heading), "relevant decision")
+    require("routing-tradeoff", section(c, "## Prepare Approved Execution"),
+            "separate comparative Family and Effort rationales", "material profile, context, permission, owner-gate")
+    dispatch = section(p, "## Selected production and stage handoffs")
+    require("stage-dispatch", dispatch, "direct asynchronous single-stage dispatch",
+            "selected profile unchanged", "Inspect the returned artifact/checkpoint",
+            "before the next authorized stage", "Never prewire dependent source→tasks",
+            "concrete branching, parallel independent work or another earned orchestration",
+            "direct delegation cannot adequately serve", "single child, convenience wrapper",
+            "stage sequence alone is insufficient", "parent inspection, stage authority, approvals and reviewer independence",
+            "do not authorize parallel implementation batches")
+    for key in ("planner", "tiny", "tasks", "helper", "memory", "coordinator", "coordination", "adoption"):
+        reject("coordination-unsafe-" + key, texts.get(key, ""),
+               "Automatically initialize coordination memory", "Write a run SUMMARY on completion",
+               "Refresh the coordination index after every task", "Reflect at blocked pause",
+               "Commit evidence separately before the next task", "Infer lessons from failed runs",
+               "Automatically create STATE.md", "Update STATE after child-ID return", "Remove finished STATE items")
+    reject("stage-dispatch", dispatch, "Default to a single-child workflow wrapper",
+           "Prewire source→tasks without parent inspection", "Sequential convenience justifies workflows")
     # Bounded checks of changed instruction carriers, not a production audit/router.
     for label, key, heading, clauses in VERIFICATION_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
@@ -716,21 +597,17 @@ VERIFICATION_CARRIERS = (
      ("item mappings unchanged", "whole batch union before", "legacy producing review/renewal")),
     ("verification-oracle", "routing", "## Assess all six factors",
      ("implementation difficulty", "oracle quality, check cost and observability", "weakest material", "practical combined verification feasibility")),
-    ("verification-graph", "coordinator", "## Build the Execution Graph",
-     ("practical combined verification feasibility", "attributable failures", "producer-before-consumer checks")),
+    ("verification-graph", "coordinator", "## Prepare Approved Execution",
+     ("One writer verifies and commits each producer before its consumer", "approved order")),
     ("verification-audit", "coordinator", "## Execute and Integrate",
-     ("`satisfied`, `failed` or `insufficient-evidence`", "relevance to the original criterion",
-      "current revision/environment", "objectively demonstrated criterion violation",
-      "both proven defects and evidence limitations", "representative-sample manual STOP",
-      "inspectable sample and explicit user approval", "Ordinary no-special-gate")),
-    ("verification-repair", "coordinator", "## Select Execution Capability",
-     ("Inspect the failed child run, invocation, partial commits and check evidence",
-      "Where diagnosed and authorized, stronger-capability repair is implementation continuation",
-      "Same-profile targeted repair remains appropriate when sufficient",
-      "current implementation SHA/state", "same original contracts", "Clean retry is exceptional",
-      "safe repository", "ownership and required owner/project gates")),
-    ("verification-feedback-owner", "coordination", "## Separate factual evidence",
-     ("batch/task item dispositions and proof references", "exact escalation", "next selected profile or pending selection")),
+     ("actual diff", "focused commit/SHA", "REQUIRED outputs", "residual owned changes",
+      "criterion relevance", "current revision/ environment", "Only satisfied REQUIRED items",
+      "Representative-sample manual STOP", "inspectable sample and explicit owner approval")),
+    ("verification-repair", "coordinator", "## Execute and Integrate",
+     ("Targeted repair retains", "same original contracts", "Unknown cause blocks blind restart",
+      "Clean retry is exceptional", "safe ownership and applicable owner gates")),
+    ("verification-feedback-owner", "coordination", "## Explicit feedback only",
+     ("Ordinary implementation approval, agent observations", "explanation-only questions", "No feedback means no write")),
 )
 
 

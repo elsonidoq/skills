@@ -19,8 +19,8 @@ planning. Compact guidance MUST not become a transcript or substitute for curren
 ### III. Explicit Authority
 
 Agents MUST respect the owner's selected planning depth and current-content approval gates.
-They MUST NOT implement unapproved scope, silently switch selected models, or modify synthesized
-project guidance without explicit owner review and approval. Denial, ambiguity, and missing
+They MUST NOT implement unapproved scope, silently switch selected models, or modify project guidance without explicit user future-directed feedback authority.
+Clear bounded feedback needs no routine second approval; ambiguity asks before writing. Denial, ambiguity, and missing
 required capabilities MUST stop the affected stage rather than imply consent.
 
 ### IV. Pragmatic Planning and Verification
@@ -41,10 +41,10 @@ it. Authorized retained repository tasks MUST follow the shared
 [task-commit contract](../../skills/memory-handling/references/task-commit-contract.md): focused,
 path-limited verification commits precede subsequent task work, reporting, or handoff; read-only/no-change
 work makes no empty commit; ownership/Git/verification conflicts stop rather than waive the checkpoint.
-Ephemeral recovery bookmarks are the explicit narrow exception: STATE-only edits/removals
-require no separate task/evidence commit and may remain understood coordinator-owned dirtiness;
-include them only in a safe otherwise-required commit when appropriate. Implementation/worker
-checkpoints, ownership and index safety remain unchanged.
+No automatic STATE maintenance or routine coordination evidence-only checkpoints.
+Recovery starts with available summary/recent context and selectively reconstructs uncertain
+authority, Git/check/commit and child status; active or unknown children cannot be replaced
+without reconciliation. Preserve existing STATE/custom content and historical records.
 This does not grant write, guideline, adaptation, external-operation, or runtime-extension authority. Inspect a
 failed delegated run and its invocation before retrying, resuming, or relaunching; unknown failures MUST be
 reported rather than blindly rerun.
@@ -52,15 +52,15 @@ reported rather than blindly rerun.
 ### VI. Compatibility and Ownership
 
 New capabilities MUST preserve existing TinySpec, Standard, and documented legacy workflows
-unless an explicit approved change says otherwise. Coordination memory is mandatory: every
-entry point MUST initialize missing project-local files, notify the user, commit only initialization
-files and proceed without a separate setup approval. There MUST NOT be an opt-out or handoff-only
-persistence path. Existing files and unrelated staged changes MUST be preserved; repeated entry
-MUST NOT duplicate initialization or commits. Creation, commit or evidence-write failures MUST
-stop with the exact blocker, not silently select nonpersistent execution. Other optional
-capabilities retain their documented absence behavior. Keep authoritative owners distinct: verified gotchas,
-execution evidence, synthesized coordination guidance, documentation, and git history MUST NOT
-be collapsed into one competing store.
+unless an explicit approved change says otherwise. Coordination memory stores only explicit
+user feedback intended to change future rounds, never agent-inferred lessons. Missing store
+or STATE MUST NOT block otherwise authorized execution. There MUST NOT be automatic
+initialization, routine summaries/index updates, reflection or evidence-only commits.
+Relevant existing compact guidance is consulted; explicit relevant history retrieval is
+selective, index-first where useful. Only needed bounded guidelines ownership may be created
+for authorized feedback, never history/index/run scaffolding. Preserve local path/symlink,
+sensitive-data, custom, dirty and concurrent ownership safeguards. Keep gotchas, feedback,
+substantive task/runtime evidence, documentation and Git ownership distinct.
 
 ## Project Constraints
 
@@ -80,16 +80,14 @@ Planner presents TinySpec and Standard and obtains the owner's choice; each rout
 its established artifact and approval gates before coordinator execution. The coordinator
 verifies authorization, task evidence, integration, and required independent review. Changes
 to shared skill contracts MUST be checked with focused fixtures and the relevant existing
-suite checks. Before assessment/depth choice or direct task/execution work, ensure the coordination
-store exists and read its compact guidelines. Factual evidence and reflection MUST be persisted
-in one indexed project-local evidence file per new run, including blocked preselection runs;
-older multi-file run records remain valid and selectively retrievable. This bounded
-initialization/commit and factual persistence is the exception to preselection read-only operation;
-it grants no source/planning/decision-file or unapproved learned-guideline write authority.
-Synthesized guideline changes still require explicit review/approval against exact resulting
-content. Ordinary planning MUST NOT load execution history by default; justified retrieval is
-index-first and relevant-only. When a global skill or project prompt changes, instruct users to
-run `/reload` in pi.
+suite checks. Trust approved settled design and task contracts: bounded delegation,
+actual diff/focused commit/REQUIRED audit, dependency-ready advance and independent final
+review. No routine replanning, unchanged preflight loops or broad redundant checks.
+Concrete invalidation reopens only affected decisions/checks; reuse applicable proof elsewhere.
+Planner defaults to direct asynchronous single-stage dispatch with parent inspection before
+next-stage release. Workflow wrappers need earned orchestration, not a single child or
+sequential convenience; they preserve stage authority/reviewer independence and never
+imply parallel implementation permission. Global skill/prompt changes require `/reload` in pi.
 
 ## Governance
 
@@ -101,7 +99,17 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 2.3.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-08
+**Version**: 3.0.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-12
+
+Amendment 3.0.0 records the explicit owner decision in the
+[approved review](../../docs/plans/reviews/coordinator-no-bookkeeping-planning-review.md):
+no automatic STATE maintenance, routine coordination summaries/index updates, evidence-only
+commits or reflection; only explicit future-directed user feedback changes coordination memory.
+The owner also approved lightweight plan-trusting coordination and substantive compression.
+MAJOR reflects incompatible removal of the mandatory persistence principle, not weakened
+verification, task commits, current-content approvals, independent review or safe retries.
+Prior amendments below retain their historical provenance; their persistence/state obligations
+are superseded by 3.0.0.
 
 Amendment 2.3.0 records owner-approved ephemeral recovery-state semantics and the narrow
 STATE-only checkpoint exception in the [approved TinySpec](../../docs/plans/ephemeral-recovery-state-tinyspec.md).

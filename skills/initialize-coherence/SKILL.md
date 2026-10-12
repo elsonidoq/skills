@@ -124,15 +124,14 @@ and `compact-memory` can cite it. Record:
   owner-chosen paths remain valid. Follow `memory-handling` trigger-first retrieval:
   Read the whole index first, then trigger-matching entries. Recheck after any memory
   write. No global-store substitution.
-- State: project-owned BRIEF current truth, not a coordinator-owned tracker. Record
-  the coordinator default root `STATE.md` or preserve an explicitly declared project-local
-  equivalent. Coordinator maintains implementation-relevant current truth before execution/
-  dispatch and at meaningful transitions; `finish-session` reconciles that same snapshot.
-  Link the [snapshot/recovery contract](../coordinate-implementation/SKILL.md#brief-current-state-and-recovery):
-  replace current truth, no accumulated history, authorization/evidence remain authoritative.
-  Preserve custom/unrelated state content; collision, dirty overlap or unclear bounds require
-  explicit approval, never silent repurposing. Adoption records the location/lifecycle, not
-  fabricated progress or a placeholder snapshot; coordinator establishes it after preflight.
+- Coordination: consult relevant existing compact guidance; missing store is nonblocking.
+  Only explicit future-directed user feedback authorizes bounded guidelines storage, not
+  auto-init, routine summaries/index updates, reflection or inferred lessons. Preserve local
+  path/symlink, sensitive-data and dirty/concurrent ownership protections.
+- Recovery: no automatic STATE creation/edit/removal; preserve existing STATE/custom content.
+  Begin with available summary/recent context, then selectively reconstruct uncertain
+  authority, Git/check/commit and active/unknown child status before continuation under the
+  [context-first recovery contract](../coordinate-implementation/SKILL.md#recover-context).
   Keep pi sessions as the conversation record and `docs/open_issues.md` as the canonical
   unresolved-work register via `track-open-issue`.
 - Documentation: Record documentation owners and the documentation-routing guide

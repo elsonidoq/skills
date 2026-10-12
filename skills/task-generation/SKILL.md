@@ -20,17 +20,18 @@ approval, or capability is missing, report the missing evidence and stop rather 
 an artifact.
 
 Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
-in either adapter, including direct entry without planner: ensure the mandatory project-local
-store exists; automatically initialize missing files, notify the user and commit only
-initialization files before proceeding, without a setup approval gate. Read compact guidelines
-during initial understanding; empty guidelines invent no knowledge, not a nonpersistent path.
-Initialization/commit failures stop; required gotcha-memory stops remain distinct.
-Carry exact applicable constraints and evidence references from source/handoff into task
-dependencies, delegation briefs, checkpoints and REQUIRED verification/acceptance. Do not
-treat a memory summary as downstream application or override source/owner authority. Verify
-a relevant decision reaches the dependency/check and coordinator brief, not merely a link.
-No default index/history intake; justified clarification uses index-first relevant-only
-retrieval, retaining uncertainty on no match.
+during initial understanding, including direct entry without planner: consult relevant existing
+compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
+routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
+future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
+explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
+sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
+and evidence references through source observables → dependencies/REQUIRED checks → brief;
+Verify a relevant decision reaches the dependency/check and coordinator brief, not merely a link.
+Never override source/owner authority. No default
+history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
+on no match. Required gotcha-memory gates remain separate.
+
 Optional `residual_reasoning: low|medium|high` with a brief rationale fits existing notes;
 it informs later batch assessment, not an execution assignment. Absence requires no
 migration and does not alter approval rules. The coordinator owns batch profile selection

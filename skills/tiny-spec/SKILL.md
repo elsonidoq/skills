@@ -19,16 +19,16 @@ stops with a report; no invented path, model binding or project policy. Preserve
 and unrelated content; inspect existing source immediately before changing it.
 
 Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
-in preflight, including direct/standalone entry: ensure the mandatory project-local store
-exists; automatically initialize missing files, notify the user and commit only initialization
-files before proceeding, without a setup approval gate. Read compact guidelines during
-initial understanding, not index/history by default. Empty guidelines invent no knowledge;
-initialization/commit failures stop, separately from required gotcha-memory stops.
-Carry exact applicable constraints and evidence references into source observables,
-producer/consumer boundaries, checkpoints and acceptance/verification, then return them
-for tasking. Check the relevant decision against approved guidance, not merely its presence
-in a link. Guidance never overrides source or owner authority. Justified historical
-clarification uses index-first relevant-only retrieval and retains uncertainty on no match.
+during initial understanding, including standalone/direct entry: consult relevant existing
+compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
+routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
+future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
+explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
+sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
+and evidence references through source observables → dependencies/REQUIRED checks → brief;
+verify their effect on a relevant decision, never override source/owner authority. No default
+history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
+on no match. Required gotcha-memory gates remain separate.
 
 Use the owner's established source format where it is complete. Link authoritative
 existing sources rather than copying long transcripts. If the request exists only

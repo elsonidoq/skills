@@ -65,12 +65,11 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 
 `planner` is the public entry point. Understand the structured requirement, inspect
 load-bearing code/contracts/tests and applicable memory, then brainstorm only material
-uncertainty. Before depth selection this is read-only except bounded project-local coordination-store
-initialization/commit and factual evidence/index/reflection persistence, including blocked
-preselection runs: no planning/decision artifacts or source edits. Create missing
-coordination files, notify the user and commit only initialization files through the
-[shared contract](../skills/memory-handling/references/project-coordination.md), then continue.
-Retain answers in session history; recover missing answers by asking.
+uncertainty. Before depth selection this is read-only: no coordination auto-init,
+routine summaries/index updates, evidence-only commits, reflection or STATE maintenance.
+Consult relevant existing guidance through the
+[shared contract](../skills/memory-handling/references/project-coordination.md); missing store
+is nonblocking. Only explicit future-directed user feedback permits bounded guideline writes.
 
 Assess reasoning complexity and coordination cost, not estimated diff size or a fixed
 task threshold. Present approximate evidence and uncertainty about affected subsystems,
@@ -138,5 +137,5 @@ production are separate retained deliverables; their existing preparation/combin
 Read-only/no-change work creates no empty commit. Preserve unrelated dirty work and stop on uncertain ownership,
 missing Git/identity, failed hooks/checks, or conflicting policy rather than offering a waiver. Coordinators inspect
 actual diffs/SHA/check evidence and only recover understood verified contextual work; fresh implementers return unknown
-state without writing. Record factual evidence in a distinct evidence-only checkpoint. Static assertions and temporary
+state without writing. Return concrete check/commit proof in existing task/runtime conventions, without routine persistence. Static assertions and temporary
 Git fixtures demonstrate policy/Git examples, not runtime model obedience.

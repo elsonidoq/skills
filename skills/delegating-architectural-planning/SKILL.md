@@ -11,11 +11,17 @@ planner owns architectural decomposition, not implementation or product scope.
 
 ## Preflight
 
-Apply the [project coordination contract](../memory-handling/references/project-coordination.md),
-including standalone entry: initialize missing store files with its notify/commit boundary,
-read approved compact guidelines and translate applicable constraints into plan observables,
-dependencies/checks and handoff. Verify their effect on a relevant decision, not merely a link;
-no default history intake or pending-candidate adoption. Initialization/persistence failures stop.
+Apply the [project coordination contract](../memory-handling/references/project-coordination.md)
+during initial understanding, including standalone/direct entry: consult relevant existing
+compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
+routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
+future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
+explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
+sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
+and evidence references through source observables → dependencies/REQUIRED checks → brief;
+verify their effect on a relevant decision, never override source/owner authority. No default
+history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
+on no match. Required gotcha-memory gates remain separate.
 
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
 verify it is readable or stop with a missing-install report. Standalone entry applies

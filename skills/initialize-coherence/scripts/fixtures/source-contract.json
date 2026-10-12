@@ -168,19 +168,19 @@
           "end": 47
         }
       ],
-      "behavior": "Brief project-owned current state and conversation/unresolved registers",
+      "behavior": "Context-first recovery without automatic STATE maintenance",
       "stage": "Adoption",
-      "ownership_change": "Owner-approved brief-current-state change supersedes the conditional state default; historical source bytes remain immutable. Current acceptance requires project-owned state, declared equivalents and no fabricated progress.",
+      "ownership_change": "Owner-approved no-bookkeeping change supersedes automatic state lifecycle; historical source bytes and citations remain immutable.",
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_state_preserved",
       "negative": "test_state_rejects_deleted_guard",
-      "evidence": "Current acceptance amended by the approved 2026-10-06-brief-current-state run; source snapshot and citations retain original provenance. Positive/deletion checks validate the revised state guards, not runtime obedience.",
+      "evidence": "Current acceptance follows approved coordinator-no-bookkeeping source A1/A5/A6; scoped positive/deletion checks validate context-first recovery and preservation, not live obedience.",
       "requires": [
-        "project-owned BRIEF current truth, not a coordinator-owned tracker",
-        "coordinator default root `STATE.md`",
-        "preserve an explicitly declared project-local equivalent",
-        "replace current truth, no accumulated history",
-        "not fabricated progress or a placeholder snapshot",
+        "no automatic STATE creation/edit/removal",
+        "preserve existing STATE/custom content",
+        "available summary/recent context",
+        "selectively reconstruct uncertain",
+        "active/unknown child status",
         "pi sessions as the conversation record",
         "`docs/open_issues.md` as the canonical unresolved-work register via `track-open-issue`"
       ]
