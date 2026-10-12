@@ -94,5 +94,6 @@ may increase effort, change family or both only with usable permitted binding/su
 owner selection; unknown cause stops blind restart. Supply the original assessment/profile,
 passed/failed items, current state and whole contract; rerun every invalidated item and reuse
 only confirmed-valid evidence. Repair success alone does not prove model-only attribution.
-Persist factual feedback in existing indexed run/task records; guideline adoption remains a
-separate exact owner approval, never automatic learning or a second evidence store.
+Return factual attempt/check evidence in existing task/runtime conventions, not indexed run
+records. Only explicit future-directed user feedback authorizes project-local guideline
+changes under the shared feedback contract; no inferred learning or routine persistence.

@@ -96,14 +96,12 @@ class StaticContractMutationTests(unittest.TestCase):
             errors = checker.check(**{f"{location}_text": mutated})
             self.assertIn(f"{location} batch autonomy guard missing", errors)
 
-    def test_ephemeral_state_exception_is_narrow_and_required(self):
-        contract = " ".join(CONTRACT.read_text().split())
-        for phrase in ("STATE-only bookmark edit or removal", "requires no separate commit",
-                       "otherwise-required commit", "changes no implementation-task or worker evidence checkpoint"):
-            self.assertIn(phrase, contract)
+    def test_no_automatic_state_or_second_checkpoint(self):
+        text = CONTRACT.read_text()
+        self.assertIn("No automatic STATE maintenance", text)
         self.assertEqual(checker.check(), [])
-        errors = checker.check(contract_text=CONTRACT.read_text().replace("Ephemeral recovery-state exception", "REMOVED"))
-        self.assertIn("ephemeral state exception missing", errors)
+        errors = checker.check(contract_text=text + "\nAfter a task commit, capture its SHA and commit evidence")
+        self.assertIn("routine evidence-only checkpoint reintroduced", errors)
 
     def test_architectural_planning_commit_opt_in_mutation_is_diagnostic(self):
         text = (ROOT / "skills/delegating-architectural-planning/SKILL.md").read_text()
@@ -197,12 +195,10 @@ class GitProtocolFixtureTests(unittest.TestCase):
         (repo / "task.txt").write_text("task\n")
         task_sha = focused_task_commit(repo)
         self.assertTrue(checkpoint_status(repo, "task.txt", baseline))
-        (repo / "evidence.md").write_text(f"task SHA: {task_sha}\n")
-        run(repo, "add", "evidence.md")
-        run(repo, "commit", "-m", "evidence checkpoint")
+        # Recovery uses the existing verified SHA, without a second repository ledger.
         commits = run(repo, "rev-list", "--count", f"{baseline}..HEAD").stdout.strip()
-        self.assertEqual(commits, "2")
-        self.assertEqual(run(repo, "rev-parse", "HEAD~1").stdout.strip(), task_sha)
+        self.assertEqual(commits, "1")
+        self.assertEqual(run(repo, "rev-parse", "HEAD").stdout.strip(), task_sha)
 
     def test_same_file_ambiguity_is_a_stop_case(self):
         holder, repo = fixture_repo()

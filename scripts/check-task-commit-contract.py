@@ -19,15 +19,15 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text
     if not contract.is_file():
         return ["task-commit contract: canonical owner missing"]
     contract_text = contract.read_text() if contract_text is None else contract_text
-    for phrase in ("no skip/defer question", "fresh implementer", "path-limited task commit", "evidence-only checkpoint"):
+    for phrase in ("no skip/defer question", "fresh implementer", "path-limited task commit", "No automatic STATE maintenance"):
         if phrase not in contract_text:
             errors.append(f"task-commit contract: missing {phrase!r}")
-    if "Ephemeral recovery-state exception" not in contract_text:
-        errors.append("ephemeral state exception missing")
+    if "After a task commit, capture its SHA and commit" in contract_text:
+        errors.append("routine evidence-only checkpoint reintroduced")
     coordinator = coordinator_text if coordinator_text is not None else (root / "skills/coordinate-implementation/SKILL.md").read_text()
     for phrase in (
         "no skip/defer question", "No-Git fallback", "never adopts or commits unknown work",
-        "coordinator alone may recover", "failed recovery stops dispatch", "evidence-only checkpoint",
+        "coordinator alone may recover", "failed recovery stops dispatch", "No extra",
     ):
         if phrase not in coordinator:
             errors.append(f"coordinator checkpoint guard missing: {phrase!r}")

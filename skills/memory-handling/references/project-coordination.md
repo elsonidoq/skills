@@ -1,226 +1,67 @@
 # Project coordination memory
 
-Required project-local coordination knowledge, shared by memory-handling, planner,
-TinySpec, task-generation and coordinator. This is an instruction contract, not a
-persistence engine or a replacement workflow. Actual project knowledge never belongs
-in global skills. Keep required adopted gotcha-memory discovery/retrieval/write gates
-unchanged; coordination evidence is not a gotcha ledger.
+Project-local feedback guidance, not a persistence engine or replacement workflow.
+Gotcha memory discovery/retrieval remains separate. Never store project knowledge in
+reusable global skills.
 
-## Project-local initialization
+## Read existing guidance
 
-Use one mandatory lifecycle in every entry point: ensure the project-local store exists,
-read compact guidelines, persist execution evidence, reflect, and apply only approved
-guideline changes. There is no opt-out or handoff-only persistence path.
+Consult relevant existing compact `GUIDELINES.md` during understanding, including
+standalone planning/task/execution entry. Resolve the selected project root and declared
+coordination owner; otherwise look for `memory/coordination/GUIDELINES.md` locally.
+Missing store or STATE is nonblocking: do not auto-initialize anything.
+Carry exact applicable constraints through source criteria → task dependencies/REQUIRED
+checks → worker brief. Guidance informs decisions, never overrides owner/source authority.
+Empty guidance means no applicable guidance, not invented success history.
 
-Resolve the current project root from the selected repository/workspace, never the global
-skill installation. Reuse a coordination root/layout explicitly declared in project
-instructions or configuration; otherwise use `<project-root>/memory/coordination/`.
-The default requires no adoption or association ceremony. Keep every destination inside
-the current project; refuse an outside-project path, unreadable file or path collision
-rather than selecting a second store or overwriting existing content.
+Retrieve history only for an explicit relevant need (user justification request or uncertain/
+conflicting guidance). Where an existing index helps, read it first and open only matching
+records. Do not recursively load history or refresh its index. Missing relevant evidence
+retains uncertainty; block only an affected decision requiring unreconstructable evidence.
 
-Before planning assessment/depth choice or direct task/execution work, automatically
-create only missing directories, `GUIDELINES.md` and `evidence/INDEX.md`. Initialize
-empty guidelines with “No approved project coordination guidelines yet” and an empty
-index with Run, Date, Areas/tags, Relevant patterns and Outcome columns. Do not invent
-lessons, historical runs or seed a generic policy. Preserve every existing file byte-for-byte;
-partial stores get only their missing files. Repeated entry is idempotent: no new files
-or initialization commit when nothing is missing.
+## Explicit feedback only
 
-Tell the user which files were initialized, then commit only those new files as a focused
-initialization commit before proceeding. Preserve unrelated working-tree and staged
-changes; use explicit paths and a path-limited commit, never `git add .` or a commit of
-all staged files. No separate setup approval is required. If creation or commit is blocked
-by permissions, repository policy or unavailable Git, report the exact blocker and stop;
-do not continue with nonpersistent memory or silently skip the commit. On resume, inspect
-any partially completed initialization and finish its missing commit without duplicating
-files/commits. The preselection read-only rule permits only bounded coordination-store
-initialization/commit and factual evidence/index/reflection persistence, including runs
-blocked before depth selection (for example, unavailable question capability). Record
-observed blockers and evidence-only reflection in the project-local store; do not infer
-an owner decision. This exception grants no source, planning-artifact/decision-file or
-unapproved learned-guideline write authority.
+Only explicit user corrective/future-round direction authorizes compact project-specific
+guideline add/refine/supersede. Clear feedback can authorize the bounded write without a
+routine second exact-content approval. Record the user provenance and a short trigger/action;
+merge/refine rather than accumulate transcripts. Ordinary implementation approval, agent
+observations, failed runs and explanation-only questions authorize no feedback write.
+No feedback means no write. Materially ambiguous meaning/scope requires asking before writing.
+An explicit no-write boundary prevails, including over otherwise clear feedback.
 
-## Compact guidelines
+Before an authorized write establish local owner/allowed paths. Refuse outside-project paths,
+symlink escapes, unreadable/non-file collisions and uncertain ownership. Preserve unrelated,
+custom, dirty and concurrent content; re-read/compare the intended baseline immediately
+before applying. Concurrent drift or same-file ambiguity stops the affected write, never
+silently overwrite. Exclude secrets/sensitive payloads; keep global assets portable.
+Create only the bounded guidelines owner if needed for authorized feedback storage, never
+history/index/run scaffolding. Recheck relevant guidance after writes. A retained feedback
+deliverable follows the [task-commit contract](task-commit-contract.md): required verification
+and one focused owned-path commit, not a second evidence-only checkpoint.
 
-Read project-local `GUIDELINES.md` during initial understanding, before brainstorming,
-scope assessment and depth choice. Report applicable guidance and carry exact constraints
-and evidence references into either selected source route, task decomposition/dependencies,
-checkpoints, verification and coordinator briefs. Direct/standalone consumers discover
-through this same boundary; they must not assume planner invocation. Guidance informs
-owner choice and source observables, never overrides owner authority or source requirements.
-Verify application to a relevant decision through source criterion → task dependency/check →
-brief, not merely a memory link. Pending/rejected/drifted candidates are not approved guidance.
+## No routine bookkeeping
 
-Each compact guideline contains a scope/trigger, short actionable statement, qualitative
-status (`tentative`, `repeated`, `stable` or `owner-supplied`) and evidence pointers where
-available. Cover only reusable planning, decomposition, delegation, verification, manual
-checkpoints, subsystem risk and implementation traps. Preserve uncertainty and contrary
-evidence. Owner-supplied entries name their origin, never fabricate supporting runs.
-Merge/refine/supersede instead of accumulating transcripts or duplicating observations.
-`GUIDELINES.md` is not the gotcha `MEMORY.md` index; run evidence and reflection are not planner guidance.
+Planning, dispatch, polling, recovery, task/check/commit completion, review, pause and
+closeout do not authorize STATE creation/edit/removal, coordination summaries/run records,
+history/index updates, reflection, candidate synthesis or evidence-only commits.
+No renamed durable snapshot, progress tracker or session-side learning ledger is required.
+Leave historical records and existing STATE/custom content unchanged. Existing task/runtime/
+session returns and Git supply substantive decisions, baseline/result SHAs and verification
+proof without duplicated persistence. Explicit separately authorized artifact work remains
+possible; ordinary execution never grants inferred-learning authority.
 
-## Selective historical retrieval
+## Recovery and execution safeguards
 
-Ordinary planning reads guidelines, not `evidence/INDEX.md` or history. Historical
-clarification is justified only by matching ambiguous/tentative/conflicting guidance,
-pattern synthesis, a user request for justification, or new contradictory observations.
-State the trigger, read the compact evidence index first, select relevant run summaries
-(or task records in older runs) by tags and pointers, then open only those selected records. Do not recursively
-load the directory or promote raw outcomes directly into instructions. Unrelated records
-stay unread; no relevant evidence means proceed retaining uncertainty, not invented facts.
+Start from available conversation summary/recent context, then selectively reconstruct
+uncertain approval/completion/ownership from authoritative artifacts, Git and actual check/
+commit evidence. No guaranteed token retention or snapshot prerequisite. Reconcile recorded
+and unrecorded active children through usable runtime before dispatch/replacement: active
+means inspect/wait, unknown status blocks replacement. Inspect failed run and invocation
+before targeted retry; unknown cause stops. Never guess completion, duplicate dispatch,
+repeat task commits, blindly relaunch or discard valid/unrelated work.
 
-## Separate factual evidence
-
-For new runs use one compact evidence file per run (existing declared project-local equivalents
-use the same lifecycle):
-
-```text
-<project-root>/memory/coordination/
-  GUIDELINES.md
-  evidence/
-    INDEX.md
-    <run-id>/
-      SUMMARY.md
-```
-
-`SUMMARY.md` owns the current disposition, a short attributable checkpoint/attempt ledger,
-exceptions and reflection/any guideline candidate or decision. Do not create separate task,
-review or reflection files for new runs, and do not reproduce task contracts, full check logs,
-Git inventories or a second narrative of every task. Keep task ID, baseline/result/evidence
-SHA, exact selected/observed profile when applicable, item result/evidence pointer, attribution
-and manual/reviewer exceptions sufficiently traceable for later synthesis; use a terse row when
-checks pass normally and expand only a surprising failure or contested conclusion. Shared
-run-wide limitations are stated once. A summary is a selective learning source, not a task
-transcript. Per-task implementation commits and distinct evidence-only Git checkpoints remain
-required; each checkpoint updates this same file and the compact index row.
-
-Reuse an existing safe project execution/run ID; otherwise derive a unique filesystem-safe
-date/subject ID and retain it in the execution tracker. Reuse that ID on resume; never
-overwrite another run. Older runs with separate task or `REFLECTION.md` files remain valid and
-selectively readable; do not migrate them by default. Evidence is factual and append-oriented:
-keep attempts and corrections distinguishable, update current disposition and index metadata
-without erasing observations or prior runs. Persist every run's evidence in the initialized
-project-local store; an execution handoff may link it, never replace it. If an evidence write
-fails, report the blocker and stop affected work, not a successful persistence checkpoint.
-Evidence-write authority is not guideline authority. The project-owned brief current-state
-snapshot (`STATE.md` by default) is separate from this append-oriented factual evidence:
-[coordinator snapshot/recovery](../../coordinate-implementation/SKILL.md#brief-current-state-and-recovery)
-owns its execution update lifecycle. State links run/checkpoint evidence without copying it;
-it is neither another coordination store nor an authorization record. Exclude state writes
-from delegated worker evidence scope; coordinate explicit write boundaries with other workflows.
-State is an ephemeral recovery bookmark: start, returned child identity, materially changed
-next safe action and verified completion are its only update triggers. Routine task/batch/check/
-commit/poll events do not trigger state edits. Coalesce facts and skip unchanged content. Returned
-child IDs still get immediate capture, but state needs no dedicated commit and may remain owned
-working-tree dirtiness until a safe otherwise-required commit. State edits never trigger summary/
-index writes. The coordinator records audited outcomes and meaningful exceptions, referencing
-worker evidence rather than duplicating routine events or its task ledger. Internal worker task/
-evidence checkpoints remain uninterrupted and independently audited on return.
-
-Ordinary successful checkpoint rows contain task/item result, bounded proof pointer and
-baseline/result/evidence commit references. Link the run-wide assessment, routing and
-limitations once rather than repeating them per task. The index is discoverability only:
-one short run row (tags/pattern, concise outcome, summary link), not attempt chronology.
-
-Expand meaningful failed, blocked and partial attempts or contested exceptions enough to
-retain task/type, areas/tags, selected role, exact selected and observed profile (binding plus
-effort or unknown), original assessment/guidance, contract strength, first/final outcome,
-diagnosis, correction/repair and item check/checkpoint references. Retain accepted, partial,
-escalated and blocked attempts, individual check results, reviewer findings and manual/user
-validation where material. Unknown is not success; unknown observation is never overwritten
-by selection. Include batch/task item dispositions and proof references, exact escalation
-reason and next selected profile or pending selection, reused and invalidated items;
-corrections link original proof, never erase or retroactively infer observations.
-Keep failed, blocked and partial work attributable without duplicating authoritative logs,
-approvals or task contracts. Link bounded proof; never copy credentials, tokens, personal
-data, secrets or sensitive payloads.
-
-Create/update the run record before its index entry. Every new evidence write refreshes
-that run's compact row: linked summary, date, areas/tags, relevant patterns and concise
-outcome. Keep one row per run, no duplicate rows, transcripts or full logs. Reconcile an
-interrupted record/index update on resume before reporting successful persistence;
-failed writes remain reported failures, not acceptance passes.
-
-## Qualified batch routing feedback
-
-Optional `residual_reasoning: low|medium|high` plus a brief rationale fits existing task
-notes/briefs; it informs the coordinator's [qualified seed](../../coordinate-implementation/references/batch-routing.md),
-not an implementation-task class or model assignment. Family and effort have independent
-rationales; one exact permitted owner-selected profile serves each sequential invocation.
-Relevant approved guidance may override the seed when its scope and evidence apply, never
-owner/source authority, permissions, supported-effort/callability or REQUIRED acceptance gates.
-Empty guidelines invent no project success history. This evidence owner is not a second router,
-store, schema, score or automatic learner.
-
-Feedback is factual: satisfied/failed/insufficient-evidence dispositions refer to original item
-criteria and relevant revision/environment proof, not model confidence. Record exact gaps and
-escalation reasons rather than attribute environment/manual/permission/contract gaps to capability.
-Stronger implementation continuation uses the same original contracts and preserves valid work;
-exceptional clean retry justification/ownership/owner gates must remain inspectable, not automatic.
-
-Retain each attempt's exact selected and observed profile separately, original assessment,
-contract strength, first/final outcome and repair/checkpoint references without erasing failures.
-Use diagnosis values `model_capability`, `planning_or_spec_gap`, `verification_contract_gap`,
-`batching_error`, `environment_or_tooling`, `external_dependency` or `unknown` with concrete
-supporting evidence. Non-model causes never count as capability failure; unavailable environments
-keep REQUIRED checks not verified and acceptance blocked without penalizing the selected profile.
-Complete meaningful first-attempt evidence may support qualified positive feedback, but weak or
-invalidated successes are not strong positive guidance. Repair success alone does not prove
-model-only attribution. Unknown actual model/effort stays unknown; later supported observations
-are appended with provenance, not retroactively inferred from selection.
-
-Inspect failed child run, invocation, partial commits and item evidence before targeted repair.
-Preserve valid work/prior attempts, identify affected dependencies and invalidated items, and
-reuse only confirmed-valid evidence. Repair may change model, effort or both only through usable
-permitted binding/support and owner gates; unknown cause or unavailable/unauthorized repair stops,
-not blind restart or a fixed ladder. Carry original assessment/profile, passed/failed mappings,
-current state and full contract, rerunning all invalidated checks through coordinator acceptance.
-Guideline synthesis still uses selective/index-first retrieval, exact owner approval and immediate
-baseline drift checks below; raw attempt outcomes never automatically become guidance.
-
-## Conservative reflection
-
-After implementation/verification and independent review, or when pausing with a blocker,
-reflect once at terminal closeout or a genuine blocked pause, not routine batch transitions.
-Choose an actionable disposition for each meaningful observation:
-
-- **Covered:** name the existing rule and explain its relevant coverage, including a missed
-  application. Refine only for an evidenced reusable gap. A covered cleanup rule does not
-  make a narrower helper/fixture gap incidental automatically.
-- **Candidate:** propose scoped reusable planning, scope, sequencing, fixture, tooling,
-  verification, cleanup or delegation guidance with support, contrary evidence and qualitative
-  uncertainty. A non-model process lesson does not require model-incapability proof.
-  Model-specific claims need causal support; one outcome alone is not that support.
-- **Incidental:** briefly explain why no reusable lesson follows; record `no update proposed`.
-
-Append attributable observations and dispositions/candidates in the
-run's `SUMMARY.md`, then refresh the index separately. Older runs may retain separate task
-and `REFLECTION.md` files. Distinguish direct observation, tentative
-pattern, repeated pattern, stable guideline, insufficient evidence and conflicting
-evidence without numerical confidence scores. Review selected prior evidence only when
-needed for synthesis using selective retrieval. One failure may support a narrowly scoped
-tentative caution, never a universal class/subsystem ban or permanent one-outcome rule.
-
-Propose add/refine/supersede/remove changes with scope, qualitative status, supporting
-and contradicting pointers, plus evidence-only items. General lessons stay out unless
-explicitly project-scoped; global skill improvement is separately approved work. Synthesis is
-never automatic mutation.
-
-## Exact guideline approval
-
-Present an executive brief and exact candidate diff before the existing `ask_user` gate;
-allow accept, edit, reject, or add a guideline. Implementation approval grants no guideline
-mutation authority. Persist the answer, approved bounds, comparable baseline/proposed
-content evidence and decision disposition in the run's `SUMMARY.md` (or an existing older
-`REFLECTION.md`) and refresh the index.
-Accepted, edited or added resulting content must be explicitly approved; do not infer
-an edited/additional statement or widen approval beyond that content.
-
-Pending, unavailable, cancelled or ambiguous interaction leaves guidelines unchanged
-and proposals pending. Rejection leaves guidelines byte-identical while retaining evidence
-and rejection disposition. Immediately before applying only approved changes, re-read
-`GUIDELINES.md` and compare with the approved baseline; concurrent/baseline drift stops
-application and requires renewed review/approval, never unapproved overwrite. Re-check
-relevant guidance after approved writes. Report implementation/feature acceptance separately
-from guideline approval that is pending or rejected.
+Keep current-content approval, REQUIRED/manual/permission gates, truthful selected versus
+observed profiles, verified per-task checkpoints and independent final review. Coordinator
+acceptance checks actual diff/focused SHA/item proof, not confidence-only reports. Healthy
+internal sequential tasks continue without routine supervisor acknowledgment. Local static/
+symbolic checks do not prove model obedience or live provider behavior.

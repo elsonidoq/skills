@@ -5,653 +5,169 @@ description: Use when implementing or resuming approved work from a reviewed tas
 
 # Coordinate Implementation
 
-Implement reviewed tasks in dependency order while preserving artifact provenance,
-integration safety, and evidence. Work in the selected workspace; do not regenerate
-planning artifacts as a substitute for resolving implementation blockers.
-On compaction, restart or uncertain execution context, first read the project snapshot under
-Brief Current State and Recovery to locate intake pointers; then selectively validate linked
-authority and reconcile Git/runtime as needed for the next safe action under the recovery rules
-below before continuation. Snapshot pointers are not authorization.
+Trust the approved settled design. Deliver bounded tasks in dependency order:
+approved intake → bounded delegation → actual diff/commit/REQUIRED audit → next
+ready work → fresh independent final review. Do not routinely replan, rereview the
+design, repeat unchanged preflight or run broad redundant checks.
 
 ## Load and Verify
 
-Require explicit or unambiguous paths to the approved requirement/source, tasks,
-applicable source/supporting artifacts, and durable authorization/review evidence.
-Read repository instructions, governing principles, linked contracts, research,
-decisions, and source constraints. In projects declaring the memory contract, verify
-`memory-handling` is discoverable and load the project memory store, index, and
-trigger-matching entries; missing required memory capability stops with a report.
-Treat verified trigger-first gotchas as implementation constraints. Apply the shared
-[task-commit contract](../memory-handling/references/task-commit-contract.md) as the
-canonical checkpoint owner; this skill supplies coordinator/implementer execution only.
+Read the identified approved source/tasks and repository instructions once. Establish
+current-content review/scope authorization, constraints, exclusions and dependencies.
+Missing, stale or unverifiable approval blocks the affected action; never invent
+provenance or regenerate planning artifacts to bypass a blocker. Resolve ambiguous
+origin or conflicting planning depth. For applicable origin-specific approval and
+repair gates, use the existing [approval/recovery mapping](../planner/references/approval-and-recovery.md).
+TinySpec needs separate source/tasks and current combined approval; Standard needs
+specification/plan/tasks, both current approvals and required SpecKit stage evidence.
+Preserve legacy source shape and authorization rather than relabeling work.
+SpecKit applies only to its selected origin/stages, not merely because installed;
+report unavailable applicable commands and use direct artifact checks where permitted.
 
-Before the first retained task write, establish the task baseline, allowed paths, HEAD,
-index/worktree ownership, usable Git/identity/signing/permission prerequisites and required
-check baseline. On every fresh/resumed implementer, compare the supplied baseline and repository state
-before writing. Unexpected changes or an unresolved checkpoint means no edits, cleanup, or commits: return the blocker. A fresh implementer never adopts or commits unknown work.
-Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md):
-ensure the mandatory project-local store exists, including direct/resumed execution.
-Automatically initialize missing files, notify the user and commit only initialization files
-before proceeding, without a setup approval gate. Read compact guidelines and carry exact
-applicable constraints/evidence references from planning into task briefs/checkpoints.
-Persist evidence in this store on every run, never a handoff-only alternative. Initialization,
-commit or evidence-write failures stop with the exact blocker; required gotcha memory
-remains separate. No default evidence-history intake; justified clarification follows
-index-first relevant-only retrieval. Verify:
+Load adopted gotcha memory through `memory-handling` and only relevant existing
+compact coordination guidance under the [project coordination contract](../memory-handling/references/project-coordination.md).
+Carry applicable constraints into task briefs and REQUIRED checks. Missing coordination
+store or STATE is nonblocking. No automatic STATE creation, editing or removal; no
+routine summaries, index updates, evidence-only commits, reflection or inferred lessons.
+Leave existing STATE/custom content and historical records untouched.
 
-- The source, tasks, and supporting artifacts refer to the same approved scope.
-- Required upstream outputs, accepted decisions, and current authorization exist.
-- Task prerequisites and integration points agree with applicable source contracts.
-- Existing workspace changes are understood and preserved.
+Before the first retained task write, establish baseline HEAD, allowed paths, index/
+worktree ownership, usable Git/identity/signing/permissions and required check baseline.
+A fresh/resumed implementer compares the supplied baseline and repository state;
+unexpected changes or unresolved checkpoints mean no edits, cleanup, or commits.
+A fresh implementer never adopts or commits unknown work. Apply the canonical
+[task-commit contract](../memory-handling/references/task-commit-contract.md).
 
-On every fresh session or resume, compare current source/task/supporting content or
-revisions with durable approval evidence, including linked records outside the
-artifacts. A chat-only approval or an `approved` label is not a fresh-session proof.
-Missing review evidence, unresolved material owner gates, or approval that is
-missing, stale, or unverifiable stops implementation at the earliest affected
-producing workflow gate. Never repair provenance by inventing artifacts.
+## Recover Context
 
-Determine workflow origin and selected planning depth from the handoff and linked artifacts.
-For `planner` origin with Standard depth (or legacy `epics-manager` origin), require
-specification, plan, tasks, both current approvals, source provenance, overall review
-evidence, and required SpecKit stage evidence.
-On every fresh session or resume:
+Start with available conversation summary/recent context; do not assume retained tokens
+or require a snapshot. Selectively reconstruct only uncertain authorization, completion,
+Git HEAD/diffs/index ownership and actual check/commit evidence needed for the next action.
+Unknown approval/completion blocks that action: never guess completion or repeat commits.
+Reconcile recorded and unrecorded active children through usable runtime before dispatch:
+a running child means inspect/wait, not duplicate dispatch; unknown child status or
+missing runtime evidence stops replacement. Inspect a failed run and its invocation
+before targeted resume/retry; unknown cause stops blind retries. Preserve partial and
+unrelated work. Missing context alone calls for selective reconstruction, not a new ledger.
 
-- Read the specification-approval and overall-review-approval records, including
-  records stored outside the spec, plan, or tasks, and their linked decisions.
-- Verify specification approval applies to the current specification and overall
-  review approval applies to the current spec, plan, and tasks. Compare their
-  recorded revisions or content evidence with the current artifacts; do not trust
-  an `approved` label or the handoff alone.
-- Inspect the overall review evidence and unresolved owner gates. If approval is
-  missing, stale, or unverifiable, or required review evidence is missing, stop
-  before implementation and return to the earliest affected planner Standard checkpoint,
-  including for legacy work. Do not invoke a retired producer or replace missing stages
-  with generic artifacts.
+## Prepare Approved Execution
 
-For `planner` origin with TinySpec depth, require a separate TinySpec/source and tasks,
-review evidence, and explicit current combined owner approval of source/tasks and
-implementation scope. For legacy `requirements-manager` origin, require durable
-requirement/source, tasks, review evidence and its explicit current combined approval;
-its original source may be embedded in tasks and needs no retroactive TinySpec.
-Verify traceability, constraints, exclusions, decisions/deferrals, and approved content
-or revision evidence. No specification, plan, or SpecKit prerequisite is required;
-do not fabricate placeholders. Missing/stale evidence returns to planner's applicable
-combined source/task review and approval checkpoint. Preserve original provenance and
-source shape for repairs, including partially planned legacy work. Follow planner's
-[approval/recovery mapping](../planner/references/approval-and-recovery.md); if unavailable,
-report the missing contract and stop rather than fabricate a repair gate.
+Verify usable question/delegation capabilities, async budgets, permitted mutation tools
+and a fresh independent reviewer before implementation. Missing required capabilities
+stop with the exact gap (`question: UNAVAILABLE`, `Delegation: UNAVAILABLE`,
+`Independent review: UNAVAILABLE` or `Agent/model selection: UNAVAILABLE`).
+No unauthorized local fallback; do not install, probe live providers or change settings.
 
-For other documented origins, verify the identified producer, durable source/task
-review and current owner authorization, plus applicable project gates. Do not impose
-Standard's two approvals on unrelated work or waive a documented producer's safeguards.
-Ambiguous origin is a blocker; resolve it before implementation, never assume
-standalone origin to bypass gates. Missing/conflicting depth for planner-origin work
-also blocks; never relabel legacy Standard work TinySpec to bypass evidence.
-Planning depth changes intake evidence only, not execution strategy or task semantics.
+Count the complete approved implementation task list, including completed tasks but
+excluding standalone reviews. Up to three bounded tasks may run locally only with the
+current owner-selected exact profile and adequate observed context; otherwise delegate.
+More than three require delegation. Completing tasks does not change that strategy.
+Both routes use the same dependencies, per-task checkpoints and final review.
 
-Run SpecKit implementation/prerequisite instructions only when applicable to the
-selected origin and artifacts. Installation alone does not make SpecKit applicable
-to direct requirement/tasks. When applicable, inspect available commands and assets
-and follow only instructions found in the current project. If the implementation
-command is unavailable, report
-`SpecKit implementation: UNAVAILABLE` and execute the reviewed tasks directly from
-their contracts. If a prerequisite checker is unavailable, perform direct artifact
-and path checks and label the scripted check `UNAVAILABLE`.
+Build consecutive context-coherent batches in approved order, one exact profile per
+invocation. Normally 2–5 related tasks, not a quota; shared files, phase headings and
+internal dependencies alone do not require splits. One writer verifies and commits each
+producer before its consumer. Split for material profile, context, permission, owner-gate
+or external-prerequisite incompatibility. A later-numbered prerequisite is a sequencing
+blocker: return to producing review, never silently reorder. All implementation batches
+execute sequentially, never in parallel. Continue all incomplete dependency-ready work;
+for an explicit partial boundary use `ask_user` to confirm boundary versus full completion.
 
-## Brief Current State and Recovery
+Assess each batch using the six-factor [routing rubric](references/batch-routing.md),
+not a universal default. Present the entire proposed execution table: task IDs, outcome,
+dependencies, integration/check pointers, local/delegated mode, exact binding/effort,
+separate comparative Family and Effort rationales, applicable guidance or none.
+Implementation approval is not routing approval: use `ask_user` for explicit batch/profile
+approval before writes or dispatch. Reuse verified unchanged approval; changed boundaries/
+profiles renew affected rows, source/scope/acceptance changes renew producing gates.
 
-`STATE.md` is project-owned temporary **current state**, not a coordinator-owned tracker.
-During implementation the coordinator maintains implementation-relevant current truth there;
-other authorized workflows, including `finish-session`, use the same snapshot. Resolve the
-selected project root, never the global skill path. Reuse an explicitly declared project-local
-equivalent; otherwise default to root `STATE.md`. A project prohibition or conflicting location
-blocks adoption, not a second file. Preserve unrelated/custom content and headers: replace only
-an understood current-execution block. For an existing ambiguous/custom file, show proposed
-bounds and obtain owner approval before using it; never silently repurpose it. Reject paths
-outside the selected project (including symlink escapes), unreadable/non-file collisions or
-unverified project roots; report the exact blocker rather than overwrite or choose a fallback.
+Verify callable binding, supported effort, permissions and tool access at assignment and
+dispatch; missing permission/binding/effort/tool support blocks dispatch. Registry
+names/suffixes alone are not proof. Copy the owner-selected exact profile
+unchanged into actual arguments (pi-subagents `model: "provider/id:effort"`); no silent
+settings/agent override. Selected versus observed stays separate; unobservable actual
+binding/effort is unknown. Unsupported or mismatched arguments block launch.
 
-STATE is an ephemeral recovery bookmark, not a checkpoint system. Keep the execution
-snapshot BRIEF: roughly five short bullets per ongoing workstream, omitting irrelevant fields.
-Include the goal, authoritative source/tasks/approval links, active execution/run identity,
-next safe action and any material blocker. Its only purpose is to recover the big picture
-after auto-compaction and find details in project files. No mandatory Git SHA, check results,
-file inventory or progress ledger; Git, task artifacts and evidence already own those facts.
-For example (shape only, not a required schema):
+## Delegate
 
-- Goal: implement the approved change.
-- Authority: source, tasks and approval-record links.
-- Execution: run identifier; active child ID or explicit none/unknown.
-- Next: inspect this child, then audit its returned work and continue ready tasks.
-- Blocker: required acceptance check awaits its environment (omit when absent).
+Normally launch one direct asynchronous worker for a batch, including internal sequential
+tasks. A single child or batch does not justify a workflow wrapper; a concrete branching,
+aggregation or other earned orchestration need may, with a terse reason in the existing
+brief. Both shapes retain all gates. Stay within observed per-run/session budgets.
+Reuse a child only with selected profile, supported resume and adequate relevant retained
+context; otherwise narrow a fresh brief. Unknown context capacity is not billed-token
+capacity. Rotation is not retry authority. On timeout inspect the checkpoint and failed
+invocation, preserve completed proof and narrow only the diagnosed remaining work.
 
-The snapshot conveys no authorization or acceptance. Every current item represents ongoing
-concurrent work: active, paused, blocked or pending review/acceptance/owner gates. Update ongoing
-items in place and remove verified finished items, never retain terminal dispositions. Finished
-planning/specification state is removed without deleting durable artifacts or fabricating an
-implementation successor; a distinct authorized successor must be independently current.
-Preserve unrelated concurrent items and custom structure. An empty current block is valid when
-nothing remains; preserve the file without completed/idle-history placeholders or next actions
-solely for finished work. Unknown completion/runtime/ownership, partial work, active children or
-missing acceptance proof cannot authorize deletion. Never clear the whole file as a shortcut; never
-append historical ledgers, transcripts, completed-task history, full check logs or duplicate evidence.
+The self-contained worker brief supplies workspace, baseline, exact selected profile,
+source/tasks/approval paths, ordered task IDs, allowed paths and mutation tools, shared
+constraints, dependencies, exclusions and permission/manual gates. Include the whole
+unchanged REQUIRED union before coding: each ID's criterion, smallest check, expected
+proof and pass condition; optional checks stay separate. Missing contracts return to the
+producer, never retrofit weaker acceptance. Require per-task verified owned-path commits
+and healthy internal continuation without routine coordinator approval.
 
-Establish the bookmark after authorization/preflight and before execution. Reuse the
-coordination run ID. Update only at the recovery-relevant boundaries below, not every dispatch
-or audited task/batch. A broad accurate next action may span multiple batches.
-Do not depend on advance compaction notification.
-While a sequential worker runs, retain its ID and the next action
-"inspect this run, then audit its returned checkpoints"; do not imply its internal progress is
-already accepted. Record a returned child ID immediately, even while the child is running.
-Delegated briefs exclude snapshot writes to prevent competition; another authorized workflow
-may update it only across an explicit non-overlapping write boundary, not by racing this writer.
-
-### Coordinator write boundaries
-
-Only these recovery-relevant events trigger a STATE edit:
-
-| Event | Bookmark action |
-| --- | --- |
-| authorized work starts | Establish goal, authority links and next safe action once. |
-| returned run identity | Record a returned child ID immediately, without an immediate commit. |
-| materially changed next safe action | Replace the next action/active identity/blocker, such as implementation becoming review or a genuine blocked pause needing owner direction. |
-| verified completion | Remove only verified finished items; preserve ongoing/gated/unrelated work. |
-
-Routine task or batch completion, passing checks, commits, polling, waiting, ordinary tool
-calls and healthy internal worker progress do not trigger STATE writes. Recovering context
-alone does not require refreshing an accurate bookmark. Skip byte-identical writes and
-coalesce available facts into one small edit. Do not imply unverified worker progress is accepted.
-
-State edits never trigger summary/index writes. Coordination evidence records approved
-baseline/routing once, audited outcomes referencing worker checkpoints, meaningful exceptions
-and terminal review/reflection—not a duplicate routine event ledger. Local implementer
-and worker task/evidence checkpoints remain unchanged and independently auditable.
-Reflection occurs once at terminal closeout or a genuine blocked pause, never routine batch
-transitions. Initialization and exact guideline approval remain separate authorities.
-
-### Recovery before continuation
-
-After compaction, restart or uncertain execution context, before any task write or dispatch
-(selective recovery, not a mandatory full-history reread):
-
-1. Read the current snapshot once, including its custom ownership/location constraints.
-2. Selectively open linked source/tasks and approval records needed to establish current
-   authorization for the next action through Load and Verify. State labels are not proof;
-   validate permission before writes/dispatch and verification before acceptance. Do not replay
-   every historical approval, run summary or check unless relevant uncertainty requires it.
-3. Inspect current Git HEAD, actual diffs and index/worktree ownership; use task/check/evidence
-   owners to reconstruct only the progress needed for the next action. State may lag committed
-   work. Recover missing required evidence only from verified facts, never repeat task commits.
-4. Inspect recorded delegated runs and their relevant invocations through the runtime before
-   dispatching, resuming or replacing work. A running child means inspect/wait, not duplicate dispatch;
-   unknown status or a missing child ID requires runtime reconciliation. Check for unrecorded
-   active dispatches too; a stale bookmark's "none" is not runtime proof. Missing runtime evidence
-   stops replacement. Failed runs retain the inspected-cause/profile gates.
-5. Continue only with the exact next action supported by reconciled current state. Update the
-   bookmark only if its next safe action materially changed. Conflicts, missing evidence, partial
-   task-owned changes or uncertain child status require reconciliation or a precise stop,
-   never guessed completion, blind retry or cleanup.
-
-Missing state never means no progress or no active child. Recover from authoritative artifacts,
-Git, verification and runtime evidence where possible before establishing a snapshot; otherwise
-report the exact blocker. Do not fabricate progress, repeat commits or redispatch unknown work.
-
-### Writes and checkpoint ordering
-
-No state-specific commit or evidence checkpoint is required, including before dispatch,
-at a pause, review/repair transition or state-only closeout. An ephemeral state-only edit is
-not a retained implementation/evidence task under the shared task-commit contract. Include
-pending owned state in the next safe otherwise-required commit when appropriate; do not invent
-a commit solely for the bookmark or chase its own SHA. It may remain uncommitted across closeout.
-
-A pending snapshot write is understood coordinator-owned dirtiness, explicitly outside worker
-task/evidence paths, not unknown task work. Do not race Git/index commits with an active writer:
-workers still make every internal task/evidence checkpoint without coordinator waits. Include
-state only with established ownership and safe index access. Task-relative cleanliness excludes
-this known state dirtiness; ordinary task commit → separate run-summary/index evidence checkpoint
-remains required. No worker task/evidence checkpoint or failure stop is waived.
-
-At completion remove only the verified finished current item; retain paused, blocked or
-review/acceptance-pending work and unrelated concurrent items. Completion outcomes and evidence
-stay in their durable owners. Skip unchanged empty-current-content writes.
-Preserve existing dirty state unless its
-exact ownership/content is established and overlap authorized; never adopt another writer's edits.
-Re-read/compare the intended block before each update and inspect diff/ownership before staging;
-concurrent drift, same-file ambiguity, write/check/commit failure stops affected work with the exact
-blocker. Preserve recoverable work. If an active child exists, report the persistence failure and
-its ID/status, inspect it and arrange a safe pause; do not launch replacement or claim persistence.
-On resume reconcile pending state/evidence and any partially completed commits before continuing.
-
-## Execution Capability Preflight
-
-Before establishing completion scope or executing work, verify permitted, usable
-question capability and owner-selected exact profile bindings, including the current
-agent for eligible local execution. Check callable bindings, not configuration names
-alone. The suite declares question/delegation runtime requirements in the global
-configuration repository's `REQUIREMENTS.md`; verify their availability rather than
-assuming installation. Missing required question capability reports
-`question: UNAVAILABLE` and stops; do not substitute inferred owner selection.
-Verify async/background delegation and its runtime budgets before any delegated work,
-and a usable fresh independent reviewer before implementation. Missing required
-delegation or reviewer capability stops with `Delegation: UNAVAILABLE` or
-`Independent review: UNAVAILABLE`. No unauthorized local fallback is permitted.
-
-Track the execution plan throughout the task. If the host provides a native
-planning or task-tracking facility, use it. Otherwise, maintain the plan as a
-Markdown checklist, updating items as they move through `pending`, `in_progress`,
-and `completed` states. Do not stop execution solely because a dedicated todo tool
-is unavailable.
-
-Use the shared [qualified seed rubric](references/batch-routing.md) to assess each batch,
-not to assign implementation-task classes. Verify usable permitted options and independent
-review selection through the question capability; owner selection remains required.
-Retain valid recorded choices on resume; offer only observed permitted options and
-never silently switch selected profiles. If no usable option exists, report
-`Agent/model selection: UNAVAILABLE` with the binding/effort gap and stop.
-Planning/reviewer stage selections remain separate from implementation batch selection.
-
-## Select Execution Strategy
-
-Count the complete approved implementation task list, including completed tasks;
-exclude standalone review tasks. Select by this count, not origin, plan presence, or remaining task count:
-
-- Up to three bounded implementation tasks may run locally only when the
-  current owner-selected exact profile fits the batch contract, scope is clear, and
-  observed context capacity is adequate. For an incompatible profile, broader isolation,
-  or excessive context, delegate the affected task or segment using the shared
-  batching rules below. Do not change the current model to force local eligibility.
-- More than three implementation tasks require delegation through the same
-  consecutive context-coherent sequential batching machinery, including one-task batches
-  where justified. The 2–5 target below is guidance, never a threshold or quota.
-
-Record the complete count, chosen local/delegated strategy, batch profile selections,
-context evidence/limitations, and any delegated segments in the tracker before work.
-Retain the recorded strategy on resume unless approved scope changes or an observed
-safety/context constraint requires a recorded revision and renewed gates as applicable.
-Completing tasks alone never changes delegated execution to local. If context cannot
-be observed sufficiently to establish local suitability, delegate; if required
-delegation is unavailable, stop rather than weakening eligibility.
-
-## Establish Completion Scope
-
-Default to implementing every incomplete batch produced by the execution graph,
-including batches that become ready after a predecessor completes. Do not stop
-after an intermediate batch, milestone, vertical slice, review point, or a
-delegated agent return merely to report progress or await routine approval.
-
-Only a user-defined partial implementation boundary permits ending before all
-batches are complete. When the user explicitly defines such a boundary, before
-starting implementation call the runtime's `ask_user` question tool to confirm whether to stop at
-that boundary or implement all incomplete batches. Provide those two choices
-without marking either as recommended. Record the selected scope in the
-execution plan and follow it. A newly discovered material owner gate or an
-unresolvable blocker may still require pausing; report it with the blocked
-batch and missing decision or dependency.
-
-## Build the Execution Graph
-
-Treat task dependencies as a directed graph, not checklist order alone.
-Both routes use this single execution graph, authorization preflight, verification,
-integration, tracker, per-task commits, and independent final review. Local tasks
-follow the same ordered task contracts; delegation uses the following shared batches.
-
-1. Mark completed tasks only from inspected changes and verification evidence.
-2. Identify dependency-ready tasks and blocked tasks with their missing producers.
-3. Build batches only from consecutive task entries in the approved list and one exact profile per invocation. Keep coherent producer/consumer work together to amortize startup and retain
-   useful context. Before combining materially different tasks, weigh concrete
-   startup/context savings against losing a smaller-profile opportunity; do not force diversity or a split.
-   Docs plus final recovery may merit separate consecutive profiles when recovery needs deeper tools;
-   coherent same-profile work can retain shared context without losing a smaller option.
-   Internal dependencies, shared files, and phase/story headings do not require
-   a split when one writer executes tasks sequentially, verifies each producer before its
-   consumer, preserves task acceptance boundaries, and commits each task separately. Never pull
-   a distant producer forward or reorder a prerequisite to fill a batch.
-4. Normally 2–5 related tasks when scope and observed context permit; it is not a quota. Split at
-   evidenced material profile differences, permissions, owner gates, context limits, incompatible scope, or
-   external integration prerequisites that cannot be satisfied inside the batch. A one-task batch
-   is valid when justified; headings, overlapping files, or internal dependencies alone are not.
-5. Keep contract producers before consumers and preserve explicit owner gates. The batch brief
-   states its internal task sequence, shared context, producer checks, and integration checkpoints.
-   Consider practical combined verification feasibility and attributable failures across the whole
-   union; preserve every task/item ID and producer-before-consumer checks, not generic batch green.
-6. Execute every batch sequentially and delegate only asynchronously in the background; never
-   run implementation batches in parallel. Re-evaluate the execution graph after each batch
-   completes without changing approved task order.
-
-If the approved tasks require a later-numbered task to unblock an earlier one,
-stop before building the batch plan. Do not silently reorder tasks or mix stories
-to make the batch run: return the sequencing defect to the producing workflow's review gate
-for correction and renewed approval as required by the project's workflow.
-
-Before execution, assess all batches under Select Execution Capability, then present the entire execution plan as a Markdown table.
-Include one row per batch with batch number, task IDs, one or two sentences describing the batch
-outcome and principal work, dependencies, integration surface and verification pointers,
-proposed exact binding and effort, separate concise Family rationale and Effort rationale,
-execution mode (local or delegated), and initial status. Track eligible local segments as work
-units in this same table and tracker, not a second execution algorithm.
-
-Implementation authorization is not execution-routing approval. After presenting the entire
-table, use `ask_user` to obtain explicit approval of batch boundaries and exact profiles
-before any implementation write or dispatch. Persist the answer against the current plan in the
-existing tracker/evidence convention, not another approval artifact. Missing, denied, cancelled
-or ambiguous approval blocks execution. Reuse verified unchanged approval on resume after
-content/authorization reconciliation; do not re-ask for unchanged routing or routine progress.
-Changes to batch boundaries or exact profiles require approval of the affected rows before
-execution; unchanged rows retain their valid approval. Source/task scope or acceptance changes
-still return to their producing approval gate. Copy approved profiles unchanged at dispatch.
-
-After explicit routing approval, initialize the execution tracker with one item per batch.
-Mark the first dependency-ready batch `in_progress`, later batches
-`pending`, and blocked batches `pending` with the blocking producer named in the
-item. Update it after every batch: mark verified batches `completed`, mark the next
-dependency-ready batch `in_progress`, and add, remove, or revise batches only when
-re-evaluating the execution graph requires it. Keep exactly one batch `in_progress`
-while implementation remains.
-
-## Select Execution Capability
-
-Assess every batch before presenting the complete table and obtaining routing approval.
-Never inherit Sol/medium or another universal default from planning, the current agent or earlier
-batches. Identical profiles across batches are valid when individually justified; do not force
-model diversity. Record ordered task IDs, assessment of residual reasoning, agentic/tool
-depth, weakest material blind spot, scope/coupling, failure cost/reversibility and relevant
-guidance. Record applicable approved evidence or explicit none, proposed versus owner-selected
-exact binding and effort, separate Family rationale and Effort rationale, and a conditional
-repair option in the existing brief/tracker. Compare closed design and implementation difficulty
-with weakest oracle quality, check cost and observability under all six factors in the sole rubric;
-strong cheap reliable proof can justify smaller capability for moderate complexity, while hidden
-coupling/weak oracles require justified stronger capability or producing review/renewal if inadequate.
-Use the rubric's comparative Family rationale, not merely suitability: explain a suitable smaller
-verified/permitted alternative's shortfall or select it; if none exists, state the availability limit.
-Effort remains independent. Avoidable orchestration overhead is not inherent difficulty, while
-stateful tooling/recovery remains risk. Empty guidelines invent no success history.
-Deep tools, weak oracles, unresolved design or costly failure defeat optimistic Luna routing;
-use the seed's stronger-option or owner/design gates, not a universal ranking.
-
-Verify permissions, callable binding, supported effort and tool access through the installed
-runtime at assignment and again at dispatch. Registry entries and suffix syntax alone
-cannot establish support or authenticated callability. Any missing permission, binding, supported effort or tool access blocks dispatch;
-missing owner selection also blocks. Live/provider probes require separate explicit permission;
-static fixtures do not prove live support. Required manual gates remain blocking.
-For eligible local work, recheck current exact profile and context fit at each checkpoint;
-if unsafe, record evidence and delegate, never silently switch profiles. Keep the recorded
-local/delegated strategy and its count/authorization gates. Requested/selected is not observed:
-unobservable actual model or effort remains unknown, never inferred from the request.
-For delegated work, an agent's report is not proof of completion.
-
-Copy the owner-selected binding and effort unchanged into the actual dispatch arguments:
-use the installed runtime's verified interface (for pi-subagents, model: "provider/id:effort").
-Compare the final arguments with the recorded decision before launch; no silent settings/agent override
-may replace the selected profile. One invocation supplies one exact profile for all its tasks,
-never per-task assignments. A mismatch or unsupported argument blocks launch and returns to
-capability/owner selection, not automatic substitution. Record selected and observed profiles
-separately in the tracker; unknown observation stays unknown.
-
-Normally use direct `subagent({agent,task,...})` for one worker implementing one batch,
-even multiple internal sequential tasks, with async/background mode and the unchanged exact
-approved model/effort arguments. A batch alone does not justify a workflow wrapper.
-A concrete named continuation/recovery, branching/aggregation or reusable orchestration need
-may justify a workflow; record a terse reason in the existing dispatch brief/tracker,
-not a new artifact, gate, approval or persistence boundary. Justified one-child workflows
-remain allowed; do not migrate existing runs. Direct delegated launch is not local execution.
-Both shapes retain the same approval, strategy, capability, tool, budget, permission,
-ownership, REQUIRED/manual verification, sequential batch, worker task/evidence checkpoint,
-return-audit and recovery gates above and below.
-
-- Delegate a task or safe batch only when write scope and dependencies are clear.
-- Verify and stay within observed per-run and session-wide delegation budgets;
-  stop rather than exceeding them or assuming historical runtime limits.
-- If required delegation is unavailable, stop before implementation and report
-  `Delegation: UNAVAILABLE` to the user.
-- Resume a previously used agent only when it uses the model selected for the batch, the
-  runtime supports resumption, its retained context materially overlaps, and observed context
-  headroom is adequate. Inspect accumulated context, compaction, tool output, and demonstrated
-  scope rather than treating task count or billed tokens as capacity. When evidence is inadequate,
-  record that limitation and issue a smaller fresh brief with durable handoff context.
-- There is no forced one-session-per-profile limit. Rotate to a fresh bounded child when
-  observed capacity is inadequate, retaining selected exact profile and durable evidence.
-  If context metrics are unavailable, state that limitation and conservatively narrow
-  the next delegation; do not force reuse or equate billed tokens with occupied context.
-- Inspect the failed run and tool invocation before retry or relaunch. Resume with a
-  targeted correction only when supported and the cause is understood; if evidence
-  is missing or uncertain, stop and report the blocker. Rotation is not a blind retry.
-- For long delegated work, checkpoint early with completed changes, check results,
-  remaining work and blockers, before the observed run budget is exhausted. After a
-  timeout, inspect that checkpoint and the failed invocation; retain valid completed
-  evidence and narrow the remaining step instead of restarting the entire batch.
-  Resume only under the inspected-cause rule above; a timeout alone is not retry authority.
-
-Before dispatching file changes, check which mutation tool the selected agent/model
-actually receives and is permitted to use. Pi's core tool set exposes `edit` and
-`write`; some runtimes or models expose only a diff-based `patch` instead. Do not
-infer a permission failure from a missing tool, or prohibit the agent's only viable
-mutation tool in a brief or smoke test. If the tool set is uncertain, verify it with
-a bounded, safe test before implementation; if no permitted mutation tool works,
-stop and report the observed blocker.
-
-For optional real-work routing experiments, use the qualified seed with usable owner-selected
-options and independent family/effort rationales. Strong contracts and cheap recovery may justify
-bounded experiments; higher effort does not resolve missing requirements or permissions.
-Never silently replace selected models or turn one outcome into permanent policy.
-On any batch failure, use diagnosis-first targeted repair, not a cheap-option-only rule.
-Inspect the failed child run, invocation, partial commits and check evidence before any
-retry, resumption or relaunch. Diagnose capability, planning/spec gap, verification contract
-gap, batching error, environment/tooling, external dependency or unknown from concrete
-artifacts; a generic abort/timeout is not a diagnosis. Preserve valid task work, unrelated
-changes and prior attempt evidence; identify affected dependencies and invalidated REQUIRED items.
-Do not reset the whole batch or discard passing tasks unless their evidence is implicated.
-
-A targeted repair may raise effort, change model or both; there is no fixed profile ladder.
-Recheck permitted callable binding, supported effort, tools and owner-selection gates before
-assignment and dispatch. Missing inspection, unavailable/unauthorized repair or unestablished
-safe task-owned state stops with the precise blocker; unknown cause stops blind restart.
-Planning/spec or contract gaps return to their producing approval gate, not a model substitution.
-Supply the original assessment and selected/observed profile (unknown stays unknown), passed/failed
-items, diagnostic evidence, affected dependencies, current implementation/checkpoint state and
-complete batch contract, including reusable and invalidated item mappings. Before acceptance,
-rerun every invalidated item and reuse only confirmed-valid evidence after checking scope,
-revision and environment. Inspect repair task diffs/checkpoints through the same cheap acceptance
-boundary and keep dependents blocked until all REQUIRED evidence is valid. Retain both attempts,
-corrections and outcomes at separate evidence checkpoints. Repair success alone does not prove
-model-only attribution.
-
-Where diagnosed and authorized, stronger-capability repair is implementation continuation
-for exact gaps under the same original contracts, not generic strong-model review.
-Same-profile targeted repair remains appropriate when sufficient; escalation is not mandatory.
-Carry the current implementation SHA/state, original task contracts,
-prior proof and precise gaps; never let a repair executor redefine weaker success. Environment,
-manual, permission and contract-definition gaps do not automatically create a stronger dispatch.
-Clean retry is exceptional: document fundamental unsoundness, contamination, safe repository
-mechanics or an applicable project rule, establish ownership and required owner/project gates
-before any authorized retry. No automatic reset/discard or batch rollback; preserve valid work,
-unrelated changes, checkpoints and prior attempts. Unknown cause still stops blind retries.
-
-Every brief includes the exact outcome, task IDs, workspace and artifact paths,
-owner-selected exact binding and effort, allowed files, dependencies, acceptance
-criteria, baseline failures, exclusions, authorization limits, the per-task commit
-convention and delegate ownership of internal task/evidence commits, the selected
-agent's verified file-mutation tool when file changes are needed, and required
-return evidence. Briefs must permit healthy internal-task continuation without routine
-coordinator approval; do not request per-task supervisor acknowledgment waits. Include the verified origin, source/supporting artifacts, current
-approval/review locations, internal task sequence, shared context, producer checks,
-and integration checkpoints. Ask for changed files, checks, incomplete work, and
-non-obvious handoff context.
-
-Aggregate the whole union of REQUIRED task-local references from the approved producer
-contract in the brief/tracker before coding, unchanged. For every reference retain the expected evidence and pass criterion,
-smallest sufficient check, manual/permission gates and optional checks separately. Include each
-task's baseline and owned paths, internal producer checks before consumer use, and the per-task
-commit followed by separate evidence checkpoint convention. Missing or ambiguous REQUIRED contracts
-return to the producing review/approval gate before dispatch; never retrofit approved tasks.
-
-Existing preparation has a definite end: once its required conditions are satisfied, dispatch;
-no state-specific dispatch-intent checkpoint is required; reopen only for concrete invalidating evidence.
-This follows completion of Load and Verify, preflight, approved graph/profile, full brief/REQUIRED
-union, child reconciliation where applicable and final argument validation;
-it substitutes for none of them. Missing conditions stop with the condition, concrete gap,
-affected action and smallest resolution. On changed content/scope/acceptance/boundary/profile,
-relevant Git/ownership/environment/tool/budget drift, failed/partial producer proof, unmet
-permission/manual gate, interrupted persistence or uncertain execution/child status,
-reopen only affected preparation under its existing owner. A passing unchanged check, prose
-polishing, generic history search or healthy worker progress is not invalidation. Administrative
-checkpoints alone do not invalidate task proof: compare relevant scope/revision/environment,
-reuse compatible evidence and refresh only affected proof, without extra unchanged persistence.
-
-Require the implementer return to identify actual profile or unknown separately from selection,
-and pass/fail/not_verified for every REQUIRED reference with concrete command/output or bounded
-artifact pointers and an explicit not_verified reason for unrun/unavailable checks. A shared output
-retains every item mapping without duplicate execution. Return changed files, incomplete work,
-and ordered baseline/result and separate evidence checkpoint references for every task.
-Confidence-only summaries are not evidence.
+Once required preparation is satisfied, dispatch. Reopen only affected decisions/checks
+on concrete contradiction, failed prerequisite, material scope change or ownership,
+permission, profile, runtime, environment or budget drift. Reuse unchanged applicable
+proof; routine progress is not invalidation. No separate progress ledger or persistence gate.
 
 ## Execute and Integrate
 
-Enforce the approved task-generation acceptance boundary in each brief and checkpoint:
-REQUIRED checks remain required; optional hardening/broader regression is not a blocker.
-Separately gated live/provider/engine/browser checks still need explicit permissions;
-if required but unavailable, report NOT RUN/UNAVAILABLE and leave acceptance blocked.
-Never silently waive an owner-required check or approved safety criterion; changing
-acceptance returns to the producing workflow for explicit authority and renewed approval.
-Reuse valid unchanged evidence after verifying scope, revisions and environment, and
-refresh only affected evidence rather than repeating historical intake or whole suites.
-New unrelated compatibility failures become separate causal work with scope/dependency
-gates, not an automatic expansion of the current task.
+Workers establish a meaningful failing check/mutation, implement only owned scope,
+inspect the actual diff and run each task's REQUIRED checks at the smallest sufficient
+layer. Required unavailable/unrun checks or unmet manual/permission gates block reliance;
+optional checks cannot compensate. Representative-sample manual STOP, when required,
+needs the inspectable sample and explicit owner approval, never self-review.
 
-For each task, whether local or inside a delegated batch:
+Commit each task's verified changes as one focused owned-path commit before later task
+writes or handoff. Explicit staging/path-limited commits preserve unrelated staged and
+unstaged work; same-file ambiguity stops. There is no skip/defer question or No-Git fallback.
+Missing verification, Git/identity/signing/permission, hook/check/commit failure or policy/
+ownership conflict stops; never disable hooks/signing, configure identity, broadly stage,
+push, reset or rewrite history to force success. Only the coordinator alone may recover
+understood verified uncommitted task work; failed recovery stops dispatch. No extra
+evidence-only checkpoint. Healthy internal tasks continue without a supervisor round trip.
 
-1. Establish the smallest meaningful failing check before behavior changes.
-2. Implement only the assigned scope.
-3. Inspect the actual diff; preserve unrelated changes.
-4. Run required task-level checks at the lowest sufficient layer and validate reports
-   against observable output; do not automatically expand to matrices or broad suites.
-5. Integrate at the planned boundary and run required affected contract or cross-component
-   checks before releasing dependents; justify additions by a concrete changed-seam risk
-   and apply the acceptance/approval boundary above.
-6. Update task completion and decisions in the project's existing artifact format.
-   If none exists, update the task list; the brief current-state snapshot only points to it.
-7. At the verified coordinator batch boundary, update the execution tracker to reflect the
-   batch's verified outcome and next dependency-ready batch. Refresh the snapshot only under
-   Coordinator write boundaries; never on healthy internal worker task progress. Local task
-   evidence checkpoints remain required; workers return evidence rather than writing the snapshot.
-8. Commit each task's verified changes as one focused commit before starting the next task.
-   Task commits are required checkpoints, not a reason to split a coherent batch or launch a
-   new session.
+At return, cheaply inspect every task's actual diff, focused commit/SHA, REQUIRED outputs
+and residual owned changes before releasing external dependents. A child report, clean
+tree, commit existence or generic green is not proof. Reject combined, empty-success or
+unauthorized commits. For each REQUIRED item audit criterion relevance, current revision/
+environment, command exit/observables, accessible proof and consistency; record satisfied,
+failed or insufficient-evidence with reason/proof in the task/runtime return. Missing,
+stale, conflicting, irrelevant or unavailable proof is insufficient-evidence, not success.
+Only satisfied REQUIRED items and fulfilled original gates release dependents. Shared
+checks run once with distinct item mappings; this audit is not general design rereview.
 
-Prefer compatible documented message, branch, sign-off and signing conventions. There is
-no skip/defer question and no No-Git fallback: missing Git, identity/signing/permission,
-policy conflict, failed hook/check/commit, uncertain ownership or missing verification stops
-with the exact reason. Never auto-configure identity, disable hooks/signing, initialize a
-repository, push, rewrite history, or broadly stage work to make a checkpoint pass.
-
-The implementer explicitly stages only assigned, understood paths and records baseline/result
-SHA, changed files, checks and residual state. In a delegated batch, the subagent verifies and
-commits each internal task and its evidence, then continues when task-relative state is clean;
-no routine coordinator pause or per-task completion message is required. Return the complete
-ordered checkpoint list at batch completion. At the batch boundary, the coordinator independently
-checks every task's actual diff, focused SHA, check evidence and residual task-owned changes
-before accepting the batch or releasing external dependents; a report, clean tree or commit
-existence is insufficient. It rejects combined, empty-success or unauthorized commits.
-For cheap batch acceptance, validate every REQUIRED item against consistent concrete outputs:
-check the union is complete, results match command exits and observables, referenced outputs exist,
-and inspected per-task diffs stay within owned scope. Missing, failed, contradictory, unauthorized
-or unrun REQUIRED evidence blocks acceptance; unmet manual/permission gates block acceptance and
-dependent release. Optional checks cannot compensate for missing required proof. Keep affected
-external dependents pending until the invalid evidence or gate is resolved and reverified.
-For each item record `satisfied`, `failed` or `insufficient-evidence` with reason and proof pointer,
-independently of executor pass/fail/not_verified. Audit relevance to the original criterion,
-current revision/environment and consistency, coverage and owned scope, not confidence or a
-zero exit alone. `failed` requires objectively demonstrated criterion violation; missing, irrelevant,
-stale, conflicting, unavailable or unrun proof is `insufficient-evidence` unless valid observations
-independently prove failure. Retain both proven defects and evidence limitations when they coexist.
-Only satisfied REQUIRED items and fulfilled original gates release dependents; a shared check
-runs once with distinct relevant item mappings, never releasing a consumer before producer proof.
-This cheap audit is not a general full rereview.
-
-Where required, representative-sample manual STOP blocks downstream/full expensive operation:
-retain an inspectable sample and explicit user approval at the original gate. Pending, rejected,
-absent sample or LLM self-review cannot release; approval permits only scoped continuation.
-Ordinary no-special-gate tasks instead use practical observables without invented ceremony.
-A passing contract needs no mandatory strong-model per-batch reviewer; the fresh independent final
-review over the complete committed range below remains required and is not replaced by this audit.
-Failed checks/commits/evidence persistence, unexpected changes and genuine owner/dependency
-gates still stop internal continuation and return a blocker. Local execution keeps the same
-per-task commit and verification boundary without adding a supervisor round trip.
-Only the coordinator alone may recover understood verified contextual uncommitted changes. If
-context/evidence is insufficient or recovery fails, failed recovery stops dispatch. Preserve
-unrelated staged/unstaged work; same-file ambiguity stops automatic staging. After the task
-commit, record its SHA and commit factual tracker/evidence changes as a separate evidence-only checkpoint before later task writes or handoff.
-
-Do not push, deploy, send external messages, run paid services, or perform
-irreversible operations unless the owner requested that operation and repository
-policy permits it.
-
-Material product, architecture, privacy, permission, cost, or irreversible choices
-remain owner gates. Save verified progress and ask one concise question when a gate
-blocks dependent work. Implementation details with a mechanically verifiable answer
-do not require owner escalation.
-
-### Coordination evidence checkpoint
-
-At each task/attempt checkpoint apply the shared
-[factual evidence lifecycle](../memory-handling/references/project-coordination.md#separate-factual-evidence).
-Keep ordinary rows terse: task/item result, proof and focused commit references; link the
-approved run-wide assessment once. Expand meaningful failed/partial/blocked attempts under
-that owner, preserving original uncertainty and correction/invalidated proof.
-The implementer writes internal task/evidence checkpoints; the coordinator references returned
-proof at Coordinator write boundaries, never duplicates the worker ledger. Update the same
-SUMMARY then its one compact index row; reconcile interrupted persistence before continuing.
-Evidence-write failures stop affected work; this grants no guideline mutation authority.
+On failure inspect run/invocation, partial commits and check evidence; diagnose capability,
+planning/contract, batching, tooling, dependency or unknown. Preserve valid work and prior
+attempts, identify affected dependencies/invalidated items. Targeted repair retains the
+same original contracts, needs usable owner-selected capability and reruns invalidated
+items only. Unknown cause blocks blind restart; planning/contract gaps return to producing
+approval, not model substitution. Clean retry is exceptional, requiring diagnosed
+unsoundness/contamination, safe ownership and applicable owner gates; never automatic
+rollback or discard. Material product/architecture/privacy/cost/irreversible choices remain
+owner gates. No external operations without explicit authorization.
 
 ## Review and Acceptance
 
-No per-task reviews: after all implementation task commits, obtain one fresh independent
-final review from the owner-selected usable reviewer, not an implementation session.
-Provide the full committed revision range and source/task/approval evidence, not merely a clean working-tree diff.
-Review against applicable source/supporting artifacts, tasks, governing principles,
-failure paths, migrations, contracts, documentation, and applicable project memory
-(per discoverable `memory-handling` when required). Missing independent capability
-blocks final acceptance; the implementer cannot self-certify independent review.
-Derive QA from the selected
-artifacts and detected project capabilities; never import another project's threat
-model, data, commands, or runtime assumptions.
+No per-task reviews. After all task commits obtain one fresh independent final review
+from the owner-selected usable reviewer, not an implementation session. Supply the full
+committed revision range, source/tasks/approval and criterion-mapped evidence. Missing
+reviewer blocks final acceptance. Correct authorized findings as separate verified focused
+tasks; rerun invalidated checks/review and renew affected producing approvals as needed.
 
-For each acceptance scenario report `PASS`, `FAIL`, `PARTIAL`, `NOT RUN`, or
-`UNAVAILABLE` with the command or observation. Distinguish local or simulated
-evidence from live acceptance. Do not call unavailable external validation passed.
-Record review findings/dispositions. Fix in-scope failures, re-run affected checks,
-and commit verified review fixes separately; leave blocked dependents pending.
-Source/task sequencing or authorization defects return to the producing workflow's
-review gate, with renewed affected approval before dependents proceed.
-
-## Coordination reflection and guideline approval
-
-After implementation/verification and fresh independent review, or at a blocked pause,
-apply the shared [reflection and exact approval lifecycle](../memory-handling/references/project-coordination.md#conservative-reflection).
-Reflect once at terminal closeout or a genuine blocked pause, not routine batch transitions.
-Record covered/candidate/incidental dispositions in the same run SUMMARY and refresh its index.
-That owner governs candidate scope, exact accept/edit/add approval, rejection/cancellation byte
-preservation, immediate baseline drift stop and re-read after approved writes; implementation
-approval grants no guideline authority. Report feature acceptance separately from guideline
-approval; neither replaces required checks or independent final review.
+Return ordered baseline/result SHAs, owned changed files, every REQUIRED item disposition
+and concrete command/output/artifact proof, residual state, incomplete work and blockers.
+Report selected versus observed profile (unknown stays unknown), local/symbolic versus live
+validation, and PASS/FAIL/PARTIAL/NOT RUN/UNAVAILABLE truthfully. State implementation
+completion separately from final acceptance. No automatic STATE/memory closeout, reflection
+or learning ledger. Explicit future-directed user feedback alone follows the feedback owner.
 
 ## Maintaining this contract
 
-With Python 3 available, run `python3 scripts/test_intake_contract.py` and
+With `PYTHONDONTWRITEBYTECODE=1`, run `python3 scripts/test_intake_contract.py`,
 `python3 scripts/test_batching_contract.py` and `python3 scripts/test_state_contract.py`
-from this skill directory, with `PYTHONDONTWRITEBYTECODE=1`. These checks cover
-intake/batching and snapshot/recovery wiring, targeted mutations and seven bounded Git-backed
-walkthroughs. Child status/compaction are symbolic, not live runtime events; these demonstrate
-instruction consistency and recovery examples, not actual compaction robustness or model obedience. If Python is unavailable, report checks `UNAVAILABLE` and inspect
-the contract manually rather than claiming automated validation.
-
-## Finish
-
-Reconcile selective removal of verified finished current items, or update ongoing
-work's precise blocker and next safe action under Brief Current State and Recovery; preserve other
-concurrent work and custom structure. `finish-session` uses that same current-only lifecycle.
-Return completed and pending tasks, changed files, per-task commits, checks and results, integration
-status, unresolved owner gates, unavailable capabilities, and the next
-dependency-ready action. State separately whether implementation is complete and
-whether feature acceptance is verified. Agent completion and checked boxes alone
-are not acceptance evidence.
+from this skill directory. Static mutations, symbolic recovery/dispatch and temporary-Git
+fixtures check contract sensitivity, not live model obedience or compaction fidelity.
+Tell the user to run `/reload` in pi after global skill changes.

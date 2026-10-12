@@ -12,12 +12,6 @@ required verification. A read-only, verified no-change, disposable-scratch, or e
 task creates no empty commit unless it retains a repository deliverable. Standalone writing
 skills treat their bounded deliverable as the task.
 
-Ephemeral recovery-state exception: a STATE-only bookmark edit or removal is not a
-retained task and requires no separate commit or evidence checkpoint. It may remain
-understood coordinator-owned dirtiness across closeout; include it in the next safe
-otherwise-required commit when appropriate, preserving explicit path ownership and index
-safety. This exception changes no implementation-task or worker evidence checkpoint.
-
 Existing authorization remains required for every write. This contract neither authorizes
 creation, uploads, external operations, guideline changes, adaptation, nor planning changes.
 
@@ -64,41 +58,30 @@ with a focused commit. Insufficient context/ownership/evidence, or a failed reco
 stops dispatch; retain recoverable state and do not bounce a fresh implementer.
 
 A coherent sequential batch still checkpoints every internal task before the next one. The
-subagent owns verification, task commits and evidence-only checkpoints inside its run. Once
+subagent owns verification, task commits  inside its run. Once
 these succeed and task-relative state is clean, it continues to the next authorized internal
 task without routine coordinator approval. Do not insert a per-task supervisor message or
 acknowledgment wait into a healthy batch. Keep the task baseline, SHA and check results in
-local durable evidence; return the full ordered checkpoint list when the batch returns.
+the task/runtime return; return the full ordered checkpoint list when the batch returns.
 
 The coordinator audits every returned task checkpoint at the batch boundary before accepting
 the batch or releasing external dependents, not between healthy internal tasks. Failed checks,
-commits or evidence persistence, unexpected changes, and genuine owner/dependency gates still
+or commits, unexpected changes, and genuine owner/dependency gates still
 stop the subagent and return the blocker to the coordinator. Coordinator commit recovery is
 exceptional, never the normal internal-task path. This is instruction-managed execution, not
 an interception guarantee.
 
 ## Evidence, interruption, and limits
 
-Record each task/attempt baseline, result SHA, checks and outcomes concisely in the existing
-factual evidence/tracker. For new coordination runs, append a compact checkpoint row or
-exception to the same run `SUMMARY.md`, not a separate task evidence file. After a task commit,
-capture its SHA and commit the resulting run-summary/index update as a distinct, focused
-evidence-only checkpoint before later task writes or handoff; it is not an implementation-task
-substitute. Older per-task evidence files remain valid and need no default migration. On interruption reconcile commits and pending evidence,
-and recover a successful reported SHA without duplicating it. Inspect a failed attempt before
-retry or escalation. Later defects require dependency analysis and separate verified correction
-tasks, never automatic rollback.
-
-The brief project-owned current-state snapshot follows the
-[coordinator snapshot/recovery lifecycle](../../coordinate-implementation/SKILL.md#brief-current-state-and-recovery),
-not a new task ledger. Only recovery-relevant start, returned child identity, materially
-changed next safe action and verified completion trigger state edits; routine task/batch/check/
-commit/poll events do not. State edits never trigger summary/index writes or state-specific
-commits. A returned child ID is written immediately; pending coordinator-owned state is
-explicitly excluded from worker paths and included only in a safe otherwise-required commit,
-never by racing the worker's Git/index. No SHA belongs in the bookmark by default. Local
-implementer duties, internal task/evidence checkpoints, ownership checks and failure stops
-remain unchanged.
+Return each task/attempt baseline, result SHA, checks and outcomes with concrete
+command/output/artifact references in existing task/runtime/session conventions.
+No automatic STATE maintenance, routine summaries/index updates, reflection or separate
+evidence-only checkpoint is required. Missing coordination store is nonblocking.
+On interruption reconcile actual commits and check evidence; recover a successful SHA
+without duplicating its task commit. Inspect failed run/invocation before targeted retry;
+unknown cause stops. Later defects need dependency analysis and separately verified
+correction tasks, never automatic rollback. Feedback-only memory follows the
+[project coordination contract](project-coordination.md).
 
 Operational assertions can check instructions, and temporary-Git fixtures can demonstrate Git
 protocol cases such as scoped commits, hook failures and unrelated-work preservation. Neither

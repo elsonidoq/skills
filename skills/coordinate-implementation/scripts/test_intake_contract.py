@@ -1,112 +1,98 @@
 #!/usr/bin/env python3
-"""Static coordinator intake/strategy checks; not proof of runtime obedience."""
-
+"""Scoped instruction mutations; not runtime obedience proof."""
 from pathlib import Path
 import unittest
+import re
 
-TEXT = (Path(__file__).parents[1] / "SKILL.md").read_text(encoding="utf-8")
+TEXT = (Path(__file__).parents[1] / "SKILL.md").read_text()
+
+
+def section(text, heading):
+    marker = "## " + heading
+    start = text.find(marker)
+    if start < 0:
+        return ""
+    match = re.search(r"(?:\n| )## ", text[start + len(marker):])
+    end = start + len(marker) + match.start() if match else -1
+    return " ".join((text[start:] if end < 0 else text[start:end]).split())
+
+
+GUARDS = {
+    "Load and Verify": (
+        "current-content review/scope authorization", "Missing, stale or unverifiable approval",
+        "TinySpec needs separate source/tasks", "Standard needs specification/plan/tasks, both current approvals",
+        "required SpecKit stage evidence", "legacy source shape", "approval/recovery mapping",
+        "baseline HEAD", "allowed paths", "index/ worktree ownership", "required check baseline",
+        "never adopts or commits unknown work", "No automatic STATE creation, editing or removal",
+        "Missing coordination store or STATE is nonblocking",
+    ),
+    "Prepare Approved Execution": (
+        "fresh independent reviewer", "No unauthorized local fallback",
+        "complete approved implementation task list", "including completed tasks",
+        "Up to three bounded tasks", "More than three require delegation",
+        "observed context", "All implementation batches execute sequentially, never in parallel",
+        "use `ask_user`", "explicit batch/profile approval before writes or dispatch",
+        "Reuse verified unchanged approval", "supported effort", "callable binding",
+        "at assignment and dispatch", "no silent settings/agent override",
+        "unobservable actual binding/effort is unknown",
+    ),
+    "Delegate": (
+        "whole unchanged REQUIRED union before coding", "smallest check", "expected proof and pass condition",
+        "permission/manual gates", "without routine coordinator approval",
+        "Once required preparation is satisfied, dispatch", "Reopen only affected decisions/checks",
+        "concrete contradiction", "failed prerequisite", "material scope change",
+        "ownership, permission, profile, runtime", "Reuse unchanged applicable proof",
+        "routine progress is not invalidation",
+    ),
+    "Execute and Integrate": (
+        "actual diff", "focused commit/SHA", "REQUIRED outputs", "residual owned changes",
+        "Only satisfied REQUIRED items and fulfilled original gates release dependents",
+        "No extra evidence-only checkpoint", "no skip/defer question", "No-Git fallback",
+        "coordinator alone may recover", "failed recovery stops dispatch",
+        "same original contracts", "Clean retry is exceptional", "Unknown cause blocks blind restart",
+        "Representative-sample manual STOP", "optional checks cannot compensate",
+    ),
+    "Review and Acceptance": (
+        "No per-task reviews", "one fresh independent final review", "not an implementation session",
+        "full committed revision range", "Missing reviewer blocks final acceptance",
+        "every REQUIRED item disposition", "selected versus observed profile",
+    ),
+}
+
+
+def contract_errors(text):
+    errors = []
+    for heading, clauses in GUARDS.items():
+        body = section(text, heading)
+        errors.extend(f"{heading}: missing {clause}" for clause in clauses if clause not in body)
+    for unsafe in ("Always replan approved tasks", "Repeat unchanged preflight before every task",
+                   "Accept the worker report without inspecting evidence",
+                   "wait for coordinator validation before next-task writes"):
+        if unsafe in text:
+            errors.append("plan-trust: " + unsafe)
+    return errors
 
 
 class IntakeContractTests(unittest.TestCase):
-    def test_origin_specific_authorization(self):
-        for phrase in (
-            "specification, plan, tasks, both current approvals",
-            "Standard depth", "TinySpec depth",
-            "separate TinySpec/source and tasks", "embedded in tasks",
-            "Missing/conflicting depth", "approval/recovery mapping",
-            "required SpecKit stage evidence",
-            "legacy `requirements-manager` origin",
-            "requirement/source, tasks, review evidence",
-            "No specification, plan, or SpecKit prerequisite is required",
-            "For other documented origins",
-            "Ambiguous origin is a blocker",
-            "missing, stale, or unverifiable",
-        ):
-            self.assertIn(phrase, TEXT)
-        self.assertNotIn("This skill still requires a spec, plan, and tasks", TEXT)
-        self.assertIn("Installation alone does not make SpecKit applicable", TEXT)
+    def test_self_contained_approved_intake_to_final_review(self):
+        self.assertEqual(contract_errors(TEXT), [])
 
-    def test_complete_count_and_resume(self):
-        for phrase in (
-            "complete approved implementation task list",
-            "exclude standalone review tasks",
-            "not origin, plan presence, or remaining task count",
-            "Up to three bounded implementation tasks",
-            "More than three implementation tasks require delegation",
-            "Retain the recorded strategy on resume",
-            "Completing tasks alone never changes delegated execution to local",
-        ):
-            self.assertIn(phrase, TEXT)
+    def test_each_actionable_guard_removal_fails_in_its_carrier(self):
+        for heading, clauses in GUARDS.items():
+            for clause in clauses:
+                with self.subTest(heading=heading, clause=clause):
+                    # Moving a rule to a footer cannot replace its actionable boundary.
+                    body = section(TEXT, heading)
+                    normalized = " ".join(TEXT.split())
+                    altered = normalized.replace(body, body.replace(clause, "REMOVED"), 1)
+                    errors = contract_errors(altered + " ## Footer " + clause)
+                    self.assertTrue(any(e.startswith(heading + ":") for e in errors), errors)
 
-    def test_local_suitability_and_common_graph(self):
-        for phrase in (
-            "current owner-selected exact profile fits",
-            "observed context capacity is adequate",
-            "delegate the affected task or segment",
-            "Both routes use this single execution graph",
-            "never silently switch selected profiles",
-            "No unauthorized local fallback",
-            "producing workflow's review gate",
-        ):
-            self.assertIn(phrase, TEXT)
-        self.assertEqual(TEXT.count("## Build the Execution Graph"), 1)
-        self.assertNotIn("Delegation is mandatory for implementation", TEXT)
-
-    def test_capabilities_context_and_inspected_failures(self):
-        for phrase in (
-            "fresh independent reviewer",
-            "no forced one-session-per-profile limit",
-            "Inspect the failed run and tool invocation before retry or relaunch",
-            "If context metrics are unavailable",
-            "Agent/model selection: UNAVAILABLE",
-            "Delegation: UNAVAILABLE",
-        ):
-            self.assertIn(phrase, TEXT)
-
-    def test_task_commits_and_one_final_review(self):
-        self.assertIn("Commit each task's verified changes as one focused commit", TEXT)
-        self.assertIn("No per-task reviews", TEXT)
-        self.assertIn("full committed revision range", TEXT)
-        self.assertIn("not merely a clean working-tree diff", TEXT)
-        self.assertNotIn("per-batch commit", TEXT)
-
-    def test_mandatory_checkpoint_recovery_and_fresh_implementer_guard(self):
-        for phrase in (
-            "Before the first retained task write", "supplied baseline and repository state",
-            "no edits, cleanup, or commits", "never adopts or commits unknown work",
-            "no skip/defer question", "No-Git fallback", "coordinator alone may recover",
-            "failed recovery stops dispatch", "evidence-only checkpoint",
-        ):
-            self.assertIn(phrase, TEXT)
-
-    def test_assignment_and_dispatch_owner_gates(self):
-        for phrase in ("owner selection remains required", "at assignment and again at dispatch",
-                       "supported effort", "callable binding", "no silent settings/agent override"):
-            self.assertIn(phrase, TEXT)
-        self.assertNotIn("selection for each class", TEXT)
-
-    def test_invalid_evidence_stops_release_without_adding_batch_review(self):
-        normalized = " ".join(TEXT.split())
-        self.assertIn("unmet manual/permission gates block acceptance and dependent release", normalized)
-        self.assertIn("no mandatory strong-model per-batch reviewer", normalized)
-        self.assertIn("one fresh independent final review", normalized)
-        self.assertIn("full committed revision range", normalized)
-        self.assertIn("not an implementation session", normalized)
-
-    def test_practical_audit_keeps_original_authority_and_review_boundary(self):
-        normalized = " ".join(TEXT.split())
-        for phrase in ("before coding, unchanged", "relevance to the original criterion",
-                       "current revision/environment", "same original contracts",
-                       "Only satisfied REQUIRED items", "Clean retry is exceptional",
-                       "representative-sample manual STOP"):
-            self.assertIn(phrase, normalized)
-        self.assertIn("never retrofit approved tasks", normalized)
-        self.assertIn("one fresh independent final review", normalized)
-
-    def test_origin_neutral_downstream_references(self):
-        self.assertIn("applicable source/supporting artifacts", TEXT)
-        self.assertNotIn("Review accumulated changes against the spec, plan, tasks", TEXT)
+    def test_administrative_loops_and_trust_only_acceptance_fail(self):
+        for unsafe in ("Always replan approved tasks", "Repeat unchanged preflight before every task",
+                       "Accept the worker report without inspecting evidence"):
+            self.assertIn("plan-trust: " + unsafe, contract_errors(TEXT + "\n" + unsafe))
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)

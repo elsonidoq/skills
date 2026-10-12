@@ -12,7 +12,29 @@ TEXT = (Path(__file__).parents[1] / "SKILL.md").read_text(encoding="utf-8")
 RUBRIC_PATH = Path(__file__).parents[1] / "references" / "batch-routing.md"
 
 
-class SeedRubricTests(unittest.TestCase):
+
+
+def carrier(text, heading):
+    marker = "## " + heading
+    start = text.find(marker)
+    if start < 0:
+        return ""
+    import re
+    match = re.search(r"(?:\n| )## ", text[start + len(marker):])
+    end = start + len(marker) + match.start() if match else len(text)
+    return " ".join(text[start:end].split())
+
+
+class CarrierTests(unittest.TestCase):
+    def assert_carrier_guards(self, heading, clauses):
+        body = carrier(TEXT, heading)
+        for clause in clauses:
+            with self.subTest(heading=heading, clause=clause):
+                self.assertIn(clause, body)
+                altered = " ".join(TEXT.split()).replace(body, body.replace(clause, "REMOVED"), 1)
+                self.assertNotIn(clause, carrier(altered + " ## Footer " + clause, heading))
+
+class SeedRubricTests(CarrierTests):
     def test_six_factors_and_independent_profile_dimensions(self):
         self.assertTrue(RUBRIC_PATH.is_file(), "shared batch routing seed is missing")
         rubric = RUBRIC_PATH.read_text(encoding="utf-8")
@@ -45,56 +67,27 @@ class SeedRubricTests(unittest.TestCase):
 
 
 def approval_errors(text):
-    """Section-bound instruction check, not a runtime authorization engine."""
-    graph = " ".join(text.split("## Build the Execution Graph", 1)[-1].split(
-        "## Select Execution Capability", 1)[0].split())
-    capability = " ".join(text.split("## Select Execution Capability", 1)[-1].split(
-        "## Execute and Integrate", 1)[0].split())
-    errors = []
-    for label, phrase in {
-        "table": "present the entire execution plan as a Markdown table",
-        "description": "one or two sentences describing the batch",
-        "profile": "proposed exact binding and effort",
-        "approval": "Implementation authorization is not execution-routing approval",
-        "gate": "before any implementation write or dispatch",
-        "question": "use `ask_user` to obtain explicit approval",
-        "resume": "Reuse verified unchanged approval on resume",
-        "change": "Changes to batch boundaries or exact profiles require approval of the affected rows",
-    }.items():
-        if phrase not in graph:
-            errors.append(label)
+    graph = carrier(text, "Prepare Approved Execution")
+    guards = {
+        "table": "entire proposed execution table", "description": "outcome",
+        "profile": "exact binding/effort", "approval": "Implementation approval is not routing approval",
+        "gate": "before writes or dispatch", "question": "use `ask_user`",
+        "resume": "Reuse verified unchanged approval", "change": "profiles renew affected rows",
+        "assessment-order": "Assess each batch", "no-default": "not a universal default",
+        "uniform-valid": "one exact profile per invocation",
+    }
+    errors = [label for label, phrase in guards.items() if phrase not in graph]
     if "Do not ask for routine batching approval" in graph:
         errors.append("approval-bypass")
-    for label, phrase in {
-        "assessment-order": "Assess every batch before presenting the complete table",
-        "no-default": "Never inherit Sol/medium or another universal default",
-        "uniform-valid": "Identical profiles across batches are valid when individually justified",
-    }.items():
-        if phrase not in capability:
-            errors.append(label)
     return errors
 
 
-class ApprovalGateTests(unittest.TestCase):
+class ApprovalGateTests(CarrierTests):
     def test_complete_table_and_assessment_gate(self):
-        self.assertEqual(approval_errors(TEXT), [])
+        self.assert_carrier_guards('Prepare Approved Execution', ('explicit batch/profile approval', 'entire proposed execution table', 'not a universal default'))
 
     def test_missing_table_description_profile_approval_and_default_guards(self):
-        for phrase, diagnostic in (
-            ("present the entire execution plan as a Markdown table", "table"),
-            ("one or two sentences describing the batch", "description"),
-            ("proposed exact binding and effort", "profile"),
-            ("Implementation authorization is not execution-routing approval", "approval"),
-            ("before any implementation write or dispatch", "gate"),
-            ("use `ask_user` to obtain explicit approval", "question"),
-            ("Assess every batch before presenting the complete table", "assessment-order"),
-            ("Never inherit Sol/medium or another universal default", "no-default"),
-        ):
-            with self.subTest(diagnostic=diagnostic):
-                normalized = " ".join(TEXT.split())
-                self.assertIn(diagnostic, approval_errors(normalized.replace(phrase, "REMOVED", 1)))
-        mutated = TEXT.replace("## Select Execution Capability", "Do not ask for routine batching approval\n\n## Select Execution Capability", 1)
-        self.assertIn("approval-bypass", approval_errors(mutated))
+        self.assert_carrier_guards('Prepare Approved Execution', ('entire proposed execution table', 'outcome', 'exact binding/effort', 'Implementation approval is not routing approval', 'before writes or dispatch', 'use `ask_user`', 'Assess each batch', 'not a universal default'))
 
     def test_symbolic_resumed_and_changed_plan_approval(self):
         self.assertEqual(approval_errors(TEXT), [])
@@ -107,40 +100,30 @@ class ApprovalGateTests(unittest.TestCase):
         ):
             # Simulated comparison only: unchanged durable content + explicit approval.
             self.assertEqual(answer == "approve" and current == approved, expected)
-        for phrase, label in (("Reuse verified unchanged approval on resume", "resume"),
-                              ("Changes to batch boundaries or exact profiles require approval of the affected rows", "change")):
+        for phrase, label in (("Reuse verified unchanged approval", "resume"),
+                              ("profiles renew affected rows", "change")):
             self.assertIn(label, approval_errors(" ".join(TEXT.split()).replace(phrase, "REMOVED", 1)))
 
 
 def dispatch_seam_errors(text):
-    """Check actual launch carrier; footer repetitions cannot supply missing rules."""
-    carrier = " ".join(text.split("## Select Execution Capability", 1)[-1].split(
-        "## Execute and Integrate", 1)[0].split())
-    errors = [phrase for phrase in (
-        "once its required conditions are satisfied, dispatch",
-        "no state-specific dispatch-intent checkpoint is required",
-        "reopen only for concrete invalidating evidence",
-        "condition, concrete gap, affected action and smallest resolution",
-        "reopen only affected preparation",
-        "healthy worker progress is not invalidation",
-        "Normally use direct `subagent({agent,task,...})`",
-        "even multiple internal sequential tasks",
-        "A batch alone does not justify a workflow wrapper",
-        "named continuation/recovery, branching/aggregation or reusable orchestration",
-        "terse reason in the existing dispatch brief/tracker",
-        "Justified one-child workflows remain allowed; do not migrate existing runs",
-        "Direct delegated launch is not local execution",
-        "Both shapes retain the same approval",
-    ) if phrase not in carrier]
+    body = carrier(text, "Delegate")
+    guards = (
+        "Once required preparation is satisfied, dispatch", "Reopen only affected decisions/checks",
+        "routine progress is not invalidation", "one direct asynchronous worker",
+        "including internal sequential tasks", "does not justify a workflow wrapper",
+        "earned orchestration need", "Both shapes retain all gates",
+        "whole unchanged REQUIRED union before coding",
+    )
+    errors = [phrase for phrase in guards if phrase not in body]
     for unsafe in ("Use workflowScript merely because it is a batch", "Ban all one-child workflows",
                    "Migrate existing runs to direct launch", "Direct delegation counts as local execution",
                    "Skip profile validation for direct launch", "Skip approval gates for workflow launch"):
-        if unsafe in carrier:
+        if unsafe in body:
             errors.append(unsafe)
     return errors
 
 
-class DispatchSeamTests(unittest.TestCase):
+class DispatchSeamTests(CarrierTests):
     def test_actual_carrier_terminates_preparation(self):
         self.assertEqual(dispatch_seam_errors(TEXT), [])
 
@@ -182,10 +165,10 @@ class DispatchSeamTests(unittest.TestCase):
 def preparation_trace_errors(text, trace):
     """Validate bounded offline action sequences against the real carrier, not execute routing."""
     errors = dispatch_seam_errors(text) + approval_errors(text)
-    recovery = " ".join(text.split("### Recovery before continuation", 1)[-1].split(
-        "### Writes and checkpoint ordering", 1)[0].split())
+    recovery = " ".join(text.split("## Recover Context", 1)[-1].split(
+        "## Prepare Approved Execution", 1)[0].split())
     for phrase in ("running child means inspect/wait, not duplicate dispatch",
-                   "unknown status or a missing child ID requires runtime reconciliation"):
+                   "unknown child status"):
         if phrase not in recovery:
             errors.append(phrase)
     for event in trace:
@@ -206,7 +189,7 @@ def preparation_trace_errors(text, trace):
     return errors
 
 
-class PreparationTraceTests(unittest.TestCase):
+class PreparationTraceTests(CarrierTests):
     """Explicit events/actions are symbolic observations, never child/runtime evidence."""
     def test_ready_dispatch_and_redundant_preparation_rejected(self):
         ready = {"ready": True, "action": "dispatch", "reason": "mandatory preparation complete; state commit not required"}
@@ -219,7 +202,7 @@ class PreparationTraceTests(unittest.TestCase):
 
     def test_concrete_invalidation_reopens_only_affected_preparation(self):
         trace = []
-        for changed in ("profile", "content", "workspace ownership"):
+        for changed in ("contradiction", "failed prerequisite", "scope change", "profile", "permission", "runtime", "workspace ownership"):
             trace.append({"changed": changed, "action": "reopen", "reason": changed, "affected": changed})
         self.assertEqual(preparation_trace_errors(TEXT, trace), [])
         for event in trace:
@@ -245,45 +228,26 @@ class PreparationTraceTests(unittest.TestCase):
 
     def test_ready_trace_cannot_pass_missing_actual_carrier(self):
         trace = [{"ready": True, "action": "dispatch", "reason": "mandatory preparation complete; state commit not required"}]
-        phrase = "reopen only for concrete invalidating evidence"
+        phrase = "Reopen only affected decisions/checks"
         altered = TEXT.replace(phrase, "REMOVED", 1) + "\n## Footer\n" + phrase
         self.assertIn(phrase, preparation_trace_errors(altered, trace))
 
 
-class BatchingContractTests(unittest.TestCase):
+class BatchingContractTests(CarrierTests):
     def test_coherent_sequential_work_is_not_split_by_incidental_boundaries(self):
-        self.assertIn("amortize startup and retain\n   useful context", TEXT)
-        self.assertIn("Internal dependencies, shared files, and phase/story headings do not require", TEXT)
-        self.assertIn("verifies each producer before its\n   consumer", TEXT)
-        self.assertIn("commits each task separately", TEXT)
+        self.assert_carrier_guards('Prepare Approved Execution', ('shared files, phase headings and internal dependencies alone do not require splits', 'One writer verifies and commits each producer before its consumer'))
 
     def test_only_evidenced_boundaries_split_and_order_stays_fixed(self):
-        self.assertIn("Normally 2–5 related tasks when scope and observed context permit", TEXT)
-        self.assertIn("material profile differences, permissions, owner gates, context limits, incompatible scope", TEXT)
-        self.assertIn("Never pull\n   a distant producer forward or reorder a prerequisite", TEXT)
-        self.assertIn("delegate only asynchronously in the background", TEXT)
-        self.assertIn("never\n   run implementation batches in parallel", TEXT)
+        self.assert_carrier_guards('Prepare Approved Execution', ('Normally 2–5 related tasks, not a quota', 'material profile, context, permission, owner-gate', 'never silently reorder', 'sequentially, never in parallel'))
 
     def test_selection_to_dispatch_contract(self):
-        for phrase in (
-            "[qualified seed rubric](references/batch-routing.md)",
-            "one exact profile per invocation", "ordered task IDs", "weakest material blind spot",
-            "applicable approved evidence or explicit none", "proposed versus owner-selected",
-            "Family rationale", "Effort rationale", "conditional repair option",
-            "at assignment and again at dispatch", "supported effort", "callable binding",
-            "Registry entries and suffix syntax alone", "actual model or effort remains unknown",
-            "model: \"provider/id:effort\"", "no silent settings/agent override",
-        ):
-            with self.subTest(phrase=phrase):
-                self.assertIn(phrase, " ".join(TEXT.split()))
-        self.assertNotIn("one required\n   model class", TEXT)
+        self.assert_carrier_guards('Prepare Approved Execution', ('six-factor', 'Family and Effort rationales', 'callable binding', 'supported effort', 'at assignment and dispatch', 'no silent settings/agent override', 'unobservable actual binding/effort is unknown'))
 
     def test_rotation_uses_observed_context_and_durable_handoff(self):
-        self.assertIn("observed context\n  headroom is adequate", TEXT)
-        self.assertIn("smaller fresh brief with durable handoff context", TEXT)
+        self.assert_carrier_guards('Delegate', ('selected profile, supported resume', 'adequate relevant retained context', 'narrow a fresh brief', 'Rotation is not retry authority'))
 
 
-class SimulatedProfileTraceTests(unittest.TestCase):
+class SimulatedProfileTraceTests(CarrierTests):
     """Offline decision/argument fixtures tied to instruction carriers, not a runtime router."""
 
     @staticmethod
@@ -302,7 +266,7 @@ class SimulatedProfileTraceTests(unittest.TestCase):
                     "family": "closed design, shallow tools, cheap recovery", "effort": "bounded inference"}
         self.assertEqual(decision["proposal"], "symbolic/luna:medium")
         self.assertEqual(decision["evidence"], "none")
-        self.assertIn("proposed versus owner-selected", TEXT)
+        self.assertIn("owner-selected exact profile", TEXT)
         actual = self.simulated_dispatch(decision["proposal"])
         self.assertEqual(actual["disposition"], "ready")
         self.assertEqual(actual["args"]["model"], "symbolic/luna:medium")
@@ -314,13 +278,13 @@ class SimulatedProfileTraceTests(unittest.TestCase):
                  "effort": "moderate residual reasoning needs extra budget"}
         args = self.simulated_dispatch(brief["selected"])["args"]
         self.assertEqual(args["model"], "symbolic/luna:max")
-        self.assertIn("Copy the owner-selected binding and effort unchanged", TEXT)
+        self.assertIn("Copy the owner-selected exact profile", TEXT)
 
     def test_deep_tools_and_weak_oracle_stop_optimistic_luna(self):
         rubric = RUBRIC_PATH.read_text()
         self.assertIn("Deep tool use, weak oracles", rubric)
         self.assertIn("defeat optimistic Luna routing", rubric)
-        self.assertIn("weakest material blind spot", TEXT)
+        self.assertIn("six-factor", TEXT)
         for case in ("deep tools", "weak oracle"):
             with self.subTest(case=case):
                 # Owner/design gate prevents launch while assessment lacks an authorized stronger option.
@@ -330,7 +294,7 @@ class SimulatedProfileTraceTests(unittest.TestCase):
                 self.assertIn("stronger option or stop at the owner/design gate", rubric)
 
     def test_unsupported_binding_effort_and_permission_block(self):
-        self.assertIn("Any missing permission, binding, supported effort or tool access blocks dispatch", TEXT)
+        self.assertIn("missing permission/binding/effort/tool support blocks dispatch", TEXT)
         for missing in ("permission", "binding", "effort", "tools", "owner", "manual"):
             gates = dict.fromkeys(("permission", "binding", "effort", "tools", "owner", "manual"), True)
             gates[missing] = False
@@ -338,11 +302,11 @@ class SimulatedProfileTraceTests(unittest.TestCase):
             args = actual["args"]
             with self.subTest(missing=missing):
                 self.assertIsNone(args)
-        self.assertIn("Registry entries and suffix syntax alone", TEXT)
-        self.assertIn("Required manual gates remain blocking", TEXT)
+        self.assertIn("names/suffixes alone are not proof", TEXT)
+        self.assertIn("unmet manual/permission gates block reliance", TEXT)
 
     def test_unobservable_actual_effort_is_unknown(self):
-        self.assertIn("actual model or effort remains unknown", TEXT)
+        self.assertIn("binding/effort is unknown", TEXT)
         selected = "symbolic/luna:max"
         returned = {"selected": selected, "observed_model": "symbolic/luna", "observed_effort": "unknown"}
         self.assertEqual(returned["observed_effort"], "unknown")
@@ -366,7 +330,7 @@ def sample_batch_contract(selected="symbolic/luna:medium"):
     brief = {"selected": selected, "tasks": tasks,
              "required_union": [item for task in tasks for item in task["required"]],
              "producer_checks": ["T005/V1 before T006"],
-             "checkpoint_convention": "per-task commit then separate evidence commit"}
+             "checkpoint_convention": "per-task verified commit with runtime return"}
     returned = {
         "observed_profile": "unknown",
         "items": {item["ref"]: {"status": "pass", "evidence": "shared-output", "reason": None}
@@ -379,31 +343,18 @@ def sample_batch_contract(selected="symbolic/luna:medium"):
                                                        "consumer_ids": ["V1", "V2"]}}},
         "files": ["fixture/producer.md", "fixture/consumer.md"],
         "checkpoints": [
-            {"task": "T005", "baseline": "fixture-base", "result": "fixture-task-005",
-             "evidence_checkpoint": "fixture-evidence-005"},
-            {"task": "T006", "baseline": "fixture-evidence-005", "result": "fixture-task-006",
-             "evidence_checkpoint": "fixture-evidence-006"},
+            {"task": "T005", "baseline": "fixture-base", "result": "fixture-task-005"},
+            {"task": "T006", "baseline": "fixture-task-005", "result": "fixture-task-006"},
         ],
     }
-    # The next task starts after the prior separate evidence checkpoint.
-    tasks[1]["baseline"] = "fixture-evidence-005"
     return brief, returned
 
 
-class SimulatedUnionReturnTests(unittest.TestCase):
+class SimulatedUnionReturnTests(CarrierTests):
     """Sample brief/return trace, not a live invocation or model performance test."""
 
     def test_whole_required_union_and_return_carriers(self):
-        normalized = " ".join(TEXT.split())
-        for phrase in (
-            "whole union of REQUIRED task-local references", "expected evidence and pass criterion",
-            "manual/permission gates", "shared output retains every item mapping",
-            "pass/fail/not_verified", "explicit not_verified reason",
-            "ordered baseline/result and separate evidence checkpoint references",
-            "Missing or ambiguous REQUIRED contracts return to the producing review/approval gate",
-        ):
-            with self.subTest(phrase=phrase):
-                self.assertIn(phrase, normalized)
+        self.assert_carrier_guards('Delegate', ('whole unchanged REQUIRED union before coding', "each ID's criterion", 'smallest check', 'expected proof and pass condition', 'Missing contracts return to the producer'))
 
     def test_two_task_shared_check_union_and_ordered_checkpoints(self):
         brief, returned = sample_batch_contract()
@@ -417,7 +368,7 @@ class SimulatedUnionReturnTests(unittest.TestCase):
         for task, cp in zip(brief["tasks"], returned["checkpoints"]):
             self.assertEqual(cp["baseline"], task["baseline"])
             self.assertTrue(cp["result"])
-            self.assertTrue(cp["evidence_checkpoint"])
+            self.assertNotIn("evidence_checkpoint", cp)
         self.assertEqual(returned["observed_profile"], "unknown")
 
     def test_not_verified_return_keeps_reference_and_explicit_reason(self):
@@ -484,7 +435,7 @@ def simulated_audit(brief, returned):
         return "blocked"
     for task, cp in zip(brief["tasks"], checkpoints):
         if (cp["baseline"] != task["baseline"] or not cp.get("result")
-                or not cp.get("evidence_checkpoint") or not cp.get("diff_inspected")
+                or not cp.get("diff_inspected")
                 or not cp.get("focused_scope")):
             return "blocked"
     return "accepted"
@@ -500,18 +451,11 @@ def audited_sample(selected="symbolic/luna:medium"):
     return brief, returned
 
 
-class SimulatedAcceptanceTests(unittest.TestCase):
+class SimulatedAcceptanceTests(CarrierTests):
     """Offline Luna success and negative evidence cases; no live performance claim."""
 
     def test_cheap_acceptance_instruction_carriers(self):
-        for phrase in (
-            "validate every REQUIRED item against consistent concrete outputs",
-            "Missing, failed, contradictory, unauthorized or unrun REQUIRED evidence blocks acceptance",
-            "unmet manual/permission gates block acceptance and dependent release",
-            "Optional checks cannot compensate", "no mandatory strong-model per-batch reviewer",
-        ):
-            with self.subTest(phrase=phrase):
-                self.assertIn(phrase, " ".join(TEXT.split()))
+        self.assert_carrier_guards('Execute and Integrate', ('actual diff', 'focused commit/SHA', 'REQUIRED outputs', 'residual owned changes', 'Only satisfied REQUIRED items', 'fulfilled original gates', 'generic green is not proof'))
 
     def assert_complete_accepted(self, selected):
         brief, returned = audited_sample(selected)
@@ -596,20 +540,11 @@ def simulated_repair_brief(brief, failed, diagnosis, *, inspected=True,
             "current_state": deepcopy(failed), "complete_contract": deepcopy(brief)}
 
 
-class SimulatedRepairTests(unittest.TestCase):
+class SimulatedRepairTests(CarrierTests):
     """Offline failure/repair scenarios, not comparative model performance evidence."""
 
     def test_diagnosis_first_repair_instruction_carriers(self):
-        for phrase in (
-            "Inspect the failed child run, invocation, partial commits and check evidence",
-            "identify affected dependencies and invalidated REQUIRED items",
-            "raise effort, change model or both", "no fixed profile ladder",
-            "original assessment and selected/observed profile", "complete batch contract",
-            "rerun every invalidated item", "reuse only confirmed-valid evidence",
-            "Repair success alone does not prove model-only attribution",
-        ):
-            with self.subTest(phrase=phrase):
-                self.assertIn(phrase, " ".join(TEXT.split()))
+        self.assert_carrier_guards('Execute and Integrate', ('inspect run/invocation, partial commits and check evidence', 'affected dependencies/invalidated items', 'same original contracts', 'reruns invalidated items only', 'Unknown cause blocks blind restart', 'never automatic rollback or discard'))
 
     def test_luna_max_capability_failure_authorized_sol_medium_repair(self):
         brief, failed = failed_capability_sample()
@@ -651,7 +586,7 @@ class SimulatedRepairTests(unittest.TestCase):
         for gate in ("inspected", "binding", "effort", "owner", "permission", "tools"):
             with self.subTest(gate=gate):
                 self.assertIsNone(simulated_repair_brief(brief, failed, "model_capability", **{gate: False}))
-        self.assertIn("unknown cause stops blind restart", " ".join(TEXT.split()))
+        self.assertIn("Unknown cause blocks blind restart", " ".join(TEXT.split()))
 
 
 
@@ -671,15 +606,15 @@ def simulated_feedback(selected, observed, outcome, diagnosis, *, strong=True, i
             "qualified_positive": outcome == "accepted" and strong and not invalidated}
 
 
-class SimulatedFeedbackTests(unittest.TestCase):
+class SimulatedFeedbackTests(CarrierTests):
     def test_factual_first_final_attempts_and_unknown_preserved(self):
         first = simulated_feedback("symbolic/luna:max", "unknown", "blocked", "model_capability")
         first["task_items"]["T006/V1"] = {"disposition": "failed", "proof": "consumer-failed"}
         original = deepcopy(first)
         final = simulated_feedback("symbolic/sol:medium", "unknown", "accepted", "model_capability")
-        record = {"summary": "fixture/SUMMARY.md", "index_rows": 1, "attempts": [first, final],
+        record = {"task_return": "runtime return", "attempts": [first, final],
                   "reused": ["T005/V1"], "invalidated_rerun": ["T006/V1"]}
-        self.assertEqual(record["index_rows"], 1)
+        self.assertNotIn("summary", record)
         self.assertEqual(first, original)
         self.assertEqual([a["observed"] for a in record["attempts"]], ["unknown", "unknown"])
         self.assertEqual(first["task_items"]["T006/V1"]["proof"], "consumer-failed")
@@ -688,22 +623,7 @@ class SimulatedFeedbackTests(unittest.TestCase):
         self.assertEqual(first["next_selected"], final["selected"])
 
     def test_feedback_instruction_carriers(self):
-        memory = " ".join(COORDINATION_PATH.read_text().split())
-        coordinator = " ".join(TEXT.split())
-        self.assertIn("[factual evidence lifecycle]", coordinator)
-        for text in (memory,):
-            for phrase in (
-                "exact selected and observed profile", "contract strength", "first/final outcome",
-                "escalated and blocked attempts", "model_capability",
-                "planning_or_spec_gap", "verification_contract_gap", "batching_error",
-                "environment_or_tooling", "external_dependency", "unknown",
-                "Non-model causes never count as capability failure",
-                "weak or invalidated successes", "unknown observation is never overwritten",
-            ):
-                with self.subTest(phrase=phrase, carrier="memory" if text == memory else "coordinator"):
-                    self.assertIn(phrase, text)
-        self.assertNotIn("class-share gates remain authoritative", memory)
-        self.assertIn("Relevant approved guidance may override the seed", memory)
+        self.assert_carrier_guards('Review and Acceptance', ('selected versus observed profile', 'unknown stays unknown', 'Explicit future-directed user feedback alone'))
 
     def test_environment_blocked_luna_medium_without_capability_penalty(self):
         brief, returned = audited_sample()
@@ -749,19 +669,13 @@ class SimulatedFeedbackTests(unittest.TestCase):
 
     def test_memory_lifecycle_approval_and_drift_preserved(self):
         memory = " ".join(COORDINATION_PATH.read_text().split())
-        for phrase in (
-            "Resolve the current project root", "create only missing directories",
-            "commit only those new files", "no opt-out or handoff-only persistence path",
-            "read the compact evidence index first", "open only those selected records",
-            "before its index entry", "never overwrite another run",
-            "allow accept, edit, reject, or add", "Implementation approval grants no guideline",
-            "compare with the approved baseline", "drift stops application",
-        ):
-            with self.subTest(phrase=phrase):
-                self.assertIn(phrase, memory)
+        for clause in ("Missing store or STATE is nonblocking", "do not auto-initialize",
+                       "explicit user corrective/future-round direction", "Concurrent drift",
+                       "never history/index/run scaffolding", "An explicit no-write boundary prevails"):
+            self.assertIn(clause, memory)
 
 
-class PracticalVerificationTests(unittest.TestCase):
+class PracticalVerificationTests(CarrierTests):
     """Named offline examples; no runtime obedience, paid operation or real user gate."""
 
     def test_oracle_sensitive_routing_cases(self):
@@ -885,7 +799,7 @@ class PracticalVerificationTests(unittest.TestCase):
         self.assertIn("implementation continuation", repair["operation"])
 
 
-class VerificationGapTests(unittest.TestCase):
+class VerificationGapTests(CarrierTests):
     def test_practical_distinct_criteria_before_generic_green(self):
         brief, _ = sample_batch_contract()
         criteria = [i["criterion"] for i in brief["required_union"]]
@@ -900,18 +814,15 @@ class VerificationGapTests(unittest.TestCase):
         self.assertIn("Clean retry is exceptional", TEXT)
 
 
-class ComparativeRoutingTests(unittest.TestCase):
+class ComparativeRoutingTests(CarrierTests):
     """Named manual recommendations and counterexamples, not a family-ranking engine."""
     def test_comparison_carrier_and_mutations(self):
         rubric = " ".join(RUBRIC_PATH.read_text().split())
-        for clause in ("suitable smaller verified, permitted alternative",
-                       "actual shortfall or select the smaller option", "none is verified/permitted",
-                       "orchestration overhead", "stateful tooling/recovery",
+        for clause in ("suitable smaller verified, permitted alternative", "actual shortfall or select the smaller option",
+                       "none is verified/permitted", "orchestration overhead", "stateful tooling/recovery",
                        "strict requirement versus a default preference"):
             self.assertIn(clause, rubric)
-            self.assertNotIn(clause, rubric.replace(clause, "REMOVED", 1))
-        graph = " ".join(TEXT.split("## Build the Execution Graph", 1)[1].split("## Select Execution Capability", 1)[0].split())
-        self.assertIn("startup/context savings against losing a smaller-profile opportunity", graph)
+        self.assert_carrier_guards("Prepare Approved Execution", ("separate comparative Family and Effort rationales",))
 
     def test_named_comparative_recommendations_and_suitability_only_rejected(self):
         # Inputs and reasoned outputs are explicitly authored, not computed from a score.
@@ -988,8 +899,8 @@ class ComparativeRoutingTests(unittest.TestCase):
                    "coherent_same_profile": "split consecutive tasks"}
         for name, decision in swapped.items():
             self.assertNotEqual(decision, expected[name], name + ": swapped decision must be rejected")
-        self.assertIn("not force diversity or a split", TEXT)
-        self.assertIn("commits each task separately", TEXT)
+        self.assertIn("shared files, phase headings and internal dependencies alone do not require splits", " ".join(TEXT.split()))
+        self.assertIn("Commit each task's verified changes as one focused owned-path commit", TEXT)
 
 
 if __name__ == "__main__":
