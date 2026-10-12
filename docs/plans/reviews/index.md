@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [Coordinator no-bookkeeping — planning review and authorization](coordinator-no-bookkeeping-planning-review.md): digest-bound A1–A9 review, owner-approved concrete compression map and direct worker/final-review routing.
 - [Comparative routing and actionable learning — bounded validation](comparative-routing-learning-validation.md): A1–A7/REQUIRED mapping and independent review/rechecks; accepted under the owner-approved preservation amendment, with live evaluation NOT RUN.
 - [Coordinator dispatch readiness — planning review](coordinator-dispatch-readiness-planning-review.md): planner-owned digest-bound TinySpec/task review; combined approval pending, planning-only boundary.
 - [Task verification contracts — TinySpec planning review](task-verification-contracts-planning-review.md): exact source/task digests, causal coverage/proportionality, baseline limits and recorded current-content combined approval.
