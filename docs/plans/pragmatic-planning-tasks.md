@@ -3,11 +3,12 @@
 ## Authority and shared context
 
 Derived by the **direct adapter** from [the TinySpec](pragmatic-planning-tinyspec.md),
-requirements truth at baseline `32907058b465d4e20ae5325a848ca29d86aec3a4`, source SHA-256
-`96ba7c5df28c1d8e1362ae08adf059ac827e0a81873768e810cd5cb8bb2d5c53`.
+requirements truth at correction baseline `158a919fc603e5a134d558baba6c31fe54c3786d`, source SHA-256
+`be86030997bb6c11255da9a074390de1e0cf6dc29aa32c2f50ac3edfc60eed5a`.
 `NO_BRAINSTORM_NEEDED`; no material questions/deferrals. Owner selected TinySpec and
-separate fresh source/task producers. Preparation/write/checkpoint authorized; **combined
-current-content source/task approval pending; no implementation authority**. No Standard
+separate fresh source/task producers. Combined approval question was cancelled for the owner's
+prototype clarification; **renewed current-content source/task approval pending; no implementation
+authority**. Bounded task correction/write/checkpoint authorized. No Standard
 plan/SpecKit or downstream SDD requirements input is needed.
 
 Task-producer proposal: Luna/medium; owner selection: `openai-codex/gpt-6.1-sol:medium`.
@@ -27,6 +28,10 @@ Repository instructions, constitution, routing/runtime requirements, documentati
 The whole [memory index](../../memory/MEMORY.md) has no gotchas;
 [coordination guidelines](../../memory/coordination/GUIDELINES.md) have none approved.
 No new dependency/API decision: local inspection suffices, external research omitted.
+Owner's very-small-task guidance applies specifically to genuine-unknown prototype experiments,
+not normal delivery outcomes. Such experiments may justify tiny prerequisite tasks and smaller
+profile candidates only under existing owner-selected routing, never task-assigned bindings/defaults.
+This known local contract repair still needs one coherent T001, not its own runtime experiment.
 
 ## Ordered delivery
 
@@ -46,8 +51,9 @@ No new dependency/API decision: local inspection suffices, external research omi
     `scripts/fixtures/planner/` fixtures, and `docs/plans/planner-regression.md`.
     Update documentation indexes only if discovery changes. Ordering script/test semantics
     stay unchanged unless a demonstrated necessity requires an affected approved correction.
-  - **Risk/order**: No difficult runtime core warrants a disposable prototype or separate proof
-    task. The actual local instruction/checker/test owners are the executable reference:
+  - **Risk/order**: This repair has no genuinely unknown runtime behavior warranting a disposable
+    prototype or separate proof task. The actual local instruction/checker/test owners are the
+    executable reference:
     add representative/adversarial permanent regression in the earliest coherent step, verify
     sensitivity before relying on it to reconcile consumers, then validate final integrated bytes.
     Producer → consumer → production validation → cleanup is internal: verified focused tests/
@@ -66,22 +72,38 @@ No new dependency/API decision: local inspection suffices, external research omi
       scenarios in C1–C3. Evidence: named case/mutation results plus changed spans showing all
       acceptance survives without artificial inventory/prototype/composition/report/cleanup tasks;
       small wiring tests observe the actual boundary inside its delivery.
-    - **T001/V2 — A2 early proof**: Permanent actual-helper tests or verified earlier intra-task
-      proof precede reliance without duplicate implementation. Genuine architecture, durability/
-      security, migration, paid/live or expensive-downstream uncertainty retains independently
-      verified prerequisites and original permission gates; non-isolatable risks require applicable
-      real-system validation. Smallest check: C1–C3 scoped mutations/scenarios reject unsupported
-      reliance/duplicate proof and preserve standalone risky prerequisite cases in both adapters.
-      Evidence: named positives/negatives and actual producer/consumer dependencies, executable
-      criteria, applicability and gates; symbolic risky cases do not execute migrations/live work.
+    - **T001/V2 — A2 early proof**: Known bounded behavior uses permanent actual-helper tests or
+      verified earlier intra-task proof before reliance, not prototype scaffolding/duplicate
+      implementation. A positive genuine-unknown system/abstraction/concept scenario justifies
+      a tiny disposable actual-dependency/boundary experiment answering one consequential question
+      worth inexpensive proof before costly reliance: typically 10/20/50 lines (tens of lines,
+      guidance not a hard cap), clear observations/few direct assertions, NO accompanying proof
+      test suite or separate harness. If setup cannot stay cheap, expose the risk/use the necessary
+      layer, not a dishonest probe. Very-small-task guidance is experiment-specific; ordinary
+      deliveries stay coherent. Experiment prerequisite tasks/smaller-profile candidates follow
+      existing owner-selected routing, never task-assigned Luna/Terra/defaults. Permanent production
+      acceptance remains separate necessary verification, not tests of the disposable experiment.
+      Genuine architecture, durability/security, migration, paid/live or expensive-downstream
+      uncertainty retains independently verified prerequisites/original gates; non-isolatable risks
+      require applicable real-system validation. Smallest check: C1–C3 bounded scoped sensitivity/
+      scenarios include that positive distinction, reject prototype overtesting/known-behavior
+      scaffolding, unsupported reliance/duplicate proof, and preserve standalone risky cases in
+      both adapters. Evidence: named positives/negatives, producer/consumer dependencies,
+      consequential question, executable criteria/inexpensive observation/assertion, applicability
+      and gates. A
+      symbolic positive fixture needs no actual prototype suite/harness; scenarios do not execute
+      migrations/live work or establish real dependency/model behavior.
     - **T001/V3 — A3 lifetime**: Shared unchanged revision/environment/scope-applicable checks run
       once with EVERY criterion/item mapping, pass condition, evidence binding and gate; invalidated
       proof is rerun only where affected. Consumers inspect/use applicable reference and preserve
       behavior with production tests. Retain proof until all applicable consumers and validation
-      pass; routine teardown stays internal, separate cleanup needs a real independently consequential
-      resource/outcome. Smallest check: C1–C3 unchanged-versus-invalidated and premature-cleanup/
-      report-only/failed-or-unrun release negatives. Evidence: named results, applicability and
-      item-mapped shared output; no optional green substitutes for missing REQUIRED evidence.
+      pass; only then safely discard actual disposable experimental material, retaining concise
+      command/result/limits in existing evidence, not an artifact/report chain. Routine teardown
+      stays internal; no hypothetical cleanup task/material. Separate cleanup needs a real
+      independently consequential resource/outcome. Smallest check: C1–C3 unchanged-versus-invalidated
+      and safe-disposal scenarios plus premature-cleanup/report-only/failed-or-unrun release negatives.
+      Evidence: named results, applicable dependent consumption/validation, concise retained limits
+      and item-mapped shared output; no optional green substitutes for missing REQUIRED evidence.
     - **T001/V4 — A4 oracle preservation**: A portable local regression preserves sequential
       capture; dump → one-pass indexing/inline validation; record-error containment with later
       independent records/chunks continuing; private full diagnostics/bounded readable progress;
@@ -107,8 +129,11 @@ No new dependency/API decision: local inspection suffices, external research omi
       with meaningful positive/negative sensitivity.
     - **T001/V6 — A6 final validation**: Final relevant bytes pass C1–C6, covering all four
       distinctions: settled multi-file, small actual-boundary wiring, risky migration/paid/live,
-      and unchanged versus invalidated shared evidence. Smallest check: the existing four local
-      commands plus changed links/diff; evidence: current revision/environment, exact commands/
+      and unchanged versus invalidated shared evidence; also a positive tiny genuine-unknown
+      experiment and rejection of prototype overtesting/known-behavior scaffolding. Keep symbolic/
+      static sensitivity bounded: no actual prototype test suite, broad programme or full indexing
+      system. Smallest check: the existing four local commands plus changed links/diff;
+      evidence: current revision/environment, exact commands/
       outputs and mapping C1–C6 to V1–V6. C4 guards retained order semantics. Coordinator must
       obtain a fresh independent final implementation review over the complete committed range
       under its exact selected profile; producer self-review cannot satisfy it. Review is a release
@@ -149,10 +174,12 @@ is not this repair's task list. Necessary global skill changes require the owner
 
 ## Task-production validation
 
-Preparation baseline/index/worktree verified clean at the supplied SHA; Python 3.12.3 available.
+Correction baseline/index/worktree verified clean at `158a919fc603e5a134d558baba6c31fe54c3786d`;
+Python 3.12.3 available. Source digest above binds the owner's updated experiment requirements.
 Task-production validation: PASS task-order checker; PASS source digest/six A-to-V mappings,
-local task/index links and exact allowed scope; PASS manual acceptance/dependency/gate/doc
+local task links and exact task-file-only correction scope; PASS manual acceptance/dependency/gate/doc
 traceability inspection and `git diff --check`. Recheck final bytes before this task-list's separate
-focused checkpoint; exact commands/result SHA travel in the producer return. Approval remains pending. No unchanged suite
-rerun is needed for creating this task file; C1–C6 above are scheduled implementation evidence,
+focused correction checkpoint; exact commands/result SHA travel in the producer return. Renewed
+approval remains pending. Unaffected suite results are reused; no suite rerun is needed for this
+artifact-only correction. C1–C6 above are scheduled implementation evidence,
 not claimed as completed acceptance. Parent owns producing review and delegated corrections.
