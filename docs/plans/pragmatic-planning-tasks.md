@@ -3,8 +3,8 @@
 ## Authority and shared context
 
 Derived by the **direct adapter** from [the TinySpec](pragmatic-planning-tinyspec.md),
-requirements truth at correction baseline `158a919fc603e5a134d558baba6c31fe54c3786d`, source SHA-256
-`be86030997bb6c11255da9a074390de1e0cf6dc29aa32c2f50ac3edfc60eed5a`.
+requirements truth at correction baseline `44510fcd6b269d578e70efc7f59913db02c308f5`, source SHA-256
+`92ca6817c1cd6cb065209eacd4431d5e002daf2195040e5fb81f5d0e8cd0819a`.
 `NO_BRAINSTORM_NEEDED`; no material questions/deferrals. Owner selected TinySpec and
 separate fresh source/task producers. Combined approval question was cancelled for the owner's
 prototype clarification; **renewed current-content source/task approval pending; no implementation
@@ -75,8 +75,14 @@ This known local contract repair still needs one coherent T001, not its own runt
     - **T001/V2 — A2 early proof**: Known bounded behavior uses permanent actual-helper tests or
       verified earlier intra-task proof before reliance, not prototype scaffolding/duplicate
       implementation. A positive genuine-unknown system/abstraction/concept scenario justifies
-      a tiny disposable actual-dependency/boundary experiment answering one consequential question
-      worth inexpensive proof before costly reliance: typically 10/20/50 lines (tens of lines,
+      a tiny disposable actual-dependency/boundary **[PROTOTYPE]** experiment answering ONE
+      consequential unknown worth inexpensive proof before costly reliance, with no production
+      feature/abstraction scaffolding. Both direct/SpecKit task titles require this marker (equivalent
+      explicit marker only for an incompatible observed format). Primary output is information:
+      conclusion/findings and tested limits, supported by script code AND actual reproducible
+      execution output with minimal command/result/applicability; code-only/unrun success claims
+      prove no behavior. Disproof/inconclusive findings are legitimate information but cannot release
+      reliance on assumed success. Typically 10/20/50 lines (tens of lines,
       guidance not a hard cap), clear observations/few direct assertions, NO accompanying proof
       test suite or separate harness. If setup cannot stay cheap, expose the risk/use the necessary
       layer, not a dishonest probe. Very-small-task guidance is experiment-specific; ordinary
@@ -86,12 +92,13 @@ This known local contract repair still needs one coherent T001, not its own runt
       Genuine architecture, durability/security, migration, paid/live or expensive-downstream
       uncertainty retains independently verified prerequisites/original gates; non-isolatable risks
       require applicable real-system validation. Smallest check: C1–C3 bounded scoped sensitivity/
-      scenarios include that positive distinction, reject prototype overtesting/known-behavior
-      scaffolding, unsupported reliance/duplicate proof, and preserve standalone risky cases in
-      both adapters. Evidence: named positives/negatives, producer/consumer dependencies,
-      consequential question, executable criteria/inexpensive observation/assertion, applicability
-      and gates. A
-      symbolic positive fixture needs no actual prototype suite/harness; scenarios do not execute
+      scenarios include the positive marked informational-scope distinction; reject missing marker/
+      bounded scope, code-only/unrun claims, prototype overtesting/known-behavior or production
+      scaffolding, unsupported reliance/duplicate proof; preserve standalone risky cases in both
+      adapters. Evidence: named positives/negatives, producer/consumer dependencies, consequential
+      question, executable criteria/inexpensive observation/assertion, conclusion/limits linked to
+      code and observed execution, applicability and gates. A symbolic positive fixture needs no
+      actual prototype suite/harness; scenarios do not execute
       migrations/live work or establish real dependency/model behavior.
     - **T001/V3 — A3 lifetime**: Shared unchanged revision/environment/scope-applicable checks run
       once with EVERY criterion/item mapping, pass condition, evidence binding and gate; invalidated
@@ -119,7 +126,12 @@ This known local contract repair still needs one coherent T001, not its own runt
     - **T001/V5 — A5 compatibility**: Reconcile actual contradictions in operative consumers/tests/
       docs, with canonical ownership and no copied policy/project-specific reusable content.
       Both paths challenge redundant splitting, duplicate proofs/report chains/disproportionate
-      checks. Preserve depth choice, exact-content approval, separate fresh producers/delegated
+      checks. Both adapters carry the [PROTOTYPE] marker and bounded informational scope into
+      handoff/worker briefs without a new schema or invented report/evidence/cleanup tasks;
+      ordinary delivery and permanent production acceptance remain intact. Smallest added check:
+      C1–C3 scoped marker/scope propagation assertions and missing-marker/scope negatives;
+      evidence: named results and actual adapter/handoff/brief spans. Preserve depth choice,
+      exact-content approval, separate fresh producers/delegated
       corrections, REQUIRED/manual gates, independent reviews, authorized execution/exact-profile
       routing and per-task checkpoints. Coordinator/checkpoint contracts remain unchanged.
       Smallest check: C1–C3 relevant safeguard mutations plus manual actual-diff/doc-to-behavior
@@ -130,8 +142,10 @@ This known local contract repair still needs one coherent T001, not its own runt
     - **T001/V6 — A6 final validation**: Final relevant bytes pass C1–C6, covering all four
       distinctions: settled multi-file, small actual-boundary wiring, risky migration/paid/live,
       and unchanged versus invalidated shared evidence; also a positive tiny genuine-unknown
-      experiment and rejection of prototype overtesting/known-behavior scaffolding. Keep symbolic/
-      static sensitivity bounded: no actual prototype test suite, broad programme or full indexing
+      [PROTOTYPE] informational experiment supported by code/actual execution. Reject missing
+      marker/scope, code-only/unrun claims and prototype overtesting/known-behavior or production
+      scaffolding. Keep symbolic/static sensitivity bounded: no actual prototype test suite,
+      broad programme or full indexing
       system. Smallest check: the existing four local commands plus changed links/diff;
       evidence: current revision/environment, exact commands/
       outputs and mapping C1–C6 to V1–V6. C4 guards retained order semantics. Coordinator must
@@ -174,7 +188,7 @@ is not this repair's task list. Necessary global skill changes require the owner
 
 ## Task-production validation
 
-Correction baseline/index/worktree verified clean at `158a919fc603e5a134d558baba6c31fe54c3786d`;
+Correction baseline/index/worktree verified clean at `44510fcd6b269d578e70efc7f59913db02c308f5`;
 Python 3.12.3 available. Source digest above binds the owner's updated experiment requirements.
 Task-production validation: PASS task-order checker; PASS source digest/six A-to-V mappings,
 local task links and exact task-file-only correction scope; PASS manual acceptance/dependency/gate/doc
