@@ -111,7 +111,9 @@ not portable global operational paths:
   defaults when model metadata is missing. Generic suffix parsing or that default output
   alone is therefore insufficient support evidence.
 
-These sources settle a non-probe readiness contract below. They do **not** attest that
+These sources justify the proportional non-probe readiness contract below; their code
+pointers explain known limits, not a mandatory fresh source audit for each profile.
+They do **not** attest that
 any concrete alternative is currently authenticated/supported here. No alternative
 snapshot, provider call, auth resolution command or live launch was performed in source
 production. Observed model/effort is not inferred from the approved planning selection.
@@ -143,28 +145,33 @@ or a comparative quality claim. Unknown actual model/effort remains unknown.
 
 **Sufficient non-probe runtime verification** requires the conjunction of:
 
-- Exact provider/id resolved in the active host's available/authentication-aware runtime
-  snapshot (or equivalent existing `/model` evidence), applicable to the intended child
-  provider/environment. A bare catalog/list-models entry or configured credential presence
+- Applicable authoritative runtime evidence of authenticated availability for the exact
+  provider/id in the intended execution context, such as an existing authentication-aware
+  available-model view. A bare catalog/list-models entry or configured credential presence
   alone is insufficient. Missing/stale/opaque evidence is an exact readiness gap.
-- Authoritative model-specific supported-level evidence from the installed runtime's
-  supported choices, with inspected applicable provider adapter/mapping confirming that
-  the requested effort survives unchanged in meaning. Reject unsupported choices,
-  clamping, ambiguous aliases/defaults and missing material mapping evidence. Registry
-  `reasoning`/thinking flags or a syntactically accepted suffix alone cannot establish this.
-- Current child launch-resolution evidence agrees with exact selected binding/effort and
-  permitted model scope/thinking ceiling; tool/extension access, mutation permissions,
-  execution environment and owner gates fit. Parent availability does not automatically
-  prove detached-child availability. Use current known evidence; no speculative auth or
-  configuration execution to fill gaps.
+- Applicable authoritative runtime-supported choices include the exact selected effort.
+  Registry `reasoning`/thinking flags or a syntactically accepted suffix alone cannot
+  establish this. Reuse still-applicable proof or documented runtime choices; inspect
+  provider mappings/source only for actual ambiguity, contradiction or clamping risk,
+  or when necessary support evidence is absent—not as a universal fresh code-audit gate.
+  Unsupported effort, clamping or omitted/different effort still blocks invocation.
+- Current exact launch contract, permitted model scope/thinking ceiling, tool/extension
+  access, mutation permissions, execution environment and owner gates agree with the
+  selected profile. Runtime-declared resolved launch preparation may supply the final
+  preflight before provider invocation; no previously launched child or completed launch
+  is required. Parent availability alone does not establish a different detached-child
+  environment's readiness, but unchanged applicable environment/contract proof can be reused.
 
-This conjunction proves runtime-declared launch readiness, not successful live provider
-acceptance, quota, network health or obedience. It does not demand a previous launch.
-Only use passive evidence already available or safe permitted read-only inspection; auth
-refresh, credential commands, live discovery/probes and profile refresh are not implicitly
-authorized by selection or by this contract. If material evidence cannot be obtained without
-such operations, report the precise gap and ask for necessary bounded authorization or an
-explicit fallback choice. Do not mark readiness true from unknown evidence.
+This conjunction establishes runtime-declared launch readiness, not successful live provider
+acceptance, quota, network health or obedience. It does not demand a previous launch or a
+new audit of unchanged evidence. Use safe permitted passive documented runtime evidence or
+reuse still-applicable proof; the inspected code pointers do not imply an exposed API or
+callable tool in the executing session, or assert that the necessary evidence is available.
+Auth refresh, credential commands, live discovery/probes and profile refresh are not implicitly
+authorized by selection or by this contract. If the runtime cannot expose necessary information
+within these bounds, stop the affected dispatch, report the precise gap and ask for necessary
+bounded authorization or an explicit fallback choice. Do not mark readiness true from unknown
+evidence or execute speculative auth/configuration operations to fill gaps.
 
 **Approval and dispatch:** present rubric proposal/rationales and readiness status/gaps first.
 Obtain one exact owner-selected profile; an approval while readiness is pending approves
@@ -184,7 +191,7 @@ missing permission, support, requirements or oracle adequacy.
 | --- | --- |
 | A1 | Existing named closed-design/strong-cheap-oracle scenario assesses all six factors and positively recommends suitable symbolic smaller family/effort with independent comparative rationales, even when never previously launched; pending readiness is not inadequacy. |
 | A2 | A catalog-only or otherwise insufficiently verified proposed smaller candidate retains its recommendation, exposes the exact binding/auth/effort/context/tool/permission gap and blocks dispatch; asks for bounded authorization or explicit fallback choice, never `alternative_unavailable` → automatic Sol. |
-| A3 | Current adequate non-probe runtime readiness plus exact owner selection allows an unlaunch-tested candidate through dispatch preparation; prior observed launch is neither required nor misreported. Missing actual support still stops. |
+| A3 | Applicable authoritative runtime-supported choices, authenticated availability and current exact launch contract/tools/environment plus exact owner selection allow an unlaunch-tested candidate through dispatch preparation. Still-applicable proof is reusable; resolved launch preparation may be the final preflight before provider invocation, without an already-launched child or routine fresh provider-code audit. Prior observed launch is neither required nor misreported; missing necessary evidence/support still stops. |
 | A4 | Named stronger-choice scenario explains smaller candidate's concrete shortfall using weakest adequate oracle/stateful recovery/coupling, separately justifies effort; suitability-only Sol rationale is rejected. Inadequate contracts stop at producing review, not escalation. |
 | A5 | Strict-medium versus default-medium-permitting-low, unsupported effort, permission/tool denial, missing owner selection and settings/default mismatch cases preserve stop/exactness semantics. Standard `plan_create` Sol/medium exception remains unchanged across direct/helper pass. |
 | A6 | Proposed/selected/observed remain distinct; selected exact profile reaches dispatch unchanged, unknown actual profile stays unknown. Failed-run inspection and targeted owner-approved repair remain mandatory; no unauthorized probes, fabricated guidance, benchmark eligibility filter or diversity quota appears. |
@@ -208,7 +215,11 @@ policy seam, not a difficult isolatable runtime algorithm. Installed source insp
 names, version behavior and passive-evidence limits; a script printing registry names would not
 prove auth, supported effort or model obedience. The high-risk remainder—actual instruction
 following/provider acceptance—is non-isolatable from a real permitted invocation. Static/symbolic
-checks demonstrate regression sensitivity only, never live obedience.
+checks demonstrate regression sensitivity only, never live obedience. Routine readiness uses
+applicable authoritative runtime choices/availability and current launch preparation, not repeated
+provider-source audits. Only actual ambiguity, contradiction, clamping risk or absent necessary
+evidence warrants bounded deeper inspection; inaccessible information blocks affected dispatch
+and returns through the existing authorization/fallback gate, not a new persistence requirement.
 
 The corrected shared owner and regression expectations are the producer; coordinator/planning/
 helper consumers must inspect and exercise the applicable existing checks before relying on it;
