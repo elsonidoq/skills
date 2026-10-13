@@ -6,7 +6,8 @@ Owner outcome: **“Simple and pragmatic plans to address requirements provided 
 Source provenance: settled owner conversation for fresh task production, benefiting owners/executors.
 `NO_BRAINSTORM_NEEDED`: no material questions/deferrals. Owner-selected TinySpec fits a reversible
 local skill-contract/Python-test correction without architecture/data/security/deployment/runtime changes.
-Combined source/task approval is **pending**; preparation/checkpoints only, not implementation.
+Combined source/task approval was **cancelled**; renewal is pending after the owner's prototype
+clarification below. Preparation/checkpoints only, not implementation.
 Planner owns dialogue, inspection, review/approval and dispatch; separate fresh source/task
 producers and delegated corrections remain required, with no nested delegation.
 
@@ -47,21 +48,31 @@ and [SDD](../best_practices_spec_driven_development.md) support bounded portabil
   task. Separation needs an independently necessary deliverable, real producer-consumer
   prerequisite, permission/manual gate, resource/lifecycle boundary or material context
   incompatibility—not a workflow noun. One-task fixes stay coherent; no quota or mechanical merges.
-- **Proof before reliance:** Prefer permanent tests exercising the actual production helper
-  in the earliest coherent implementation task. An earlier verified intra-task step can
-  establish necessary proof; use a focused existing test instead of disposable prototypes/
-  duplicate implementation when it observes the risk. Retain independently verified
-  prerequisites for genuinely unresolved architecture, durability/security uncertainty,
-  migration risk, paid/live boundaries or expensive downstream reliance. Non-isolatable
-  uncertainty still requires real-system validation and applicable permission.
+- **Proof before reliance:** For known bounded behavior, prefer permanent actual-production-helper
+  tests in the earliest coherent task; an earlier verified intra-task step can establish proof.
+  No artificial prototype/duplicate implementation when focused existing tests observe the risk.
+  Owner clarification: very-small tasks apply to **prototype experiments specifically**, not
+  normal delivery. For genuinely unknown system/abstraction/concept behavior, plan a tiny
+  disposable script exercising the actual abstraction/dependency to answer one consequential
+  question before costly reliance. Typically 10/20/50 lines (tens of lines), clear observations
+  or a few direct assertions, **no accompanying test suite or separate test harness**. Justify
+  its value and inexpensive checks; line counts are guidance, not a hard cap. If setup/proof
+  cannot stay cheap, report the risk/use the necessary layer, not a tiny dishonest probe.
+  Experiments can justify independent prerequisite tasks and smaller owner-selected profiles
+  under existing routing, never task-producer-assigned Luna/Terra bindings or defaults.
+  Production acceptance tests remain necessary verification, not tests of the disposable proof.
+  Retain independent prerequisites for unresolved architecture, durability/security uncertainty,
+  migration risk, paid/live boundaries or expensive downstream reliance; non-isolatable risks
+  still need real-system validation and applicable permission.
 - **Evidence and cleanup:** Run shared applicable checks once, preserving EVERY REQUIRED
   criterion/item mapping, pass condition, permission/manual gate and evidence binding.
   Consumers inspect/use the reference and preserve behavior with production tests; report-only
   links are insufficient. Reuse valid revision/environment/scope-applicable results across
   consumers; rerun invalidated evidence, not unchanged proof for ceremony. Retain proof through
-  all applicable consumers and production validation. Cleanup is conditional and owned:
-  routine teardown stays with its test/task; separate cleanup needs actual resources or a
-  consequential independently gated outcome, not hypothetical scaffolding. Real runtime
+  all applicable consumers and production validation. Then discard actual disposable material
+  safely; retain concise command/result/limits in existing evidence, not an artifact/report chain.
+  Cleanup is conditional and owned: routine teardown stays with its test/task; separate cleanup
+  needs actual resources or a consequential independently gated outcome, not hypothetical scaffolding. Real runtime
   cleanup can be a product outcome. Failed/unrun REQUIRED proof blocks reliance; retain
   disproof/limits, correct/replan and renew affected reviews/approvals without weakening
   criteria. Missing permission/capability is NOT VERIFIED, not technical disproof.
@@ -81,13 +92,16 @@ command/output evidence and original gates; optional hardening remains optional.
 - **A1 — Delivery:** Both adapters and planner review apply the split rule. A settled
   multi-file scenario preserves all acceptance without artificial prototype/composition/
   report/cleanup tasks; small wiring uses focused actual-boundary tests inside its outcome.
-- **A2 — Early proof:** Actual-helper permanent tests/verified intra-task proof precede
-  reliance; sensitivity rejects duplicate implementation and unsupported reliance. Risky
-  migration/paid/live scenarios retain independently verified prerequisite tasks/gates.
+- **A2 — Early proof:** Known behavior uses actual-helper permanent tests/verified intra-task
+  proof before reliance, not prototype scaffolding. A positive genuine-unknown scenario uses a tiny actual-boundary
+  disposable experiment with direct observations/assertions, no proof test suite/harness; reject
+  prototype overtesting, duplicate implementation and unsupported reliance. Risky migration/
+  paid/live scenarios retain independent prerequisite tasks/gates. Production acceptance remains.
 - **A3 — Evidence lifetime:** Distinguish unchanged applicable from invalidated shared proof:
   run once with every mapping/pass/gate/evidence binding, rerun affected invalid proof.
-  Cleanup waits for applicable validated consumption; teardown neither invents an outcome
-  nor destroys required evidence prematurely.
+  Dispose of actual experimental material only after applicable dependent consumption/validation,
+  retaining concise command/result/limits; no hypothetical cleanup task or premature proof loss.
+  Routine teardown neither invents an outcome nor destroys required evidence.
 - **A4 — Acceptance preservation:** The generic local scenario below retains all behavior,
   policy prerequisites and doc reconciliation, including counter-observed actual stage
   advancement and metadata-only opening. This is regression sensitivity preserving the
@@ -98,7 +112,9 @@ command/output evidence and original gates; optional hardening remains optional.
 - **A6 — Validation:** Focused sensitivity/scenario checks at existing owners expose relevant
   regressions, not only new wording. Cover four distinctions: settled multi-file delivery,
   small actual-boundary wiring, risky migration/paid/live prerequisites and unchanged versus
-  invalidated shared proof. Required suite/link/diff checks pass with every mapping/gate intact.
+  invalidated shared proof. Also cover the positive tiny genuine-unknown experiment and reject
+  prototype overtesting/known-behavior scaffolding; keep local sensitivity bounded, not a full
+  indexing/prototype system. Required suite/link/diff checks pass with every mapping/gate intact.
   Final implementation gets a fresh independent review of the complete committed range under
   the coordinator's exact selected profile, not producer self-review.
 
@@ -132,7 +148,7 @@ advancement, not fixture labels or component-green alone. Use only relevant port
 regression scenarios, not a new indexing system.
 
 Static/symbolic checks are not model-obedience/live-production proof; any smallest bounded trial
-needs separate selection/authorization, never a silent paid probe. Correction owns this source only
-(indices if needed), not tasks/implementation or ancillary/STATE/memory records. No branch/worktree,
+needs separate selection/authorization, never a silent paid probe. Correction owns this source only,
+not indices, tasks/implementation or ancillary/STATE/memory records. No branch/worktree,
 push/install/settings/provider changes, external-project modifications or resource/job operations.
 Source checks prove content/link/scope integrity, not A1–A6 completion; parent inspects before task production.
