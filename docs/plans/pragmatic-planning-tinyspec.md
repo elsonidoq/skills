@@ -48,13 +48,22 @@ and [SDD](../best_practices_spec_driven_development.md) support bounded portabil
   task. Separation needs an independently necessary deliverable, real producer-consumer
   prerequisite, permission/manual gate, resource/lifecycle boundary or material context
   incompatibility—not a workflow noun. One-task fixes stay coherent; no quota or mechanical merges.
+  This settled repair needs one coherent delivery task, not a prototype of its own.
 - **Proof before reliance:** For known bounded behavior, prefer permanent actual-production-helper
   tests in the earliest coherent task; an earlier verified intra-task step can establish proof.
   No artificial prototype/duplicate implementation when focused existing tests observe the risk.
   Owner clarification: very-small tasks apply to **prototype experiments specifically**, not
   normal delivery. For genuinely unknown system/abstraction/concept behavior, plan a tiny
   disposable script exercising the actual abstraction/dependency to answer one consequential
-  question before costly reliance. Typically 10/20/50 lines (tens of lines), clear observations
+  question before costly reliance. Direct and SpecKit task titles mark these tasks **[PROTOTYPE]**
+  (equivalent explicit marker only if the actual existing format cannot use brackets). Carry
+  the marker and bounded scope through task/handoff/worker brief: ONE consequential unknown,
+  tiny actual-dependency/abstraction script, no production implementation or abstraction scaffolding.
+  The primary output is an informational conclusion/findings and tested limits; script code
+  plus actual reproducible execution output support it, not a shipped feature. Include minimal
+  command/result/applicability; code alone or an unrun script proves no behavior. Disproof or
+  inconclusive results are legitimate information, but cannot release reliance on assumed success.
+  Typically 10/20/50 lines (tens of lines), clear observations
   or a few direct assertions, **no accompanying test suite or separate test harness**. Justify
   its value and inexpensive checks; line counts are guidance, not a hard cap. If setup/proof
   cannot stay cheap, report the risk/use the necessary layer, not a tiny dishonest probe.
@@ -94,8 +103,9 @@ command/output evidence and original gates; optional hardening remains optional.
   report/cleanup tasks; small wiring uses focused actual-boundary tests inside its outcome.
 - **A2 — Early proof:** Known behavior uses actual-helper permanent tests/verified intra-task
   proof before reliance, not prototype scaffolding. A positive genuine-unknown scenario uses a tiny actual-boundary
-  disposable experiment with direct observations/assertions, no proof test suite/harness; reject
-  prototype overtesting, duplicate implementation and unsupported reliance. Risky migration/
+  **[PROTOTYPE]** experiment whose informational output is supported by code and actual execution,
+  with direct observations/assertions, no proof test suite/harness; reject code-only/unrun proof,
+  prototype overtesting, production scaffolding, duplicate implementation and unsupported reliance. Risky migration/
   paid/live scenarios retain independent prerequisite tasks/gates. Production acceptance remains.
 - **A3 — Evidence lifetime:** Distinguish unchanged applicable from invalidated shared proof:
   run once with every mapping/pass/gate/evidence binding, rerun affected invalid proof.
@@ -108,13 +118,15 @@ command/output evidence and original gates; optional hardening remains optional.
   oracle, NOT indexing implementation/runtime proof or access to an external project.
 - **A5 — Compatibility:** Reconcile actual contradictory consumers/tests/docs without
   duplicated policy, unrelated audit or project-specific reusable content. Both depth
-  preparation/reviews challenge decomposition/check proportionality; all preserved gates above remain intact.
+  preparation/reviews challenge decomposition/check proportionality. Both adapters preserve the
+  prototype marker/informational scope through handoff/worker brief without a new schema or
+  invented report/evidence/cleanup tasks; ordinary delivery/production acceptance and all gates remain intact.
 - **A6 — Validation:** Focused sensitivity/scenario checks at existing owners expose relevant
   regressions, not only new wording. Cover four distinctions: settled multi-file delivery,
   small actual-boundary wiring, risky migration/paid/live prerequisites and unchanged versus
   invalidated shared proof. Also cover the positive tiny genuine-unknown experiment and reject
-  prototype overtesting/known-behavior scaffolding; keep local sensitivity bounded, not a full
-  indexing/prototype system. Required suite/link/diff checks pass with every mapping/gate intact.
+  missing prototype markers/scope, code-only/unrun claims and prototype overtesting/known-behavior
+  scaffolding; keep local sensitivity bounded, not a full indexing/prototype system. Required suite/link/diff checks pass with every mapping/gate intact.
   Final implementation gets a fresh independent review of the complete committed range under
   the coordinator's exact selected profile, not producer self-review.
 
