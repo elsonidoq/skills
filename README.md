@@ -114,7 +114,16 @@ Before implementation, coordinator presents the complete batch table with one/tw
 descriptions, exact proposed model/effort and separate family/effort rationales, then obtains
 explicit approval of batch boundaries and profiles. Implementation approval alone does not approve
 routing. Reuse verified unchanged routing approval on resume; approve changed rows before execution.
-No universal Sol/medium default or forced model diversity applies.
+No universal Sol/medium default or forced model diversity applies. Apply **rubric first,
+capability verification second**: **Prior launch success establishes availability, not superiority**.
+Compare suitable family/effort options—even when an alternative has no previous launch history—and
+retain a suitable proposal as pending rather than treating incomplete readiness as inadequacy.
+Catalog evidence is distinct from authoritative authenticated/runtime readiness and observed launch.
+Reuse applicable passive proof; a conditional source audit is warranted only by concrete uncertainty,
+contradiction, clamping risk, or absent necessary support evidence. If verification is insufficient,
+surface the gap and ask for necessary authorization or an explicit fallback choice—not silently
+substitute Sol. A fallback needs independent rationale, readiness, and exact owner selection; model
+variety is not itself a goal.
 Verify permitted callable binding, supported effort, tools and owner gates at assignment/dispatch,
 and ensure settings do not silently override actual dispatch arguments. Actual profile stays
 unknown when unobservable, never inferred from selection.
@@ -151,8 +160,9 @@ ownership/safe repository mechanics and required owner/project gates, never auto
 Each task has its own verified focused commit with concrete task/runtime proof;
 one fresh independent final review covers the complete committed range. Planning depth and
 unrelated planning/reviewer selections remain separate from implementation selection.
-Static/symbolic fixtures demonstrate contracts, not live model performance or obedience;
-live support/callability checks require separate permission and usable runtime capabilities.
+Static/symbolic fixtures demonstrate contracts, not live model performance, provider acceptance,
+or obedience; live support/callability checks require separate permission and usable runtime
+capabilities. After global-contract changes, run `/reload` in pi.
 
 ## Context-first recovery and coordination feedback
 

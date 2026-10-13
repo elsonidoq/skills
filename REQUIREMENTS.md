@@ -36,7 +36,16 @@ explicit `ask_user` approval of boundaries/profiles is required before implement
 Reuse verified unchanged approval on resume; changed boundaries/profiles need affected-row approval.
 There is no universal Sol/medium default and no forced model diversity. Select one exact binding
 and independently justified reasoning effort per invocation through owner choice; task assignments
-never silently select a different profile inside that invocation.
+never silently select a different profile inside that invocation. Apply **rubric first, capability
+verification second**: **Prior launch success establishes availability, not superiority**. Compare
+suitable family/effort options—even when an alternative has no previous launch history—and keep a
+suitable proposal pending when readiness is incomplete. Catalog is distinct from authoritative
+authenticated/runtime readiness and observed launch. Reuse applicable passive proof; use a
+conditional source audit only for concrete uncertainty, contradiction, clamping risk, or absent
+necessary support evidence. If verification is insufficient, surface the gap and ask for the
+necessary authorization or an explicit fallback choice—not silently substitute Sol. An explicit
+fallback needs its own rationale, readiness, and exact owner selection; model variety is not
+itself a goal.
 For one worker implementing one batch, normally use direct asynchronous delegation, even
 with sequential internal tasks; workflow orchestration needs a concrete reason in the existing
 brief. The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#delegate)
@@ -88,12 +97,18 @@ and usable permitted binding/effort/tool support; fixture success never substitu
 Planning/advisory invocations use the same
 [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md): assess
 all six applicable factors, including the weakest verification blind spot, and justify family
-and supported effort independently. Obtain one exact owner-selected binding plus effort;
-verify permissions, tools, callable binding and supported effort at assignment and dispatch.
-Pass the selected profile unchanged through direct calls and helper briefs/dispatch. A missing
-selection/support or settings/default mismatch blocks work, never silently substitutes.
-Record proposed, selected and observed separately; unknown actual binding/effort stays unknown.
-Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites.
+and supported effort independently. Proposal precedes readiness: a suitable never-launched
+option may remain pending while passive, authoritative readiness evidence is incomplete. Distinguish
+catalog from authenticated/runtime readiness and observed launch; reuse current applicable proof
+and audit provider/source mappings only for concrete uncertainty, contradiction, clamping risk,
+or absent necessary support evidence. Missing readiness blocks dispatch, retains the proposal,
+and requires bounded authorization or an explicitly selected, independently justified fallback.
+Obtain one exact owner-selected binding plus effort; verify permissions, tools, callable binding
+and supported effort at assignment and dispatch. Pass the selected profile unchanged through direct
+calls and helper briefs/dispatch. A missing selection/support or settings/default mismatch blocks
+work, never silently substitutes. Record proposed, selected and observed separately; unknown actual
+binding/effort stays unknown. Implementation-only batching, task-count and REQUIRED-item rules are
+not planning prerequisites.
 
 The explicit owner-required exception is Standard `plan_create`: **Sol with exactly medium
 supported effort** for the complete same-session specification review/fix → one plan creation →
