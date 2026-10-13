@@ -25,6 +25,26 @@ PATHS = {
 }
 
 
+# A7 bounded inventory: each consumer carries A1/A2 pending, A3 first-launch readiness,
+# A4 independent comparison and A5/A6 exact selection through its existing dispatch guards.
+ROUTING_CARRIERS = (
+    ("rubric-coordinator", "coordinator", "## Prepare Approved Execution"),
+    ("rubric-planner", "planner", "## Shared routing selection"),
+    ("rubric-helper", "helper", "## Preflight"),
+    ("rubric-brainstorm", "brainstorm", "## Capability preflight"),
+)
+ROUTING_SEQUENCE = (
+    "Compare suitable family/effort options before readiness",
+    "smaller never-launched pending proposal",
+    "independent comparative Family and Effort rationales",
+    "Then report readiness/gaps under the shared rubric",
+    "readiness blocks launch, not suitability",
+    "retain the recommendation and ask for bounded authorization or an explicit fallback choice",
+    "fallback needs its own justification, readiness and exact owner selection",
+    "Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate",
+)
+
+
 def section(text, heading):
     start = text.find(heading)
     if start < 0:
@@ -72,6 +92,12 @@ def check_contracts(texts):
         for phrase in phrases:
             if phrase.lower() in text.lower():
                 errors.append(f"{label}: contradictory {phrase!r}")
+
+    for label, key, heading in ROUTING_CARRIERS:
+        body = section(texts[key], heading)
+        require(label, body, *ROUTING_SEQUENCE)
+        reject(label, body, "compare only verified alternatives", "verify readiness before proposing",
+               "silently substitute Sol", "always audit provider source before comparison")
 
     p = texts["planner"]
     job_first = section(p, "## Job first; bookkeeping is subordinate")

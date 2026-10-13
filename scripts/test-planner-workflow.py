@@ -1449,6 +1449,26 @@ sys.stdin.buffer.read()
 
 
 class ComparativeCarrierTests(unittest.TestCase):
+    def test_assessment_before_readiness_actual_consumer_inventory(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, heading in checker.ROUTING_CARRIERS:
+            body = checker.section(texts[key], heading)
+            for clause in checker.ROUTING_SEQUENCE:
+                with self.subTest(carrier=label, removed=clause):
+                    changed = dict(texts)
+                    pattern = r'\s+'.join(re.escape(w) for w in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, 'REMOVED', body), 1)
+                    # An owner/footer-only copy cannot rescue the actual operational consumer.
+                    changed[key] += '\n## Footer\n' + clause
+                    self.assertTrue(any(e.startswith(label + ': missing') for e in checker.check_contracts(changed)))
+            for reversal in ('compare only verified alternatives', 'verify readiness before proposing',
+                             'silently substitute Sol', 'always audit provider source before comparison'):
+                with self.subTest(carrier=label, reversed=reversal):
+                    changed = dict(texts)
+                    changed[key] = changed[key].replace(body, body + '\n' + reversal + '\n', 1)
+                    self.assertTrue(any(e.startswith(label + ': contradictory') for e in checker.check_contracts(changed)))
+
     def test_owner_comparison_and_graph_tradeoff_mutations(self):
         texts = checker.load_texts()
         self.assertEqual(checker.check_contracts(texts), [])

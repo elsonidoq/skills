@@ -74,15 +74,21 @@ execute sequentially, never in parallel. Continue all incomplete dependency-read
 for an explicit partial boundary use `ask_user` to confirm boundary versus full completion.
 
 Assess each batch using the six-factor [routing rubric](references/batch-routing.md),
-not a universal default. Present the entire proposed execution table: task IDs, outcome,
+not a universal default. Compare suitable family/effort options before readiness, including a
+smaller never-launched pending proposal, with independent comparative Family and Effort rationales.
+Then report readiness/gaps under the shared rubric: readiness blocks launch, not suitability;
+retain the recommendation and ask for bounded authorization or an explicit fallback choice.
+A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
+Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.
+Present the entire proposed execution table: task IDs, outcome,
 dependencies, integration/check pointers, local/delegated mode, exact binding/effort,
 separate comparative Family and Effort rationales, applicable guidance or none.
 Implementation approval is not routing approval: use `ask_user` for explicit batch/profile
 approval before writes or dispatch. Reuse verified unchanged approval; changed boundaries/
 profiles renew affected rows, source/scope/acceptance changes renew producing gates.
 
-Verify callable binding, supported effort, permissions and tool access at assignment and
-dispatch; missing permission/binding/effort/tool support blocks dispatch. Registry
+Verify callable binding, supported effort, permissions and tool access through the shared rubric's
+readiness conjunction at assignment and dispatch; missing permission/binding/effort/tool support blocks dispatch. Registry
 names/suffixes alone are not proof. Copy the owner-selected exact profile
 unchanged into actual arguments (pi-subagents `model: "provider/id:effort"`); no silent
 settings/agent override. Selected versus observed stays separate; unobservable actual

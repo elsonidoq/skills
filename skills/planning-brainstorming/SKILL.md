@@ -16,9 +16,14 @@ preselection mode use available session history only; in selected-production or 
 repair mode use established project artifacts. Use the
 [qualified seed rubric](../coordinate-implementation/references/batch-routing.md) for gate
 assessment and decision application: assess all six applicable factors, including the
-weakest verification blind spot, and justify family and supported effort independently. Verify one exact
-owner-selected profile, permissions, tools, callable binding and supported effort at assignment
-and dispatch. Copy the selected binding/effort unchanged into each invocation; a settings/default
+weakest verification blind spot, and justify family and supported effort independently.
+Compare suitable family/effort options before readiness, including a smaller never-launched pending proposal,
+with independent comparative Family and Effort rationales. Then report readiness/gaps under the shared rubric:
+readiness blocks launch, not suitability; retain the recommendation and ask for bounded authorization or an explicit fallback choice.
+A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
+Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.
+Verify one exact owner-selected profile, permissions, tools, callable binding and supported effort at assignment
+and dispatch through the shared readiness conjunction. Copy the selected binding/effort unchanged into each invocation; a settings/default
 override or missing selection/support stops, never silently substitutes. Record proposed,
 selected and observed separately; unknown actual model or effort stays unknown.
 Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites. If a required capability is unavailable, report the

@@ -105,10 +105,15 @@ Use the [qualified seed rubric](../coordinate-implementation/references/batch-ro
 for each planning/advisory invocation, including brainstorming assessment/application,
 TinySpec source/tasks/review, and Standard specification/tasks/independent review.
 Assess all six applicable factors, especially the weakest verification blind spot.
-Record separate Family rationale and Effort rationale, proposed versus owner-selected
+Compare suitable family/effort options before readiness, including a smaller never-launched pending proposal,
+with independent comparative Family and Effort rationales. Then report readiness/gaps under the shared rubric:
+readiness blocks launch, not suitability; retain the recommendation and ask for bounded authorization or an explicit fallback choice.
+A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
+Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.
+Record the Family rationale, proposed versus owner-selected
 exact binding plus supported effort, applicable approved guidance or none, and inspected-failure
 repair conditions. Verify permissions, tools, callable binding and supported effort at
-assignment and dispatch. Copy one exact selected profile unchanged into the direct call or
+assignment and dispatch through the shared readiness conjunction. Copy one exact selected profile unchanged into the direct call or
 helper brief/dispatch; settings or agent defaults overriding selection stop dispatch.
 Missing owner selection or support stops the affected invocation; never silently substitute.
 Record selected versus observed separately; unknown actual model or effort stays unknown.

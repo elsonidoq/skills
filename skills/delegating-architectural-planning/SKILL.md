@@ -74,8 +74,14 @@ configuration repository's `REQUIREMENTS.md`) and configured planning-capable
 agents. For independently authorized standalone selection, use the
 [qualified seed rubric](../coordinate-implementation/references/batch-routing.md): assess all six
 applicable factors, including the weakest verification blind spot; justify family and supported
-effort independently and obtain one exact owner-selected profile. Verify permissions, tools,
-callable binding and supported effort at assignment and dispatch. Copy the selected binding/effort
+effort independently. Compare suitable family/effort options before readiness, including a
+smaller never-launched pending proposal, with independent comparative Family and Effort rationales.
+Then report readiness/gaps under the shared rubric: readiness blocks launch, not suitability;
+retain the recommendation and ask for bounded authorization or an explicit fallback choice.
+A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
+Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.
+Obtain one exact owner-selected profile. Verify permissions, tools,
+callable binding and supported effort at assignment and dispatch through the shared readiness conjunction. Copy the selected binding/effort
 unchanged into the invocation; missing selection/support or a settings/default override stops,
 never silently substitutes. Record proposed, selected and observed separately; unknown actual
 model or effort stays unknown. Implementation-only batching, task-count and REQUIRED-item rules
