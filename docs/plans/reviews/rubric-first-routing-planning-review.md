@@ -39,4 +39,4 @@ Parent inspected full source/task contents, actual owned commit/index diffs and 
 
 ## Combined owner approval
 
-Pending `ask_user` against the exact source/task digests above. Approval will approve the reviewed planning content and proposed future scope only. The explicit planning-only boundary prevents automatic coordinator execution. After approval, record the answer here and return the bounded handoff; implementation and execution routing need separate authorization.
+After the complete executive brief, the owner answered **“Approve planning-only handoff”** through `ask_user`, approving the exact source/task digests above and proposed future scope. Approval covers planning content only; the explicit planning-only boundary prevents automatic coordinator execution. Implementation and execution routing need separate authorization. The next phase is the bounded handoff, not dispatch.
