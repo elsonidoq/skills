@@ -149,6 +149,14 @@ use the necessary integration layer instead. Genuine schema, security or durabil
 changes retain the checks needed to detect migration, authorization or persistence
 failures; small diffs alone never justify weakening safety evidence.
 
+When separate green components cannot establish a genuine risky boundary, require the
+smallest composed check that observes the final observable, order or custody—not just
+helper outputs. Reuse an existing focused check that already observes the boundary;
+ordinary observed wiring needs no extra integration programme. Preserve necessary security
+and durability checks. Schedule risky proof at the earliest practical producer/consumer
+boundary under early-risk ordering; block downstream reliance until sufficient proof exists,
+not all seams before coding or a duplicate prototype.
+
 Separate REQUIRED acceptance checks (from source criteria, owner direction or
 repository policy) from optional hardening and broader regression. Identify separately
 gated live/provider/engine/browser checks and their permissions/capabilities; a gate
@@ -297,7 +305,9 @@ absence requires no migration and changes no approval rule.
 Pass source constraints, canonical research links, applicable guidelines and stable task-local REQUIRED
 verification needs through both adapters to task generation and coordinator. Each item retains
 its pass criterion, smallest sufficient check, expected evidence and manual/permission gates;
-optional checks stay distinct. Preserve item mappings unchanged into the whole batch union before
+include accessible proof/pass conditions, explicit earlier producer dependencies and original
+permission/manual gates in the inline REQUIRED brief for both adapters. Missing, weakened or
+unrun REQUIRED proof blocks downstream reliance. Optional checks stay distinct. Preserve item mappings unchanged into the whole batch union before
 coding, including both adapters and legacy producing review/renewal when contracts are inadequate.
 The [qualified seed rubric](../coordinate-implementation/references/batch-routing.md)
 also informs planning selection under Shared routing selection; planning-stage bindings are

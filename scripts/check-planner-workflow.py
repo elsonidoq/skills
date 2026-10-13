@@ -474,6 +474,8 @@ def check_contracts(texts):
     # Bounded checks of changed instruction carriers, not a production audit/router.
     for label, key, heading, clauses in VERIFICATION_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
+    for label, key, heading, clauses in COMPOSED_CARRIERS:
+        require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, heading, clauses in RISK_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
     if not texts.get("risk"):
@@ -487,6 +489,32 @@ def check_contracts(texts):
                "forward SDD guidance as requirements input", "reread SDD guidance for requirements",
                "approved plan is requirements truth")
     return errors
+
+
+COMPOSED_CARRIERS = (
+    ('composed-planner', 'planner', '## Proportionate validation', (
+        'separate green components cannot establish a genuine risky boundary',
+        'smallest composed check that observes the final observable, order or custody',
+        'Reuse an existing focused check that already observes the boundary',
+        'earliest practical producer/consumer boundary',
+        'not all seams before coding or a duplicate prototype',
+    )),
+    ('composed-tasks', 'tasks', '## Task contract', (
+        'separate green components cannot establish a genuine risky boundary',
+        'smallest composed check that observes the final observable, order or custody',
+        'Reuse an existing focused check that already observes the boundary',
+        'earliest practical producer/consumer boundary',
+        'not all seams before coding or a duplicate prototype',
+    )),
+    ('composed-handoff', 'planner', '## Selected production and stage handoffs', (
+        'explicit earlier producer dependencies', 'original permission/manual gates',
+        'accessible proof/pass conditions',
+    )),
+    ('composed-adapters', 'tasks', '## Review and handoff', (
+        'explicit earlier producer dependencies', 'original permission/manual gates into the inline REQUIRED brief',
+        'accessible proof/pass conditions',
+    )),
+)
 
 
 RISK_CARRIERS = (

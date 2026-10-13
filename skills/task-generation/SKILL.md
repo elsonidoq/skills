@@ -91,6 +91,14 @@ carry these same item mappings through handoff. A representative-sample manual S
 only to tasks whose actual risk/source requires explicit user approval before downstream/full
 expensive operation; do not invent that ceremony for ordinary tasks.
 
+When separate green components cannot establish a genuine risky boundary, require the
+smallest composed check that observes the final observable, order or custody—not just
+helper outputs. Reuse an existing focused check that already observes the boundary;
+ordinary observed wiring needs no extra integration programme. Preserve necessary security
+and durability checks. Schedule risky proof at the earliest practical producer/consumer
+boundary under early-risk ordering; block downstream reliance until sufficient proof exists,
+not all seams before coding or a duplicate prototype.
+
 Acceptance evidence uses the smallest sufficient check at the lowest layer that can
 observe the changed seam's concrete failure. Use stable task-local references such as
 `T001/V1` in existing acceptance/observable/invariant/test fields, not a new schema. Each
@@ -136,6 +144,11 @@ explicit consumption/dependencies, all-consumer retention, production tests befo
 disproof/renewal and feasibility through both adapters/direct entry. Return producer → consumer
 → production validation → cleanup mapping, applicability and blocked reliance to existing
 producing review and coordinator handoff; syntax/order validation alone cannot prove consumption.
+
+For both adapters, carry each criterion/item ID, smallest check, accessible proof/pass
+conditions, explicit earlier producer dependencies and original permission/manual gates into
+the inline REQUIRED brief. Missing, weakened or unrun REQUIRED proof blocks downstream reliance;
+source pointers cannot substitute for the contract.
 
 Before approval, validate explicit dependencies and story continuity with
 `python3 scripts/check-task-order.py /path/to/tasks.md` from this skill directory when the

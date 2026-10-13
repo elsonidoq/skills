@@ -179,6 +179,34 @@ class EarlyRiskReductionTests(unittest.TestCase):
                 self.assertIn(clause, checker.section(texts[key], heading))
 
 
+class ComposedAcceptanceTests(unittest.TestCase):
+    """Actual carriers plus one shared local composition fixture, not live obedience."""
+    def test_changed_carriers_and_bounded_mutations(self):
+        texts = checker.load_texts()
+        errors = checker.check_contracts(texts)
+        self.assertFalse([e for e in errors if e.startswith('composed-')], errors)
+        for label, key, heading, clauses in checker.COMPOSED_CARRIERS:
+            for clause in clauses:
+                with self.subTest(diagnostic=label, removed=clause):
+                    changed = dict(texts)
+                    body = checker.section(texts[key], heading)
+                    pattern = r'\s+'.join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, 'REMOVED', body), 1)
+                    changed[key] += '\n## Footer only\n' + clause
+                    self.assertTrue(any(e.startswith(label + ':') for e in checker.check_contracts(changed)))
+
+    def test_consumes_shared_composed_reference_and_adapter_records(self):
+        fixture = load('composed_task_reference', '../skills/task-generation/scripts/test_contract.py')
+        suite = unittest.TestSuite(fixture.ComposedAcceptanceTests(name) for name in (
+            'test_isolated_green_broken_and_corrected_first_write',
+            'test_direct_and_speckit_inline_acceptance_records'))
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.failures, [])
+        self.assertEqual(result.testsRun, 2)
+
+
 class ProportionateValidationTests(unittest.TestCase):
     """Instruction-removal regressions, not behavioral/model evaluations."""
 
