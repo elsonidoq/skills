@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Pragmatic planning — TinySpec](pragmatic-planning-tinyspec.md): outcome-oriented task boundaries, proportional production proof and reusable shared evidence; source preparation only, separate tasks and combined approval pending.
 - [Bounded execution efficiency — tasks](execution-efficiency-tasks.md): two sequential coordinator-contract/regression and composed-acceptance-definition/regression units; A1–A6 REQUIRED evidence and safety gates, preparation only with combined approval pending.
 - [Bounded execution efficiency — TinySpec](execution-efficiency-tinyspec.md): preparation-only source for executable local readiness, composed acceptance, compact complete briefs, applicable proof and event-driven recovery; preserves routing and safety contracts, separate tasks and combined approval pending.
 - [Rubric-first routing — tasks](rubric-first-routing-tasks.md): three dependency-ordered shared-rubric/regression, operational-consumer and current-documentation/acceptance units; A1–A7 REQUIRED checks distinguish proposal from readiness and retain exact-profile/Standard gates, planning-only with combined approval pending.
