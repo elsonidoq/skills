@@ -291,7 +291,7 @@ class SimulatedProfileTraceTests(CarrierTests):
                 actual = self.simulated_dispatch("symbolic/luna:medium", owner=False)
                 self.assertEqual(actual["disposition"], "blocked")
                 self.assertIsNone(actual["args"])
-                self.assertIn("stronger option or stop at the owner/design gate", rubric)
+                self.assertIn("stronger option only with adequate contracts", rubric)
 
     def test_unsupported_binding_effort_and_permission_block(self):
         self.assertIn("missing permission/binding/effort/tool support blocks dispatch", TEXT)
@@ -818,21 +818,48 @@ class ComparativeRoutingTests(CarrierTests):
     """Named manual recommendations and counterexamples, not a family-ranking engine."""
     def test_comparison_carrier_and_mutations(self):
         rubric = " ".join(RUBRIC_PATH.read_text().split())
-        for clause in ("suitable smaller verified, permitted alternative", "actual shortfall or select the smaller option",
-                       "none is verified/permitted", "orchestration overhead", "stateful tooling/recovery",
-                       "strict requirement versus a default preference"):
-            self.assertIn(clause, rubric)
+        for heading, clauses in (
+            ("Provisional family and effort choices", (
+                "rubric first, capability verification second",
+                "suitable options even with zero previous launches",
+                "actual shortfall or select the smaller option",
+                "pending readiness is not inadequacy", "orchestration overhead",
+                "stateful tooling/recovery", "strict requirement versus a default preference")),
+            ("Readiness before dispatch", (
+                "authenticated availability for the exact provider/id",
+                "authoritative runtime-supported choices include the exact selected effort",
+                "current exact launch contract", "model scope/thinking ceiling",
+                "tool/extension access", "mutation permissions", "execution environment",
+                "exact owner selection", "missing/stale/opaque evidence",
+                "detached-child environment", "clamping or omitted/different effort",
+                "Reuse still-applicable proof", "final preflight before provider invocation",
+                "no previous launch is required", "not a universal fresh audit",
+                "bounded authorization or an explicit fallback choice",
+                "retain the recommendation", "never silently substitute Sol")),
+        ):
+            body = carrier(RUBRIC_PATH.read_text(), heading)
+            for clause in clauses:
+                with self.subTest(carrier=heading, guard=clause):
+                    self.assertIn(clause, body, heading + ': missing ' + clause)
+                    mutant = body.replace(clause, 'REMOVED')
+                    self.assertNotIn(clause, carrier(mutant + ' ## Footer ' + clause, heading))
+        self.assertNotIn('suitable smaller verified, permitted alternative', rubric)
+        self.assertNotIn('none is verified/permitted', rubric)
+        for old in ('suitable smaller verified, permitted alternative',
+                    'only previously launched alternatives are eligible'):
+            mutant = rubric.replace('suitable options even with zero previous launches', old)
+            self.assertNotIn('suitable options even with zero previous launches', mutant)
         self.assert_carrier_guards("Prepare Approved Execution", ("separate comparative Family and Effort rationales",))
 
     def test_named_comparative_recommendations_and_suitability_only_rejected(self):
         # Inputs and reasoned outputs are explicitly authored, not computed from a score.
         cases = (
-            ("closed_design_strong_cheap_oracle", "bounded tools; cheap rollback; both verified/permitted",
+            ("closed_design_strong_cheap_oracle", "closed design; bounded tools; strong cheap oracle; bounded coupling; cheap rollback; no approved guidance (uncertain); zero previous launches; pending readiness",
              "symbolic/luna:low", "Luna meets the closed contract; no Sol shortfall claim", "low: tightly bounded inference"),
-            ("hidden_coupling_costly_recovery", "adequate contract; weak oracle; stateful recovery; both verified/permitted",
+            ("hidden_coupling_costly_recovery", "recovery inference; stateful tools; weakest adequate weak oracle; hidden coupling; costly rollback; no approved guidance (uncertain)",
              "symbolic/sol:medium", "Luna shortfall: hidden coupling and long recovery escape cheap checks", "medium: recovery reasoning"),
-            ("alternative_unavailable", "only Sol verified/permitted; registry Luna is not callability",
-             "symbolic/sol:low", "none is verified/permitted; no invented Luna inadequacy", "low: closed inference"),
+            ("alternative_unavailable", "closed design; catalog-only Luna; readiness pending, no launch history",
+             "symbolic/luna:low", "Luna meets the closed contract; readiness does not change sufficiency", "low: closed inference"),
             ("strict_medium", "owner policy requires medium; closed contract",
              "symbolic/luna:medium", "Luna meets closed contract", "medium: strict requirement, low not permitted"),
             ("default_medium_allows_low", "medium preference permits low; closed contract",
@@ -841,25 +868,40 @@ class ComparativeRoutingTests(CarrierTests):
              "stop: effort support gate, not family inadequacy", "unsupported low blocks"),
             ("inadequate_contract", "missing consumer invariant despite available Sol", None,
              "stop: producing review/renewal, no model repairs criteria", "no effort can fix missing criteria"),
+            ("unresolved_design", "owner architecture decision remains open", None,
+             "stop: producing review/owner clarification", "no effort can settle owner direction"),
         )
         # Independent expectations for these finite authored inputs, not routing rules.
         expected = {
             "closed_design_strong_cheap_oracle": ("symbolic/luna:low", "closed contract", "low:"),
             "hidden_coupling_costly_recovery": ("symbolic/sol:medium", "Luna shortfall: hidden coupling", "medium:"),
-            "alternative_unavailable": ("symbolic/sol:low", "none is verified/permitted", "low:"),
+            "alternative_unavailable": ("symbolic/luna:low", "readiness does not change sufficiency", "low:"),
             "strict_medium": ("symbolic/luna:medium", "closed contract", "medium:"),
             "default_medium_allows_low": ("symbolic/luna:low", "closed contract", "low:"),
             "unsupported_effort": (None, "stop: effort support gate", "unsupported low blocks"),
             "inadequate_contract": (None, "stop: producing review/renewal", "no effort can fix missing criteria"),
+            "unresolved_design": (None, "stop: producing review/owner clarification", "no effort can settle owner direction"),
         }
         for name, inputs, proposal, family, effort in cases:
             with self.subTest(case=name):
                 expected_profile, family_reason, effort_reason = expected[name]
                 self.assertTrue(inputs and family and effort)
+                if name == 'closed_design_strong_cheap_oracle':
+                    for factor in ('closed design', 'bounded tools', 'strong cheap oracle',
+                                   'bounded coupling', 'cheap rollback', 'no approved guidance (uncertain)',
+                                   'zero previous launches', 'pending readiness'):
+                        self.assertIn(factor, inputs, name + ': missing factor/state ' + factor)
+                if name == 'hidden_coupling_costly_recovery':
+                    for factor in ('recovery inference', 'stateful tools', 'weakest adequate weak oracle',
+                                   'hidden coupling', 'costly rollback', 'no approved guidance (uncertain)'):
+                        self.assertIn(factor, inputs, name + ': missing factor ' + factor)
                 self.assertNotEqual(family, effort)
                 self.assertEqual(proposal, expected_profile, name + ": recommendation violates case constraints")
                 self.assertIn(family_reason, family, name + ": missing case-specific family reasoning")
                 self.assertTrue(effort.startswith(effort_reason), name + ": effort reasoning violates case constraints")
+        old_fallback = dict(case='alternative_unavailable', proposal='symbolic/sol:low')
+        self.assertNotEqual(old_fallback['proposal'], expected[old_fallback['case']][0],
+                            'automatic unavailable-to-Sol fallback must fail')
         invalid_medium = {"case": "strict_medium", "proposal": "symbolic/luna:low",
                           "effort": "medium: strict requirement, low not permitted"}
         self.assertFalse(invalid_medium["proposal"] == expected[invalid_medium["case"]][0],
@@ -876,7 +918,7 @@ class ComparativeRoutingTests(CarrierTests):
         self.assertTrue(complete(rationale), "recovery comparison must explain the named alternative's shortfall")
         self.assertFalse(complete(dict(rationale, family="Sol is suitable", comparison="")))
         self.assertFalse(complete(dict(rationale, comparison="Sol is suitable")),
-                         "suitability alone does not explain the verified alternative")
+                         "suitability alone does not explain the suitable alternative")
         override = dict(rationale, selected="symbolic/luna:medium", observed="unknown")
         self.assertEqual(override["proposal"], "symbolic/sol:medium")
         self.assertEqual(SimulatedProfileTraceTests.simulated_dispatch(override["selected"])["args"]["model"], override["selected"])
@@ -884,6 +926,41 @@ class ComparativeRoutingTests(CarrierTests):
         stage = {"Standard plan_create": "symbolic/sol:medium", "implementation": cases[0][2]}
         self.assertNotEqual(stage["Standard plan_create"], stage["implementation"])
         self.assertIn("This exception does not assign implementation-task profiles", (Path(__file__).parents[2] / "planner/SKILL.md").read_text())
+
+    def test_pending_gap_and_ready_without_history(self):
+        # Finite symbolic preparations; these booleans do not discover runtime evidence.
+        proof = dict(binding=True, authenticated=True, effort=True, contract=True,
+                     scope_ceiling=True, tools=True, permissions=True, environment=True,
+                     owner=True)
+        ready = dict(proposal='symbolic/luna:low', readiness=proof, selected='symbolic/luna:low',
+                     historical_launch=None, observed='unknown', outcome='dispatch preparation')
+        self.assertTrue(all(ready['readiness'].values()))
+        self.assertIsNone(ready['historical_launch'])
+        captured = SimulatedProfileTraceTests.simulated_dispatch(ready['selected'])
+        self.assertEqual(captured['args']['model'], ready['selected'])
+        self.assertEqual(ready['observed'], 'unknown')
+        for gap in proof:
+            with self.subTest(case='missing_' + gap):
+                pending = dict(ready, readiness=dict(proof, **{gap: False}), outcome='blocked')
+                self.assertFalse(all(pending['readiness'].values()), 'missing_' + gap + ': dispatch blocked')
+                self.assertEqual(pending['proposal'], 'symbolic/luna:low')
+        catalog = dict(ready, readiness=dict.fromkeys(proof, False), selected=None,
+                       outcome='blocked: bounded authorization or explicit fallback choice')
+        self.assertEqual([k for k, v in catalog['readiness'].items() if not v], list(proof))
+        self.assertEqual(catalog['proposal'], 'symbolic/luna:low')
+        self.assertIsNone(catalog['selected'])
+        for name, gap in (
+            ('credential_presence_only', 'authenticated'), ('thinking_flag_only', 'effort'),
+            ('suffix_only', 'effort'), ('permissive_missing_metadata', 'effort'),
+            ('stale_availability', 'authenticated'), ('opaque_availability', 'authenticated'),
+            ('detached_environment_mismatch', 'environment'), ('unsupported_effort', 'effort'),
+            ('clamped_effort', 'effort'), ('omitted_effort', 'effort'), ('different_effort', 'effort'),
+            ('tool_denied', 'tools'), ('permission_denied', 'permissions'),
+            ('missing_owner_selection', 'owner'), ('settings_default_mismatch', 'contract'),
+        ):
+            with self.subTest(case=name):
+                negative = dict(proof, **{gap: False})
+                self.assertFalse(all(negative.values()), name + ': exact dispatch must stop')
 
     def test_batch_tradeoff_examples(self):
         expected = {"docs_plus_final_recovery": "split consecutive tasks",

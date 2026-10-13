@@ -36,12 +36,15 @@ Raw attempt outcomes are not approved guidance and never automatically mutate it
 
 ## Provisional family and effort choices
 
-Family and effort are independent dimensions: record a **Family rationale** for the selected
-capability and a separate **Effort rationale** for the remaining reasoning budget. Compare the
-recommendation with a suitable smaller verified, permitted alternative when one exists:
-explain the actual shortfall or select the smaller option. Suitability alone is not a comparison.
-If none is verified/permitted, say so without inventing inadequacy. Distinguish avoidable
-orchestration overhead from inherent reasoning; real stateful tooling/recovery still carries risk.
+Apply rubric first, capability verification second. Family and effort are independent dimensions:
+record a comparative **Family rationale** and a separate **Effort rationale** for remaining inference.
+Compare suitable options even with zero previous launches: explain the actual shortfall or select the smaller option.
+Prior launch success establishes availability, not superiority; pending readiness is not inadequacy.
+Closed design, bounded tools, cheap reversible recovery and strong cheap oracles can positively
+justify a smaller candidate. A stronger family must explain that candidate's concrete shortfall
+under the weakest adequate oracle; suitability alone is not a comparison. Effort needs its own
+sufficiency/extra-inference rationale, not a family-derived label. Model variety is not itself a goal.
+Distinguish avoidable orchestration overhead from inherent reasoning; real stateful tooling/recovery still carries risk.
 Effort respects a strict requirement versus a default preference: mandatory medium excludes low;
 a default permitting low does not. Owner overrides retain the original proposal and reasons.
 Neither dimension implies the other. These symbolic options are not provider bindings or
@@ -52,16 +55,17 @@ guaranteed supported pairs; there is no universal ladder.
 | Luna/medium | Shallow, closed-design work with strong contracts, bounded tools and cheap recovery can justify Luna. | Medium is a provisional budget for the remaining bounded reasoning, not a family-derived label. |
 | Luna/max | A bounded multi-file batch with moderate residual reasoning and strong oracles may justify a Luna experiment. | Max must have an explicit extra-reasoning rationale and remain recorded as max, never renamed medium. |
 | Sol/low or Sol/medium | Stronger reasoning or deeper tool use may justify Sol, subject to the actual task blind spots and evidence. | Low can suffice when residual inference is tightly bounded; medium requires its own rationale for greater reasoning/tool demands. |
-| Astra or Terra | Other stronger agentic options only when permitted, supported and justified for this batch. | Select supported effort independently; neither family implies a fixed effort or mandatory step in a ranking. |
+| Astra or Terra | Other stronger agentic options only when justified for this batch; readiness is a separate dispatch gate. | Select supported effort independently; neither family implies a fixed effort or mandatory step in a ranking. |
 
 Moderate complexity with closed design and strong cheap reliable oracles can justify a smaller
-supported symbolic proposal, with separate family/effort rationales. Weak oracle/hidden coupling
+symbolic proposal even while readiness is pending, with separate family/effort rationales. Weak oracle/hidden coupling
 favors a justified stronger option only while contracts remain adequate; inadequate contracts
 stop at producing review/renewal. Evaluate the weakest condition, not an average or score.
 
 Deep tool use, weak oracles, unresolved architecture, high failure cost and relevant
-repeated negative guidance defeat optimistic Luna routing. Choose a justified supported
-stronger option or stop at the owner/design gate; more effort cannot resolve missing
+repeated negative guidance defeat optimistic Luna routing. Propose a justified
+stronger option only with adequate contracts; unresolved design stops at producing review/owner
+clarification, never escalation. Otherwise stop at the owner/design gate; more effort cannot resolve missing
 requirements, permissions or an inadequate verification contract. Do not bypass those gates
 by substituting a model. Split only for material profile/context/permission/prerequisite
 incompatibility, preserving order and producer verification before consumer work.
@@ -78,14 +82,43 @@ Astra/Terra signals do not create a universal ranking. Do not average unlike row
 Pi success rates: snapshots and some verification are unknown; compilation time is not
 an evaluation date. Benchmark absence does not prove a supported pair ineligible.
 
+## Readiness before dispatch
+
+Keep proposal, readiness/gaps, exact owner selection, historical launch and dispatch outcome
+separate in the existing brief/table; no new score or ledger. A catalog-only candidate can remain
+recommended while pending readiness. Dispatch needs the conjunction of:
+
+- Applicable authoritative evidence of authenticated availability for the exact provider/id in
+  the intended context. A catalog entry or credential presence alone is insufficient;
+  missing/stale/opaque evidence is a precise gap, never a permissive default.
+- Applicable authoritative runtime-supported choices include the exact selected effort.
+  Thinking flags, suffix syntax and permissive missing-metadata defaults alone are insufficient.
+  Unsupported effort, clamping or omitted/different effort blocks invocation. Reuse still-applicable proof;
+  inspect provider mappings/source only for concrete uncertainty, contradiction, clamping risk or
+  absent necessary support evidence, not a universal fresh audit.
+- A current exact launch contract, permitted model scope/thinking ceiling, tool/extension access,
+  mutation permissions, execution environment and exact owner selection agree with the profile.
+  Parent availability does not prove a different detached-child environment ready. Unchanged
+  applicable context/contract proof is reusable; resolved launch preparation may be the
+  final preflight before provider invocation and no previous launch is required.
+
+Use safe permitted passive evidence; these requirements do not assume a callable discovery API.
+If verification is insufficient, surface the gap: stop affected dispatch, retain the recommendation
+and ask for bounded authorization or an explicit fallback choice; never silently substitute Sol.
+Inaccessible passive evidence asks, never speculative auth/configuration commands. Selection alone
+never authorizes auth refresh, live discovery, provider probes or profile refresh. An explicit fallback
+requires independent justification, its own readiness checks and exact owner selection.
+Runtime-declared readiness is not live acceptance, quota/network health or model obedience.
+
 ## Selection and conditional repair gates
 
 Record factors, applicable evidence or none, proposed versus owner-selected exact binding
 and effort, independent rationales and a conditional repair option in the existing brief/tracker.
-Verify permissions, tool access, callable binding and supported effort through the installed
-runtime at assignment and dispatch. Catalog entries, thinking flags and suffix syntax alone
-are not support or authenticated-launch evidence. Requested/selected is not observed;
-unobservable actual model or effort stays unknown.
+Verify permissions, tool access, callable binding and supported effort using the readiness conjunction
+at assignment and dispatch. Copy the exact selected `model: "provider/id:effort"` unchanged into
+actual arguments; settings/agent-default mismatch stops launch. Requested/selected is not observed;
+unobservable actual model or effort stays unknown. An owner approval while readiness is pending
+approves selection only, not dispatch or probes.
 
 If verification fails, inspect the child run, invocation, partial commits and check evidence,
 then diagnose capability versus planning/spec, contract, batching, environment/tooling,

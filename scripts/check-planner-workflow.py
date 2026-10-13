@@ -424,8 +424,8 @@ def check_contracts(texts):
     require("coordination-intake", section(c, "## Load and Verify"),
             "Missing coordination store or STATE is nonblocking", "No automatic STATE creation, editing or removal")
     require("routing-comparison", section(texts.get("routing", ""), "## Provisional family and effort choices"),
-            "suitable smaller verified, permitted alternative", "actual shortfall or select the smaller option",
-            "none is verified/permitted", "orchestration overhead", "stateful tooling/recovery",
+            "suitable options even with zero previous launches", "actual shortfall or select the smaller option",
+            "pending readiness is not inadequacy", "orchestration overhead", "stateful tooling/recovery",
             "strict requirement versus a default preference")
     require("routing-tradeoff", section(c, "## Prepare Approved Execution"),
             "separate comparative Family and Effort rationales", "material profile, context, permission, owner-gate")
