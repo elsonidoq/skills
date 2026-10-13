@@ -51,7 +51,8 @@ legacy port retain their own documentation and memory boundaries.
 ## Implementation Plans
 
 - [Plans directory index](plans/index.md): Direct plan records and the nested review index.
-- [Pragmatic planning — TinySpec](plans/pragmatic-planning-tinyspec.md): outcome-oriented decomposition and proportional proof with complete acceptance preserved; separate tasks and combined approval pending.
+- [Pragmatic planning — TinySpec](plans/pragmatic-planning-tinyspec.md): outcome-oriented decomposition and proportional proof with complete acceptance preserved; combined source/task approval pending.
+- [Pragmatic planning — tasks](plans/pragmatic-planning-tasks.md): one coherent contract/regression/operative-doc delivery; A1–A6 REQUIRED evidence and gates preserved, preparation only with no implementation authority.
 - [Planner delegation and complete approval briefs — TinySpec](plans/planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs; current-content owner approval and execution evidence in [run SUMMARY](../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md), independent final review accepted within documented offline limits.
 - [Planner delegation and complete approval briefs — tasks](plans/planner-delegation-approval-tasks.md): three approved dependency-ordered contract, regression and documentation units; checkpoints and REQUIRED dispositions in the linked source's run evidence, not historical pending labels.
 - [Mandatory Task Commits — TinySpec](plans/mandatory-task-commits-tinyspec.md): Authoritative pragmatic checkpoint scope and A1–A7 acceptance; no runtime extension gate.
