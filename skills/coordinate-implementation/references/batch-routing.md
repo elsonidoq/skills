@@ -39,6 +39,8 @@ Raw attempt outcomes are not approved guidance and never automatically mutate it
 Apply rubric first, capability verification second. Family and effort are independent dimensions:
 record a comparative **Family rationale** and a separate **Effort rationale** for remaining inference.
 Compare suitable options even with zero previous launches: explain the actual shortfall or select the smaller option.
+Build the suitability shortlist across the rubric's family options, not a habitual two-family subset.
+Briefly explain omissions of other plausible families. Do not enumerate every model variant or force diversity.
 Prior launch success establishes availability, not superiority; pending readiness is not inadequacy.
 Closed design, bounded tools, cheap reversible recovery and strong cheap oracles can positively
 justify a smaller candidate. A stronger family must explain that candidate's concrete shortfall

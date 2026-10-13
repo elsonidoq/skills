@@ -88,6 +88,34 @@ class IntakeContractTests(unittest.TestCase):
                     errors = contract_errors(altered + " ## Footer " + clause)
                     self.assertTrue(any(e.startswith(heading + ":") for e in errors), errors)
 
+    def test_family_shortlist_accounts_for_plausible_omissions(self):
+        # Static carrier sensitivity and authored shortlist cases, not live routing proof.
+        rubric = (Path(__file__).parents[1] / "references" / "batch-routing.md").read_text()
+        heading = "Provisional family and effort choices"
+        clauses = (
+            "Build the suitability shortlist across the rubric's family options, not a habitual two-family subset",
+            "Briefly explain omissions of other plausible families",
+            "Do not enumerate every model variant or force diversity",
+        )
+        body = section(rubric, heading)
+        for clause in clauses:
+            with self.subTest(clause=clause):
+                self.assertIn(clause, body)
+                altered = " ".join(rubric.split()).replace(clause, "REMOVED", 1)
+                self.assertNotIn(clause, section(altered + " ## Footer " + clause, heading))
+        # A plausible third family needs consideration or a reason, not a launch.
+        plausible = {"Luna", "Sol", "Terra"}
+        for considered, omitted_reasons, complete in (
+            ({"Luna", "Sol"}, {}, False),
+            ({"Luna", "Sol", "Terra"}, {}, True),
+            ({"Luna", "Sol"}, {"Terra": "no additional task-fit benefit identified"}, True),
+            ({"Luna", "Sol"}, {"Terra": ""}, False),
+        ):
+            accounted = considered | {family for family, reason in omitted_reasons.items() if reason.strip()}
+            self.assertEqual(plausible <= accounted, complete)
+        # One selected family still suffices; variants outside the plausible set add no quota.
+        self.assertIn("Model variety is not itself a goal", body)
+
     def test_administrative_loops_and_trust_only_acceptance_fail(self):
         for unsafe in ("Always replan approved tasks", "Repeat unchanged preflight before every task",
                        "Accept the worker report without inspecting evidence"):
