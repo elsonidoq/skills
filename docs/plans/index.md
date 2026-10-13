@@ -4,8 +4,8 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
-- [Pragmatic planning — TinySpec](pragmatic-planning-tinyspec.md): outcome-oriented task boundaries, proportional production proof and reusable shared evidence; preparation only, combined source/task approval pending.
-- [Pragmatic planning — tasks](pragmatic-planning-tasks.md): one coherent canonical-contract, contradiction/regression and operative-doc outcome with A1–A6 REQUIRED mappings; preparation only, no implementation authority.
+- [Pragmatic planning — TinySpec](pragmatic-planning-tinyspec.md): outcome-oriented boundaries, proportional proof and tagged informational prototypes; current-content approval in [review](reviews/pragmatic-planning-review.md).
+- [Pragmatic planning — tasks](pragmatic-planning-tasks.md): one coherent canonical-contract/regression/operative-doc outcome with A1–A6 REQUIRED mappings; [approved scope](reviews/pragmatic-planning-review.md), execution-profile selection and independent final review still required.
 - [Bounded execution efficiency — tasks](execution-efficiency-tasks.md): two sequential coordinator-contract/regression and composed-acceptance-definition/regression units; A1–A6 REQUIRED evidence and safety gates, preparation only with combined approval pending.
 - [Bounded execution efficiency — TinySpec](execution-efficiency-tinyspec.md): preparation-only source for executable local readiness, composed acceptance, compact complete briefs, applicable proof and event-driven recovery; preserves routing and safety contracts, separate tasks and combined approval pending.
 - [Rubric-first routing — tasks](rubric-first-routing-tasks.md): three dependency-ordered shared-rubric/regression, operational-consumer and current-documentation/acceptance units; A1–A7 REQUIRED checks distinguish proposal from readiness and retain exact-profile/Standard gates, planning-only with combined approval pending.
