@@ -3,11 +3,13 @@
 ## Status, provenance and outcome
 
 Owner-selected TinySpec and Sol/medium source producer; preparation and focused source
-commit only. Implementation is NOT authorized. Separate tasks, planner review and
-current-content combined owner approval remain required. This is authoritative what/how
-for that later task production, not an implementation checklist or readiness declaration.
-Production baseline: `592cd051080e2e0a9f0045561427dde09420deea` on `main`.
-Only this source and its [discovery entry](index.md) are owned by this production.
+commit only. Implementation is NOT authorized; combined approval was withheld pending
+focused source/task revisions. Preserve the separately produced two-task structure;
+planner inspection precedes task-producer correction and current-content combined approval.
+This is authoritative what/how, not an implementation checklist or readiness declaration.
+Initial production baseline: `592cd051080e2e0a9f0045561427dde09420deea` on `main`;
+source-correction baseline: `fdf94c2fccb1c8c19520770c5371dd82519a508d`.
+Only this source is owned by the correction; its [discovery entry](index.md) is unchanged.
 
 The conversation supplies the request: a reported multi-hour run with many calls,
 retries/compactions and setup, composed-boundary, timeout and obsolete-selector failures.
@@ -90,14 +92,18 @@ model/effort or runtime-obedience claim is inferred from the owner's Sol/medium 
 
 Use short conditional additions at the canonical seams and targeted fixtures/mutations
 in existing harnesses. Source pointers reduce background, not applicable contractual
-content. No migration is needed; corrections are separately verified focused changes,
-not rollback/discard of valid checkpoints. Material contract/scope changes renew affected
-producing review and approval; missing required authority/evidence blocks reliance.
+content. No migration is needed. Within-approved-scope corrections under existing repair
+authority are verified focused repairs, not automatic replanning or rollback/discard of
+valid checkpoints; file ownership still applies. Genuinely new scope or acceptance changes
+renew affected producing review and approval. Missing authority/evidence blocks reliance.
 
-**A1 — Executable local readiness.** Before tooling-dependent dispatch, establish or reuse
-the smallest applicable actual proof that the assigned workspace can execute its first
-required local check. Authorization is not availability; a dependency directory is not
-an installed usable dependency; a client is not a runnable required server; reusable
+**A1 — Executable local readiness.** Before dependent product implementation dispatch,
+establish or reuse the smallest applicable actual proof that the assigned workspace can
+execute its first required local check. An authorized bounded setup/readiness assignment
+may establish this proof; the parent need not personally provision every environment.
+Dependent product implementation waits for sufficient proof. One applicable first-check
+result may cover multiple tasks without per-task repeats. Authorization is not availability;
+a dependency directory is not an installed usable dependency; a client is not a runnable required server; reusable
 packages do not establish writable-cache isolation. Inspect the actual loader/tool write
 location and current applicable guard branch, not a historical adjacent guard. Proof is
 reusable only for applicable workspace, versions, write conditions and check. Already-
@@ -109,63 +115,85 @@ No mandatory install, provider probe or exhaustive environment audit is implied.
 Observable: finite positive/reuse and negative cases distinguish authorized-but-unusable,
 directory-only, client-only, cache-write mismatch, parent-versus-assigned workspace and
 historical-versus-current guard. Applicable execution evidence records check/outcome and
-context; a declaration of readiness alone cannot release tooling-dependent work. For this
-instruction change these are offline cases, not execution against an external project.
+context; a declaration alone cannot release dependent product implementation. A minimal
+setup-to-implementation scenario distinguishes permitted readiness work from blocked
+product work and demonstrates shared applicable proof. These are offline cases, not
+execution against an external project.
 
 **A2 — Smallest composed acceptance where needed.** Planner and both task adapters must
 identify a genuine risky boundary that separate green components cannot establish, and
-require the smallest composed check that observes it. Relevant examples are serialization
-through storage limits, primary input/error custody through cleanup, sanitization before
-the first durable write, and transport arguments through wrappers. Assert the final
-observable/order/custody, not only each helper's green test. If a focused existing seam
-check already establishes the contract, reuse it; no Cartesian matrix, duplicate proof
-or blanket integration programme. Preserve necessary security/durability checks.
+require the smallest composed check that observes it. Illustrative examples are
+serialization through storage limits, primary input/error custody through cleanup,
+sanitization before the first durable write, and transport arguments through wrappers;
+these are not four mandated toy systems or a future-project matrix. Assert the final
+observable/order/custody, not only each helper's green test. Apply the existing
+[early-risk ordering](../../skills/planner/references/early-risk-reduction.md#produce-a-minimal-executable-reference)
+at the earliest practical risky producer/consumer boundary, blocking downstream reliance
+until proof exists. This is not an all-seams-before-coding rule or a duplicate prototype.
+Reuse a focused existing check that already establishes the contract; preserve necessary
+security/durability checks without a Cartesian matrix or blanket integration programme.
 
-Observable: representative offline fixtures make isolated components green while the
-composed contract fails; a corrected composition passes. A negative control keeps an
-ordinary already-observed wiring seam bounded. Each required item carries criterion,
-smallest check, expected accessible proof, dependencies and permission/manual gates
-through direct and SpecKit adapters, with no executor-defined weaker acceptance.
+Observable: the smallest representative offline fixture set covers distinct decision rules,
+combining cases where meaningful: isolated components can be green while composition fails,
+and corrected composition passes. A negative control keeps already-observed wiring bounded.
+Both adapters position the risky proof at the earliest practical boundary with blocked
+reliance, carrying criterion, smallest check, expected proof, dependencies and gates;
+no executor-defined weaker acceptance.
 
-**A3 — Compact complete briefs and returns.** Keep briefs source-bound, not transcript-bound,
-while retaining the WHOLE applicable REQUIRED union, constraints, scope and gates before
-coding. Safely batch independent deterministic inspections/checks with attributable
-failures and preserved dependency/permission boundaries; implementation writers/batches
-remain sequential. Return concise item-mapped results with accessible command/output or
-artifact proof and focused checkpoints. A shared check runs once with every item mapping.
+**A3 — Compact complete briefs and returns.** Use one canonical contract reference and keep
+briefs source-bound, not transcript-bound. Inline the WHOLE APPLICABLE REQUIRED content
+before coding, including complete criteria, checks, expected proof/pass conditions and
+gates, not abbreviated criteria or pointers in their place. Retain scope and constraints;
+avoid repeated contract reconstruction or rediscovery between healthy tasks. Safely batch
+independent deterministic inspections/checks with attributable failures and preserved
+dependency/permission boundaries; implementation writers/batches remain sequential.
+Return changed outcomes, blockers and accessible proof, plus still-REQUIRED ordered
+baseline/result SHAs and every item disposition. Record a shared command result once,
+mapped to all covered items, rather than duplicating its output.
 
-Observable: existing multi-item shared-proof fixture remains accepted; removing an item,
-gate or accessible output blocks acceptance/dependence. Bounded batching cases distinguish
-independent read-only checks from dependent producer/consumer checks and unsafe writes.
-No quota, writer cap, transcript forwarding or profile change is introduced.
+Observable: inspect a compact brief/return for the single canonical reference, full
+applicable inline content, one shared result and all item/checkpoint mappings. Existing
+shared-proof fixtures remain accepted; missing criteria, gates or accessible proof block
+reliance. Minimal cases distinguish safe independent checks from dependent checks and
+unsafe writes. No quota, writer cap, transcript forwarding or profile change is introduced.
 
 **A4 — Applicable current proof, not generic green.** Choose affected checks from the changed
 contract and current test collection; verify selectors actually reach current guards rather
-than retired adjacent contracts. Attribute an inherited failure only with an applicable
-baseline: same selector, contract, tool/environment and unchanged relevant bytes. Run
-checks on final bytes; subsequent edits invalidate only affected proof. Reuse previous
-proof only after confirming scope, relevant bytes and environment. Rerun invalidated or
-contradicted items, not all unchanged checks. A skip or old green is not new proof;
-missing REQUIRED evidence blocks acceptance and dependent release.
+than retired adjacent contracts. Distinguish proof reuse from inherited-failure comparison.
+Reuse without rerunning requires unchanged pertinent bytes and applicable scope/environment.
+Comparison may involve changed bytes: identify both revisions and relevant differences,
+use equivalent selector, tool/environment and failure oracle, and observe the same failing
+behavior before attributing it as inherited. Matching failure text alone is insufficient;
+byte identity is not an automatic comparison prerequisite. Run checks on final bytes;
+subsequent edits invalidate only affected proof. Rerun invalidated or contradicted items,
+not all unchanged checks. A skip or old green is not new proof; missing REQUIRED evidence
+blocks acceptance and dependent release.
 
-Observable: fixtures reject obsolete/empty selection, skip-as-pass, post-check affected
-edits and mismatched baseline attribution; accept unchanged applicable proof and retain
-unaffected proof after a bounded edit. Reports distinguish proven defect from
-insufficient evidence without relabeling either as success.
+Observable: minimal fixtures reject obsolete/empty selection, skip-as-pass, affected edits
+as reusable proof and mismatched baseline attribution. They permit comparison with identified
+changed bytes and equivalent observed failure, but reject matching text without an equivalent
+oracle. Unchanged applicable proof and unaffected proof remain reusable. Reports distinguish
+proven defect from insufficient evidence without relabeling either as success.
 
 **A5 — Delivery-risk setup and event-driven recovery.** Separate materially delivery-threatening
 unresolved setup from a large implementation assignment so it can be diagnosed without
-burying the blocker in the whole batch. Ordinary bounded ready setup needs no ceremonial
-split. On an observed stall/failure inspect the actual invocation and available checkpoint/
-proof now; do not wait for the full timeout just because budget remains. Narrow diagnosed
-missing work and preserve verified checkpoints and applicable partial proof. Running
-children require inspect/wait; unknown status/cause blocks replacement or blind retry.
-Resume suitable retained context only with supported capability and existing authority.
+burying the blocker in the whole batch; authorized setup/readiness work establishes A1
+proof before dependent product work. Ordinary bounded ready setup needs no ceremonial split.
+Concrete events include a worker-reported setup blocker, failed first check, runtime
+attention/failure notification, or available progress event demonstrating blocked work.
+On such an observed stall/failure inspect the actual invocation and available checkpoint/
+proof now; do not wait for a full timeout just because budget remains. Silence alone is
+not an observable stall. Without supported signals, early detection is not promised;
+do not add polling, monitoring loops or thresholds. Narrow diagnosed missing work and
+preserve verified checkpoints and applicable partial proof. Running children require
+inspect/wait; unknown status/cause blocks replacement or blind retry. Resume suitable
+retained context only with supported capability and existing authority.
 
-Observable: offline event traces show inspection before the remaining deadline, exact
-missing-work handoff with preserved SHA/item proof, and no duplicate dispatch. Controls
-reject unknown-cause retry, discard of valid work and routine polling/threshold protocols;
-healthy sequential internal tasks still continue without supervisor round trips.
+Observable: a minimal event trace shows available blocker/failure evidence triggering
+inspection without waiting for the full timeout, a narrowed handoff retaining SHA/item
+proof, and no duplicate dispatch. A silence/no-signal control makes no early-detection
+claim. Preserve unknown-cause retry and valid-work safeguards; healthy sequential tasks
+continue without supervisor round trips.
 
 **A6 — Routing and safety preservation.** Keep the existing six-factor rubric/profile rules
 unchanged absent a demonstrated concrete gap returned through scope review. Preserve
@@ -179,13 +207,21 @@ regressions remain green after authorized implementation; changed links resolve 
 
 ## Verification, proof lifetime and handoff limits
 
-Early risk reduction uses existing mutation/fixture checks, not a duplicate prototype:
-the hard seam is distinguishing permitted transitions and sufficient evidence in prose;
-no new library/runtime core warrants a disposable implementation experiment. Before
-instruction changes, demonstrate meaningful failing contract/mutation tests for A1–A5
-in existing harnesses. Test the distinctions and negative controls, not keywords alone;
-retain current safety tests. The present dirty tests supply baseline failures, but later
-authorized work must close symbolic coverage gaps rather than merely paste asserted phrases.
+Acceptance separates three claims: existing policy is preserved (relevant safety checks);
+the actual changed instruction clearly expresses the missing decision rule (review the
+changed spans); minimal offline scenarios demonstrate that the distinction is testable
+(representative positive/negative observations). None establishes an enforcement fix,
+live obedience or timing improvement. The critique did not inspect repository/harnesses
+or reconstruct runtime; its acceptance corrections are adopted on their merits, not as
+new historical timing evidence.
+
+Early risk reduction uses existing focused contract/mutation and fixture checks, not a
+duplicate prototype: no new library/runtime core warrants a disposable experiment. Before
+instruction changes demonstrate meaningful failing checks for A1–A5 at the affected seams.
+Scope mutation sensitivity proportionately; no exhaustive carrier-mutation programme or
+general simulator. Retain safety tests. The present dirty tests supply baseline failures,
+not sufficient acceptance by phrase insertion; pair focused instruction review with the
+smallest realistic scenario set covering the distinct rules.
 
 Proof producer → instruction consumers → final production validation → cleanup: failing
 fixtures precede changed coordinator/planner/task-generation text; each affected consumer
@@ -204,9 +240,9 @@ workflow checks when affected. Check changed links and `git diff --check` on fin
 Task production must map A1–A6 to stable REQUIRED items, outputs and gates, selecting the
 smallest checks sufficient for each distinction; optional broader checks remain separate.
 
-No material design question is deferred. Source production has no implementation authority,
-tasks, combined approval or final implementation review. Runtime/enforcement limitations
-remain: instruction-managed checks cannot guarantee live agent compliance, child setup,
+No material design question is deferred. This source correction does not edit the separate
+tasks or grant implementation authority, combined approval or final implementation acceptance.
+Runtime/enforcement limitations remain: instruction-managed checks cannot guarantee live agent compliance, child setup,
 provider availability or measured improvement. Live evaluation requires separate authority
 and usable capabilities; it is not scheduled as a mandatory probe by this source. The
 owner-owned dirty batching test must remain untouched/uncommitted during source production.
