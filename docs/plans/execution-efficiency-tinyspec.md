@@ -106,8 +106,10 @@ result may cover multiple tasks without per-task repeats. Authorization is not a
 a dependency directory is not an installed usable dependency; a client is not a runnable required server; reusable
 packages do not establish writable-cache isolation. Inspect the actual loader/tool write
 location and current applicable guard branch, not a historical adjacent guard. Proof is
-reusable only for applicable workspace, versions, write conditions and check. Already-
-authorized bounded local setup needs no redundant permission request; destructive,
+reusable only for applicable workspace, versions, write conditions and check. Readiness
+covers only capabilities exercised or otherwise established; newly encountered dependencies
+need bounded readiness checks, not another full preflight or assumed first-check coverage.
+Already-authorized bounded local setup needs no redundant permission request; destructive,
 ownership, network and external-operation boundaries still apply. Missing permission
 stops the affected setup; missing capability stops affected dispatch with the exact gap.
 No mandatory install, provider probe or exhaustive environment audit is implied.
@@ -164,7 +166,9 @@ Reuse without rerunning requires unchanged pertinent bytes and applicable scope/
 Comparison may involve changed bytes: identify both revisions and relevant differences,
 use equivalent selector, tool/environment and failure oracle, and observe the same failing
 behavior before attributing it as inherited. Matching failure text alone is insufficient;
-byte identity is not an automatic comparison prerequisite. Run checks on final bytes;
+byte identity is not an automatic comparison prerequisite. Inherited failure may coexist
+with a new regression or increased severity: compare relevant behavior/oracle and retain
+both; baseline failure alone cannot dismiss changed behavior. Run checks on final bytes;
 subsequent edits invalidate only affected proof. Rerun invalidated or contradicted items,
 not all unchanged checks. A skip or old green is not new proof; missing REQUIRED evidence
 blocks acceptance and dependent release.
