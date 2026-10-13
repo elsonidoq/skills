@@ -94,6 +94,24 @@ unchanged into actual arguments (pi-subagents `model: "provider/id:effort"`); no
 settings/agent override. Selected versus observed stays separate; unobservable actual
 binding/effort is unknown. Unsupported or mismatched arguments block launch.
 
+Before tooling-dependent dispatch, establish the smallest applicable executable proof
+that the first required local check runs in the assigned workspace. An authorized bounded
+setup/readiness assignment may establish it; dependent product implementation waits for
+sufficient proof. Record check/outcome, workspace, tool/dependency versions and write
+conditions; one applicable result can serve multiple tasks. It covers only capabilities
+exercised or otherwise established; new dependencies need bounded readiness checks,
+not assumed coverage or another full preflight.
+Authorization is not availability; an existing dependency directory is not a usable installation,
+and client binaries do not prove a required server can run. Reusable packages do not
+establish writable-cache isolation: inspect where the actual loader/tool writes.
+Read the current guard branch, not historical adjacent restrictions. Reuse readiness proof
+only while its workspace, tool/dependency versions and write conditions still apply.
+Already-authorized bounded local setup may proceed without another approval request;
+missing permission stops setup, missing capability stops dependent dispatch with the exact gap.
+Separate unresolved setup from a large implementation assignment when it materially threatens
+delivery; ordinary ready setup stays internal. This grants no destructive, ownership,
+network or external-operation permission.
+
 ## Delegate
 
 Normally launch one direct asynchronous worker for a batch, including internal sequential
@@ -105,13 +123,28 @@ context; otherwise narrow a fresh brief. Unknown context capacity is not billed-
 capacity. Rotation is not retry authority. On timeout inspect the checkpoint and failed
 invocation, preserve completed proof and narrow only the diagnosed remaining work.
 
+On an observed stall or failure, inspect the actual invocation and available checkpoint/proof now;
+do not wait for a full timeout just because budget remains. Supported signals include a
+worker setup blocker, failed first check, runtime attention/failure or available progress
+showing blocked work. Narrow the diagnosed missing work while preserving verified checkpoints
+and applicable partial evidence, using the recovery safeguards above. Silence alone is not
+an observable stall. Without supported signals, early detection is not promised.
+This is event-driven recovery, not routine polling or an arbitrary stop threshold.
+
+Keep briefs compact and source-bound, not transcript-bound: use one canonical contract reference.
+Source pointers do not replace the whole applicable REQUIRED contract.
 The self-contained worker brief supplies workspace, baseline, exact selected profile,
 source/tasks/approval paths, ordered task IDs, allowed paths and mutation tools, shared
 constraints, dependencies, exclusions and permission/manual gates. Include the whole
 unchanged REQUIRED union before coding: each ID's criterion, smallest check, expected
 proof and pass condition; optional checks stay separate. Missing contracts return to the
 producer, never retrofit weaker acceptance. Require per-task verified owned-path commits
-and healthy internal continuation without routine coordinator approval.
+and healthy internal continuation without routine coordinator approval. No healthy-task
+contract reconstruction or rediscovery is needed. Batch independent deterministic inspections/checks
+when safe; preserve dependency order, attributable failures and permission boundaries.
+This does not parallelize implementation writers. Return concise item-mapped results with
+accessible proof, changed outcomes/blockers, every REQUIRED disposition and ordered baseline/result SHAs.
+Record each shared command result once with all covered item mappings.
 
 Once required preparation is satisfied, dispatch. Reopen only affected decisions/checks
 on concrete contradiction, failed prerequisite, material scope change or ownership,
@@ -125,6 +158,21 @@ inspect the actual diff and run each task's REQUIRED checks at the smallest suff
 layer. Required unavailable/unrun checks or unmet manual/permission gates block reliance;
 optional checks cannot compensate. Representative-sample manual STOP, when required,
 needs the inspectable sample and explicit owner approval, never self-review.
+
+Choose affected checks from the changed contract and current test collection;
+verify selectors reach current guards rather than retired adjacent contracts, and that
+selection is nonempty. Run checks on final bytes; later edits invalidate only affected proof.
+A skipped test or old green report is not new proof. Reuse prior evidence only after confirming
+scope, relevant bytes and environment remain applicable: unchanged pertinent bytes and
+applicable selector/tool conditions allow reuse; bounded unrelated edits leave proof valid.
+Rerun invalidated or contradicted items, not all unchanged checks.
+Attribute inherited failures only with an applicable baseline: identify both revisions and
+relevant differences, equivalent selector, tool/environment and failure oracle, and observed
+same failing behavior. Matching failure text alone is insufficient; byte identity is not an
+automatic comparison prerequisite. Retain inherited failures alongside new regressions or
+increased severity against the relevant behavior/oracle; baseline failure cannot dismiss
+changed behavior. Proven criterion violations are failed; inadequate comparison proof is
+insufficient-evidence, not an invented historical green.
 
 Commit each task's verified changes as one focused owned-path commit before later task
 writes or handoff. Explicit staging/path-limited commits preserve unrelated staged and

@@ -980,5 +980,216 @@ class ComparativeRoutingTests(CarrierTests):
         self.assertIn("Commit each task's verified changes as one focused owned-path commit", TEXT)
 
 
+class ExecutionReadinessTests(CarrierTests):
+    """Instruction mutations and finite offline cases, not an environment detector."""
+
+    def test_first_check_proof_and_setup_distinctions(self):
+        self.assert_carrier_guards('Prepare Approved Execution', (
+            'Before tooling-dependent dispatch, establish the smallest applicable executable proof',
+            'in the assigned workspace',
+            'An authorized bounded setup/readiness assignment may establish it',
+            'dependent product implementation waits for sufficient proof',
+            'only capabilities exercised or otherwise established',
+            'new dependencies need bounded readiness checks',
+            'Authorization is not availability; an existing dependency directory is not a usable installation',
+            'client binaries do not prove a required server can run',
+            'Reusable packages do not establish writable-cache isolation',
+            'inspect where the actual loader/tool writes',
+            'Read the current guard branch, not historical adjacent restrictions',
+            'Reuse readiness proof only while its workspace, tool/dependency versions and write conditions still apply',
+            'Already-authorized bounded local setup may proceed without another approval request',
+            'Separate unresolved setup from a large implementation assignment when it materially threatens delivery',
+        ))
+
+    def test_authorized_but_unusable_and_reusable_but_not_isolated(self):
+        # A bounded assignment executes a harmless first check in its own workspace.
+        import subprocess
+        import sys
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            permission = False
+            self.assertFalse(permission)  # no setup invocation before authority
+            self.assertFalse((workspace / 'first-check.out').exists())
+            permission = True
+            result = subprocess.run([sys.executable, '-c',
+                "from pathlib import Path; Path('first-check.out').write_text('usable')"],
+                cwd=workspace, capture_output=True, text=True)
+            proof = dict(check='first-required', exit=result.returncode,
+                         workspace=workspace, version=sys.version_info[:3],
+                         loader_write=workspace / 'first-check.out', guard='current',
+                         exercised={'local-python-write'})
+            def gaps(record, assigned=workspace, capability='local-python-write'):
+                missing = []
+                if not permission:
+                    missing.append('permission')
+                if record['workspace'] != assigned:
+                    missing.append('workspace')
+                if record['check'] != 'first-required' or record['exit'] != 0:
+                    missing.append('check/outcome')
+                if record['version'] != sys.version_info[:3] or record['guard'] != 'current':
+                    missing.append('context')
+                if record['loader_write'].parent != assigned or not record['loader_write'].is_file():
+                    missing.append('actual write location')
+                if capability not in record['exercised']:
+                    missing.append('capability')
+                return missing
+            self.assertEqual(gaps(proof), [])
+            for task in ('producer', 'consumer'):
+                self.assertEqual(gaps(proof), [], task)  # same applicable result, not two runs
+            for label, weak, capability in (
+                ('authorization/directory-only', dict(proof, check='directory-exists'), 'local-python-write'),
+                ('failed first check', dict(proof, exit=1), 'local-python-write'),
+                ('client-only', proof, 'server-start'),
+                ('cache mismatch', dict(proof, loader_write=workspace.parent / 'cache'), 'local-python-write'),
+                ('parent workspace', dict(proof, workspace=workspace.parent), 'local-python-write'),
+                ('historical adjacent guard', dict(proof, guard='retired'), 'local-python-write'),
+                ('new dependency', proof, 'different-loader'),
+            ):
+                with self.subTest(distinction=label):
+                    self.assertTrue(gaps(weak, capability=capability))
+            permission = False
+            self.assertIn('permission', gaps(proof))
+            print('V1: authorized assigned-workspace check -> shared product release; '
+                  'unusable/directory/client/cache/parent/retired/new-dependency controls blocked')
+
+    def test_compact_whole_contract_and_deterministic_batching(self):
+        self.assert_carrier_guards('Delegate', (
+            'Keep briefs compact and source-bound, not transcript-bound',
+            'Source pointers do not replace the whole applicable REQUIRED contract',
+            'Batch independent deterministic inspections/checks when safe',
+            'preserve dependency order, attributable failures and permission boundaries',
+            'Return concise item-mapped results with accessible proof',
+            'one canonical contract reference',
+            'every REQUIRED disposition and ordered baseline/result SHAs',
+        ))
+
+    def test_compact_brief_return_and_safe_check_batch(self):
+        brief, returned = audited_sample()
+        brief.update(contract='canonical-contract', scope='producer -> consumer',
+                     constraints=['local only', 'sequential writers'])
+        self.assertEqual(simulated_audit(brief, returned), 'accepted')
+        self.assertEqual(len(returned['outputs']), 1)
+        # Contract fields must be present before work, not reconstructed from pointers.
+        for field in ('criterion', 'check', 'expected', 'expected_evidence',
+                      'manual_gate', 'permission_gate'):
+            broken = deepcopy(brief)
+            del broken['required_union'][0][field]
+            self.assertFalse(all(field in item for item in broken['required_union']))
+        for mutation in ('missing-item', 'missing-gate', 'missing-access'):
+            broken = deepcopy(returned)
+            if mutation == 'missing-item':
+                del broken['items']['T006/V1']
+            elif mutation == 'missing-gate':
+                broken['gates']['T006/V1']['permission'] = False
+            else:
+                broken['outputs'].clear()
+            self.assertEqual(simulated_audit(brief, broken), 'blocked')
+        # Bounded check scheduling controls, not a general workflow simulator.
+        checks = [('read-producer', (), 'read', True),
+                  ('read-consumer', (), 'read', True)]
+        safe = lambda group: all(not deps and mode == 'read' and allowed
+                                 for _, deps, mode, allowed in group)
+        self.assertTrue(safe(checks))
+        self.assertFalse(safe([('consumer', ('producer',), 'read', True)]))
+        self.assertFalse(safe([('writer', (), 'write', True)]))
+        self.assertFalse(safe([('external', (), 'read', False)]))
+        observed = {'read-producer': 0, 'read-consumer': 1}
+        self.assertEqual([name for name, code in observed.items() if code], ['read-consumer'])
+        print('V2: compact inline union/shared output/ordered checkpoints; '
+              'missing criterion/gate/access and dependent/write/permission batching rejected')
+
+    def test_affected_selection_final_bytes_and_baseline_applicability(self):
+        self.assert_carrier_guards('Execute and Integrate', (
+            'Choose affected checks from the changed contract and current test collection',
+            'verify selectors reach current guards rather than retired adjacent contracts',
+            'Attribute inherited failures only with an applicable baseline',
+            'identify both revisions and relevant differences',
+            'equivalent selector, tool/environment and failure oracle',
+            'byte identity is not an automatic comparison prerequisite',
+            'Retain inherited failures alongside new regressions or increased severity',
+            'Run checks on final bytes; later edits invalidate only affected proof',
+            'A skipped test or old green report is not new proof',
+            'Reuse prior evidence only after confirming scope, relevant bytes and environment remain applicable',
+        ))
+        # Reuse must not turn a skipped final check into a fresh pass.
+        brief, returned = audited_sample()
+        returned['items']['T006/V1'].update(status='skipped', reason='old report was green')
+        self.assertEqual(simulated_audit(brief, returned), 'blocked')
+        brief, returned = audited_sample()
+        returned['item_revisions']['T006/V1'] = 'edited-after-check'
+        self.assertEqual(simulated_audit(brief, returned), 'blocked')
+
+    def test_current_proof_reuse_and_changed_baseline_comparison(self):
+        proof = dict(revision='before', bytes='guard-v1', selector='current-guard',
+                     collected=1, status='fail', environment='offline-python',
+                     oracle='preserve-both-IDs', behavior=['dropped-V2'])
+        def reusable(old, current):
+            return (old['bytes'] == current['bytes'] and old['environment'] == current['environment']
+                    and old['selector'] == current['selector'] == 'current-guard'
+                    and current['collected'] > 0 and current['status'] != 'skipped')
+        def compare(old, current):
+            if (not old['revision'] or not current['revision'] or
+                any(old[key] != current[key] for key in ('selector', 'environment', 'oracle')) or
+                current['selector'] != 'current-guard' or not current['collected']):
+                return None  # insufficient evidence, not demonstrated violation
+            return (set(old['behavior']) & set(current['behavior']),
+                    set(current['behavior']) - set(old['behavior']))
+        current = dict(proof, revision='after', bytes='guard-v2',
+                       behavior=['dropped-V2', 'dropped-V1'])
+        self.assertFalse(reusable(proof, current))
+        self.assertEqual(compare(proof, current), ({'dropped-V2'}, {'dropped-V1'}))
+        self.assertTrue(reusable(proof, dict(proof, revision='unrelated-edit')))
+        for changes in (dict(selector='retired'), dict(collected=0), dict(status='skipped'),
+                        dict(bytes='edited-after-check'), dict(environment='different')):
+            self.assertFalse(reusable(proof, dict(proof, **changes)))
+        for changes in (dict(oracle='different-oracle'), dict(selector='retired'),
+                        dict(revision=''), dict(environment='different')):
+            self.assertIsNone(compare(proof, dict(current, **changes)))
+        # Same failure text is deliberately not an input to the comparison oracle.
+        print('V3: changed-byte comparison retains inherited drop plus new drop; '
+              'unaffected proof reusable; stale/empty/skip/mismatched oracle blocked')
+
+    def test_stall_is_diagnosed_before_deadline_without_polling(self):
+        self.assert_carrier_guards('Delegate', (
+            'On an observed stall or failure, inspect the actual invocation and available checkpoint/proof now',
+            'do not wait for a full timeout just because budget remains',
+            'Narrow the diagnosed missing work while preserving verified checkpoints and applicable partial evidence',
+            'This is event-driven recovery, not routine polling or an arbitrary stop threshold',
+            'Silence alone is not an observable stall',
+            'Without supported signals, early detection is not promised',
+        ))
+
+    def test_event_inspection_retains_checkpoint_and_silence_waits(self):
+        signals = ('worker setup blocker', 'failed first check',
+                   'runtime attention/failure', 'available progress showing blocked work')
+        brief, failed = failed_capability_sample()
+        def trace_valid(signal, actions):
+            return actions == (['inspect invocation/checkpoint/proof', 'narrow diagnosed gap']
+                               if signal in signals else ['inspect/wait'])
+        for signal in signals:
+            trace = ['inspect invocation/checkpoint/proof', 'narrow diagnosed gap']
+            self.assertTrue(trace_valid(signal, trace))
+            self.assertFalse(trace_valid(signal, ['wait for timeout'] + trace))
+            # Diagnosis is bounded setup, not an inferred model-capability failure.
+            narrowed = dict(current_sha=failed['revision'], passed=['T005/V1'],
+                            prior_proof=deepcopy(failed['outputs']),
+                            missing='assigned-workspace first-check proof')
+            self.assertEqual(narrowed['current_sha'], failed['revision'])
+            self.assertEqual(narrowed['prior_proof'], failed['outputs'])
+            self.assertEqual(narrowed['passed'], ['T005/V1'])
+        self.assertTrue(trace_valid(None, ['inspect/wait']))
+        self.assertFalse(trace_valid(None, ['relaunch']))
+        for child, action in (('running', 'inspect/wait'), ('unknown', 'reconcile')):
+            event = dict(child=child, action=action, reason='existing child')
+            self.assertEqual(preparation_trace_errors(TEXT, [event]), [])
+            self.assertIn('child reconciliation', preparation_trace_errors(
+                TEXT, [dict(event, action='replacement dispatch')]))
+        self.assertIsNone(simulated_repair_brief(brief, failed, 'unknown'))
+        self.assertIsNone(simulated_repair_brief(brief, failed, 'model_capability', inspected=False))
+        print('V4: blocker event -> inspect invocation/checkpoint/proof -> narrow retaining SHA/items; '
+              'silence/running/unknown prevent replacement; no early-detection promise')
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
