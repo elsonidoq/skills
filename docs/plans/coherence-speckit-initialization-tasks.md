@@ -224,3 +224,12 @@ CLI choices/version and material `ask_user` selection, then exact write-proposal
 malformed/conflicting metadata and unresolved recipes still stop. One absent-metadata
 scenario plus carrying-clause deletion sensitivity added. 174 C1 static tests PASS;
 immutable provenance and doc/gate diff checks PASS. Independent final review remains pending.
+
+RF2 targeted final-review correction (after the RF1 checkpoint): permanent old/new
+sensitivity reads a bounded exact-byte historical skill fixture with captured SHA256,
+not caller-relative Git or a required historical object. Explicit repository-scoped
+Git audit verified fixture bytes against approved `a9db662` history. Direct old/new test
+and full 174-test C1 PASS from `/tmp`; isolated old/new seam PASS with subprocess calls
+disallowed. C2 four provenance tests and C4 immutable byte comparisons/whitespace PASS;
+no introduced local links. Runtime install/model behavior NOT RUN / NOT VERIFIED;
+independent final review remains pending.

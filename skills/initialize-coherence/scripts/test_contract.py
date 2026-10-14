@@ -488,10 +488,17 @@ for row in BASELINE["ledger"]:
     setattr(MutationTests, row["negative"], deletion_check(row))
 
 
+# Frozen source oracle, not current operational guidance: exact old SKILL.md bytes
+# from a9db66274d51a61bafd537f1ba8511201fbfb21f, captured via explicit repository audit.
+OLD_CONTRACT_SHA256 = "2a8d31f15e5933cefd9c6181e7e82f5002acc893e0e28b76a017460812800667"
+
+
 class SpecKitTests(unittest.TestCase):
     """Scoped source pressure checks, not execution of SpecKit or invented filesystem proof."""
     def test_new_expectations_fail_old_contract_with_named_diagnostics(self):
-        old = subprocess.check_output(["git", "show", "a9db66274d51a61bafd537f1ba8511201fbfb21f:skills/initialize-coherence/SKILL.md"], text=True)
+        old_bytes = (HERE / "fixtures/old-initialize-coherence.txt").read_bytes()
+        self.assertEqual(hashlib.sha256(old_bytes).hexdigest(), OLD_CONTRACT_SHA256)
+        old = old_bytes.decode("utf-8")
         errors = check_contract(old)
         for diagnostic in SPECKIT_RULES:
             self.assertTrue(any(e.startswith(diagnostic + ": missing") for e in errors), diagnostic)
