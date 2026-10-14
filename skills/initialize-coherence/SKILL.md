@@ -70,6 +70,14 @@ architecture records, decisions, specifications, and memory configuration.
   new adoption, compatible adoption and refresh.
 - Detect integration, script variant, command location, recorded version and relevant options
   from target metadata/configuration; do not silently select noninteractive Copilot defaults.
+- Distinguish absent SpecKit metadata from malformed or conflicting metadata; absence is not an
+  unsupported integration.
+- When metadata is absent, inspect installed official CLI source/help read-only for supported
+  integration, script, version and options; use current runtime/repository evidence to prepare
+  explicit supported choices for Approval, not guessed or silent defaults.
+- Use the installed official CLI version verified from source evidence when no recorded project
+  version exists; unresolved selections or unknown/unsupported recipes stop until resolved,
+  without readiness.
 - Compare an authoritative expected inventory from the official bundle for the detected
   integration/version against commands, templates and scripts.
 - Check every expected actual file is readable and nonempty, required script permissions are
@@ -128,6 +136,10 @@ Continue only the approved bounded stages, not investigated implementation.
 
 **SpecKit install/repair proposal.**
 
+- For absent metadata, obtain material owner selection of integration, script, command location
+  and relevant options via `ask_user` under the existing brief/capability/denial gates;
+  selection alone grants no writes, then present the exact staging/target proposal for explicit
+  approval.
 - Include SpecKit integration/version/options, three-family status, conflicts, exact prospective
   asset paths and necessary manifest/metadata entry changes in the current-content proposal
   before permission to repair.

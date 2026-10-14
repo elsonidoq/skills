@@ -218,3 +218,9 @@ C4: diff whitespace, actual owned diff, docs agreement and immutable `sources`, 
 `revision` and `SOURCE_HASHES` comparison PASS. V1–V6 statically checked; real SpecKit
 execution/install and live/model behavior NOT RUN / NOT VERIFIED (excluded). `/reload`
 inside pi remains required. This records implementation evidence, not independent acceptance.
+
+RF1 targeted final-review correction: absent metadata now routes through read-only supported
+CLI choices/version and material `ask_user` selection, then exact write-proposal approval;
+malformed/conflicting metadata and unresolved recipes still stop. One absent-metadata
+scenario plus carrying-clause deletion sensitivity added. 174 C1 static tests PASS;
+immutable provenance and doc/gate diff checks PASS. Independent final review remains pending.

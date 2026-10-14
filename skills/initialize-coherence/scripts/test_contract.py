@@ -67,7 +67,17 @@ UNSAFE = {
     "permission-epic": r"\bautomatically create a new epic\b",
 }
 # T001 live expectations; original attribution and hashes remain untouched.
-SPECKIT_RULES = {'assets-discovery': ('Discovery',
+SPECKIT_RULES = {
+ "assets-absent-metadata": ('Discovery',
+ ['Distinguish absent SpecKit metadata from malformed or conflicting metadata; absence is not '
+  'an unsupported integration.',
+  'When metadata is absent, inspect installed official CLI source/help read-only for supported '
+  'integration, script, version and options; use current runtime/repository evidence to '
+  'prepare explicit supported choices for Approval, not guessed or silent defaults.',
+  'Use the installed official CLI version verified from source evidence when no recorded '
+  'project version exists; unresolved selections or unknown/unsupported recipes stop until '
+  'resolved, without readiness.']),
+ 'assets-discovery': ('Discovery',
                       ['After the dirty-first capability gate, check SpecKit project assets on '
                        'every initialization: new adoption, compatible adoption and refresh.',
                        'Detect integration, script variant, command location, recorded version and '
@@ -87,7 +97,11 @@ SPECKIT_RULES = {'assets-discovery': ('Discovery',
                        'assets or unsafe paths stop the affected operation with specific '
                        'gaps/conflicts, not guessed readiness.']),
  'assets-proposal': ('Approval',
-                     ['Include SpecKit integration/version/options, three-family status, '
+                     ['For absent metadata, obtain material owner selection of integration, script, command '
+                      'location and relevant options via `ask_user` under the existing brief/capability/denial '
+                      'gates; selection alone grants no writes, then present the exact staging/target proposal '
+                      'for explicit approval.',
+                      'Include SpecKit integration/version/options, three-family status, '
                       'conflicts, exact prospective asset paths and necessary manifest/metadata '
                       'entry changes in the current-content proposal before permission to repair.',
                       'Complete assets propose no asset rewrite; missing assets require an exact '

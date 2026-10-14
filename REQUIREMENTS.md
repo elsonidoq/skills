@@ -37,6 +37,12 @@ automatic retry or destructive rollback; report partial outputs. Other missing r
 retain stop/report behavior. TinySpec/direct tasking still does not require SpecKit, and
 Standard capability gates remain. After global skill changes, run `/reload` inside pi.
 
+When SpecKit metadata is absent (not malformed/conflicting), inspect supported installed-CLI
+choices and version read-only, propose from current runtime/repository evidence and obtain
+material owner selection via `ask_user` without guessed/silent defaults. The installed CLI
+version can supply the absent recorded version. Selection grants no writes: the exact
+staging/target proposal still needs explicit approval; unresolved selections/recipes stop.
+
 ## Implementation batch selection
 
 Implementation tasks carry objective REQUIRED task-local verification items, expected

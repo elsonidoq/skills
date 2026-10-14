@@ -51,6 +51,12 @@ scripts, templates, integration metadata and the [project constitution](.specify
 extension overrides and `.pi/subagents/` runtime state remain ignored. Other projects
 still need their own SpecKit installation for Standard; TinySpec does not require it.
 
+When SpecKit metadata is absent (not malformed/conflicting), inspect supported installed-CLI
+choices and version read-only, propose from current runtime/repository evidence and obtain
+material owner selection via `ask_user` without guessed/silent defaults. The installed CLI
+version can supply the absent recorded version. Selection grants no writes: the exact
+staging/target proposal still needs explicit approval; unresolved selections/recipes stop.
+
 ## Planning and Implementation
 
 Start with one entry point:
