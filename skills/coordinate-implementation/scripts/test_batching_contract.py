@@ -45,8 +45,8 @@ class SeedRubricTests(CarrierTests):
             with self.subTest(factor=factor):
                 self.assertIn(factor, rubric)
         for term in (
-            "Family rationale", "Effort rationale", "Luna/medium", "Luna/max",
-            "Sol/low", "Sol/medium", "Astra", "Terra", "no universal ladder",
+            "Family rationale", "Effort rationale", "| Luna |", "| Sol |", "| Astra |", "| Terra |",
+            "Luna/max", "no universal ladder",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, rubric)
@@ -64,6 +64,22 @@ class SeedRubricTests(CarrierTests):
             with self.subTest(term=term):
                 self.assertIn(term, rubric)
         self.assertIn("../../../specs/002-batch-routing-contracts/research.md", rubric)
+
+    def test_family_examples_have_one_independent_row_per_family(self):
+        rubric = RUBRIC_PATH.read_text(encoding="utf-8")
+        start = rubric.index("## Provisional family and effort choices")
+        end = rubric.index("## Evidence limits", start)
+        body = rubric[start:end]
+        rows = [line for line in body.splitlines() if line.startswith("| ")]
+        self.assertEqual([row.split("|")[1].strip() for row in rows[2:6]], ["Luna", "Sol", "Astra", "Terra"])
+        self.assertNotIn("Astra or Terra", body)
+        for clause in ("family does not imply an effort", "no fixed family-to-effort step follows",
+                       "no family ranking follows", "neither require equal proposal rows nor enumerate variants"):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, body)
+                altered = body.replace(clause, "REMOVED", 1)
+                self.assertNotIn(clause, carrier(altered + " ## Footer " + clause,
+                                                  "Provisional family and effort choices"))
 
 
 def approval_errors(text):
@@ -272,7 +288,7 @@ class SimulatedProfileTraceTests(CarrierTests):
         self.assertEqual(actual["args"]["model"], "symbolic/luna:medium")
 
     def test_luna_max_exact_effort_to_dispatch(self):
-        self.assertIn("Max must have an explicit extra-reasoning rationale", RUBRIC_PATH.read_text())
+        self.assertIn("Luna/max remains a symbolic supported effort only when it has an explicit extra-reasoning", RUBRIC_PATH.read_text())
         selected = "symbolic/luna:max"
         brief = {"selected": selected, "family": "bounded multi-file, strong oracles",
                  "effort": "moderate residual reasoning needs extra budget"}
@@ -992,6 +1008,10 @@ class FirstProposalRoutingTests(CarrierTests):
         "specific selection difference, or `no established difference`",
         "provisional choice or exact owner preference",
         "sufficient capability without an unsupported premium",
+        "there is **no established difference** between them for this invocation",
+        "not a model deficit",
+        "no additional remaining inference over low is established",
+        "This example does not rely on retained benchmark evidence",
     )
 
     def test_recipe_carrier_and_evidence_sequence_mutations(self):

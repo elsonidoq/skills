@@ -34,16 +34,14 @@ use diversity as a reason. `Complex`, `safe`, `more margin`, benchmark-leader, o
 cheapest/fastest claims are not comparisons. The objective is sufficient capability
 without an unsupported premium, not a universal size, quality, or cost ladder.
 
-**Compact example (after demands and material evidence inspection):** “The remaining
-inference is reconciling async settlement with cross-mode publication; the weakest
-adequate oracle misses failure custody. Luna/medium is a plausible adequate alternative,
-but its shortfall is unobserved recovery across that seam; Sol/medium is provisional for
-that specific gap. Family: the recovery gap, not a rank, supports Sol. Effort: medium
-covers reconciling the two states; any extra effort benefit is empirically unestablished.
-The retained Terminal-Bench 4.0 mini-swe-agent Sol/medium span is only qualified,
-pre-comparison context (different harness and unknown snapshot), not a Pi prediction.”
-A real tie instead says `no established difference`; an exact owner preference can select
-without claiming superiority.
+**Compact example (after demands and explicit non-reliance):** “The remaining inference
+is reconciling async settlement with cross-mode publication; the weakest adequate oracle
+misses failure custody. Luna/medium and Sol/medium are plausible adequate alternatives;
+there is **no established difference** between them for this invocation. Family: the oracle
+gap identifies verification uncertainty, not a model deficit. Low and medium are supported,
+but no additional remaining inference over low is established; retain the tie unless an exact
+owner preference selects medium without claiming benefit.” A real tie or exact owner preference
+is not a benchmark claim. This example does not rely on retained benchmark evidence.
 
 ## Assess all six factors
 
@@ -86,12 +84,16 @@ a default permitting low does not. Owner overrides retain the original proposal 
 Neither dimension implies the other. These symbolic options are not provider bindings or
 guaranteed supported pairs; there is no universal ladder.
 
-| Option | Family rationale | Effort rationale |
+| Family | Family rationale | Effort rationale |
 | --- | --- | --- |
-| Luna/medium | Shallow, closed-design work with strong contracts, bounded tools and cheap recovery can justify Luna. | Medium is a provisional budget for the remaining bounded reasoning, not a family-derived label. |
-| Luna/max | A bounded multi-file batch with moderate residual reasoning and strong oracles may justify a Luna experiment. | Max must have an explicit extra-reasoning rationale and remain recorded as max, never renamed medium. |
-| Sol/low or Sol/medium | Stronger reasoning or deeper tool use may justify Sol, subject to the actual task blind spots and evidence. | Low can suffice when residual inference is tightly bounded; medium requires its own rationale for greater reasoning/tool demands. |
-| Astra or Terra | Other stronger agentic options only when justified for this batch; readiness is a separate dispatch gate. | Select supported effort independently; neither family implies a fixed effort or mandatory step in a ranking. |
+| Luna | Shallow, closed-design work with strong contracts, bounded tools and cheap recovery can justify Luna. | Choose any supported effort only for named remaining inference; family does not imply an effort. |
+| Sol | Stronger reasoning or deeper tool use may justify Sol, subject to actual task blind spots and evidence. | Low can suffice when inference is tightly bounded; medium needs a separate remaining-inference rationale. |
+| Astra | Consider Astra when its task-specific capability difference is established or an owner preference resolves an adequate tie. | Select supported effort independently; no fixed family-to-effort step follows. |
+| Terra | Consider Terra on the same comparative basis, including a no-established-difference tie. | Select supported effort independently; no family ranking follows. |
+
+Luna/max remains a symbolic supported effort only when it has an explicit extra-reasoning
+rationale; max must remain recorded as max, never renamed medium. The family rows normalize
+attention; they neither require equal proposal rows nor enumerate variants.
 
 Moderate complexity with closed design and strong cheap reliable oracles can justify an adequate
 symbolic proposal without a premium even while readiness is pending, with separate family/effort rationales. Weak oracle/hidden coupling
