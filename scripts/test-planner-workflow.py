@@ -232,6 +232,7 @@ class SymbolicReaderStageOracle:
         self.status_calls = self.completion_calls = self.cleanup_calls = 0
         self.operator_record_calls = 0
         self.reader_content_reads = 0
+        self.content_read_call_order = []
         self.captured = []
         self.descriptors = ()
         self.processed = []
@@ -272,7 +273,6 @@ class SymbolicReaderStageOracle:
 
     def open_metadata_only_reader(self, mode):
         self.reader_open_calls += 1
-        self.reader_content_reads = 0
         return {"mode": mode, "descriptors": self.descriptors}
 
     def reset_and_verify(self, _reader):
@@ -290,9 +290,11 @@ class SymbolicReaderStageOracle:
 
     def read_dataset_content(self, _record):
         self.reader_content_reads += 1
+        self.content_read_call_order.append("read_dataset_content")
 
     def consume_first_frame(self, reader):
         self.frame_scan_calls += 1
+        self.content_read_call_order.append("consume_first_frame")
         self.read_dataset_content(reader["descriptors"][0])
 
 
@@ -328,20 +330,36 @@ class A4AcceptancePreservationTests(unittest.TestCase):
             self.assertEqual(oracle.reset_verify_calls, 1)
             self.assertEqual(oracle.invoked_modes, [mode])
             self.assertEqual(oracle.reader_content_reads, 0)
+            self.assertEqual(oracle.content_read_call_order, [])
             self.assertEqual(oracle.frame_scan_calls, 0)
 
             oracle.consume_first_frame(reader)
             self.assertEqual(oracle.reader_content_reads, 1)
+            self.assertEqual(oracle.content_read_call_order,
+                             ["consume_first_frame", "read_dataset_content"])
             self.assertEqual(oracle.frame_scan_calls, 1)
             after_consumption = oracle.reader_content_reads
             oracle.completion(reader)
             oracle.status(reader)
             oracle.cleanup(reader)
             self.assertEqual(oracle.reader_content_reads, after_consumption)
+            self.assertEqual(oracle.content_read_call_order,
+                             ["consume_first_frame", "read_dataset_content"])
             self.assertEqual(oracle.frame_scan_calls, 1)
 
     def test_metadata_open_counters_and_local_stage_advancement(self):
         self.assert_local_lifecycle(SymbolicReaderStageOracle)
+
+        class PreOpenReread(SymbolicReaderStageOracle):
+            def open_metadata_only_reader(self, mode):
+                self.read_dataset_content(self.descriptors[0])
+                return super().open_metadata_only_reader(mode)
+
+        class RebuildReread(SymbolicReaderStageOracle):
+            def rebuild_and_inline_validate_once(self):
+                result = super().rebuild_and_inline_validate_once()
+                self.read_dataset_content(self.descriptors[0])
+                return result
 
         class SilentReread(SymbolicReaderStageOracle):
             def open_metadata_only_reader(self, mode):
@@ -354,13 +372,14 @@ class A4AcceptancePreservationTests(unittest.TestCase):
                 self.rebuild_calls += 1
                 return ()
 
-        for mutation in (SilentReread, NonAdvancingRebuild):
+        for mutation in (PreOpenReread, RebuildReread, SilentReread, NonAdvancingRebuild):
             with self.subTest(mutation=mutation.__name__):
                 with self.assertRaises(AssertionError):
                     self.assert_local_lifecycle(mutation)
         print("A4 local oracle: sequential capture, one rebuild/operator pass, error continuation, "
               "success/skip accounting, private diagnostics, both maintained modes; "
-              "0 content reads before first consumption; silent-reread and non-advancement mutations rejected")
+              "cumulative counter/call order rejects pre-open, rebuild and post-open rereads "
+              "plus non-advancement")
 
 
 class ComposedAcceptanceTests(unittest.TestCase):
