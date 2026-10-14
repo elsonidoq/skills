@@ -78,19 +78,38 @@ class ComposedAcceptanceTests(unittest.TestCase):
                            proof='accessible-first-write-output', producer='T001',
                            permission='local write', manual='original source gate')
         _, _, _, observed = composition_observations()
+        delivery = dict(task_id='T002', outcome='publish the verified safe write',
+                        acceptance=[deepcopy(source_item)],
+                        support_work=['focused tests', 'evidence', 'operative docs', 'routine teardown'],
+                        separate_tasks=[])
         def sufficient(brief, result):
             item = brief['required']
+            boundary = brief['delivery']
             return (all(item.get(field) for field in source_item) and item == source_item
                     and item['producer'] in brief['depends']
+                    and boundary['task_id'] == 'T002' and boundary['outcome'] == delivery['outcome']
+                    and boundary['acceptance'] == [item]
+                    and boundary['support_work'] == ['focused tests', 'evidence', 'operative docs', 'routine teardown']
+                    and boundary['separate_tasks'] == []
                     and result['status'] == 'pass' and result['observed'] == item['expected']
                     and result['proof'] == item['proof'] and result['producer_passed']
                     and result['permission'] and result['manual'])
         for adapter in ('direct', 'SpecKit'):
-            brief = dict(adapter=adapter, depends=['T001'], required=deepcopy(source_item))
+            brief = dict(adapter=adapter, depends=['T001'], required=deepcopy(source_item),
+                         delivery=deepcopy(delivery))
             result = dict(status='pass', observed=observed, proof=source_item['proof'],
                           producer_passed=True, permission=True, manual=True)
             self.assertTrue(sufficient(brief, result))
             self.assertFalse(sufficient(dict(brief, depends=[]), result))
+            split = deepcopy(brief)
+            split['delivery']['separate_tasks'].append('T003: write report')
+            self.assertFalse(sufficient(split, result))
+            missing_acceptance = deepcopy(brief)
+            missing_acceptance['delivery']['acceptance'] = []
+            self.assertFalse(sufficient(missing_acceptance, result))
+            phase_label = deepcopy(brief)
+            phase_label['delivery']['outcome'] = 'verification phase'
+            self.assertFalse(sufficient(phase_label, result))
             for field in ('ref', 'criterion', 'check', 'expected', 'proof', 'producer', 'permission', 'manual'):
                 missing = deepcopy(brief)
                 del missing['required'][field]
@@ -100,8 +119,8 @@ class ComposedAcceptanceTests(unittest.TestCase):
             for changes in (dict(status='not_verified'), dict(producer_passed=False),
                             dict(proof=None), dict(permission=False), dict(manual=False)):
                 self.assertFalse(sufficient(brief, dict(result, **changes)))
-        print('A2 adapters: direct/SpecKit retain ID/check/pass/access/dependency/original gates; '
-              'missing/weakened/unrun proof blocks downstream reliance')
+        print('A2 adapters: direct/SpecKit retain mapped acceptance, coherent delivery, support work, '
+              'ID/check/pass/dependency and original gates; split/missing/unrun proof blocks reliance')
 
 
 class TaskGenerationContractTests(unittest.TestCase):

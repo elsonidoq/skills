@@ -199,22 +199,208 @@ class EarlyRiskReductionTests(unittest.TestCase):
                 self.assertIn(" ".join(clause.split()), " ".join(body.split()))
 
     def test_outcome_boundaries_and_shared_proof_scenarios(self):
-        source = (HERE / "fixtures/planner/risk-walkthroughs.md").read_text()
-        for heading, phrases in (
-            ("## F", ("settled multi-file", "one coherent delivery task", "all acceptance",
-                      "no inventory, prototype, composition, report or hypothetical-cleanup task",
-                      "small wiring", "existing test observes the actual value at the consumer boundary")),
-            ("## G", ("migration, paid or live", "independently verified prerequisite",
-                      "original permission/manual gate", "does not replace required migration, real-system or paid/live validation")),
-            ("## H", ("revision/environment/scope remain unchanged", "shared applicable check once",
-                      "every criterion/item mapping", "rerun only invalidated proof",
-                      "all applicable consumers and production validation", "Routine teardown stays inside",
-                      "no separate cleanup task")),
+        # Concrete sensitivity records, not a planner, live operation, or semantic scoring layer.
+        acceptance = [
+            {"item": "A1", "criterion": "later independent records continue after an error",
+             "pass": "later record is published", "check": "local sequential reader test",
+             "evidence": "processed IDs and published values"},
+            {"item": "A2", "criterion": "metadata opening reads no content before consumption",
+             "pass": "zero reads before first frame", "check": "cumulative local read counter",
+             "evidence": "counter and call order"},
+            {"item": "wiring", "criterion": "selected identifier reaches the consumer unchanged",
+             "pass": "captured argument is chosen-7", "check": "existing captured consumer argument fixture",
+             "evidence": "captured argument equals selected ID", "expected": "chosen-7", "observed": "chosen-7"},
+        ]
+        gates = [{"permission": "local-only; no service or production operation",
+                  "manual": "no additional approval gate"}]
+        delivery = {
+            "files": ["capture.py", "reader.py", "contract.md"],
+            "required_items": ["T001/V1"],
+            "tasks": [{"id": "T001", "outcome": "capture and publish validated records",
+                       "acceptance": copy.deepcopy(acceptance), "gates": copy.deepcopy(gates),
+                       "support_work": ["focused tests", "evidence", "operative docs", "routine teardown"]}],
+            "separate_support_tasks": [],
+        }
+
+        def assert_settled_delivery(record):
+            self.assertEqual(record["files"], ["capture.py", "reader.py", "contract.md"])
+            self.assertEqual(record["required_items"], ["T001/V1"])
+            self.assertEqual(len(record["tasks"]), 1)
+            task = record["tasks"][0]
+            self.assertEqual(task["outcome"], "capture and publish validated records")
+            self.assertEqual(task["acceptance"], acceptance)
+            wiring_check = task["acceptance"][-1]
+            self.assertEqual(wiring_check["observed"], wiring_check["expected"])
+            self.assertEqual(wiring_check["check"], "existing captured consumer argument fixture")
+            self.assertEqual(task["gates"], gates)
+            self.assertEqual(task["support_work"],
+                             ["focused tests", "evidence", "operative docs", "routine teardown"])
+            self.assertEqual(record["separate_support_tasks"], [])
+
+        assert_settled_delivery(delivery)
+        for label, mutate in (
+            ("drop acceptance", lambda record: record["tasks"][0]["acceptance"].pop()),
+            ("wrong captured value", lambda record: record["tasks"][0]["acceptance"][-1].update(observed="default-1")),
+            ("drop gate", lambda record: record["tasks"][0]["gates"].clear()),
+            ("split support task", lambda record: record["separate_support_tasks"].append("T002: report")),
         ):
-            section = checker.section(source, heading)
-            for phrase in phrases:
-                with self.subTest(scenario=heading, expected=phrase):
-                    self.assertIn(" ".join(phrase.split()), " ".join(section.split()))
+            changed = copy.deepcopy(delivery)
+            mutate(changed)
+            with self.subTest(mutation=label), self.assertRaises(AssertionError):
+                assert_settled_delivery(changed)
+
+        risk_cases = [
+            {"ref": "T001/V2", "kind": "migration", "prerequisite": {"id": "P-migration",
+             "criterion": "existing records survive migration", "pass": "all sampled records remain",
+             "check": "isolated migration dry run", "evidence": "dry-run output"},
+             "delivery": {"id": "D-migration", "depends_on": [{"task": "P-migration", "relationship": "blocks"}],
+                          "permission": "owner permission for migration", "manual": "approval before execution",
+                          "executed": False}},
+            {"ref": "T001/V2", "kind": "paid", "prerequisite": {"id": "P-paid", "criterion": "cost stays within approved bound",
+             "pass": "cost estimate is within bound", "check": "offline cost review", "evidence": "bounded estimate"},
+             "delivery": {"id": "D-paid", "depends_on": [{"task": "P-paid", "relationship": "blocks"}],
+                          "permission": "owner permission for paid use", "manual": "approval before provider call",
+                          "executed": False}},
+            {"ref": "T001/V2", "kind": "live", "prerequisite": {"id": "P-live", "criterion": "staging behavior is acceptable",
+             "pass": "staging check passes", "check": "isolated staging validation", "evidence": "staging result"},
+             "delivery": {"id": "D-live", "depends_on": [{"task": "P-live", "relationship": "blocks"}],
+                          "permission": "owner permission for live action", "manual": "approval before live execution",
+                          "executed": False}},
+        ]
+
+        def assert_risky_prerequisites(records):
+            self.assertEqual([record["kind"] for record in records], ["migration", "paid", "live"])
+            self.assertEqual([record["ref"] for record in records], ["T001/V2"] * 3)
+            for record in records:
+                prerequisite = record["prerequisite"]
+                delivery_task = record["delivery"]
+                self.assertTrue(all(prerequisite[field] for field in
+                                    ("criterion", "pass", "check", "evidence")))
+                self.assertEqual(delivery_task["depends_on"],
+                                 [{"task": prerequisite["id"], "relationship": "blocks"}])
+                self.assertTrue(delivery_task["permission"])
+                self.assertTrue(delivery_task["manual"])
+                self.assertFalse(delivery_task["executed"])
+
+        assert_risky_prerequisites(risk_cases)
+        for label, mutate in (
+            ("drop prerequisite edge", lambda record: record["delivery"].update(depends_on=[])),
+            ("drop permission", lambda record: record["delivery"].update(permission="")),
+            ("drop manual gate", lambda record: record["delivery"].update(manual="")),
+        ):
+            changed_risks = copy.deepcopy(risk_cases)
+            mutate(changed_risks[0])
+            with self.subTest(mutation=label), self.assertRaises(AssertionError):
+                assert_risky_prerequisites(changed_risks)
+
+        applicability = {"revision": "rev-1", "environment": "python-3.12-local",
+                         "scope": "bounded-reader"}
+        required = {"ref": "T001/V3", "criterion": "reuse unchanged proof and rerun only affected consumers",
+                    "pass": "one shared result; changed applicability reruns only its consumer",
+                    "check": "two-consumer revision/environment/scope scenario",
+                    "evidence": "named reuse and invalidation outcomes",
+                    "gates": {"permission": "local symbolic test only; no external operation",
+                              "manual": "inspect applicability and limits"}}
+        shared = {
+            "required": required,
+            "proof": {"id": "proof-1", "status": "pass", "applicability": applicability,
+                      "evidence": {"code": "test_outcome_boundaries_and_shared_proof_scenarios",
+                                   "execution": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+                                   "result": "PASS", "limits": "symbolic only; no model or service proof"}},
+            "consumers": [
+                {"id": "consumer-A", "mapping": "T001/V3", "applicability": copy.deepcopy(applicability),
+                 "proof_used": "proof-1", "consumed": True, "production_validation": "pass"},
+                {"id": "consumer-B", "mapping": "T001/V3", "applicability": copy.deepcopy(applicability),
+                 "proof_used": "proof-1", "consumed": True, "production_validation": "pass"},
+            ],
+            "reuse": {"runs": 1, "result": "proof-1", "consumers": ["consumer-A", "consumer-B"]},
+            "disposal": {"allowed": True, "after_consumed": ["consumer-A", "consumer-B"],
+                         "after_validation": ["consumer-A", "consumer-B"],
+                         "retained": {"command": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+                                      "result": "PASS", "limits": "symbolic only"}},
+        }
+
+        def assert_shared_proof(record):
+            item = record["required"]
+            self.assertEqual(set(item), {"ref", "criterion", "pass", "check", "evidence", "gates"})
+            self.assertEqual(set(item["gates"]), {"permission", "manual"})
+            self.assertTrue(all(item[field] for field in ("ref", "criterion", "pass", "check", "evidence")))
+            self.assertTrue(all(item["gates"].values()))
+            proof = record["proof"]
+            self.assertEqual(proof["status"], "pass")
+            self.assertTrue(all(proof["evidence"][field] for field in ("code", "execution", "result", "limits")))
+            self.assertEqual(proof["evidence"]["result"], proof["status"].upper())
+            consumers = record["consumers"]
+            ids = [consumer["id"] for consumer in consumers]
+            self.assertEqual(ids, ["consumer-A", "consumer-B"])
+            self.assertEqual([consumer["mapping"] for consumer in consumers], [item["ref"], item["ref"]])
+            self.assertEqual([consumer["applicability"] for consumer in consumers],
+                             [proof["applicability"], proof["applicability"]])
+            self.assertTrue(all(consumer["consumed"] and consumer["production_validation"] == "pass"
+                                for consumer in consumers))
+            self.assertEqual([consumer["proof_used"] for consumer in consumers], [proof["id"], proof["id"]])
+            self.assertEqual(record["reuse"], {"runs": 1, "result": proof["id"], "consumers": ids})
+            self.assertTrue(record["disposal"]["allowed"])
+            self.assertEqual(record["disposal"]["after_consumed"], ids)
+            self.assertEqual(record["disposal"]["after_validation"], ids)
+            self.assertEqual(record["disposal"]["retained"],
+                             {"command": proof["evidence"]["execution"], "result": "PASS",
+                              "limits": "symbolic only"})
+
+        assert_shared_proof(shared)
+        for dimension, replacement in (("revision", "rev-2"), ("environment", "python-3.13-local"),
+                                       ("scope", "narrower-reader")):
+            changed = copy.deepcopy(shared)
+            changed["consumers"][0]["applicability"][dimension] = replacement
+            changed["consumers"][0]["proof_used"] = "proof-2"
+            changed["resolution"] = {
+                "rerun": ["consumer-A"], "reuse": {"consumer-B": "proof-1"},
+                "rerun_result": {"id": "proof-2", "status": "pass",
+                                 "applicability": copy.deepcopy(changed["consumers"][0]["applicability"]),
+                                 "evidence": copy.deepcopy(changed["proof"]["evidence"]),
+                                 "production_validation": "pass"}
+            }
+            with self.subTest(invalidation=dimension):
+                self.assertNotEqual(changed["consumers"][0]["applicability"][dimension],
+                                    changed["proof"]["applicability"][dimension])
+                self.assertEqual({key: value for key, value in changed["consumers"][0]["applicability"].items()
+                                  if key != dimension},
+                                 {key: value for key, value in changed["proof"]["applicability"].items()
+                                  if key != dimension})
+                self.assertEqual(changed["consumers"][1]["applicability"], changed["proof"]["applicability"])
+                self.assertEqual(changed["resolution"]["rerun"], ["consumer-A"])
+                self.assertEqual(changed["resolution"]["reuse"], {"consumer-B": "proof-1"})
+                rerun = changed["resolution"]["rerun_result"]
+                self.assertEqual(rerun["status"], "pass")
+                self.assertEqual(rerun["evidence"]["result"], "PASS")
+                self.assertTrue(all(rerun["evidence"][field] for field in ("code", "execution", "limits")))
+                self.assertEqual(rerun["production_validation"], "pass")
+                self.assertEqual(rerun["applicability"], changed["consumers"][0]["applicability"])
+                self.assertEqual(changed["consumers"][0]["production_validation"], "pass")
+                self.assertEqual(changed["consumers"][0]["proof_used"], "proof-2")
+                self.assertEqual(changed["consumers"][1]["proof_used"], "proof-1")
+                self.assertEqual(changed["disposal"]["after_consumed"], ["consumer-A", "consumer-B"])
+                self.assertEqual(changed["disposal"]["after_validation"], ["consumer-A", "consumer-B"])
+                self.assertTrue(changed["disposal"]["allowed"])
+
+        for label, mutate in (
+            ("missing mapping", lambda record: record["consumers"][0].update(mapping=None)),
+            ("stale proof", lambda record: record["consumers"][0]["applicability"].update(revision="stale")),
+            ("premature consumption disposal", lambda record: record["disposal"].update(after_consumed=["consumer-A"])),
+            ("premature validation disposal", lambda record: record["disposal"].update(after_validation=["consumer-A"])),
+            ("failed proof", lambda record: record["proof"].update(status="failed")),
+            ("unrun proof", lambda record: record["proof"].update(status="not-run")),
+            ("report-only proof", lambda record: record["proof"].update(evidence={"code": None, "execution": None,
+                                                                                    "result": "PASS", "limits": "link only"})),
+        ):
+            changed = copy.deepcopy(shared)
+            mutate(changed)
+            with self.subTest(mutation=label), self.assertRaises(AssertionError):
+                assert_shared_proof(changed)
+
+        print("Outcome records: settled multi-file acceptance/gates and focused wiring reject artificial splits; "
+              "migration/paid/live prerequisites retain blocking edges and manual permission; "
+              "two-consumer proof maps all fields, reuses unchanged output, scopes reruns and rejects unsafe disposal/release")
 
 
 class SymbolicReaderStageOracle:
