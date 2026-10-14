@@ -4,8 +4,11 @@
 
 Preparation only: the owner selected TinySpec and exact `openai-codex/gpt-6.1-sol:medium`
 for planning because planning correctness is critical to downstream work. This is an
-owner preference, not empirical superiority. Separate tasks, planner review and combined
-current-content approval remain outstanding; this source grants no implementation approval.
+owner preference, not empirical superiority. Separate tasks now exist; parent review,
+source-to-task reconciliation and combined current-content approval remain outstanding.
+The combined approval question was cancelled; no approval is inferred. This targeted
+source correction uses baseline `f98e711fff497699770134c8365328c5d7b6d7aa` and grants
+no task-edit or implementation authority.
 The beneficiary is an owner reviewing the **first** planner/coordinator routing proposal:
 it must compare adequate candidates against actual work and verification boundaries,
 without conservative guessing, leaderboard selection or diversity for its own sake.
@@ -116,22 +119,37 @@ comparative reasons. No specific table is the required answer.
 - Preserves coherent batching, exact owner-selected profiles, permission gates, supported effort checks, observed-versus-selected honesty, conditional diagnosed repairs, and independent final review.
 - Produces a compact first approval proposal. Do not solve weak reasoning by multiplying tables, documents, gates or owner questions.
 
+## Planning correction feedback (verbatim)
+
+1. Make evidence order unambiguous. The source currently places evidence after comparison. Change this to: inspect demands/oracles → inspect evidence materially needed → compare candidates and effort → propose. Otherwise post-hoc justification remains possible.
+2. Define a minimum substantive comparison. Each proposal should identify: the concrete remaining work and weakest adequate oracle; one plausible adequate alternative; the specific difference supporting selection—or explicitly no established difference; provisional choice/owner preference. This prevents filling rubric headings with suitability slogans.
+3. Tighten evaluation against the actual failure. Require negative controls that preserve all rubric headings but contain generic conservatism, leaderboard reasoning or invented effort gains. For the behavioral pair, provide realistic source/task context without coaching the desired answer; assess the first proposal, including actual evidence inspected. No exact-model gold table.
+
+Keep one implementation task and existing gates. Don’t add documents, scoring infrastructure or mandatory model diversity. These changes improve defensibility; only an authorized behavioral trial can provide bounded evidence of better application.
+
 ## Bounded approach
 
-Make the shared owner prescribe a compact demand → adequacy comparison → independent effort
-→ evidence limits → readiness/selection sequence within the existing proposal, not a new
+Make the shared owner prescribe this order: inspect demands/oracles → inspect evidence
+materially needed → compare candidates and effort → propose. Read supporting underlying
+spans before relying on them in a recommendation; bounded inspection, explicit non-reliance
+or evidence absence is sufficient, not a mandatory broad benchmark audit or a claim to have
+inspected the original CSV. Keep readiness/selection gates in the existing proposal, not a new
 artifact or gate. Start with residual reasoning, agentic/tool depth, verification blind
 spots, scope/coupling, failure cost/reversibility and applicable approved guidance, recording
 the weakest material condition. Normalize the family examples' attention so separate Luna
 efforts do not overshadow Astra/Terra consideration; this is not an equal-row quota.
-Name a plausible adequate alternative and explain a specific adequacy gap or why neither has a demonstrated
-advantage. Account tersely and fairly for other plausible families; no variant enumeration.
+The minimum substantive comparison in each existing row/brief identifies concrete remaining
+work and the weakest adequate oracle; one plausible adequate alternative; the specific
+difference supporting selection—or explicitly no established difference; and the provisional
+choice/owner preference. Rubric headings and suitability slogans alone do not satisfy this
+content minimum. Account tersely and fairly for other plausible families; no variant enumeration.
 Replace ambiguous universal “smaller” language with avoiding an **unsupported premium**:
 without measurements there is no cheapest/fastest claim or cross-family rank. Where local
 facts and qualified evidence do not distinguish adequate candidates, state the tie and
 uncertainty; an exact owner preference resolves selection without a superiority claim.
 
-Evidence comes after task demands, not before them. If benchmark evidence is used, cite exact
+Inspect evidence materially supporting comparison after demands/oracles and before comparing
+or proposing, not as post-hoc justification. If benchmark evidence is used, cite exact
 family/version/effort, harness/task relevance, retained provenance and unknowns. The 002 rows
 include GPT-6 Luna medium/max, GPT-6.1 Sol low/medium, GPT-6 Astra low and GPT-5.6 Terra max;
 SciCode subproblems without tools, AutomationBench-AA multi-turn environments, Terminal-Bench
@@ -169,9 +187,12 @@ All A1–A7 are required acceptance needs for subsequent task generation, not im
 tasks or profile assignments. Preserve their observables, expected proof and permission gates.
 
 - **A1 — First proposal:** inspected operative contract and compact example begin with actual
-  invocation demands/verification boundaries, apply all six factors, name an adequate alternative
-  with a task-specific selection/rejection reason and fairly account for plausible families.
-  Reject generic conservatism, benchmark-leader and diversity rationales. Existing test-owner
+  invocation demands/verification boundaries and apply all six factors. Before comparison,
+  inspect materially supporting evidence or explicitly state non-reliance/absence. Each existing
+  row/brief contains the minimum: concrete remaining work/weakest adequate oracle, plausible
+  adequate alternative, specific selection difference or no established difference, provisional
+  choice/owner preference. Fairly account for plausible families; reject suitability slogans,
+  generic conservatism, benchmark-leader and diversity rationales. Existing test-owner
   mutation checks must detect loss of these actionable carrier rules, not rescue them in a footer.
 - **A2 — Honest dimensions/evidence:** examples and negative controls keep family and effort
   independent; unsupported effort differences are not invented or conflated. Exact benchmark
@@ -187,8 +208,10 @@ tasks or profile assignments. Preserve their observables, expected proof and per
   without launch history; hidden coupling/stateful recovery justifying stronger capability by
   a concrete adequate-oracle gap; unsupported effort-delta claims; readiness-pending adequate
   alternatives with no fallback; equally defensible uncertain ties without diversity; and
-  missing requirements/inadequate checks stopping at gates rather than escalating. Inspect
-  reasons, not a golden selected model. Static sensitivity and authored fixtures remain only
+  missing requirements/inadequate checks stopping at gates rather than escalating. Negative
+  controls preserve all rubric headings while substituting generic conservatism, leaderboard
+  reasoning or invented effort gains; they must fail on substantive content, not missing labels.
+  Inspect reasons, not a golden selected model. Static sensitivity and authored fixtures remain only
   instruction/sample checks, not actual reasoning proof.
 - **A4 — Compatibility and ownership:** inspect actual diff/consumer links to show one canonical
   policy, coherent batching, exact-profile/readiness/permissions/supported-effort/observed honesty,
@@ -205,10 +228,14 @@ tasks or profile assignments. Preserve their observables, expected proof and per
   old green or skipped test becomes new proof. Shared proof is recorded once with all mappings.
 - **A6 — Behavioral uncertainty:** before relying on repaired guidance as demonstrated better
   reasoning, propose the smallest bounded fresh-context BEFORE/AFTER evaluation: two source
-  contexts (baseline and repaired), same settled seven-task input, one first proposal each,
-  same separately owner-selected exact evaluator profile/effort and permitted tools, no product
-  writes, product execution or provider probes beyond separately authorized proposal calls. Compare justification/evidence quality against A1–A4, including
-  alternatives and unsupported-premium rejection, not agreement with a gold model table. Retain
+  contexts (baseline and repaired guidance), the same realistic settled seven-task request,
+  source/tasks and readable retained research in both; only guidance changes. Do not coach the
+  desired routing answer. Assess one first approval proposal from each fresh context, including
+  the actual consulted supporting spans and how they inform comparison/effort reasoning.
+  Use the same separately owner-selected exact evaluator profile/effort and permitted tools,
+  with no product writes/execution or provider probes beyond separately authorized proposal
+  calls. Compare A1–A4 justification/evidence quality, alternatives and unsupported-premium
+  rejection, not agreement with an exact-model gold table. Retain
   proposals and concise judgment in existing authorized evidence conventions only, no new
   framework. A single pair gives bounded observations, not reliability or causal calibration;
   a failed/inconclusive result blocks claims of demonstrated improvement and returns affected
@@ -239,7 +266,8 @@ At initial source production, intake 4, batching 59 and state 12 tests passed lo
 bytecode writes disabled, matching the parent's reported 4/59 baseline for the first two.
 On resumption, their script/contract bytes were confirmed unchanged; that proof is reused,
 not reported as fresh execution. They prove contract sensitivity, authored symbolic checks
-and temporary-Git examples only. The historical ownership blocker is resolved; separate task
-production, combined approval, implementation routing/readiness/permission checks, any new
+and temporary-Git examples only. The historical ownership blocker is resolved; parent source
+inspection, originating task-producer reconciliation, combined approval,
+implementation routing/readiness/permission checks, any new
 ownership conflict, paid behavioral evaluation and independent final review remain gated.
 No implementation readiness or completion is claimed.
