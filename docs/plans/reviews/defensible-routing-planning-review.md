@@ -38,8 +38,22 @@ improvement or optimal routing assignment is claimed.
 
 ## Coordinator handoff
 
-Proceed to coordinator preflight under the approved source/tasks, then obtain exact worker and
-fresh independent reviewer selection and readiness before edits/dispatch. Preserve all permission,
+Coordinator proposed Luna/medium worker and Sol/medium reviewer as provisional sufficient
+profiles, with adequate alternatives and unmeasured effort differences explicit; no benchmark
+rank or cost/speed claim supported selection. Owner selected **“terra medium worker, sol medium
+reviewer”**: exact `openai-codex/gpt-5.6-terra:medium` for direct async T001, then
+`openai-codex/gpt-6.1-sol:medium` in a fresh independent final review. This overrides the worker
+proposal, not scope or gates, and claims no empirical superiority or diversity benefit.
+Both are in enforced model scope. Passive runtime effort checks return medium unchanged;
+inspected native request mapping sends medium (Terra omits an explicit medium override),
+consistent with retained provider support evidence. Detached authoritative launch preflight
+still verifies authenticated context/tool access; actual provider/effort stays unknown where
+unobservable. No live probe or behavioral evaluation is authorized.
+Local preflight: coordinator intake/batching/state 4/59/12 PASS; planner static checker PASS,
+planner fixture suite 120 PASS (initial 30-second tool window insufficient; completed in a
+120-second window). These establish local check usability, not model reasoning.
+Proceed under these exact selected profiles and approved source/tasks, with readiness before
+edits/dispatch. Preserve all permission,
 REQUIRED proof, batching, checkpoint, observed-profile honesty, diagnosed repair and final-review
 gates, including Standard plan_create Sol/medium. No Cerca, runtime/provider/settings, deployment,
 installation, branch/worktree, historical-research or unrelated repairs are authorized. No such
