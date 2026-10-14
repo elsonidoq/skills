@@ -822,7 +822,7 @@ class ComparativeRoutingTests(CarrierTests):
             ("Provisional family and effort choices", (
                 "rubric first, capability verification second",
                 "suitable options even with zero previous launches",
-                "actual shortfall or select the smaller option",
+                "actual shortfall or select the adequate candidate without an unsupported premium",
                 "pending readiness is not inadequacy", "orchestration overhead",
                 "stateful tooling/recovery", "strict requirement versus a default preference")),
             ("Readiness before dispatch", (
@@ -978,6 +978,81 @@ class ComparativeRoutingTests(CarrierTests):
             self.assertNotEqual(decision, expected[name], name + ": swapped decision must be rejected")
         self.assertIn("shared files, phase headings and internal dependencies alone do not require splits", " ".join(TEXT.split()))
         self.assertIn("Commit each task's verified changes as one focused owned-path commit", TEXT)
+
+
+class FirstProposalRoutingTests(CarrierTests):
+    """Authored static sensitivity cases, never evidence of model reasoning."""
+
+    RECIPE_GUARDS = (
+        "actual invocation demands and verification boundaries",
+        "Before comparing candidates, inspect only the retained evidence materially needed",
+        "or state explicit non-reliance/absence",
+        "remaining work/weakest adequate oracle",
+        "one plausible adequate alternative",
+        "specific selection difference, or `no established difference`",
+        "provisional choice or exact owner preference",
+        "sufficient capability without an unsupported premium",
+    )
+
+    def test_recipe_carrier_and_evidence_sequence_mutations(self):
+        rubric = RUBRIC_PATH.read_text()
+        body = carrier(rubric, "First proposal recipe")
+        for clause in self.RECIPE_GUARDS:
+            with self.subTest(clause=clause):
+                self.assertIn(clause, body)
+                altered = " ".join(rubric.split()).replace(clause, "REMOVED", 1)
+                self.assertNotIn(clause, carrier(altered + " ## Footer " + clause, "First proposal recipe"))
+        evidence = carrier(rubric, "Evidence limits")
+        for clause in ("*after* demands/oracles and *before* the comparison/proposal",
+                       "exact family/version/effort", "harness and task relevance",
+                       "retained provenance, and limits", "causal effort gains"):
+            self.assertIn(clause, evidence)
+
+    @staticmethod
+    def valid(record):
+        """A compact content oracle; it intentionally never selects a model."""
+        headings = {"family", "effort", "evidence"}
+        substantive = all(record.get(key) for key in (
+            "remaining", "oracle", "alternative", "difference", "choice", "family", "effort"))
+        generic = {"complex", "safe", "more margin", "benchmark leader", "diversity"}
+        words = " ".join(str(value).lower() for value in record.values())
+        effort_claim = "empirically unestablished" in words or "established span" in words
+        sequence = record.get("evidence_order") in ("inspected-before-comparison", "explicit-nonreliance")
+        return headings <= set(record) and substantive and sequence and effort_claim and not any(term in words for term in generic)
+
+    def test_seven_reason_sensitive_first_proposal_cases(self):
+        base = dict(remaining="bounded implementation inference", oracle="cheap focused oracle",
+                    alternative="Luna/medium", difference="closed contract needs no premium",
+                    choice="Luna/medium provisional", family="adequate closed-contract capability",
+                    effort="medium bounds remaining inference; benefit beyond it is empirically unestablished",
+                    evidence="no retained signal relied on", evidence_order="explicit-nonreliance")
+        cases = {
+            # S1: headings remain, but generic conservatism/leaderboard still fail.
+            "S1_generic_conservatism": (dict(base, family="complex safe more margin", choice="Sol/medium"), False),
+            "S1_benchmark_only_all_sol": (dict(base, family="benchmark leader", choice="Sol/medium"), False),
+            "S1_multiple_justified_tables": (base, True),
+            # S2: no launch history does not exclude an adequate lower-premium candidate.
+            "S2_bounded_edits_cheap_oracle": (dict(base, historical_launch="none"), True),
+            # S3: a concrete weakest-oracle gap can support stronger capability.
+            "S3_hidden_recovery_gap": (dict(base, remaining="reader scans, async settlement, cross-mode publication and failure custody",
+                oracle="adequate local oracle misses cross-mode failure custody", alternative="Luna/medium",
+                difference="stateful recovery gap remains outside the adequate oracle", choice="Sol/medium provisional",
+                family="stronger capability addresses the named recovery gap"), True),
+            # S4: effort is independently constrained, not an invented gain.
+            "S4_invented_effort_gain": (dict(base, effort="max is better because Sol is stronger"), False),
+            # S5: readiness blocks launch but retains the proposal and alternatives.
+            "S5_pending_readiness": (dict(base, readiness="pending; retain Luna/medium and block dispatch; no fallback"), True),
+            # S6: ties permit owner choice without diversity.
+            "S6_uncertain_tie": (dict(base, difference="no established difference", choice="owner preference: Terra/medium",
+                family="adequate tie; no superiority claim"), True),
+            # S7: deficient contracts return to producing gates rather than escalation.
+            "S7_deficient_requirements": (dict(base, remaining="missing consumer criterion", oracle="inadequate; producing review required",
+                difference="no profile can repair missing criteria", choice="producing gate; no dispatch"), True),
+        }
+        for name, (record, expected) in cases.items():
+            with self.subTest(case=name):
+                self.assertEqual(self.valid(record), expected)
+        self.assertEqual({name.split("_")[0] for name in cases}, {f"S{i}" for i in range(1, 8)})
 
 
 class ExecutionReadinessTests(CarrierTests):

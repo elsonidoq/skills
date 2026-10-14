@@ -28,7 +28,9 @@ Implementation tasks carry objective REQUIRED task-local verification items, exp
 outputs, smallest sufficient checks and manual/permission gates through
 [task-generation](skills/task-generation/SKILL.md), not mandatory model classes or shares.
 The coordinator uses the [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md)
-plus applicable approved project guidance to assess consecutive sequential batches, normally
+plus applicable approved project guidance to assess consecutive sequential batches. First proposals inspect
+demands/oracles, then material evidence or explicit non-reliance, then family and effort comparison before proposing;
+normally
 2–5 related tasks when feasible, never a quota. Assess every batch before presenting the complete
 approval table, with a one/two-sentence batch description, exact proposed binding/effort and
 independent family/effort rationales. Implementation authorization is not routing approval:

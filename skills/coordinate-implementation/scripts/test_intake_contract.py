@@ -121,6 +121,25 @@ class IntakeContractTests(unittest.TestCase):
                        "Accept the worker report without inspecting evidence"):
             self.assertIn("plan-trust: " + unsafe, contract_errors(TEXT + "\n" + unsafe))
 
+    def test_rubric_recipe_is_canonical_and_not_rescued_by_consumer_footer(self):
+        # Static carrier check: consumers link the owner; this does not prove live reasoning.
+        rubric = (Path(__file__).parents[1] / "references" / "batch-routing.md").read_text()
+        heading = "First proposal recipe"
+        clauses = (
+            "actual invocation demands and verification boundaries",
+            "Before comparing candidates, inspect only the retained evidence materially needed",
+            "Then compare plausible adequate families and effort separately, and only then make a provisional proposal",
+            "one plausible adequate alternative",
+            "specific selection difference, or `no established difference`",
+        )
+        body = section(rubric, heading)
+        for clause in clauses:
+            with self.subTest(clause=clause):
+                self.assertIn(clause, body)
+                altered = " ".join(rubric.split()).replace(clause, "REMOVED", 1)
+                self.assertNotIn(clause, section(altered + " ## Footer " + clause, heading))
+        self.assertIn("references/batch-routing.md", TEXT)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

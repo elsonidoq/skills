@@ -104,9 +104,10 @@ research capabilities only when needed; configuration names are not usability pr
 Use the [qualified seed rubric](../coordinate-implementation/references/batch-routing.md)
 for each planning/advisory invocation, including brainstorming assessment/application,
 TinySpec source/tasks/review, and Standard specification/tasks/independent review.
-Assess all six applicable factors, especially the weakest verification blind spot.
-Compare suitable family/effort options before readiness, including a smaller never-launched pending proposal,
-with independent comparative Family and Effort rationales. Then report readiness/gaps under the shared rubric:
+Assess all six applicable factors, especially the weakest verification blind spot. Start the
+first proposal with demands/oracles, inspect material evidence or state non-reliance, then compare
+suitable family/effort options before readiness with independent comparative Family and Effort rationales.
+An adequate never-launched proposal may remain pending. Then report readiness/gaps under the shared rubric:
 readiness blocks launch, not suitability; retain the recommendation and ask for bounded authorization or an explicit fallback choice.
 A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
 Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.

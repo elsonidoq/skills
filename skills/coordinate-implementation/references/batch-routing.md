@@ -16,6 +16,35 @@ rules do not become planning prerequisites. An explicit owner-mandated stage pro
 controls that stage; this seed cannot substitute another profile or create a family hierarchy.
 Standalone helper selection remains separate and cannot bypass a manager-governed Standard rule.
 
+## First proposal recipe
+
+Start each first proposal with the actual invocation demands and verification boundaries.
+Inspect all six factors below, name the concrete remaining work and weakest **adequate**
+oracle, and record applicable approved guidance or explicit `none` with uncertainty.
+Before comparing candidates, inspect only the retained evidence materially needed for that
+comparison, or state explicit non-reliance/absence. Then compare plausible adequate
+families and effort separately, and only then make a provisional proposal. This order
+prevents post-hoc benchmark justification; it is not a broad evidence audit.
+
+Each compact existing table row or brief must include: remaining work/weakest adequate
+oracle; one plausible adequate alternative; the specific selection difference, or `no
+established difference`; and the provisional choice or exact owner preference. Account
+briefly for omitted plausible families. Do not enumerate variants, require equal rows or
+use diversity as a reason. `Complex`, `safe`, `more margin`, benchmark-leader, or
+cheapest/fastest claims are not comparisons. The objective is sufficient capability
+without an unsupported premium, not a universal size, quality, or cost ladder.
+
+**Compact example (after demands and material evidence inspection):** “The remaining
+inference is reconciling async settlement with cross-mode publication; the weakest
+adequate oracle misses failure custody. Luna/medium is a plausible adequate alternative,
+but its shortfall is unobserved recovery across that seam; Sol/medium is provisional for
+that specific gap. Family: the recovery gap, not a rank, supports Sol. Effort: medium
+covers reconciling the two states; any extra effort benefit is empirically unestablished.
+The retained Terminal-Bench 4.0 mini-swe-agent Sol/medium span is only qualified,
+pre-comparison context (different harness and unknown snapshot), not a Pi prediction.”
+A real tie instead says `no established difference`; an exact owner preference can select
+without claiming superiority.
+
 ## Assess all six factors
 
 Record ordered task IDs and the weakest material condition, not an average across tasks.
@@ -38,14 +67,19 @@ Raw attempt outcomes are not approved guidance and never automatically mutate it
 
 Apply rubric first, capability verification second. Family and effort are independent dimensions:
 record a comparative **Family rationale** and a separate **Effort rationale** for remaining inference.
-Compare suitable options even with zero previous launches: explain the actual shortfall or select the smaller option.
-Build the suitability shortlist across the rubric's family options, not a habitual two-family subset.
+Family explains sufficient capability versus the named adequate alternative; effort names the
+concrete remaining inference relative to a lower supported effort. Extra effort has no asserted
+empirical benefit unless evidence establishes it; otherwise say it is empirically unestablished.
+Compare suitable options even with zero previous launches: explain the actual shortfall or select
+the adequate candidate without an unsupported premium. Build the suitability shortlist across the rubric's family options, not a habitual two-family subset.
 Briefly explain omissions of other plausible families. Do not enumerate every model variant or force diversity.
 Prior launch success establishes availability, not superiority; pending readiness is not inadequacy.
 Closed design, bounded tools, cheap reversible recovery and strong cheap oracles can positively
-justify a smaller candidate. A stronger family must explain that candidate's concrete shortfall
-under the weakest adequate oracle; suitability alone is not a comparison. Effort needs its own
-sufficiency/extra-inference rationale, not a family-derived label. Model variety is not itself a goal.
+justify an adequate candidate without a premium. A stronger family must explain that candidate's
+concrete shortfall under the weakest adequate oracle; suitability alone is not a comparison.
+Effort needs its own sufficiency/extra-inference rationale, not a family-derived label. Model
+variety is not itself a goal. When adequate candidates tie, preserve the uncertainty and let an
+exact owner preference select one without a superiority claim.
 Distinguish avoidable orchestration overhead from inherent reasoning; real stateful tooling/recovery still carries risk.
 Effort respects a strict requirement versus a default preference: mandatory medium excludes low;
 a default permitting low does not. Owner overrides retain the original proposal and reasons.
@@ -59,8 +93,8 @@ guaranteed supported pairs; there is no universal ladder.
 | Sol/low or Sol/medium | Stronger reasoning or deeper tool use may justify Sol, subject to the actual task blind spots and evidence. | Low can suffice when residual inference is tightly bounded; medium requires its own rationale for greater reasoning/tool demands. |
 | Astra or Terra | Other stronger agentic options only when justified for this batch; readiness is a separate dispatch gate. | Select supported effort independently; neither family implies a fixed effort or mandatory step in a ranking. |
 
-Moderate complexity with closed design and strong cheap reliable oracles can justify a smaller
-symbolic proposal even while readiness is pending, with separate family/effort rationales. Weak oracle/hidden coupling
+Moderate complexity with closed design and strong cheap reliable oracles can justify an adequate
+symbolic proposal without a premium even while readiness is pending, with separate family/effort rationales. Weak oracle/hidden coupling
 favors a justified stronger option only while contracts remain adequate; inadequate contracts
 stop at producing review/renewal. Evaluate the weakest condition, not an average or score.
 
@@ -73,6 +107,13 @@ by substituting a model. Split only for material profile/context/permission/prer
 incompatibility, preserving order and producer verification before consumer work.
 
 ## Evidence limits
+
+When benchmark signals materially support a comparison, inspect their underlying retained span
+*after* demands/oracles and *before* the comparison/proposal. Identify exact family/version/effort,
+harness and task relevance, retained provenance, and limits. Do not claim original-CSV inspection
+unless it occurred. Unlike harnesses, compilation/evaluation dates, and missing snapshots are not
+interchangeable; no row supplies Pi probabilities, causal effort gains, or a leaderboard choice.
+Evidence absence/non-reliance is explicit and does not make a supported pair ineligible.
 
 The [canonical feature research](../../../specs/002-batch-routing-contracts/research.md)
 ("Inspected representative signals and limits", "Runtime and ownership findings", Decisions

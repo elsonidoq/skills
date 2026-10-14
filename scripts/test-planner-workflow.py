@@ -1890,7 +1890,7 @@ class ComparativeCarrierTests(unittest.TestCase):
         texts = checker.load_texts()
         self.assertEqual(checker.check_contracts(texts), [])
         for key, clause, label in (
-            ("routing", "actual shortfall or select the smaller option", "routing-comparison:"),
+            ("routing", "Family explains sufficient capability versus the named adequate alternative", "routing-comparison:"),
             ("routing", "pending readiness is not inadequacy", "routing-comparison:"),
             ("routing", "strict requirement versus a default preference", "routing-comparison:"),
             ("coordinator", "separate comparative Family and Effort rationales", "routing-tradeoff:"),

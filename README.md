@@ -116,8 +116,9 @@ explicit approval of batch boundaries and profiles. Implementation approval alon
 routing. Reuse verified unchanged routing approval on resume; approve changed rows before execution.
 No universal Sol/medium default or forced model diversity applies. Apply **rubric first,
 capability verification second**: **Prior launch success establishes availability, not superiority**.
-Compare suitable family/effort options—even when an alternative has no previous launch history—and
-retain a suitable proposal as pending rather than treating incomplete readiness as inadequacy.
+First proposals inspect demands/oracles, then material evidence or explicit non-reliance, then compare
+family and effort independently before proposing. Compare suitable options—even when an alternative has no
+previous launch history—and retain a suitable proposal as pending rather than treating incomplete readiness as inadequacy.
 Catalog evidence is distinct from authoritative authenticated/runtime readiness and observed launch.
 Reuse applicable passive proof; a conditional source audit is warranted only by concrete uncertainty,
 contradiction, clamping risk, or absent necessary support evidence. If verification is insufficient,

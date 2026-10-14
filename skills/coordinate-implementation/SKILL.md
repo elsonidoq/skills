@@ -74,8 +74,9 @@ execute sequentially, never in parallel. Continue all incomplete dependency-read
 for an explicit partial boundary use `ask_user` to confirm boundary versus full completion.
 
 Assess each batch using the six-factor [routing rubric](references/batch-routing.md),
-not a universal default. Compare suitable family/effort options before readiness, including a
-smaller never-launched pending proposal, with independent comparative Family and Effort rationales.
+not a universal default. Start the first proposal with demands/oracles, inspect material evidence
+or state non-reliance, then compare suitable family/effort options before readiness with independent
+comparative Family and Effort rationales; an adequate never-launched proposal may remain pending.
 Then report readiness/gaps under the shared rubric: readiness blocks launch, not suitability;
 retain the recommendation and ask for bounded authorization or an explicit fallback choice.
 A fallback needs its own justification, readiness and exact owner selection; no silent fallback.

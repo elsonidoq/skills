@@ -34,8 +34,6 @@ ROUTING_CARRIERS = (
     ("rubric-brainstorm", "brainstorm", "## Capability preflight"),
 )
 ROUTING_SEQUENCE = (
-    "Compare suitable family/effort options before readiness",
-    "smaller never-launched pending proposal",
     "independent comparative Family and Effort rationales",
     "Then report readiness/gaps under the shared rubric",
     "readiness blocks launch, not suitability",
@@ -98,6 +96,10 @@ def check_contracts(texts):
         require(label, body, *ROUTING_SEQUENCE)
         reject(label, body, "compare only verified alternatives", "verify readiness before proposing",
                "silently substitute Sol", "always audit provider source before comparison")
+    for label, key, heading in ROUTING_CARRIERS[:2]:
+        require(label, section(texts[key], heading),
+                "Start the first proposal with demands/oracles, inspect material evidence or state non-reliance",
+                "then compare suitable family/effort options before readiness")
 
     p = texts["planner"]
     job_first = section(p, "## Job first; bookkeeping is subordinate")
@@ -450,8 +452,9 @@ def check_contracts(texts):
     require("coordination-intake", section(c, "## Load and Verify"),
             "Missing coordination store or STATE is nonblocking", "No automatic STATE creation, editing or removal")
     require("routing-comparison", section(texts.get("routing", ""), "## Provisional family and effort choices"),
-            "suitable options even with zero previous launches", "actual shortfall or select the smaller option",
-            "pending readiness is not inadequacy", "orchestration overhead", "stateful tooling/recovery",
+            "suitable options even with zero previous launches", "Family explains sufficient capability versus the named adequate alternative",
+            "actual shortfall or select the adequate candidate without an unsupported premium", "pending readiness is not inadequacy",
+            "orchestration overhead", "stateful tooling/recovery",
             "strict requirement versus a default preference")
     require("routing-tradeoff", section(c, "## Prepare Approved Execution"),
             "separate comparative Family and Effort rationales", "material profile, context, permission, owner-gate")
