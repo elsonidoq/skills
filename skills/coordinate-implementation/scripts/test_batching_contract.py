@@ -1009,49 +1009,98 @@ class FirstProposalRoutingTests(CarrierTests):
             self.assertIn(clause, evidence)
 
     @staticmethod
-    def valid(record):
-        """A compact content oracle; it intentionally never selects a model."""
-        headings = {"family", "effort", "evidence"}
+    def settled_input():
+        """Reported seven-task illustration, kept as finite static test input only."""
+        tasks = {
+            "T000": "constitution cleanup and propagation",
+            "T001": "capture/tolerant reader with permanent filesystem/read-count tests",
+            "T002": "both journal modes, containment, accounting and publication",
+            "T003": "metadata-only status and evidence-preserving cleanup",
+            "T004": "maintained progress and endpoint-wrapper paths",
+            "T005": "canonical documentation against verified behavior",
+            "T006": "composed checks and fresh independent review",
+        }
+        required = ("T000/V1", "T001/V1", "T001/V2", "T002/V1", "T002/V2", "T002/V3",
+                    "T003/V1", "T003/V2", "T004/V1", "T004/V2", "T005/V1", "T006/V1",
+                    "T006/V2", "T006/V3")
+        return {"tasks": tasks, "criteria": tuple(f"C{i}" for i in range(1, 10)), "required": required,
+                "risks": ("reader-opening scans", "async native-task settlement",
+                          "cross-mode publication", "failure-preserving cleanup")}
+
+    @staticmethod
+    def valid(record, settled):
+        """Static content sensitivity, not a routing engine or model-reasoning oracle."""
         substantive = all(record.get(key) for key in (
-            "remaining", "oracle", "alternative", "difference", "choice", "family", "effort"))
-        generic = {"complex", "safe", "more margin", "benchmark leader", "diversity"}
-        words = " ".join(str(value).lower() for value in record.values())
-        effort_claim = "empirically unestablished" in words or "established span" in words
-        sequence = record.get("evidence_order") in ("inspected-before-comparison", "explicit-nonreliance")
-        return headings <= set(record) and substantive and sequence and effort_claim and not any(term in words for term in generic)
+            "remaining", "oracle", "alternative", "difference", "choice", "family", "effort", "evidence"))
+        task_refs = set(record.get("task_refs", ()))
+        concrete_oracle = record["oracle"].startswith("weakest adequate oracle:")
+        comparison = (record["family"].startswith("alternative shortfall:") or
+                      record["difference"] == "no established difference")
+        effort = record["effort"].startswith("remaining inference:") and (
+            "empirically unestablished" in record["effort"] or "established span" in record["effort"])
+        evidence = record["evidence_order"] in ("inspected-before-comparison", "explicit-nonreliance")
+        concrete_risks = all(risk in record["remaining"] for risk in record.get("required_risks", ()))
+        return (substantive and task_refs <= set(settled["tasks"]) and concrete_oracle and comparison and
+                effort and evidence and concrete_risks and record.get("dispatch") is not None)
 
     def test_seven_reason_sensitive_first_proposal_cases(self):
-        base = dict(remaining="bounded implementation inference", oracle="cheap focused oracle",
-                    alternative="Luna/medium", difference="closed contract needs no premium",
-                    choice="Luna/medium provisional", family="adequate closed-contract capability",
-                    effort="medium bounds remaining inference; benefit beyond it is empirically unestablished",
-                    evidence="no retained signal relied on", evidence_order="explicit-nonreliance")
+        settled = self.settled_input()
+        self.assertEqual((len(settled["tasks"]), len(settled["criteria"]), len(settled["required"])), (7, 9, 14))
+        self.assertEqual(set(settled["tasks"]), {f"T00{i}" for i in range(7)})
+        base = dict(task_refs=("T000", "T001", "T003", "T004", "T005", "T006"),
+                    remaining="bounded capture, docs and review inference",
+                    oracle="weakest adequate oracle: permanent filesystem/read-count and composed checks",
+                    alternative="Terra/medium", difference="Luna has no concrete shortfall under these oracles",
+                    choice="Luna/medium provisional", family="alternative shortfall: none established",
+                    effort="remaining inference: bounded; extra benefit is empirically unestablished",
+                    evidence="non-reliance: no retained signal is needed", evidence_order="explicit-nonreliance",
+                    dispatch=True)
+        bounded_table = (("T000", "Luna/medium"), ("T001", "Luna/medium"), ("T003", "Luna/medium"),
+                         ("T004", "Luna/medium"), ("T005", "Luna/medium"), ("T006", "Sol/medium"))
+        recovery_table = (("T000", "Luna/medium"), ("T001", "Sol/medium"), ("T002", "Sol/medium"),
+                          ("T003", "Sol/medium"), ("T004", "Luna/medium"), ("T005", "Luna/medium"),
+                          ("T006", "Sol/medium"))
         cases = {
-            # S1: headings remain, but generic conservatism/leaderboard still fail.
-            "S1_generic_conservatism": (dict(base, family="complex safe more margin", choice="Sol/medium"), False),
-            "S1_benchmark_only_all_sol": (dict(base, family="benchmark leader", choice="Sol/medium"), False),
-            "S1_multiple_justified_tables": (base, True),
-            # S2: no launch history does not exclude an adequate lower-premium candidate.
-            "S2_bounded_edits_cheap_oracle": (dict(base, historical_launch="none"), True),
-            # S3: a concrete weakest-oracle gap can support stronger capability.
-            "S3_hidden_recovery_gap": (dict(base, remaining="reader scans, async settlement, cross-mode publication and failure custody",
-                oracle="adequate local oracle misses cross-mode failure custody", alternative="Luna/medium",
-                difference="stateful recovery gap remains outside the adequate oracle", choice="Sol/medium provisional",
-                family="stronger capability addresses the named recovery gap"), True),
-            # S4: effort is independently constrained, not an invented gain.
-            "S4_invented_effort_gain": (dict(base, effort="max is better because Sol is stronger"), False),
-            # S5: readiness blocks launch but retains the proposal and alternatives.
-            "S5_pending_readiness": (dict(base, readiness="pending; retain Luna/medium and block dispatch; no fallback"), True),
-            # S6: ties permit owner choice without diversity.
-            "S6_uncertain_tie": (dict(base, difference="no established difference", choice="owner preference: Terra/medium",
-                family="adequate tie; no superiority claim"), True),
-            # S7: deficient contracts return to producing gates rather than escalation.
-            "S7_deficient_requirements": (dict(base, remaining="missing consumer criterion", oracle="inadequate; producing review required",
-                difference="no profile can repair missing criteria", choice="producing gate; no dispatch"), True),
+            # S1: all headings remain in failures; concrete comparison, not labels, decides them.
+            "S1_generic_conservatism": (dict(base, family="more margin", choice="Sol/medium", table=bounded_table), False),
+            "S1_benchmark_only_all_sol": (dict(base, family="leaderboard result", choice="all Sol/medium", table=recovery_table), False),
+            "S1_bounded_table": (dict(base, table=bounded_table), True),
+            "S1_recovery_table": (dict(base, task_refs=tuple(settled["tasks"]), remaining="journal recovery work",
+                oracle="weakest adequate oracle: reader-opening scans miss cleanup custody", alternative="Luna/medium",
+                difference="stateful recovery boundary is not covered", choice="Sol/medium provisional",
+                family="alternative shortfall: recovery remains outside the oracle", table=recovery_table), True),
+            # S2: no launch history does not exclude a concrete adequate alternative.
+            "S2_bounded_edits_cheap_oracle": (dict(base, table=bounded_table, historical_launch="none"), True),
+            # S3: name the actual hidden boundaries and their oracle gap.
+            "S3_hidden_recovery_gap": (dict(base, task_refs=("T001", "T002", "T003"),
+                remaining="reader-opening scans, async native-task settlement, cross-mode publication and failure-preserving cleanup",
+                oracle="weakest adequate oracle: local checks miss cross-mode failure custody", alternative="Luna/medium",
+                difference="stateful recovery is outside that adequate oracle", choice="Sol/medium provisional",
+                family="alternative shortfall: unobserved recovery custody", required_risks=settled["risks"],
+                table=recovery_table), True),
+            # S4: effort remains independent from the family rationale.
+            "S4_invented_effort_gain": (dict(base, table=bounded_table, effort="max is better because Sol is stronger"), False),
+            # S5: preserve proposed choice/alternative while readiness blocks dispatch.
+            "S5_pending_readiness": (dict(base, table=bounded_table, readiness="pending", dispatch=False,
+                choice="Luna/medium proposed; no fallback"), True),
+            # S6: a tie has no superiority claim or diversity requirement.
+            "S6_uncertain_tie": (dict(base, table=bounded_table, difference="no established difference",
+                choice="owner preference: Terra/medium", family="adequate tie"), True),
+            # S7: missing criteria invalidate launch, not justify escalation.
+            "S7_deficient_requirements": (dict(base, table=bounded_table, task_refs=("T002",),
+                remaining="missing publication criterion", oracle="weakest adequate oracle: inadequate; producing review required",
+                difference="no profile repairs missing criteria", choice="producing gate; no dispatch", dispatch=False), True),
         }
         for name, (record, expected) in cases.items():
             with self.subTest(case=name):
-                self.assertEqual(self.valid(record), expected)
+                self.assertEqual(self.valid(record, settled), expected)
+        recovery = cases["S3_hidden_recovery_gap"][0]
+        for risk in settled["risks"]:
+            with self.subTest(missing_risk=risk):
+                self.assertFalse(self.valid(dict(recovery, remaining=recovery["remaining"].replace(risk, "REMOVED")), settled))
+        self.assertFalse(cases["S5_pending_readiness"][0]["dispatch"])
+        self.assertFalse(cases["S7_deficient_requirements"][0]["dispatch"])
+        self.assertNotEqual(bounded_table, recovery_table)
         self.assertEqual({name.split("_")[0] for name in cases}, {f"S{i}" for i in range(1, 8)})
 
 
