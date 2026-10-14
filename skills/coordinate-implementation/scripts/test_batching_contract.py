@@ -1040,88 +1040,99 @@ class FirstProposalRoutingTests(CarrierTests):
             "T005": "canonical documentation against verified behavior",
             "T006": "composed checks and fresh independent review",
         }
-        required = ("T000/V1", "T001/V1", "T001/V2", "T002/V1", "T002/V2", "T002/V3",
-                    "T003/V1", "T003/V2", "T004/V1", "T004/V2", "T005/V1", "T006/V1",
-                    "T006/V2", "T006/V3")
-        return {"tasks": tasks, "criteria": tuple(f"C{i}" for i in range(1, 10)), "required": required,
+        # The source reports only counts; these are deliberately not historical criterion/item IDs.
+        return {"tasks": tasks, "criteria": tuple(f"symbolic source criterion {i}" for i in range(1, 10)),
+                "required": tuple(f"symbolic REQUIRED item {i}" for i in range(1, 15)),
                 "risks": ("reader-opening scans", "async native-task settlement",
                           "cross-mode publication", "failure-preserving cleanup")}
 
     @staticmethod
-    def valid(record, settled):
-        """Static content sensitivity, not a routing engine or model-reasoning oracle."""
-        substantive = all(record.get(key) for key in (
-            "remaining", "oracle", "alternative", "difference", "choice", "family", "effort", "evidence"))
-        task_refs = set(record.get("task_refs", ()))
-        concrete_oracle = record["oracle"].startswith("weakest adequate oracle:")
-        comparison = (record["family"].startswith("alternative shortfall:") or
-                      record["difference"] == "no established difference")
-        effort = record["effort"].startswith("remaining inference:") and (
-            "empirically unestablished" in record["effort"] or "established span" in record["effort"])
-        evidence = record["evidence_order"] in ("inspected-before-comparison", "explicit-nonreliance")
-        concrete_risks = all(risk in record["remaining"] for risk in record.get("required_risks", ()))
-        return (substantive and task_refs <= set(settled["tasks"]) and concrete_oracle and comparison and
-                effort and evidence and concrete_risks and record.get("dispatch") is not None)
+    def assert_complete_proposal(test, proposal, expected_rows, settled):
+        """Finite authored-fixture assertions, not a routing engine or model-quality oracle."""
+        rows = proposal["rows"]
+        test.assertEqual([row["task"] for row in rows], list(settled["tasks"]))
+        # Profile spelling is carried for an invocation record, never used as reasoning proof.
+        without_profile = lambda items: [{key: value for key, value in row.items() if key != "proposed"} for row in items]
+        test.assertEqual(without_profile(rows), without_profile(expected_rows))
+        for row in rows:
+            test.assertTrue(all(row[key] for key in ("demand", "oracle", "alternative", "comparison",
+                                                      "family", "effort", "evidence", "proposed")))
+            test.assertEqual(row["observed"], "unknown")
+        test.assertFalse(proposal["dispatch"])
+        test.assertIsNone(proposal.get("fallback"))
+        if "producing_gate" in proposal:
+            test.assertTrue(proposal["producing_gate"])
+            test.assertIsNone(proposal.get("escalation"))
 
     def test_seven_reason_sensitive_first_proposal_cases(self):
         settled = self.settled_input()
         self.assertEqual((len(settled["tasks"]), len(settled["criteria"]), len(settled["required"])), (7, 9, 14))
-        self.assertEqual(set(settled["tasks"]), {f"T00{i}" for i in range(7)})
-        base = dict(task_refs=("T000", "T001", "T003", "T004", "T005", "T006"),
-                    remaining="bounded capture, docs and review inference",
-                    oracle="weakest adequate oracle: permanent filesystem/read-count and composed checks",
-                    alternative="Terra/medium", difference="Luna has no concrete shortfall under these oracles",
-                    choice="Luna/medium provisional", family="alternative shortfall: none established",
-                    effort="remaining inference: bounded; extra benefit is empirically unestablished",
-                    evidence="non-reliance: no retained signal is needed", evidence_order="explicit-nonreliance",
-                    dispatch=True)
-        bounded_table = (("T000", "Luna/medium"), ("T001", "Luna/medium"), ("T003", "Luna/medium"),
-                         ("T004", "Luna/medium"), ("T005", "Luna/medium"), ("T006", "Sol/medium"))
-        recovery_table = (("T000", "Luna/medium"), ("T001", "Sol/medium"), ("T002", "Sol/medium"),
-                          ("T003", "Sol/medium"), ("T004", "Luna/medium"), ("T005", "Luna/medium"),
-                          ("T006", "Sol/medium"))
-        cases = {
-            # S1: all headings remain in failures; concrete comparison, not labels, decides them.
-            "S1_generic_conservatism": (dict(base, family="more margin", choice="Sol/medium", table=bounded_table), False),
-            "S1_benchmark_only_all_sol": (dict(base, family="leaderboard result", choice="all Sol/medium", table=recovery_table), False),
-            "S1_bounded_table": (dict(base, table=bounded_table), True),
-            "S1_recovery_table": (dict(base, task_refs=tuple(settled["tasks"]), remaining="journal recovery work",
-                oracle="weakest adequate oracle: reader-opening scans miss cleanup custody", alternative="Luna/medium",
-                difference="stateful recovery boundary is not covered", choice="Sol/medium provisional",
-                family="alternative shortfall: recovery remains outside the oracle", table=recovery_table), True),
-            # S2: no launch history does not exclude a concrete adequate alternative.
-            "S2_bounded_edits_cheap_oracle": (dict(base, table=bounded_table, historical_launch="none"), True),
-            # S3: name the actual hidden boundaries and their oracle gap.
-            "S3_hidden_recovery_gap": (dict(base, task_refs=("T001", "T002", "T003"),
-                remaining="reader-opening scans, async native-task settlement, cross-mode publication and failure-preserving cleanup",
-                oracle="weakest adequate oracle: local checks miss cross-mode failure custody", alternative="Luna/medium",
-                difference="stateful recovery is outside that adequate oracle", choice="Sol/medium provisional",
-                family="alternative shortfall: unobserved recovery custody", required_risks=settled["risks"],
-                table=recovery_table), True),
-            # S4: effort remains independent from the family rationale.
-            "S4_invented_effort_gain": (dict(base, table=bounded_table, effort="max is better because Sol is stronger"), False),
-            # S5: preserve proposed choice/alternative while readiness blocks dispatch.
-            "S5_pending_readiness": (dict(base, table=bounded_table, readiness="pending", dispatch=False,
-                choice="Luna/medium proposed; no fallback"), True),
-            # S6: a tie has no superiority claim or diversity requirement.
-            "S6_uncertain_tie": (dict(base, table=bounded_table, difference="no established difference",
-                choice="owner preference: Terra/medium", family="adequate tie"), True),
-            # S7: missing criteria invalidate launch, not justify escalation.
-            "S7_deficient_requirements": (dict(base, table=bounded_table, task_refs=("T002",),
-                remaining="missing publication criterion", oracle="weakest adequate oracle: inadequate; producing review required",
-                difference="no profile repairs missing criteria", choice="producing gate; no dispatch", dispatch=False), True),
-        }
-        for name, (record, expected) in cases.items():
+        self.assertTrue(all("symbolic" in item for item in settled["criteria"] + settled["required"]))
+        tie_rows = [
+            {"task": task, "demand": demand, "oracle": oracle, "alternative": "Sol/low",
+             "comparison": "no established difference", "family": "honest tie; no family superiority claim",
+             "effort": "no extra remaining inference over low; empirical benefit unestablished",
+             "evidence": "explicit non-reliance", "proposed": "Luna/medium", "observed": "unknown"}
+            for task, demand, oracle in (
+                ("T000", "constitution cleanup", "propagation check"),
+                ("T001", "capture/tolerant reader", "filesystem/read-count test"),
+                ("T002", "journal containment/accounting/publication", "both-mode focused check"),
+                ("T003", "metadata-only cleanup", "failure-custody check"),
+                ("T004", "progress/endpoint wrapper", "existing wrapper check"),
+                ("T005", "canonical documentation", "verified-behavior check"),
+                ("T006", "composed verification/review", "composed final oracle"))]
+        coupling_rows = [dict(row) for row in tie_rows]
+        for task, risk in (("T001", "reader-opening scans"), ("T002", "async native-task settlement and cross-mode publication"),
+                           ("T003", "failure-preserving cleanup")):
+            row = next(item for item in coupling_rows if item["task"] == task)
+            row.update(alternative="Luna/medium", proposed="Sol/medium",
+                       comparison="provisional uncalibrated judgment: Sol may help inspect " + risk + "; not Luna incapacity",
+                       family="tentative coupling judgment with no task-specific probability",
+                       effort="remaining inference over low: reconcile " + risk + "; empirical benefit unestablished",
+                       evidence="synthetic fixture; retained evidence non-reliance")
+        tie = {"rows": tie_rows, "dispatch": False, "readiness": "pending", "selected": None}
+        coupling = {"rows": coupling_rows, "dispatch": False, "readiness": "pending", "selected": None}
+        self.assert_complete_proposal(self, tie, tie_rows, settled)
+        self.assert_complete_proposal(self, coupling, coupling_rows, settled)
+        self.assertNotEqual(tie_rows, coupling_rows)  # multiple justified proposals, not one gold table
+
+        # S1/S4 heading-preserving negatives: all fields remain but exact concrete mapping is lost.
+        generic = {**tie, "rows": [dict(row) for row in tie_rows]}
+        generic["rows"][2]["family"] = "more margin"
+        leaderboard = {**tie, "rows": [dict(row) for row in tie_rows]}
+        leaderboard["rows"][2]["comparison"] = "leaderboard result"
+        invented_effort = {**coupling, "rows": [dict(row) for row in coupling_rows]}
+        invented_effort["rows"][1]["effort"] = "medium is better because Sol is stronger"
+        for name, proposal, expected in (("S1_generic", generic, tie_rows), ("S1_leaderboard", leaderboard, tie_rows),
+                                         ("S4_invented_effort", invented_effort, coupling_rows)):
             with self.subTest(case=name):
-                self.assertEqual(self.valid(record, settled), expected)
-        recovery = cases["S3_hidden_recovery_gap"][0]
+                with self.assertRaises(AssertionError):
+                    self.assert_complete_proposal(self, proposal, expected, settled)
+        for bad_rows in ([], tie_rows[:2] + tie_rows[3:], [dict(row, task="T006") for row in tie_rows]):
+            with self.subTest(case="coverage_or_mapping"):
+                with self.assertRaises(AssertionError):
+                    self.assert_complete_proposal(self, {**tie, "rows": bad_rows}, tie_rows, settled)
+
+        # S2 preserves no-launch adequacy; S3 exposes all actual risks as tentative, uncalibrated judgment.
+        self.assertEqual(tie["readiness"], "pending")
         for risk in settled["risks"]:
-            with self.subTest(missing_risk=risk):
-                self.assertFalse(self.valid(dict(recovery, remaining=recovery["remaining"].replace(risk, "REMOVED")), settled))
-        self.assertFalse(cases["S5_pending_readiness"][0]["dispatch"])
-        self.assertFalse(cases["S7_deficient_requirements"][0]["dispatch"])
-        self.assertNotEqual(bounded_table, recovery_table)
-        self.assertEqual({name.split("_")[0] for name in cases}, {f"S{i}" for i in range(1, 8)})
+            self.assertIn(risk, " ".join(row["comparison"] + row["effort"] for row in coupling_rows))
+        self.assertIn("not Luna incapacity", " ".join(row["comparison"] for row in coupling_rows))
+        # S5: pending readiness retains a proposal and blocks launch/fallback.
+        pending = {**tie, "dispatch": False, "selected": None, "fallback": None}
+        self.assert_complete_proposal(self, pending, tie_rows, settled)
+        for bad in ({**pending, "dispatch": True}, {**pending, "fallback": "Sol/medium"}):
+            with self.subTest(case="S5_launch_or_fallback"):
+                with self.assertRaises(AssertionError):
+                    self.assert_complete_proposal(self, bad, tie_rows, settled)
+        # S6 is the honest owner-preference tie; S7 missing criteria returns to producing review, not escalation.
+        self.assertEqual(tie_rows[0]["comparison"], "no established difference")
+        deficient = {**tie, "dispatch": False, "producing_gate": "missing publication criterion", "escalation": None}
+        self.assert_complete_proposal(self, deficient, tie_rows, settled)
+        for bad in ({**deficient, "dispatch": True}, {**deficient, "escalation": "Sol/medium"}):
+            with self.subTest(case="S7_launch_or_escalation"):
+                with self.assertRaises(AssertionError):
+                    self.assert_complete_proposal(self, bad, tie_rows, settled)
 
 
 class ExecutionReadinessTests(CarrierTests):
