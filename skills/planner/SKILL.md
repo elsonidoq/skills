@@ -264,7 +264,8 @@ Do not create a redundant brief/Epic between request and selected planning sourc
 
 Creation always uses a separate fresh bounded-context producer for each artifact. Loading
 a skill in the parent is not delegation. Planner owns dialogue, coordination, inspection,
-review and its own approval brief, never artifact authoring or repair. Do not forward full
+review and its own approval brief, never fresh artifact authoring or substantive repair. Direct mechanical repair is limited
+to the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections). Do not forward full
 transcripts or unrelated history. Missing, unusable or unauthorized delegation stops the
 affected production/correction stage with the exact gap; no inline/local fallback.
 
@@ -284,9 +285,9 @@ owner flags/answers/deferrals, and required evidence. Each stage reads the brief
 returns updated handoff. Source references reduce artifact duplication; they do not
 replace necessary constraints in a fresh delegate's brief. Do not delegate owner dialogue.
 Resume originating correction context when supported and suitable; otherwise use a
-fresh bounded correction delegate with a durable correction handoff. Delegate all artifact
-corrections, including mechanical, task-level and upstream changes; never edit them in the
-parent. Inspect returned artifacts/checkpoints; ownership or verification conflicts stop.
+fresh bounded correction delegate with a durable correction handoff. Delegate uncertain or substantive artifact
+corrections, including task-level and upstream changes; never edit those in the parent.
+For proven-equivalent mechanical repairs use the bounded mechanical correction contract above. Inspect returned artifacts/checkpoints; ownership or verification conflicts stop.
 Re-present unanswered questions before downstream work.
 
 Carry dependency research triggers, local/version findings, reuse/skip rationale,
@@ -337,7 +338,7 @@ gate for affected review and renewed approval, never fabricated historical requi
    Supply SDD quality guidance for specification creation only. Require complete relevant
    behavior, approach, constraints and observable acceptance in the source; unresolved
    material gaps return through existing gates. Missing, unusable or unauthorized source
-   delegation stops; no parent creation/correction or inline/local fallback.
+   delegation stops; no parent creation/substantive correction or inline/local fallback.
    Inspect returned compact source and blockers. No SpecKit prerequisite or standalone
    TinySpec approval is required before task production.
 2. **Tasks — shared routing selection:** delegate a separate fresh bounded-context task
@@ -345,15 +346,16 @@ gate for affected review and renewed approval, never fabricated historical requi
    applicable source links. TinySpec is requirements truth; no SDD forwarding/rereading as
    direct requirements input. Governing instructions/contracts, memory and permission/safety
    still apply. Missing, unusable or unauthorized task delegation stops; no parent task
-   creation/correction or inline/local fallback. Create separate tasks using its full contract. Derive docs
+   creation/substantive correction or inline/local fallback. Create separate tasks using its full contract. Derive docs
    from inspected effects/requirement, not an absent plan. Keep context-coherent work
    consecutive without reordering dependencies or padding distant tasks.
 3. **Review — planner-owned, shared routing selection:** review source-to-task traceability, in-scope coverage,
    exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
    verification item completeness, explicit and implicit dependencies, and stage feasibility. Record
-   fixes, validation results and current content evidence. Delegate every source/task correction
-   to suitable originating context or a fresh bounded correction delegate; no parent mechanical
-   or upstream repair. Missing, unusable or unauthorized correction delegation stops; no
+   fixes, validation results and current content evidence. Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
+   to proven-equivalent mechanical repairs. Delegate uncertain or substantive source/task corrections
+   to suitable originating context or a fresh bounded correction delegate; no parent substantive
+   task-level or upstream repair. Missing, unusable or unauthorized correction delegation stops; no
    inline/local fallback. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
    Apply the dependency evidence/permission review above before combined approval.
@@ -384,7 +386,7 @@ an independent reviewer before assigning their work.
    SDD reference for specification creation only using request/provenance and shared gate result.
    Require complete relevant behavior, approach, constraints and observable acceptance in the
    specification; unresolved material gaps return through existing gates. Missing, unusable or
-   unauthorized specification delegation stops; no parent creation/correction or inline/local
+   unauthorized specification delegation stops; no parent creation/substantive correction or inline/local
    fallback. Supply research
    triggers/context and apply the shared research contract before consequential dependency constraints
    are chosen; carry evidence-backed constraints/checks, not invented dependency rules.
@@ -404,7 +406,7 @@ an independent reviewer before assigning their work.
    Delegate a separate fresh bounded-context plan producer. The specification is requirements
    truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct
    requirements input; governing instructions/contracts, memory and permission/safety still
-   apply. Missing, unusable or unauthorized plan delegation stops; no parent production/repair
+   apply. Missing, unusable or unauthorized plan delegation stops; no parent production/substantive repair
    or inline/local fallback. From current approved specification, in one
    same-session pass review/fix the specification, create one plan through the observed
    capability, then review/fix the produced plan. Cover contracts, architecture,
@@ -430,7 +432,7 @@ an independent reviewer before assigning their work.
    `task-generation`. Specification is requirements truth; approved plan is derived sequencing
    only. No SDD forwarding/rereading as direct requirements input; governing instructions/
    contracts, memory and permission/safety still apply. Missing, unusable or unauthorized task
-   delegation stops; no parent task creation/correction or inline/local fallback. Supply authorization to prepare tasks and already-applicable
+   delegation stops; no parent task creation/substantive correction or inline/local fallback. Supply authorization to prepare tasks and already-applicable
    approvals; final implementation approval is not a prerequisite to creation.
    This stage is create-only: no producer self-review/correction. Defects belong to
    `overall_review`. Include documentation, acceptance, shared context and producer
@@ -444,9 +446,11 @@ an independent reviewer before assigning their work.
    in direct Standard and managed/helper plans.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
-   Delegate mechanical task-level and upstream corrections to suitable originating producer
+   Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
+   to proven-equivalent mechanical repairs. Delegate uncertain or substantive task-level and
+   upstream corrections to suitable originating producer
    context or a fresh bounded correction delegate; record evidence. The independent reviewer
-   does not become the producer. No parent artifact edits. Missing, unusable or unauthorized
+   does not become the producer. No parent substantive artifact edits. Missing, unusable or unauthorized
    correction delegation stops; no inline/local fallback. Flag only material
    friction/complexity or genuine specification deviation with alternatives and a
    recommendation; never apply unresolved material defaults. Task ordering, grouping,

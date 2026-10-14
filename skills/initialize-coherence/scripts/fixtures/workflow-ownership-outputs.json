@@ -1,0 +1,12 @@
+[
+  {
+    "name": "new-adoption-resolving-custom-associations",
+    "before": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n",
+    "after": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nPackage contracts:\n[contract](INSTALL/planner/SKILL.md)\n[contract](INSTALL/coordinate-implementation/SKILL.md)\n[contract](INSTALL/task-generation/SKILL.md)\n[contract](INSTALL/planner/references/approval-and-recovery.md)\n[contract](INSTALL/memory-handling/references/task-commit-contract.md)\nExisting STATE location: scratch/STATE.md; preserve content, no upkeep.\n<!-- coherence-suite-contract:end -->\n"
+  },
+  {
+    "name": "bounded-refresh-preserves-custom-policy-memory-docs",
+    "before": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nOld mechanics\n<!-- coherence-suite-contract:end -->\n",
+    "after": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nPackage contracts:\n[contract](INSTALL/planner/SKILL.md)\n[contract](INSTALL/coordinate-implementation/SKILL.md)\n[contract](INSTALL/task-generation/SKILL.md)\n[contract](INSTALL/planner/references/approval-and-recovery.md)\n[contract](INSTALL/memory-handling/references/task-commit-contract.md)\nExisting STATE location: scratch/STATE.md; preserve content, no upkeep.\n<!-- coherence-suite-contract:end -->\n"
+  }
+]

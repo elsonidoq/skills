@@ -196,6 +196,42 @@ class CandidateTests(unittest.TestCase):
         self.assertIn("no suite-level persistent database/schema owner", normalized(index))
 
 
+class WorkflowOwnershipOutputTests(unittest.TestCase):
+    """Authored adoption outputs, not a generator or live agent simulation."""
+    def test_new_and_refresh_resolve_contracts_preserve_associations(self):
+        rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
+        adoption = stage(SKILL.read_text(), "Adoption")
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            with self.subTest(case=row["name"]):
+                custom = row["before"].split("<!-- coherence-suite-contract:start -->")[0]
+                self.assertTrue(row["after"].startswith(custom))
+                for target in re.findall(r"\]\(INSTALL/([^)]+)\)", row["after"]):
+                    self.assertIn(target, adoption)
+                    self.assertTrue((ROOT / "skills" / target).is_file(), target)
+                self.assertEqual(len(re.findall(r"\]\(INSTALL/", row["after"])), 5)
+                self.assertNotIn("request →", row["after"])
+                self.assertIn("no upkeep", row["after"])
+                self.assertIn("Refer to these owners rather than reproduce their workflow rules", adoption)
+                self.assertIn("missing installed contracts stop adoption/refresh", adoption)
+                self.assertIn("preserve custom memory paths, docs, policy", adoption)
+                self.assertIn("no STATE initialization or upkeep", adoption)
+                self.assertIn("Package references do not supersede local product policy or authorize work", adoption)
+
+    def test_unsafe_expansion_and_dirty_approval_guards(self):
+        text = SKILL.read_text()
+        for clause, diagnostic in (
+            ("Automatically create STATE.md", "permission-auto-state"),
+            ("Reset existing memory on refresh", "permission-memory-reset"),
+            ("Edit dirty targets without approval", "permission-dirty-overlap"),
+            ("All merged-stage writes are unconditionally permitted", "permission-merged-writes"),
+        ):
+            with self.subTest(unsafe=diagnostic):
+                self.assertTrue(any(e.startswith(diagnostic + ":") for e in check_contract(text + "\n" + clause)))
+        self.assertIn("Proposal-first", stage(text, "Approval"))
+        self.assertIn("general plan approval is not an overlap waiver", stage(text, "Preflight"))
+
+
 class PreservationTests(unittest.TestCase):
     """Each original ledger row has a separately named carrying-stage check."""
 

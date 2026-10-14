@@ -106,7 +106,8 @@ producer/consumer sequencing; do not imply each proof is a separate task or exec
 proofs.
 
 The managed producer uses a separate fresh bounded context for the entire plan pass;
-the manager never authors or repairs artifacts. Delegate corrections to suitable originating
+the manager never authors fresh artifacts or makes substantive repairs. Direct mechanical repairs
+follow the [bounded mechanical correction contract](../planner/references/approval-and-recovery.md#bounded-mechanical-corrections). Delegate uncertain or substantive corrections to suitable originating
 producer context or a fresh bounded correction delegate. Missing, unusable or unauthorized
 delegation stops; no managed direct/inline/local fallback. The specification is requirements
 truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct

@@ -80,8 +80,50 @@ def operational_carrier(text, selector):
         return text[start:] if not end else text[start:start + len(marker) + end.start()]
     return section(text, selector)
 
-def check_contracts(texts):
+# Focused workflow-ownership boundaries; these are textual checks, not semantic oracles.
+MECHANICAL_CARRIERS = (
+    ("requirements", "The explicit owner-required exception"),
+    ("planner", "## Selected production and stage handoffs"),
+    ("planner", "item:3. **Review"),
+    ("planner", "stage:overall_review"),
+    ("helper", "## Planner Standard adapter contract"),
+    ("coordinator", "## Load and Verify"),
+)
+MECHANICAL_GUARDS = (
+    "typos, formatting or broken links only",
+    "actual before/after diff",
+    "requirements, decisions, scope, dependencies, acceptance and approval validity",
+    "Record the equivalence comparison",
+    "comparable current-content evidence",
+    "never silently reuse a stale digest",
+    "A cosmetic label alone is insufficient",
+    "Uncertain or substantive changes",
+    "affected review and renewed approval",
+    "independent reviewer never becomes the producer",
+    "task-commit contract",
+)
+
+def check_workflow_ownership(texts):
     errors = []
+    owner = section(texts["approval"], "## Bounded mechanical corrections")
+    for guard in MECHANICAL_GUARDS:
+        if " ".join(guard.split()) not in " ".join(owner.split()):
+            errors.append("mechanical-owner: missing " + guard)
+    for key, selector in MECHANICAL_CARRIERS:
+        body = operational_carrier(texts[key], selector)
+        label = "mechanical-" + key + "-" + selector
+        if "bounded mechanical correction contract" not in body:
+            errors.append(label + ": missing owner reference")
+        for ban in ("Delegate all artifact corrections", "Delegate every source/task correction",
+                    "Delegate mechanical task-level and upstream corrections", "never authors or repairs artifacts",
+                    "no parent mechanical", "No parent artifact edits", "never artifact authoring or repair"):
+            if ban.lower() in " ".join(body.split()).lower():
+                errors.append(label + ": former blanket ban " + ban)
+    return errors
+
+
+def check_contracts(texts):
+    errors = check_workflow_ownership(texts)
     def require(label, text, *phrases):
         for phrase in phrases:
             if " ".join(phrase.split()) not in " ".join(text.split()):
@@ -637,16 +679,16 @@ BOUNDARY_CARRIERS = (
 
 # Actual producer/consumer inputs, not incidental summary keywords.
 DELEGATION_CARRIERS = (
-    ("delegate-source", "planner", "item:1. **Source creation", ("delegate `tiny-spec`", "separate fresh", "bounded-context source producer", "unauthorized source", "delegation stops", "no parent creation/correction or inline/local fallback")),
-    ("delegate-tiny-tasks", "planner", "item:2. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/correction or inline/local fallback")),
-    ("delegate-tiny-correction", "planner", "item:3. **Review", ("Delegate every source/task correction", "originating context or a fresh bounded correction delegate", "no parent mechanical", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
-    ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "unauthorized specification delegation stops", "no parent creation/correction or inline/local", "mechanical gaps are resolved by the delegate")),
-    ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "unauthorized plan delegation stops", "no parent production/repair", "inline/local fallback", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
-    ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "unauthorized task", "delegation stops", "no parent task creation/correction or inline/local fallback")),
-    ("delegate-overall-correction", "planner", "stage:overall_review", ("Delegate mechanical task-level and upstream corrections", "originating producer", "fresh bounded correction delegate", "independent reviewer", "does not become the producer", "No parent artifact edits", "unauthorized", "correction delegation stops", "no inline/local fallback")),
-    ("delegate-recovery", "approval", "## Transition and invalidation table", ("Delegate artifact corrections", "originating producer context", "fresh bounded correction delegate", "No parent artifact authoring", "mechanical, task-level or upstream repair, including legacy recovery", "unauthorized delegation stops", "no inline/local fallback or full transcript handoff")),
-    ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors or repairs artifacts", "Delegate corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "no managed direct/inline/local fallback")),
-    ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent is not delegation", "never artifact authoring or repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate all artifact", "corrections, including mechanical, task-level and upstream changes")),
+    ("delegate-source", "planner", "item:1. **Source creation", ("delegate `tiny-spec`", "separate fresh", "bounded-context source producer", "unauthorized source", "delegation stops", "no parent creation/substantive correction or inline/local fallback")),
+    ("delegate-tiny-tasks", "planner", "item:2. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/substantive correction or inline/local fallback")),
+    ("delegate-tiny-correction", "planner", "item:3. **Review", ("Delegate uncertain or substantive source/task corrections", "originating context or a fresh bounded correction delegate", "no parent substantive", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
+    ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "unauthorized specification delegation stops", "no parent creation/substantive correction or inline/local", "mechanical gaps are resolved by the delegate")),
+    ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "unauthorized plan delegation stops", "no parent production/substantive repair", "inline/local fallback", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
+    ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "unauthorized task", "delegation stops", "no parent task creation/substantive correction or inline/local fallback")),
+    ("delegate-overall-correction", "planner", "stage:overall_review", ("Delegate uncertain or substantive task-level and", "originating producer", "fresh bounded correction delegate", "independent reviewer", "does not become the producer", "No parent substantive artifact edits", "unauthorized", "correction delegation stops", "no inline/local fallback")),
+    ("delegate-recovery", "approval", "## Transition and invalidation table", ("Delegate uncertain or substantive artifact corrections", "originating producer context", "fresh bounded correction delegate", "No parent artifact authoring", "substantive task-level or upstream repair, including legacy recovery", "unauthorized delegation stops", "fallback or full transcript handoff")),
+    ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors fresh artifacts or makes substantive repairs", "Delegate uncertain or substantive corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "no managed direct/inline/local fallback")),
+    ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent is not delegation", "never fresh artifact authoring or substantive repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate uncertain or substantive artifact", "corrections, including task-level and upstream changes")),
 )
 
 AUTHORITY_CARRIERS = (

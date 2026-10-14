@@ -123,15 +123,20 @@
       ],
       "behavior": "Record complete planning flow and depth gates",
       "stage": "Adoption",
-      "ownership_change": "none; preserve source behavior",
+      "ownership_change": "T001: mechanics move to resolving installed package references; original source preserved for attribution",
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_flow_preserved",
       "negative": "test_flow_rejects_deleted_guard",
       "evidence": "PASS: test_flow_preserved and test_flow_rejects_deleted_guard; all required guard phrases checked in Adoption; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
-        "request \u2192 `planner` understanding/brainstorming/scope \u2192 explicit owner TinySpec/Standard choice \u2192 reviewed tasks \u2192 approved handoff \u2192 `coordinate-implementation` \u2192 `finish-session`",
-        "TinySpec uses `tiny-spec`, separate tasks and combined approval",
-        "Standard uses installed SpecKit and specification/final approval gates",
+        "resolve the installed package location",
+        "planner/SKILL.md",
+        "coordinate-implementation/SKILL.md",
+        "task-generation/SKILL.md",
+        "planner/references/approval-and-recovery.md",
+        "memory-handling/references/task-commit-contract.md",
+        "Verify each target before writing",
+        "Refer to these owners rather than reproduce their workflow rules",
         "Neither automatically creates an Epic"
       ]
     },
@@ -170,19 +175,18 @@
       ],
       "behavior": "Context-first recovery without automatic STATE maintenance",
       "stage": "Adoption",
-      "ownership_change": "Owner-approved no-bookkeeping change supersedes automatic state lifecycle; historical source bytes and citations remain immutable.",
+      "ownership_change": "T001: recovery mechanics referenced through installed owners; preserve STATE association without upkeep",
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_state_preserved",
       "negative": "test_state_rejects_deleted_guard",
       "evidence": "Current acceptance follows approved coordinator-no-bookkeeping source A1/A5/A6; scoped positive/deletion checks validate context-first recovery and preservation, not live obedience.",
       "requires": [
-        "no automatic STATE creation/edit/removal",
-        "preserve existing STATE/custom content",
-        "available summary/recent context",
-        "selectively reconstruct uncertain",
-        "active/unknown child status",
+        "preserve any existing STATE/custom content",
+        "document its existing location",
+        "no STATE initialization or upkeep",
+        "Reference installed execution and approval/recovery owners",
         "pi sessions as the conversation record",
-        "`docs/open_issues.md` as the canonical unresolved-work register via `track-open-issue`"
+        "canonical unresolved-work register via `track-open-issue`"
       ]
     },
     {

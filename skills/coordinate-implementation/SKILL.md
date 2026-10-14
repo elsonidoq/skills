@@ -18,6 +18,10 @@ Missing, stale or unverifiable approval blocks the affected action; never invent
 provenance or regenerate planning artifacts to bypass a blocker. Resolve ambiguous
 origin or conflicting planning depth. For applicable origin-specific approval and
 repair gates, use the existing [approval/recovery mapping](../planner/references/approval-and-recovery.md).
+Direct artifact repair is limited by the
+[bounded mechanical correction contract](../planner/references/approval-and-recovery.md#bounded-mechanical-corrections);
+uncertain or substantive intake corrections return to the originating/fresh bounded producer
+and affected review/approval renewal, never approval relabeling.
 TinySpec needs separate source/tasks and current combined approval; Standard needs
 specification/plan/tasks, both current approvals and required SpecKit stage evidence.
 Preserve legacy source shape and authorization rather than relabeling work.

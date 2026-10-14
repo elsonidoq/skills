@@ -114,12 +114,14 @@ block and append a marked, self-contained suite contract to existing instruction
 preserving existing custom content verbatim. `memory-handling`, `finish-session`,
 and `compact-memory` can cite it. Record:
 
-- Planning: request → `planner` understanding/brainstorming/scope → explicit owner
-  TinySpec/Standard choice → reviewed tasks → approved handoff →
-  `coordinate-implementation` → `finish-session`.
-  TinySpec uses `tiny-spec`, separate tasks and combined approval; Standard uses
-  installed SpecKit and specification/final approval gates. Neither automatically
-  creates an Epic.
+- Package contracts: resolve the installed package location from the discoverable suite
+  configuration. Record resolving links to `planner/SKILL.md` (planning),
+  `coordinate-implementation/SKILL.md` (execution), `task-generation/SKILL.md` (task mechanics),
+  `planner/references/approval-and-recovery.md` (approval/recovery and bounded mechanical
+  corrections) and `memory-handling/references/task-commit-contract.md` (retained checkpoints).
+  Verify each target before writing; missing installed contracts stop adoption/refresh.
+  Refer to these owners rather than reproduce their workflow rules. Neither automatically
+  creates an Epic. Package references do not supersede local product policy or authorize work.
 - Memory: default `<project-root>/memory/` with `memory/MEMORY.md` and entry files;
   owner-chosen paths remain valid. Follow `memory-handling` trigger-first retrieval:
   Read the whole index first, then trigger-matching entries. Recheck after any memory
@@ -128,12 +130,10 @@ and `compact-memory` can cite it. Record:
   Only explicit future-directed user feedback authorizes bounded guidelines storage, not
   auto-init, routine summaries/index updates, reflection or inferred lessons. Preserve local
   path/symlink, sensitive-data and dirty/concurrent ownership protections.
-- Recovery: no automatic STATE creation/edit/removal; preserve existing STATE/custom content.
-  Begin with available summary/recent context, then selectively reconstruct uncertain
-  authority, Git/check/commit and active/unknown child status before continuation under the
-  [context-first recovery contract](../coordinate-implementation/SKILL.md#recover-context).
-  Keep pi sessions as the conversation record and `docs/open_issues.md` as the canonical
-  unresolved-work register via `track-open-issue`.
+- Recovery association: preserve any existing STATE/custom content and document its existing
+  location when applicable; no STATE initialization or upkeep. Reference installed execution
+  and approval/recovery owners above, not a project-local workflow ledger. Keep pi sessions
+  as the conversation record and the canonical unresolved-work register via `track-open-issue`.
 - Documentation: Record documentation owners and the documentation-routing guide
   discovered here.
 

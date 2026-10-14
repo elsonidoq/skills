@@ -1,0 +1,256 @@
+[
+  {
+    "name": "typo",
+    "before": "Keep teh API",
+    "after": "Keep the API",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual before/after diff inspected: 'Keep teh API' \u2192 'Keep the API'; all six aspects unchanged."
+    },
+    "currentDigest": "44fccb384c53f486b6dd644bb76c1ae4b1784753ddc31fe8aba26fb25272c220",
+    "route": "mechanical"
+  },
+  {
+    "name": "format",
+    "before": "Keep the API",
+    "after": "Keep  the API",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual before/after diff inspected: 'Keep the API' \u2192 'Keep  the API'; all six aspects unchanged."
+    },
+    "currentDigest": "ce1e4644ac829c6e494deae3d54cae630d8a0ca55e06106d42bef94824c91389",
+    "route": "mechanical"
+  },
+  {
+    "name": "broken-link",
+    "before": "[API](absent.md)",
+    "after": "[API](api.md)",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual before/after diff inspected: '[API](absent.md)' \u2192 '[API](api.md)'; all six aspects unchanged."
+    },
+    "currentDigest": "5e86cf0c4879f1714134c3bae5025d4616836a115b145207ae8ef8268b58c3d0",
+    "route": "mechanical"
+  },
+  {
+    "name": "disguised-requirements",
+    "before": "Keep API",
+    "after": "Keep API (cosmetic label only)",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Changed Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual diff changes requirements"
+    },
+    "route": "delegate-review-renew"
+  },
+  {
+    "name": "disguised-decisions",
+    "before": "Keep API",
+    "after": "Keep API (cosmetic label only)",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Changed Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual diff changes decisions"
+    },
+    "route": "delegate-review-renew"
+  },
+  {
+    "name": "disguised-scope",
+    "before": "Keep API",
+    "after": "Keep API (cosmetic label only)",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "Changed API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual diff changes scope"
+    },
+    "route": "delegate-review-renew"
+  },
+  {
+    "name": "disguised-dependencies",
+    "before": "Keep API",
+    "after": "Keep API (cosmetic label only)",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "Changed No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual diff changes dependencies"
+    },
+    "route": "delegate-review-renew"
+  },
+  {
+    "name": "disguised-acceptance",
+    "before": "Keep API",
+    "after": "Keep API (cosmetic label only)",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "Changed API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": "Actual diff changes acceptance"
+    },
+    "route": "delegate-review-renew"
+  },
+  {
+    "name": "disguised-approval validity",
+    "before": "Keep API",
+    "after": "Keep API (cosmetic label only)",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Changed Owner approved API-only source"
+      },
+      "record": "Actual diff changes approval validity"
+    },
+    "route": "delegate-review-renew"
+  },
+  {
+    "name": "unproven-approval",
+    "before": "Keep teh API",
+    "after": "Keep the API",
+    "comparison": {
+      "before": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "after": {
+        "requirements": "Keep API",
+        "decisions": "Use local fixtures",
+        "scope": "API only",
+        "dependencies": "No new dependency",
+        "acceptance": "API fixture passes",
+        "approval validity": "Owner approved API-only source"
+      },
+      "record": ""
+    },
+    "currentDigest": "stale-before-digest",
+    "route": "delegate-review-renew"
+  }
+]

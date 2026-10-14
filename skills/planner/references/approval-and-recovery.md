@@ -65,12 +65,29 @@ acceptance, dependencies or instructions do. Do not waive drift merely by callin
 cosmetic: verify the authorized content remains equivalent and record that comparison.
 
 Unanswered questions retain their originating context, alternatives and owner rationale.
-Delegate artifact corrections to that originating producer context when supported and
-suitable; otherwise use a fresh bounded correction delegate. No parent artifact authoring
-or mechanical, task-level or upstream repair, including legacy recovery. Missing, unusable
-or unauthorized delegation stops; no inline/local fallback or full transcript handoff.
+Delegate uncertain or substantive artifact corrections to that originating producer context
+when supported and suitable; otherwise use a fresh bounded correction delegate.
+No parent artifact authoring or substantive task-level or upstream repair, including legacy recovery.
+Missing, unusable or unauthorized delegation stops substantive correction; no inline/local
+fallback or full transcript handoff. Mechanical repairs follow the contract below.
 Resume that correction context when supported; otherwise hand off durable answers and
 constraints. Do not regenerate answers or silently apply recommended defaults.
+
+## Bounded mechanical corrections
+
+A coordinating parent may directly repair typos, formatting or broken links only after
+comparing the actual before/after diff and proving unchanged requirements, decisions, scope,
+dependencies, acceptance and approval validity. Record the equivalence comparison in the
+existing return/approval convention and retain comparable current-content evidence for the
+corrected bytes; never silently reuse a stale digest. A cosmetic label alone is insufficient.
+If equivalence or approval validity cannot be established, direct repair is not permitted.
+Uncertain or substantive changes return to suitable originating producer context or a fresh
+bounded correction delegate, affected review and renewed approval. This applies to task-level,
+upstream and legacy corrections alike, not fresh creation: every new artifact still uses a
+separate fresh bounded-context producer. Missing, unusable or unauthorized delegation stops
+substantive work; no inline/local fallback. The independent reviewer never becomes the producer.
+Authorized retained repairs follow the shared
+[task-commit contract](../../memory-handling/references/task-commit-contract.md).
 
 ## Legacy checkpoint mapping
 

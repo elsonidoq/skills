@@ -1530,6 +1530,65 @@ class DelegationAuthorityTests(unittest.TestCase):
         self.assertIn("separate source and tasks file", texts["tasks"])
 
 
+class MechanicalOwnershipTests(unittest.TestCase):
+    """Trusted comparison examples plus carrier mutations; not model obedience."""
+    def test_each_boundary_rejects_former_blanket_ban(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_workflow_ownership(texts), [])
+        for key, selector in checker.MECHANICAL_CARRIERS:
+            with self.subTest(carrier=key, boundary=selector):
+                changed = dict(texts)
+                body = checker.operational_carrier(texts[key], selector)
+                changed[key] = changed[key].replace(body, body + "\nNo parent artifact edits\n", 1)
+                self.assertTrue(any("former blanket ban" in e for e in checker.check_workflow_ownership(changed)))
+                changed[key] = texts[key].replace(body, body.replace("bounded mechanical correction contract", "REMOVED"), 1)
+                self.assertTrue(any("missing owner reference" in e for e in checker.check_workflow_ownership(changed)))
+
+    def test_equivalence_guards_cannot_be_footer_rescued(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_workflow_ownership(texts), [])
+        body = checker.section(texts["approval"], "## Bounded mechanical corrections")
+        for guard in checker.MECHANICAL_GUARDS:
+            with self.subTest(guard=guard):
+                changed = dict(texts)
+                changed["approval"] = texts["approval"].replace(body, re.sub(r"\s+".join(re.escape(w) for w in guard.split()), "REMOVED", body), 1)
+                changed["approval"] += "\n## Footer\n" + guard
+                self.assertTrue(any(e.startswith("mechanical-owner:") for e in checker.check_workflow_ownership(changed)))
+
+    def test_named_equivalence_examples(self):
+        # Authored comparison records: no NLP inference or live model simulation.
+        import hashlib
+        cases = json.loads((HERE / "fixtures/planner/mechanical-corrections.json").read_text())
+        owner = checker.section(checker.load_texts()["approval"], "## Bounded mechanical corrections")
+        aspects = ("requirements", "decisions", "scope", "dependencies", "acceptance", "approval validity")
+        self.assertEqual(len(cases), 10)
+        for case in cases:
+            with self.subTest(case=case["name"]):
+                self.assertNotEqual(case["before"], case["after"])
+                comparison = case["comparison"]
+                self.assertEqual(set(comparison["before"]), set(aspects))
+                if case["route"] == "mechanical":
+                    self.assertTrue(comparison["record"])
+                    self.assertEqual(comparison["before"], comparison["after"])
+                    self.assertEqual(case["currentDigest"], hashlib.sha256(case["after"].encode()).hexdigest())
+                    self.assertIn("Record the equivalence comparison", owner)
+                    self.assertIn("typos, formatting or broken links only", owner)
+                else:
+                    self.assertEqual(case["route"], "delegate-review-renew")
+                    self.assertIn("Uncertain or substantive changes", owner)
+                    self.assertIn("affected review and renewed approval", owner)
+                    if case["name"] == "unproven-approval":
+                        self.assertFalse(comparison["record"])
+                        self.assertNotEqual(case["currentDigest"], hashlib.sha256(case["after"].encode()).hexdigest())
+                        self.assertIn("If equivalence or approval validity cannot be established, direct repair is not permitted", owner)
+                    else:
+                        aspect = case["name"].removeprefix("disguised-")
+                        self.assertNotEqual(comparison["before"][aspect], comparison["after"][aspect])
+                        self.assertIn(aspect, owner)
+        self.assertIn("A cosmetic label alone is insufficient", owner)
+        self.assertIn("never silently reuse a stale digest", owner)
+
+
 class CompleteBriefTests(unittest.TestCase):
     """Trusted exact fixture outcomes, not a generic semantic/NLP oracle."""
 
