@@ -95,7 +95,7 @@
       ],
       "behavior": "Verify requirements; report missing without installing",
       "stage": "Preflight",
-      "ownership_change": "none; preserve source behavior",
+      "ownership_change": "T001 bounded exception: approved project-local SpecKit assets only; other missing runtime requirements still stop/report without installation",
       "task": "T002; T005\u2013T007 verification",
       "positive": "test_requirements_preserved",
       "negative": "test_requirements_rejects_deleted_guard",
@@ -108,7 +108,7 @@
         "Verify actual registered and usable capabilities",
         "SpecKit is required only for applicable Standard stages, not TinySpec",
         "Jev is optional for Jev triage in `finish-session-jev`, with manual routing fallback",
-        "Report missing requirements; do not proceed silently or install them"
+        "Report missing runtime requirements; do not proceed silently or install them"
       ]
     },
     {

@@ -19,5 +19,21 @@
   {"diagnostic":"permission-shell-complete", "stage":"Validation", "text":"Shell initialization is substantive completion."},
   {"diagnostic":"permission-planner", "stage":"Validation", "text":"Handoff substantive work without planner."},
   {"diagnostic":"permission-depth", "stage":"Validation", "text":"Force Standard for documentation handoff."},
-  {"diagnostic":"permission-epic", "stage":"Validation", "text":"Automatically create a new Epic."}
+  {"diagnostic":"permission-epic", "stage":"Validation", "text":"Automatically create a new Epic."},
+  {"diagnostic":"permission-assets-bypass", "stage":"Adoption", "text":"Return immediately after compatible adoption."},
+  {"diagnostic":"permission-assets-default", "stage":"Approval", "text":"Use default integration for asset repair."},
+  {"diagnostic":"permission-assets-unapproved", "stage":"Approval", "text":"Install SpecKit assets without approval."},
+  {"diagnostic":"permission-assets-force", "stage":"Adoption", "text":"Run specify init --here --force in the existing repository."},
+  {"diagnostic":"permission-assets-global-install", "stage":"Approval", "text":"Automatically install the missing global SpecKit CLI."},
+  {"diagnostic":"permission-assets-overwrite", "stage":"Adoption", "text":"Overwrite existing custom assets."},
+  {"diagnostic":"permission-assets-conflict", "stage":"Adoption", "text":"Continue asset repair after conflict or drift."},
+  {"diagnostic":"permission-assets-ready", "stage":"Validation", "text":"Claim ready after CLI failure or partial output."},
+  {"diagnostic":"permission-assets-retry", "stage":"Adoption", "text":"Automatically retry failed asset repair."},
+  {"diagnostic":"permission-assets-rollback", "stage":"Adoption", "text":"Destructively roll back partial asset repair."},
+  {"diagnostic":"permission-assets-metadata", "stage":"Adoption", "text":"Blindly copy staging metadata over custom metadata."},
+  {"diagnostic":"permission-assets-existence", "stage":"Discovery", "text":"Treat directory existence alone as asset completeness."},
+  {"diagnostic":"permission-assets-manifest", "stage":"Discovery", "text":"Treat manifest presence alone as asset completeness."},
+  {"diagnostic":"permission-assets-permissions", "stage":"Discovery", "text":"Skip required script permissions checks."},
+  {"diagnostic":"permission-assets-references", "stage":"Discovery", "text":"Skip asset reference checks."},
+  {"diagnostic":"permission-assets-empty", "stage":"Validation", "text":"Claim ready with empty or missing asset files."}
 ]

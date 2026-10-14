@@ -28,6 +28,22 @@ BOOKKEEPING_UNSAFE = {
     "permission-summary": r"write a run summary on completion",
 }
 UNSAFE = {
+    "permission-assets-existence": r"\btreat directory existence alone as asset completeness\b",
+    "permission-assets-manifest": r"\btreat manifest presence alone as asset completeness\b",
+    "permission-assets-permissions": r"\bskip required script permissions checks\b",
+    "permission-assets-references": r"\bskip asset reference checks\b",
+    "permission-assets-empty": r"\bclaim ready with empty or missing asset files\b",
+    "permission-assets-bypass": r"\breturn immediately after compatible adoption\b",
+    "permission-assets-default": r"\buse default integration for asset repair\b",
+    "permission-assets-unapproved": r"\binstall speckit assets without approval\b",
+    "permission-assets-force": r"\brun specify init \-\-here \-\-force in the existing repository\b",
+    "permission-assets-global-install": r"\bautomatically install the missing global speckit cli\b",
+    "permission-assets-overwrite": r"\boverwrite existing custom assets\b",
+    "permission-assets-conflict": r"\bcontinue asset repair after conflict or drift\b",
+    "permission-assets-ready": r"\bclaim ready after cli failure or partial output\b",
+    "permission-assets-retry": r"\bautomatically retry failed asset repair\b",
+    "permission-assets-rollback": r"\bdestructively roll back partial asset repair\b",
+    "permission-assets-metadata": r"\bblindly copy staging metadata over custom metadata\b",
     "permission-unapproved": r"\bwrite any target without approval\b",
     "permission-denial": r"\bdenial grants writes\b",
     "permission-ambiguous": r"\bambiguous answers authorize writes\b",
@@ -50,6 +66,82 @@ UNSAFE = {
     "permission-depth": r"\bforce standard for documentation handoff\b",
     "permission-epic": r"\bautomatically create a new epic\b",
 }
+# T001 live expectations; original attribution and hashes remain untouched.
+SPECKIT_RULES = {'assets-discovery': ('Discovery',
+                      ['After the dirty-first capability gate, check SpecKit project assets on '
+                       'every initialization: new adoption, compatible adoption and refresh.',
+                       'Detect integration, script variant, command location, recorded version and '
+                       'relevant options from target metadata/configuration; do not silently '
+                       'select noninteractive Copilot defaults.',
+                       'Compare an authoritative expected inventory from the official bundle for '
+                       'the detected integration/version against commands, templates and scripts.',
+                       'Check every expected actual file is readable and nonempty, required script '
+                       'permissions are usable, and command/template/script references resolve '
+                       'inside safe project-root/symlink bounds.',
+                       'Empty directory shells, missing families, individual missing files and '
+                       'incomplete manifests are incomplete; directory or manifest existence alone '
+                       'cannot establish readiness.',
+                       'Valid custom files remain valid; hash differences alone grant no overwrite '
+                       'permission.',
+                       'Ambiguous integration, unsupported version, malformed metadata, unreadable '
+                       'assets or unsafe paths stop the affected operation with specific '
+                       'gaps/conflicts, not guessed readiness.']),
+ 'assets-proposal': ('Approval',
+                     ['Include SpecKit integration/version/options, three-family status, '
+                      'conflicts, exact prospective asset paths and necessary manifest/metadata '
+                      'entry changes in the current-content proposal before permission to repair.',
+                      'Complete assets propose no asset rewrite; missing assets require an exact '
+                      'official install/repair recipe and bounded target writes.',
+                      'Missing usable CLI is a reported blocker for repair; do not silently '
+                      'install/upgrade global tooling.',
+                      'Before future execution inspect the installed official CLI version, current '
+                      'help and source; unknown safe recipe/version/integration stops.',
+                      'For inspected official 1.0.12, assets are bundled offline; use isolated '
+                      'fresh staging with explicit `--integration`, `--script` and detected '
+                      'relevant options, not silent CLI defaults.',
+                      'Propose the exact staging command and options, staging location, candidate '
+                      'inventory/diff and approved missing-file-only transfer paths before any '
+                      'staging or target write.',
+                      'No blanket `specify init --here --force` against an existing repository: '
+                      '`--force` permits merge/overwrite and managed refresh is not an overwrite '
+                      'waiver.']),
+ 'assets-continuation': ('Adoption',
+                         ['Compatible adoption remains an instructions/memory no-op, not an exit '
+                          'that bypasses the SpecKit check.',
+                          'New, compatible and refresh routes all continue from Discovery through '
+                          'Approval to the approved asset operation below and final Validation; no '
+                          'adoption early return.',
+                          'Asset repair is separately bounded by Approval, not authority to change '
+                          'instructions/memory or documentation.',
+                          'Only after explicit approval, scaffold with the verified official '
+                          'recipe into the isolated fresh staging directory; inspect candidate '
+                          'inventory/diff before approved missing-file-only transfer.',
+                          'Preserve existing custom assets, constitution and integration metadata; '
+                          'exclude incidental scaffold outputs, `.git`, constitution replacements '
+                          'and unrelated metadata changes.',
+                          'Never blindly copy scaffold manifests over custom metadata; reconcile '
+                          'only necessary approved entries so the recorded inventory describes '
+                          'actual installed files.',
+                          'Apply Preflight dirty-target/exact-overlap and concurrent-change '
+                          'protections to staging, asset and metadata writes; re-read each target '
+                          'immediately before writing.',
+                          'Conflict, drift, CLI failure or partial output stops the affected '
+                          'operation; report partial outputs and blockers without readiness, '
+                          'automatic retry or destructive rollback.',
+                          'Complete assets remain untouched on repeat runs; revalidate the actual '
+                          'three-family inventory after approved repair.']),
+ 'assets-report': ('Validation',
+                   ['On all new, compatible and refresh routes, report detected SpecKit '
+                    'integration/version, actual commands/templates/scripts completeness, repair '
+                    'or no-op, partial outputs and blockers.',
+                    'Missing or incomplete required SpecKit project assets block '
+                    'initialization-ready claims even on compatible adoption; documentation shell '
+                    'readiness is not asset completeness.',
+                    'Revalidate the authoritative expected inventory against actual readable, '
+                    'nonempty files, required permissions and resolving references; manifest-only '
+                    'success or CLI exit status is insufficient.',
+                    'After global skill changes, tell the user to run `/reload` inside pi.'])}
+
 SOURCE_HASHES = {
     "skills/install-memory/SKILL.md": "7894452bb308c5292c13f5cfb3d19ed945842d88e1a31e1d5dbb8861dddc715f",
     "skills/initialize-documentation/SKILL.md": "978b51d11867496a6237d233987886e9dcb718a6ac3beedf7fc52a1f16c24b32",
@@ -76,6 +168,11 @@ def check_contract(text):
     for diagnostic, pattern in (UNSAFE | BOOKKEEPING_UNSAFE).items():
         if re.search(pattern, normalized(text)):
             errors.append(f"{diagnostic}: contradictory permission")
+    for diagnostic, (name, phrases) in SPECKIT_RULES.items():
+        body = normalized(stage(text, name))
+        for phrase in phrases:
+            if normalized(phrase) not in body:
+                errors.append(f"{diagnostic}: missing {phrase!r} in {name}")
     for row in BASELINE["ledger"]:
         body = normalized(stage(text, row["stage"]))
         for phrase in row["requires"]:
@@ -176,6 +273,9 @@ class CandidateTests(unittest.TestCase):
         requirements = normalized((ROOT / "REQUIREMENTS.md").read_text())
         for phrase in ("proposal-first", "compatible adoption", "bounded refresh", "fresh read-only investigation", "empty/template shells", "structural readiness", "outstanding work", "/reload", "authorize separately"):
             self.assertIn(phrase, readme)
+        for doc in (readme, requirements):
+            for phrase in ("every initialization", "commands, templates and scripts", "compatible adoption and refresh", "approved missing-file-only transfer", "missing usable cli", "other missing runtime prerequisites", "tinyspec/direct tasking", "no blanket", "--force", "/reload"):
+                self.assertIn(phrase, doc)
         for phrase in ("0.87.x", "0.87.1", "pi-subagents@0.73.1", "pi-ask-user@0.15.1", "tinyspec/direct tasking does not require it", "manual routing", "schema owner", "missing required structure blocks readiness"):
             self.assertIn(phrase, requirements)
 
@@ -269,6 +369,14 @@ def scenario_check(scenario):
             body = normalized(stage(text, row["stage"]))
             for phrase in row["requires"]:
                 self.assertIn(normalized(phrase), body, f"{scenario['name']}: {scenario['bound']}")
+        for rule in scenario.get("asset_rules", []):
+            self.assertFalse(any(e.startswith(rule + ":") for e in check_contract(text)), scenario["name"])
+        if scenario.get("asset_route"):
+            self.assertLess(normalized(text).index("first verify"),
+                            normalized(text).index(normalized(SPECKIT_RULES["assets-discovery"][1][0])))
+            self.assertEqual(check_contract(text), [])
+            bypass = text.replace(stage(text, "Adoption"), stage(text, "Adoption") + "\nReturn immediately after compatible adoption.\n", 1)
+            self.assertIn("permission-assets-bypass: contradictory permission", check_contract(bypass))
         if scenario["branch"] == "non-clean":
             self.assertIn("on a non-clean project first verify", normalized(stage(text, "Preflight")))
         elif scenario["branch"] == "clean":
@@ -324,6 +432,9 @@ class MutationTests(unittest.TestCase):
                 changed = summaries + "\n" + text.replace(body, "", 1)
                 errors = check_contract(changed)
                 self.assertTrue(any(e.startswith("stage-order:") for e in errors), errors)
+                for diagnostic, (carrying, _) in SPECKIT_RULES.items():
+                    if carrying == name:
+                        self.assertTrue(any(e.startswith(diagnostic + ": missing") for e in errors), diagnostic)
                 for row in BASELINE["ledger"]:
                     if row["stage"] == name:
                         self.assertTrue(any(e.startswith(row["id"] + ":") for e in errors), row["id"])
@@ -361,6 +472,43 @@ def deletion_check(row):
 
 for row in BASELINE["ledger"]:
     setattr(MutationTests, row["negative"], deletion_check(row))
+
+
+class SpecKitTests(unittest.TestCase):
+    """Scoped source pressure checks, not execution of SpecKit or invented filesystem proof."""
+    def test_new_expectations_fail_old_contract_with_named_diagnostics(self):
+        old = subprocess.check_output(["git", "show", "a9db66274d51a61bafd537f1ba8511201fbfb21f:skills/initialize-coherence/SKILL.md"], text=True)
+        errors = check_contract(old)
+        for diagnostic in SPECKIT_RULES:
+            self.assertTrue(any(e.startswith(diagnostic + ": missing") for e in errors), diagnostic)
+        self.assertEqual(check_contract(SKILL.read_text()), [])
+
+
+def asset_positive(rule):
+    def test(self):
+        self.assertFalse(any(e.startswith(rule + ":") for e in check_contract(SKILL.read_text())))
+    return test
+
+
+def asset_deletion(rule):
+    def test(self):
+        text = SKILL.read_text()
+        name, phrases = SPECKIT_RULES[rule]
+        body = stage(text, name)
+        for phrase in phrases:
+            with self.subTest(guard=phrase):
+                pattern = r"\s+".join(re.escape(word) for word in phrase.split())
+                altered, count = re.subn(pattern, "[asset guard removed]", body, count=1, flags=re.I)
+                self.assertEqual(count, 1, phrase)
+                # A summary elsewhere cannot replace an operational carrying clause.
+                changed = "Summary only: " + phrase + "\n" + text.replace(body, altered, 1)
+                self.assertTrue(any(e.startswith(rule + ": missing") for e in check_contract(changed)))
+    return test
+
+
+for rule in SPECKIT_RULES:
+    setattr(SpecKitTests, "test_" + rule.replace("-", "_") + "_positive", asset_positive(rule))
+    setattr(SpecKitTests, "test_" + rule.replace("-", "_") + "_deletion_rejected", asset_deletion(rule))
 
 
 class InstallerMutationTests(unittest.TestCase):
@@ -416,4 +564,4 @@ if __name__ == "__main__":
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(BaselineTests)
         result = unittest.TextTestRunner(verbosity=2).run(suite)
         raise SystemExit(not result.wasSuccessful())
-    unittest.main()
+    unittest.main(verbosity=2)

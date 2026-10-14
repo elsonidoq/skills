@@ -30,7 +30,20 @@ empty/template shells, maps and indexes only. Structural readiness requires all 
 instructions/memory and required documentation structure; missing requirements, denied
 approval or missing structure prevent a ready claim. Empty/stale substantive documentation
 remains explicit outstanding work for planner's owner-selected TinySpec/Standard path.
-Initialization reports missing capabilities rather than installing prerequisites.
+On every initialization, including compatible adoption and refresh, check actual
+SpecKit commands, templates and scripts against the detected integration/version inventory,
+including readability, nonempty files, permissions and references. Complete/custom valid
+assets need no rewrite; compatible adoption remains an instructions/memory no-op but
+continues to this check. Missing/incomplete assets block initialization-ready claims.
+The bounded exception is proposal-first project-asset repair with the installed official
+CLI: explicitly detected integration/script/options, isolated fresh staging and
+approved missing-file-only transfer with scoped manifest reconciliation. Preserve custom
+assets, constitution and metadata; no blanket `specify init --here --force` in an existing
+repository. Missing usable CLI or unknown safe recipe is a blocker, not permission to
+install/upgrade tooling. Conflict/drift/failure stops; report partial outputs without
+readiness, automatic retry or destructive rollback. Other missing runtime prerequisites
+are reported, not installed by initialization. TinySpec/direct tasking still does not
+require SpecKit; Standard retains its stage capability gates.
 
 This repository tracks its project-local SpecKit 1.0.12 setup: `.specify/` contains shared
 scripts, templates, integration metadata and the [project constitution](.specify/memory/constitution.md);

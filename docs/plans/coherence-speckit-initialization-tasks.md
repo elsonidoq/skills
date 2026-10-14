@@ -7,8 +7,12 @@ Status: combined source/task/scope approval granted through `ask_user` on 2026-1
 `46fbc1269b7b15c1714c8d4edf665fced9d95c9d587392b765b15843a7ff3374`.
 Planner review passed A1–A6 traceability, exclusions, REQUIRED gates and task order.
 This status-only approval record leaves the reviewed T001 contract unchanged; coordinator
-preflight starts now. Exact execution routing approval and fresh independent final review
-remain required. Actual SpecKit installation and live probes remain excluded.
+preflight completed against clean baseline `5b0972ae143ca53345f257083a2f6b3f319e0d35`.
+Exact routing approval through `ask_user`: “Approve Sol/medium for T001 and final review”.
+Selected worker and later fresh independent final reviewer: `openai-codex/gpt-6.1-sol:medium`.
+Observed worker profile is not independently observable in the worker tools; selection
+is not an observed runtime claim. Fresh independent final review remains required.
+Actual SpecKit installation and live probes remain excluded.
 
 Requirements truth: [TinySpec](coherence-speckit-initialization-tinyspec.md), committed at
 `a9db66274d51a61bafd537f1ba8511201fbfb21f`, SHA256
@@ -24,7 +28,7 @@ no gotchas or applicable guidance; no memory/coordination writes.
 
 ## Ordered delivery
 
-- [ ] T001 Deliver safe every-initialization SpecKit asset checks and approved repair guidance
+- [x] T001 Deliver safe every-initialization SpecKit asset checks and approved repair guidance
   - **Depends**: none (start only after combined current-content approval and coordinator routing authorization).
   - **Outcome**: The canonical initialization skill checks real project-local commands,
     templates and scripts on every route, proposes official version-aware repair only within
@@ -200,3 +204,17 @@ acceptance is NOT RUN by this producer. Exact artifact digest and focused checkp
 in the producer return (no recursive self-hash). Any changed source/tasks reopen affected producing
 review and approval. Combined current-content approval and later coordinator routing/final
 independent review remain pending.
+
+## T001 implementation evidence (final independent review pending)
+
+Implementation checkpoint covers only the approved coupled skill/regression/setup/runtime
+surfaces and this factual status. C1: 171 focused static tests PASS, including three composed
+routes, completeness cases, proposal/denial/capability cases, preservation/failure cases,
+carrying-clause/stage deletions and contradictory permissions. C2: four BaselineTests PASS.
+New expectations fail the old `a9db662` skill with `assets-discovery`, `assets-proposal`,
+`assets-continuation` and `assets-report` missing-clause diagnostics and pass the final skill.
+C3: no introduced local Markdown targets/anchors; existing reference check PASS.
+C4: diff whitespace, actual owned diff, docs agreement and immutable `sources`, `supporting`,
+`revision` and `SOURCE_HASHES` comparison PASS. V1–V6 statically checked; real SpecKit
+execution/install and live/model behavior NOT RUN / NOT VERIFIED (excluded). `/reload`
+inside pi remains required. This records implementation evidence, not independent acceptance.

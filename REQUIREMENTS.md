@@ -11,7 +11,7 @@ project adopts the suite through `initialize-coherence` before the workflow skil
 | pi coding agent | 0.87.x (tested with 0.87.1) | `pi --version` | Install or update pi |
 | pi-subagents | npm:`pi-subagents@0.73.1` | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and `pi install npm:pi-subagents@0.73.1` |
 | pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Where a stage permits prose interaction, ask in prose and end the turn; do not proceed past the owner-answer gate or infer an answer. A manager's explicit mandatory preflight may stop earlier. |
-| SpecKit toolkit | installed in the **project** for planner's Standard path | detected stage commands and assets exist in the target project | Stop at the affected Standard stage with a capability report; TinySpec/direct tasking does not require it |
+| SpecKit toolkit | installed in the **project** for planner's Standard path | detected integration/version inventory matches real readable, nonempty commands, templates and scripts, including permissions/references | Stop at the affected Standard stage with a capability report; TinySpec/direct tasking does not require it |
 | jev (optional) | `~/.agents/skills/jev` | `command -v jev` or the skill loads | Manual routing in `finish-session-jev` |
 
 All npm pins are exact: pi treats versioned npm specifications as pinned, and `pi update
@@ -21,6 +21,21 @@ Keep this table in sync with the dependency statements inside the skills. The
 `initialize-coherence` skill records the approved requirement list in the project's
 instructions during adoption. It reports missing prerequisites without installing them;
 its mandatory question/approval-contract gates stop when unavailable.
+
+On every initialization, including compatible adoption and refresh, the bounded exception
+is proposal-first project-local SpecKit assets, not global tooling installation. Discover
+integration/version/script/options and verify commands, templates and scripts against an
+authoritative expected inventory and actual files. Complete valid/custom assets remain
+untouched; compatible association stays an instructions/memory no-op, not an early exit.
+Missing/incomplete assets block initialization-ready claims. Use an installed official CLI
+with a source-verified recipe, explicit integration/options, isolated fresh staging and
+approved missing-file-only transfer; reconcile only approved necessary manifest entries.
+Preserve custom assets, constitution and metadata; no blanket `specify init --here --force`
+against an existing repository. Missing usable CLI or unknown safe recipe blocks repair;
+do not silently install/upgrade tooling. Conflict/drift/failure stops without readiness,
+automatic retry or destructive rollback; report partial outputs. Other missing runtime prerequisites
+retain stop/report behavior. TinySpec/direct tasking still does not require SpecKit, and
+Standard capability gates remain. After global skill changes, run `/reload` inside pi.
 
 ## Implementation batch selection
 

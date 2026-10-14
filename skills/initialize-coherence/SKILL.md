@@ -22,7 +22,10 @@ Follow the stages below; approvals authorize only their stated bounded writes.
   Verify actual registered and usable capabilities, not package names alone.
   SpecKit is required only for applicable Standard stages, not TinySpec.
   Jev is optional for Jev triage in `finish-session-jev`, with manual routing fallback.
-  Report missing requirements; do not proceed silently or install them.
+  Report missing runtime requirements; do not proceed silently or install them.
+  The only exception is approved project-local SpecKit asset provisioning below,
+  not global CLI/runtime installation or a change to planning depth.
+  TinySpec/direct tasking still does not require SpecKit.
 - Record every prospective target’s initial dirty state and content, including
   instructions, memory and documentation. Do not edit an already-dirty target
   without explicit owner approval; general plan approval is not an overlap waiver.
@@ -60,6 +63,23 @@ architecture records, decisions, specifications, and memory configuration.
   documentation root, index mechanism, architecture/schema/routing/unresolved-work/deployment
   locations and formats. Do not assume a `docs/` layout or create owners before those
   choices. Preserve the suite's canonical unresolved-work register described below.
+
+**SpecKit project-asset discovery (read-only).**
+
+- After the dirty-first capability gate, check SpecKit project assets on every initialization:
+  new adoption, compatible adoption and refresh.
+- Detect integration, script variant, command location, recorded version and relevant options
+  from target metadata/configuration; do not silently select noninteractive Copilot defaults.
+- Compare an authoritative expected inventory from the official bundle for the detected
+  integration/version against commands, templates and scripts.
+- Check every expected actual file is readable and nonempty, required script permissions are
+  usable, and command/template/script references resolve inside safe project-root/symlink
+  bounds.
+- Empty directory shells, missing families, individual missing files and incomplete manifests
+  are incomplete; directory or manifest existence alone cannot establish readiness.
+- Valid custom files remain valid; hash differences alone grant no overwrite permission.
+- Ambiguous integration, unsupported version, malformed metadata, unreadable assets or unsafe
+  paths stop the affected operation with specific gaps/conflicts, not guessed readiness.
 
 ## Investigation
 
@@ -106,11 +126,42 @@ artifact/decision conventions; avoid recursive self-hashes. Recheck evidence on 
 Ancillary adoption/shell approvals are not substantive implementation authorization.
 Continue only the approved bounded stages, not investigated implementation.
 
+**SpecKit install/repair proposal.**
+
+- Include SpecKit integration/version/options, three-family status, conflicts, exact prospective
+  asset paths and necessary manifest/metadata entry changes in the current-content proposal
+  before permission to repair.
+- Complete assets propose no asset rewrite; missing assets require an exact official
+  install/repair recipe and bounded target writes.
+- Missing usable CLI is a reported blocker for repair; do not silently install/upgrade global
+  tooling.
+- Before future execution inspect the installed official CLI version, current help and source;
+  unknown safe recipe/version/integration stops.
+- For inspected official 1.0.12, assets are bundled offline; use isolated fresh staging with
+  explicit `--integration`, `--script` and detected relevant options, not silent CLI defaults.
+- Propose the exact staging command and options, staging location, candidate inventory/diff and
+  approved missing-file-only transfer paths before any staging or target write.
+- No blanket `specify init --here --force` against an existing repository: `--force` permits
+  merge/overwrite and managed refresh is not an overwrite waiver.
+
+For 1.0.12, the official shape is `specify init <fresh-staging-directory>
+--integration <detected-integration> --script <detected-variant> --non-interactive`
+plus only source-verified relevant options. Resolve placeholders from discovery,
+verify target-option compatibility with current official help/source, and include
+the concrete command in the proposal. Do not execute this illustrative shape
+until current-content approval. Other versions need renewed applicable evidence.
+Derive the proposed candidate inventory/diff read-only from the installed bundle;
+inspect actual staged output before transfer and renew approval if it differs.
+Pass integration-specific options via verified `--integration-options` where needed
+(e.g. a detected custom command directory); never add presets/extensions, network
+operations or agent-tool-check bypasses merely to make scaffolding succeed.
+
 ## Adoption
 
 For a compatible existing adoption, report adoption unnecessary and validate the
-existing association as a no-op. For new adoption, apply the approved requirements
-block and append a marked, self-contained suite contract to existing instructions,
+existing association as a no-op (instructions/memory only). For new adoption, apply
+the approved requirements block and append a marked, self-contained suite contract
+to existing instructions,
 preserving existing custom content verbatim. `memory-handling`, `finish-session`,
 and `compact-memory` can cite it. Record:
 
@@ -150,8 +201,37 @@ convert old artifacts or approvals, authorize substantive documentation through
 refresh, or reset the memory store. Preserve the existing memory store and index
 on refresh, never replace them with a skeleton.
 
-Adoption writes are limited to approved instructions/memory; do not create
+For association changes, Adoption writes are limited to approved instructions/memory; do not create
 documentation directories or planning artifacts in this stage.
+
+**Approved SpecKit project-asset operation (all routes).**
+
+- Compatible adoption remains an instructions/memory no-op, not an exit that bypasses the
+  SpecKit check.
+- New, compatible and refresh routes all continue from Discovery through Approval to the
+  approved asset operation below and final Validation; no adoption early return.
+- Asset repair is separately bounded by Approval, not authority to change instructions/memory or
+  documentation.
+- Only after explicit approval, scaffold with the verified official recipe into the isolated
+  fresh staging directory; inspect candidate inventory/diff before approved missing-file-only
+  transfer.
+- Preserve existing custom assets, constitution and integration metadata; exclude incidental
+  scaffold outputs, `.git`, constitution replacements and unrelated metadata changes.
+- Never blindly copy scaffold manifests over custom metadata; reconcile only necessary approved
+  entries so the recorded inventory describes actual installed files.
+- Apply Preflight dirty-target/exact-overlap and concurrent-change protections to staging, asset
+  and metadata writes; re-read each target immediately before writing.
+- Conflict, drift, CLI failure or partial output stops the affected operation; report partial
+  outputs and blockers without readiness, automatic retry or destructive rollback.
+- Complete assets remain untouched on repeat runs; revalidate the actual three-family inventory
+  after approved repair.
+
+Staging and metadata reconciliation must remain within approved safe path bounds;
+no escaping symlink or unapproved incidental output is transferable. If an existing
+file is invalid rather than missing, report a conflict and stop that transfer,
+not an overwrite. Missing mandatory approval capability, denial, cancellation,
+timeout or ambiguity grants no staging, asset or metadata writes. General adoption
+approval does not waive exact overlap approval or approve an unlisted asset repair.
 
 ## Documentation
 
@@ -184,6 +264,17 @@ documentation owners/indexes/routing and schema owner where required.
 Missing required structure blocks readiness. Report empty/stale substantive content
 separately as outstanding planner work. Never treat shell initialization as substantive
 completion. Do not promise readiness when requirements or approval gates failed.
+
+**SpecKit validation/reporting (all routes).**
+
+- On all new, compatible and refresh routes, report detected SpecKit integration/version, actual
+  commands/templates/scripts completeness, repair or no-op, partial outputs and blockers.
+- Missing or incomplete required SpecKit project assets block initialization-ready claims even
+  on compatible adoption; documentation shell readiness is not asset completeness.
+- Revalidate the authoritative expected inventory against actual readable, nonempty files,
+  required permissions and resolving references; manifest-only success or CLI exit status is
+  insufficient.
+- After global skill changes, tell the user to run `/reload` inside pi.
 
 Report instructions/memory paths, requirements recorded and approval evidence.
 Report retained, initialized and intentionally absent owners, validation results,
