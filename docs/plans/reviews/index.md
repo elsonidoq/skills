@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [Defensible routing — planning review and approval](defensible-routing-planning-review.md): current-content TinySpec/T001 approval; exact execution/reviewer routing and separately authorized behavioral evaluation remain gated.
 - [Pragmatic planning — review and approval](pragmatic-planning-review.md): digest-bound TinySpec/T001 approval including small informational `[PROTOTYPE]` tasks; coordinator execution-profile approval and independent final review remain required.
 - [Rubric-first routing — planning review](rubric-first-routing-planning-review.md): owner-approved digest-bound A1–A7 planning-only handoff, three producer-first tasks and proportional readiness safeguards; implementation remains on hold.
 - [Coordinator no-bookkeeping — planning review and authorization](coordinator-no-bookkeeping-planning-review.md): digest-bound A1–A9 review, owner-approved concrete compression map and direct worker/final-review routing.
