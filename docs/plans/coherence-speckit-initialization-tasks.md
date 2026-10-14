@@ -1,8 +1,14 @@
 # SpecKit assets in Coherence initialization — tasks
 
-Status: preparation only. Source reviewed by planner with no blockers; combined current-content
-source/task approval, coordinator routing authorization and independent final implementation
-review remain pending. This artifact authorizes no implementation or installation.
+Status: combined source/task/scope approval granted through `ask_user` on 2026-10-14:
+“Approve and start coordinator preflight”. Approved content is the TinySpec and tasks at
+`39a7eac25b444e8725b14216e53f697b322d26c6`: source SHA256
+`3943ce3fd5d6b97e906004d872955725e92be6b51e0b84c14ea0e5aa404ec2d9`, tasks SHA256
+`46fbc1269b7b15c1714c8d4edf665fced9d95c9d587392b765b15843a7ff3374`.
+Planner review passed A1–A6 traceability, exclusions, REQUIRED gates and task order.
+This status-only approval record leaves the reviewed T001 contract unchanged; coordinator
+preflight starts now. Exact execution routing approval and fresh independent final review
+remain required. Actual SpecKit installation and live probes remain excluded.
 
 Requirements truth: [TinySpec](coherence-speckit-initialization-tinyspec.md), committed at
 `a9db66274d51a61bafd537f1ba8511201fbfb21f`, SHA256
