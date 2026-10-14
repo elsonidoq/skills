@@ -1047,7 +1047,7 @@ class FirstProposalRoutingTests(CarrierTests):
                           "cross-mode publication", "failure-preserving cleanup")}
 
     @staticmethod
-    def assert_complete_proposal(test, proposal, expected_rows, settled):
+    def assert_complete_proposal(test, proposal, expected_rows, settled, producing_gate=None):
         """Finite authored-fixture assertions, not a routing engine or model-quality oracle."""
         rows = proposal["rows"]
         test.assertEqual([row["task"] for row in rows], list(settled["tasks"]))
@@ -1060,8 +1060,8 @@ class FirstProposalRoutingTests(CarrierTests):
             test.assertEqual(row["observed"], "unknown")
         test.assertFalse(proposal["dispatch"])
         test.assertIsNone(proposal.get("fallback"))
-        if "producing_gate" in proposal:
-            test.assertTrue(proposal["producing_gate"])
+        if producing_gate is not None:
+            test.assertEqual(proposal.get("producing_gate"), producing_gate)
             test.assertIsNone(proposal.get("escalation"))
 
     def test_seven_reason_sensitive_first_proposal_cases(self):
@@ -1127,12 +1127,15 @@ class FirstProposalRoutingTests(CarrierTests):
                     self.assert_complete_proposal(self, bad, tie_rows, settled)
         # S6 is the honest owner-preference tie; S7 missing criteria returns to producing review, not escalation.
         self.assertEqual(tie_rows[0]["comparison"], "no established difference")
-        deficient = {**tie, "dispatch": False, "producing_gate": "missing publication criterion", "escalation": None}
-        self.assert_complete_proposal(self, deficient, tie_rows, settled)
-        for bad in ({**deficient, "dispatch": True}, {**deficient, "escalation": "Sol/medium"}):
-            with self.subTest(case="S7_launch_or_escalation"):
+        producing_gate = "missing publication criterion"
+        deficient = {**tie, "dispatch": False, "producing_gate": producing_gate, "escalation": None}
+        self.assert_complete_proposal(self, deficient, tie_rows, settled, producing_gate)
+        missing_gate = dict(deficient)
+        del missing_gate["producing_gate"]
+        for bad in ({**deficient, "dispatch": True}, {**deficient, "escalation": "Sol/medium"}, missing_gate):
+            with self.subTest(case="S7_launch_escalation_or_deleted_gate"):
                 with self.assertRaises(AssertionError):
-                    self.assert_complete_proposal(self, bad, tie_rows, settled)
+                    self.assert_complete_proposal(self, bad, tie_rows, settled, producing_gate)
 
 
 class ExecutionReadinessTests(CarrierTests):
