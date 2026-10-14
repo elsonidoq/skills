@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Workflow ownership — tasks](workflow-ownership-tasks.md): two package-before-Cerca deliveries with A1–A6 REQUIRED checks, exact constitutional amendment approval and preservation gates; preparation only, combined approval pending.
 - [Workflow ownership — TinySpec](workflow-ownership-tinyspec.md): package-owned mechanics, diff-proven mechanical corrections and bounded Cerca instruction/constitutional alignment; source preparation only, separate tasks and combined approval pending.
 - [Pragmatic planning — TinySpec](pragmatic-planning-tinyspec.md): outcome-oriented boundaries, proportional proof and tagged informational prototypes; current-content approval in [review](reviews/pragmatic-planning-review.md).
 - [Pragmatic planning — tasks](pragmatic-planning-tasks.md): one coherent canonical-contract/regression/operative-doc outcome with A1–A6 REQUIRED mappings; [approved scope](reviews/pragmatic-planning-review.md), execution-profile selection and independent final review still required.
