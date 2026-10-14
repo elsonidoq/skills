@@ -1,28 +1,20 @@
 # Illustrative TinySpec risk adapter — B
 
 Synthetic task shape only: no real library, execution, approval or model-obedience proof.
-B: subtle queued-write/close semantics are disproportionately uncertain and cheaply isolatable;
-tested core behavior has substantial leverage before production lifecycle plumbing.
+B is a genuinely unknown, inexpensive queued-write/close behavior whose answer changes a
+costly downstream reliance decision. This is an example, not a required task template.
 
-- [ ] T001 Prove queued completion before close in a disposable executable reference.
+- [ ] T001 [PROTOTYPE] Determine whether queued writes complete before close.
   - **Depends**: none
-  - **Outcome**: determine whether the assumed lifecycle technique works in tested bounds.
-  - **Files/interfaces**: disposable proof.py, assertions and retained findings in discovered project owners.
-  - **Acceptance**: REQUIRED T001/V1. Pass: representative and adversarial queued writes complete before close, no loss or duplicate completion; failure rejects the technique. Smallest check: real dependency/runtime, observed target version, executable assertions for empty, pending and failure cases (not a mock/name-print script). Commands: `python proof.py --cases representative,adversarial`; expected completion-before-close event order. Evidence: artifact, commands actually run, observed findings, version/runtime/revision applicability and limits. Gate: separately authorized local execution and available target runtime; unrun/unavailable is NOT VERIFIED, not PASS, and blocks dependent reliance.
-  - **Capabilities**: separately permitted target runtime and dependency; no installation or live call assumed.
-  - **Integration checkpoint**: retain executable artifact, commands and findings for all consumers; failed result blocks assumed consumer approach and returns to correction/replanning and affected approval renewal.
+  - **Outcome**: an informational conclusion and tested limits for one consequential lifecycle question—not a production feature.
+  - **Files/interfaces**: a tiny disposable script exercising the actual dependency/abstraction or boundary; it is not a production feature or abstraction scaffold.
+  - **Acceptance**: REQUIRED T001/V1. Pass: the script records clear observations for representative pending and failure cases; failure or inconclusive output is retained, blocks assumed reliance and does not release assumed success. Smallest check: executable assertions against the actual dependency/runtime, not a mock/name-print script. Scope: ONE consequential question. Use a few direct assertions/observations, typically tens of lines; guidance, not a hard cap. No accompanying proof suite or separate harness. Evidence: script code and actual observed execution output, with minimal commands actually run, conclusion/findings, tested limits and dependency/runtime/revision applicability; code-only or unrun claims are NOT VERIFIED, not PASS. Gate: separately authorized local execution and available target runtime; no installation or live call assumed.
+  - **Capabilities**: separately permitted target runtime and dependency.
 
-- [ ] T002 Implement production lifecycle using the tested reference.
+- [ ] T002 Deliver the production lifecycle behavior and acceptance.
   - **Depends**: T001
-  - **Outcome**: production preserves proven behavior within applicable bounds, with remaining integration risks tested.
-  - **Files/interfaces**: production lifecycle and production tests in discovered project repository.
-  - **Acceptance**: REQUIRED T002/V1. Pass: inspect and run applicable proof.py, use it as implementation reference, preserve completion-before-close behavior with production tests; a report-only link is insufficient. Smallest check: `python proof.py --cases representative,adversarial` then observed project production test command for shutdown ordering, error propagation and remaining integration risks. Evidence: replay output, applicability check, production assertions/results compared to T001 findings. Gate: T001 passed and still-applicable version/runtime/revision, separate production execution authority; failed/unrun producer cannot release this task.
-  - **Capabilities**: editing and observed production runner under approved permissions.
-  - **Shared context**: proof artifact, commands, findings and limits retained until all consumers and production validation pass.
-
-- [ ] T003 Clean disposable proof only after validated consumption.
-  - **Depends**: T001, T002
-  - **Outcome**: disposable reference removed without losing reproducible findings.
-  - **Files/interfaces**: disposable proof and established evidence owner.
-  - **Acceptance**: REQUIRED T003/V1. Pass: cleanup only after all applicable consumers and production validation pass; preserve reproducible evidence, commands, findings and limits. Smallest check: compare T001/T002 replay and production results to retention inventory before deletion. Evidence: consumer mapping, passed production results and preserved reproduction record. Gate: all consumers validated; otherwise retain proof.
-  - **Capabilities**: authorized artifact cleanup and evidence writing.
+  - **Outcome**: production preserves the applicable proven behavior and meets the full delivery acceptance.
+  - **Files/interfaces**: production lifecycle, focused production tests and any lockstep operative documentation.
+  - **Acceptance**: REQUIRED T002/V1. Pass: inspect and use the applicable proof (the T001 script, findings and observed result) as informational evidence for implementation; permanent production acceptance tests verify queued completion, failure handling and the integrated boundary. A report-only link is insufficient, and a failed/unrun producer cannot release this task. Do not rerun unchanged shared proof for ceremony; rerun only if its applicability is invalidated. Smallest check: the actual production-helper test at the affected lifecycle boundary. Evidence: applicable T001 result mapped to each criterion plus production command/results. Gate: a failed, inconclusive or unrun T001 is NOT VERIFIED, not PASS; it blocks assumed reliance and cannot release success. Retain required permissions and manual gates.
+  - **Capabilities**: editing and the observed production runner under approved permissions.
+  - **Cleanup/evidence**: keep the actual disposable script until all applicable consumers and production validation pass; then safely discard it and retain concise command/result/limits in existing evidence. Routine teardown stays within this delivery; no separate cleanup task is implied.

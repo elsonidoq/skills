@@ -99,8 +99,11 @@ below supplement the generated artifacts and do not replace the SpecKit stage.
 
 ## Planner Standard adapter contract
 
-Apply early risk reduction throughout the managed pass and its review/handoff, including
-justified selection/omission and producer/consumer sequencing; do not execute scheduled proofs.
+Apply the shared early-risk contract and task-generation boundaries (see the
+[task-generation contract](../task-generation/SKILL.md)) throughout the managed pass and
+its review/handoff. Justify proof selection/omission and include only genuinely necessary
+producer/consumer sequencing; do not imply each proof is a separate task or execute scheduled
+proofs.
 
 The managed producer uses a separate fresh bounded context for the entire plan pass;
 the manager never authors or repairs artifacts. Delegate corrections to suitable originating
@@ -148,12 +151,13 @@ For already-authorized planning outputs within the bounded write permission abov
 make the focused path-limited task checkpoint required by the shared contract before completion or handoff. This mandatory checkpoint needs no separate commit opt-in; it does not authorize
 new writes, specification/adaptation changes, pushes, or additional delegation.
 
-Apply early risk reduction to plan sequencing/verification: justify selection/omission
-for a difficult isolatable core with substantial leverage; easy names/types use inspection,
-non-isolatable risks use real-system validation with prerequisites/gates. Specify minimal
-real-runtime executable proof with representative/adversarial criteria, explicit production
-consumption/dependencies, all-consumer retention, production tests before cleanup and
-disproof/renewal. These needs feed task generation, not an embedded substitute task list.
+Apply early risk reduction to plan sequencing/verification: justify selection/omission for
+a consequential unknown; known bounded behavior uses actual-helper acceptance tests, easy
+names/types use inspection, and non-isolatable risks use real-system validation with actual
+gates. Identify only necessary prototype prerequisites and consumer dependencies; ordinary
+tests, evidence and teardown stay within coherent delivery. The shared risk contract owns
+execution evidence, reuse and lifetime. These needs feed task generation, not an embedded
+task chain.
 
 Ensure the SpecKit plan covers:
 
@@ -193,11 +197,11 @@ the required runtime policy is undefined.
 
 ## Completion
 
-Review and return early risk reduction rationale, executable criteria/applicability and
-producer → consumer → production validation → cleanup mapping. Check explicit inspect/run
-consumption and preserved behavior, all-consumer retention and disproof/NOT VERIFIED blockers;
-renew affected existing approvals, including standalone entry. Failed/unrun proofs cannot
-release assumed dependents. No new gate or execution authority is implied.
+Review and return risk rationale, executable criteria/applicability, genuinely necessary
+dependencies, proof reuse/lifetime, preserved production behavior and disproof/NOT VERIFIED
+blockers. Renew affected existing approvals, including standalone entry. Failed/unrun proofs
+cannot release assumed reliance. Routine cleanup stays with the task; no new gate or execution
+authority is implied.
 
 Verify that the detected SpecKit planning stage ran and inspect its outputs
 against the approved spec and planner boundary. Verify shared-link resolution,

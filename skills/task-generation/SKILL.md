@@ -68,16 +68,26 @@ as unavailable.
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
 verify it is readable or stop with a missing-install report. Both adapters and direct entry
 apply it without assuming planner already did. Planning schedules proofs, not execution
-without separate authority. Justify selection/omission: difficult isolatable cores need
-substantial leverage, easy names/types use inspection, non-isolatable risks use real-system
-validation with actual prerequisites/gates. Use existing fields for a minimal real-runtime
-executable producer with representative/adversarial criteria, commands/artifact/findings,
-applicability and permission gates. Production consumers explicitly depend on the earlier
-producer; acceptance requires inspect/run/use of the reference and preserving proven
-behavior with production tests, not a report-only link. Retain proof until all consumers
-and production validation pass; schedule cleanup last and preserve reproducible evidence.
-Failed/unrun proofs cannot release assumed dependents: retain disproof/limits, correct/replan
-and renew affected existing approvals rather than label failed techniques proven.
+without separate authority. Known bounded behavior normally uses permanent actual-helper
+tests or a verified earlier step inside its delivery task; do not add a prototype task when
+that proof suffices. Select a disposable experiment only for a genuinely unknown consequential
+behavior, to answer ONE consequential question before costly reliance. If selected, use existing
+task fields to scope its informational conclusion/limits, with both script code and actual
+observed execution evidence; the shared owner defines the complete evidence, applicability and
+lifetime contract. Both the direct and SpecKit adapters mark the task title **[PROTOTYPE]** (or an
+explicit equivalent only for an incompatible observed format) and carry its bounded
+informational scope through the task handoff and worker brief. Only an independently necessary
+prerequisite becomes an earlier task; otherwise verify before reliance inside the same task.
+Consumers use applicable findings and preserve behavior with permanent production acceptance
+tests. Failed or unrun evidence cannot release assumed reliance; retain limits, correct/replan
+and renew affected existing approvals rather than label a failed technique proven.
+
+A task delivers an independently verifiable outcome, not a phase label. Separate tasks only
+for a concrete independently necessary deliverable, prerequisite, gate, resource boundary or
+material context incompatibility. Test writing/running, evidence, verification, review
+preparation and routine teardown normally stay inside that outcome. Do not split by a workflow
+noun or task-count quota; preserve real dependencies and gates rather than mechanically merging
+independent work.
 
 Every task records an outcome, explicit prerequisites, likely files or interfaces,
 independently observable acceptance evidence, required capabilities and shared context. Cover all in-scope work, integration/acceptance checks, and
@@ -95,9 +105,10 @@ When separate green components cannot establish a genuine risky boundary, requir
 smallest composed check that observes the final observable, order or custody—not just
 helper outputs. Reuse an existing focused check that already observes the boundary;
 ordinary observed wiring needs no extra integration programme. Preserve necessary security
-and durability checks. Schedule risky proof at the earliest practical producer/consumer
-boundary under early-risk ordering; block downstream reliance until sufficient proof exists,
-not all seams before coding or a duplicate prototype.
+and durability checks. This check does not itself require a separate task: use an earlier
+producer only when an independently necessary prerequisite is evidenced, otherwise verify
+before reliance inside the same delivery. Block reliance on insufficient or invalidated proof,
+not unrelated seams or a duplicate prototype.
 
 Acceptance evidence uses the smallest sufficient check at the lowest layer that can
 observe the changed seam's concrete failure. Use stable task-local references such as
@@ -139,16 +150,21 @@ batch decision.
 
 ## Review and handoff
 
-Review early risk reduction selection/omission, real-runtime executable criteria,
-explicit consumption/dependencies, all-consumer retention, production tests before cleanup,
-disproof/renewal and feasibility through both adapters/direct entry. Return producer → consumer
-→ production validation → cleanup mapping, applicability and blocked reliance to existing
-producing review and coordinator handoff; syntax/order validation alone cannot prove consumption.
+Review selection/omission, real-runtime evidence, applicable dependencies, proof lifetime,
+production acceptance, disproof/renewal and feasibility through both adapters/direct entry.
+Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks
+without weakening acceptance or original gates. Return only necessary producer/consumer
+dependencies, applicable evidence/limits and blocked reliance to the existing producing review
+and coordinator handoff; syntax/order validation alone cannot prove consumption.
 
 For both adapters, carry each criterion/item ID, smallest check, accessible proof/pass
-conditions, explicit earlier producer dependencies and original permission/manual gates into
-the inline REQUIRED brief. Missing, weakened or unrun REQUIRED proof blocks downstream reliance;
-source pointers cannot substitute for the contract.
+conditions, applicable earlier producer dependencies and original permission/manual gates into
+the inline REQUIRED brief. For a [PROTOTYPE] task, preserve the marker and bounded informational
+scope in the handoff and worker brief; missing marker/scope or code-only/unrun success claims
+are not proof. Missing, weakened or unrun REQUIRED evidence blocks reliance; source pointers
+cannot substitute for the contract. Reuse unchanged applicable proof once with all mappings,
+rerun only affected invalidated evidence, and keep routine teardown inside its task. A separate
+cleanup task needs an actual independently consequential resource or outcome.
 
 Before approval, validate explicit dependencies and story continuity with
 `python3 scripts/check-task-order.py /path/to/tasks.md` from this skill directory when the

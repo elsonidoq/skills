@@ -4,6 +4,7 @@
 from pathlib import Path
 import unittest
 import json
+import re
 import tempfile
 from copy import deepcopy
 
@@ -15,8 +16,8 @@ COMPOSED_RULES = (
     'separate green components cannot establish a genuine risky boundary',
     'smallest composed check that observes the final observable, order or custody',
     'Reuse an existing focused check that already observes the boundary',
-    'earliest practical producer/consumer boundary',
-    'not all seams before coding or a duplicate prototype',
+    'Only an independently necessary prerequisite becomes an earlier task',
+    'otherwise verify before reliance inside the same task',
 )
 
 
@@ -162,6 +163,68 @@ class TaskGenerationContractTests(unittest.TestCase):
         self.assertIn("do not reorder dependencies or pad a segment", TEXT)
         self.assertIn("Internal producer/consumer dependencies, shared files, and phase/story headings may", TEXT)
         self.assertIn("shared\ncontext and integration checkpoints", TEXT)
+
+    def test_delivery_boundaries_and_prototype_policy_are_required(self):
+        contract = TEXT.split("## Task contract", 1)[1].split("## Review and handoff", 1)[0]
+        review = TEXT.split("## Review and handoff", 1)[1].split("## Mandatory", 1)[0]
+        for clause in (
+            "A task delivers an independently verifiable outcome, not a phase label",
+            "Separate tasks only for a concrete independently necessary deliverable, prerequisite, gate, resource boundary or material context incompatibility",
+            "Test writing/running, evidence, verification, review preparation and routine teardown normally stay inside that outcome",
+            "Do not split by a workflow noun or task-count quota",
+            "Known bounded behavior normally uses permanent actual-helper tests",
+            "verified earlier step inside its delivery task", "genuinely unknown consequential",
+            "ONE consequential question", "[PROTOTYPE]", "informational conclusion",
+            "both script code and actual observed execution evidence", "early risk reduction",
+            "Both the direct and SpecKit adapters mark the task title **[PROTOTYPE]**",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(" ".join(clause.split()), " ".join(contract.split()))
+        for clause in (
+            "Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks",
+            "For a [PROTOTYPE] task, preserve the marker and bounded informational scope in the handoff and worker brief",
+            "keep routine teardown inside its task",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(" ".join(clause.split()), " ".join(review.split()))
+
+    def assert_prototype_adapter_fixture(self, source):
+        tasks = re.findall(r"(?m)^- \[ \] (T\d+) (.+)$", source)
+        self.assertEqual([task_id for task_id, _ in tasks], ["T001", "T002"])
+        self.assertTrue(tasks[0][1].startswith("[PROTOTYPE] "))
+        self.assertFalse(any("cleanup" in title.lower() for _, title in tasks))
+        prototype, delivery = re.split(r"(?m)^- \[ \] T\d+", source)[1:]
+        for phrase in ("ONE consequential question", "actual dependency/abstraction",
+                       "informational conclusion and tested limits", "script code and actual observed execution",
+                       "commands actually run", "No accompanying proof suite or separate harness",
+                       "typically tens of lines"):
+            self.assertIn(phrase, prototype)
+        self.assertIn("**Depends**: T001", delivery)
+        self.assertIn("inspect and use the applicable proof", delivery)
+        self.assertIn("permanent production acceptance tests", delivery)
+
+    def test_both_adapters_propagate_bounded_informational_prototype(self):
+        root = Path(__file__).parents[3] / "scripts" / "fixtures" / "planner"
+        for name in ("risk-tiny-tasks.md", "risk-standard-tasks.md"):
+            with self.subTest(adapter=name):
+                self.assert_prototype_adapter_fixture((root / name).read_text())
+
+    def test_prototype_adapter_contract_rejects_scope_and_proof_mutations(self):
+        root = Path(__file__).parents[3] / "scripts" / "fixtures" / "planner"
+        mutations = (
+            ("[PROTOTYPE] ", ""),
+            ("ONE consequential question", "unbounded questions"),
+            ("script code and actual observed execution", "script code only"),
+            ("No accompanying proof suite or separate harness", "a separate suite and harness"),
+            ("**Depends**: T001\n", "**Depends**: none\n"),
+        )
+        for name in ("risk-tiny-tasks.md", "risk-standard-tasks.md"):
+            source = (root / name).read_text()
+            for old, new in mutations:
+                with self.subTest(adapter=name, negative=new):
+                    self.assertIn(old, source)
+                    with self.assertRaises(AssertionError):
+                        self.assert_prototype_adapter_fixture(source.replace(old, new, 1))
 
 
 if __name__ == "__main__":

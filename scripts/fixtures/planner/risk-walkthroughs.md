@@ -32,3 +32,31 @@ scope, acceptance or dependencies change. A corrected attempt retains the first 
 no weaker criteria or blind retry. Missing capability is an evidence gap, not disproof.
 Gate: no downstream release from failed/unrun proof; correction needs existing authority
 and affected approval renewal. The hypothetical result is not an observed library failure.
+
+## F — outcome boundaries and ordinary wiring
+
+A settled multi-file local change has no independent deliverable, prerequisite, gate, resource
+or material context boundary between its accepted behaviors. Keep all acceptance, focused tests,
+evidence, operative documentation and routine teardown in one coherent delivery task: no
+inventory, prototype, composition, report or hypothetical-cleanup task. A small wiring outcome
+also stays together; its existing test observes the actual value at the consumer boundary.
+A workflow noun or task-count target is not a split reason. This scenario proves no requirement
+to combine work that has a real independent boundary.
+
+## G — risky operations retain their gates
+
+A migration, paid or live boundary that requires separate evidence keeps its independently
+verified prerequisite and original permission/manual gate. A tiny symbolic fixture or an
+informational prototype does not replace required migration, real-system or paid/live
+validation. This example executes no migration or live operation and establishes no external
+behavior.
+
+## H — shared proof applicability and lifetime
+
+If revision/environment/scope remain unchanged, run the shared applicable check once with
+every criterion/item mapping, pass condition, evidence binding and gate. When a change
+invalidates proof for only one consumer, rerun only invalidated proof for that affected scope
+and keep unchanged applicable results. Retain proof until all applicable consumers and production validation
+pass; then safely discard actual disposable material and retain concise command/result/limits
+in existing evidence. Routine teardown stays inside the delivery; no separate cleanup task.
+This is a symbolic reuse/disposal scenario, not a runtime result.

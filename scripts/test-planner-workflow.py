@@ -79,6 +79,19 @@ class EarlyRiskReductionTests(unittest.TestCase):
                     errors = checker.check_contracts(changed)
                     self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
 
+    def test_delivery_boundary_clause_removals_have_named_diagnostics(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, heading, clauses in checker.BOUNDARY_CARRIERS:
+            for clause in clauses:
+                with self.subTest(diagnostic=label, removed=clause):
+                    changed = dict(texts)
+                    body = checker.section(changed[key], heading)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, "REMOVED", body), 1)
+                    errors = checker.check_contracts(changed)
+                    self.assertTrue(any(e.startswith(label + ":") for e in errors), errors)
+
     def test_risk_carrier_removal_and_summary_only_replacement(self):
         texts = checker.load_texts()
         for label, key, heading, _ in checker.RISK_CARRIERS:
@@ -118,44 +131,50 @@ class EarlyRiskReductionTests(unittest.TestCase):
 
     def assert_risk_adapter_semantics(self, source):
         # Bounded expected-fixture assertions, not a generic semantic task validator.
+        tasks = re.findall(r"(?m)^- \[ \] (T\d+) (.+)$", source)
+        self.assertEqual([task_id for task_id, _ in tasks], ["T001", "T002"])
+        self.assertTrue(tasks[0][1].startswith("[PROTOTYPE] "))
+        self.assertFalse(any("cleanup" in title.lower() for _, title in tasks))
         blocks = re.split(r"(?m)^- \[ \] T\d+", source)[1:]
-        self.assertEqual(len(blocks), 3)
-        producer, consumer, cleanup = blocks
+        prototype, delivery = blocks
         for block in blocks:
             for field in ("Outcome", "Files/interfaces", "Acceptance", "Capabilities", "Depends"):
                 self.assertIn(f"**{field}**", block)
             for field in ("REQUIRED", "Pass:", "Smallest check:", "Evidence:", "Gate:"):
                 self.assertIn(field, block)
-        for phrase in ("real dependency/runtime", "representative and adversarial", "failure rejects the technique",
-                       "Commands:", "commands actually run", "observed findings", "version/runtime/revision applicability",
-                       "NOT VERIFIED, not PASS", "blocks dependent reliance", "retain executable artifact, commands and findings"):
-            self.assertIn(phrase, producer)
-        for phrase in ("**Depends**: T001", "inspect and run applicable", "use it as implementation reference",
-                       "behavior with production tests", "a report-only link is insufficient", "remaining integration risks",
-                       "T001 passed and still-applicable", "failed/unrun producer cannot release"):
-            self.assertIn(phrase, consumer)
-        for phrase in ("**Depends**: T001, T002", "cleanup only after all applicable consumers and production validation pass",
-                       "preserve reproducible evidence, commands, findings and limits", "otherwise retain proof"):
-            self.assertIn(phrase, cleanup)
+        for phrase in ("ONE consequential question", "actual dependency/abstraction", "informational conclusion",
+                       "script code and actual observed execution", "commands actually run", "tested limits",
+                       "NOT VERIFIED, not PASS", "blocks assumed reliance", "No accompanying proof suite or separate harness",
+                       "not a production feature or abstraction scaffold", "typically tens of lines"):
+            self.assertIn(" ".join(phrase.split()), " ".join(prototype.split()))
+        for phrase in ("**Depends**: T001", "inspect and use the applicable proof", "as informational evidence for implementation",
+                       "permanent production acceptance tests", "A report-only link is insufficient",
+                       "all applicable consumers", "production validation pass", "retain concise command/result/limits",
+                       "failed/unrun producer cannot release"):
+            self.assertIn(" ".join(phrase.split()), " ".join(delivery.split()))
 
-    def test_B_C_both_adapter_producer_consumer_lifetime(self):
+    def test_B_C_both_adapter_informational_prototype_and_coherent_delivery(self):
         validator = load("risk_order", "../skills/task-generation/scripts/check-task-order.py")
         for name in ("risk-tiny-tasks.md", "risk-standard-tasks.md"):
             source = (HERE / "fixtures/planner" / name).read_text()
             self.assertEqual(validator.check(source), [], name)
             self.assert_risk_adapter_semantics(source)
-        self.assertIn("before production lifecycle plumbing", (HERE / "fixtures/planner/risk-tiny-tasks.md").read_text())
-        self.assertIn("before integration plumbing", (HERE / "fixtures/planner/risk-standard-tasks.md").read_text())
 
-    def test_early_deletion_report_only_missing_dependency_failed_as_proven_rejected(self):
+    def test_prototype_marker_scope_execution_and_lifetime_negatives(self):
+        mutations = (
+            ("[PROTOTYPE] ", ""),
+            ("ONE consequential question", "unbounded questions"),
+            ("script code and actual observed execution", "script code only"),
+            ("No accompanying proof suite or separate harness", "a separate proof suite and harness"),
+            ("not a production feature or abstraction scaffold", "production scaffolding is required"),
+            ("inspect and use the applicable proof", "link a report about the proof"),
+            ("A report-only link is insufficient", "a report-only link is sufficient"),
+            ("**Depends**: T001\n", "**Depends**: none\n"),
+            ("production validation pass", "producer pass"),
+        )
         for name in ("risk-tiny-tasks.md", "risk-standard-tasks.md"):
             source = (HERE / "fixtures/planner" / name).read_text()
-            for old, new in (
-                ("cleanup only after all applicable consumers and production validation pass", "delete immediately after producer"),
-                ("inspect and run applicable", "link a report about"),
-                ("**Depends**: T001\n", "**Depends**: none\n"),
-                ("failure rejects the technique", "failed technique is proven"),
-            ):
+            for old, new in mutations:
                 with self.subTest(adapter=name, negative=new):
                     self.assertIn(old, source)
                     with self.assertRaises(AssertionError):
@@ -176,7 +195,172 @@ class EarlyRiskReductionTests(unittest.TestCase):
         for label in ("risk-selection", "risk-producer", "risk-disproof", "risk-boundary"):
             _, key, heading, clauses = next(c for c in checker.RISK_CARRIERS if c[0] == label)
             for clause in clauses:
-                self.assertIn(clause, checker.section(texts[key], heading))
+                body = checker.section(texts[key], heading)
+                self.assertIn(" ".join(clause.split()), " ".join(body.split()))
+
+    def test_outcome_boundaries_and_shared_proof_scenarios(self):
+        source = (HERE / "fixtures/planner/risk-walkthroughs.md").read_text()
+        for heading, phrases in (
+            ("## F", ("settled multi-file", "one coherent delivery task", "all acceptance",
+                      "no inventory, prototype, composition, report or hypothetical-cleanup task",
+                      "small wiring", "existing test observes the actual value at the consumer boundary")),
+            ("## G", ("migration, paid or live", "independently verified prerequisite",
+                      "original permission/manual gate", "does not replace required migration, real-system or paid/live validation")),
+            ("## H", ("revision/environment/scope remain unchanged", "shared applicable check once",
+                      "every criterion/item mapping", "rerun only invalidated proof",
+                      "all applicable consumers and production validation", "Routine teardown stays inside",
+                      "no separate cleanup task")),
+        ):
+            section = checker.section(source, heading)
+            for phrase in phrases:
+                with self.subTest(scenario=heading, expected=phrase):
+                    self.assertIn(" ".join(phrase.split()), " ".join(section.split()))
+
+
+class SymbolicReaderStageOracle:
+    """Tiny counter-observed local scenario; no real files, dependency or indexing product."""
+    records = (
+        {"id": "first", "state": "success", "value": "one"},
+        {"id": "bad", "state": "error", "detail": "full private diagnostic"},
+        {"id": "skip", "state": "skipped", "value": "not published"},
+        {"id": "later", "state": "success", "value": "two"},
+    )
+
+    def __init__(self):
+        self.capture_calls = self.dump_calls = self.rebuild_calls = 0
+        self.reader_open_calls = self.reset_verify_calls = self.frame_scan_calls = 0
+        self.status_calls = self.completion_calls = self.cleanup_calls = 0
+        self.operator_record_calls = 0
+        self.reader_content_reads = 0
+        self.captured = []
+        self.descriptors = ()
+        self.processed = []
+        self.successful = []
+        self.skipped = []
+        self.published = []
+        self.private_diagnostics = []
+        self.public_progress = []
+        self.invoked_modes = []
+
+    def sequential_capture(self):
+        self.capture_calls += 1
+        self.captured = list(self.records)
+        return self.captured
+
+    def dump_descriptors(self):
+        self.dump_calls += 1
+        self.descriptors = tuple(record["id"] for record in self.captured)
+
+    def rebuild_and_inline_validate_once(self):
+        self.rebuild_calls += 1
+        for record in self.captured:
+            self.operator_record_calls += 1
+            self.processed.append(record["id"])
+            if record["state"] == "error":
+                self.private_diagnostics.append(record["detail"])
+            elif record["state"] == "skipped":
+                self.skipped.append(record["id"])
+            else:
+                self.successful.append(record["id"])
+                self.published.append(record["value"])
+        self.public_progress.append(f"Processed {len(self.processed)} records")
+        return tuple(self.successful)
+
+    def maintained_reader_invocation(self, mode):
+        self.invoked_modes.append(mode)
+        return self.open_metadata_only_reader(mode)
+
+    def open_metadata_only_reader(self, mode):
+        self.reader_open_calls += 1
+        self.reader_content_reads = 0
+        return {"mode": mode, "descriptors": self.descriptors}
+
+    def reset_and_verify(self, _reader):
+        self.reset_verify_calls += 1
+
+    def status(self, _reader):
+        self.status_calls += 1
+        return {"successes": len(self.successful), "skipped": len(self.skipped)}
+
+    def completion(self, _reader):
+        self.completion_calls += 1
+
+    def cleanup(self, _reader):
+        self.cleanup_calls += 1
+
+    def read_dataset_content(self, _record):
+        self.reader_content_reads += 1
+
+    def consume_first_frame(self, reader):
+        self.frame_scan_calls += 1
+        self.read_dataset_content(reader["descriptors"][0])
+
+
+class A4AcceptancePreservationTests(unittest.TestCase):
+    def assert_local_lifecycle(self, oracle_type):
+        for mode in ("mode-a", "mode-b"):
+            oracle = oracle_type()
+            oracle.sequential_capture()
+            oracle.dump_descriptors()
+            oracle.rebuild_and_inline_validate_once()
+            reader = oracle.maintained_reader_invocation(mode)
+            oracle.reset_and_verify(reader)
+            status = oracle.status(reader)
+            oracle.completion(reader)
+            oracle.cleanup(reader)
+
+            # These counters are incremented by the actual local operator methods/record loop.
+            self.assertEqual(oracle.capture_calls, 1)
+            self.assertEqual(oracle.dump_calls, 1)
+            self.assertEqual(oracle.rebuild_calls, 1)
+            self.assertEqual(oracle.captured, list(oracle.records))
+            self.assertEqual(oracle.descriptors, tuple(record["id"] for record in oracle.records))
+            self.assertEqual(oracle.operator_record_calls, len(oracle.records))
+            self.assertEqual(oracle.processed, ["first", "bad", "skip", "later"])
+            self.assertEqual(oracle.successful, ["first", "later"])
+            self.assertEqual(oracle.skipped, ["skip"])
+            self.assertEqual(oracle.published, ["one", "two"])
+            self.assertEqual(status, {"successes": 2, "skipped": 1})
+            self.assertNotIn("full private diagnostic", status.values())
+            self.assertEqual(oracle.private_diagnostics, ["full private diagnostic"])
+            self.assertLessEqual(len(oracle.public_progress), 1)
+            self.assertEqual(oracle.reader_open_calls, 1)
+            self.assertEqual(oracle.reset_verify_calls, 1)
+            self.assertEqual(oracle.invoked_modes, [mode])
+            self.assertEqual(oracle.reader_content_reads, 0)
+            self.assertEqual(oracle.frame_scan_calls, 0)
+
+            oracle.consume_first_frame(reader)
+            self.assertEqual(oracle.reader_content_reads, 1)
+            self.assertEqual(oracle.frame_scan_calls, 1)
+            after_consumption = oracle.reader_content_reads
+            oracle.completion(reader)
+            oracle.status(reader)
+            oracle.cleanup(reader)
+            self.assertEqual(oracle.reader_content_reads, after_consumption)
+            self.assertEqual(oracle.frame_scan_calls, 1)
+
+    def test_metadata_open_counters_and_local_stage_advancement(self):
+        self.assert_local_lifecycle(SymbolicReaderStageOracle)
+
+        class SilentReread(SymbolicReaderStageOracle):
+            def open_metadata_only_reader(self, mode):
+                reader = super().open_metadata_only_reader(mode)
+                self.read_dataset_content(reader["descriptors"][0])
+                return reader
+
+        class NonAdvancingRebuild(SymbolicReaderStageOracle):
+            def rebuild_and_inline_validate_once(self):
+                self.rebuild_calls += 1
+                return ()
+
+        for mutation in (SilentReread, NonAdvancingRebuild):
+            with self.subTest(mutation=mutation.__name__):
+                with self.assertRaises(AssertionError):
+                    self.assert_local_lifecycle(mutation)
+        print("A4 local oracle: sequential capture, one rebuild/operator pass, error continuation, "
+              "success/skip accounting, private diagnostics, both maintained modes; "
+              "0 content reads before first consumption; silent-reread and non-advancement mutations rejected")
 
 
 class ComposedAcceptanceTests(unittest.TestCase):

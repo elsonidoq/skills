@@ -127,11 +127,19 @@ hard-coded here. This exception does not assign implementation-task profiles.
 ## Proportionate validation
 
 Read and apply [early risk reduction](references/early-risk-reduction.md); verify it is
-readable or stop with a missing-install report. Select a difficult isolatable core by
-leverage, not ceremony; easy names/types use inspection, non-isolatable risks use
-real-system validation. Planning schedules executable proofs, not execution without
-separate authority. Carry minimal real-runtime proof, explicit production consumption,
-production tests before cleanup and retained disproof into selected work.
+readable or stop with a missing-install report. Select proof for a consequential unknown
+only when inexpensive, executable evidence can reduce costly reliance; known bounded behavior
+uses permanent actual-helper tests or a verified step inside its delivery task. Easy names/types
+use inspection, and non-isolatable risks use real-system validation with actual gates. Planning
+schedules proofs, not execution without separate authority; the shared risk owner defines proof
+applicability and lifetime.
+
+At both TinySpec and Standard reviews, challenge proposed task boundaries using the shared
+task-generation outcome rule; see the [task-generation contract](../task-generation/SKILL.md).
+A workflow or phase noun is not a reason to split; keep tests, evidence, review preparation
+and routine teardown with the supported delivery unless a concrete independent outcome,
+prerequisite, gate, resource or context boundary warrants separation.
+Reject duplicate proof/report chains and disproportionate checks without weakening acceptance.
 
 During assessment and selected production/review, identify the actual changed seam
 and its concrete failure before choosing checks. Choose the lowest validation layer
@@ -153,9 +161,10 @@ When separate green components cannot establish a genuine risky boundary, requir
 smallest composed check that observes the final observable, order or custody—not just
 helper outputs. Reuse an existing focused check that already observes the boundary;
 ordinary observed wiring needs no extra integration programme. Preserve necessary security
-and durability checks. Schedule risky proof at the earliest practical producer/consumer
-boundary under early-risk ordering; block downstream reliance until sufficient proof exists,
-not all seams before coding or a duplicate prototype.
+and durability checks. Use a separate proof prerequisite only when the consequential unknown
+and costly downstream reliance justify it; otherwise put a verified step before reliance in
+the same coherent task. Preserve real dependency order and block reliance only on insufficient
+or invalidated evidence, not on unrelated seams.
 
 Separate REQUIRED acceptance checks (from source criteria, owner direction or
 repository policy) from optional hardening and broader regression. Identify separately
@@ -240,10 +249,11 @@ new material owner gates and explicit stop boundaries still prevent unsafe conti
 
 ## Selected production and stage handoffs
 
-Apply the early risk reduction contract in stage briefs and source/task handoffs:
-return justified selection/omission, executable criteria and applicability, explicit
-producer → consumer → production validation → cleanup dependencies, retention through
-all consumers, and disproof/NOT VERIFIED blockers with affected approval renewal.
+Apply the shared early-risk and task-boundary contracts in stage briefs and source/task
+handoffs. Return the selection/omission rationale, executable criteria and applicability,
+only genuinely necessary producer/consumer dependencies, proof lifetime and disproof/NOT
+VERIFIED blockers with affected approval renewal. Keep ordinary acceptance, evidence and
+teardown inside coherent delivery; do not prescribe a prototype/consumer/cleanup task chain.
 
 After choice, persist the selected source/provenance, evidence, decisions/deferrals,
 and depth using established project conventions. Preserve the original request by
@@ -346,9 +356,9 @@ gate for affected review and renewed approval, never fabricated historical requi
    inline/local fallback. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
    Apply the dependency evidence/permission review above before combined approval.
-   Review early risk reduction selection/omission, real-runtime executable criteria,
-   explicit consumption/dependencies, all-consumer retention, production tests before
-   cleanup, disproof/renewal and feasibility; source carries needs, separate tasks carry work.
+   Review risk selection/omission, actual evidence and gates, necessary producer/consumer
+   dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries.
+   Source carries needs; separate tasks carry only independently necessary work units.
 4. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
    obtain explicit approval of current TinySpec/source, tasks, and implementation scope,
    stating that approval starts the coordinator next unless planning-only was requested.
@@ -428,9 +438,9 @@ an independent reviewer before assigning their work.
    follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
    coverage, dependencies, verification item completeness, documentation, integration and approvals.
-   Review early risk reduction selection/omission, real-runtime executable criteria,
-   explicit consumption/dependencies, all-consumer retention, production tests before
-   cleanup, disproof/renewal and feasibility in direct Standard and managed/helper plans.
+   Review risk selection/omission, actual evidence and gates, necessary producer/consumer
+   dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries
+   in direct Standard and managed/helper plans.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
    Delegate mechanical task-level and upstream corrections to suitable originating producer
@@ -463,9 +473,10 @@ ambiguous origin stops. Never invoke a retired manager to repair its handoff.
 
 ## Handoff, not execution
 
-Revalidate the early risk reduction mapping and blockers against current proof applicability:
-explicit consumers must inspect/run the reference and preserve behavior with production tests;
-cleanup waits for all consumers. Failed/unrun proofs cannot release assumed dependents.
+Revalidate risk rationale and any required proof against current applicability: consumers
+use applicable evidence and preserve behavior with permanent production tests; retain proof
+through all consumers/validation before safely discarding disposable material. Failed/unrun
+proof cannot release assumed reliance; routine cleanup does not become a separate task.
 
 Revalidate paths, source/task consistency, ordering, current review/approval evidence,
 required upstream outputs, and unresolved material gates. Provide explicit locations

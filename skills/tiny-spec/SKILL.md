@@ -59,12 +59,14 @@ impact, allowed bounds and outstanding validation, never automatic deferral.
 
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
 verify it is readable or stop with a missing-install report, including direct/standalone
-entry. In approach/acceptance, justify selection/omission: difficult isolatable cores
-need leverage-bearing minimal real-runtime executable proof, easy names/types need
-inspection, non-isolatable risks need real-system validation. Carry explicit production
-consumption, representative/adversarial criteria, applicability, production tests before
-cleanup, all-consumer retention and disproof/renewal. Planning schedules proofs, not
-execution without separate authority; this source describes needs, not work-unit checklists.
+entry. In approach/acceptance, justify proof selection/omission: use permanent actual-helper
+tests for known bounded behavior, inspection for easy names/types, and real-system validation
+with actual gates for non-isolatable risks. For a genuine consequential unknown, state the
+question, why inexpensive evidence matters before reliance, required informational findings
+and tested limits, and applicable execution gates. The shared risk contract owns proof scope, execution evidence and lifetime; task generation
+decides whether a prerequisite is a separate outcome or a verified step inside delivery
+(see the [task-generation contract](../task-generation/SKILL.md)). Planning schedules proofs,
+not execution without separate authority; this source describes needs, not a task chain.
 
 Read and apply the [SDD quality guidance](../../docs/best_practices_spec_driven_development.md)
 for specification creation only, including TinySpec; missing guidance stops with a
@@ -100,10 +102,10 @@ deferral. Do not reintroduce excluded work.
 
 ## Boundary and return
 
-Return the early risk reduction rationale and producer → consumer → production validation
-→ cleanup needs for source/task review: explicit dependencies and inspect/run consumption,
-commands/findings/applicability, all-consumer retention, and failed/unrun reliance blockers
-with affected existing approval renewal. Do not assume planner applied this on direct entry.
+Return the risk rationale, any genuinely necessary producer/consumer dependency, proof
+applicability and lifetime, required production acceptance, execution gates and failed/unrun
+reliance blockers for source/task review, with affected approval renewal. Do not assume
+planner applied the shared contract on direct entry or imply separate consumer/cleanup tasks.
 
 Do not embed an implementation task checklist. A separate task file is mandatory:
 planner invokes `task-generation`'s direct adapter after this artifact. Acceptance

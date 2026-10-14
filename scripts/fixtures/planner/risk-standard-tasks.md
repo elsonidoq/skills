@@ -1,29 +1,20 @@
 # Illustrative Standard risk adapter — C
 
-Synthetic task shape only, not output from real SpecKit or a real transformation experiment.
-No execution, approval or model-obedience proof. C: difficult canonical transformation is the
-hardest core, cheaply isolatable with an executable oracle and substantial downstream leverage.
-The assumed plan sequences this producer before integration plumbing using existing fields.
+Synthetic task shape only: no real SpecKit output, transformation execution, approval or
+model-obedience proof. C is a genuinely unknown, inexpensive canonicalization behavior whose
+answer changes a costly downstream reliance decision. This is an example, not a task quota.
 
-- [ ] T001 Prove canonical transformation with a minimal executable reference.
+- [ ] T001 [PROTOTYPE] Determine whether canonical output preserves required information.
   - **Depends**: none
-  - **Outcome**: determine whether canonical output preserves required information in tested bounds.
-  - **Files/interfaces**: disposable transform-proof.py, assertions and retained findings in discovered project owners.
-  - **Acceptance**: REQUIRED T001/V1. Pass: representative and adversarial inputs preserve fields, deterministic round-trip canonical output, explicit rejection of malformed/ambiguous input; failure rejects the technique. Smallest check: real dependency/runtime where relevant, observed target version, executable assertions for nested, empty and conflicting inputs (not a mock/name-print script). Commands: `python transform-proof.py --cases representative,adversarial`; expected exact output and rejection assertions. Evidence: artifact, commands actually run, observed findings, version/runtime/revision applicability and limits. Gate: separately authorized local execution and available target runtime; unrun/unavailable is NOT VERIFIED, not PASS, and blocks dependent reliance.
-  - **Capabilities**: separately permitted target runtime and dependency; no installation or live call assumed.
-  - **Integration checkpoint**: retain executable artifact, commands and findings for all consumers; failed result blocks assumed consumer approach and returns to correction/replanning and affected approval renewal.
+  - **Outcome**: an informational conclusion and tested limits for one consequential transformation question—not production code.
+  - **Files/interfaces**: a tiny disposable script exercising the actual dependency/abstraction or boundary; it is not a production feature or abstraction scaffold.
+  - **Acceptance**: REQUIRED T001/V1. Pass: executable observations cover representative, empty and conflicting input and record exact output/rejection bounds; disproof or inconclusive output is retained, blocks assumed reliance and cannot release assumed success. Smallest check: actual dependency/runtime where relevant, not a mock or trivial print. Scope: ONE consequential question. Use clear observations or a few direct assertions, typically tens of lines; guidance, not a hard cap. No accompanying proof suite or separate harness. Evidence: script code and actual observed execution output, with minimal commands actually run, conclusion/findings, tested limits and dependency/runtime/revision applicability; code-only or unrun claims are NOT VERIFIED, not PASS. Gate: separately authorized local execution and available dependency/runtime; no installation or live operation assumed.
+  - **Capabilities**: separately permitted dependency/runtime and local execution.
 
-- [ ] T002 [US1] Integrate production transformation using the tested reference.
+- [ ] T002 [US1] Deliver the production transformation and acceptance.
   - **Depends**: T001
-  - **Outcome**: production preserves proven behavior within applicable bounds, with remaining integration risks tested.
-  - **Files/interfaces**: production transformation plumbing and production tests in discovered project repository.
-  - **Acceptance**: REQUIRED T002/V1. Pass: inspect and run applicable transform-proof.py, use it as implementation reference, preserve canonical behavior with production tests; a report-only link is insufficient. Smallest check: `python transform-proof.py --cases representative,adversarial` then observed project production test command for round-trip/rejection behavior and remaining integration risks. Evidence: replay output, applicability check, production assertions/results compared to T001 findings. Gate: T001 passed and still-applicable version/runtime/revision, separate production execution authority; failed/unrun producer cannot release this task.
-  - **Capabilities**: editing and observed production runner under approved permissions.
-  - **Shared context**: proof artifact, commands, findings and limits retained until all consumers and production validation pass.
-
-- [ ] T003 [US1] Clean disposable proof only after validated consumption.
-  - **Depends**: T001, T002
-  - **Outcome**: disposable reference removed without losing reproducible findings.
-  - **Files/interfaces**: disposable proof and established evidence owner.
-  - **Acceptance**: REQUIRED T003/V1. Pass: cleanup only after all applicable consumers and production validation pass; preserve reproducible evidence, commands, findings and limits. Smallest check: compare T001/T002 replay and production results to retention inventory before deletion. Evidence: consumer mapping, passed production results and preserved reproduction record. Gate: all consumers validated; otherwise retain proof.
-  - **Capabilities**: authorized artifact cleanup and evidence writing.
+  - **Outcome**: production preserves applicable proven behavior and meets the full story acceptance.
+  - **Files/interfaces**: production transformation, permanent acceptance tests and any lockstep operative documentation.
+  - **Acceptance**: REQUIRED T002/V1. Pass: inspect and use the applicable proof (the T001 script, findings and observed result) as informational evidence for implementation; permanent production acceptance tests verify round-trip and malformed/ambiguous-input behavior at the actual boundary. A report-only link is insufficient, and a failed/unrun producer cannot release this task. Do not rerun unchanged shared proof for ceremony; rerun only if its applicability is invalidated. Smallest check: the affected production transformation tests. Evidence: applicable T001 result mapped to each criterion plus production command/results. Gate: a failed, inconclusive or unrun T001 is NOT VERIFIED, not PASS; it blocks assumed reliance and cannot release success. Retain original permission/manual gates.
+  - **Capabilities**: editing and the observed production test runner under approved permissions.
+  - **Cleanup/evidence**: keep the actual disposable script until all applicable consumers and production validation pass; then safely discard it and retain concise command/result/limits in existing evidence. Routine teardown stays within this delivery; no separate cleanup task is implied.

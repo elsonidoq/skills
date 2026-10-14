@@ -133,67 +133,56 @@ source→constraint→validation correspondence across managed and standalone en
 local reuse/trivial skip, changed-version refresh, unavailable/insufficient evidence and
 explicit bounded deferral; deterministic PASS is not behavioral acceptance.
 
-## Early technical risk reduction assurance
+## Early technical risk reduction and task-boundary assurance
 
-The [shared owner](../../skills/planner/references/early-risk-reduction.md) schedules
-selective early **implementation** proof of a difficult isolatable core, not merely
-research before planning. Its Select for leverage section distinguishes substantial
-leverage/cheap isolation/executable oracle from easy inspection and whole-environment
-risks. Produce a minimal executable reference requires real dependency/runtime/version
-where relevant, representative/adversarial observables, objective success/failure criteria,
-commands actually run, findings, applicability, limits and capability/permission gates.
-No obligatory prototype, production-quality abstraction, new schema or approval stage.
-Planning schedules this work; execution still requires separate authority.
+The [shared risk owner](../../skills/planner/references/early-risk-reduction.md) is applied
+through direct/SpecKit task generation, TinySpec, both planner path reviews and the managed
+Standard helper. Known bounded behavior uses permanent actual-helper tests or a verified step
+inside its delivery. A disposable experiment is reserved for a genuine consequential unknown
+worth inexpensive proof before costly reliance: one tiny actual-boundary **[PROTOTYPE]** task,
+whose informational conclusion/limits require both code and observed execution output. It has
+no accompanying proof suite/harness or production scaffolding. Both task adapters carry the
+title marker and bounded scope into their handoff/worker brief. Failed, inconclusive or unrun
+proof does not release assumed success.
 
-Consume, validate, then clean up requires explicit earlier producer dependencies and
-consumer acceptance to inspect/run the applicable executable reference, use it for production,
-and preserve proven behavior with production tests plus remaining integration-risk checks.
-A report link alone does not consume proof. Artifact, commands and findings survive until
-**all** applicable consumers and production validation pass; only then clean disposable
-material while preserving reproducible evidence. Revision/environment changes invalidate
-affected evidence. Disproof and return retains failures/limits, blocks assumed consumers,
-corrects/replans and renews affected existing reviews/approvals when required. Failed or
-unrun experiments cannot release assumed dependents; unavailable REQUIRED evidence is
-NOT VERIFIED, not a pass or technical disproof.
+Task generation is the canonical task-boundary owner. Each task delivers an independently
+verifiable outcome; splitting requires a concrete independent deliverable/prerequisite/gate/
+resource/context boundary, not a workflow noun or quota. Tests, evidence, review preparation
+and routine teardown normally stay in that task. Planner reviews in both depths challenge
+unnecessary decomposition, duplicate proof/report chains and disproportionate checks without
+weakening acceptance or original gates. A separate producer/consumer dependency is used only
+when independently necessary; unchanged shared evidence runs once with all item mappings,
+only affected invalidated evidence reruns, and actual disposable material remains through all
+applicable consumers and production validation. Routine cleanup is internal; separate cleanup
+requires a real independently consequential resource or outcome.
 
-Operational carriers are planner Proportionate validation, stage handoffs, both path reviews
-and final handoff; TinySpec Compact source/Boundary and return; helper Preflight, Standard
-adapter, Planner Boundary and Completion; task-generation Task contract/Review and handoff.
-They apply the owner through managed TinySpec/Standard, direct TinySpec/tasking and
-standalone/helper planning without assuming planner already did. TinySpec carries approach
-and evidence needs without a task checklist; Standard/helper preserves installed task
-production. Missing/unreadable packaging stops affected planning with a missing-install
-report. Existing depth/model routing, approvals and task/evidence/release gates are unchanged.
+The operational owner still requires actual dependency/runtime applicability, representative
+observables, concise command/result/limits and permission gates. Migration, architecture,
+durability/security, paid/live or expensive-downstream risks retain independently verified
+prerequisites and their original gates; non-isolatable risk needs the applicable real-system
+validation. Planning never executes a proof without separate authority. Existing depth/model
+routing, exact-content approvals, REQUIRED/manual gates, independent reviews, execution scope
+and per-task checkpoints are unchanged.
 
-`EarlyRiskReductionTests` in `scripts/test-planner-workflow.py` provides bounded offline
-sensitivity and illustrative examples (not executed library proofs):
-
-| Source acceptance / case | Implemented span and named evidence |
+| Scenario / requirement | Bounded evidence and named tests |
 | --- | --- |
-| AC1, AC7: carriers and entry paths | Authority and scope / Review and handoff; `test_shared_risk_owner_is_required`, `test_risk_clause_removals_have_named_diagnostics`, `test_risk_carrier_removal_and_summary_only_replacement`, `test_risk_missing_wrong_reference_and_distributed_links` cover all four owners, operational/review/return deletion, summary-only replacements and missing/wrong/distributed links |
-| AC2 / A: easy name/type | Select for leverage; risk-walkthroughs.md A resolves by inspected source/documentation, no name-print spike; `test_A_D_E_labelled_walkthroughs_and_operational_mapping` and selection/boundary clause mutations |
-| AC3 / B: subtle library core | Produce / Consume sections; risk-tiny-tasks.md T001 real-runtime queued-write/close assertion shape, command/applicability/gates; T002 Depends T001, inspect/run/use reference and preserve completion-before-close with production tests; T003 cleanup last; `test_B_C_both_adapter_producer_consumer_lifetime` |
-| AC4 / C: hard transformation | Produce / Consume sections; risk-standard-tasks.md T001 representative/adversarial canonical round-trip/rejection executable before plumbing; T002 preserves behavior with production tests; T003 cleanup after validation; same named B/C test |
-| AC5 / D: non-isolatable risk | Select / Produce sections; risk-walkthroughs.md D real-system failover observables and topology/deployment/fault-control/monitoring prerequisites, explicit environment permissions, NOT VERIFIED if unrun; A/D/E test and selection/producer mutations |
-| AC6 / E: disproof | Disproof and return; risk-walkthroughs.md E hypothetical loss retains failed attempt, blocks assumed T002, corrects/replans and renews affected approvals; A/D/E test and disproof mutations |
-| AC3, AC4, AC7: semantic negatives | `test_early_deletion_report_only_missing_dependency_failed_as_proven_rejected` rejects each variant in both B/C adapters; lifetime/task/disproof clause mutations provide named diagnostics |
-| AC8: documentation truth | Manual comparison of this mapping to committed reference, operational consumers and actual test definitions; concrete task/runtime check and commit evidence, not a routine run SUMMARY |
+| Known behavior and real unknowns | Both adapter fixtures use a marked informational prototype with code + actual-run evidence and a necessary delivery consumer; no separate cleanup task. `test_B_C_both_adapter_informational_prototype_and_coherent_delivery`, `test_both_adapters_propagate_bounded_informational_prototype` |
+| Missing scope/evidence or artificial chain | Marker, unbounded question, code-only, suite/harness, production scaffolding, report-only and missing-dependency mutations are rejected in both fixtures. `test_prototype_marker_scope_execution_and_lifetime_negatives`, `test_prototype_adapter_contract_rejects_scope_and_proof_mutations` |
+| Easy inspection and disproof | Walkthrough A uses source/documentation inspection; E retains a failed attempt and blocks assumed reliance/renews affected approval. `test_A_D_E_labelled_walkthroughs_and_operational_mapping` |
+| Non-isolatable / migration / paid / live risk | Walkthrough D retains real-system prerequisites, capabilities and explicit permission; G retains an independently verified prerequisite/original manual gate. No live operation is run. `test_A_D_E_labelled_walkthroughs_and_operational_mapping`, `test_outcome_boundaries_and_shared_proof_scenarios` |
+| Settled multi-file outcome and small wiring | F keeps acceptance, focused tests, documentation and teardown in one task absent an independent boundary; existing consumer-boundary test stays inside small wiring. No artificial inventory/prototype/composition/report/cleanup tasks. `test_outcome_boundaries_and_shared_proof_scenarios` |
+| Unchanged versus invalidated proof | H runs unchanged applicable evidence once with every mapping; reruns only invalidated scope; retains results through all consumers/production validation; no hypothetical cleanup task. `test_outcome_boundaries_and_shared_proof_scenarios` |
+| Acceptance-oracle preservation (A4) | `A4AcceptancePreservationTests.test_metadata_open_counters_and_local_stage_advancement` records sequential capture → dump → one rebuild/inline-validation pass; record-error continuation; success/skip counts and private diagnostics/bounded progress; both modes via maintained invocation; zero dataset-content reads on metadata-only open/reset/status/completion/cleanup before first frame consumption. Actual local method/record-loop counters reject silent-reread and non-advancement mutations. This is a symbolic local oracle, not an indexing implementation or external-runtime evidence. |
+| Contract carrier sensitivity and syntax | C1 scoped mutations: `test_risk_clause_removals_have_named_diagnostics`, `test_delivery_boundary_clause_removals_have_named_diagnostics`, `test_risk_carrier_removal_and_summary_only_replacement`; C3 task-contract tests: `test_delivery_boundaries_and_prototype_policy_are_required`, `test_both_adapters_propagate_bounded_informational_prototype`; C4 keeps `test_check_task_order.py` semantics. |
+| Documentation/manual truth | C5 compares this guide with the shared owner, actual changed skill spans, current tests and every required gate; changed links resolve locally. This is manual semantic review, not a test keyword match. |
 
-Existing tiny-tasks.md and standard-tasks.md remain unchanged; new risk-tiny-tasks.md and
-risk-standard-tasks.md use the same numbered Markdown/Depends fields. Run the existing
-`skills/task-generation/scripts/check-task-order.py` on all four numbered fixtures.
-Parser PASS proves syntax/order only, **not semantic consumption**. Manually inspect A–E,
-real-executable versus trivial/mock substitutions, actual task criterion/check/evidence/gates,
-producer-to-consumer transfer, multi-consumer lifetime, cleanup and failed/unrun release.
-
-The assertions compare fixture-defined expected fields and scoped instruction phrases;
-they are not a generic semantic validator, runtime enforcement or an agent-produced plan.
-Offline static/fixture PASS does **not** establish real-library behavior or model obedience.
-Live/provider/real-library/real-system experiments for these scenarios are **NOT RUN** and
-require separate authorization, applicable dependencies/runtime, isolated execution and
-collected commands/observations. No such operation is authorized by the offline suite.
-Global skill changes require `/reload` in pi. Fresh independent final implementation review
-remains required under the existing workflow, separate from this bounded documentation check.
+These bounded static/symbolic fixtures test specified failure sensitivity; they are not a
+planner simulator, runtime enforcement, model-obedience proof, real dependency experiment,
+migration/live validation or proof of external correctness. The local oracle uses no project
+data, services, deployment, production resources or job interruption. No paid/live/provider/
+engine/browser/external-project trial is authorized or run. Global skill changes require
+`/reload` in pi. Fresh independent final implementation review remains required under the
+existing workflow, separate from this bounded documentation check.
 
 ## Project coordination feedback and context-first recovery assurance
 
