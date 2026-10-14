@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [SpecKit assets in Coherence initialization — TinySpec](coherence-speckit-initialization-tinyspec.md): every-initialization asset checks and proposal-first official repair with custom-file preservation; preparation only, separate tasks and combined approval pending.
 - [Workflow ownership — authority and delivery](workflow-ownership-execution.md): current-content combined approval and exact routing selection, bounded T001/T002 delivery and independent-review gate.
 - [Workflow ownership — tasks](workflow-ownership-tasks.md): two package-before-Cerca deliveries with A1–A6 REQUIRED checks, exact constitutional amendment approval and preservation gates; preparation only, combined approval pending.
 - [Workflow ownership — TinySpec](workflow-ownership-tinyspec.md): package-owned mechanics, diff-proven mechanical corrections and bounded Cerca instruction/constitutional alignment; source preparation only, separate tasks and combined approval pending.
