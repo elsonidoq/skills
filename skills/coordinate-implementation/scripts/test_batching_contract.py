@@ -1014,6 +1014,20 @@ class FirstProposalRoutingTests(CarrierTests):
         "This example does not rely on retained benchmark evidence",
     )
 
+    def test_preproposal_completeness_check(self):
+        body = carrier(RUBRIC_PATH.read_text(), "First proposal recipe")
+        for clause in (
+            "Before presenting the proposal, check completeness",
+            "all six factors and the weakest adequate oracle",
+            "each family in this rubric is considered or briefly accounted for",
+            "family and effort have separate comparative rationales",
+            "prior launch success is used only as readiness evidence",
+            "ties remain explicit rather than becoming superiority claims",
+            "Repair missing items before asking for profile approval",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, body)
+
     def test_recipe_carrier_and_evidence_sequence_mutations(self):
         rubric = RUBRIC_PATH.read_text()
         body = carrier(rubric, "First proposal recipe")
