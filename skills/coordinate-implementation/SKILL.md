@@ -69,11 +69,15 @@ More than three require delegation. Completing tasks does not change that strate
 Both routes use the same dependencies, per-task checkpoints and final review.
 
 Build consecutive context-coherent batches in approved order, one exact profile per
-invocation. Normally 2–5 related tasks, not a quota; shared files, phase headings and
-internal dependencies alone do not require splits. One writer verifies and commits each
-producer before its consumer. Split for material profile, context, permission, owner-gate
-or external-prerequisite incompatibility. A later-numbered prerequisite is a sequencing
-blocker: return to producing review, never silently reorder. All implementation batches
+invocation. Normally 4–7 related tasks, not a quota. Size by implementation complexity,
+shared context, verification cost and observed context capacity, not task count alone.
+Avoid 1–2-task batches unless a concrete split constraint requires them; briefly justify
+each exception. Merge small remainder batches into an adjacent batch when practical;
+never exceed workable context merely to meet the range. Do not default an entire large
+specification to one batch; shared files, phase headings and internal dependencies alone
+do not require splits. One writer verifies and commits each producer before its consumer.
+Split for material profile, context, permission, owner-gate or external-prerequisite
+incompatibility. A later-numbered prerequisite is a sequencing blocker: return to producing review, never silently reorder. All implementation batches
 execute sequentially, never in parallel. Continue all incomplete dependency-ready work;
 for an explicit partial boundary use `ask_user` to confirm boundary versus full completion.
 

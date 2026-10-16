@@ -254,7 +254,25 @@ class BatchingContractTests(CarrierTests):
         self.assert_carrier_guards('Prepare Approved Execution', ('shared files, phase headings and internal dependencies alone do not require splits', 'One writer verifies and commits each producer before its consumer'))
 
     def test_only_evidenced_boundaries_split_and_order_stays_fixed(self):
-        self.assert_carrier_guards('Prepare Approved Execution', ('Normally 2–5 related tasks, not a quota', 'material profile, context, permission, owner-gate', 'never silently reorder', 'sequentially, never in parallel'))
+        self.assert_carrier_guards('Prepare Approved Execution', ('Normally 4–7 related tasks, not a quota', 'material profile, context, permission, owner-gate', 'never silently reorder', 'sequentially, never in parallel'))
+
+    def test_batch_size_guideline_and_small_batch_exceptions(self):
+        # Static instruction checks, not a runtime batching algorithm or obedience test.
+        self.assert_carrier_guards('Prepare Approved Execution', (
+            'Size by implementation complexity, shared context, verification cost and observed context capacity',
+            'Avoid 1–2-task batches unless a concrete split constraint requires them; briefly justify each exception',
+            'Merge small remainder batches into an adjacent batch when practical',
+            'never exceed workable context merely to meet the range',
+            'Do not default an entire large specification to one batch',
+        ))
+
+    def test_checkpoints_and_review_do_not_add_task_handoffs(self):
+        self.assert_carrier_guards('Delegate', (
+            'healthy internal continuation without routine coordinator approval',
+        ))
+        self.assert_carrier_guards('Review and Acceptance', (
+            'No per-task reviews', 'one fresh independent final review',
+        ))
 
     def test_selection_to_dispatch_contract(self):
         self.assert_carrier_guards('Prepare Approved Execution', ('six-factor', 'Family and Effort rationales', 'callable binding', 'supported effort', 'at assignment and dispatch', 'no silent settings/agent override', 'unobservable actual binding/effort is unknown'))
