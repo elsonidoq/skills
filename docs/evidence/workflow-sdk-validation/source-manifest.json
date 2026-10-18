@@ -1,0 +1,70 @@
+{
+  "baseline": "79f315980c3380471579f1e556ee2016b587eaeb",
+  "branch": "follow-attached-workflow-migration-instructions",
+  "sdkInstallRoot": "/home/dev/.pi/agent/install/releases/0.87.1/node_modules/@earendil-works/pi-coding-agent",
+  "versions": {
+    "pi-coding-agent": "0.87.1",
+    "pi-ai": "0.87.1",
+    "pi-agent-core": "0.87.1"
+  },
+  "node": "v22.23.3",
+  "python": "Python 3.12.3",
+  "sourceProvenance": {
+    "pi-coding-agent/dist/core/sdk.js": {
+      "sha256": "b49c2843197166bb84283edcb7702b91346d8fbaed2b0b8c70e5277dd78bcf5f",
+      "spans": "75-143 explicit configuration/clamping; 177-245 SDK stream and transforms"
+    },
+    "pi-coding-agent/dist/core/agent-session.js": {
+      "sha256": "5ebfae51db5a900596145159428e7cb57d195af9d54a28f41d4ac8ff1bfd5729",
+      "spans": "1842-1845 compaction stream route; 1608-1625 abort/idle; 3043-3136 totals/current context; 2938 branch route"
+    },
+    "pi-coding-agent/dist/core/settings-manager.js": {
+      "sha256": "5368b155ec26d88374cec9e66b8e588b5041a0fb0047414f70b34e13892c4f48",
+      "spans": "566-596 effective model lookup; 637 cache mode"
+    },
+    "pi-coding-agent/dist/core/compaction/compaction.js": {
+      "sha256": "871f81769ef67a78c63cfc674e09f13097899effe4677f156a3613878c387640",
+      "spans": "194-197 threshold; 484-508 summary options/stream route"
+    },
+    "pi-coding-agent/dist/core/extensions/runner.js": {
+      "sha256": "67c7ca2d24197ff46cb5f0a49d7c19a76825ab7c66bc942015a484b550396441",
+      "spans": "961-987 swallowed extension error"
+    },
+    "pi-coding-agent/dist/core/cache-warmer.js": {
+      "sha256": "9c4b000930d6d3c567073102f6b6a52660110bb0f79cf78dd72c4dd1ebc87fc0",
+      "spans": "91-93 off exits start; 114-118 off stops"
+    },
+    "pi-coding-agent/dist/core/tools/bash.js": {
+      "sha256": "8acde89e7e1ad7ab013ccbf4b2cbfe847422de46f9451ca796f889ab37fee307",
+      "spans": "35-110 detached child spawn, abort group kill, wait"
+    },
+    "pi-coding-agent/dist/utils/shell.js": {
+      "sha256": "9874bbe8f6e26dd05029c3487d7789b160e92470696b2168424394f5dd00a34a",
+      "spans": "169-214 tracking/killProcessTree"
+    },
+    "pi-coding-agent/dist/core/auth-storage.js": {
+      "sha256": "0b45029901579032b19273a1427f63b622df8e1aaf9ea185eb932c0d4898998c",
+      "spans": "readStoredCredential exported read-only helper"
+    },
+    "pi-agent-core/dist/agent.d.ts": {
+      "sha256": "9d9354db9bd491ee6550984814bb05210d2ebeb5dbecfac42c35b5e129a35fe3",
+      "spans": "40-45 public streamFunction/onPayload"
+    },
+    "pi-agent-core/dist/agent.js": {
+      "sha256": "3a890712a7a02fc29754a2af61b758cba43eec97d289e446cd7e432ed0093085",
+      "spans": "297-315 onPayload forwarded to loop"
+    },
+    "pi-ai/dist/api/openai-codex-responses.js": {
+      "sha256": "6e69310d77278231cfc87d7f03ee815d4a0f2ff273e6c43fcee6835e7df2b0c7",
+      "spans": "174-180 awaited payload before serialize; 267 transport fetch; 363-428 reasoning mapping"
+    },
+    "pi-ai/dist/auth/resolve.js": {
+      "sha256": "82ee45ecec319f59536759312a4de25313a8bb8cb7ce43db43d18edc10fef305",
+      "spans": "59-107 expired token refresh uses store.modify; forbidden by host"
+    }
+  },
+  "modelCatalogInputSha256": "773d601dc0154470615a61e7802f13a81e493bcda63e8428be0a881508a68cec",
+  "memory": "memory/MEMORY.md read in full; empty index; coordination/GUIDELINES.md empty; no writes",
+  "realRun": "run2",
+  "realTaskSession": "01a1512d-b0ee-73b2-ae85-ea72e7b9625b"
+}

@@ -1,0 +1,25 @@
+// Synthetic settings fixtures use actual SDK merge/lookup implementation; no files/auth.
+import assert from 'node:assert/strict';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const {SettingsManager,shouldCompact}=await import(pathToFileURL(path.join(process.env.PI_SDK_ROOT,'dist/index.js')));
+const model={provider:'openai-codex',id:'gpt-6.1-sol'};
+const global={compaction:{enabled:true,reserveTokens:12000,modelOverrides:{'openai-codex/gpt-6.1-sol':{reserveTokens:22000}}}};
+const project={compaction:{reserveTokens:8000,keepRecentTokens:12345}};
+let writes=0;
+const storage={withLock(scope,fn){const next=fn(JSON.stringify(scope==='global'?global:project));if(next!==undefined)writes++;}};
+const s=SettingsManager.fromStorage(storage,{projectTrusted:true});
+const globalExactBeatsProjectOrdinary=s.getCompactionSettings(model);
+assert.equal(globalExactBeatsProjectOrdinary.reserveTokens,22000);
+assert.equal(globalExactBeatsProjectOrdinary.keepRecentTokens,12345);
+s.applyOverrides({compaction:{modelOverrides:{'openai-codex/gpt-6.1-sol':{reserveTokens:16384}}}});
+const exact=s.getCompactionSettings(model);
+assert.equal(exact.reserveTokens,16384);
+assert.equal(s.getCompactionSettings({provider:'other',id:'other'}).reserveTokens,8000);
+assert.equal(SettingsManager.inMemory().getCompactionSettings(model).reserveTokens,16384);
+assert.equal(shouldCompact(483616,500000,exact),false);
+assert.equal(shouldCompact(483617,500000,exact),true);
+assert.equal(shouldCompact(999999,500000,{...exact,enabled:false}),false);
+assert.throws(()=>SettingsManager.inMemory({compaction:{reserveTokens:-1}}).getCompactionSettings(model));
+assert.equal(writes,0);
+console.log(JSON.stringify({synthetic:true,global,project,globalExactBeatsProjectOrdinary,afterExplicitExactOverride:exact,ordinaryOtherModel:8000,defaultReserve:16384,invalidRejected:true,thresholdBoundary:[false,true],storageWrites:writes}));

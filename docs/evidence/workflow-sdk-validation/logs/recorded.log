@@ -1,0 +1,7 @@
+test_real_metrics_and_final_payloads (__main__.Recorded.test_real_metrics_and_final_payloads) ... ok
+test_real_tool_processes_drained (__main__.Recorded.test_real_tool_processes_drained) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+OK

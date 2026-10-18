@@ -1,0 +1,384 @@
+{
+  "synthetic_cutoff": [
+    {
+      "headroom": 150000,
+      "reuse": true
+    },
+    {
+      "headroom": 149999,
+      "reuse": false
+    },
+    {
+      "headroom": null,
+      "reuse": false
+    }
+  ],
+  "real": [
+    {
+      "task": "t1",
+      "sessionId": "01a1512d-b0ee-73b2-ae85-ea72e7b9625b",
+      "before": {
+        "sdk": "0.87.1",
+        "node": "v22.23.3",
+        "skill": [
+          {
+            "name": "toy-skill",
+            "filePath": "/home/dev/.paseo/worktrees/0zfm1a0e/tearful-alpacka/docs/evidence/workflow-sdk-validation/poc/toy-skill/SKILL.md"
+          }
+        ],
+        "requested": {
+          "v": 1,
+          "id": "init",
+          "op": "init",
+          "provider": "openai-codex",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "skill": "/home/dev/.paseo/worktrees/0zfm1a0e/tearful-alpacka/docs/evidence/workflow-sdk-validation/poc/toy-skill",
+          "tools": [
+            "write"
+          ]
+        },
+        "sessionId": "01a1512d-b0ee-73b2-ae85-ea72e7b9625b",
+        "model": {
+          "provider": "openai-codex",
+          "id": "gpt-6.1-sol",
+          "contextWindow": 500000,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": "low",
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          }
+        },
+        "effort": "medium",
+        "tools": [
+          "write"
+        ],
+        "effective": {
+          "enabled": true,
+          "reserveTokens": 16384,
+          "keepRecentTokens": 20000
+        },
+        "context": {
+          "tokens": 0,
+          "contextWindow": 500000,
+          "percent": 0
+        },
+        "tokens": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cost": 0,
+        "threshold": 483616,
+        "headroom": 483616,
+        "provenance": "SDK getSessionStats.contextUsage current projected estimate; tokens cumulative; settingsManager.getCompactionSettings(session.model)",
+        "wireCount": 0,
+        "guardCount": 0,
+        "transforms": 0,
+        "idle": true
+      },
+      "after": {
+        "v": 1,
+        "at": 1792363314476,
+        "type": "settled",
+        "id": "t1",
+        "successful": true,
+        "stopReason": "stop",
+        "skillMarker": true,
+        "sessionId": "01a1512d-b0ee-73b2-ae85-ea72e7b9625b",
+        "model": {
+          "provider": "openai-codex",
+          "id": "gpt-6.1-sol",
+          "contextWindow": 500000,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": "low",
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          }
+        },
+        "effort": "medium",
+        "tools": [
+          "write"
+        ],
+        "effective": {
+          "enabled": true,
+          "reserveTokens": 16384,
+          "keepRecentTokens": 20000
+        },
+        "context": {
+          "tokens": 452,
+          "contextWindow": 500000,
+          "percent": 0.0904
+        },
+        "tokens": {
+          "input": 774,
+          "output": 69,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 843
+        },
+        "cost": 0.0022379999999999995,
+        "threshold": 483616,
+        "headroom": 483164,
+        "provenance": "SDK getSessionStats.contextUsage current projected estimate; tokens cumulative; settingsManager.getCompactionSettings(session.model)",
+        "wireCount": 2,
+        "guardCount": 2,
+        "transforms": 2,
+        "idle": true
+      },
+      "delta": {
+        "input": 774,
+        "output": 69,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "fileSha256": "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03"
+    },
+    {
+      "task": "t2",
+      "sessionId": "01a1512d-b0ee-73b2-ae85-ea72e7b9625b",
+      "before": {
+        "v": 1,
+        "at": 1792363314476,
+        "type": "settled",
+        "id": "t1",
+        "successful": true,
+        "stopReason": "stop",
+        "skillMarker": true,
+        "sessionId": "01a1512d-b0ee-73b2-ae85-ea72e7b9625b",
+        "model": {
+          "provider": "openai-codex",
+          "id": "gpt-6.1-sol",
+          "contextWindow": 500000,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": "low",
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          }
+        },
+        "effort": "medium",
+        "tools": [
+          "write"
+        ],
+        "effective": {
+          "enabled": true,
+          "reserveTokens": 16384,
+          "keepRecentTokens": 20000
+        },
+        "context": {
+          "tokens": 452,
+          "contextWindow": 500000,
+          "percent": 0.0904
+        },
+        "tokens": {
+          "input": 774,
+          "output": 69,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 843
+        },
+        "cost": 0.0022379999999999995,
+        "threshold": 483616,
+        "headroom": 483164,
+        "provenance": "SDK getSessionStats.contextUsage current projected estimate; tokens cumulative; settingsManager.getCompactionSettings(session.model)",
+        "wireCount": 2,
+        "guardCount": 2,
+        "transforms": 2,
+        "idle": true
+      },
+      "after": {
+        "v": 1,
+        "at": 1792363317980,
+        "type": "settled",
+        "id": "t2",
+        "successful": true,
+        "stopReason": "stop",
+        "skillMarker": true,
+        "sessionId": "01a1512d-b0ee-73b2-ae85-ea72e7b9625b",
+        "model": {
+          "provider": "openai-codex",
+          "id": "gpt-6.1-sol",
+          "contextWindow": 500000,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": "low",
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          }
+        },
+        "effort": "medium",
+        "tools": [
+          "write"
+        ],
+        "effective": {
+          "enabled": true,
+          "reserveTokens": 16384,
+          "keepRecentTokens": 20000
+        },
+        "context": {
+          "tokens": 725,
+          "contextWindow": 500000,
+          "percent": 0.145
+        },
+        "tokens": {
+          "input": 2093,
+          "output": 139,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 2232
+        },
+        "cost": 0.005575999999999999,
+        "threshold": 483616,
+        "headroom": 482891,
+        "provenance": "SDK getSessionStats.contextUsage current projected estimate; tokens cumulative; settingsManager.getCompactionSettings(session.model)",
+        "wireCount": 4,
+        "guardCount": 4,
+        "transforms": 4,
+        "idle": true
+      },
+      "delta": {
+        "input": 1319,
+        "output": 70,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "fileSha256": "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447"
+    }
+  ],
+  "interruptions": [
+    {
+      "mode": "abort",
+      "hostPid": 3043014,
+      "toolChildPid": 3043032,
+      "identities": [
+        {
+          "pid": 3043014,
+          "ppid": 3042972,
+          "pgid": 3043014,
+          "state": "S",
+          "start": "202722839"
+        },
+        {
+          "pid": 3043031,
+          "ppid": 3043014,
+          "pgid": 3043031,
+          "state": "S",
+          "start": "202723044"
+        },
+        {
+          "pid": 3043032,
+          "ppid": 3043031,
+          "pgid": 3043031,
+          "state": "S",
+          "start": "202723044"
+        },
+        {
+          "pid": 3043034,
+          "ppid": 3043032,
+          "pgid": 3043031,
+          "state": "S",
+          "start": "202723045"
+        }
+      ],
+      "pgid": 3043031,
+      "requestedAt": 1792363320.088585,
+      "settlementOrHostExitAt": 1792363320.0943675,
+      "initialBytes": 1,
+      "partialBytes": [
+        1,
+        1
+      ],
+      "observationSeconds": 0.6,
+      "liveKnownAfter": [],
+      "liveGroupAfter": [],
+      "cleanup": "SDK abort + waitForIdle",
+      "replacementAdmitted": true
+    },
+    {
+      "mode": "kill",
+      "hostPid": 3043035,
+      "toolChildPid": 3043053,
+      "identities": [
+        {
+          "pid": 3043035,
+          "ppid": 3042972,
+          "pgid": 3043035,
+          "state": "S",
+          "start": "202723110"
+        },
+        {
+          "pid": 3043052,
+          "ppid": 3043035,
+          "pgid": 3043052,
+          "state": "S",
+          "start": "202723326"
+        },
+        {
+          "pid": 3043053,
+          "ppid": 3043052,
+          "pgid": 3043052,
+          "state": "S",
+          "start": "202723327"
+        },
+        {
+          "pid": 3043055,
+          "ppid": 3043053,
+          "pgid": 3043052,
+          "state": "S",
+          "start": "202723327"
+        }
+      ],
+      "pgid": 3043052,
+      "requestedAt": 1792363322.9049983,
+      "settlementOrHostExitAt": 1792363322.9203968,
+      "initialBytes": 1,
+      "partialBytes": [
+        4,
+        4
+      ],
+      "observationSeconds": 0.6,
+      "liveKnownAfter": [],
+      "liveGroupAfter": [],
+      "cleanup": "supervisor killed previously observed owned tool process group",
+      "replacementAdmitted": true,
+      "orphanLiveAfterHostKill": true,
+      "postKillBytes": 4
+    }
+  ],
+  "synthetic_guard": {
+    "synthetic": true,
+    "normal": {
+      "stopReason": "error",
+      "errorMatched": true
+    },
+    "summary": {
+      "stopReason": "error",
+      "errorMatched": true
+    },
+    "sends": 0,
+    "guards": 2,
+    "forbiddenExists": false
+  },
+  "protocol": {
+    "invalid_version_rejected": true,
+    "status_without_llm": true,
+    "status_wire_count": 4
+  }
+}

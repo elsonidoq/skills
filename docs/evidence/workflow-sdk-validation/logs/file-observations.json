@@ -1,0 +1,60 @@
+{
+  "reuse": {
+    "toy.txt": {
+      "bytes": 12,
+      "sha256": "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447"
+    }
+  },
+  "abort": {
+    "partial.txt": {
+      "bytes": 1,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
+    },
+    "replacement.txt": {
+      "bytes": 30,
+      "sha256": "5bf8210f96f0394caa3059cba42284e6c3638dde820fb8f572172794e1a22c9c"
+    },
+    "child.sh": {
+      "bytes": 95,
+      "sha256": "6b41aeda7218322df2c03fbd350fcebf0182f9b935ad82db503938971a06310a"
+    },
+    "loop.sh": {
+      "bytes": 46,
+      "sha256": "35ffcc33058ef7055992fcb750632e02a340a1024dad789fac83d5c9a9ae918b"
+    },
+    "child.pid": {
+      "bytes": 8,
+      "sha256": "3f68ef3a4c029b669342e5c5e6fe8e32151a03aa3364272e16621321a076580a"
+    },
+    "launched.pid": {
+      "bytes": 8,
+      "sha256": "3f68ef3a4c029b669342e5c5e6fe8e32151a03aa3364272e16621321a076580a"
+    }
+  },
+  "kill": {
+    "partial.txt": {
+      "bytes": 4,
+      "sha256": "2481a63c85a62cf889d2b149f1a52e985a9341750173fe01eff50cc27b5941b5"
+    },
+    "replacement.txt": {
+      "bytes": 30,
+      "sha256": "5bf8210f96f0394caa3059cba42284e6c3638dde820fb8f572172794e1a22c9c"
+    },
+    "child.sh": {
+      "bytes": 95,
+      "sha256": "6b41aeda7218322df2c03fbd350fcebf0182f9b935ad82db503938971a06310a"
+    },
+    "loop.sh": {
+      "bytes": 46,
+      "sha256": "35ffcc33058ef7055992fcb750632e02a340a1024dad789fac83d5c9a9ae918b"
+    },
+    "child.pid": {
+      "bytes": 8,
+      "sha256": "e898bb36544518b094c051ccbad8c2183cff544e56d6bfbcc1b4bd6ef0d5262a"
+    },
+    "launched.pid": {
+      "bytes": 8,
+      "sha256": "e898bb36544518b094c051ccbad8c2183cff544e56d6bfbcc1b4bd6ef0d5262a"
+    }
+  }
+}

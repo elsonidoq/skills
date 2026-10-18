@@ -1,0 +1,8 @@
+test_cutoff_unknown_disabled_unsettled (__main__.Tests.test_cutoff_unknown_disabled_unsettled) ... ok
+test_process_identity_not_pid_only (__main__.Tests.test_process_identity_not_pid_only) ... ok
+test_protocol_version_poison_and_eof (__main__.Tests.test_protocol_version_poison_and_eof) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.779s
+
+OK
