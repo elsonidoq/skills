@@ -50,6 +50,7 @@ legacy port retain their own documentation and memory boundaries.
 
 ## Implementation Plans
 
+- [Coordinate Implementation executable workflow — draft Standard specification](../specs/003-coordinate-workflow/spec.md): Source, stack/session decisions, requirements and approval-pending specification checklist; not a migrated implementation.
 - [Plans directory index](plans/index.md): Direct plan records and the nested review index.
 - [Pragmatic planning — TinySpec](plans/pragmatic-planning-tinyspec.md): outcome-oriented decomposition, proportional proof and tagged informational prototypes; exact-content approval in [review](plans/reviews/pragmatic-planning-review.md).
 - [Pragmatic planning — tasks](plans/pragmatic-planning-tasks.md): one coherent contract/regression/operative-doc delivery; A1–A6 REQUIRED evidence and gates preserved, execution-profile selection and independent final review remain required.
