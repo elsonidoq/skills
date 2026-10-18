@@ -1,0 +1,11 @@
+{
+  "cause": "logger duplicate at keyword caused controller exception/EPIPE; tools=[] also left custom tools inactive",
+  "hostPid": 3054178,
+  "hostExited": true,
+  "realCalls": 1,
+  "tokens": 235,
+  "costUsd": 0.000886,
+  "originalSession": "01a15165-1154-75e1-bf2c-08f70a57a9df",
+  "correction": "logger dictionary override; explicit custom tool allowlist+assert; targeted continuation of same persisted failed session, no fresh worker",
+  "observedException": "TypeError: dict() got multiple values for keyword argument 'at'; subsequent host Error: write EPIPE (code EPIPE)"
+}

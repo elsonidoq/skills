@@ -1,0 +1,27 @@
+{
+  "realCli": true,
+  "cases": [
+    {
+      "case": "duplicate",
+      "returncode": 1,
+      "rejection": "ValueError: REJECT no pending question"
+    },
+    {
+      "case": "wrong-nonce",
+      "returncode": 1,
+      "rejection": "ValueError: REJECT wrong/stale gate/session/source binding"
+    },
+    {
+      "case": "wrong-session",
+      "returncode": 1,
+      "rejection": "ValueError: REJECT wrong/stale gate/session/source binding"
+    },
+    {
+      "case": "stale-source",
+      "returncode": 1,
+      "rejection": "ValueError: REJECT wrong/stale gate/session/source binding"
+    }
+  ],
+  "eventLedgerUnchanged": true,
+  "ledgerHash": "618fa39677affae334fe90951a4067d4d4c7b5fa6607f1694a237ed0dc15cb4a"
+}

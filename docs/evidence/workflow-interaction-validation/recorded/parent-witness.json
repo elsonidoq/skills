@@ -1,0 +1,21 @@
+{
+  "provenance": "Factual parent reply through native contact_supervisor after real workflow completion; not a fabricated tool ID or exported raw parent transcript",
+  "parentSession": "01a14fcd-f377-746e-853f-6c8a53cf6b29",
+  "paseoAgent": "defb1061-11f1-4b12-b07f-dbe45cebd27b",
+  "automaticCallbacksObserved": [1, 2, 3, 4],
+  "manualLogForwarding": false,
+  "probeAcknowledgedOnlyAfterActualReceipt": true,
+  "pendingSeparateProcessStatus": {"next": ["park"], "pending": true, "answerAccepted": false, "active": false},
+  "askUser": {
+    "tool": "ask_user",
+    "question": "Which title should the toy note use?",
+    "options": ["Release note", "Progress note"],
+    "context": "Deliberate isolated product-choice fixture; no scope or cost impact",
+    "actualReturnedText": "User answered: Release note"
+  },
+  "activeSeparateProcessStatus": {"next": ["continue_original"], "pending": false, "answerAccepted": true, "active": true, "done": false},
+  "steer": "Parent sent fixed bound steering CLI after active callback; treated CLI return as QUEUED only",
+  "doneSeparateProcessStatus": {"next": [], "pending": false, "active": false, "done": true},
+  "independentOutputRead": "Release note\nSteering received.\n",
+  "launchBoundary": "Parent authorized READY through native supervisor; delegated fixture controller launch, not a registered production launch tool"
+}

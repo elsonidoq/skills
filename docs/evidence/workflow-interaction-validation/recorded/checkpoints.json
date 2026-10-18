@@ -1,0 +1,70 @@
+[
+  {
+    "checkpointId": "1f1cb4de-451a-66cc-8005-615f64d6959b",
+    "next": [],
+    "pending": false,
+    "session": "01a15165-1154-75e1-bf2c-08f70a57a9df",
+    "answerId": "answer-1",
+    "hasResult": true
+  },
+  {
+    "checkpointId": "1f1cb4db-e979-6e5e-8004-76312cf9792a",
+    "next": [
+      "continue_original"
+    ],
+    "pending": false,
+    "session": "01a15165-1154-75e1-bf2c-08f70a57a9df",
+    "answerId": "answer-1",
+    "hasResult": false
+  },
+  {
+    "checkpointId": "1f1cb4da-a17b-6951-8003-bb5d05d9a664",
+    "next": [
+      "park"
+    ],
+    "pending": true,
+    "session": "01a15165-1154-75e1-bf2c-08f70a57a9df",
+    "answerId": null,
+    "hasResult": false
+  },
+  {
+    "checkpointId": "1f1cb4da-8642-6880-8002-88cba05fdd40",
+    "next": [
+      "ask"
+    ],
+    "pending": false,
+    "session": null,
+    "answerId": null,
+    "hasResult": false
+  },
+  {
+    "checkpointId": "1f1cb4da-863f-6502-8001-deaf2fbf8246",
+    "next": [
+      "__start__"
+    ],
+    "pending": false,
+    "session": null,
+    "answerId": null,
+    "hasResult": false
+  },
+  {
+    "checkpointId": "1f1cb4d8-f055-638c-8000-44d9d4080fc1",
+    "next": [
+      "ask"
+    ],
+    "pending": false,
+    "session": null,
+    "answerId": null,
+    "hasResult": false
+  },
+  {
+    "checkpointId": "1f1cb4d8-f052-66d0-bfff-a8966f90d5b4",
+    "next": [
+      "__start__"
+    ],
+    "pending": false,
+    "session": null,
+    "answerId": null,
+    "hasResult": false
+  }
+]

@@ -1,0 +1,204 @@
+{
+  "session": "01a15165-1154-75e1-bf2c-08f70a57a9df",
+  "messages": [
+    {
+      "entryId": "40ba11ce",
+      "parentId": "53eeae8b",
+      "role": "system",
+      "toolName": null,
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "29646e4c",
+      "parentId": "40ba11ce",
+      "role": "user",
+      "toolName": null,
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "27db1df0",
+      "parentId": "29646e4c",
+      "role": "assistant",
+      "toolName": null,
+      "stopReason": "stop",
+      "usage": {
+        "input": 183,
+        "output": 52,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 27,
+        "totalTokens": 235,
+        "cost": {
+          "input": 0.000366,
+          "output": 0.0005200000000000001,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.0008860000000000001
+        }
+      },
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol"
+    },
+    {
+      "entryId": "4deb2b67",
+      "parentId": "27db1df0",
+      "role": "system",
+      "toolName": null,
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "03643607",
+      "parentId": "4deb2b67",
+      "role": "user",
+      "toolName": null,
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "8a780b68",
+      "parentId": "03643607",
+      "role": "assistant",
+      "toolName": null,
+      "stopReason": "toolUse",
+      "usage": {
+        "input": 528,
+        "output": 62,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 590,
+        "cost": {
+          "input": 0.0010559999999999999,
+          "output": 0.00062,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.001676
+        }
+      },
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol"
+    },
+    {
+      "entryId": "e70a8ec3",
+      "parentId": "8a780b68",
+      "role": "toolResult",
+      "toolName": "request_owner_input",
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "ac370189",
+      "parentId": "e70a8ec3",
+      "role": "user",
+      "toolName": null,
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "eb89933f",
+      "parentId": "ac370189",
+      "role": "assistant",
+      "toolName": null,
+      "stopReason": "toolUse",
+      "usage": {
+        "input": 855,
+        "output": 15,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 870,
+        "cost": {
+          "input": 0.00171,
+          "output": 0.00015000000000000001,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.0018599999999999999
+        }
+      },
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol"
+    },
+    {
+      "entryId": "4b6f8f40",
+      "parentId": "eb89933f",
+      "role": "toolResult",
+      "toolName": "controlled_wait",
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "705dad36",
+      "parentId": "4b6f8f40",
+      "role": "user",
+      "toolName": null,
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "5f24b2cd",
+      "parentId": "705dad36",
+      "role": "assistant",
+      "toolName": null,
+      "stopReason": "toolUse",
+      "usage": {
+        "input": 910,
+        "output": 40,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 950,
+        "cost": {
+          "input": 0.00182,
+          "output": 0.0004,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.00222
+        }
+      },
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol"
+    },
+    {
+      "entryId": "7a67ad1d",
+      "parentId": "5f24b2cd",
+      "role": "toolResult",
+      "toolName": "write_note",
+      "stopReason": null,
+      "usage": null
+    },
+    {
+      "entryId": "d087de30",
+      "parentId": "7a67ad1d",
+      "role": "assistant",
+      "toolName": null,
+      "stopReason": "stop",
+      "usage": {
+        "input": 969,
+        "output": 27,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 996,
+        "cost": {
+          "input": 0.0019379999999999998,
+          "output": 0.00027,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.002208
+        }
+      },
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol"
+    }
+  ],
+  "assistantCalls": 5,
+  "modelChanges": [
+    {
+      "provider": "openai-codex",
+      "modelId": "gpt-6.1-sol"
+    }
+  ]
+}

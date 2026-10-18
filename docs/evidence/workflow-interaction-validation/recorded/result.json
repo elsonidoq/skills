@@ -1,0 +1,1 @@
+{"v": 1, "at": 1792367082848, "phase": "resume", "type": "settled", "session": "01a15165-1154-75e1-bf2c-08f70a57a9df", "idle": true, "stopReason": "stop", "gate": null, "calls": 3, "stats": {"input": 3445, "output": 196, "cacheRead": 0, "cacheWrite": 0, "total": 3641}, "cost": 0.00885, "answerInConversation": true, "steerInConversation": true}

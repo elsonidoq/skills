@@ -1,0 +1,7 @@
+{
+  "cause": "PI_PACKAGE_DIR absent in parent runtime CLI environment; failure before host subprocess or API call",
+  "resumeRunnerPid": 3054385,
+  "realCalls": 0,
+  "correction": "persist explicit read-only runtime inputs and read on reentry; explicit resume of continue_original checkpoint with already persisted answer",
+  "observedException": "KeyError: 'PI_PACKAGE_DIR'"
+}

@@ -1,0 +1,80 @@
+{
+  "baseline": "d6acc130a1dd9f407b5da4a8698b07f9960a6991",
+  "result": "PASS bounded integrated fixture",
+  "sourceSha256": {
+    "poc/notify.py": "1d16e176c1613c298cfc6ea5d3f37ba8554f7480b26bdc3226146dea796e8355",
+    "poc/runner.py": "2469396b805f33df322824f0460d29084900933cb266324b35289e6c9a879a42",
+    "poc/test_validation.py": "3322a01e96681d7575ebff72bbb2f8e80b84d7b7c95a26a5024cf4a2f3daf686",
+    "poc/host.mjs": "5591b7e08f00e0d90f23b5767127c03abf845378a816c392e0ca5c156ba305c5",
+    "poc/approved-source.txt": "fc1c0e0c7ae8690bf702ade724d2543f81603a03b3956338f76ddef54ad713b9"
+  },
+  "workerSession": "01a15165-1154-75e1-bf2c-08f70a57a9df",
+  "actualWorkerRequests": 5,
+  "cumulativeWorkerTokens": 3641,
+  "cumulativeSdkCostEstimateUsd": 0.00885,
+  "commands": [
+    {
+      "command": "paseo --version; paseo send --help; paseo inspect --help; paseo --json inspect <exact-agent>",
+      "result": "passed",
+      "summary": "CLI0.9.2 supported send; matching agent/cwd/provider/model/medium"
+    },
+    {
+      "command": "notify.py probe",
+      "result": "passed",
+      "summary": "actual idle parent wake then bound ACK"
+    },
+    {
+      "command": "runner.py launch (first)",
+      "result": "failed",
+      "summary": "logger duplicate timestamp key/EPIPE; one tiny call; inspected"
+    },
+    {
+      "command": "runner.py launch (targeted corrected retry)",
+      "result": "passed",
+      "summary": "same persisted failed session, parked question, checkpoint, callback"
+    },
+    {
+      "command": "parent runner.py answer (initial auto-resume)",
+      "result": "failed",
+      "summary": "answer checkpointed; PI_PACKAGE_DIR KeyError before host/API call; inspected"
+    },
+    {
+      "command": "runner.py resume (explicit corrected recovery)",
+      "result": "passed",
+      "summary": "original persisted SDK session, active callback, real steering input/ACK/output, END"
+    },
+    {
+      "command": "test_validation.py -v (live scratch)",
+      "result": "passed",
+      "summary": "7 tests; 4 actual rejected CLI inputs unchanged ledger/no new worker"
+    },
+    {
+      "command": "POC_EVIDENCE_DIR=<retained-recorded> test_validation.py -v",
+      "result": "passed",
+      "summary": "7 offline source/evidence tests no model calls"
+    },
+    {
+      "command": "runner.py negative-tests",
+      "result": "passed",
+      "summary": "synthetic preflight/category/binding/headroom policy assertions"
+    },
+    {
+      "command": "node --check <retained-poc>/host.mjs",
+      "result": "passed",
+      "summary": "Node syntax"
+    },
+    {
+      "command": "JSON/JSONL/AST/link/credential-pattern checks; git diff --check",
+      "result": "passed",
+      "summary": "sanitized portable evidence checks"
+    }
+  ],
+  "residualLimits": [
+    "Paseo-specific wake, not generic native Pi plugin",
+    "parent-authorized delegated launch, not production launch tool",
+    "compaction disabled; headroom only synthetic",
+    "trusted local fixture flags are not production auth",
+    "no crash-proof exactly-once or run-wide token/dollar cap",
+    "post-run notification interlock/config overrides/UI-failure catch synthetic-tested only"
+  ]
+}
