@@ -1,0 +1,511 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coherence.invalid/design/v1/shared.schema.json",
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nullable_text": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "$ref": "shared.schema.json#/$defs/path"
+        },
+        "section": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "kind": {
+          "enum": [
+            "source",
+            "spec",
+            "plan",
+            "tasks",
+            "review",
+            "config",
+            "decision"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "section",
+        "sha256",
+        "kind"
+      ]
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gate_kind": {
+          "enum": [
+            "specification",
+            "combined",
+            "overall",
+            "implementation",
+            "permission",
+            "manual",
+            "remediation",
+            "legacy"
+          ]
+        },
+        "record_ref": {
+          "$ref": "shared.schema.json#/$defs/path"
+        },
+        "record_sha256": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "scope_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authority_ref": {
+          "$ref": "shared.schema.json#/$defs/path"
+        },
+        "action": {
+          "enum": [
+            "approve",
+            "deny",
+            "cancel"
+          ]
+        }
+      },
+      "required": [
+        "gate_kind",
+        "record_ref",
+        "record_sha256",
+        "scope_hash",
+        "actor",
+        "authority_ref",
+        "action"
+      ]
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "manual",
+            "permission",
+            "capability"
+          ]
+        },
+        "criterion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approval_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "criterion",
+        "scope",
+        "expected_evidence",
+        "approval_ref"
+      ]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "args"
+      ]
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "criterion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "check": {
+          "$ref": "shared.schema.json#/$defs/check"
+        },
+        "pass_condition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "producer_dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/id"
+          },
+          "minItems": 0
+        },
+        "gates": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/id"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "id",
+        "criterion",
+        "check",
+        "pass_condition",
+        "expected_evidence",
+        "producer_dependencies",
+        "gates"
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observer_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "observer_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "effort",
+        "observer_id",
+        "observer_version"
+      ]
+    },
+    "session_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "role_default",
+            "fresh_only"
+          ]
+        },
+        "min_free_tokens_before_compaction": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reuse_preference": {
+          "enum": [
+            "role_default",
+            "same_group",
+            "original_implementer",
+            "own_reviewer"
+          ]
+        }
+      },
+      "required": [
+        "mode",
+        "min_free_tokens_before_compaction",
+        "reuse_preference"
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_verified"
+          ]
+        },
+        "evidence_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "item_id",
+        "status",
+        "evidence_ref",
+        "reason"
+      ]
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unknown_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "source",
+        "unknown_reason"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unknown_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "unknown_reason": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "alarm": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "alarm_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "kind": {
+          "const": "ORPHAN_PROCESS"
+        },
+        "task_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "operation_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "scope_kind": {
+          "const": "task_tools"
+        },
+        "scope_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "resolved"
+          ]
+        },
+        "original_outcome": {
+          "type": "string",
+          "minLength": 1
+        },
+        "replacement_allowed": {
+          "type": "boolean"
+        },
+        "reconciliation_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "alarm_id",
+        "kind",
+        "task_id",
+        "operation_id",
+        "scope_kind",
+        "scope_ref",
+        "identity_hash",
+        "state",
+        "original_outcome",
+        "replacement_allowed",
+        "reconciliation_ref"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "active"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "replacement_allowed": {
+                "const": false
+              },
+              "reconciliation_ref": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reconciliation_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "binding_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mapping_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "effort",
+        "source",
+        "mapping_version"
+      ]
+    }
+  }
+}

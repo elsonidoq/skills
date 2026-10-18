@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coherence.invalid/design/v1/agent-result.schema.json",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "attempt_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "contract_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "kind": {
+          "enum": [
+            "implementation",
+            "repair"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "produced",
+            "read_only",
+            "failure",
+            "blocked"
+          ]
+        },
+        "changed_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/path"
+          },
+          "minItems": 0
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/evidence"
+          },
+          "minItems": 0
+        },
+        "blocker": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempt_id",
+        "contract_hash",
+        "kind",
+        "outcome",
+        "changed_paths",
+        "items",
+        "blocker"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "read_only"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "changed_paths": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "blocked"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "blocker": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "attempt_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "contract_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "kind": {
+          "const": "review"
+        },
+        "outcome": {
+          "enum": [
+            "pass",
+            "correction",
+            "blocked"
+          ]
+        },
+        "range_base": {
+          "type": "string",
+          "minLength": 1
+        },
+        "range_head": {
+          "type": "string",
+          "minLength": 1
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "shared.schema.json#/$defs/id"
+              },
+              "severity": {
+                "enum": [
+                  "blocking",
+                  "important",
+                  "minor"
+                ]
+              },
+              "criterion_ref": {
+                "$ref": "shared.schema.json#/$defs/id"
+              },
+              "location": {
+                "type": "string",
+                "minLength": 1
+              },
+              "observation": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scope": {
+                "enum": [
+                  "in_scope",
+                  "owner_decision",
+                  "clarification"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "severity",
+              "criterion_ref",
+              "location",
+              "observation",
+              "evidence_ref",
+              "action",
+              "scope"
+            ]
+          },
+          "minItems": 0
+        },
+        "blocker": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempt_id",
+        "contract_hash",
+        "kind",
+        "outcome",
+        "range_base",
+        "range_head",
+        "findings",
+        "blocker"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "pass"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "findings": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "correction"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "findings": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "blocked"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "blocker": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

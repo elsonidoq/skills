@@ -1,0 +1,352 @@
+{
+  "warning": "Synthetic schema examples; absent approvals mean NOT authorized or runtime-valid.",
+  "cases": [
+    {
+      "schema": "task.schema.json",
+      "value": {
+        "schema_version": 1,
+        "origin": "Standard",
+        "legacy_origin": null,
+        "sources": [
+          {
+            "path": "fixture/spec.md",
+            "section": null,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "kind": "spec"
+          }
+        ],
+        "approval_refs": [],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "order": 0,
+            "outcome": "Synthetic schema example only",
+            "depends": [],
+            "context_group": "fixture-story",
+            "owned_paths": [
+              "fixture/value.txt"
+            ],
+            "required": [
+              {
+                "id": "fixture-task/V1",
+                "criterion": "Owned value equals expected fixture value",
+                "check": {
+                  "id": "fixture.equal",
+                  "version": "1",
+                  "args": {
+                    "expected": "fixture"
+                  }
+                },
+                "pass_condition": "Exact equality",
+                "expected_evidence": "Bounded comparison output with revision",
+                "producer_dependencies": [],
+                "gates": []
+              }
+            ],
+            "optional": [],
+            "gates": []
+          }
+        ]
+      }
+    },
+    {
+      "schema": "agent-result.schema.json",
+      "value": {
+        "schema_version": 1,
+        "task_id": "fixture-task",
+        "attempt_id": "fixture-attempt",
+        "contract_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "implementation",
+        "outcome": "produced",
+        "changed_paths": [
+          "fixture/value.txt"
+        ],
+        "items": [
+          {
+            "item_id": "fixture-task/V1",
+            "status": "not_verified",
+            "evidence_ref": null,
+            "reason": "Schema example is not executed"
+          }
+        ],
+        "blocker": null
+      }
+    },
+    {
+      "schema": "agent-result.schema.json",
+      "value": {
+        "schema_version": 1,
+        "task_id": "fixture-final-review",
+        "attempt_id": "fixture-review-attempt",
+        "contract_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "review",
+        "outcome": "correction",
+        "range_base": "fixture-base",
+        "range_head": "fixture-head",
+        "findings": [
+          {
+            "id": "fixture-finding",
+            "severity": "important",
+            "criterion_ref": "fixture-task/V1",
+            "location": "fixture/value.txt",
+            "observation": "Synthetic mismatch",
+            "evidence_ref": "fixture/output",
+            "action": "Request scoped correction",
+            "scope": "in_scope"
+          }
+        ],
+        "blocker": null
+      }
+    },
+    {
+      "schema": "workflow.schema.json",
+      "value": {
+        "schema_version": 1,
+        "workflow_id": "fixture-read-only-terminal",
+        "registry_version": "fixture-only",
+        "start": "end",
+        "nodes": [
+          {
+            "id": "end",
+            "handler": "fixture.terminal",
+            "handler_version": "1",
+            "outcomes": [],
+            "transitions": {},
+            "side_effects": [],
+            "type": "terminal"
+          }
+        ],
+        "profiles": {
+          "fixture": {
+            "provider": "fixture-provider",
+            "model": "fixture-model",
+            "effort": "medium",
+            "observer_id": "fixture-observer",
+            "observer_version": "1"
+          }
+        },
+        "skills": {
+          "fixture": {
+            "path": "fixture/SKILL.md",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "resource_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        "defaults": {
+          "max_repair_attempts": 2,
+          "min_free_tokens_before_compaction": 150000,
+          "monitor_interval_ms": 1000,
+          "telemetry_max_age_ms": 2000
+        },
+        "storage": {
+          "checkpoint": ".coherence/workflow/workflow.sqlite",
+          "event_root": ".coherence/workflow/runs"
+        },
+        "permissions": [],
+        "tool_capabilities": [],
+        "containment_capability": null,
+        "settings_manifest": {
+          "path": "fixture/settings.json",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    },
+    {
+      "schema": "host.schema.json",
+      "value": {
+        "protocol_version": 1,
+        "host_id": "fixture-host",
+        "nonce": "fixture-nonce",
+        "sequence": 0,
+        "command_id": "fixture-command",
+        "operation_id": "fixture-operation",
+        "attempt_id": "fixture-attempt",
+        "session_id": null,
+        "type": "command",
+        "op": "telemetry",
+        "payload_schema": "host.telemetry.v1",
+        "payload": {
+          "expected_generation": 0
+        },
+        "run_id": "fixture-run"
+      }
+    },
+    {
+      "schema": "projection.schema.json",
+      "value": {
+        "schema_version": 1,
+        "run_id": "fixture-run",
+        "seq": 0,
+        "record_id": "fixture-state",
+        "timestamp": "2026-10-18T00:00:00Z",
+        "kind": "state",
+        "payload": {
+          "status": "blocked",
+          "acceptance": "pending",
+          "config_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "checkpoint_ref": null,
+          "task_id": null,
+          "node_id": null,
+          "attempt_id": null,
+          "gate_ref": null,
+          "blocker": "Synthetic example; approvals absent",
+          "projection_lag": 0,
+          "alarms": []
+        }
+      }
+    },
+    {
+      "schema": "execution-result.schema.json",
+      "value": {
+        "schema_version": 1,
+        "run_id": "fixture-run",
+        "task_id": "fixture-task",
+        "attempt_id": "fixture-attempt",
+        "outcome": "ORPHAN_PROCESS",
+        "original_worker_outcome": "produced",
+        "replacement_allowed": false,
+        "alarms": [
+          {
+            "alarm_id": "fixture-alarm",
+            "kind": "ORPHAN_PROCESS",
+            "task_id": "fixture-task",
+            "operation_id": "fixture-tool",
+            "scope_kind": "task_tools",
+            "scope_ref": "fixture-owned-group",
+            "identity_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "state": "active",
+            "original_outcome": "produced",
+            "replacement_allowed": false,
+            "reconciliation_ref": null
+          }
+        ],
+        "items": [],
+        "baseline_sha": "fixture-base",
+        "result_sha": null,
+        "blocker": "Synthetic survivor; no cleanup evidence"
+      }
+    },
+    {
+      "schema": "projection.schema.json",
+      "value": {
+        "schema_version": 1,
+        "run_id": "fixture-run",
+        "seq": 1,
+        "record_id": "fixture-alarm-event",
+        "timestamp": "2026-10-18T00:00:00Z",
+        "kind": "event",
+        "payload": {
+          "kind": "ORPHAN_PROCESS",
+          "operation_ref": "fixture-tool",
+          "attempt_ref": "fixture-attempt",
+          "details_schema": "alarm.v1",
+          "details": {
+            "alarm_id": "fixture-alarm",
+            "kind": "ORPHAN_PROCESS",
+            "task_id": "fixture-task",
+            "operation_id": "fixture-tool",
+            "scope_kind": "task_tools",
+            "scope_ref": "fixture-owned-group",
+            "identity_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "state": "active",
+            "original_outcome": "produced",
+            "replacement_allowed": false,
+            "reconciliation_ref": null
+          }
+        }
+      }
+    },
+    {
+      "schema": "projection.schema.json",
+      "value": {
+        "schema_version": 1,
+        "run_id": "fixture-run",
+        "seq": 2,
+        "record_id": "fixture-metric",
+        "timestamp": "2026-10-18T00:00:00Z",
+        "kind": "metric",
+        "payload": {
+          "task_id": "fixture-task_id",
+          "attempt_id": "fixture-attempt_id",
+          "node_id": "fixture-node_id",
+          "role": "code",
+          "requested_profile": null,
+          "observed_runtime": null,
+          "observed_request": null,
+          "provider_acknowledged": null,
+          "skill_requested": null,
+          "skill_observed": null,
+          "session_id": null,
+          "context_group": null,
+          "reused": null,
+          "selection_reason": "Synthetic code node; no Pi session or measured tokens",
+          "started_at": null,
+          "ended_at": null,
+          "elapsed_ms": null,
+          "outcome": "blocked",
+          "retry_count": 0,
+          "repair_count": 0,
+          "evidence_refs": [],
+          "baseline_sha": null,
+          "result_sha": null,
+          "input_tokens": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "output_tokens": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "cache_read_tokens": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "cache_write_tokens": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "context_start": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "context_end": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "threshold_start": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "threshold_end": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "headroom_start": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "headroom_end": {
+            "value": null,
+            "source": "synthetic schema example",
+            "unknown_reason": "not executed"
+          },
+          "telemetry_provenance": "Synthetic code node; no Pi session or measured tokens",
+          "unknown_reasons": {
+            "agent_fields": "non-agent node; no Pi telemetry",
+            "ended_at": "example not executed"
+          },
+          "supersedes": null
+        }
+      }
+    }
+  ]
+}

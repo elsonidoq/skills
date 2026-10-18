@@ -195,3 +195,61 @@ planning producers and a separate independent review session to
 artifacts and their focused commits, not migration implementation. Specification approval
 is still pending. This feature contains only the Standard specification-stage bundle;
 architecture, tasks, overall review and implementation have not been released.
+
+### SDK integration owner direction
+
+During Standard `plan_create`, the parent reported an explicit `ask_user` answer:
+**“Allow the thin SDK host (recommended)”**. The question permits a pinned official Pi
+SDK subprocess/JSONL adapter while Python LangGraph/SQLite remain sole orchestration and
+durable workflow authority, subject to focused production validation; **NO implementation
+now**. The parent states: “Approval permits revising the integration requirement and
+continuing design, not implementing it; I will present the revised specification for
+renewed approval before downstream tasks.”
+
+This addendum supersedes only the transport restriction, not the selected stack, completed
+PoC limits, other requirements/defaults or planning-only boundary. The SDK host owns only
+Pi lifecycle/resources/tools/telemetry; Python owns transitions, approvals, commits, task
+selection and session-selection policy. Native RPC is not a silent fallback. The original
+approval digest remains historical; revised specification approval is required before tasks.
+
+### Focused SDK probe owner direction and accepted bounds
+
+Before continued architecture production, the owner answered **“Run the focused PoC
+(recommended)”** through the parent. Parent paused this originating producer, obtained a
+separate fresh coding experiment and independently accepted commit
+`6939f113c199c557f8b6c2b3afacc5cfb81a78a0` within its tested bounds. [Canonical report](../../docs/evidence/workflow-sdk-validation/stack-integration-report.md)
+records six real outgoing requests, two same-session tasks plus abort/kill, actual skills,
+threshold/settings and final request binding. Real SIGKILL left a detached tool writing;
+proven-owned-group cleanup and observed quiescence preceded replacement. No durable
+cross-restart registry, resumed real Pi session, real high-pressure compaction/retry,
+arbitrary-tool containment or production approval is implied. Preserve killed final cost
+as unknown. No experiment/stack-selection repetition is requested. Continue the same plan
+with production custody/recovery proof before reliance; renew revised specification approval
+before tasks. Planning-only remains unchanged.
+
+### Local lifecycle alarm requirement and accepted feasibility evidence
+
+Parent-supplied owner direction required a harmless case where a worker starts a one-minute
+sleep then ends: the survivor must remain tracked/killable and “after a worker finishes
+should raise some alarm”. The owner required this work before continuing the plan, then
+asked to be pragmatic: very simple minimal code to establish information/stack feasibility,
+not a broad test framework. Parent bounded this to four cases in one fixture.
+
+Initial Linux delegation was unavailable (read-only cgroup mount and Delegate=no). The
+owner administratively changed service delegation/protection and answered **“Done”**.
+Parent verified owned-child create/placement/kill and readable events; no agent changed
+service configuration. Fresh experiment commit `00b7a4d908a9ab2a6bb650deb6803b7ebe6947de`
+contains [source/report/events](../../docs/evidence/workflow-process-validation/README.md).
+Parent inspected it and independently reran the same four real cases successfully.
+
+Accepted bounds: local inherited cgroup membership, worker exit0/exit1/SIGKILL including
+setsid+TERM resistance, separate-controller receipt reentry, own-group kill and populated=0,
+outside sentinel alive. Persistent `ORPHAN_PROCESS` records replacement_allowed=false until
+observed cleanup; logical success must not suppress alarm. Keep reusable idle Pi host
+separate from task-tool groups. Populated=0 is necessary, not a substitute for partial
+files/Git/REQUIRED acceptance. This is not malicious same-UID migration protection,
+arbitrary remote/container/different-user tracking, production authenticated/durable registry,
+atomic spawn, reboot/power-loss or general sandbox proof. No repeated feasibility probe or
+service setup is requested. Production must verify approved portable delegation and block
+unknown ownership/quiescence, never silently use PID-only fallback. Renew revised spec
+approval before tasks; planning-only boundary remains.

@@ -168,3 +168,72 @@ installation, generic substitute spec, shell-simulated slash or downstream stage
 not independent review or owner approval. Traceability is in spec.md; no extra research,
 plan, schema, task or Epic file is produced. **Next gate: parent inspection and explicit
 current-content owner specification approval before a fresh bounded `plan_create`.**
+
+## D7 — Owner-selected SDK integration revision
+
+Historical D1–D6 describe their original specification-stage state; do not read their
+pending labels as current authority. [spec-approval.md](spec-approval.md) records owner
+approval of the original SHA-256 and configurable defaults, including two repairs. During
+this same fresh Sol/medium `plan_create` pass the owner answered **“Allow the thin SDK host
+(recommended)”** through the parent's `ask_user`. [Source addendum](source-request.md#sdk-integration-owner-direction)
+preserves the scope: update FR-002 and continue design, **not implementation**. Renew
+specification approval for the revised digest before tasks. Do not alter the historical
+approval record or claim this transport was PoC-tested.
+
+Repository-derived architecture: a thin version-pinned official Pi SDK subprocess with
+JSONL protocol permits direct effective SettingsManager telemetry and sanitized outgoing
+request observations without recreating Pi trust/settings resolution in Python. Python
+LangGraph and one SQLite database remain sole workflow/operation authority. Pi's own
+session files persist conversation only. [Canonical research](research.md) identifies
+inspected SDK/provider spans, alternative native-RPC limitations and remaining proof.
+The host has no task selection, routing, approval, repair-policy or Git authority.
+
+[Draft plan](plan.md), [data model](data-model.md), [contracts](contracts/README.md) and
+[quickstart validation](quickstart.md) are design only. No tasks, overall independent
+review, implementation authorization or production PASS is implied. Source review found
+no other specification defect; all previously approved constraints/defaults remain.
+
+## D8 — Focused SDK evidence consumed, no repeat experiment
+
+Owner chose **“Run the focused PoC (recommended)”**; parent paused this plan producer and
+accepted separate evidence commit `6939f113c199c557f8b6c2b3afacc5cfb81a78a0` within tested
+bounds after independent source/log and no-paid-check inspection. [Canonical SDK research
+interpretation](research.md#r10--accepted-sdk-experiment-changes-production-constraints)
+links exact sources/results. Six real outgoing requests, two real same-session tasks,
+actual skill expansion and effective threshold are distinct from synthetic cutoff/summary-
+route guard tests. Real retry/compaction and durable session reopening were not induced.
+
+Critical correction: wrap public `agent.streamFunction`, composing per-call/SDK payload
+hooks first; onPayload alone misses summaries. Real host death left detached tool writing,
+so production lock + durable operation/process registry + gated launch/controlled tool
+gateway must precede mutation. Unknown ownership/quiescence blocks. A PID, quiet file window
+or exited host is not sufficient evidence. No new supervision platform/daemon, arbitrary
+sandbox promise or workflow authority in Node is introduced. Killed usage/cost stays unknown.
+
+The same originating plan resumes from known six partial paths at baseline `6939f11`.
+Only FR-002's authorized integration seam and associated status/provenance/assumption text
+change in the spec; original approval file stays historical. **RENEW_SPEC_APPROVAL** before
+separate task production. No code implementation, task generation or overall review here.
+
+## D9 — Local lifecycle feasibility accepted; mandatory orphan alarm
+
+Owner requested simple sleep60-survivor tracking/cleanup and an alarm after logical worker
+completion. Parent accepted `00b7a4d908a9ab2a6bb650deb6803b7ebe6947de` after full source/event
+inspection and independent same-four-case rerun. Earlier unavailable cgroup discovery is
+historical: owner enabled delegation, parent verified own-child controls, and the real
+fixture proved exit0/exit1/SIGKILL+setsid/TERM resistance plus distinct-controller reentry.
+No agent service modification, provider call or new platform survey occurred.
+
+Choose the smallest supported production seam: Linux delegated cgroup-v2 adapter for trusted
+local tools, project-configured parent and validated own-child identity, populated oracle;
+no daemon, generic container/service platform or PID-only fallback. Preserve tested limits:
+not adversarial same-UID migration prevention, remote effects or production durable-registry/
+spawn/reboot proof. Current capability is proven only in its inspected environment; production
+preflight and actual helper crash-phase tests remain REQUIRED before reliance, not another
+stack/lifecycle selection experiment. Canonical research R12 links spans→constraints→checks.
+
+FR-017 gains the owner-required durable ORPHAN_PROCESS alarm/status with blocked replacement
+until cleanup+partial-work reconciliation. Reusable idle session host is separate from task
+tool lifetimes. Optional notifications do not replace the authoritative alarm. Original
+approval remains immutable; revised spec (FR-002/017 and provenance/status/assumption text)
+needs **RENEW_SPEC_APPROVAL** before tasks. All other defaults and planning-only gates remain.

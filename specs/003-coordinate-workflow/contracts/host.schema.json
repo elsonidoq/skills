@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coherence.invalid/design/v1/host.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": 1
+    },
+    "host_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "nonce": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "command_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "operation_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "attempt_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "session_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "type": {
+      "enum": [
+        "command",
+        "response",
+        "lifecycle",
+        "tool_request",
+        "tool_result",
+        "request_observation",
+        "settled"
+      ]
+    },
+    "op": {
+      "enum": [
+        "create",
+        "open",
+        "prompt",
+        "telemetry",
+        "abort",
+        "drain",
+        "close",
+        "tool",
+        "observe"
+      ]
+    },
+    "payload_schema": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "run_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    }
+  },
+  "required": [
+    "protocol_version",
+    "host_id",
+    "nonce",
+    "sequence",
+    "command_id",
+    "operation_id",
+    "attempt_id",
+    "session_id",
+    "type",
+    "op",
+    "payload_schema",
+    "payload",
+    "run_id"
+  ]
+}

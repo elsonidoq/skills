@@ -39,3 +39,30 @@
 - Runtime binding observed in this producer's session: openai-codex/gpt-6.1-sol, medium. SpecKit 1.0.12/pi/sh metadata, active template resolution and ignored pointer inspected. No extension hooks exist.
 - Focused validation: original-source byte-prefix equality; local link existence in new/changed material; mandatory heading order; unique FR/SC IDs and traceability; no unresolved template/material markers; sensitive-value scan; allowed-path/diff inspection; `git diff --check`. Results recorded in the producer return.
 - Approval pending: committing this preparation does not approve its content. Parent inspection and explicit owner specification approval are required before `plan_create`; this request remains planning-only. No independent overall review has run.
+
+## Same-session plan-stage integration correction
+
+- Parent supplied historical original-digest approval, including configurable session
+  defaults and two repair attempts. That record is not rewritten.
+- Owner explicitly selected **“Allow the thin SDK host (recommended)”**. FR-002 now permits
+  the pinned official SDK subprocess/JSONL host, with no orchestration/Git authority and
+  focused unproven integration gates. Status/assumption/provenance text is aligned.
+- All FR IDs, original behavior/acceptance and other defaults remain intact. This is a
+  substantive authorized integration revision, not a cosmetic-equivalence claim.
+- **RENEW_SPEC_APPROVAL**: checklist quality review is not approval of revised bytes.
+  No tasks may be released before the parent obtains renewed specification approval.
+- On resumed same-session planning, parent-accepted focused SDK evidence was consumed, not
+  rerun. FR-002's integration seam now distinguishes original stack PoC from focused SDK
+  proof and preserves the real orphan-write negative finding/unknown-cost and production
+  custody/restart/pressure/reattachment limits. Original FR/SC IDs and other requirements
+  remain unchanged. Renewed specification approval is still mandatory before tasks.
+
+- Owner-required local lifecycle alarm clarification is now explicit in FR-017. Parent-accepted
+  four-case kernel-containment feasibility is consumed with scope/identity/empty-oracle and
+  malicious/remote/reboot limits. Earlier unavailable-delegation statement is superseded, not
+  presented as still blocked. Production durable registry/placement-crash proof remains required.
+  No original FR/SC IDs/defaults or historical approval bytes were removed.
+- Final plan-producer artifact review checked revised requirements against the preserved
+  source/owner addenda, all 34 FR IDs and existing SC IDs. Only FR-002/FR-017 normative text
+  changed; source byte prefix and historical approval remain intact. Plan schemas/examples
+  and local links were checked separately, not represented as production tests or approval.
