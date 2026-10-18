@@ -7,5 +7,14 @@
   },
   "run3": "4 tests passed after inspected trust correction",
   "run4": "4 tests passed, adding assistant skill marker and staged+tracked unrelated dirt assertions",
-  "run5": "crash reconciliation strengthened with parent SHA and owned-path checks; focused crash test passed"
+  "run5": "crash reconciliation strengthened with parent SHA and owned-path checks; focused crash test passed",
+  "parent_settlement_review": {
+    "baseline": "47bc57eac668af070facd9b973aa75bdc3f36e90",
+    "bug": "RPC.prompt waited for agent_end instead of agent_settled; response wait discarded early lifecycle events",
+    "contract": "Pi 0.87.1 docs/rpc.md: subscribe before prompt; agent_end can precede retry/overflow/compaction; wait for agent_settled",
+    "correction": "Reader independently routes ID-keyed responses and tracks active prompt lifecycle; subscribe before send, serialize prompts through settlement, require current agent_start, poison on uncertain prompt error",
+    "synthetic_fixture": "Early settled before response, stale prior settled, agent_end then retry/compaction, second agent_end then settled",
+    "rerun": "5 tests passed in 15.252s, including two real tasks, crash/recovery and repair; logs/suite.log supersedes pre-correction full suite",
+    "classification": "Known harness bug, not framework FAIL; PASS still pending parent acceptance"
+  }
 }

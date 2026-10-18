@@ -7,7 +7,7 @@
     "text": "hello\n",
     "outcome": "success",
     "repairs": 0,
-    "sha": "6d2da1b5cff3adb2be36f6c7ece599d0a2853648",
+    "sha": "3675fa58c16e72e10d843ad868b2281a52af3c07",
     "events": [
       {
         "kind": "reconciled-file",
@@ -37,8 +37,8 @@
       {
         "kind": "commit",
         "task": "t1",
-        "sha": "6d2da1b5cff3adb2be36f6c7ece599d0a2853648",
-        "baseline": "3f3a659ebb36b86287e4ade1aa39e61cd0ce6897"
+        "sha": "3675fa58c16e72e10d843ad868b2281a52af3c07",
+        "baseline": "d0b463867d04da54dbf429ca1c225780be83dcf8"
       },
       {
         "kind": "node",

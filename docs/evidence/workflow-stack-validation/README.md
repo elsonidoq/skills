@@ -57,6 +57,25 @@ and reconcile or block first. Crash tests use no live Pi process. Real-task CLI 
 stops Pi; the integration test retains the same RPC process across the two task threads to
 exercise greedy reuse. Durable reattachment across host restarts is not claimed.
 
+## RPC completion boundary
+
+Pi 0.87.1 `docs/rpc.md` and `docs/json.md` distinguish low-level `agent_end` from
+session-level **`agent_settled`**: retries, overflow recovery, compaction or follow-up work
+can continue after agent_end. The reader independently routes responses by request ID and
+tracks lifecycle under a condition lock; request waits never consume/discard lifecycle.
+Prompt tracking is registered **before sending**, so settlement before the prompt response
+is retained. Prompts are serialized through settlement; an active prompt must observe its
+own agent_start before accepting settled, preventing an idle/prior-task settled event from
+completing the next task. Prompt errors/timeouts poison the adapter rather than permit reuse
+of uncertain work. This assumes the PoC's single prompt writer and disabled extensions, not
+arbitrary externally queued work. Metrics include per-prompt lifecycle counts; after-task
+telemetry, checks and commits only occur after the response and current agent_settled.
+
+The synthetic `test_00_rpc_settlement_protocol` exercises fast settlement before response,
+a stale prior-task settled event, low-level agent_end followed by simulated retry/compaction,
+and a second agent_end that must still not finish the wait. Real retries/compactions are
+not induced; the two real tasks each observed start/end/settled and distinct prompt numbers.
+
 ## Telemetry and compaction
 
 `get_state` verifies provider/model/effort, session ID, 500000 contextWindow and enabled
@@ -85,8 +104,11 @@ They are outside demonstrations 1–8; this is not migration implementation/plan
 
 ## Evidence
 
-`logs/suite.log`: four executed tests, two real task status reads, raw safe telemetry records.
-`logs/crash-recheck.log`: strengthened receipt/parent-SHA/path assertions rerun after inspection.
+`logs/suite.log`: five executed tests after the parent settlement correction, two real task
+status reads, safe telemetry records including observed settled lifecycle for each prompt.
+`logs/protocol-settlement.json`: explicitly synthetic lifecycle/race regression evidence.
+`logs/crash-recheck.log`: historical pre-settlement-correction focused receipt/parent-SHA/path
+rerun; the current full suite also reruns these strengthened crash assertions.
 `logs/*state.json`: small checkpoint-derived final snapshots; no SQLite binary or toy `.git`.
 `logs/real-metrics.jsonl`: sanitized real before/after records, deltas and provenance.
 `logs/cutoff.json`: explicitly synthetic admission/session fixture.

@@ -1,0 +1,17 @@
+{
+  "synthetic": true,
+  "fast_settlement_before_response": {
+    "prompt_number": 1,
+    "agent_starts": 1,
+    "agent_ends": 1,
+    "settled": true
+  },
+  "stale_settlement_ignored": true,
+  "agent_end_did_not_complete_prompt": true,
+  "retry_compaction": {
+    "prompt_number": 2,
+    "agent_starts": 2,
+    "agent_ends": 2,
+    "settled": true
+  }
+}

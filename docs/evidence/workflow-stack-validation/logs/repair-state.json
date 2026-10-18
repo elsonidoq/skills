@@ -7,7 +7,7 @@
     "text": "hello\n",
     "outcome": "success",
     "repairs": 1,
-    "sha": "78160272cfa69a5256899338beb143a46064e35c",
+    "sha": "1ca0354498622e4956ab6559330304562ca91072",
     "events": [
       {
         "kind": "node",
@@ -52,8 +52,8 @@
       {
         "kind": "commit",
         "task": "t1",
-        "sha": "78160272cfa69a5256899338beb143a46064e35c",
-        "baseline": "4530fbbbc96ceae8edec47eb28e2977b8f7a542e"
+        "sha": "1ca0354498622e4956ab6559330304562ca91072",
+        "baseline": "2d8c66d31559f70ebbacf09f42af998189e4e751"
       },
       {
         "kind": "node",
@@ -76,11 +76,12 @@
         },
         "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
         "observed": null,
+        "lifecycle": null,
         "context_group": "story-1",
         "reused": false,
-        "start": 1792341026.063671,
-        "end": 1792341026.0641282,
-        "elapsed": 0.000457763671875,
+        "start": 1792341436.851748,
+        "end": 1792341436.852223,
+        "elapsed": 0.00047516822814941406,
         "before": null,
         "after": null,
         "provenance": "synthetic-no-token-data",
@@ -91,7 +92,7 @@
         "headroom_start": null,
         "headroom_end": null,
         "token_deltas": null,
-        "baseline": "4530fbbbc96ceae8edec47eb28e2977b8f7a542e",
+        "baseline": "2d8c66d31559f70ebbacf09f42af998189e4e751",
         "synthetic": true,
         "verification": "failed"
       },
@@ -107,11 +108,12 @@
         },
         "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
         "observed": null,
+        "lifecycle": null,
         "context_group": "story-1",
         "reused": false,
-        "start": 1792341026.0729272,
-        "end": 1792341026.0734282,
-        "elapsed": 0.0005011558532714844,
+        "start": 1792341436.8600285,
+        "end": 1792341436.8605323,
+        "elapsed": 0.0005040168762207031,
         "before": null,
         "after": null,
         "provenance": "synthetic-no-token-data",
@@ -122,10 +124,10 @@
         "headroom_start": null,
         "headroom_end": null,
         "token_deltas": null,
-        "baseline": "4530fbbbc96ceae8edec47eb28e2977b8f7a542e",
+        "baseline": "2d8c66d31559f70ebbacf09f42af998189e4e751",
         "synthetic": true,
         "verification": "passed",
-        "result_sha": "78160272cfa69a5256899338beb143a46064e35c",
+        "result_sha": "1ca0354498622e4956ab6559330304562ca91072",
         "outcome": "success",
         "repair_count": 1
       }

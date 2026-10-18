@@ -13,6 +13,50 @@ PYTHON=sys.executable
 SCRIPT=str(h.HERE/'harness.py')
 
 class Acceptance(unittest.TestCase):
+    def test_00_rpc_settlement_protocol(self):
+        # Synthetic wire ordering only; real integration is test_02.
+        rpc=h.RPC.__new__(h.RPC);rpc._init_protocol()
+        ready=h.threading.Event();done=h.threading.Event();results=[];errors=[]
+        class Wire:
+            def write(self, line):
+                command=json.loads(line)
+                if rpc._prompt_number==1:
+                    for typ in ['agent_start','agent_end','agent_settled']:
+                        rpc._receive({'type':typ})
+                    # Fast lifecycle completes BEFORE the authoritative prompt response.
+                    rpc._receive({'type':'response','id':command['id'],'success':True})
+                else:
+                    rpc._receive({'type':'agent_settled'})  # Stale/idle event, no current start.
+                    rpc._receive({'type':'response','id':command['id'],'success':True})
+                    rpc._receive({'type':'agent_start'})
+                    rpc._receive({'type':'agent_end','willRetry':True})
+                    ready.set()
+            def flush(self):pass
+        rpc.p=type('Process',(),{'stdin':Wire()})()
+        first=rpc.prompt('fast')
+        self.assertTrue(first['settled']);self.assertEqual(first['agent_ends'],1)
+        def second_prompt():
+            try:results.append(rpc.prompt('retry/compaction'))
+            except BaseException as exc:errors.append(str(exc))
+            finally:done.set()
+        thread=h.threading.Thread(target=second_prompt);thread.start()
+        try:
+            self.assertTrue(ready.wait(2))
+            self.assertFalse(done.wait(.05),'agent_end or stale settlement completed current prompt')
+            rpc._receive({'type':'auto_compaction_start'})
+            rpc._receive({'type':'auto_compaction_end'})
+            rpc._receive({'type':'agent_start'})
+            rpc._receive({'type':'agent_end','willRetry':False})
+            self.assertFalse(done.wait(.05),'second low-level agent_end completed prompt')
+        finally:
+            rpc._receive({'type':'agent_settled'})
+            thread.join(timeout=2)
+        self.assertFalse(thread.is_alive());self.assertEqual(errors,[])
+        self.assertEqual(results,[{'prompt_number':2,'agent_starts':2,'agent_ends':2,'settled':True}])
+        evidence={'synthetic':True,'fast_settlement_before_response':first,
+            'stale_settlement_ignored':True,'agent_end_did_not_complete_prompt':True,'retry_compaction':results[0]}
+        (ROOT/'protocol-settlement.json').write_text(json.dumps(evidence,indent=2)+'\n')
+
     def cli(self,command,root,*args,kill=False):
         p=subprocess.run([PYTHON,SCRIPT,command,'--root',str(root),*args],capture_output=True,text=True)
         if kill:self.assertEqual(p.returncode,-9)
@@ -58,7 +102,11 @@ class Acceptance(unittest.TestCase):
                 self.assertEqual(status['outcome'],'success')
                 (ROOT/f'{task}-state.json').write_text((root/'state.json').read_text())
                 print(self.cli('status',root,'--task',task).strip())
+            self.assertEqual([r['lifecycle']['prompt_number'] for r in records],[1,2])
             for record in records:
+                self.assertTrue(record['lifecycle']['settled'])
+                self.assertGreaterEqual(record['lifecycle']['agent_starts'],1)
+                self.assertGreaterEqual(record['lifecycle']['agent_ends'],1)
                 self.assertGreater(record['token_deltas']['input'],0)
                 self.assertEqual(record['token_deltas']['cacheRead'],record['after']['tokens']['cacheRead']-record['before']['tokens']['cacheRead'])
                 self.assertEqual(record['headroom_end'],483616-record['context_end'])

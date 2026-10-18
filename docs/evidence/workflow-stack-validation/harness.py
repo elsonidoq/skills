@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import queue
 import signal
 import sqlite3
 import subprocess
@@ -46,7 +45,7 @@ def admit(context, threshold, same_group=True, compatible=True, ready=True, cuto
 
 class RPC:
     def __init__(self, root, profile, skill):
-        self.q = queue.Queue()
+        self._init_protocol()
         self.err = (root / 'pi-stderr.log').open('a')
         self.p = subprocess.Popen(['pi','--approve','--mode','rpc','--provider',profile['provider'],'--model',profile['model'],
             '--thinking',profile['effort'],'--no-extensions','--no-skills','--no-prompt-templates','--no-context-files',
@@ -54,27 +53,61 @@ class RPC:
             f'All writes MUST be within {root / "toy"}. Never commit. {skill}'],cwd=root/'toy',
             stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=self.err,text=True, start_new_session=True)
         def reader():
-            for line in self.p.stdout:
-                try: self.q.put(json.loads(line))
-                except json.JSONDecodeError: pass
+            try:
+                for line in self.p.stdout:
+                    try: self._receive(json.loads(line))
+                    except json.JSONDecodeError: pass
+            finally:
+                with self._condition:
+                    self._closed=True; self._condition.notify_all()
         threading.Thread(target=reader,daemon=True).start()
+    def _init_protocol(self):
+        self._condition=threading.Condition()
+        self._prompt_lock=threading.Lock()
+        self._responses={}; self._active_prompt=None; self._closed=False
+        self._prompt_number=0; self._poisoned=False
+    def _receive(self, msg):
+        with self._condition:
+            if msg.get('type')=='response':
+                self._responses[msg.get('id')]=msg
+            active=self._active_prompt
+            if active is not None:
+                typ=msg.get('type')
+                if typ=='agent_start':active['agent_starts']+=1
+                elif typ=='agent_end' and active['agent_starts']:active['agent_ends']+=1
+                elif typ=='agent_settled' and active['agent_starts']:active['settled']=True
+                # Idle/prior-task settlement cannot complete a newly registered prompt
+                # before its own agent_start. Prompts are serialized through settlement.
+            self._condition.notify_all()
     def request(self, typ, **kw):
         ident = str(uuid.uuid4())
-        self.p.stdin.write(json.dumps(dict(id=ident,type=typ,**kw))+'\n'); self.p.stdin.flush()
-        end = time.monotonic()+180
-        while time.monotonic()<end:
-            msg = self.q.get(timeout=max(.1,end-time.monotonic()))
-            if msg.get('id') == ident and msg.get('type')=='response':
-                assert msg['success'], msg
-                return msg.get('data')
-        raise TimeoutError(typ)
+        with self._condition:
+            if self._poisoned or self._closed:raise RuntimeError('RPC unavailable; reconcile before reuse')
+            self.p.stdin.write(json.dumps(dict(id=ident,type=typ,**kw))+'\n'); self.p.stdin.flush()
+            if not self._condition.wait_for(lambda:ident in self._responses or self._closed,timeout=180):
+                self._poisoned=True; raise TimeoutError(typ)
+            if ident not in self._responses:raise EOFError('Pi exited before response')
+            msg=self._responses.pop(ident)
+            assert msg['success'], msg
+            return msg.get('data')
     def prompt(self, text):
-        self.request('prompt',message=text)
-        end = time.monotonic()+240
-        while time.monotonic()<end:
-            msg=self.q.get(timeout=max(.1,end-time.monotonic()))
-            if msg.get('type')=='agent_end': return
-        raise TimeoutError('agent_end')
+        with self._prompt_lock:
+            with self._condition:
+                self._prompt_number+=1
+                active={'prompt_number':self._prompt_number,'agent_starts':0,'agent_ends':0,'settled':False}
+                self._active_prompt=active  # Subscribe before sending, including pre-response events.
+            try:
+                self.request('prompt',message=text)
+                with self._condition:
+                    if not self._condition.wait_for(lambda:active['settled'] or self._closed,timeout=240):
+                        raise TimeoutError('agent_settled')
+                    if not active['settled']:raise EOFError('Pi exited before agent_settled')
+                    return dict(active)
+            except BaseException:
+                self._poisoned=True
+                raise
+            finally:
+                with self._condition:self._active_prompt=None
     def close(self):
         os.killpg(self.p.pid,signal.SIGTERM); self.p.wait(timeout=15)
         self.p.stdin.close(); self.p.stdout.close(); self.err.close()
@@ -136,12 +169,13 @@ class Engine:
                     assert observed['autoCompactionEnabled'] is True
                     assert observed['model']['contextWindow']==500000
                     before=self.rpc.request('get_session_stats')
-                    self.rpc.prompt(f'{skill}\nTask {task}, context_group story-1. Use write tool to write toy.txt exactly {s["text"]!r}. Do not change any other file. Reply with skill marker only.')
+                    lifecycle=self.rpc.prompt(f'{skill}\nTask {task}, context_group story-1. Use write tool to write toy.txt exactly {s["text"]!r}. Do not change any other file. Reply with skill marker only.')
                     after=self.rpc.request('get_session_stats')
                     self.previous=(profile,skill,'story-1')
                 dump(op,{'task':task,'text':s['text'],'baseline':baseline,'phase':'file-written','synthetic':self.synthetic})
                 metrics.append({'task':task,'attempt':repairs,'node':name,'profile':n['profile'],'requested':profile,'skill':skill,
                     'observed':None if observed is None else {'provider':observed['model']['provider'],'model':observed['model']['id'],'effort':observed['thinkingLevel'],'sessionId':observed.get('sessionId')},
+                    'lifecycle':None if self.synthetic else lifecycle,
                     'context_group':'story-1','reused':reused,'start':started,'end':time.time(),'elapsed':time.time()-started,
                     'before':before,'after':after,'provenance':'synthetic-no-token-data' if self.synthetic else 'Pi RPC get_session_stats before/after; cumulative tokens; contextUsage current occupancy',
                     'effective_threshold':483616,'threshold_provenance':'Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384',

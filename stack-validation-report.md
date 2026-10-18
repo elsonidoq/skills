@@ -17,7 +17,8 @@ Fresh coding worker's actual environment `PI_SESSION_ID`:
 This is distinct from the real Pi worker session used by the harness. No additional coding
 subagents were launched. Real Pi RPC nodes are explicitly authorized harness workers.
 
-Outer baseline: `18e400d2613cd8341d5d4cc73014e6bd0a2f1af8`; initial tracked index/worktree clean,
+Original outer baseline: `18e400d2613cd8341d5d4cc73014e6bd0a2f1af8`. Settlement-correction
+baseline: `47bc57eac668af070facd9b973aa75bdc3f36e90`; tracked index/worktree clean,
 rechecked before retained writes. Owned retained paths only: this report and
 `docs/evidence/workflow-stack-validation/**`. Result SHA is the focused commit containing
 these paths, recorded exactly in the worker return artifact (avoids a self-referential SHA).
@@ -38,7 +39,7 @@ Paths below are relative to `docs/evidence/workflow-stack-validation/`.
 The principal executed command was:
 
 ```sh
-POC_ROOT="$PWD/.pi/workflow-validation/candidate-a/run4" \
+POC_ROOT="$PWD/.pi/workflow-validation/candidate-a/settled-run1" \
   .pi/workflow-validation/venv/bin/python docs/evidence/workflow-stack-validation/test_harness.py
 ```
 
@@ -46,27 +47,29 @@ POC_ROOT="$PWD/.pi/workflow-validation/candidate-a/run4" \
 |---|---|---|
 | 1 YAML graph | PASS. JSON Schema plus reference/handler/transition validation; two code nodes and implement/repair agent definitions. YAML-only alternate profile alias, instruction skill B, and success→END bypass checks/commit without engine edits. Unknown handler rejected. | `test_01_configuration_and_cutoff`; `workflow.yaml`, `schema.json`, executed `variant.yaml`; `logs/suite.log`. Variant is synthetic, same verified concrete model via another alias, not a claim of a real different-model test. |
 | 2 Real Pi | PASS. Real write-tool tasks create then update toy.txt in `story-1`; same **observed** session ID; requested/observed `openai-codex/gpt-6.1-sol`, **medium**. Actual assistant replies acknowledge instruction skill marker twice. | `test_02_real_two_tasks`; `logs/real-metrics.jsonl`, `logs/skill-observed.json`, `logs/t1-state.json`, `logs/t2-state.json`. |
-| 3 Telemetry/status | PASS. Real before/after `get_session_stats`, current context occupancy distinct from session cumulative counters, per-attempt deltas, cache zeroes, headroom provenance, timestamps, checks and SHAs. Separate subprocess CLI reads SQLite without Pi or conversational coordination. | Same test invokes `harness.py status --root .../real --task t1` and `t2`; stdout in `logs/suite.log`; before/after records in `logs/real-metrics.jsonl`. |
+| 3 Telemetry/status | PASS. Real before/after `get_session_stats`, current context occupancy distinct from session cumulative counters, per-attempt deltas, cache zeroes, headroom provenance, timestamps, checks and SHAs. After-task telemetry/checks wait for current `agent_settled`, not low-level `agent_end`. Separate subprocess CLI reads SQLite without Pi or conversational coordination. | Same test invokes `harness.py status --root .../real --task t1` and `t2`; stdout in `logs/suite.log`; before/after records in `logs/real-metrics.jsonl`; race regression `test_00_rpc_settlement_protocol` and `logs/protocol-settlement.json`. |
 | 4 Greedy cutoff | PASS. Explicit synthetic factory selects same session at exactly 150000 free, new UUID at 149999; unknown/incompatible/unready/different affinity deny reuse. Real inputs verified via Pi contextUsage/contextWindow plus controlled effective settings and installed version source. | `test_01_configuration_and_cutoff`, `logs/cutoff.json`; threshold **483616**, not model advertised **500000**. See README telemetry section. No large token burn. |
 | 5 Checks/Git | PASS. REQUIRED exact text equality before each focused `git commit --only -- toy.txt`; commits retain task ID/baseline/result. Staged unrelated.txt excluded, unrelated tracked seed modification preserved. | `test_02_real_two_tasks`, `test_03_crashes`, `test_04_bounded_repair`; commit/check events in `logs/*state.json`. |
-| 6 Crash/reconcile | PASS. Actual process SIGKILL after file-write/receipt before node-success checkpoint; separately after real Git commit before commit-node checkpoint. New processes resume real LangGraph/SQLite. One synthetic worker dispatch and one task commit per case; no destructive cleanup. Reconciliation checks expected file, unique task commit, HEAD, parent baseline and owned path. | `test_03_crashes`; `logs/crash-recheck.log`, `logs/crash-file-state.json`, `logs/crash-commit-state.json`. Worker is synthetic, engine/Git/checkpointer/kill/restart real. |
+| 6 Crash/reconcile | PASS. Actual process SIGKILL after file-write/receipt before node-success checkpoint; separately after real Git commit before commit-node checkpoint. New processes resume real LangGraph/SQLite. One synthetic worker dispatch and one task commit per case; no destructive cleanup. Reconciliation checks expected file, unique task commit, HEAD, parent baseline and owned path. | `test_03_crashes`; current `logs/suite.log` (historical focused `logs/crash-recheck.log`), `logs/crash-file-state.json`, `logs/crash-commit-state.json`. Worker is synthetic, engine/Git/checkpointer/kill/restart real. |
 | 7 Bounded failure | PASS. Synthetic worker intentionally writes bad text, REQUIRED check fails, one configured repair role succeeds, then one focused task commit. No narrative-based decision. CLI independently runnable/queryable. | `test_04_bounded_repair`, `logs/repair-state.json`: checks `[false,true]`, repair count 1; `logs/suite.log`. |
 | 8 No orchestration LLM | PASS. Registered handlers return enumerated code outcomes; LangGraph YAML transitions route them. Pi writes files only; no free-form response selects node/model. No Pi process in synthetic crash/repair/config tests or status CLI. | `harness.py` node handlers/conditional edges, `test_harness.py`, validated YAML. No LangChain agent abstraction instantiated. |
 
 ## Real result details
 
 Observed real Pi session for **both** tasks:
-`01a14fd9-6b69-7576-a1f8-46806138c694`.
+`01a14fdf-b04b-7355-907e-064a63c6ce66`.
 
 | Task | Baseline → task commit | Context start→end | Input/output/cache-read/cache-write deltas |
 |---|---|---|---|
-| t1 (fresh) | `eb8155ba1980d6df868230fc8cc62238de3344e4` → `65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925` | 0 → 938 | 1744 / 70 / 0 / 0 |
-| t2 (reused) | `65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925` → `a121470c57b3e8ebee0cf45356a689c453519efa` | 938 → 1120 | 2107 / 71 / 0 / 0 |
+| t1 (fresh) | `566acd59673a6aa5b302c5343affb92120502947` → `671863802495ca39b1f8f9e5eb6046a27f3f9429` | 0 → 950 | 1762 / 73 / 0 / 0 |
+| t2 (reused) | `671863802495ca39b1f8f9e5eb6046a27f3f9429` → `c628c25860e0b67cd859e7c94d55343ac171683a` | 950 → 1138 | 2137 / 74 / 0 / 0 |
 
 Both have effective threshold **483616** (500000 minus configured/verified reserve 16384).
-End headroom: **482678**, **482496**. Session-cumulative end counters after t2:
-input **3851**, output **141**, cache read/write **0/0**. Context occupancy **1120** is not
-cumulative **3992**. Provenance is actual Pi RPC, not guessed usage or advertised headroom.
+End headroom: **482666**, **482478**. Session-cumulative end counters after t2:
+input **3899**, output **147**, cache read/write **0/0**. Context occupancy **1138** is not
+cumulative **4046**. Provenance is actual Pi RPC, not guessed usage or advertised headroom.
+Both real prompts observed one agent_start, one agent_end and current agent_settled before
+after-task telemetry/checks; prompt numbers were 1 and 2. Real retry/compaction was not induced.
 Compaction is observed enabled after explicitly trusting the known toy-local configuration;
 exact-model reserve override prevents global-model override ambiguity.
 
@@ -80,9 +83,20 @@ exact-model reserve override prevents global-model override ambiguity.
   global compaction was disabled. Inspected traceback/settings/source; bounded correction
   was **`--approve` for the known disposable toy only**, not a global configuration change.
 - Corrected suite passed; strengthened staged/unrelated dirt and actual assistant-marker
-  assertions; final full suite: **4 tests, 15.215 seconds, OK** (`logs/suite.log`).
+  assertions; pre-parent-review full suite: **4 tests, 15.215 seconds, OK** (historical).
 - Added parent-SHA/single-path commit reconciliation assertions; focused crash rerun:
-  **1 test, 4.379 seconds, OK** (`logs/crash-recheck.log`). No unexplained agent relaunch.
+  **1 test, 4.379 seconds, OK** (`logs/crash-recheck.log`, historical). No unexplained agent relaunch.
+- Parent review then found a mandatory harness bug: waiting for low-level `agent_end`, plus
+  discarding unmatched lifecycle events during response waits. Pi 0.87.1 installed
+  `docs/rpc.md` explicitly requires subscribing before prompt and waiting for `agent_settled`.
+  Corrected reader demultiplexing: independently retain ID-keyed responses and track the
+  registered prompt lifecycle, serialize prompts, require current agent_start, and poison
+  uncertain prompt failures. Synthetic fixture proves fast settlement before response,
+  stale prior settlement rejection, and continued retry/compaction after agent_end.
+- Final post-correction full suite: **5 tests, 15.252 seconds, OK** (`logs/suite.log`),
+  including two real tasks with current settled lifecycle and both strengthened crash checks.
+  This is a bounded known-code-bug repair, **not** a framework FAIL; PASS remains pending
+  independent parent acceptance. Before/after telemetry and task SHAs above are this rerun.
 - `pip check`, Python compilation, JSON evidence parsing and `git diff --check` passed.
   Full first-draft history is summarized in `logs/corrections.json`, not hidden as framework failure.
 
@@ -103,7 +117,7 @@ Pinned versions executed successfully on Python 3.12.3; no prerequisites auto-in
 
 ## Operational/glue cost and residual limits
 
-The adapter is roughly 240 Python lines plus roughly 120 lines of acceptance tests, a tiny
+The adapter is roughly 270 Python lines plus roughly 160 lines of acceptance tests, a tiny
 YAML and schema. Framework provides graph routing/checkpoints; custom glue explicitly owns
 RPC lifecycle, admission/telemetry, file/commit reconciliation, checks, lock and projections.
 Installation needs a Python venv and native SQLite, no orchestration service. Status requires

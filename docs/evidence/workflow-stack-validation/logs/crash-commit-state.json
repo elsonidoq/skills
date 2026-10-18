@@ -7,7 +7,7 @@
     "text": "hello\n",
     "outcome": "success",
     "repairs": 0,
-    "sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
+    "sha": "fc9c45901f037f4af82ea01b6004f0f06bf07d6c",
     "events": [
       {
         "kind": "node",
@@ -31,14 +31,14 @@
       },
       {
         "kind": "reconciled-commit",
-        "sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
+        "sha": "fc9c45901f037f4af82ea01b6004f0f06bf07d6c",
         "task": "t1"
       },
       {
         "kind": "commit",
         "task": "t1",
-        "sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
-        "baseline": "2fcad6da80e133bfc39fbc9975d13bb2fdb81829"
+        "sha": "fc9c45901f037f4af82ea01b6004f0f06bf07d6c",
+        "baseline": "13578f13fb0754db90c33e5eac991604619e3ab1"
       },
       {
         "kind": "node",
@@ -61,11 +61,12 @@
         },
         "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
         "observed": null,
+        "lifecycle": null,
         "context_group": "story-1",
         "reused": false,
-        "start": 1792341063.7408857,
-        "end": 1792341063.7414243,
-        "elapsed": 0.0005393028259277344,
+        "start": 1792341434.6103919,
+        "end": 1792341434.6108868,
+        "elapsed": 0.0004951953887939453,
         "before": null,
         "after": null,
         "provenance": "synthetic-no-token-data",
@@ -76,10 +77,10 @@
         "headroom_start": null,
         "headroom_end": null,
         "token_deltas": null,
-        "baseline": "2fcad6da80e133bfc39fbc9975d13bb2fdb81829",
+        "baseline": "13578f13fb0754db90c33e5eac991604619e3ab1",
         "synthetic": true,
         "verification": "passed",
-        "result_sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
+        "result_sha": "fc9c45901f037f4af82ea01b6004f0f06bf07d6c",
         "outcome": "success",
         "repair_count": 0
       }

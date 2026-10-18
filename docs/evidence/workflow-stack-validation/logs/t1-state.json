@@ -7,7 +7,7 @@
     "text": "hello\n",
     "outcome": "success",
     "repairs": 0,
-    "sha": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925",
+    "sha": "671863802495ca39b1f8f9e5eb6046a27f3f9429",
     "events": [
       {
         "kind": "node",
@@ -32,8 +32,8 @@
       {
         "kind": "commit",
         "task": "t1",
-        "sha": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925",
-        "baseline": "eb8155ba1980d6df868230fc8cc62238de3344e4"
+        "sha": "671863802495ca39b1f8f9e5eb6046a27f3f9429",
+        "baseline": "566acd59673a6aa5b302c5343affb92120502947"
       },
       {
         "kind": "node",
@@ -59,16 +59,22 @@
           "provider": "openai-codex",
           "model": "gpt-6.1-sol",
           "effort": "medium",
-          "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694"
+          "sessionId": "01a14fdf-b04b-7355-907e-064a63c6ce66"
+        },
+        "lifecycle": {
+          "prompt_number": 1,
+          "agent_starts": 1,
+          "agent_ends": 1,
+          "settled": true
         },
         "context_group": "story-1",
         "reused": false,
-        "start": 1792341011.0791228,
-        "end": 1792341015.3772466,
-        "elapsed": 4.298124551773071,
+        "start": 1792341421.9252915,
+        "end": 1792341426.4736621,
+        "elapsed": 4.548371076583862,
         "before": {
-          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
-          "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-37-02-156Z_01a14fdf-b04b-7355-907e-064a63c6ce66.jsonl",
+          "sessionId": "01a14fdf-b04b-7355-907e-064a63c6ce66",
           "userMessages": 0,
           "assistantMessages": 0,
           "toolCalls": 0,
@@ -89,44 +95,44 @@
           }
         },
         "after": {
-          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
-          "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-37-02-156Z_01a14fdf-b04b-7355-907e-064a63c6ce66.jsonl",
+          "sessionId": "01a14fdf-b04b-7355-907e-064a63c6ce66",
           "userMessages": 1,
           "assistantMessages": 2,
           "toolCalls": 1,
           "toolResults": 1,
           "totalMessages": 5,
           "tokens": {
-            "input": 1744,
-            "output": 70,
+            "input": 1762,
+            "output": 73,
             "cacheRead": 0,
             "cacheWrite": 0,
-            "total": 1814
+            "total": 1835
           },
-          "cost": 0.004188,
+          "cost": 0.004254,
           "contextUsage": {
-            "tokens": 938,
+            "tokens": 950,
             "contextWindow": 500000,
-            "percent": 0.18760000000000002
+            "percent": 0.19
           }
         },
         "provenance": "Pi RPC get_session_stats before/after; cumulative tokens; contextUsage current occupancy",
         "effective_threshold": 483616,
         "threshold_provenance": "Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384",
         "context_start": 0,
-        "context_end": 938,
+        "context_end": 950,
         "headroom_start": 483616,
-        "headroom_end": 482678,
+        "headroom_end": 482666,
         "token_deltas": {
-          "input": 1744,
-          "output": 70,
+          "input": 1762,
+          "output": 73,
           "cacheRead": 0,
           "cacheWrite": 0
         },
-        "baseline": "eb8155ba1980d6df868230fc8cc62238de3344e4",
+        "baseline": "566acd59673a6aa5b302c5343affb92120502947",
         "synthetic": false,
         "verification": "passed",
-        "result_sha": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925",
+        "result_sha": "671863802495ca39b1f8f9e5eb6046a27f3f9429",
         "outcome": "success",
         "repair_count": 0
       }

@@ -7,7 +7,7 @@
     "text": "hello world\n",
     "outcome": "success",
     "repairs": 0,
-    "sha": "a121470c57b3e8ebee0cf45356a689c453519efa",
+    "sha": "c628c25860e0b67cd859e7c94d55343ac171683a",
     "events": [
       {
         "kind": "node",
@@ -32,8 +32,8 @@
       {
         "kind": "commit",
         "task": "t2",
-        "sha": "a121470c57b3e8ebee0cf45356a689c453519efa",
-        "baseline": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925"
+        "sha": "c628c25860e0b67cd859e7c94d55343ac171683a",
+        "baseline": "671863802495ca39b1f8f9e5eb6046a27f3f9429"
       },
       {
         "kind": "node",
@@ -59,74 +59,80 @@
           "provider": "openai-codex",
           "model": "gpt-6.1-sol",
           "effort": "medium",
-          "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694"
+          "sessionId": "01a14fdf-b04b-7355-907e-064a63c6ce66"
+        },
+        "lifecycle": {
+          "prompt_number": 2,
+          "agent_starts": 1,
+          "agent_ends": 1,
+          "settled": true
         },
         "context_group": "story-1",
         "reused": true,
-        "start": 1792341016.1914952,
-        "end": 1792341020.12923,
-        "elapsed": 3.9377360343933105,
+        "start": 1792341427.220163,
+        "end": 1792341430.9353986,
+        "elapsed": 3.715235710144043,
         "before": {
-          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
-          "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-37-02-156Z_01a14fdf-b04b-7355-907e-064a63c6ce66.jsonl",
+          "sessionId": "01a14fdf-b04b-7355-907e-064a63c6ce66",
           "userMessages": 1,
           "assistantMessages": 2,
           "toolCalls": 1,
           "toolResults": 1,
           "totalMessages": 5,
           "tokens": {
-            "input": 1744,
-            "output": 70,
+            "input": 1762,
+            "output": 73,
             "cacheRead": 0,
             "cacheWrite": 0,
-            "total": 1814
+            "total": 1835
           },
-          "cost": 0.004188,
+          "cost": 0.004254,
           "contextUsage": {
-            "tokens": 938,
+            "tokens": 950,
             "contextWindow": 500000,
-            "percent": 0.18760000000000002
+            "percent": 0.19
           }
         },
         "after": {
-          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
-          "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+          "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-37-02-156Z_01a14fdf-b04b-7355-907e-064a63c6ce66.jsonl",
+          "sessionId": "01a14fdf-b04b-7355-907e-064a63c6ce66",
           "userMessages": 2,
           "assistantMessages": 4,
           "toolCalls": 2,
           "toolResults": 2,
           "totalMessages": 9,
           "tokens": {
-            "input": 3851,
-            "output": 141,
+            "input": 3899,
+            "output": 147,
             "cacheRead": 0,
             "cacheWrite": 0,
-            "total": 3992
+            "total": 4046
           },
-          "cost": 0.009111999999999999,
+          "cost": 0.009268,
           "contextUsage": {
-            "tokens": 1120,
+            "tokens": 1138,
             "contextWindow": 500000,
-            "percent": 0.22399999999999998
+            "percent": 0.22759999999999997
           }
         },
         "provenance": "Pi RPC get_session_stats before/after; cumulative tokens; contextUsage current occupancy",
         "effective_threshold": 483616,
         "threshold_provenance": "Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384",
-        "context_start": 938,
-        "context_end": 1120,
-        "headroom_start": 482678,
-        "headroom_end": 482496,
+        "context_start": 950,
+        "context_end": 1138,
+        "headroom_start": 482666,
+        "headroom_end": 482478,
         "token_deltas": {
-          "input": 2107,
-          "output": 71,
+          "input": 2137,
+          "output": 74,
           "cacheRead": 0,
           "cacheWrite": 0
         },
-        "baseline": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925",
+        "baseline": "671863802495ca39b1f8f9e5eb6046a27f3f9429",
         "synthetic": false,
         "verification": "passed",
-        "result_sha": "a121470c57b3e8ebee0cf45356a689c453519efa",
+        "result_sha": "c628c25860e0b67cd859e7c94d55343ac171683a",
         "outcome": "success",
         "repair_count": 0
       }
