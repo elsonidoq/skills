@@ -1,0 +1,10 @@
+test_03_crashes (__main__.Acceptance.test_03_crashes) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 4.379s
+
+OK
+KILLED file {"task": "t1", "next": ["implement"], "outcome": null, "sha": null}
+RESUMED file {"task": "t1", "next": [], "outcome": "success", "sha": "6d2da1b5cff3adb2be36f6c7ece599d0a2853648"}
+KILLED commit {"task": "t1", "next": ["commit"], "outcome": "success", "sha": ""}
+RESUMED commit {"task": "t1", "next": [], "outcome": "success", "sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5"}

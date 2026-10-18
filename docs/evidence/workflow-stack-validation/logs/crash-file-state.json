@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "task": "t1",
+  "next": [],
+  "values": {
+    "task": "t1",
+    "text": "hello\n",
+    "outcome": "success",
+    "repairs": 0,
+    "sha": "6d2da1b5cff3adb2be36f6c7ece599d0a2853648",
+    "events": [
+      {
+        "kind": "reconciled-file",
+        "task": "t1",
+        "agent_redispatched": false
+      },
+      {
+        "kind": "node",
+        "node": "implement",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 2
+      },
+      {
+        "kind": "required-check",
+        "task": "t1",
+        "command": "assert toy.txt == task.text",
+        "passed": true
+      },
+      {
+        "kind": "node",
+        "node": "check",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 4
+      },
+      {
+        "kind": "commit",
+        "task": "t1",
+        "sha": "6d2da1b5cff3adb2be36f6c7ece599d0a2853648",
+        "baseline": "3f3a659ebb36b86287e4ade1aa39e61cd0ce6897"
+      },
+      {
+        "kind": "node",
+        "node": "commit",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 6
+      }
+    ],
+    "metrics": []
+  }
+}

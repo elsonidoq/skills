@@ -1,0 +1,23 @@
+{
+  "test_harness.py": "615e0c67be8c0d3cf02571182b6490163b04cd22b1fab560fde66aa860c6e60b",
+  "harness.py": "702152646718158bb26b0532452a2b89bce2ad88c70fa5572f7ac523a0f7be60",
+  ".gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+  "remote-signals.json": "b138399a71c84964ad4c9c077e3187f33c7ef5fc74de2b86571d2fdb60426d9b",
+  "workflow.yaml": "2f471f70476972fd06c255a4edde2c4c700195e081913716f5d082933f876d29",
+  "README.md": "fd72e600e8d7f77c2b7ba0095e0873d29c5a6637e3918b3fcddd06ea8b911aab",
+  "schema.json": "c0f1ca2c40ea01f2b1766f44400350c28285a50ff4d1c89f273aa25d1ed7a577",
+  "variant.yaml": "1002df610a214a9d094eb0064e89847882d992f8627acc520a23209383eb1731",
+  "environment.json": "0f98d242fd6167a77443acf71e4f920ebcee2296e003c795c96185cfbca434c5",
+  "requirements.txt": "09bb1595453cc6a96ae50b091cd9493c9a1fd2c90c8b595ebe22ca6ec82de50c",
+  "logs/real-metrics.jsonl": "dd36e7bd7da3ce80c15c6efafc20e8fdc49bd2ba2ba60a4d56f99acfc3e0f7d7",
+  "logs/crash-recheck.log": "c9175c99e93d34f969997ddaace07e1d40d3ffcd34675246bd454f55b3698604",
+  "logs/cutoff.json": "79386b65d17575f9646f32ff97d40b6e84127d422175064ec0f549ac6f46ee20",
+  "logs/suite.log": "3f2e0cf5abb5871c756a7e1f757c455a75e544f70f7ed7e84f6c32c2e960d638",
+  "logs/crash-commit-state.json": "247a6585a5475d25ee16805ea22d7119c6ba038359cd08515e12f4c455a6a2be",
+  "logs/repair-state.json": "da8adef29278fdad3744f8f1864646f72a569e4dfffb3d10d2ab5f94b974ced5",
+  "logs/skill-observed.json": "7e44483a4057daad590d07d02d491d7570a477951dbc8474a1e810f82cf009cd",
+  "logs/crash-file-state.json": "a21cdd215f0409b4387feee48cb211c33edceecd49f60febc209dba0c455bf87",
+  "logs/corrections.json": "e408f92108f816fa3ad7a4061a9cb3113265eaa01e29087e0770d9c155979e19",
+  "logs/t2-state.json": "203d0fd2730b858919a106ec7052ad012c7a3e076a77476e50e0e168707ab54b",
+  "logs/t1-state.json": "34b8a1c2a29e9f54580c0f3490cc586c9c70a707f76c94f517544e1755a884b1"
+}

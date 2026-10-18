@@ -1,0 +1,190 @@
+test_01_configuration_and_cutoff (__main__.Acceptance.test_01_configuration_and_cutoff) ... ok
+test_02_real_two_tasks (__main__.Acceptance.test_02_real_two_tasks) ... ok
+test_03_crashes (__main__.Acceptance.test_03_crashes) ... ok
+test_04_bounded_repair (__main__.Acceptance.test_04_bounded_repair) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 15.215s
+
+OK
+{"task": "t1", "next": [], "outcome": "success", "sha": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925"}
+{"task": "t2", "next": [], "outcome": "success", "sha": "a121470c57b3e8ebee0cf45356a689c453519efa"}
+REAL METRIC SHAPE [
+  {
+    "task": "t1",
+    "attempt": 0,
+    "node": "implement",
+    "profile": "default",
+    "requested": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
+    "observed": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694"
+    },
+    "context_group": "story-1",
+    "reused": false,
+    "start": 1792341011.0791228,
+    "end": 1792341015.3772466,
+    "elapsed": 4.298124551773071,
+    "before": {
+      "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
+      "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+      "userMessages": 0,
+      "assistantMessages": 0,
+      "toolCalls": 0,
+      "toolResults": 0,
+      "totalMessages": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 0
+      },
+      "cost": 0,
+      "contextUsage": {
+        "tokens": 0,
+        "contextWindow": 500000,
+        "percent": 0
+      }
+    },
+    "after": {
+      "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
+      "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+      "userMessages": 1,
+      "assistantMessages": 2,
+      "toolCalls": 1,
+      "toolResults": 1,
+      "totalMessages": 5,
+      "tokens": {
+        "input": 1744,
+        "output": 70,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 1814
+      },
+      "cost": 0.004188,
+      "contextUsage": {
+        "tokens": 938,
+        "contextWindow": 500000,
+        "percent": 0.18760000000000002
+      }
+    },
+    "provenance": "Pi RPC get_session_stats before/after; cumulative tokens; contextUsage current occupancy",
+    "effective_threshold": 483616,
+    "threshold_provenance": "Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384",
+    "context_start": 0,
+    "context_end": 938,
+    "headroom_start": 483616,
+    "headroom_end": 482678,
+    "token_deltas": {
+      "input": 1744,
+      "output": 70,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "baseline": "eb8155ba1980d6df868230fc8cc62238de3344e4",
+    "synthetic": false,
+    "verification": "passed",
+    "result_sha": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925",
+    "outcome": "success",
+    "repair_count": 0
+  },
+  {
+    "task": "t2",
+    "attempt": 0,
+    "node": "implement",
+    "profile": "default",
+    "requested": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
+    "observed": {
+      "provider": "openai-codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694"
+    },
+    "context_group": "story-1",
+    "reused": true,
+    "start": 1792341016.1914952,
+    "end": 1792341020.12923,
+    "elapsed": 3.9377360343933105,
+    "before": {
+      "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
+      "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+      "userMessages": 1,
+      "assistantMessages": 2,
+      "toolCalls": 1,
+      "toolResults": 1,
+      "totalMessages": 5,
+      "tokens": {
+        "input": 1744,
+        "output": 70,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 1814
+      },
+      "cost": 0.004188,
+      "contextUsage": {
+        "tokens": 938,
+        "contextWindow": 500000,
+        "percent": 0.18760000000000002
+      }
+    },
+    "after": {
+      "sessionFile": "<POC_ROOT>/real/sessions/2026-10-18T16-30-11-306Z_01a14fd9-6b69-7576-a1f8-46806138c694.jsonl",
+      "sessionId": "01a14fd9-6b69-7576-a1f8-46806138c694",
+      "userMessages": 2,
+      "assistantMessages": 4,
+      "toolCalls": 2,
+      "toolResults": 2,
+      "totalMessages": 9,
+      "tokens": {
+        "input": 3851,
+        "output": 141,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 3992
+      },
+      "cost": 0.009111999999999999,
+      "contextUsage": {
+        "tokens": 1120,
+        "contextWindow": 500000,
+        "percent": 0.22399999999999998
+      }
+    },
+    "provenance": "Pi RPC get_session_stats before/after; cumulative tokens; contextUsage current occupancy",
+    "effective_threshold": 483616,
+    "threshold_provenance": "Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384",
+    "context_start": 938,
+    "context_end": 1120,
+    "headroom_start": 482678,
+    "headroom_end": 482496,
+    "token_deltas": {
+      "input": 2107,
+      "output": 71,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "baseline": "65df7ea8b57c17eb3334c8a7f6ffdbe3dd3ec925",
+    "synthetic": false,
+    "verification": "passed",
+    "result_sha": "a121470c57b3e8ebee0cf45356a689c453519efa",
+    "outcome": "success",
+    "repair_count": 0
+  }
+]
+KILLED file {"task": "t1", "next": ["implement"], "outcome": null, "sha": null}
+RESUMED file {"task": "t1", "next": [], "outcome": "success", "sha": "a016d5767a384c11f628d7edf6781f48eeb804d3"}
+KILLED commit {"task": "t1", "next": ["commit"], "outcome": "success", "sha": ""}
+RESUMED commit {"task": "t1", "next": [], "outcome": "success", "sha": "391f3adc4cf34c0137445e43a9eca12aac9ff177"}
+{"task": "t1", "next": [], "outcome": "success", "sha": "78160272cfa69a5256899338beb143a46064e35c"}

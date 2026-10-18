@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-10-18T16:27:46.171655+00:00",
+  "sources": {
+    "github": {
+      "url": "https://api.github.com/repos/langchain-ai/langgraph",
+      "response": {
+        "full_name": "langchain-ai/langgraph",
+        "html_url": "https://github.com/langchain-ai/langgraph",
+        "pushed_at": "2026-10-18T01:27:12Z",
+        "updated_at": "2026-10-18T15:31:29Z",
+        "stargazers_count": 43447,
+        "forks_count": 7407,
+        "open_issues_count": 652,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "archived": false
+      }
+    },
+    "release": {
+      "url": "https://api.github.com/repos/langchain-ai/langgraph/releases/latest",
+      "response": {
+        "tag_name": "1.2.16",
+        "published_at": "2026-10-16T22:11:28Z",
+        "prerelease": false,
+        "draft": false,
+        "html_url": "https://github.com/langchain-ai/langgraph/releases/tag/1.2.16"
+      }
+    },
+    "pypi": {
+      "url": "https://pypi.org/pypi/langgraph/json",
+      "response": {
+        "name": "langgraph",
+        "version": "1.2.16",
+        "requires_python": ">=3.10",
+        "license": null,
+        "license_expression": "MIT",
+        "project_urls": {
+          "Changelog": "https://github.com/langchain-ai/langgraph/releases",
+          "Documentation": "https://reference.langchain.com/python/langgraph/",
+          "Homepage": "https://docs.langchain.com/oss/python/langgraph/overview",
+          "Reddit": "https://www.reddit.com/r/LangChain/",
+          "Slack": "https://www.langchain.com/join-community",
+          "Source": "https://github.com/langchain-ai/langgraph/tree/main/libs/langgraph",
+          "Twitter": "https://x.com/langchain_oss"
+        },
+        "latest_files": [
+          {
+            "filename": "langgraph-1.2.16-py3-none-any.whl",
+            "upload_time": "2026-10-16T22:11:12.638076Z"
+          },
+          {
+            "filename": "langgraph-1.2.16.tar.gz",
+            "upload_time": "2026-10-16T22:11:14.147680Z"
+          }
+        ]
+      }
+    },
+    "sqlite": {
+      "url": "https://pypi.org/pypi/langgraph-checkpoint-sqlite/json",
+      "response": {
+        "name": "langgraph-checkpoint-sqlite",
+        "version": "3.1.2",
+        "requires_python": ">=3.10",
+        "license": null,
+        "license_expression": "MIT",
+        "project_urls": {
+          "Reddit": "https://www.reddit.com/r/LangChain/",
+          "Slack": "https://www.langchain.com/join-community",
+          "Source": "https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint-sqlite",
+          "Twitter": "https://x.com/langchain_oss"
+        },
+        "latest_files": [
+          {
+            "filename": "langgraph_checkpoint_sqlite-3.1.2-py3-none-any.whl",
+            "upload_time": "2026-10-12T22:54:30.429662Z"
+          },
+          {
+            "filename": "langgraph_checkpoint_sqlite-3.1.2.tar.gz",
+            "upload_time": "2026-10-12T22:54:31.540450Z"
+          }
+        ]
+      }
+    }
+  }
+}

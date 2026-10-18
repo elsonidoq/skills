@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "task": "t1",
+  "next": [],
+  "values": {
+    "task": "t1",
+    "text": "hello\n",
+    "outcome": "success",
+    "repairs": 1,
+    "sha": "78160272cfa69a5256899338beb143a46064e35c",
+    "events": [
+      {
+        "kind": "node",
+        "node": "implement",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 1
+      },
+      {
+        "kind": "required-check",
+        "task": "t1",
+        "command": "assert toy.txt == task.text",
+        "passed": false
+      },
+      {
+        "kind": "node",
+        "node": "check",
+        "task": "t1",
+        "outcome": "failure",
+        "sequence": 3
+      },
+      {
+        "kind": "node",
+        "node": "repair",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 4
+      },
+      {
+        "kind": "required-check",
+        "task": "t1",
+        "command": "assert toy.txt == task.text",
+        "passed": true
+      },
+      {
+        "kind": "node",
+        "node": "check",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 6
+      },
+      {
+        "kind": "commit",
+        "task": "t1",
+        "sha": "78160272cfa69a5256899338beb143a46064e35c",
+        "baseline": "4530fbbbc96ceae8edec47eb28e2977b8f7a542e"
+      },
+      {
+        "kind": "node",
+        "node": "commit",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 8
+      }
+    ],
+    "metrics": [
+      {
+        "task": "t1",
+        "attempt": 0,
+        "node": "implement",
+        "profile": "default",
+        "requested": {
+          "provider": "openai-codex",
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
+        "observed": null,
+        "context_group": "story-1",
+        "reused": false,
+        "start": 1792341026.063671,
+        "end": 1792341026.0641282,
+        "elapsed": 0.000457763671875,
+        "before": null,
+        "after": null,
+        "provenance": "synthetic-no-token-data",
+        "effective_threshold": 483616,
+        "threshold_provenance": "Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384",
+        "context_start": null,
+        "context_end": null,
+        "headroom_start": null,
+        "headroom_end": null,
+        "token_deltas": null,
+        "baseline": "4530fbbbc96ceae8edec47eb28e2977b8f7a542e",
+        "synthetic": true,
+        "verification": "failed"
+      },
+      {
+        "task": "t1",
+        "attempt": 1,
+        "node": "repair",
+        "profile": "default",
+        "requested": {
+          "provider": "openai-codex",
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
+        "observed": null,
+        "context_group": "story-1",
+        "reused": false,
+        "start": 1792341026.0729272,
+        "end": 1792341026.0734282,
+        "elapsed": 0.0005011558532714844,
+        "before": null,
+        "after": null,
+        "provenance": "synthetic-no-token-data",
+        "effective_threshold": 483616,
+        "threshold_provenance": "Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384",
+        "context_start": null,
+        "context_end": null,
+        "headroom_start": null,
+        "headroom_end": null,
+        "token_deltas": null,
+        "baseline": "4530fbbbc96ceae8edec47eb28e2977b8f7a542e",
+        "synthetic": true,
+        "verification": "passed",
+        "result_sha": "78160272cfa69a5256899338beb143a46064e35c",
+        "outcome": "success",
+        "repair_count": 1
+      }
+    ]
+  }
+}

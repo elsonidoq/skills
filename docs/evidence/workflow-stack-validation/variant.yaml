@@ -1,0 +1,43 @@
+max_repair_attempts: 1
+min_free_tokens_before_compaction: 150000
+nodes:
+  check:
+    handler: check
+    transitions:
+      blocked: END
+      failure: repair
+      success: commit
+    type: code
+  commit:
+    handler: commit
+    transitions:
+      success: END
+    type: code
+  implement:
+    handler: worker
+    profile: alternate
+    skill: alternate
+    transitions:
+      success: END
+    type: agent
+  repair:
+    handler: worker
+    profile: default
+    skill: toy
+    transitions:
+      success: check
+    type: agent
+profiles:
+  alternate:
+    effort: medium
+    model: gpt-6.1-sol
+    provider: openai-codex
+  default:
+    effort: medium
+    model: gpt-6.1-sol
+    provider: openai-codex
+skills:
+  alternate: 'TOY_SKILL_B: write exactly the requested text; no other files.'
+  toy: 'TOY_SKILL_A: write exactly the requested text; no other files.'
+start: implement
+version: 1

@@ -1,0 +1,11 @@
+{
+  "run1": "4 tests passed; inspection found project compaction setting might be ignored; added observed autoCompactionEnabled assertion and synchronous durability",
+  "run2": {
+    "result": "1 assertion failure before any Pi prompt",
+    "cause": "Pi did not trust toy project settings by default; global compaction.enabled=false remained effective",
+    "correction": "explicit --approve for known disposable toy config only; no global settings changed"
+  },
+  "run3": "4 tests passed after inspected trust correction",
+  "run4": "4 tests passed, adding assistant skill marker and staged+tracked unrelated dirt assertions",
+  "run5": "crash reconciliation strengthened with parent SHA and owned-path checks; focused crash test passed"
+}

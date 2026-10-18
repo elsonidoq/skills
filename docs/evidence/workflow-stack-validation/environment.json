@@ -1,0 +1,12 @@
+{
+  "python": "3.12.3",
+  "git": "git version 2.43.0",
+  "pi": "0.87.1",
+  "packages": {
+    "langgraph": "1.2.16",
+    "langgraph-checkpoint-sqlite": "3.1.2",
+    "PyYAML": "6.0.3",
+    "jsonschema": "4.26.0"
+  },
+  "worker_session_id": "01a14fd4-b163-705e-bac3-a12947a304b7"
+}

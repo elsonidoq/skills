@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "task": "t1",
+  "next": [],
+  "values": {
+    "task": "t1",
+    "text": "hello\n",
+    "outcome": "success",
+    "repairs": 0,
+    "sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
+    "events": [
+      {
+        "kind": "node",
+        "node": "implement",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 1
+      },
+      {
+        "kind": "required-check",
+        "task": "t1",
+        "command": "assert toy.txt == task.text",
+        "passed": true
+      },
+      {
+        "kind": "node",
+        "node": "check",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 3
+      },
+      {
+        "kind": "reconciled-commit",
+        "sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
+        "task": "t1"
+      },
+      {
+        "kind": "commit",
+        "task": "t1",
+        "sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
+        "baseline": "2fcad6da80e133bfc39fbc9975d13bb2fdb81829"
+      },
+      {
+        "kind": "node",
+        "node": "commit",
+        "task": "t1",
+        "outcome": "success",
+        "sequence": 6
+      }
+    ],
+    "metrics": [
+      {
+        "task": "t1",
+        "attempt": 0,
+        "node": "implement",
+        "profile": "default",
+        "requested": {
+          "provider": "openai-codex",
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        "skill": "TOY_SKILL_A: write exactly the requested text; no other files.",
+        "observed": null,
+        "context_group": "story-1",
+        "reused": false,
+        "start": 1792341063.7408857,
+        "end": 1792341063.7414243,
+        "elapsed": 0.0005393028259277344,
+        "before": null,
+        "after": null,
+        "provenance": "synthetic-no-token-data",
+        "effective_threshold": 483616,
+        "threshold_provenance": "Pi 0.87.1 shouldCompact: contextWindow minus project modelOverrides.reserveTokens=16384",
+        "context_start": null,
+        "context_end": null,
+        "headroom_start": null,
+        "headroom_end": null,
+        "token_deltas": null,
+        "baseline": "2fcad6da80e133bfc39fbc9975d13bb2fdb81829",
+        "synthetic": true,
+        "verification": "passed",
+        "result_sha": "458a2852ed6abd934e54f4d4af6868d241eea4c5",
+        "outcome": "success",
+        "repair_count": 0
+      }
+    ]
+  }
+}
