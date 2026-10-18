@@ -79,8 +79,9 @@ Carried assessment: remaining inference is source-to-spec and cross-contract con
 tool depth is bounded inspection/writing; weakest adequate oracle is substantive
 source-to-spec review, not syntax. Scope couples runner/Pi/Git/skills/contracts; retained
 Markdown is reversible and has no production execution effect. Applicable memory/guidance:
-`memory/MEMORY.md` read whole, no entries; `memory/coordination/GUIDELINES.md` absent,
-nonblocking, no invented guidance. Explicit non-reliance on benchmark rankings. Terra and
+`memory/MEMORY.md` read whole, no entries; `memory/coordination/GUIDELINES.md` exists
+and states that no approved project coordination guidelines are recorded. No applicable
+guidance or inferred guidance is introduced. Explicit non-reliance on benchmark rankings. Terra and
 Luna are plausible alternatives with no established advantage; owner selected verified
 Sol/medium. No empirically established effort gain is claimed and no automatic substitution
 or escalation is permitted.
