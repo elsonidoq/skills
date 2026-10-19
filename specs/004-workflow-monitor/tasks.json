@@ -13,13 +13,13 @@
       "path": "specs/004-workflow-monitor/plan.md",
       "kind": "plan",
       "section": null,
-      "sha256": "b6e1276960f1805747f85de95420cb5403a7ec032ba7726b043c9a0382f29a9e"
+      "sha256": "ba77a0090a31e90266f37e0812f1287f77cf1da6feed4b766a4887983f5f3887"
     },
     {
       "path": "specs/004-workflow-monitor/research.md",
       "kind": "source",
       "section": null,
-      "sha256": "bed2c5b351c8543ceeec2ba58a2506919c1271b3ed1753737c98586d5289a73c"
+      "sha256": "c653ff9044aac7703decdcaac70a2123b8c15e52abbf65d72bff8beca5049564"
     },
     {
       "path": "specs/004-workflow-monitor/data-model.md",
@@ -31,13 +31,13 @@
       "path": "specs/004-workflow-monitor/contracts/monitor-v1.md",
       "kind": "source",
       "section": null,
-      "sha256": "8f4ea574c55b38368ced605368ea145da06e45a235754f575d404643367cc642"
+      "sha256": "8251061b3eab874da5f9a9dee6b69c3bc2b8345d38b72756a14ff99c8e4d25b6"
     },
     {
       "path": "specs/004-workflow-monitor/contracts/validation.md",
       "kind": "source",
       "section": null,
-      "sha256": "665afb0ac346fd4e9ed3fbf9d6cb22a2ef72f9ff2d4f52444c27abf1983f4734"
+      "sha256": "bf722f3aa61533c0ac8031b66a8ba0024ae2053a1fea6fdc19d09b60ffb14501"
     },
     {
       "path": "specs/004-workflow-monitor/contracts/README.md",
@@ -49,7 +49,7 @@
       "path": "specs/004-workflow-monitor/quickstart.md",
       "kind": "source",
       "section": null,
-      "sha256": "5e48c8e502dfc1a69f5313835be9fc7d55ea591520a9a8df86f6bbb67ce51df2"
+      "sha256": "66ea2a6562e5b90d090c17a997edae55f7760f5ea4f556cd9f75b70ad2ede3a1"
     },
     {
       "path": "specs/004-workflow-monitor/specification-approval.md",
@@ -58,16 +58,16 @@
       "sha256": "3a816bb8513471a6e6eeba2685364f224a6d28e552a7f7258609c7e48ec2c188"
     },
     {
-      "path": "runtime/coherence_workflow/workflows/coordinate.yaml",
+      "path": "specs/004-workflow-monitor/monitor-workflow.yaml",
       "kind": "config",
       "section": "monitor-workflow/v1",
-      "sha256": "a9e85751a75fe7d8c53504b437947e26f5eb2c666be66afdc55a8dfe282ee9f5"
+      "sha256": "4c3d403c2244a9525c0cbc80e0c5cca50fb4d1a905bafa45afcfa83c105f9ada"
     },
     {
       "path": "specs/004-workflow-monitor/monitor-presentation.json",
       "kind": "config",
       "section": "monitor-presentation/v1",
-      "sha256": "17bde609fb8c3340cefd176e8c6a23c2bfa71d7069d6b95a9c83a803bfa92e62"
+      "sha256": "9095b71e3fb2808c1f144c294668c483d8fe379ed9c71d4e3a1fd06fd46735ed"
     },
     {
       "path": "runtime/coherence_workflow/engine.py",
@@ -115,7 +115,7 @@
       "path": "runtime/coherence_workflow/verification.py",
       "kind": "source",
       "section": null,
-      "sha256": "072dbcb37ecc56d5646cef5f41d781c0c4a5c333f92ce60cc0571a45001f699b"
+      "sha256": "6c8496276008139cd683e01c929c277bb5864c324ee6c0f8054f11cc820904f0"
     },
     {
       "path": "runtime/coherence_workflow/schemas/task.schema.json",
@@ -139,10 +139,86 @@
       "path": "specs/004-workflow-monitor/tasks.md",
       "kind": "tasks",
       "section": null,
-      "sha256": "f0ed0d89c6a2294969c8d38072606b47dea13ca1ff58450d7c1377c96a7bc1cc"
+      "sha256": "4b6800beab90e5fcec1326fd1c733ffa38bc908eacb5158a318780c28a09c3f1"
+    },
+    {
+      "path": "specs/004-workflow-monitor/overall-review.md",
+      "kind": "review",
+      "section": null,
+      "sha256": "c24ad58557d1eb34d165ddb3072339e3ba866cfe36f5a7d47c6e3e4b3c9e3e12"
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "source",
+      "section": null,
+      "sha256": "f2b189926b0841b1f921223b747c71977d4538dd63ed5d16b0f0cb5b23c39efb"
+    },
+    {
+      "path": ".specify/memory/constitution.md",
+      "kind": "source",
+      "section": null,
+      "sha256": "1c459f94efe3d2bcb24b171e8dfcc8c7ecf084884b1c617ddfa1b6bff60c3106"
+    },
+    {
+      "path": "memory/MEMORY.md",
+      "kind": "source",
+      "section": null,
+      "sha256": "1e3319682f677fde8ee5f52540776b3fbfcf167ccde9888e3de8c2559adc3b93"
+    },
+    {
+      "path": "skills/memory-handling/SKILL.md",
+      "kind": "source",
+      "section": null,
+      "sha256": "ffd7db74584eb4976e68aeb3dce55735d5b3f8f598dc264dbc338f16910a3176"
+    },
+    {
+      "path": "skills/memory-handling/references/task-commit-contract.md",
+      "kind": "source",
+      "section": null,
+      "sha256": "b00e11d55283351857853bdced069769342d22ce1556e06e3f13a74a6cf52845"
+    },
+    {
+      "path": "skills/memory-handling/references/project-coordination.md",
+      "kind": "source",
+      "section": null,
+      "sha256": "3f1ebe1f393bd0834affce14326b6c3aa2b2ee8899fdb6cafc27591ac47b37b7"
+    },
+    {
+      "path": "runtime/coherence_workflow/review_documents.py",
+      "kind": "source",
+      "section": null,
+      "sha256": "18dd89f2ab25d450ae804de8304506553bc206a8f18ef68f6f69911eb6a1c7a9"
     }
   ],
-  "approval_refs": [],
+  "approval_refs": [
+    {
+      "gate_kind": "specification",
+      "record_ref": "specs/004-workflow-monitor/specification-approval.md",
+      "record_sha256": "3a816bb8513471a6e6eeba2685364f224a6d28e552a7f7258609c7e48ec2c188",
+      "scope_hash": "f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55",
+      "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
+      "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/specification",
+      "action": "approve"
+    },
+    {
+      "gate_kind": "overall",
+      "record_ref": "specs/004-workflow-monitor/app-scope.md",
+      "record_sha256": "1a11461452865b962f54a9adb1aeb44f908aa2d703943a3a38fc7a4236da0409",
+      "scope_hash": "e9e167c731ad0a0da4746fa4b0d19d917f4101bb0e3d797b54ab1810ec294430",
+      "actor": "pending owner decision",
+      "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/overall",
+      "action": "deny"
+    },
+    {
+      "gate_kind": "implementation",
+      "record_ref": "specs/004-workflow-monitor/app-scope.md",
+      "record_sha256": "1a11461452865b962f54a9adb1aeb44f908aa2d703943a3a38fc7a4236da0409",
+      "scope_hash": "811a77cad450a2a87b1fc0b367ce15c76d3e0286e7af45c0ec865d0c49b65c83",
+      "actor": "pending owner decision",
+      "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/implementation",
+      "action": "deny"
+    }
+  ],
   "execution_intent": {
     "model_class": "Sol",
     "effort": "medium",
@@ -178,35 +254,35 @@
     "capabilities": [
       {
         "id": "read_file",
-        "action_scope": "{\"action\":\"read_file\",\"readable_paths\":[\"docs/index.md\",\"runtime/coherence_workflow/authority.py\",\"runtime/coherence_workflow/engine.py\",\"runtime/coherence_workflow/intake.py\",\"runtime/coherence_workflow/interaction.py\",\"runtime/coherence_workflow/projections.py\",\"runtime/coherence_workflow/schemas/shared.schema.json\",\"runtime/coherence_workflow/schemas/task.schema.json\",\"runtime/coherence_workflow/schemas/workflow.schema.json\",\"runtime/coherence_workflow/store.py\",\"runtime/coherence_workflow/tools.py\",\"runtime/coherence_workflow/verification.py\",\"runtime/coherence_workflow/workflows/coordinate.yaml\",\"specs/004-workflow-monitor/contracts/README.md\",\"specs/004-workflow-monitor/contracts/monitor-v1.md\",\"specs/004-workflow-monitor/contracts/validation.md\",\"specs/004-workflow-monitor/data-model.md\",\"specs/004-workflow-monitor/monitor-presentation.json\",\"specs/004-workflow-monitor/plan.md\",\"specs/004-workflow-monitor/quickstart.md\",\"specs/004-workflow-monitor/research.md\",\"specs/004-workflow-monitor/spec.md\",\"specs/004-workflow-monitor/specification-approval.md\",\"specs/004-workflow-monitor/tasks.md\",\"workflow_monitor/README.md\",\"workflow_monitor/__init__.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/public.py\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/reader.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/build.spec.js\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/web/vite.config.js\"],\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
+        "action_scope": "{\"action\":\"read_file\",\"readable_paths\":[\".gitignore\",\".specify/memory/constitution.md\",\"AGENTS.md\",\"docs/index.md\",\"memory/MEMORY.md\",\"runtime/coherence_workflow/authority.py\",\"runtime/coherence_workflow/engine.py\",\"runtime/coherence_workflow/intake.py\",\"runtime/coherence_workflow/interaction.py\",\"runtime/coherence_workflow/projections.py\",\"runtime/coherence_workflow/review_documents.py\",\"runtime/coherence_workflow/schemas/shared.schema.json\",\"runtime/coherence_workflow/schemas/task.schema.json\",\"runtime/coherence_workflow/schemas/workflow.schema.json\",\"runtime/coherence_workflow/store.py\",\"runtime/coherence_workflow/tools.py\",\"runtime/coherence_workflow/verification.py\",\"skills/memory-handling/SKILL.md\",\"skills/memory-handling/references/project-coordination.md\",\"skills/memory-handling/references/task-commit-contract.md\",\"specs/004-workflow-monitor/app-scope.md\",\"specs/004-workflow-monitor/contracts/README.md\",\"specs/004-workflow-monitor/contracts/monitor-v1.md\",\"specs/004-workflow-monitor/contracts/validation.md\",\"specs/004-workflow-monitor/data-model.md\",\"specs/004-workflow-monitor/monitor-presentation.json\",\"specs/004-workflow-monitor/monitor-workflow.yaml\",\"specs/004-workflow-monitor/overall-review.md\",\"specs/004-workflow-monitor/plan.md\",\"specs/004-workflow-monitor/quickstart.md\",\"specs/004-workflow-monitor/research.md\",\"specs/004-workflow-monitor/spec.md\",\"specs/004-workflow-monitor/specification-approval.md\",\"specs/004-workflow-monitor/tasks.md\",\"workflow_monitor/README.md\",\"workflow_monitor/__init__.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/public.py\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/reader.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/build.spec.js\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/web/vite.config.js\"],\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
         "effects": [
           "external"
         ]
       },
       {
         "id": "write_file",
-        "action_scope": "{\"action\":\"write_file\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
+        "action_scope": "{\"action\":\"write_file\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
         "effects": [
           "mutation"
         ]
       },
       {
         "id": "request_owner_input",
-        "action_scope": "{\"action\":\"request_owner_input\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
+        "action_scope": "{\"action\":\"request_owner_input\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
         "effects": [
           "external"
         ]
       },
       {
         "id": "runner-git-commit",
-        "action_scope": "{\"action\":\"runner-git-commit\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
+        "action_scope": "{\"action\":\"runner-git-commit\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
         "effects": [
           "mutation"
         ]
       },
       {
         "id": "workflow.PythonAnswer",
-        "action_scope": "{\"action\":\"workflow.PythonAnswer\",\"checks\":[{\"args_hash\":\"fed8da193e30072e7c41062a0d6fb87f59937b420f0b0a51df8862b228dd21ae\",\"task_id\":\"T001\",\"version\":\"1\"},{\"args_hash\":\"fed8da193e30072e7c41062a0d6fb87f59937b420f0b0a51df8862b228dd21ae\",\"task_id\":\"T001\",\"version\":\"1\"},{\"args_hash\":\"8590ce445fbe9fae276183b36d197d13cf69c0267689c0d1c3ce7d125ff6b7db\",\"task_id\":\"T002\",\"version\":\"1\"},{\"args_hash\":\"8590ce445fbe9fae276183b36d197d13cf69c0267689c0d1c3ce7d125ff6b7db\",\"task_id\":\"T002\",\"version\":\"1\"},{\"args_hash\":\"fca0e21f4607fddb7ce3a0472ce96ee3ce431b026ec11425ab6b307f15d89d2a\",\"task_id\":\"T003\",\"version\":\"1\"},{\"args_hash\":\"fca0e21f4607fddb7ce3a0472ce96ee3ce431b026ec11425ab6b307f15d89d2a\",\"task_id\":\"T003\",\"version\":\"1\"},{\"args_hash\":\"f70ea0dd00e692d47e4b195ca6ab5a48928ee5602c08a89bcf1975fea4422e47\",\"task_id\":\"T004\",\"version\":\"1\"},{\"args_hash\":\"f70ea0dd00e692d47e4b195ca6ab5a48928ee5602c08a89bcf1975fea4422e47\",\"task_id\":\"T004\",\"version\":\"1\"}],\"execution\":\"trusted-project-python\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
+        "action_scope": "{\"action\":\"workflow.PythonAnswer\",\"checks\":[{\"args_hash\":\"fed8da193e30072e7c41062a0d6fb87f59937b420f0b0a51df8862b228dd21ae\",\"task_id\":\"T001\",\"version\":\"1\"},{\"args_hash\":\"fed8da193e30072e7c41062a0d6fb87f59937b420f0b0a51df8862b228dd21ae\",\"task_id\":\"T001\",\"version\":\"1\"},{\"args_hash\":\"8590ce445fbe9fae276183b36d197d13cf69c0267689c0d1c3ce7d125ff6b7db\",\"task_id\":\"T002\",\"version\":\"1\"},{\"args_hash\":\"8590ce445fbe9fae276183b36d197d13cf69c0267689c0d1c3ce7d125ff6b7db\",\"task_id\":\"T002\",\"version\":\"1\"},{\"args_hash\":\"fca0e21f4607fddb7ce3a0472ce96ee3ce431b026ec11425ab6b307f15d89d2a\",\"task_id\":\"T003\",\"version\":\"1\"},{\"args_hash\":\"fca0e21f4607fddb7ce3a0472ce96ee3ce431b026ec11425ab6b307f15d89d2a\",\"task_id\":\"T003\",\"version\":\"1\"},{\"args_hash\":\"f70ea0dd00e692d47e4b195ca6ab5a48928ee5602c08a89bcf1975fea4422e47\",\"task_id\":\"T004\",\"version\":\"1\"},{\"args_hash\":\"f70ea0dd00e692d47e4b195ca6ab5a48928ee5602c08a89bcf1975fea4422e47\",\"task_id\":\"T004\",\"version\":\"1\"}],\"execution\":\"trusted-project-python\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
         "effects": [
           "test"
         ]
@@ -223,6 +299,7 @@
       "depends": [],
       "context_group": "foundation",
       "owned_paths": [
+        ".gitignore",
         "workflow_monitor/__init__.py",
         "workflow_monitor/reader.py",
         "workflow_monitor/pins.py",
@@ -249,13 +326,11 @@
           "pass_condition": "Permanent actual-helper tests positively collect, no skips; compare complete expected and observed ID/edge/count sets for shipped cyclic definition plus changed definition, repetitions, semantic parks and unsupported records. No invented causal edges, values or task containment; all inventory items retrievable. Reject duplicate/tag/alias YAML, corrupt/missing pins, unrelated config, task mismatch and unsupported new inputs safely.",
           "expected_evidence": "Bounded non-sensitive inventory/set/hash/edge assertions, source-to-DTO null/zero/revision/provenance comparisons and safe unavailable cases; exact tested revision/environment and positive counts. Required collection must finish inside actual 15s oracle deadline, else NOT VERIFIED.",
           "producer_dependencies": [],
-          "gates": [
-            "T001/G1"
-          ]
+          "gates": []
         },
         {
           "id": "T001/V2",
-          "criterion": "SC-005/006, FR-013-017: real production reader observes actual isolated accepted shipped-runtime records while writer progresses, before UI relies on it. Fixed worktree DB mode=ro/query_only/deny authorizer, short thread-owned <=500ms snapshot/250ms busy budget, existing sidecars, no immutable/nolock/saver/Authority/Publisher/DDL/repair route. Exact installed Python pins Starlette1.9.0/Uvicorn0.54.0/PyYAML6.0.3; worker writes direct manifest in-run matching pre-admitted external locks/tree; scoped immutable setup validation, no lock courier.",
+          "criterion": "SC-005/006, FR-013-017: real production reader observes actual isolated accepted shipped-runtime records while writer progresses, before UI relies on it. Fixed worktree DB mode=ro/query_only/deny authorizer, short thread-owned <=500ms snapshot/250ms busy budget, safe existing/new sidecar identity checks and SQLite-only normal empty WAL/SHM bookkeeping for historical reads; no authoritative mutation, no immutable/nolock/saver/Authority/Publisher/DDL/repair route. Exact installed Python pins Starlette1.9.0/Uvicorn0.54.0/PyYAML6.0.3; worker writes direct manifest in-run matching pre-admitted external locks/tree; scoped read-only setup validation, no courier. In T001 only, narrowly add !workflow_monitor/web/package.json to root .gitignore before T002 writes its manifest; no broader ignore edit or force staging.",
           "check": {
             "id": "workflow.PythonAnswer",
             "version": "1",
@@ -264,25 +339,14 @@
               "expected": 1
             }
           },
-          "pass_condition": "Actual operator-owned isolated shipped CLI/SDK harness supplies fresh bound records and controller progress; oracle reopens the real DB read-only and compares causal events/quiescent authoritative/projection fingerprints before/after reads, proving zero viewer effects and controller progress (not naive active DB byte equality). Snapshot closes before network. Trusted setup_inputs verifies descriptor bytes against quickstart's admitted raw pin, actual app/fixture stores and immutable dependency/tool/lock/inventory identities, exact worker direct manifests and license/audit provenance. Fixed installed tools may build a hash-bound copy of current owned source only in writable scratch with admitted read-only node_modules; no hidden app source/install or retained-file generation. All children drain.",
+          "pass_condition": "Actual operator-owned isolated shipped CLI/SDK harness supplies fresh bound records and controller progress; oracle reopens the real DB read-only and compares causal events/quiescent authoritative/projection fingerprints before/after reads, proving zero viewer effects and controller progress (not naive active DB byte equality). Snapshot closes before network. Trusted setup_inputs verifies descriptor bytes against quickstart's admitted raw pin, actual app/fixture stores and operationally read-only dependency/tool/lock/inventory identities with independent hash revalidation, exact worker direct manifests and license/audit provenance. Fixed installed tools may build a hash-bound copy of current owned source only in writable scratch with admitted read-only node_modules; no hidden app source/install or retained-file generation. All children drain. Actual git_effects uses git add -A -- owned (not force); focused assertion compares .gitignore baseline and exactly that exception, and git check-ignore --no-index confirms only this manifest exception. Retrospective closed-WAL DB without preexisting sidecars succeeds with standard SQLite bookkeeping only; SQL mutation/unsafe identities still deny.",
           "expected_evidence": "Actual isolated run/config/source/controller/read observations and causal noninterference evidence; lock provenance, real dependency/browser readiness or exact unavailable gap. Setup/live harness are separately authorized operator processes, not completed by this 15s PythonAnswer or fixture-only green.",
           "producer_dependencies": [],
-          "gates": [
-            "T001/G1"
-          ]
+          "gates": []
         }
       ],
       "optional": [],
-      "gates": [
-        {
-          "id": "T001/G1",
-          "kind": "capability",
-          "criterion": "UNRESOLVED: current independent overall planning review/final owner scope, separately verified and independently accepted reference-only precursor, refreshed affected pins, sole writer, exact SDK/catalog/resources/profile and containment; scoped operator setup/test authority and baseline tools. Before final app binding/start, immutable external dependencies/descriptor and actual quickstart launch pins must be ready; real scenario records must exist before affected checks. No install/auth/paid/runtime-change permission inferred.",
-          "scope": "Fresh app run; exact read/write/question and runner Git/check streams declared in the envelope. External operator setup/live harness/viewer require separately scoped custody, never worker shell or leaked task descendants. Routine dependency setup precedes final binding, never question/answer delivery; missing proof cannot pass an oracle.",
-          "expected_evidence": "Genuine current-content approvals/catalog, accepted precursor revision and current runtime/config/SDK identities; kernel custody and baseline tool readiness, scoped isolated TMPDIR/setup permissions; actual frozen descriptor/locks/tree/tools and pinned quickstart digest/run ID before binding, real records before checks. Verify standalone answer/resume for genuine questions only, or reviewed matching interactive-parent readiness. No skipped/empty pass.",
-          "approval_ref": null
-        }
-      ],
+      "gates": [],
       "authorization_envelope_id": "monitor-app-draft"
     },
     {
@@ -294,6 +358,7 @@
       ],
       "context_group": "US1",
       "owned_paths": [
+        ".gitignore",
         "workflow_monitor/__init__.py",
         "workflow_monitor/reader.py",
         "workflow_monitor/pins.py",
@@ -333,9 +398,7 @@
           "producer_dependencies": [
             "T001"
           ],
-          "gates": [
-            "T002/G1"
-          ]
+          "gates": []
         },
         {
           "id": "T002/V2",
@@ -353,22 +416,11 @@
           "producer_dependencies": [
             "T001"
           ],
-          "gates": [
-            "T002/G1"
-          ]
+          "gates": []
         }
       ],
       "optional": [],
-      "gates": [
-        {
-          "id": "T002/G1",
-          "kind": "capability",
-          "criterion": "UNRESOLVED: current independent overall planning review/final owner scope, separately verified and independently accepted reference-only precursor, refreshed affected pins, sole writer, exact SDK/catalog/resources/profile and containment; scoped operator setup/test authority and baseline tools. Before final app binding/start, immutable external dependencies/descriptor and actual quickstart launch pins must be ready; real scenario records must exist before affected checks. No install/auth/paid/runtime-change permission inferred.",
-          "scope": "Fresh app run; exact read/write/question and runner Git/check streams declared in the envelope. External operator setup/live harness/viewer require separately scoped custody, never worker shell or leaked task descendants. Routine dependency setup precedes final binding, never question/answer delivery; missing proof cannot pass an oracle.",
-          "expected_evidence": "Genuine current-content approvals/catalog, accepted precursor revision and current runtime/config/SDK identities; kernel custody and baseline tool readiness, scoped isolated TMPDIR/setup permissions; actual frozen descriptor/locks/tree/tools and pinned quickstart digest/run ID before binding, real records before checks. Verify standalone answer/resume for genuine questions only, or reviewed matching interactive-parent readiness. No skipped/empty pass.",
-          "approval_ref": null
-        }
-      ],
+      "gates": [],
       "authorization_envelope_id": "monitor-app-draft"
     },
     {
@@ -380,6 +432,7 @@
       ],
       "context_group": "US2",
       "owned_paths": [
+        ".gitignore",
         "workflow_monitor/__init__.py",
         "workflow_monitor/reader.py",
         "workflow_monitor/pins.py",
@@ -423,9 +476,7 @@
           "producer_dependencies": [
             "T002"
           ],
-          "gates": [
-            "T003/G1"
-          ]
+          "gates": []
         },
         {
           "id": "T003/V2",
@@ -443,22 +494,11 @@
           "producer_dependencies": [
             "T002"
           ],
-          "gates": [
-            "T003/G1"
-          ]
+          "gates": []
         }
       ],
       "optional": [],
-      "gates": [
-        {
-          "id": "T003/G1",
-          "kind": "capability",
-          "criterion": "UNRESOLVED: current independent overall planning review/final owner scope, separately verified and independently accepted reference-only precursor, refreshed affected pins, sole writer, exact SDK/catalog/resources/profile and containment; scoped operator setup/test authority and baseline tools. Before final app binding/start, immutable external dependencies/descriptor and actual quickstart launch pins must be ready; real scenario records must exist before affected checks. No install/auth/paid/runtime-change permission inferred.",
-          "scope": "Fresh app run; exact read/write/question and runner Git/check streams declared in the envelope. External operator setup/live harness/viewer require separately scoped custody, never worker shell or leaked task descendants. Routine dependency setup precedes final binding, never question/answer delivery; missing proof cannot pass an oracle.",
-          "expected_evidence": "Genuine current-content approvals/catalog, accepted precursor revision and current runtime/config/SDK identities; kernel custody and baseline tool readiness, scoped isolated TMPDIR/setup permissions; actual frozen descriptor/locks/tree/tools and pinned quickstart digest/run ID before binding, real records before checks. Verify standalone answer/resume for genuine questions only, or reviewed matching interactive-parent readiness. No skipped/empty pass.",
-          "approval_ref": null
-        }
-      ],
+      "gates": [],
       "authorization_envelope_id": "monitor-app-draft"
     },
     {
@@ -470,6 +510,7 @@
       ],
       "context_group": "US3",
       "owned_paths": [
+        ".gitignore",
         "workflow_monitor/__init__.py",
         "workflow_monitor/reader.py",
         "workflow_monitor/pins.py",
@@ -517,13 +558,11 @@
           "producer_dependencies": [
             "T003"
           ],
-          "gates": [
-            "T004/G1"
-          ]
+          "gates": []
         },
         {
           "id": "T004/V2",
-          "criterion": "SC-001-006 and documentation: app README launch/setup/trust/read-only/new-contract/freshness/privacy/unknown/limits/rollback agrees with implementation; docs/index routes it. All permanent required checks/current evidence remain valid; external immutable locks/tree/provenance/licenses/audits stay reviewable, worker direct manifests match. Full original-range fresh independent review/finding correction/current acceptance remain runner-owned AFTER task checkpoint, not implementer work or inferred green.",
+          "criterion": "SC-001-006 and documentation: app README launch/setup/trust/read-only/new-contract/freshness/privacy/unknown/limits/rollback agrees with implementation; docs/index routes it. All permanent required checks/current evidence remain valid; external operationally read-only locks/tree/provenance/licenses/audits stay reviewable, worker direct manifests match. Full original-range fresh independent review/finding correction/current acceptance remain runner-owned AFTER task checkpoint, not implementer work or inferred green.",
           "check": {
             "id": "workflow.PythonAnswer",
             "version": "1",
@@ -537,22 +576,11 @@
           "producer_dependencies": [
             "T003"
           ],
-          "gates": [
-            "T004/G1"
-          ]
+          "gates": []
         }
       ],
       "optional": [],
-      "gates": [
-        {
-          "id": "T004/G1",
-          "kind": "capability",
-          "criterion": "UNRESOLVED: current independent overall planning review/final owner scope, separately verified and independently accepted reference-only precursor, refreshed affected pins, sole writer, exact SDK/catalog/resources/profile and containment; scoped operator setup/test authority and baseline tools. Before final app binding/start, immutable external dependencies/descriptor and actual quickstart launch pins must be ready; real scenario records must exist before affected checks. No install/auth/paid/runtime-change permission inferred.",
-          "scope": "Fresh app run; exact read/write/question and runner Git/check streams declared in the envelope. External operator setup/live harness/viewer require separately scoped custody, never worker shell or leaked task descendants. Routine dependency setup precedes final binding, never question/answer delivery; missing proof cannot pass an oracle.",
-          "expected_evidence": "Genuine current-content approvals/catalog, accepted precursor revision and current runtime/config/SDK identities; kernel custody and baseline tool readiness, scoped isolated TMPDIR/setup permissions; actual frozen descriptor/locks/tree/tools and pinned quickstart digest/run ID before binding, real records before checks. Verify standalone answer/resume for genuine questions only, or reviewed matching interactive-parent readiness. No skipped/empty pass.",
-          "approval_ref": null
-        }
-      ],
+      "gates": [],
       "authorization_envelope_id": "monitor-app-draft"
     }
   ]
