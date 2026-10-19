@@ -268,8 +268,15 @@ class ReviewRepair:
         ready=self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_ready'",(host_op,)).fetchone()
         if host['phase']!='completed' or not ready:raise Blocked('review host custody not settled')
         provenance=json.loads(ready[0])
-        if provenance['compatibility']['role']!='review' or provenance['snapshot']['tools']!=['read_file']:
-            raise Blocked('review was not independent read-only')
+        tools=provenance['snapshot']['tools']
+        configured=[node for node in self.coordinate.config['nodes'] if node.get('role')=='review' and
+                    set(node['tools'])==set(tools) and len(node['tools'])==len(tools) and
+                    set(tools)<=set(node['permissions'])]
+        admission=self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_admission'",(host_op,)).fetchone()
+        if (provenance['compatibility']['role']!='review' or provenance['compatibility'].get('review_lineage')!=base or
+                sorted(tools) not in (['read_file'],['read_file','request_owner_input']) or not configured or
+                not admission or json.loads(admission[0])['compatibility']!=provenance['compatibility']):
+            raise Blocked('review was not independent read-only with exact configured/admitted tools')
         if len({f['id'] for f in result['findings']})!=len(result['findings']):raise Blocked('duplicate review finding IDs')
         review_id=uuid.uuid4().hex
         with self.store.transaction() as db:

@@ -153,10 +153,12 @@ class Lifecycle:
 
 class PiAdapter:
     """One host, one active prompt. Caller owns authorization and manifest provenance."""
-    def __init__(self,gateway,manifest,*,node,environment,session_context,reopen_from=None,host_path=None):
+    def __init__(self,gateway,manifest,*,node,environment,session_context,reopen_from=None,host_path=None,interaction=None,question_binding=None):
         gateway.authority.assert_held()
         self.gateway=gateway
         self.manifest=copy.deepcopy(manifest)
+        self.interaction, self.question_binding = interaction, copy.deepcopy(question_binding)
+        self.question_gate = None
         if manifest.get('cwd') != str(gateway.authority.project):
             raise Blocked('SDK worktree mismatch')
         private_root=safe_path(gateway.authority.project,'.coherence/workflow')
@@ -168,24 +170,31 @@ class PiAdapter:
             if s.st_uid!=os.getuid() or s.st_mode & 0o077:
                 raise Blocked('SDK directory not private/owned')
         if 'open' in manifest:
-            private_file(Path(manifest['open']['file']))
+            try:private_file(Path(manifest['open']['file']))
+            except OSError as exc:
+                raise Blocked('original saved conversation unavailable; explicit owner recovery required') from exc
         if (set(session_context) != {'role','affinity','review_lineage'} or
             any(not isinstance(session_context[k],str) or not session_context[k] for k in ('role','affinity')) or
             session_context['review_lineage'] is not None and not isinstance(session_context['review_lineage'],str)):
             raise Blocked('closed session role/affinity/lineage context required')
         for spec in manifest['tools']:
+            if spec['name'] == 'request_owner_input':
+                from .interaction import QUESTION_SCHEMA
+                if (interaction is None or question_binding is None or spec['parameters'] != QUESTION_SCHEMA or
+                        spec['version'] != '1' or spec['permission'] != 'request_owner_input'):
+                    raise Blocked('question tool lacks runner interaction binding')
+                continue
             tool=gateway.tools.get(spec['name'])
             if (not tool or tool.version!=spec['version'] or tool.arguments!=spec['parameters'] or
                 session_context['role']=='review' and tool.owned_paths):
                 raise Blocked('SDK tool manifest differs from registered role-safe gateway')
-        self.compatibility={**copy.deepcopy(session_context),'worktree':str(gateway.authority.project),
-            **{k:digest(manifest[k]) for k in ('profile','skills','tools','permissions','trust')},
-            'settings':digest({'settings':manifest['settings'],'pressure_policy':manifest['pressure_policy']})}
+        from .sessions import manifest_compatibility
+        self.compatibility=manifest_compatibility(manifest,gateway.authority.project,**session_context)
         if 'open' in manifest:
             if not reopen_from:raise Blocked('exact prior host custody reference required')
             prior=gateway.store.operation(reopen_from)
             if prior['run_id']!=gateway.run or prior['phase']!='completed':raise Blocked('prior host not reconciled')
-            gateway.resolve(reopen_from,drain=False)
+            gateway.verify_closed_host(reopen_from)
             ready=gateway.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_ready'",(reopen_from,)).fetchone()
             if not ready:raise Blocked('prior host role/resource provenance missing')
             old=json.loads(ready[0])['compatibility']
@@ -236,6 +245,8 @@ class PiAdapter:
             gateway.tools.pop(tool_id,None)
         self.selector=selectors.DefaultSelector();self.selector.register(self.event_r,selectors.EVENT_READ)
         self.request_bindings={}
+        self.control_commands={}
+        self.control_acknowledgements={}
         try:
             self._persist('host_admission',{'compatibility':self.compatibility,'manifest_hash':digest(self.manifest)},self.host_op)
             command=self.send('open' if 'open' in manifest else 'create',self.manifest,operation_id=self.host_op,attempt_id=node)
@@ -340,6 +351,23 @@ class PiAdapter:
         if not isinstance(call,str) or not call or len(call)>1024 or call in self.tool_calls_seen:
             raise Blocked('duplicate/invalid tool call identity')
         name=p.get('tool'); spec=next((t for t in self.manifest['tools'] if t['name']==name),None)
+        if self.question_gate:
+            raise Blocked('tool after question admission freeze')
+        if name == 'request_owner_input':
+            if not spec or spec['version'] != p.get('version') or self.interaction is None:
+                raise Blocked('unregistered question tool')
+            if self.pending or self.tool_queue or self.tool_calls_seen:
+                raise Blocked('question batch has unsettled task tools')
+            Draft202012Validator(spec['parameters']).validate(p['args'])
+            binding = {**self.question_binding, 'session_id': self.session_id}
+            result = self.interaction.request(self.current['operation_id'], call, binding, p['args'], batch=p.get('batch'))
+            self.question_gate = result['gate_id']
+            self.tool_calls_seen.add(call)
+            self._tool_disposition(record, 'question_terminating')
+            self.send('tool', {'generation': self.lifecycle.generation, 'call': call,
+                'result': {'content': [{'type': 'text', 'text': canonical(result)}],
+                           'details': result, 'terminate': True}})
+            return
         tool=self.gateway.tools.get(name)
         if not spec or not tool or tool.version!=p.get('version') or spec['version']!=tool.version:
             raise Blocked('unregistered tool binding')
@@ -391,8 +419,8 @@ class PiAdapter:
         self._start_next_tool()
 
     def _settle_prompt(self, payload):
-        if self.pending or self.tool_queue:
-            raise Blocked('settlement with pending/queued task tools')
+        if self.pending or self.tool_queue or self.control_commands:
+            raise Blocked('settlement with pending/queued task tools or unconfirmed control enqueue')
         self.lifecycle.finish(payload)
 
     def prompt(self,*,node,task_id,attempt_id,role,text,skill,contract_hash,selection,timeout=120,interrupt=None):
@@ -404,6 +432,7 @@ class PiAdapter:
         if not before:raise Blocked('missing initial telemetry')
         generation=self.lifecycle.begin()
         self.tool_calls_seen.clear()
+        self.question_gate = None
         details={'run_id':self.gateway.run,'task_id':task_id,'node_id':node,'role':role,
                  'host_op':self.host_op,'attempt_id':attempt_id,'contract_hash':contract_hash,
                  'generation':generation,'selection':selection,'compatibility':self.compatibility,'before':before,'started_ns':time.time_ns(),
@@ -428,6 +457,14 @@ class PiAdapter:
                 record=self.receive(.05)
                 if not record:continue
                 if record['command_id']!=command:
+                    if record['command_id'] in self.control_commands and record['type']=='response':
+                        input_id=self.control_commands.pop(record['command_id'])
+                        if record['payload'].get('ok') is not True or record['payload'].get('input_id')!=input_id or record['payload'].get('sdk_enqueued') is not True:
+                            raise Blocked('SDK control enqueue not confirmed')
+                        self.interaction.control_stage(input_id,'queued','sdk_delivered',
+                            {'command_id':record['command_id'],'host_op':self.host_op,'session_id':self.session_id,'generation':generation})
+                        self._flush_control_ack(input_id)
+                        continue
                     if record['type']=='response' and record['payload'].get('ok') is True:continue
                     raise Blocked('interleaved operation mismatch')
                 p=record['payload']
@@ -439,6 +476,9 @@ class PiAdapter:
                 safe={k:v for k,v in p.items() if k in ('type','generation','provider','model','wire_effort','mapping','request_sequence','reason','stop_reason','idle','promise_done','outgoing_tools','skill_expanded','expanded_prompt_hash')}
                 self._persist('sdk:'+str(record['sequence']),safe,operation['op_id'])
                 if record['type']=='lifecycle':
+                    if p.get('type')=='control_acknowledged':
+                        self.control_acknowledgements[p['input_id']]={k:p[k] for k in ('input_id','user_entry_id','assistant_entry_id')}
+                        self._flush_control_ack(p['input_id'])
                     self.lifecycle.event(p)
                     if p.get('type') in ('pressure','compaction_start'):
                         raise Blocked('SDK context pressure/compaction; drain and owner recovery required')
@@ -452,7 +492,7 @@ class PiAdapter:
                     segment.update(details,ended_ns=time.time_ns(),elapsed_ns=time.monotonic_ns()-started,retry_count=retries,
                         request_observed=[r['payload'] for r in self.records if r['command_id']==command and r['type']=='request_observation'])
                     self.gateway.store.transition(operation['op_id'],'intent','completed',segment)
-                    return {'snapshot':self.snapshot,'segment':segment,'output':p.get('output','')}
+                    return {'snapshot':self.snapshot,'segment':segment,'output':p.get('output',''), 'question_gate': self.question_gate}
             raise Blocked('SDK prompt deadline')
         except BaseException as exc:
             self.lifecycle.poisoned=True
@@ -498,6 +538,38 @@ class PiAdapter:
                 if cancellation_unrecorded:raise Blocked('queued cancellation receipt unavailable; no reuse')
                 return
         raise Blocked('SDK abort deadline; custody unresolved')
+
+    def enqueue_control(self, value):
+        if (self.interaction is None or self.question_gate or not self.lifecycle.active or self.lifecycle.poisoned or
+                value['binding']['session_id']!=self.session_id or value['binding']['role']!=self.compatibility['role']):
+            raise Blocked('control target no longer active; no retarget')
+        self.interaction.control_stage(value['input_id'],'received','queued')
+        command=self.send(value['action'],{k:value[k] for k in ('input_id','binding','message')})
+        self.control_commands[command]=value['input_id']
+        return command
+
+    def _flush_control_ack(self, input_id):
+        receipt=self.control_acknowledgements.get(input_id)
+        if not receipt:return
+        row=self.gateway.store.db.execute('SELECT stage FROM wf_owner_inputs WHERE input_id=? AND run_id=?',(input_id,self.gateway.run)).fetchone()
+        if row and row['stage']=='sdk_delivered':
+            self.interaction.control_stage(input_id,'sdk_delivered','worker_acknowledged',
+                {**receipt,'host_op':self.host_op,'session_id':self.session_id})
+            self.control_acknowledgements.pop(input_id,None)
+
+    def deliver_answer(self, value):
+        if ('open' not in self.manifest or value['binding']['session_id'] != self.session_id or
+                value['binding']['role'] != self.compatibility['role'] or self.lifecycle.active or
+                self.lifecycle.poisoned or self.pending or self.tool_queue):
+            raise Blocked('answer requires exact reopened original idle role/conversation')
+        command = self.send('owner_answer', {k: value[k] for k in ('input_id','answer','binding')},
+                            operation_id=self.host_op, attempt_id='owner-answer:'+value['input_id'])
+        receipt = self.wait_response(command, 10)['receipt']
+        if receipt['input_id'] != value['input_id'] or receipt['session_id'] != self.session_id:
+            raise Blocked('answer original entry identity mismatch')
+        self.snapshot = receipt['snapshot']
+        self._persist('host_answer_entry', receipt, self.host_op)
+        return receipt
 
     def telemetry(self):
         if self.lifecycle.active or self.lifecycle.poisoned or self.pending or self.tool_queue:raise Blocked('telemetry not settled')

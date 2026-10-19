@@ -395,6 +395,86 @@ class Gateway:
             # Explicit continuation/approval is a later task; alarm resolution alone never resumes.
         return result
 
+    def verify_closed_host(self, op):
+        """Reconcile a saved conversation through later VERIFIED checkpoints.
+
+        Original host/tool snapshots are immutable. Only an exact ordered chain
+        of completed same-run process effects and actual focused Git receipts can
+        bridge them; unknown Git, tool, index or file changes remain blockers.
+        """
+        import copy
+        from .git_effects import entries, assert_safe_git_inputs
+        self.store.assert_dispatchable(self.run)
+        operation = self.store.operation(op)
+        process, containment = self._record(op)
+        if (operation['phase'] != 'completed' or process['scope_kind'] != 'host' or
+                self.containment.populated(containment) != 0):
+            raise Blocked('original host is not verified closed/empty')
+        result = json.loads(operation['result'])
+        event = self.store.db.execute("SELECT seq,payload FROM wf_events WHERE op_id=? AND kind='completed'", (op,)).fetchone()
+        if (not event or event['payload'] != operation['result'] or not result.get('replacement_allowed') or
+                process['reconciliation'] != canonical(result['reconciliation']) or
+                process['empty_receipt'] != canonical(result['empty_receipt'])):
+            raise Blocked('closed host original result/event mismatch')
+        expected = copy.deepcopy(result['reconciliation'])
+        chain = []
+        rows = self.store.db.execute("""SELECT o.*,e.seq FROM wf_operations o JOIN wf_events e USING(op_id)
+            WHERE o.run_id=? AND e.kind='completed' AND e.seq>? AND o.kind IN ('process','git-checkpoint')
+            ORDER BY e.seq""", (self.run,event['seq'])).fetchall()
+        for row in rows:
+            details, after = json.loads(row['intent']), json.loads(row['result'])
+            proof = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='intent'", (row['op_id'],)).fetchone()
+            completed = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='completed'", (row['op_id'],)).fetchone()
+            if row['phase'] != 'completed' or not proof or proof[0] != row['intent'] or not completed or completed[0] != row['result']:
+                raise Blocked('closed host successor receipt/event mismatch')
+            if row['kind'] == 'process':
+                successor, receipt = self._record(row['op_id'])
+                if successor['scope_kind'] == 'host':
+                    continue
+                if self.containment.populated(receipt) != 0 or not after.get('replacement_allowed'):
+                    raise Blocked('closed host successor task scope not empty')
+                if successor['reconciliation'] != canonical(after['reconciliation']) or successor['empty_receipt'] != canonical(after['empty_receipt']):
+                    raise Blocked('closed host successor process receipt drift')
+                if details['tool'] == 'runner-git-commit':
+                    # Staging/commit are admitted solely by the later checkpoint
+                    # receipt below, not by accepting arbitrary process HEAD drift.
+                    checkpoint = self.store.operation(row['node_id'].removeprefix('commit:'))
+                    if checkpoint['kind'] != 'git-checkpoint' or checkpoint['phase'] != 'completed':
+                        raise Blocked('closed host successor Git receipt unavailable')
+                    continue
+                before = details['baseline']
+                if any(before[k] != expected[k] for k in ('head','index','files')):
+                    raise Blocked('closed host successor tool chain gap')
+                if after['reconciliation']['head'] != before['head'] or after['reconciliation']['index'] != before['index']:
+                    raise Blocked('closed host successor unknown Git effect')
+                owned = details['owned_paths']
+                for name in set(before['files']) | set(after['reconciliation']['files']):
+                    if name not in owned and before['files'].get(name) != after['reconciliation']['files'].get(name):
+                        raise Blocked('closed host successor unrelated tool drift')
+            else:
+                before = details['before']
+                if any(before[k] != expected[k] for k in ('head','index','files')):
+                    raise Blocked('closed host checkpoint chain gap')
+                assert_safe_git_inputs(self.authority.project,details['owned_paths'])
+                if not after['read_only']:
+                    sha = after['sha']
+                    if (after['parent'] != expected['head'] or
+                            git(self.authority.project,'rev-list','--parents','-n','1',sha).decode().strip().split() != [sha,expected['head']] or
+                            entries(self.authority.project,tree=sha) != details['expected_entries'] or
+                            git(self.authority.project,'log','-1','--format=%B',sha).decode().splitlines().count('Coherence-Operation: '+row['op_id']) != 1):
+                        raise Blocked('closed host checkpoint actual parent/tree/identity mismatch')
+                    changed = set(git(self.authority.project,'diff-tree','--no-commit-id','--name-only','-r','-z',sha).decode().split('\0'))-{''}
+                    if not changed or not changed <= set(details['owned_paths']):
+                        raise Blocked('closed host checkpoint ownership mismatch')
+                if after['reconciliation']['files'] != before['files']:
+                    raise Blocked('closed host checkpoint hook/file drift')
+            expected = after['reconciliation']
+            chain.append(row['op_id'])
+        now = snapshot(self.authority.project, [])
+        if any(now[k] != expected[k] for k in ('head','index','files')):
+            raise Blocked('closed host unexplained current Git/file/index drift')
+        return {'host_op':op,'successors':chain,'reconciliation':now}
+
     def recover(self):
         """Observe durable scopes; never release/replay tools or adopt unknown identities."""
         results, errors = [], []

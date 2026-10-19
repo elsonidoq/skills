@@ -9,6 +9,7 @@ from typing import TypedDict
 from jsonschema import Draft202012Validator
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command
 import yaml
 
 from .registry import schemas, validate_schema
@@ -105,10 +106,14 @@ def load_workflow(registry, source=None, resource_root=None):
     def walk(id, stack, stages):
         if id in stack:
             previous = handlers[stack[-1]].stage
+            if handlers[id].stage == 'owner_input' and previous == 'continue_original':
+                if not progress or nodes[stack[-1]].get('role') not in ('implement','repair','review'):
+                    raise Blocked('unbounded question continuation')
+                return
             if (id == progress and ((stages == required[:5] and previous == 'checkpoint') or
                                     (stages == required[:3] and previous == 'correction_authority'))):
                 return
-            if (stages == required[:4] and ((handlers[id].stage == 'verification' and previous == 'repair') or
+            if (stages == required[:4] and ((handlers[id].stage == 'verification' and (previous == 'repair' or previous == 'continue_original' and nodes[stack[-1]].get('role') == 'repair')) or
                                            (handlers[id].stage == 'repair' and previous == 'verification'))):
                 return
             raise Blocked('unbounded/unsupported graph cycle')
@@ -159,7 +164,7 @@ class GraphState(TypedDict):
 
 
 class Engine:
-    def __init__(self, authority, run_id, config, registry, resource_root, phase_hook=None, *, max_task_visits=None, input_identity=None):
+    def __init__(self, authority, run_id, config, registry, resource_root, phase_hook=None, *, max_task_visits=None, input_identity=None, boundary_hook=None):
         self.authority, self.store = authority, authority.store
         config = load_workflow(registry, yaml.safe_dump(config), resource_root)
         self.run_id, self.config, self.registry = run_id, config, registry
@@ -180,6 +185,7 @@ class Engine:
             raise Blocked('bounded approved task count required')
         self.max_task_visits = max_task_visits
         self.hook = phase_hook or (lambda phase, op: None)
+        self.boundary_hook = boundary_hook or (lambda: None)
         self.store.reserve(run_id,self.hash)
         self.saver_db = sqlite3.connect(authority.database,check_same_thread=False,timeout=5)
         self.saver_db.execute('PRAGMA journal_mode=WAL')
@@ -203,8 +209,8 @@ class Engine:
         handler = self.registry.handler(node)
         def execute(state):
             self.authority.assert_held()
+            self.boundary_hook()
             self._assert_pins()
-            self.store.assert_dispatchable(self.run_id)
             trace_before = state.get('trace',[])
             visit = sum(item['node'] == node['id'] for item in trace_before)
             if self.progress and visit > self.max_task_visits:
@@ -212,8 +218,21 @@ class Engine:
             logical = node['id'] + ':' + str(visit) if self.progress else node['id']
             args = {'config_hash':self.hash,'node':node,'trace':trace_before}
             details = {'handler':handler.id,'version':handler.version,'input_hash':digest(args)}
+            # Interrupt is pure and precedes the graph operation intent: LangGraph
+            # restarts an interrupted node from its beginning, never replaying an
+            # uncertain question/dispatch effect.
+            parked_result = handler.function({'node':node,'run_id':self.run_id,'operation_id':'park'}) if handler.stage == 'owner_input' else None
             old = self.store.db.execute('SELECT * FROM wf_operations WHERE run_id=? AND node_id=? AND kind=?',
                                          (self.run_id,logical,'graph')).fetchone()
+            if handler.stage not in ('owner_input','continue_original'):
+                parked_replay = (old and old['phase']=='completed' and old['result'] and
+                                 json.loads(old['result']).get('outcome')=='owner_input_required')
+                if parked_replay:
+                    gate=self.store.db.execute("SELECT pin FROM wf_questions WHERE run_id=? AND stage IN ('pending','answered')",(self.run_id,)).fetchone()
+                    if not gate or json.loads(gate['pin']).get('graph_op') != old['op_id']:
+                        raise Blocked('parked graph replay lacks exact original operation pin')
+                else:
+                    self.store.assert_dispatchable(self.run_id)
             op = self.store.intent(self.run_id,logical,'graph',args,details)
             if old:
                 if op['phase'] != 'completed' or op['result'] is None:
@@ -233,7 +252,7 @@ class Engine:
                 Draft202012Validator(handler.input_schema).validate(context)
                 if self.store.db.in_transaction:
                     raise Blocked('application transaction spans external wait')
-                result = handler.function(context)
+                result = parked_result if parked_result is not None else handler.function(context)
                 Draft202012Validator(handler.result_schema).validate(result)
                 if node['type']!='terminal' and result['outcome'] not in handler.outcomes:
                     raise Blocked('illegal handler result outcome')
@@ -263,6 +282,7 @@ class Engine:
 
     def invoke(self):
         self.authority.assert_held()
+        self.boundary_hook()
         self._assert_pins()
         if self.store.db.in_transaction:
             raise Blocked('application transaction held across saver')
@@ -270,7 +290,36 @@ class Engine:
         if state.values and not state.next:
             self.audit(state.values)
             return state.values
-        result = self.graph.invoke(None if state.values else {'trace':[],'outcome':''},self.thread,durability='sync')
+        incoming = None if state.values else {'trace':[],'outcome':''}
+        pauses=[pause for task in state.tasks for pause in getattr(task,'interrupts',())]
+        ready=bool(pauses) and all(isinstance(pause.value,dict) and
+            self.store.db.execute("SELECT 1 FROM wf_questions WHERE run_id=? AND gate_id=? AND stage='answered'",(self.run_id,pause.value.get('gate_id'))).fetchone() for pause in pauses)
+        if pauses and not ready:
+            result={**state.values,'__interrupt__':pauses}
+            checkpoint=state
+        else:
+            if pauses:incoming = Command(resume={'source':'runner_revalidated'})
+            result = self.graph.invoke(incoming,self.thread,durability='sync')
+            checkpoint = self.graph.get_state(self.thread)
+        if checkpoint.next and result.get('__interrupt__'):
+            for task in checkpoint.tasks:
+                for paused in task.interrupts:
+                    value=paused.value
+                    if not isinstance(value,dict) or 'gate_id' not in value:raise Blocked('unknown graph owner interrupt')
+                    gate=self.store.db.execute('SELECT * FROM wf_questions WHERE run_id=? AND gate_id=?',(self.run_id,value['gate_id'])).fetchone()
+                    if not gate or gate['stage']!='pending':raise Blocked('graph park lacks pending SQL gate')
+                    pin=json.loads(gate['pin'])
+                    if not any(entry['operation_id']==pin['graph_op'] for entry in checkpoint.values.get('trace',[])):
+                        raise Blocked('graph park lacks original completed visit')
+                    checkpoint_id=checkpoint.config['configurable']['checkpoint_id']
+                    with self.store.transaction() as db:
+                        old=db.execute('SELECT * FROM wf_question_parks WHERE gate_id=?',(gate['gate_id'],)).fetchone()
+                        if not old:
+                            db.execute('INSERT INTO wf_question_parks VALUES(?,?,?,?)',(gate['gate_id'],checkpoint_id,task.name,pin['graph_op']))
+                            self.store.event(db,self.run_id,None,'question_graph_parked',{'gate_id':gate['gate_id'],'checkpoint_id':checkpoint_id,'node_id':task.name,'original_graph_op':pin['graph_op']})
+                        elif old['original_graph_op']!=pin['graph_op'] or old['node_id']!=task.name:
+                            raise Blocked('graph park identity drift')
+            return {**result, 'outcome':'waiting_owner_input'}
         self.audit(result)
         return result
 

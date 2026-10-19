@@ -15,6 +15,11 @@ export function closed(value, required, optional=[]) {
   check(value && typeof value==='object' && !Array.isArray(value), 'object required');
   check(required.every(k=>Object.hasOwn(value,k)) && Object.keys(value).every(k=>[...required,...optional].includes(k)), 'closed payload mismatch');
 }
+export function admitQuestionBatch(tool, call, batch) {
+  const hasQuestion=Array.isArray(batch) && batch.some(item=>item.tool==='request_owner_input');
+  if(tool==='request_owner_input' || hasQuestion) check(Array.isArray(batch) && batch.length===1 &&
+    batch[0].call===call && batch[0].tool==='request_owner_input','question requires observed exclusive terminating batch');
+}
 export class Decoder {
   constructor(consume, limit=MAX_RECORD) { this.buffer=Buffer.alloc(limit); this.used=0; this.consume=consume; }
   feed(chunk) {
@@ -120,11 +125,17 @@ export async function createHost(config, emit, proxy) {
   const names=new Set();
   const customTools=config.tools.map(tool=>{
     closed(tool,['name','version','description','parameters','permission']);
-    check(/^[a-z][a-z0-9_]{0,63}$/.test(tool.name) && !['bash','powershell','git','ask_user','edit','write','request_owner_input'].includes(tool.name) &&
+    check(/^[a-z][a-z0-9_]{0,63}$/.test(tool.name) && !['bash','powershell','git','ask_user','edit','write'].includes(tool.name) &&
       !names.has(tool.name) && config.permissions.includes(tool.permission),'unapproved tool');
     names.add(tool.name);
     return {name:tool.name,label:tool.name,description:tool.description,parameters:tool.parameters,
-      execute:async(call,args,signal)=>proxy({call,tool:tool.name,version:tool.version,args},signal)};
+      execute:async(call,args,signal)=>{
+        const batch=observedBatch;
+        try {admitQuestionBatch(tool.name,call,batch);} catch(error) {poisoned=true;throw error;}
+        if(tool.name==='request_owner_input') questionRequested=true;
+        else check(!questionRequested,'tool after question admission freeze');
+        return proxy({call,tool:tool.name,version:tool.version,args,batch},signal);
+      }};
   });
   const loader={getExtensions:()=>({extensions:[],errors:[],runtime:createExtensionRuntime()}),
     getSkills:()=>({skills,diagnostics:[]}),getPrompts:()=>({prompts:[],diagnostics:[]}),
@@ -149,12 +160,30 @@ export async function createHost(config, emit, proxy) {
   const epoch=crypto.randomUUID();
   let generation=0, active=false, poisoned=false, started=false, settled=false, promiseDone=false, mode=null;
   let requestSequence=0, acknowledged=null,invokedSkill=null;
+  let observedBatch=null, questionRequested=false, verifiedSkillPrompt=null;
+  const controlInputs=new Map();
   const notify=(type,data={})=>emit({type,generation,...data});
+  function acknowledgeControls() {
+    // Public message_end listeners run BEFORE SessionManager persistence in
+    // Pi 0.87.1. Resolve actual entry IDs only at a subsequent request/idle
+    // boundary, never from the previous leaf or an in-memory enqueue receipt.
+    const branch=manager.getBranch();
+    const text=e=>e.type==='message'?(typeof e.message.content==='string'?e.message.content:(e.message.content??[]).filter(b=>b.type==='text').map(b=>b.text).join('\n')):'';
+    for(const [id,value] of controlInputs) {
+      const user=branch.findIndex(e=>e.type==='message' && e.message.role==='user' && text(e).includes(value.marker));
+      const assistant=user<0?-1:branch.findIndex((e,index)=>index>user && e.type==='message' && e.message.role==='assistant' && text(e).includes('CONTROL_ACK:'+id));
+      if(user>=0 && assistant>user) {
+        notify('control_acknowledged',{input_id:id,user_entry_id:branch[user].id,assistant_entry_id:branch[assistant].id});
+        controlInputs.delete(id);
+      }
+    }
+  }
   session.subscribe(event=>{
     if (event.type==='agent_start') { started=true; settled=false; }
     if (event.type==='agent_settled' && started && active) settled=true;
     if (event.type==='message_end' && event.message.role==='assistant') {
       const m=event.message;
+      observedBatch=(m.content??[]).filter(b=>b.type==='toolCall').map(b=>({call:b.id,tool:b.name}));
       acknowledged={model:m.responseModel??null,effort:m.providerThinkingLevel??null};
       if (['error','aborted'].includes(m.stopReason)) {
         const reason=['skill not expanded into current prompt','final tool binding mismatch','final binding mismatch','request admission revoked',
@@ -181,17 +210,22 @@ export async function createHost(config, emit, proxy) {
   },config.pressure_policy.monitor_interval_ms);
   monitor.unref();
   session.agent.streamFunction=guardedStream(session,config.profile,(observation,body)=>{
+    acknowledgeControls();
     const outgoingTools=(body.tools??[]).map(t=>t.name).sort();
     check(JSON.stringify(outgoingTools)===JSON.stringify(mode==='summary'?[]:[...names].sort()),'final tool binding mismatch');
     const latestUser=[...session.messages].reverse().find(m=>m.role==='user');
     const textOf=content=>typeof content==='string'?content:(content??[]).filter(b=>b.type==='text'||b.type==='input_text').map(b=>b.text??'').join('\n');
     const expanded=textOf(latestUser?.content);
     const delivered=(body.input??[]).filter(m=>m.role==='user').map(m=>textOf(m.content));
-    const skillExpanded=mode==='prompt' && invokedSkill!==null && expanded.includes(`<skill name="${invokedSkill}"`) && delivered.some(text=>text.includes(expanded));
+    if(mode==='prompt' && verifiedSkillPrompt===null && invokedSkill!==null && expanded.includes(`<skill name="${invokedSkill}"`) && delivered.some(text=>text.includes(expanded))) verifiedSkillPrompt=expanded;
+    // A later authorized plain steer/follow-up is a newer user message. Keep
+    // checking delivery of THIS generation's verified skill-bearing prompt,
+    // rather than requiring control messages to duplicate/re-expand the skill.
+    const skillExpanded=mode==='prompt' && verifiedSkillPrompt!==null && delivered.some(text=>text.includes(verifiedSkillPrompt));
     check(mode==='summary' || skillExpanded,'skill not expanded into current prompt');
     notify('request_observation',{...observation,outgoing_tools:outgoingTools,skill_expanded:skillExpanded,
-      expanded_prompt_hash:mode==='prompt'?hash(expanded):null,request_sequence:++requestSequence});
-  },()=>active && !poisoned && (mode==='summary' || pressureReason()===null));
+      expanded_prompt_hash:mode==='prompt'?hash(verifiedSkillPrompt??''):null,request_sequence:++requestSequence});
+  },()=>active && !poisoned && !questionRequested && (mode==='summary' || pressureReason()===null));
   function telemetry() {
     check(!active && !poisoned,'telemetry requires known settled idle boundary');
     const effective=settings.getCompactionSettings(session.model), usage=session.getContextUsage();
@@ -214,12 +248,14 @@ export async function createHost(config, emit, proxy) {
     check(skills.some(s=>s.name===prompt.skill) && !prompt.text.startsWith('/'),'explicit skill required');
     for (const resource of config.skills) check(hash(readBounded(resource.path))===resource.sha256,'skill drift');
     generation=prompt.generation; active=true; mode='prompt';invokedSkill=prompt.skill; started=false; settled=false; promiseDone=false;
+    observedBatch=null;questionRequested=false;verifiedSkillPrompt=null;
     try {
       await session.prompt(`/skill:${prompt.skill} ${prompt.text}`); promiseDone=true;
       await session.waitForIdle();
       check(promiseDone && started && settled && !session.isStreaming && !session.isCompacting && session.pendingMessageCount===0,'incomplete SDK settlement');
       const last=[...session.messages].reverse().find(m=>m.role==='assistant');
       check(last && !['error','aborted','length'].includes(last.stopReason),'assistant unsuccessful');
+      acknowledgeControls();
       active=false;mode=null;
       const snapshot=telemetry();
       notify('settled',{snapshot,output:session.getLastAssistantText()??'',promise_done:true,idle:true});
@@ -243,7 +279,30 @@ export async function createHost(config, emit, proxy) {
       request_sequence:requestSequence,occupancy:session.getContextUsage()?.tokens??null,
       summary_usage:manager.getEntries().filter(e=>e.type==='compaction').map(e=>e.usage??null)};
   }
-  return {session,telemetry,run,abort,compact,get active(){return active;},get generation(){return generation;},
+  function ownerAnswer(value) {
+    closed(value,['input_id','answer','binding']);
+    check(!active && !poisoned && value.binding.session_id===session.sessionId &&
+      typeof value.input_id==='string' && typeof value.answer==='string' && value.answer.length>0,'answer original/idle binding');
+    const content=JSON.stringify({kind:'bound_owner_answer',input_id:value.input_id,binding:value.binding,answer:value.answer});
+    const matches=manager.getBranch().filter(e=>e.type==='message' && e.message.role==='user' && e.message.content===content);
+    check(matches.length<=1,'duplicate persisted answer entry');
+    const entryId=matches[0]?.id??manager.appendMessage({role:'user',content,timestamp:Date.now()});
+    // SessionManager is authoritative. Rebuild the public agent context only
+    // after persisting the actual user entry, never memory-only history.
+    session.agent.state.messages=manager.buildSessionContext().messages;
+    return {input_id:value.input_id,entry_id:entryId,session_id:session.sessionId,leaf:manager.getLeafId(),snapshot:telemetry()};
+  }
+  async function control(action,value) {
+    closed(value,['input_id','binding','message']);
+    check(active && !poisoned && !questionRequested && value.binding.session_id===session.sessionId &&
+      ['steer','follow_up'].includes(action) && !controlInputs.has(value.input_id),'active control binding/phase');
+    const marker=JSON.stringify({kind:'bound_owner_control',...value});
+    controlInputs.set(value.input_id,{marker,user_entry:null});
+    const text=`${marker}\nIf you observably receive this input, include CONTROL_ACK:${value.input_id} in your next public response. This is receipt only, not a compliance assertion.`;
+    if(action==='steer')await session.steer(text);else await session.followUp(text);
+    return {input_id:value.input_id,sdk_enqueued:true,generation};
+  }
+  return {session,telemetry,run,abort,compact,ownerAnswer,control,get active(){return active;},get generation(){return generation;},
     get poisoned(){return poisoned;},get mode(){return mode;},close:async()=>{clearInterval(monitor);await abort();session.dispose();}};
 }
 
@@ -305,6 +364,8 @@ async function main() {
       await host.run(c.payload);return;
     }
     if (['abort','drain'].includes(c.op)) { closed(c.payload,['generation']);check(c.payload.generation===host.generation,'abort generation');send('response',{ok:true,...await host.abort()},c);return; }
+    if (['steer','follow_up'].includes(c.op)) {send('response',{ok:true,...await host.control(c.op,c.payload)},c);return;}
+    if (c.op==='owner_answer') {send('response',{ok:true,receipt:host.ownerAnswer(c.payload)},c);return;}
     if (c.op==='telemetry') {closed(c.payload,['generation']);check(c.payload.generation===host.generation,'telemetry generation');send('response',{ok:true,snapshot:host.telemetry()},c);return;}
     if (c.op==='close') {closed(c.payload,['generation']);check(!host.active && tools.size===0,'close requires drain');await host.close();send('response',{ok:true},c);process.exit(0);}
     throw new Error('unsupported operation');

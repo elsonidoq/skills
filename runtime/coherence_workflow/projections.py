@@ -57,6 +57,14 @@ def state_record(db, run):
              'unresolved review findings' if finding_blocked else None if accepted_current else
              json.loads(blocked['payload'])['reason'] if blocked else 'independent review required' if complete else
              'controller not live; explicit authorized recovery required' if not active else None)
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_questions'").fetchone():
+        question=db.execute("SELECT gate_id,stage FROM wf_questions WHERE run_id=? AND stage NOT IN ('continued','cancelled') ORDER BY rowid DESC LIMIT 1",(run,)).fetchone()
+        if question and not any(a['state']=='active' for a in alarms):
+            gate=question['gate_id'];accepted_current=False
+            status='waiting_owner_input' if question['stage'] in ('pending','answered') else 'blocked'
+            blocker='owner answer pending' if question['stage']=='pending' else 'original answer accepted; explicit original continuation required' if question['stage']=='answered' else 'question/delivery reconciliation required; no replay'
+    if row['state'] in ('paused','cancelled') and not any(a['state']=='active' for a in alarms):
+        accepted_current=False;status=row['state'];blocker='owner '+row['state']+'; partial work retained'
     cursor=0
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_projections'").fetchone():
         c=db.execute('SELECT seq FROM wf_projections WHERE run_id=?',(run,)).fetchone();cursor=c[0] if c else 0
@@ -65,6 +73,7 @@ def state_record(db, run):
         'attempt_id':active_details.get('attempt_id'),'gate_ref':gate,
         'blocker':blocker,
         'projection_lag':max(0,seq-cursor),'alarms':alarms}
+    if status=='waiting_owner_input':payload['pending_question_ref']=gate
     record={'schema_version':1,'run_id':run,'seq':seq,'record_id':run+':state:'+str(seq),
             'timestamp':'unknown:event-timestamps-not-recorded','kind':'state','payload':payload}
     validate_schema('projection.schema.json',record)

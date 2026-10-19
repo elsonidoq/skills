@@ -14,7 +14,7 @@ import yaml
 from coherence_workflow.cli import Coordinate, ROOT, registered_checks, status
 from coherence_workflow.intake import approval_scope
 from coherence_workflow.store import Authority, Blocked, canonical, digest, git
-from coherence_workflow.tools import Gateway, snapshot
+from coherence_workflow.tools import Gateway, ProcessTool, snapshot
 from fixtures.support import make_project
 from test_custody import IsolatedCustody
 from test_intake import approved_fixture
@@ -85,6 +85,26 @@ class RepairBudgetTests(unittest.TestCase):
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
 
+def inject_registered_fault(authority, run, parent, text, *, owned_path='answer.py'):
+    """Deliberate fixture fault with real successor custody, never hidden drift."""
+    gateway=Gateway(authority,run,parent,{})
+    baseline=snapshot(authority.project,[owned_path])
+    gateway.bind_task_origin('fixture-fault:',[owned_path],baseline)
+    read=ProcessTool('fixture-fault-read','1',{'type':'object','additionalProperties':False},
+                     lambda unused:[str(Path('/usr/bin/true').resolve())],(),environment())
+    write=ProcessTool('fixture-fault-write','1',{'type':'object','additionalProperties':False},
+        lambda unused:[str(Path(sys.executable).resolve()),'-c','import sys;from pathlib import Path;Path(sys.argv[1]).write_text(sys.argv[2])',
+                       str(authority.project/owned_path),text],(owned_path,),environment())
+    gateway.tools={read.id:read,write.id:write}
+    results=[]
+    for label,tool in (('read',read),('write',write)):
+        operation,process=gateway.launch('fixture-fault:'+label,tool.id,'1',{})
+        receipt=gateway.settle(operation,process.wait(timeout=15))
+        if not receipt.get('replacement_allowed'):raise Blocked('registered fixture fault not quiescent')
+        results.append(operation)
+    return results
+
+
 def live_case(case, *, review_correction):
     case.assertEqual(os.environ.get('COHERENCE_LIVE'),'1','REQUIRED actual review/repair integration NOT VERIFIED')
     project=case.project
@@ -120,9 +140,10 @@ def live_case(case, *, review_correction):
           '--manifest',str(case.root/'manifest.json'),'--containment',case.parent]
     defect='def answer():\n    return 1\n\ndef unused():\n    return 0\n' if review_correction else 'def answer():\n    return 0\n'
     driver='''
-import sys
+import os,sys
 from coherence_workflow.cli import main
 from coherence_workflow.engine import Engine
+from test_review_repair import inject_registered_fault
 original=Engine.__init__
 injected=False
 def initialize(self,*args,**kwargs):
@@ -130,7 +151,7 @@ def initialize(self,*args,**kwargs):
   global injected
   operation=self.store.operation(op)
   if phase=='application_result' and operation['kind']=='graph' and operation['node_id'].startswith('implement:') and not injected:
-   (self.authority.project/'answer.py').write_text(sys.argv[1])
+   inject_registered_fault(self.authority,self.run_id,os.environ['COHERENCE_TEST_CGROUP_PARENT'],sys.argv[1])
    injected=True
  return original(self,*args,**kwargs,phase_hook=fault)
 Engine.__init__=initialize
@@ -143,6 +164,14 @@ sys.exit(main(['start',*sys.argv[2:]]))
     try:
         capture(case,db)
         case.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        if not review_correction:
+            turns=[json.loads(r[0]) for r in db.execute("SELECT result FROM wf_operations WHERE kind='sdk-turn' AND phase='completed' ORDER BY rowid")]
+            implementation=next(t for t in turns if t['role']=='implement')
+            repair=next(t for t in turns if t['role']=='repair')
+            case.assertEqual(repair['selection']['reason'],'original_implementer')
+            case.assertEqual(repair['before']['session_id'],implementation['after']['session_id'])
+            print(canonical({'proof':'actual-original-implementer-repair-reuse','selection':repair['selection'],
+                             'session_id':repair['before']['session_id']}))
         tasks=[dict(r) for r in db.execute('SELECT * FROM wf_tasks ORDER BY approved_order')]
         case.assertEqual(len(tasks),2 if review_correction else 1)
         case.assertTrue(all(t['state']=='checkpointed' for t in tasks))
@@ -154,7 +183,7 @@ sys.exit(main(['start',*sys.argv[2:]]))
         case.assertEqual(reviews[-1]['head_sha'],git(project,'rev-parse','HEAD').decode().strip())
         for review in reviews:
             ready=json.loads(db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_ready'",(review['host_op'],)).fetchone()[0])
-            case.assertEqual(ready['compatibility']['role'],'review');case.assertEqual(ready['snapshot']['tools'],['read_file'])
+            case.assertEqual(ready['compatibility']['role'],'review');case.assertEqual(sorted(ready['snapshot']['tools']),sorted(next(n for n in config['nodes'] if n['id']=='review')['tools']))
         budgets=[dict(r) for r in db.execute('SELECT * FROM wf_repair_budgets')]
         case.assertEqual(len(budgets),1);case.assertEqual(budgets[0]['used'],1)
         case.assertEqual(budgets[0]['failure_key'],'review-final' if review_correction else 'task:A')
@@ -194,6 +223,10 @@ sys.exit(main(['start',*sys.argv[2:]]))
             'exit':result.returncode,'base':before['head'],'head':after['head'],'reviews':reviews,'budgets':budgets,
             'task_checkpoints':[json.loads(t['checkpoint'])['sha'] for t in tasks],
             'review_host_ops':[r['host_op'] for r in reviews],'selected_profile':'openai-codex/gpt-6.1-sol:medium'}))
+    except BaseException:
+        from test_interaction import retain_current_failure
+        retain_current_failure(case,result,{name:case.root/name for name in ('workflow.yaml','tasks.json','catalog.json','manifest.json')})
+        raise
     finally:db.close()
 
 

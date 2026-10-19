@@ -266,3 +266,64 @@ cannot be counted as executed work or a completed workflow attempt.
 `task_evidence_refreshed` appends final-head proof for stale producer inputs without changing
 their original contracts/checkpoints. Checkpoint metric evidence references are selected as of
 that checkpoint event sequence; later evidence cannot rewrite immutable published history.
+
+## T006 question/input/control extension (additive v1)
+
+`interaction.py` owns this DDL in the same private application database; it does not alter
+LangGraph saver tables. The execution controller retains the worktree mutation lock. A narrow
+owner-input connection may insert/accept bound inputs while that lock is held; short SQLite
+BEGIN IMMEDIATE transactions serialize inputs with controller writes. It cannot dispatch or
+change graph/configuration/custody. WAL/FULL/foreign keys and bounded busy timeout remain required.
+
+| Table | Actual columns/invariants |
+| --- | --- |
+| `wf_questions` | gate PK; run FK; UNIQUE turn-op FK; call ID; canonical binding; UNIQUE nonce; bounded canonical request; stage; original pin and settlement proof. UNIQUE(run,call); one unresolved parking/pending/answered/delivering gate per run |
+| `wf_question_parks` | gate PK/FK, actual sync-saver checkpoint ID, interrupted gate node, original graph-op FK. A SQL pending gate without this receipt is not answer/transport eligible |
+| `wf_owner_inputs` | input PK; run FK; nullable gate FK; complete input hash and safe canonical payload; stage; nullable delivery/facts/stop receipt. One answer per nonnull gate; identical duplicates return the original aggregate without redispatch |
+| `wf_outbox` | stable event PK, run FK, UNIQUE gate FK, stage and nullable receipt. T006 creates recorded only; no parent sender is enabled |
+| `wf_controls` | input PK/FK, immutable canonical target binding, action/scope/message. Control stages are in wf_owner_inputs and append-only events |
+| `wf_run_bindings` | run PK/FK, immutable run-scoped source/approval/config binding with null task/node/attempt/session/role/task hash |
+| `wf_active_targets` | run PK/FK, actual current task/node/attempt/session/role/source/task/approval/config binding; removed after host close/stop. Inputs never silently retarget |
+
+Question stages are parking → pending → answered → delivering → continued, or cancelled.
+Pending requires the completed sdk-turn snapshot, current tool-end/agent_settled and actual
+closed/empty host/tool receipts. The original pin additionally records host operation, saved
+snapshot, original attempt and actual invocation attempt ID, graph operation and review-bundle
+hash when applicable. The application result commits before saver; after the actual sync
+interrupt, `question_graph_parked` and wf_question_parks make delivery eligible. Replay can
+reconcile the exact original completed graph visit; no pending tool is held for human input.
+Unsupported mixed/unknown batches fail before effects; the only supported question batch is
+exclusive, not arbitrary all-tools termination.
+
+Answer input shape is the packaged owner_answer schema, accepted at delivery=accepted with
+null delivery_ref. External authority binds its complete digest, genuine receipt and within-
+envelope scope. Acceptance, queued_original intent, sdk_delivered entry receipt and subsequent
+continuation remain separate. The entry receipt contains input/session/entry/leaf and the new
+idle SDK snapshot; no answer is blindly resent after uncertain delivery. A new host has a new
+counter epoch even when session/branch persist. Source/scope-changing input is blocked for
+producing renewal; accepted historical input remains independently inspectable.
+
+Controls use owner_control. received → queued → sdk_delivered → worker_acknowledged records
+actual enqueue and later public user/assistant entry provenance separately. Inquiry may remain
+received with a recorded-facts receipt (there is no fictional worker delivery). A safely stopped
+pause/cancel becomes reconciled with owned empty-scope hashes and a partial snapshot hash,
+worker_acknowledged=false. Wrong/stale/duplicate/out-of-scope controls never select a replacement
+or bypass an original question. A cancelled/paused state is durable even without a live controller.
+Status adds SQL-derived questions/controls; waiting_owner_input includes pending_question_ref.
+These fields are facts, not optional transport notifications or projection decision inputs.
+
+`retained_candidates` derives saved sessions from completed SDK/event receipts, latest settled
+sequence and their completed host custody. Normal compatibility also hashes the system prompt
+with settings/pressure policy. `Gateway.verify_closed_host` composes only exact same-run completed
+tool and focused checkpoint chains to current HEAD/index/files. Original host/empty/tool receipts
+are never rewritten. Unknown effects, mismatched parent/tree/operation identity or current drift
+block. Reopening always checks saved file/session/leaf/hash, role/resources and actual headroom;
+original-only pins cannot fall through to fresh selection.
+
+All-role configured question/continue_original edges are bounded graph loops, not a second
+scheduler. Original repair budgets remain consumed once for that repair; continuation segments
+have distinct SDK operation/attempt identities. Review permits exactly configured/admitted
+read_file, optionally request_owner_input, with original independent role/range lineage and
+completed host-admission provenance. Mutating/undeclared tools remain rejected. T007 must add
+actual parent readiness/outbox delivery provenance; a recorded row or authorization file alone
+cannot establish an actual ask_user invocation or answer.

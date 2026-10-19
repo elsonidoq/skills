@@ -66,7 +66,7 @@ def retain_failure(case, result, inputs):
     return target
 
 
-def live_sequence(case):
+def live_sequence(case, *, expected_check_count=2):
     case.assertEqual(os.environ.get('COHERENCE_LIVE'),'1','REQUIRED real CLI/Pi integration unavailable; NOT VERIFIED')
     project=case.project
     (project/'second.txt').write_text('initial second')
@@ -120,7 +120,7 @@ def live_sequence(case):
         case.assertTrue(observed)
         case.assertTrue(all(row['model']=='gpt-6.1-sol' and row['wire_effort']=='medium' for row in observed))
         checkrows=[json.loads(row[0]) for row in db.execute('SELECT receipt FROM wf_checks')]
-        case.assertEqual(len(checkrows),2);case.assertTrue(all(row['collected']==1 and row['status']=='satisfied' for row in checkrows))
+        case.assertEqual(len(checkrows),expected_check_count);case.assertTrue(all(row['collected']==1 and row['status']=='satisfied' for row in checkrows))
         # A separate process queries SQL without launching Node or changing projections.
         status=subprocess.run([str(ROOT/'scripts/coordinate-implementation'),'status','--project',str(project),'--run','sequence'],
                               env=env,capture_output=True,text=True,timeout=20)
@@ -131,7 +131,7 @@ def live_sequence(case):
         case.assertEqual(json.loads(review['result'])['outcome'],'pass');case.assertEqual(review['independent'],1)
         case.assertEqual(db.execute("SELECT COUNT(*) FROM wf_findings WHERE disposition!='resolved'").fetchone()[0],0)
         ready=json.loads(db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_ready'",(review['host_op'],)).fetchone()[0])
-        case.assertEqual(ready['compatibility']['role'],'review');case.assertEqual(ready['snapshot']['tools'],['read_file'])
+        case.assertEqual(ready['compatibility']['role'],'review');case.assertEqual(sorted(ready['snapshot']['tools']),sorted(next(n for n in config['nodes'] if n['id']=='review')['tools']))
         print(canonical({'proof':'actual-cli-sdk-two-tasks','argv':argv,'exit':proc.returncode,'checkpoints':checkpoints,
                          'observed':observed,'checks':checkrows,'event_order':[(r['seq'],r['kind']) for r in events],
                          'source_revision':git(ROOT,'rev-parse','HEAD').decode().strip()}))

@@ -1,6 +1,41 @@
 """One role-safe selector. Inputs are trusted runner facts, never model recommendations."""
 import math
+import json
 from .store import Blocked
+
+
+def retained_candidates(store, run):
+    """SQL-settled saved conversations, never caller-supplied invented sessions."""
+    candidates = {}
+    for row in store.db.execute("SELECT o.*,e.seq FROM wf_operations o JOIN wf_events e USING(op_id) WHERE o.run_id=? AND o.kind='sdk-turn' AND e.kind='completed' ORDER BY e.seq", (run,)):
+        if row['phase'] != 'completed' or not row['result']:
+            raise Blocked('retained turn is not completed')
+        result = json.loads(row['result'])
+        host = store.operation(result['host_op'])
+        if host['phase'] != 'completed':
+            raise Blocked('retained host not closed/reconciled')
+        snapshot = result['after']
+        candidates[snapshot['session_id']] = {**result['compatibility'], 'id':snapshot['session_id'],
+            'settled':True,'poisoned':False,'settle_seq':row['seq'],'telemetry':snapshot,
+            'host_op':result['host_op']}
+    return list(candidates.values())
+
+
+def manifest_compatibility(manifest, project, *, role, affinity, review_lineage):
+    from .store import digest
+    return {'role':role,'affinity':affinity,'review_lineage':review_lineage,'worktree':str(project),
+            **{k:digest(manifest[k]) for k in ('profile','skills','tools','permissions','trust')},
+            'settings':digest({'settings':manifest['settings'],'pressure_policy':manifest['pressure_policy'],
+                               'system_prompt':manifest['system_prompt']})}
+
+
+def open_manifest(manifest, candidate):
+    import copy
+    result = copy.deepcopy(manifest)
+    snapshot = candidate['telemetry']
+    result['open'] = {key:snapshot[value] for key,value in (
+        ('file','session_file'),('session_id','session_id'),('leaf','leaf'),('sha256','session_file_hash'))}
+    return result
 
 
 COMPATIBILITY = ('affinity','profile','skills','tools','permissions','trust','settings','worktree')

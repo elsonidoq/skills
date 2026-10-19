@@ -69,8 +69,10 @@ nodes:
   type: agent
   outcomes:
   - ok
+  - owner_input_required
   transitions:
     ok: verify
+    owner_input_required: owner-input-implement
   side_effects:
   - files
   - process
@@ -80,16 +82,18 @@ nodes:
   profile: sol-medium
   skill: coordinate
   session_policy:
-    mode: fresh_only
+    mode: role_default
     min_free_tokens_before_compaction: 150000
     reuse_preference: same_group
   max_repair_attempts: 2
   tools:
   - read_file
   - write_file
+  - request_owner_input
   permissions:
   - read_file
   - write_file
+  - request_owner_input
 - id: repair
   handler: repair
   handler_version: '1'
@@ -97,9 +101,11 @@ nodes:
   outcomes:
   - ok
   - blocked
+  - owner_input_required
   transitions:
     ok: verify
     blocked: failure
+    owner_input_required: owner-input-repair
   side_effects:
   - files
   - process
@@ -109,16 +115,77 @@ nodes:
   profile: sol-medium
   skill: coordinate
   session_policy:
-    mode: fresh_only
+    mode: role_default
     min_free_tokens_before_compaction: 150000
     reuse_preference: original_implementer
   max_repair_attempts: 2
   tools:
   - read_file
   - write_file
+  - request_owner_input
   permissions:
   - read_file
   - write_file
+  - request_owner_input
+- id: owner-input-implement
+  handler: owner-input-implement
+  handler_version: '1'
+  type: gate
+  outcomes: [ready]
+  transitions:
+    ready: continue-implement
+  side_effects: []
+  max_retries: 0
+- id: owner-input-repair
+  handler: owner-input-repair
+  handler_version: '1'
+  type: gate
+  outcomes: [ready]
+  transitions:
+    ready: continue-repair
+  side_effects: []
+  max_retries: 0
+- id: continue-implement
+  handler: continue-implement
+  handler_version: '1'
+  type: agent
+  outcomes: [ok, owner_input_required]
+  transitions:
+    ok: verify
+    owner_input_required: owner-input-implement
+  side_effects: [files, process, conversation]
+  max_retries: 0
+  role: implement
+  profile: sol-medium
+  skill: coordinate
+  session_policy:
+    mode: role_default
+    min_free_tokens_before_compaction: 150000
+    reuse_preference: same_group
+  max_repair_attempts: 2
+  tools: [read_file, write_file, request_owner_input]
+  permissions: [read_file, write_file, request_owner_input]
+- id: continue-repair
+  handler: continue-repair
+  handler_version: '1'
+  type: agent
+  outcomes: [ok, blocked, owner_input_required]
+  transitions:
+    ok: verify
+    blocked: failure
+    owner_input_required: owner-input-repair
+  side_effects: [files, process, conversation]
+  max_retries: 0
+  role: repair
+  profile: sol-medium
+  skill: coordinate
+  session_policy:
+    mode: role_default
+    min_free_tokens_before_compaction: 150000
+    reuse_preference: original_implementer
+  max_repair_attempts: 2
+  tools: [read_file, write_file, request_owner_input]
+  permissions: [read_file, write_file, request_owner_input]
 - id: verify
   handler: verify
   handler_version: '1'
@@ -155,10 +222,12 @@ nodes:
   - ok
   - correction
   - blocked
+  - owner_input_required
   transitions:
     ok: complete
     correction: authorize-correction
     blocked: failure
+    owner_input_required: owner-input-review
   side_effects:
   - read
   max_retries: 0
@@ -166,14 +235,47 @@ nodes:
   profile: sol-medium
   skill: coordinate
   session_policy:
-    mode: fresh_only
+    mode: role_default
     min_free_tokens_before_compaction: 150000
     reuse_preference: own_reviewer
   max_repair_attempts: 2
   tools:
   - read_file
+  - request_owner_input
   permissions:
   - read_file
+  - request_owner_input
+- id: owner-input-review
+  handler: owner-input-review
+  handler_version: '1'
+  type: gate
+  outcomes: [ready]
+  transitions:
+    ready: continue-review
+  side_effects: []
+  max_retries: 0
+- id: continue-review
+  handler: continue-review
+  handler_version: '1'
+  type: agent
+  outcomes: [ok, correction, blocked, owner_input_required]
+  transitions:
+    ok: complete
+    correction: authorize-correction
+    blocked: failure
+    owner_input_required: owner-input-review
+  side_effects: [read]
+  max_retries: 0
+  role: review
+  profile: sol-medium
+  skill: coordinate
+  session_policy:
+    mode: role_default
+    min_free_tokens_before_compaction: 150000
+    reuse_preference: own_reviewer
+  max_repair_attempts: 2
+  tools: [read_file, request_owner_input]
+  permissions: [read_file, request_owner_input]
 - id: authorize-correction
   handler: authorize-correction
   handler_version: '1'
@@ -226,11 +328,13 @@ storage:
 permissions:
 - read_file
 - write_file
+- request_owner_input
 - workflow.FileBytes
 - workflow.PythonAnswer
 tool_capabilities:
 - read_file
 - write_file
+- request_owner_input
 containment_capability: linux-cgroup-v2
 settings_manifest:
   path: runtime/coherence_workflow/schemas/workflow.schema.json

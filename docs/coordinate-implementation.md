@@ -182,8 +182,8 @@ private SDK storage and may contain model/tool text.
 Commands/events use bounded UTF-8 LF JSON records (262144 bytes), inherited anonymous pipes,
 private bootstrap nonce, host/run/request/attempt/operation/session IDs, monotonic sequence
 and prompt generation. Std streams are not a protocol, and no socket/CLI endpoint is added.
-Only create/open/prompt/telemetry/abort/drain/close and correlated tool replies are supported;
-owner-answer/steer/follow-up remain unavailable until their later task. Prompt acceptance and
+Create/open/prompt/telemetry/abort/drain/close, correlated tool replies and T006's bound
+owner_answer/steer/follow_up commands are supported. Workers never receive ask_user. Prompt acceptance and
 `agent_end` never release completion. Current prompt promise + current `agent_settled` +
 idle/no queued work + completed kernel-empty task-tool audits are all required.
 
@@ -228,7 +228,7 @@ Fresh-only wins ordinary reuse. First independent review is fresh, later review 
 own exact lineage. Repair prefers the eligible original implementer; remaining candidates
 sort latest-settled then stable ID ascending. Reasons and rejected candidates are returned.
 An original-question pin outranks greedy selection and **blocks**, never substitutes fresh,
-if the original is missing/incompatible/low/unknown. The actual owner-input protocol is later.
+if the original is missing/incompatible/low/unknown. The delivered standalone protocol is below.
 
 Exact reopen requires the original completed host operation, its private saved file/leaf/hash,
 matching role/resource/worktree identity and durable last-settled telemetry, followed by new
@@ -382,11 +382,13 @@ one count durably before dispatch, including an interrupted invocation. Capabili
 stop before consumption; uncertain dispatched effects still block safe replacement. The
 configured repair/review gate ceilings bind across restart; changing them changes run identity.
 
-First final review is a fresh independent `review` session, with only bounded `read_file`.
+First final review is a fresh independent `review` session, with bounded `read_file` and,
+only when explicitly configured and permission-admitted, nonmutating `request_owner_input`.
 It receives the complete committed original base→current head patch, source/tasks/approval
 content, item evidence, checkpoint refs and prior findings. No implementation history or write
-capability is supplied. The shipped graph explicitly uses fresh-only defaults; direct SDK
-saved-conversation/selector APIs retain their separately proven role-safe reuse boundaries.
+capability is supplied. The shipped graph now uses role-default selection with SQL-derived
+settled candidates; explicit fresh-only remains available for ordinary assignments. Exact
+saved reopening bridges verified task-tool/checkpoint chains without altering old receipts.
 A complete bundle over the supported protocol bound blocks rather than truncating the range.
 Review judgment is distinct from mechanical green; malformed/stale-head review cannot accept.
 
@@ -407,7 +409,8 @@ a current passing rereview can resolve only checkpointed corrections. Acceptance
 required evidence, original permission/manual gates, full checkpoint chain and exact review head.
 Optional green, worker confidence, implementation completion and an old review cannot replace
 these conditions. An approved representative sample remains an unrun check until its real oracle
-runs. Standalone interaction/question delivery is still unavailable until its own shipped adapters.
+runs. Standalone interaction is delivered below; interactive parent transport remains gated
+until its separately verified adapter is delivered.
 
 `status` exposes SQL-derived reviews/findings/budgets, unsuperseded metric records, exact blocker,
 current graph/attempt refs and null/unknown reasons without spawning agents or mutating projections.
@@ -424,8 +427,8 @@ not relaxed. Queued/launched/cancelled argument and call hashes are durable fact
 is unsettled: it prevents prompt success, telemetry, checks/commits and reuse. Abort cancels
 never-launched requests and drains/reconciles actual active scopes. Missing cancellation
 receipts block reuse even after physical drain. Overflow, duplicates, stale/wrong targets and
-premature settlement block explicitly. This does **not** establish the exclusive/all-terminating
-owner-question batch contract; T006 must still deliver that separate safety boundary.
+premature settlement block explicitly. T006 additionally enforces the separate exclusive
+owner-question batch boundary described below; ordinary FIFO serialization alone is not its proof.
 
 Before task dispatch and again before Git hashing/staging/commit launch, admission inspects
 configuration, attributes and hook paths using builtins only. Applicable external clean/process
@@ -448,3 +451,96 @@ current correction proof when it already satisfies the unchanged original items.
 new evidence, not an empty commit or a rewritten original checkpoint. Failed/insufficient final
 proof still blocks. The launcher disables Python bytecode writes process-locally so ordinary
 read-only status does not depend on the caller already setting that environment flag.
+
+## Standalone questions and anytime owner controls (T006)
+
+The runner exposes `request_owner_input` only when BOTH the agent node's tool and permission
+lists admit it. Registered tools/permission IDs must exactly fit the supported node manifest;
+unsupported restrictive configurations block before SDK launch, never receive a widened tool
+set. Preflight aggregates known node-tool/permission gaps. Workers cannot choose a recipient,
+approve scope, access workflow storage or invoke `ask_user`. Inside-envelope implementation,
+debugging and approved tests remain autonomous. Necessary manager product/priority or unexpected
+material-impact questions require why/options/recommendation and scope/complexity/time/cost
+impact. These structural checks assist bounded human judgment, not a semantic necessity oracle.
+
+A question must be the ONLY tool in its observed finalized assistant batch. The host rejects
+both sides of a mixed question batch before proxying effects; unknown question batches also
+block. The runner records request intent, then returns a NORMAL completed `terminate:true`
+result. Current tool end, `agent_settled`, prompt completion/idle, empty tool queues and actual
+closed-host/task-scope reconciliation precede SQL pending/outbox. A separate sync LangGraph
+interrupt records the original node/visit and checkpoint. Until that graph-park receipt exists,
+an answer is blocked and the outbox is not eligible for delivery. A parked question is not a
+successful task and cannot release verification, commit or dependents.
+
+```sh
+scripts/coordinate-implementation pending --project /canonical/project --run RUN_ID
+scripts/coordinate-implementation answer --project /canonical/project --run RUN_ID \
+  --input /owner/bound-answer.json --input-authority /owner/private-answer-authority.json
+scripts/coordinate-implementation control --project /canonical/project --run RUN_ID \
+  --input /owner/bound-control.json --input-authority /owner/private-control-authority.json
+# Continuation still uses the original start inputs and explicit --resume-authority:
+scripts/coordinate-implementation resume --project /canonical/project --run RUN_ID \
+  --workflow /approved/workflow.yaml --tasks /approved/tasks.json \
+  --owner-catalog /owner/catalog.json --manifest /approved/sdk-manifest.json \
+  --containment /approved/delegated-parent --resume-authority /owner/recovery.json
+```
+
+Inputs use `interaction.schema.json`'s owner_answer/owner_control shapes. Answers enter with
+`delivery: accepted` and `delivery_ref: null`; controls with `stage: received` and null evidence.
+Copy the authoritative original/active/run binding, never invent session or source identities.
+A CLI answer authority file contains `input_hash=digest(complete_input)`, `scope: within_envelope`
+and the exact genuine `receipt` from that input. Its source must be `cli_owner`. A control authority
+file instead binds the exact `owner_authority_ref` under `authority_ref`, plus the input hash and
+scope. These private, owned, single-link operator files must be OUTSIDE worker tool reach/worktree.
+They must represent genuine owner authority, not worker-authored approvals. They are a trusted
+local operator channel, not authentication against malicious same-UID processes. The CLI rejects
+parent_ask_user receipts until a registered parent adapter can verify their real provenance.
+Do not submit secrets/private reasoning; bounded safe question/answer/control content is retained
+in restricted SQL and the private original conversation, never exported as raw transcripts.
+
+SQL UNIQUE/CAS acceptance and original delivery are separate. Identical duplicates return the
+old receipt without redispatch; conflicting/stale/wrong binding or unverified/scope-changing
+inputs reject. Scope changes require producing approval renewal, not a prose interpretation or
+an answer flag. Acceptance preserves an original-only delivery obligation across process exit.
+Resume revalidates exact source/task/approval/config and original role/resources, closed custody,
+saved file/leaf/hash and ACTUAL new-host telemetry. Missing/unsafe/unknown or insufficient original
+headroom blocks explicit recovery: no greedy/fresh substitute. Only after that admission does
+the host persist a unique bound USER answer entry, reconstruct its context from SessionManager,
+and acknowledge its entry ID before the next model request. Unknown delivery blocks blind resend;
+accepted content is retained and never reasked. Post-request/result crash gaps without sufficient
+settlement evidence remain explicit blockers. Completed app-result-before-saver recovery uses the
+saved original visit and never redispatches the ask node.
+
+Ordinary assignments use eligible SQL-retained candidates, exact manifest/role/affinity and
+configured fresh telemetry (default maximum age 2000 ms, minimum headroom 150000). Stale/low/
+unknown ordinary candidates yield fresh only after custody reconciliation. Repair prefers the
+eligible original implementer; first final review is independent/fresh and later review stays
+in its own range lineage. Original-question continuation takes priority, opens only that saved
+conversation and measures current telemetry rather than renewing an old timestamp.
+
+Controls are accepted while the execution lock is held through a narrow owner-input SQL channel;
+SQLite serializes these short transactions with the execution controller. This channel cannot
+run graph nodes, choose tasks/models, release process custody or change configuration. Received,
+queued, SDK-enqueued (`sdk_delivered`) and actual public worker ACK are distinct immutable events.
+Plain steer/followUp uses supported SDK boundaries and retains the generation's actually delivered
+skill prompt; it does not re-expand the skill for each control. Public CONTROL_ACK receipts require
+both actual persisted incoming-user and later assistant entry IDs. Public message_end precedes
+SDK persistence, so receipts are resolved at a subsequent request/idle boundary. Missing ACK stays
+visible; an ACK proves observable receipt, not understanding/compliance/private thoughts.
+
+Run-scoped inquiry/pause/cancel uses null worker fields. Inquiry reports recorded facts only.
+When no execution controller holds the lock, a short no-agent control consumer can report facts
+or reconcile pause/cancel independently; while active, the current runner consumes queued inputs.
+Pause/cancel uses supported abort/drain, validated owned `populated=0` scopes and partial files/
+HEAD/index reconciliation before a stopped claim. Partial work/history stays intact and no
+stopped-worker ACK is invented. Unknown custody remains blocked. No instant shell preemption,
+universal absence-of-Pi-process claim or automatic retry of an interrupted task is promised.
+Pending question pins cannot be bypassed by steering. Cancellation retains the run reservation;
+new mutation requires explicit reconciliation, never automatic replacement.
+
+The four closed v1 selectors are `workflow.QuestionParkTests`, `workflow.OriginalAnswerTests`,
+`workflow.ControlDeliveryTests`, `workflow.AutonomyAdmissionTests`. Run their source-named classes
+in test_interaction/test_controls with the same approved live/auth/catalog/cgroup environment
+used above. Offline binding, crash/SQL and controlled headroom fixtures are distinct from actual
+CLI/SDK/LangGraph/original-entry/control/cgroup traces. Parent wake/actual ask_user, transport busy/
+outage/reconnect/authentication remain T007, not implied by standalone or historical PoC proof.
