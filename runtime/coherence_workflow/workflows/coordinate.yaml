@@ -326,6 +326,7 @@ storage:
   checkpoint: .coherence/workflow/workflow.sqlite
   event_root: .coherence/workflow/runs
 permissions:
+- runner-git-commit
 - read_file
 - write_file
 - request_owner_input

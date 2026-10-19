@@ -17,7 +17,7 @@ from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import Gateway, ProcessTool, snapshot
 from fixtures.support import make_project
 from test_custody import IsolatedCustody
-from test_intake import approved_fixture
+from test_intake import approved_fixture, declare_builtin_actions
 from test_pi_adapter import manifest, environment
 from test_recovery import capture
 
@@ -29,11 +29,11 @@ def coordinate_fixture(project, owner, *, limit=2, task_setup=None):
     config['defaults']['max_repair_attempts']=limit
     sdk=manifest(project,tools=False)
     contract,catalog=approved_fixture(project,digest(config))
-    if task_setup:
-        task_setup(contract)
-        for ref in contract['approval_refs']:
-            if ref['gate_kind']=='implementation':
-                ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
+    if task_setup:task_setup(contract)
+    declare_builtin_actions(contract)
+    for ref in contract['approval_refs']:
+        if ref['gate_kind']=='implementation':
+            ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     owner.store.reserve('run',digest(config))
     coordinate=Coordinate(owner,'run',contract,catalog,config,os.environ['COHERENCE_TEST_CGROUP_PARENT'],sdk,environment())
     coordinate.intake({})
@@ -131,6 +131,7 @@ def live_case(case, *, review_correction):
         catalog['workflow_correction_rules']=[{'criterion_ref':'A/V1','path':'answer.py','original_task_id':'A','task':correction,
             'scope_hash':digest(correction),'actor':'current owner via mandatory-isolated-test preapproval',
             'provenance':'Actual owner preapproved all mandatory isolated tests and test-only approval scenarios; not production acceptance.'}]
+    declare_builtin_actions(contract)
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     for name,value in {'workflow.yaml':yaml.safe_dump(config),'tasks.json':canonical(contract),'catalog.json':canonical(catalog),'manifest.json':canonical(sdk)}.items():
@@ -349,11 +350,13 @@ class AcceptanceGateTests(unittest.TestCase):
     def test_pure_file_evidence_invalidates_only_affected_input_and_function_inputs_are_conservative(self):
         from coherence_workflow.verification import item_identity
         with Authority(self.project) as owner:
-            coordinate=coordinate_fixture(self.project,owner)
-            task=copy.deepcopy(coordinate.contract['tasks'][0]);task['owned_paths']=['owned.txt','other.txt']
-            task['required'][0]['check']['args']['expected']='base'
-            second=copy.deepcopy(task['required'][0]);second['id']='A/V2'
-            second['check']['args']={'path':'other.txt','expected':'other'};task['required'].append(second)
+            def setup(contract):
+                task=contract['tasks'][0];task['owned_paths']=['owned.txt','other.txt']
+                task['required'][0]['check']['args']['expected']='base'
+                second=copy.deepcopy(task['required'][0]);second['id']='A/V2'
+                second['check']['args']={'path':'other.txt','expected':'other'};task['required'].append(second)
+            coordinate=coordinate_fixture(self.project,owner,task_setup=setup)
+            task=coordinate.contract['tasks'][0]
             evidence=coordinate.verification.run_checks(task)
             self.assertEqual([d['status'] for d in coordinate.verification.audit(task,evidence)],['satisfied','satisfied'])
             (self.project/'other.txt').write_text('changed')

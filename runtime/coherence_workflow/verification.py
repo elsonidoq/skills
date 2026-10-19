@@ -29,9 +29,10 @@ def item_identity(project, task, item, environment):
 
 
 class Verification:
-    def __init__(self, authority, run, checks, environment=None):
+    def __init__(self, authority, run, checks, environment=None, *, authorize=None):
         self.authority, self.store, self.run = authority, authority.store, run
         self.checks = checks
+        self.authorize = authorize
         self.environment = environment or environment_identity()
         self.store.db.executescript('''
         CREATE TABLE IF NOT EXISTS wf_checks(
@@ -101,6 +102,8 @@ class Verification:
                        'reason': 'registered check unavailable', 'exit_code': None, 'collected': 0}
             if spec and spec['version'] == check['version']:
                 Draft202012Validator(spec['schema']).validate(check['args'])
+                if self.authorize is None:raise Blocked('check action authority unavailable')
+                self.authorize(task,item)
                 key = digest(check)
                 if key not in shared:
                     start = time.time_ns()

@@ -18,7 +18,7 @@ from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import Gateway, snapshot
 from fixtures.support import configuration, make_project
 from test_custody import IsolatedCustody
-from test_intake import approved_fixture
+from test_intake import approved_fixture, declare_builtin_actions
 from test_pi_adapter import manifest, environment
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -37,6 +37,7 @@ def cli_inputs(case):
     sdk['resource_hash']=digest({k:sdk[k] for k in ('skills','tools','permissions','trust','system_prompt')})
     contract,catalog=approved_fixture(project,digest(config))
     contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
+    declare_builtin_actions(contract)
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     values={'workflow.yaml':yaml.safe_dump(config),'tasks.json':canonical(contract),'catalog.json':canonical(catalog),'manifest.json':canonical(sdk)}

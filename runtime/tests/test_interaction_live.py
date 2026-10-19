@@ -25,7 +25,7 @@ from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.containment import Cgroup, process_identity
 from coherence_workflow.notifications.paseo import Paseo, ParentEvidence, TRANSPORT
 from fixtures.support import make_project
-from test_intake import approved_fixture
+from test_intake import approved_fixture, declare_builtin_actions
 from test_interaction import question
 from test_pi_adapter import manifest
 
@@ -43,6 +43,7 @@ def prepare_live(root, descriptor):
         'Mandatory isolated parent UI roundtrip test. BEFORE any file mutation, invoke request_owner_input exactly once as the ONLY tool in its batch with this exact JSON: '+canonical(question())+
         '. After a bound_owner_answer in the SAME original conversation, do not reask. If the answer is Preserve compatibility, read owned.txt and write exactly first\\n (f i r s t newline). Otherwise stop blocked. No routine technical/test questions.')
     contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
+    declare_builtin_actions(contract)
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     sdk=manifest(project,tools=False)

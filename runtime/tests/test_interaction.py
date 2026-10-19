@@ -219,7 +219,7 @@ class OriginalAnswerTests(IsolatedCustody):
         import yaml
         from coherence_workflow.cli import ROOT
         from coherence_workflow.intake import approval_scope
-        from test_intake import approved_fixture
+        from test_intake import approved_fixture, declare_builtin_actions
         self.assertEqual(os.environ.get('COHERENCE_LIVE'),'1','NOT VERIFIED: live CLI/SDK test not enabled')
         config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
         contract,catalog=approved_fixture(self.project,digest(config))
@@ -231,6 +231,7 @@ class OriginalAnswerTests(IsolatedCustody):
             '(the six bytes f i r s t newline). Never reask the same question after seeing bound_owner_answer. '
             'The selected test answer is Preserve compatibility; if owner instead chooses Prefer new behavior, stop blocked.')
         contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
+        declare_builtin_actions(contract)
         for ref in contract['approval_refs']:
             if ref['gate_kind']=='implementation':
                 ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']

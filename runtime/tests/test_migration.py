@@ -17,7 +17,7 @@ from coherence_workflow.store import canonical, digest, git
 from coherence_workflow.tools import snapshot
 from fixtures.support import make_project
 from test_custody import IsolatedCustody
-from test_intake import approved_fixture
+from test_intake import approved_fixture, declare_builtin_actions
 from test_interaction import question
 from test_pi_adapter import manifest
 
@@ -76,6 +76,7 @@ class EntryCutoverTests(IsolatedCustody):
         catalog['workflow_correction_rules']=[{'criterion_ref':'A/V1','path':'answer.py','original_task_id':'A','task':correction,
             'scope_hash':digest(correction),'actor':'current owner standing mandatory isolated-test preapproval',
             'provenance':'Actual owner preapproved mandatory isolated tests and exact test-only answer/correction scenarios; not production approval.'}]
+        declare_builtin_actions(contract)
         for ref in contract['approval_refs']:
             if ref['gate_kind']=='implementation':ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
         for name,value in {'workflow.yaml':yaml.safe_dump(config),'tasks.json':canonical(contract),'catalog.json':canonical(catalog),'manifest.json':canonical(sdk)}.items():

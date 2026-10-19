@@ -95,12 +95,14 @@ class ProcessTool:
 
 
 class Gateway:
-    def __init__(self, authority, run, containment_parent, tools):
+    def __init__(self, authority, run, containment_parent, tools, *, authorize=None, require_authorization=False):
         self.authority = authority
         self.store = authority.store
         self.run = run
         self.containment = Cgroup(containment_parent)
         self.tools = dict(tools)
+        self.authorize = authorize
+        self.require_authorization = require_authorization
         self.task_origin = None
 
     def bind_task_origin(self, prefix, owned, baseline):
@@ -161,6 +163,8 @@ class Gateway:
         tool = self.tools.get(tool_id)
         if not tool or tool.version != version:
             raise Blocked('unknown registered tool/version')
+        if self.require_authorization and self.authorize is None:raise Blocked('tool action authority unavailable')
+        if self.authorize is not None:self.authorize(tool_id,args,scope_kind)
         argv = tool.argv(args)
         owned = list(tool.owned_paths)
         if len(set(owned)) != len(owned):

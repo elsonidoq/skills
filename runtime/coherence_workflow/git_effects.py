@@ -81,9 +81,11 @@ def expected_entries(project, baseline, owned):
 
 
 class GitEffects:
-    def __init__(self, authority, run, gateway):
+    def __init__(self, authority, run, gateway, *, authorize=None, require_authorization=False):
         self.authority, self.store, self.run, self.gateway = authority, authority.store, run, gateway
         self.project = authority.project
+        self.authorize = authorize
+        self.require_authorization = require_authorization
 
     def begin(self, task):
         assert_safe_git_inputs(self.project,task['owned_paths'])
@@ -100,6 +102,9 @@ class GitEffects:
             raise Blocked('REQUIRED evidence/original gates block checkpoint')
         owned = task['owned_paths']
         now = reconcile(self.project, owned, baseline)
+        if now!=baseline:
+            if self.require_authorization and self.authorize is None:raise Blocked('Git action authority unavailable')
+            if self.authorize is not None:self.authorize('runner-git-commit')
         before_index = entries(self.project)
         expected = expected_entries(self.project, baseline, owned)
         details = {'task_id': task['id'], 'baseline': baseline, 'owned_paths': owned,

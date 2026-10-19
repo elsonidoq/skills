@@ -30,8 +30,10 @@ def validate_question(request):
 
 
 class Interaction:
-    def __init__(self, store, run, *, initialize=True):
+    def __init__(self, store, run, *, initialize=True, authorize_request=None, require_authorization=False):
         self.store, self.run = store, run
+        self.authorize_request = authorize_request
+        self.require_authorization = require_authorization
         if not initialize:
             return
         store.db.executescript('''
@@ -83,6 +85,8 @@ class Interaction:
         Only an observed exclusive batch is supported. Unknown/mixed batches fail
         closed even when the question happens to be the first completed tool.
         """
+        if self.require_authorization and self.authorize_request is None:raise Blocked('question action authority unavailable')
+        if self.authorize_request is not None:self.authorize_request(binding)
         validate_question(request)
         if batch != [{'call': call, 'tool': 'request_owner_input'}]:
             raise Blocked('question requires observed exclusive terminating batch')

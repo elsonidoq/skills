@@ -12,7 +12,7 @@ import yaml
 from coherence_workflow.intake import approval_scope
 from coherence_workflow.store import canonical, digest, git
 from coherence_workflow.tools import snapshot
-from test_intake import approved_fixture
+from test_intake import approved_fixture, declare_builtin_actions
 from test_pi_adapter import manifest
 from test_custody import IsolatedCustody
 
@@ -81,6 +81,7 @@ def live_sequence(case, *, expected_check_count=2):
     sdk['resource_hash']=digest({k:sdk[k] for k in ('skills','tools','permissions','trust','system_prompt')})
     contract,catalog=approved_fixture(project,digest(config))
     contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
+    declare_builtin_actions(contract)
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':
             ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']

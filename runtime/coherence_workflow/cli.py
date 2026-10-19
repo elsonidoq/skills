@@ -13,7 +13,7 @@ import uuid
 import yaml
 from jsonschema.exceptions import ValidationError
 
-from .authority import AuthorityAdmission
+from .authority import AuthorityAdmission, action_requirement, required_actions
 from .engine import Engine, StrictLoader, load_workflow
 from .git_effects import GitEffects, assert_safe_git_inputs
 from .intake import Approvals, admit, content_hash, load_contract, verify_execution_intent
@@ -80,9 +80,10 @@ class Coordinate:
         self.contract, self.config, self.manifest = contract, config, manifest
         self.catalog, self.containment, self.environment = catalog, containment, environment
         self.host_hash = content_hash(host_resource())
-        self.gateway = Gateway(authority, run, containment, {})
-        self.git = GitEffects(authority, run, self.gateway)
-        self.verification = Verification(authority, run, registered_checks(authority.project,self.gateway))
+        self.agent_node = None
+        self.gateway = Gateway(authority, run, containment, {}, authorize=self.authorize_effect, require_authorization=True)
+        self.git = GitEffects(authority, run, self.gateway, authorize=self.authorize_action, require_authorization=True)
+        self.verification = Verification(authority, run, registered_checks(authority.project,self.gateway), authorize=self.authorize_check)
         self.store.db.executescript('''
         CREATE TABLE IF NOT EXISTS wf_tasks(
           run_id TEXT NOT NULL REFERENCES wf_runs, task_id TEXT NOT NULL, approved_order INTEGER NOT NULL,
@@ -93,7 +94,7 @@ class Coordinate:
           owner_catalog_hash TEXT NOT NULL);
         ''')
         self.review_repair=ReviewRepair(self)
-        self.interaction=Interaction(self.store,self.run)
+        self.interaction=Interaction(self.store,self.run, authorize_request=self.authorize_question, require_authorization=True)
         self.parent_transport=None
 
     def publish_run_binding(self):
@@ -130,14 +131,82 @@ class Coordinate:
                 self.store.event(db, self.run, None, 'intake_admitted', receipt)
         return {'outcome': 'ok'}
 
+    def action_admission(self):
+        return AuthorityAdmission(self.contract['authorization_envelope'],self.config['profiles'],
+            ['read_file','write_file','request_owner_input','runner-git-commit',*registered_checks(self.authority.project)],
+            self.config['permissions'],Approvals(self.authority.project,self.catalog).verify)
+
+    def verify_action_origin(self):
+        pinned=self.store.db.execute('SELECT contract FROM wf_run_inputs WHERE run_id=?',(self.run,)).fetchone()
+        if not pinned or pinned[0]!=canonical(self.contract):
+            raise Blocked('active action contract drift/unadmitted; producing renewal required')
+        admit(self.authority.project,self.contract,Approvals(self.authority.project,self.catalog),digest(self.config))
+
+    def authorize_action(self, name):
+        self.verify_action_origin()
+        self.action_admission().require(name,action_requirement(self.contract,name))
+        if name=='runner-git-commit':
+            nodes=[n for n in self.config['nodes'] if n['handler']=='checkpoint']
+            if not nodes or any(not {'git','process'}<=set(n['side_effects']) for n in nodes):
+                raise Blocked('checkpoint node effect restriction')
+        return True
+
+    def authorize_check(self, task, item):
+        allowed=[(t,i) for t in self.contract['tasks'] for i in t['required']
+                 if i['id']==item['id'] and i['check']==item['check']]
+        correction=self.store.db.execute('SELECT original_task_id FROM wf_corrections WHERE run_id=? AND task_id=?',
+            (self.run,task['id'])).fetchone()
+        origin=correction[0] if correction else task['id']
+        if not any(t['id']==origin and t['owned_paths']==task['owned_paths'] for t,i in allowed):
+            raise Blocked('check outside approved task/check stream; producing renewal required')
+        self.authorize_action(item['check']['id'])
+        needed={'read'} if item['check']['id']=='workflow.FileBytes' else {'read','process'}
+        nodes=[n for n in self.config['nodes'] if n['handler']=='verify']
+        if not nodes or any(not needed<=set(n['side_effects']) for n in nodes):
+            raise Blocked('verification node effect restriction')
+
+    def node_action(self, node, name):
+        configured=[n for n in self.config['nodes'] if n['id']==node['id'] and n['type']=='agent']
+        if (len(configured)!=1 or node!=configured[0] or name not in node['tools'] or name not in node['permissions']):
+            raise Blocked('actual tool node permission restriction')
+        effects=set(node['side_effects'])
+        permitted=(bool(effects&{'read','files'}) if name=='read_file' else
+                   'files' in effects and node['role']!='review' if name=='write_file' else
+                   bool(effects&{'read','conversation'}))
+        if not permitted:raise Blocked('actual tool node effect restriction')
+
+    def authorize_question(self, binding):
+        self.authorize_action('request_owner_input')
+        if any(binding.get(k)!=expected for k,expected in
+               (('source_hash',digest(self.contract['sources'])),('approval_hash',digest(self.contract['approval_refs'])),
+                ('config_hash',digest(self.config)))):
+            raise Blocked('question current source/approval/config binding mismatch')
+        nodes=[n for n in self.config['nodes'] if n['id']==binding['node_id'] and n['type']=='agent']
+        if len(nodes)!=1 or nodes[0]['role']!=binding['role']:
+            raise Blocked('question node tool/permission restriction')
+        self.node_action(nodes[0],'request_owner_input')
+
+    def authorize_effect(self, name, args, scope_kind):
+        if scope_kind=='host':
+            self.verify_action_origin()
+            node=self.agent_node
+            if not node:raise Blocked('SDK host lacks current authorized node')
+            self.action_admission().model(self.config['profiles'][node['profile']])
+            return
+        if name=='check-python-answer':return self.authorize_action('workflow.PythonAnswer')
+        self.authorize_action(name)
+        if name in ('read_file','write_file'):
+            if self.agent_node is None:raise Blocked('actual tool lacks current node')
+            self.node_action(self.agent_node,name)
+
     def authority_check(self, context):
         verify_execution_intent(self.contract, [self.config['profiles'][node['profile']]
             for node in self.config['nodes'] if node['type']=='agent' and node['role'] in ('implement','repair')])
         envelope = self.contract['authorization_envelope']
-        capabilities = ['read_file', 'write_file', 'request_owner_input', *registered_checks(self.authority.project)]
+        capabilities = ['read_file', 'write_file', 'request_owner_input', 'runner-git-commit', *registered_checks(self.authority.project)]
         admission = AuthorityAdmission(envelope, self.config['profiles'], capabilities, self.config['permissions'],
                                        Approvals(self.authority.project, self.catalog).verify)
-        gaps = admission.gaps()
+        gaps = admission.gaps(required_actions(self.contract,self.config))
         for node in self.config['nodes']:
             if node['type'] == 'agent':
                 try:
@@ -149,7 +218,9 @@ class Coordinate:
                 expected={'read_file'}
                 if node['role']!='review' and any(task['owned_paths'] for task in self.contract['tasks']):expected.add('write_file')
                 if 'request_owner_input' in node['tools']:expected.add('request_owner_input')
-                try:self.admit_node_tools(node,expected)
+                try:
+                    self.admit_node_tools(node,expected)
+                    for name in expected:self.node_action(node,name)
                 except Blocked as exc:
                     gaps.append({'kind':'node_tool_permission','id':node['id'],'impact':str(exc),'options':['provide an explicitly compatible approved tool/permission declaration','stop affected work']})
         checks = registered_checks(self.authority.project)
@@ -169,10 +240,17 @@ class Coordinate:
                             safe_path(self.authority.project,check['args']['path'])
                     except Exception:
                         gaps.append({'kind':'check','id':item['id'],'impact':'REQUIRED check arguments invalid','options':['producing contract renewal','stop']})
+            for item in task['required']:
+                try:self.authorize_check(task,item)
+                except Blocked as exc:
+                    gaps.append({'kind':'action','id':item['check']['id'],'impact':str(exc),'options':['producing renewal','stop']})
             try:
                 self.gates_satisfied(task)
             except Blocked as exc:
                 gaps.append({'kind':'gate','id':task['id'],'impact':str(exc),'options':['provide current original authority','stop']})
+        if any(t['owned_paths'] for t in self.contract['tasks']):
+            try:self.authorize_action('runner-git-commit')
+            except Blocked as exc:gaps.append({'kind':'action','id':'runner-git-commit','impact':str(exc),'options':['producing renewal','stop']})
         rules=self.catalog.get('workflow_correction_rules',[])
         if not isinstance(rules,list):
             gaps.append({'kind':'correction_contract','id':'rules','impact':'correction authority must be a structured list','options':['producing renewal','stop']})
@@ -413,6 +491,7 @@ class Coordinate:
             raise Blocked('missing selected task')
         task = json.loads(row['contract'])
         node = context['node']
+        self.agent_node = node
         self.gateway.tools = self._tools(task)
         admitted=set(self.gateway.tools)
         if 'request_owner_input' in node['tools']:admitted.add('request_owner_input')
@@ -522,7 +601,7 @@ class Coordinate:
         self.reconcile_effect({}, {})
         try:self.review_repair.refresh_evidence()
         except Blocked as exc:self.record_block(str(exc));return {'outcome':'blocked'}
-        bundle=self.review_repair.bundle();node=context['node']
+        bundle=self.review_repair.bundle();node=context['node'];self.agent_node=node
         task={'id':'final-review','context_group':'final-review','owned_paths':sorted({path for t in self.contract['tasks'] for path in t['owned_paths']})}
         self.gateway.tools=self._tools(task,review=True)
         admitted=set(self.gateway.tools)

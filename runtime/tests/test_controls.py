@@ -17,7 +17,7 @@ from coherence_workflow.cli import ROOT
 from coherence_workflow.interaction import Interaction
 from coherence_workflow.pi_adapter import PiAdapter
 from coherence_workflow.store import Authority, Blocked, canonical, digest
-from coherence_workflow.tools import ProcessTool
+from coherence_workflow.tools import ProcessTool, Gateway
 from test_custody import IsolatedCustody
 from test_interaction import binding, seeded_pending, standing_authority
 from test_pi_adapter import manifest, environment
@@ -64,6 +64,8 @@ class ControlDeliveryTests(IsolatedCustody):
         with Authority(self.project) as owner:
             coordinate=coordinate_fixture(self.project,owner)
             coordinate.publish_run_binding();coordinate.select({})
+            # Explicit trusted SDK/control fixture, not a configured workflow tool grant.
+            coordinate.gateway=Gateway(owner,'run',self.parent,{})
             config=control_manifest(self.project)
             from fixtures.custody_support import process_tool
             prototype=process_tool(self.project)
@@ -114,6 +116,8 @@ class ControlDeliveryTests(IsolatedCustody):
             coordinate=coordinate_fixture(self.project,owner)
             coordinate.publish_run_binding();coordinate.select({})
             from fixtures.custody_support import process_tool
+            # Explicit trusted SDK/control fixture, not a configured workflow tool grant.
+            coordinate.gateway=Gateway(owner,'run',self.parent,{})
             coordinate.gateway.tools={'fixture':process_tool(self.project)}
             config=control_manifest(self.project)
             adapter=PiAdapter(coordinate.gateway,config,node='pause-host',environment=environment(),

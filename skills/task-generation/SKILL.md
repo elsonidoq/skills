@@ -192,6 +192,21 @@ not task preparation. Inadequate legacy returns to producing review/renewal, no 
 mass conversion, STATE initialization or historical rewrite. Reconcile active/unknown legacy
 writers before reusing an origin.
 
+Builtin runtime actions require explicit capability declarations for the actually exposed
+read_file/write_file/request_owner_input tools, every REQUIRED oracle and potentially mutating
+runner-git-commit stream (not unused registry checks). Their action_scope is canonical JSON:
+version 1, action ID, tasks with original IDs/owned_paths; read_file additionally includes
+sorted readable_paths from sources/approval record refs/owned paths. Check actions include
+checks with task_id/version/args_hash; PythonAnswer also declares execution=trusted-project-python.
+Use the delivered authority.action_requirement helper to obtain exact canonical bytes rather
+than narrative matching. Effects are external for local read/question actions, mutation for
+write/Git, test for oracles. External here is a local action, not network or financial authority.
+PythonAnswer executes explicitly trusted project code, not a harmless byte comparison or
+sandbox; a test declaration never infers arbitrary network/extra mutation authority. Keep
+workflow and applicable node permissions/effect restrictions consistent. Duplicate, missing,
+wrong-path/check/effect scopes block for producing renewal. Other scoped/paid-service actions
+retain their original semantics; never silently convert historical prose approvals.
+
 Root authorization_envelope and each task's authorization_envelope_id preserve selected exact
 profiles, capabilities/action scope, actual owner references and unresolved/denied/approved
 semantics. Ordinary approved-profile model traffic has no financial approval/cap/reservation.

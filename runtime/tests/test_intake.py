@@ -10,6 +10,15 @@ from coherence_workflow.store import Blocked, digest
 from fixtures.support import make_project
 
 
+def declare_builtin_actions(contract):
+    """Explicit current mandatory-test authority only; never historical conversion."""
+    from coherence_workflow.authority import action_requirement
+    names={'read_file','request_owner_input'}
+    if any(t['owned_paths'] for t in contract['tasks']):names.update(('write_file','runner-git-commit'))
+    names.update(i['check']['id'] for t in contract['tasks'] for i in t['required'])
+    contract['authorization_envelope']['capabilities']=[{'id':name,**action_requirement(contract,name)} for name in sorted(names)]
+
+
 def approved_fixture(project, config_hash, origin='TinySpec'):
     kinds = ['spec','plan','tasks','review'] if origin == 'Standard' else ['source','tasks']
     sources = []
@@ -45,6 +54,11 @@ def approved_fixture(project, config_hash, origin='TinySpec'):
                'actor':'fixture catalog: current owner isolated-test preapproval','authority_ref':'external-owner/'+kind,'action':'approve'}
         contract['approval_refs'].append(ref)
         catalog[ref['authority_ref']] = {k:ref[k] for k in ('actor','record_ref','record_sha256','scope_hash','gate_kind','action')}
+    declare_builtin_actions(contract)
+    for ref in contract['approval_refs']:
+        if ref['gate_kind']=='implementation':
+            ref['scope_hash']=approval_scope(contract,config_hash)
+            catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     return contract, catalog
 
 
