@@ -209,8 +209,11 @@ class Paseo:
         raise Blocked(last or 'required parent transport unavailable')
 
     def facade_command(self, operation, nonce, event=None):
-        # Use the actual approved interpreter/package, not a source-checkout-relative script.
-        argv=[sys.executable,'-m','coherence_workflow.cli',operation,'--project',str(self.authority.project),
+        # Bind the actual interpreter and imported package, excluding caller cwd/PYTHONPATH.
+        # -I is supported on Python 3.10; -P alone would neither be portable nor bind this root.
+        bootstrap='import sys,runpy;sys.path.insert(0,sys.argv.pop(1));runpy.run_module("coherence_workflow.cli",run_name="__main__",alter_sys=True)'
+        package_root=str(Path(__file__).resolve().parents[2])
+        argv=[sys.executable,'-I','-c',bootstrap,package_root,operation,'--project',str(self.authority.project),
               '--run',self.run,'--nonce',nonce]
         if event:argv+=['--event',event]
         label={'parent-ready':'READY','parent-received':'RECEIVED','parent-answer':'ANSWER'}[operation]

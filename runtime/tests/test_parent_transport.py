@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
+import unittest
 
 import yaml
 
@@ -228,3 +230,55 @@ class FacadeAuthorityTests(TransportFixture):
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         self.assertFalse(json.loads(result.stdout)['accepted'])
         self.assertTrue(json.loads(result.stdout)['questions'])
+
+
+class FacadeResourceTests(unittest.TestCase):
+    """R003 callbacks bind actual interpreter/package, not parent cwd/PYTHONPATH."""
+    def exercise(self, command, root):
+        import shlex
+        project=root/'foreign-project';project.mkdir()
+        conflict=root/'caller-path';conflict.mkdir()
+        marker=root/'shadow-executed'
+        for directory in (project,conflict):
+            package=directory/'coherence_workflow';package.mkdir()
+            (package/'__init__.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').write_text("shadow")\nraise RuntimeError("SHADOW_RUNTIME")\n')
+        for value in (None,str(conflict)):
+            env=dict(os.environ);env.pop('PYTHONPATH',None)
+            if value:env['PYTHONPATH']=value
+            result=subprocess.run(shlex.split(command.split(' # ')[0]),cwd=project,env=env,
+                capture_output=True,text=True,timeout=20)
+            self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+            self.assertEqual(json.loads(result.stdout),{'status':'blocked','reason':'parent channel project must be canonical'})
+            self.assertNotIn('ModuleNotFoundError',result.stderr)
+            self.assertNotIn('SHADOW_RUNTIME',result.stdout+result.stderr)
+            self.assertFalse(marker.exists(),'foreign cwd/environment shadowed approved runtime')
+        print('actual facade isolated interpreter/package; unset/conflicting PYTHONPATH and local shadow rejected')
+
+    def test_source_callback_does_not_depend_on_parent_import_environment(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);target=root/'project-target';target.mkdir()
+            project=root/'unregistered-project';project.symlink_to(target,target_is_directory=True)
+            capability=SimpleNamespace(authority=SimpleNamespace(project=project),run='unregistered')
+            command=Paseo.facade_command(capability,'parent-ready','no-gate')
+            self.exercise(command,root)
+
+    def test_wheel_callback_binds_its_actual_installed_package_and_interpreter(self):
+        from test_installation import PortableInstallationTests
+        PortableInstallationTests.setUpClass()
+        try:
+            fixture=PortableInstallationTests
+            target=fixture.root/'project-target';target.mkdir()
+            project=fixture.root/'unregistered-project';project.symlink_to(target,target_is_directory=True)
+            code='''from types import SimpleNamespace
+from pathlib import Path
+from coherence_workflow.notifications.paseo import Paseo
+capability=SimpleNamespace(authority=SimpleNamespace(project=Path(__import__('sys').argv[1])),run='unregistered')
+print(Paseo.facade_command(capability,'parent-ready','no-gate'))
+'''
+            generated=subprocess.run([sys.executable,'-c',code,str(project)],env=fixture.env,cwd=fixture.foreign,
+                capture_output=True,text=True,timeout=20)
+            self.assertEqual(generated.returncode,0,generated.stdout+generated.stderr)
+            self.assertIn(str(fixture.installed),generated.stdout,'callback did not bind wheel package root')
+            self.exercise(generated.stdout.strip(),fixture.root)
+        finally:PortableInstallationTests.doClassCleanups()
