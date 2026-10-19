@@ -65,18 +65,17 @@ settings resources; --project always names the separate execution worktree.
   `recover()` observes durable operations; it never releases or replays a tool.
   `resolve(op)` drains only proven-owned containment and reconciles partial files/Git.
 
-These are trusted runner interfaces, **not agent-exposed authority APIs**. T003 must
-validate external requests and owner scope before connecting task execution to this library. Production
-registry entries remain unavailable until their real implementations and capability proof
-exist. Fixture handlers used in engine tests are deliberately not Pi/approval certification.
+These are trusted runner interfaces, **not agent-exposed authority APIs**. Delivered intake,
+authority and registered task/review handlers validate external requests and scope before effects.
+Unregistered/unavailable capabilities still block before reliance. Fixture handlers used in engine tests are deliberately not Pi/approval certification.
 
 Every successful graph route must traverse intake → authority → custody → verification →
 checkpoint → independent review before a registered success terminal. Other terminals may
-block early. T001 supports acyclic graphs only; loops/retries are rejected until registered
-progress/reconciliation capabilities exist. Definition order is not scheduling; configured
+block early. Only registered bounded task-progress/repair/review/question cycles are admitted; arbitrary
+cycles or blind effect retries are rejected. Definition order is not scheduling; configured
 handlers/outcome edges/profile/skill bindings determine actual LangGraph routes. Reviewer
-nodes are read-only and role isolated; first-session independence still requires the future
-SDK/session capability, not a green synthetic handler. Runtime configuration/registry/source
+nodes are read-only and role isolated; actual fresh-first SDK session selection and current
+full-range review are required, not a green synthetic handler. Runtime configuration/registry/source
 and schema identities are pinned; changed inputs cannot silently apply to an existing run.
 
 ## Storage, launch and failure rules
@@ -113,8 +112,10 @@ path identity changes and unrelated drift. All tracked and untracked/ignored use
 unrelated STATE/custom content is preserved. Registered tools are trusted to respect owned
 paths; containment is not a filesystem sandbox. Inventory uses no optional Git locks;
 configured fsmonitor process hooks are unavailable rather than run outside custody.
-Git commits/recovery are not implemented here: uncertain Git effects always block and
-must never be replayed blindly. Future commits must retain signing/hooks and focused scope.
+Runner Git checkpoints and exact existing-commit recovery are implemented below. REQUIRED
+checks/original gates and actual owned/index/tree/operation receipts precede focused commits;
+uncertain effects block instead of blind replay. Signing/hooks remain enabled and scoped;
+recovery never invents success, replays commit blindly or discards partial/unrelated work.
 
 ## Containment and supported limits
 
@@ -144,12 +145,13 @@ and dirty/index/custom preservation. Cleanup touches only validated test-owned c
 Engine tests use actual StateGraph/SQLite saver and process death after app result before
 checkpoint. Printed hashes/routes/phase receipts are item-mapped proof, not live SDK proof.
 
-Rollout remains opt-in. On failure stop dispatch, preserve DB/evidence/partial work/commits,
+Runtime installation remains optional/explicit; the skill entry is now executable. On failure
+stop dispatch, preserve DB/evidence/partial work/commits,
 reconcile only owned scopes and leave unknowns blocked. Do not reset Git, erase history,
-auto-resume legacy, install services or claim later task acceptance. No existing workflow
-skill or operative policy was changed by T001/T002.
+auto-resume legacy, install services or infer acceptance. Historical T001/T002 did not amend
+policy; the later owner-approved operative amendment and guarded entry cutover are delivered.
 
-## T002 SDK/session seam (trusted library, not a task runner)
+## SDK/session seam (internal trusted adapter, composed by the executable runner)
 
 `pi_adapter.PiAdapter(gateway, manifest, node=..., environment=...,
 session_context={role, affinity, review_lineage}, reopen_from=None, host_path=None)`
@@ -203,7 +205,8 @@ oracle, and requests actual SDK abort/idle. Host death never proves tool quiesce
 survivor still records `ORPHAN_PROCESS` before release; resolving it does not resume the run.
 `close(force=True)` drains only its validated own host scope, not guessed PIDs. Close/reopen
 retains durable receipts; cleanup of fixture groups is separately validated test cleanup.
-Concurrent tool batches are not supported: an overlapping gateway operation blocks and
+Concurrent tool effects are not supported: same-prompt requests use the bounded FIFO below;
+an unregistered overlapping gateway operation blocks and
 drains rather than opening a second writer. T002 host lifetime audit accepts only a complete,
 applicable same-run task-tool baseline→result chain; unexplained files, active alarms,
 incomplete/forged receipts and HEAD/index changes block. Runner Git effects across an idle
@@ -411,8 +414,8 @@ a current passing rereview can resolve only checkpointed corrections. Acceptance
 required evidence, original permission/manual gates, full checkpoint chain and exact review head.
 Optional green, worker confidence, implementation completion and an old review cannot replace
 these conditions. An approved representative sample remains an unrun check until its real oracle
-runs. Standalone interaction is delivered below; interactive parent transport remains gated
-until its separately verified adapter is delivered.
+runs. Standalone and registered interactive-parent interaction are delivered below, each with
+its own verified authority/capability boundary.
 
 `status` exposes SQL-derived reviews/findings/budgets, unsuperseded metric records, exact blocker,
 current graph/attempt refs and null/unknown reasons without spawning agents or mutating projections.
@@ -686,3 +689,86 @@ restricted host, not blanket SDK immunity, zero vulnerabilities, or general CLI 
 Exposing default/package resources, model-scope/cycle/glob APIs, or finding a supported-input
 route immediately invalidates this rationale and blocks acceptance pending a narrow remedy.
 The independent full-range migration reviewer must inspect this residual and its rationale.
+
+## Final operating/rollback acceptance boundary
+
+Current public commands are start/resume/intake/status/pending/answer/control and generated
+parent-ready/parent-received/parent-answer callbacks. Status/pending print structured JSON
+without a --json flag. Intake uses --config-hash; start/resume use the flags above and resume
+requires --resume-authority. Generated parent callbacks bind --project/--run/--nonce and,
+for received/answer, --event. Do not handcraft an ACK: actual registered launch/tool evidence
+is still required. The callback binds its actual interpreter with Python -I and a fixed runpy
+bootstrap inserting the actual imported package parent, so caller cwd/PYTHONPATH cannot
+substitute another runtime. Source and wheel installations use the same CLI semantics.
+Packaged host/manifest/lock live under share/coherence-workflow/pi-host; actual Python/YAML/
+schema resources remain in coherence_workflow. No callback installs/provisions anything.
+
+A completed read/tool in an earlier settled batch does not prevent a new observed exclusive
+owner-question batch. Current pending/FIFO work, unknown registered process custody, stale/
+duplicate identity, mixed batches and post-question effects still block. Lifetime replay IDs
+are retained; kernel-empty/Git reconciliation and current SDK settlement precede durable park.
+
+For failed acceptance or unsupported capability: stop new dispatch, submit the bound pause/
+cancel, abort/drain actual owned scopes and reconcile partial files/Git before claiming stopped.
+An input receipt alone is not pause. If live tools remain, the CLI/runner keeps a blocker until
+explicit validated cleanup; unknown scopes/writers are never adopted or killed. Retain SQLite
+state/backups, real Pi conversations, immutable event/operation/check evidence, prior task SHAs,
+unrelated index/STATE/custom/history and partial owned work. A paused partial task is not accepted.
+No DB downgrade, Git reset/rewrite, evidence deletion or inferred task completion is permitted.
+
+Disable only the owner-reviewed selected entry/config through a scoped focused change after
+safe drain/reconciliation; do not modify an unowned/foreign link or global installation. This
+is a routing/adoption disable, not a new core security switch or permission to bypass paused
+state by invoking the CLI directly. Preserve the old runtime read-only for evidence/status.
+Never automatically restart legacy. Legacy requires explicit compatible current contract/
+authority and proven reconciliation of active/unknown writers; otherwise remain blocked.
+Re-enable only after remediation, affected verification and renewed current-range review.
+Fresh independent full-range migration review and all current REQUIRED/gates distinguish final
+acceptance from implementation completion. Changed skills/prompts need /reload when adopted,
+not an automatic global activation or reload of this bootstrap session.
+
+### Concrete builtin action authority and private process payloads
+
+Executable preflight derives the actually exposed node tools and whole REQUIRED check stream,
+not merely declared/available registry names. Each applicable action needs a unique explicit
+owner envelope declaration, compatible concrete scope/effects, workflow permission and applicable
+node restriction. Required oracles are not authorized by registry existence. Potentially mutating
+streams additionally declare runner-git-commit as a scoped mutation and workflow permission;
+Git remains runner-only, never an agent tool. No-change/read-only effects create no empty commit.
+
+Builtin action_scope is the canonical JSON produced by authority.action_requirement: version1,
+action, original tasks with id/owned_paths; read_file adds sorted readable_paths from owned/
+source/approval paths; a check adds task_id/version/args_hash stream entries. PythonAnswer marks
+execution=trusted-project-python. Effects: local read/question external, write/Git mutation,
+oracles test. Local external does not grant network or paid authority. PythonAnswer executes
+explicitly trusted project code, not a harmless byte oracle or filesystem/network sandbox;
+extra mutation/network/service authority is never inferred from a broad test label. Ordinary
+approved model traffic stays separately exact-profile-bound, without a financial capability.
+Other paid/external action scopes retain their existing original semantics.
+
+At actual checks, registered tools, question admission and Git dispatch the runner rechecks
+current admitted original contract/approvals, concrete scope and exact node/workflow policy.
+Missing production authorizer fails closed; preflight is not a cached grant. Unknown/omitted/
+duplicate/wrong task/path/check/effect declarations return producing renewal, not silent legacy
+conversion. Standalone trusted ledger/process protocol fixtures are not executable-workflow
+permission substitutes. Source launcher and internal Python helper/write imports bind isolated
+actual package roots with -I/-B; cwd/caller PYTHONPATH cannot shadow privileged runtime code.
+A separately authorized project-code test retains its own intended project import semantics.
+
+Non-Git process intents/events retain executable, argv_hash, environment_hash and required
+custody/file/Git reconciliation metadata, never the incoming write body or arbitrary argv/env
+values. Complete executable data travels only through process memory and the existing private
+inherited controller pipe: bounded1MiB initial JSON frame, membership/identity registration,
+then a separate matching release nonce before any task effect. The spawned test-hook boundary
+means manifest input available but identity not yet observed; spawned_before_payload proves
+independent pre-payload EOF cancellation. Malformed/oversize/truncated/EOF/mismatched release
+fails closed without payload echo. There is no persistent payload cache or automatic replay.
+Exact checkpoint-bound non-content Git argv is the sole retained argv exception, validated
+against original operation/task/path/message identity for focused receipt recovery.
+
+Old private/test SQL/event rows remain historical and are NOT scrubbed or relabeled as redacted.
+Changed code/input/protocol identities do not silently apply to pinned old runs. Lost private
+payload after interruption cannot be reconstructed/replayed from SQL; unknown effects still
+block for explicit reconciliation, preserving partial work and prior receipts. Check evidence
+is separately bounded registered-oracle output and must be non-sensitive/sanitized; this is
+process-payload minimization, not a general secret classifier or blanket transcript redaction.

@@ -215,3 +215,120 @@ class ActiveConsumersTests(unittest.TestCase):
                 path.write_text(original+'\n'+retired)
                 self.assertTrue(checker.active_consumer_errors(root))
         print(result.stdout)
+
+
+class RollbackTests(IsolatedCustody):
+    """Actual bound control, owned descendant drain, preserved accepted history, disabled entry."""
+    def setUp(self):
+        self.assertTrue(os.environ.get('COHERENCE_ROLLBACK_FIXTURE'),'explicit current composed fixture required; NOT VERIFIED')
+        retained=Path(os.environ['COHERENCE_ROLLBACK_FIXTURE']).resolve(strict=True)
+        self.assertTrue(retained.is_relative_to(ROOT/'.pi/workflow-validation/implementation/t009'))
+        self.root=Path(tempfile.mkdtemp(prefix='rollback-',dir=ROOT/'.pi/workflow-validation/implementation/t010'))
+        self.project=retained/'unrelated-adopted-project'
+        self.parent=os.environ['COHERENCE_TEST_CGROUP_PARENT'];self.capability=Cgroup(self.parent);self.receipts=[]
+        self.sentinel=subprocess.Popen(['/usr/bin/sleep','120'])
+        self.sentinel_identity=process_identity(self.sentinel.pid,'outside-sentinel')
+        self.outside=self.root/'outside.txt';self.outside.write_text('outside unchanged')
+        self.addCleanup(self.cleanup_scopes)
+
+    def test_failed_acceptance_safe_drain_preserves_sql_pi_commits_index_and_partial_work(self):
+        import time,uuid
+        from coherence_workflow.cli import Coordinate
+        from coherence_workflow.store import Authority,Blocked
+        from test_controls import control_value
+        from test_pi_adapter import environment
+        from fixtures.custody_support import process_tool
+        project=self.project
+        accepted_head=git(project,'rev-parse','HEAD').decode().strip()
+        before=snapshot(project,['owned.txt'])
+        pi_files={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in (project/'.coherence/workflow/sdk/sessions').glob('*.jsonl')}
+        self.assertTrue(pi_files,'must preserve real original Pi conversations, not placeholders')
+        run='rollback-'+uuid.uuid4().hex
+        import shlex
+        selected_entry=self.root/'coordinate-entry'
+        initial_entry='#!/bin/sh\nexec '+shlex.quote(str(ROOT/'scripts/coordinate-implementation'))+' "$@"\n'
+        selected_entry.write_text(initial_entry);selected_entry.chmod(0o700)
+        # The original selected entry is ACTUALLY invoked before its scoped disable change.
+        initial=subprocess.run([str(selected_entry),'status','--project',str(project),'--run','composed-cutover'],
+            env=dict(os.environ,COHERENCE_PYTHON=sys.executable),capture_output=True,text=True,timeout=20)
+        self.assertEqual(initial.returncode,0,initial.stdout+initial.stderr);self.assertTrue(json.loads(initial.stdout)['accepted'])
+        with Authority(project) as owner:
+            original={table:[tuple(r) for r in owner.store.db.execute('SELECT * FROM '+table+" WHERE run_id='composed-cutover' ORDER BY rowid")]
+                for table in ('wf_runs','wf_operations','wf_events','wf_tasks','wf_checks','wf_reviews')}
+            backup=sqlite3.connect(self.root/'before.sqlite');owner.store.db.backup(backup);backup.close()
+            config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
+            contract,catalog=approved_fixture(project,digest(config))
+            owner.store.reserve(run,digest(config))
+            c=Coordinate(owner,run,contract,catalog,config,self.parent,manifest(project,tools=False),environment())
+            c.intake({});binding=c.publish_run_binding();c.select({})
+            from coherence_workflow.tools import Gateway
+            # Explicit trusted rollback custody probe, not a configured agent-tool grant.
+            c.gateway=Gateway(owner,run,self.parent,{'fixture':process_tool(project)})
+            op,process=c.gateway.launch('rollback-active','fixture','1',{'mode':'survivor_hang','exit':0})
+            self.receipts.append(json.loads(owner.store.db.execute('SELECT containment FROM wf_processes WHERE op_id=?',(op,)).fetchone()[0]))
+            deadline=time.monotonic()+10
+            while 'child' not in (project/'owned.txt').read_text():
+                if time.monotonic()>deadline:self.fail('actual scoped descendant did not write')
+                time.sleep(.01)
+            with self.assertRaisesRegex(Blocked,'current full-range independent review required'):
+                c.review_repair.acceptance()
+            value=control_value(binding,'pause','rollback-pause-'+uuid.uuid4().hex,active=False)
+            incoming=self.root/'pause.json';incoming.write_text(canonical(value))
+            authority=self.root/'pause-authority.json';authority.write_text(canonical({'input_hash':digest(value),'scope':'within_envelope','authority_ref':value['owner_authority_ref']}));authority.chmod(0o600)
+            control=subprocess.run([str(selected_entry),'control','--project',str(project),'--run',run,
+                '--input',str(incoming),'--input-authority',str(authority)],
+                env=dict(os.environ,COHERENCE_PYTHON=sys.executable),capture_output=True,text=True,timeout=20)
+            self.assertEqual(control.returncode,0,control.stdout+control.stderr)
+            self.assertEqual(json.loads(control.stdout)['stage'],'received','no false pause before actual drain')
+            with self.assertRaisesRegex(Blocked,'custody not quiescent'):c.controls_boundary()
+            with self.assertRaisesRegex(Blocked,'unreconciled process'):owner.store.assert_dispatchable(run)
+            drained=c.gateway.resolve(op);process.wait(timeout=10)
+            self.assertTrue(drained['replacement_allowed']);self.assertEqual(drained['empty_receipt']['populated'],0)
+            partial=(project/'owned.txt').read_bytes();self.assertIn(b'child',partial)
+            with self.assertRaisesRegex(Blocked,'paused; no worker ACK'):c.controls_boundary()
+            row=owner.store.db.execute('SELECT stage,receipt FROM wf_owner_inputs WHERE input_id=?',(value['input_id'],)).fetchone()
+            self.assertEqual(row['stage'],'reconciled');self.assertFalse(json.loads(row['receipt'])['worker_acknowledged'])
+            self.assertEqual(owner.store.db.execute('SELECT state FROM wf_runs WHERE run_id=?',(run,)).fetchone()[0],'paused')
+            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE run_id=? AND kind='git-checkpoint'",(run,)).fetchone()[0],0)
+            for table,rows in original.items():
+                self.assertEqual(rows,[tuple(r) for r in owner.store.db.execute('SELECT * FROM '+table+" WHERE run_id='composed-cutover' ORDER BY rowid")],table)
+            backup=sqlite3.connect(self.root/'after.sqlite');owner.store.db.backup(backup);backup.close()
+            self.assertEqual(owner.store.db.execute('PRAGMA integrity_check').fetchone()[0],'ok')
+        # Actual entry refuses an unsupported capability before dispatch, keeping prior SQL/commits.
+        for name,payload in {'workflow.yaml':yaml.safe_dump(config),'tasks.json':canonical(contract),
+                             'catalog.json':canonical(catalog),'manifest.json':canonical(c.manifest)}.items():
+            p=self.root/name;p.write_text(payload);p.chmod(0o600)
+        capability_denial=subprocess.run([str(selected_entry),'start','--project',str(project),'--run','unsupported-'+run,
+            '--workflow',str(self.root/'workflow.yaml'),'--tasks',str(self.root/'tasks.json'),
+            '--owner-catalog',str(self.root/'catalog.json'),'--manifest',str(self.root/'manifest.json'),
+            '--containment',str(self.root)],env=dict(os.environ,COHERENCE_PYTHON=sys.executable),
+            capture_output=True,text=True,timeout=20)
+        self.assertEqual(capability_denial.returncode,2,capability_denial.stdout+capability_denial.stderr)
+        self.assertIn('approved owned cgroup-v2 delegation unavailable',capability_denial.stdout)
+        # Disable only this exact owned selected-entry wrapper; preserve its shipped target.
+        old=selected_entry.lstat();target=ROOT/'scripts/coordinate-implementation'
+        delta={'scope':'standing owner preapproved isolated rollback test; full migration review still required',
+               'before_target':str(target),'before_sha256':hashlib.sha256(initial_entry.encode()).hexdigest(),'before_device':old.st_dev,'before_inode':old.st_ino,
+               'after':'blocking shim, no legacy fallback'}
+        (self.root/'entry-disable-scope.json').write_text(canonical(delta))
+        self.assertFalse(selected_entry.is_symlink());self.assertEqual(selected_entry.lstat(),old)
+        self.assertEqual(selected_entry.read_text(),initial_entry)
+        selected_entry.write_text('#!/bin/sh\nprintf "%s\\n" "workflow entry disabled: explicit compatible authority/reconciliation required; legacy remains off" >&2\nexit 2\n');selected_entry.chmod(0o700)
+        disabled=subprocess.run([str(selected_entry),'start'],capture_output=True,text=True,timeout=10)
+        self.assertEqual(disabled.returncode,2);self.assertIn('legacy remains off',disabled.stderr)
+        self.assertEqual((project/'owned.txt').read_bytes(),partial)
+        self.assertEqual(git(project,'rev-parse','HEAD').decode().strip(),accepted_head)
+        after=snapshot(project,['owned.txt'])
+        self.assertEqual(before['index'],after['index'])
+        for path,value in before['files'].items():
+            if path!='owned.txt':self.assertEqual(value,after['files'][path],path)
+        self.assertEqual(pi_files,{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in (project/'.coherence/workflow/sdk/sessions').glob('*.jsonl')})
+        proof={'root':str(self.root),'project':str(project),'run':run,'prior_accepted_run':'composed-cutover',
+            'prior_head_preserved':accepted_head,'index_hash_preserved':before['index'],
+            'before':before,'after':after,'real_pi_hashes_preserved':pi_files,
+            'database_backups':{name:hashlib.sha256((self.root/name).read_bytes()).hexdigest() for name in ('before.sqlite','after.sqlite')},
+            'prior_SQL_rows_unchanged':True,'actual_empty':drained['empty_receipt'],'partial_hash':hashlib.sha256(partial).hexdigest(),
+            'entry_scope':delta,'trigger':'actual current full-range acceptance rejection and actual unsupported-containment CLI denial',
+            'unsupported_capability_exit':capability_denial.returncode,'control_exit':control.returncode,'disabled_exit':disabled.returncode,
+            'residual':'Known paused test run/reservation and partial owned.txt intentionally retained; no SDK/model calls or legacy restart, no reset/downgrade/history deletion.'}
+        (self.root/'proof.json').write_text(canonical(proof));print(canonical(proof))

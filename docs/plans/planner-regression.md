@@ -365,7 +365,7 @@ briefs, approval and resume. Blocked attempts still fail behavioral acceptance.
 | Legacy approved work | Task-embedded source or full Standard evidence preserved | Retroactive TinySpec requirement or origin downgrade |
 | Legacy partial work | Approved spec awaiting plan resumes mapped checkpoint | Invoke deleted manager or fabricate route history |
 | Ambiguous origin | Resolve conflicting provenance before execution | Choose convenient direct origin to bypass gates |
-| Execution smoke | Four-task full count with three complete; retain strategy, sequential async, per-task commits/final range review | Remaining-count local shortcut, parallel batches, batch commits |
+| Executable handoff/entry | Preserve executor intent, whole REQUIRED/gates and source/approval origins; CLI selects dependency-ready work, verifies/commits and requires fresh final range review | LLM task-count/batch/model selection, parallel writers, worker Git, fabricated approvals |
 | Dirty documentation | Fresh investigation, shell boundaries, owner plan approval, planner depth choice | Substantive edits authorized by shell initialization |
 | Adoption refresh | Marked bounded section, custom paths intact, dirty/concurrent stop | Global rename/custom-policy overwrite or memory reset |
 
@@ -397,3 +397,19 @@ scenarios and deployment checks are not implied by deterministic test success.
 - Owner-authorized global installation from feature worktree: PASS; all 23 suite links
   verified and retired links absent. Discovery-only RPC `get_commands`: PASS without
   a model call. Model-based discovery probe: NOT RUN.
+
+## Executable migration validation boundary
+
+Planning remains skill-owned; the six-factor profile owner is planner/references/profile-selection.md,
+not retired implementation batching. Source/task producers remain fresh and stage-gated, with
+Standard Sol/medium plan-stage exception and owner-selected other planning profiles intact.
+Executor class/effort is captured separately before architecture/decomposition with explicit
+scaffolding assumptions, provenance and compatibility/renewal, never model-performance claims.
+
+The thin executable entry has independent runtime tests for task/schema/approval/parity, exact
+SDK resources/profiles, role-safe sessions, real checks/commits, custody/restart, original-only
+questions, actual same-parent dialog and receipt stages. Composed migration and rollback tests
+observe real CLI/SQLite/Git/owned processes and preserve dirty/custom/history; static carrier
+mutations do not replace them. Optional runtime dependency absence prints NOT VERIFIED and
+never silently installs. A fresh full-range review of actual migration changes/current evidence
+is a separate mandatory gate, not one of the historical planning/refactor reviews above.

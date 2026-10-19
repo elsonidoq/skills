@@ -1,25 +1,28 @@
 # Coordinate Implementation schema owner
 
-This is the canonical owner for the **delivered foundation and T002 adapter**, alongside
+This is the canonical owner for the **delivered executable runtime**, alongside
 [operating/security guidance](coordinate-implementation.md). The [design data model](../specs/003-coordinate-workflow/data-model.md)
 and [reviewed contracts](../specs/003-coordinate-workflow/contracts/README.md) describe the
-complete planned runtime. Tables and projections for later tasks are not implicitly installed.
+approved design. The sections below describe current delivered tables, projections and limits,
+not hypothetical future installation.
 
 ## Packaged contracts
 
 `runtime/coherence_workflow/schemas/` contains the eight reviewed draft-2020-12 JSON schemas,
-byte-equivalent to the approved design copies at T001 delivery:
+with version-1 identifiers preserved. T001 delivered byte-equivalent design copies; T008
+intentionally extends both task schema carriers for executor-aware planning. Original source/
+approval snapshots are preserved, not relabeled as approval of arbitrary new schema bytes:
 
 | File | Boundary |
 | --- | --- |
 | `shared.schema.json` | IDs/digests/paths, profiles, session policy, evidence and provenance definitions |
 | `workflow.schema.json` | Closed version-1 declarative node/transition/profile/skill/settings/storage configuration |
-| `task.schema.json` | Full normalized origin/order/ownership/REQUIRED/gates/authorization contract; intake later |
-| `agent-result.schema.json` | Untrusted proposed implementation/review result; task-result admission later |
-| `execution-result.schema.json` | Runner-audited outcome, REQUIRED dispositions and mandatory survivor blocking; public aggregation later |
+| `task.schema.json` | Full normalized origin/order/ownership/REQUIRED/gates/authorization contract and executor intent; delivered intake |
+| `agent-result.schema.json` | Untrusted proposed implementation/review result; delivered result admission |
+| `execution-result.schema.json` | Runner-audited outcome, REQUIRED dispositions and mandatory survivor blocking; runner authority remains distinct |
 | `host.schema.json` | Delivered SDK envelope; closed op payload/phase validation in host.mjs and pi_adapter.py |
-| `interaction.schema.json` | Original question pins, owner/control/provenance/transport authority; interaction later |
-| `projection.schema.json` | Derived versioned state/events/metrics; publisher later |
+| `interaction.schema.json` | Original question pins, owner/control/provenance/transport authority; delivered interaction |
+| `projection.schema.json` | Derived versioned state/events/metrics; delivered publisher |
 
 Schema `$id`s retain their reviewed `https://coherence.invalid/design/v1/` identifiers.
 `registry.validate_schema(name,value)` resolves references from packaged resources locally,
@@ -31,12 +34,12 @@ Workflow semantic validation additionally rejects duplicate YAML keys, all expli
 anchors/aliases, >256 KiB inputs, >128 nodes, unknown/unused node references, handler-version/
 outcome/effect mismatch, absent capability/resources, unsafe/symlink paths, resource hash
 drift, permission escalation, unsupported interaction/retries/cycles, unreachable/dead-end
-nodes and paths bypassing required safety stages. Supported T001 graphs are acyclic.
+nodes and paths bypassing required safety stages. Only registered bounded task/repair/review/owner-question cycles are admitted.
 Success terminals are registered trusted handlers, not an outcome inferred from prose.
 Node results use the trusted handler's closed result schema; the foundation default is
-`{outcome: string, value?: bounded string}`. Agent-result schemas are packaged, not a claim
-that a workflow task-result/acceptance handler is present. Each registered check has closed `test_file`/`selector`
-constants and version `1`: `workflow.ConfigGraphTests`, `workflow.CustodyTests`,
+`{outcome: string, value?: bounded string}`. Delivered task/repair/review handlers validate the packaged agent-result schema; model output
+never supplies mechanical acceptance. Registered unittest checks have closed `test_file`/`selector`
+constants/version `1`; file-byte/PythonAnswer oracles have their own closed arguments. Foundation selectors include: `workflow.ConfigGraphTests`, `workflow.CustodyTests`,
 `workflow.LaunchCrashTests`, `workflow.LedgerCheckpointTests`.
 
 ## One application database, schema version 1
@@ -59,10 +62,11 @@ schema versions block before DDL; there is no automatic migration/downgrade.
 | `wf_processes` | operation PK/FK, `scope_kind=host|task_tools`, unique child `name`, containment and process identity JSON, nullable exit code, empty receipt and reconciliation JSON |
 | `wf_alarms` | `alarm_id` PK, process-operation FK, `kind=ORPHAN_PROCESS`, active/resolved state, original event-sequence FK, resolution JSON; one active alarm per operation |
 
-Sequences are global for this foundation database; they are immutable history in the runner
-API, not yet the planned per-run public projection sequence. Projections are not published
-or read for decisions. No wf_tasks/sessions/checks/gates/outbox tables exist until their
-respective delivery. Pi conversation data never becomes workflow authority.
+Sequences are global for this database; they are immutable runner history and define published
+record ordering. Per-run projections are derived, never read for decisions. Delivered task/check/
+gate/interaction/review/projection tables are documented below. Sessions/metrics use existing
+operation/event receipts rather than fictitious separate authority tables. Pi conversation data
+never becomes workflow authority.
 
 ## Transactions and replay
 
@@ -91,8 +95,9 @@ replay reconciliation are **not exactly-once external effects** or an atomic app
 
 Process operations use phases `intent → contained → prepared → released → completed`:
 
-1. Intent holds unique operation/tool/version/argv/environment, nonce/name, explicit owned
-   paths and baseline HEAD/index/file fingerprints. No raw file contents/tool output enter SQL.
+1. Intent holds unique operation/tool/version, executable/argv_hash/environment_hash, nonce/name,
+   explicit owned paths and baseline HEAD/index/file fingerprints. Incoming process write bodies
+   and arbitrary argv/env values are not persisted; bounded registered check evidence is separate.
 2. `contained` records fresh child UID/device/inode/name+parent/boot before helper spawn.
 3. `prepared` records helper PID/start/UID/parent/boot/nonce after validated membership.
 4. `released` commits release intent before sending the matching nonce on the inherited gate.
@@ -109,10 +114,9 @@ Survivors override exit 0/1/kill. Resolution retains alarm history, records vali
 and actual reconciliation, and does not clear blocked run state or grant acceptance/resume.
 Idle host scopes have a distinct outcome, not a task-tool alarm.
 
-Current receipts are trusted runner-internal records, not serialized public projection/
-execution-result envelopes. T002 adds SDK telemetry/null-reason segments below. Public
-projections, intake/owner authority, Git commit receipts and UI integration remain later
-tasks and must use the packaged contracts plus their semantic rules. No schema-valid fixture can authorize execution.
+Receipts remain trusted runner-internal records, distinct from sanitized public projection/
+execution-result envelopes. Delivered SDK telemetry, public projections, owner intake, focused
+Git receipts and parent integration are described below and retain their semantic gates. No schema-valid fixture can authorize execution.
 
 ## T002 internal SDK facts and usage segments (no DDL migration)
 
@@ -187,8 +191,8 @@ connection and WAL/FULL/foreign-key policy; they do not make saver commits atomi
 
 Graph operations use `node:visit` logical identities only for the registered bounded
 `task_select` cycle. The approved task-count bound and external input identity are in the
-engine hash. A checkpoint-to-selector backedge is the only task-progress cycle admitted;
-other cycles remain blocked. Registry CHECKS contains closed v1 selectors. Check receipts
+engine hash. The checkpoint-to-selector backedge is the task-progress cycle; only the additional registered
+bounded repair/review/question cycles below are admitted. Other cycles remain blocked. Registry CHECKS contains closed v1 selectors. Check receipts
 contain source revision, exact check arguments, item mappings, Python/platform identity,
 collected count, exit, bounded output, timestamps, applicability and disposition. Applicability
 binds the whole item, owned bytes and environment. Unknown/unrun is not zero or pass.
@@ -280,7 +284,7 @@ change graph/configuration/custody. WAL/FULL/foreign keys and bounded busy timeo
 | `wf_questions` | gate PK; run FK; UNIQUE turn-op FK; call ID; canonical binding; UNIQUE nonce; bounded canonical request; stage; original pin and settlement proof. UNIQUE(run,call); one unresolved parking/pending/answered/delivering gate per run |
 | `wf_question_parks` | gate PK/FK, actual sync-saver checkpoint ID, interrupted gate node, original graph-op FK. A SQL pending gate without this receipt is not answer/transport eligible |
 | `wf_owner_inputs` | input PK; run FK; nullable gate FK; complete input hash and safe canonical payload; stage; nullable delivery/facts/stop receipt. One answer per nonnull gate; identical duplicates return the original aggregate without redispatch |
-| `wf_outbox` | stable event PK, run FK, UNIQUE gate FK, stage and nullable receipt. T006 creates recorded only; no parent sender is enabled |
+| `wf_outbox` | stable event PK, run FK, UNIQUE gate FK, stage and nullable receipt. question park creates recorded; the registered T007 sender advances it after genuine readiness |
 | `wf_controls` | input PK/FK, immutable canonical target binding, action/scope/message. Control stages are in wf_owner_inputs and append-only events |
 | `wf_run_bindings` | run PK/FK, immutable run-scoped source/approval/config binding with null task/node/attempt/session/role/task hash |
 | `wf_active_targets` | run PK/FK, actual current task/node/attempt/session/role/source/task/approval/config binding; removed after host close/stop. Inputs never silently retarget |
@@ -408,3 +412,56 @@ Unresolved/incompatible execution intent blocks dispatch. Changed intent assesse
 boundaries/detail/assumptions and renews affected current-content approvals; no automatic full
 regeneration/escalation. The approved original migration task/source snapshot remains unchanged;
 new schema bytes and renewed fixture approval hashes are not historical owner approval.
+
+## Published version-1 field inventory
+
+Each record has `schema_version`, `run_id`, `seq`, `record_id`, `timestamp`, `kind`, `payload`.
+Schema version 1 and global SQL seq/event IDs provide stable identity/order, not exactly-once
+external side effects. State is atomically replaced; append projections reconcile complete
+records/torn tails from SQL under the publisher lock. Status is read-only and reports lag.
+
+- **state payload**: `status`, `acceptance`, `config_hash`, `checkpoint_ref`, `task_id`, `node_id`, `attempt_id`, `gate_ref`, `blocker`, `projection_lag`, `alarms`, `pending_question_ref`, `outbox_ref`, `control_stage`.
+- **event payload**: `kind`, `operation_ref`, `attempt_ref`, `details_schema`, `details`.
+- **metric payload**: `task_id`, `attempt_id`, `node_id`, `role`, `requested_profile`, `observed_runtime`, `observed_request`, `provider_acknowledged`, `skill_requested`, `skill_observed`, `session_id`, `context_group`, `reused`, `selection_reason`, `started_at`, `ended_at`, `elapsed_ms`, `outcome`, `retry_count`, `repair_count`, `evidence_refs`, `baseline_sha`, `result_sha`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, `context_start`, `context_end`, `threshold_start`, `threshold_end`, `headroom_start`, `headroom_end`, `telemetry_provenance`, `unknown_reasons`, `supersedes`.
+
+Unsupported observations remain null with explicit unknown_reasons, never invented zeros.
+Real zero cache is valid. Requested/runtime/request-observed/provider-acknowledged profiles are
+separate; absent provider acknowledgement is null. Current occupancy/headroom is not cumulative
+billing. Counter deltas require same session/branch/epoch and exclusive monotone continuity;
+reopen/reset/interruption establishes new baselines or null reasons. Metric revisions use
+supersedes; select the unsuperseded attempt record, never sum revisions as extra usage.
+Non-agent nodes have null Pi/token fields. Public event details are sanitized hashes/schema
+references, not raw tool transcripts, credentials or private reasoning.
+
+## Concrete action scopes and private process-intent compatibility
+
+Builtin action_scope is a canonical JSON string, not narrative matching: version=1, action,
+tasks=[{id,owned_paths}]; read_file additionally readable_paths (sorted union of source paths,
+approval record refs and owned paths); registered check actions additionally checks entries
+{task_id,version,args_hash}. PythonAnswer includes execution=trusted-project-python to disclose
+trusted project-code execution rather than byte-only checking/sandboxing. task-generation
+uses authority.action_requirement to preserve exact bytes. Effects are external for local
+read/question, mutation for write/runner-git-commit, test for checks; no inferred network/
+financial authority. Missing/duplicate/unknown/mismatched declarations require producing renewal.
+The actual full REQUIRED stream and exposed tools must be declared, but unused registry actions
+are not demanded. Workflow and exact node permissions/effects restrict, never replace owner
+scope. Runtime callbacks check at actual check/tool/question/Git effects; absent production
+callbacks deny. Immutable admitted contract/current approval and original/correction task/check
+identity are rechecked. Model profiles and separately chargeable service authority stay separate.
+
+New process intent metadata has executable, argv_hash and environment_hash instead of arbitrary
+argv/environment data. Baseline/path/nonce/child/identity/reconciliation fields remain. Only exact
+checkpoint-bound runner-git-commit metadata retains safe argv, validated against the planned
+operation/message/paths before persistence and again by receipt reconciliation. This is not
+a caller-selectable payload-logging exemption. No schema/SQL history rewrite is performed.
+Existing private raw-argv history is historical, not retrospectively redacted; older pinned runs
+do not auto-adopt changed code or handoff semantics.
+
+Tool-process bootstrap receives only inherited FD numbers. Its bounded1MiB private initial
+manifest frame carries executable data/receipt/cwd/environment in memory, not SQL or helper
+startup argv; a separate nonce frame releases work only after durable membership/identity.
+Malformed/oversize/truncated/EOF/mismatched release stops without task effects/body echo. Payload
+is not durably cached; restart inspects custody/files/Git and blocks unknown effects, never
+reconstructs/replays a lost executable payload from hashes. Registered check outputs remain
+bounded allowlisted evidence with non-sensitive-data obligations, not generic raw tool stdout
+or a universal secret-classification system.
