@@ -26,6 +26,17 @@ Check:
 
 Read the changed code and enough surrounding context to substantiate each finding. Do not infer success solely from a summary or reported test result.
 
+## Executable review binding
+
+For runner review use the supplied packaged agent-result.schema.json, exact task/attempt/
+contract identity and range_base/range_head. Return kind review and pass/correction/blocked
+with stable finding IDs, severity, criterion_ref, location, evidence, proposed_action and scope.
+Narrative cannot select graph outcomes. Remain read-only; never become the repair producer,
+commit or weaken REQUIRED/manual/permission gates. Review the entire committed range with
+source/tasks/approval and current item proof. First final review is fresh independent context;
+later rounds may reuse only eligible own-review lineage. Questions use request_owner_input,
+not direct ask_user; original-only answer continuity and owner scope gates still apply.
+
 ## Output
 
 List findings first, ordered by severity. For each finding include:

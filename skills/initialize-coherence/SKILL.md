@@ -193,6 +193,13 @@ and `compact-memory` can cite it. Record:
   Only explicit future-directed user feedback authorizes bounded guidelines storage, not
   auto-init, routine summaries/index updates, reflection or inferred lessons. Preserve local
   path/symlink, sensitive-data and dirty/concurrent ownership protections.
+- Executable runtime: report optional explicit isolated Python/SDK setup and approved skill/
+  settings resource root. Missing dependency/auth/containment blocks execution, never silent
+  provisioning or task mass conversion. Core standalone CLI has no Paseo dependency; selected
+  interactive mode requires verified same-parent transport and actual registered ask_user.
+  Record resolving operating/schema owners, preserve original approvals and reconcile any
+  active/unknown legacy writer before execution-origin reuse. Refresh only approved marked
+  association bounds; preserve every unrelated/custom byte and dirty/concurrent protections.
 - Recovery association: preserve any existing STATE/custom content and document its existing
   location when applicable; no STATE initialization or upkeep. Reference installed execution
   and approval/recovery owners above, not a project-local workflow ledger. Keep pi sessions

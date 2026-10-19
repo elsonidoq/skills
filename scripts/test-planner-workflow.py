@@ -647,8 +647,8 @@ class ProportionateValidationTests(unittest.TestCase):
         self.assert_clause_required("tasks", "owner-required criteria", "validation-tasks")
 
     def test_timeout_narrows_remaining_work_without_blind_retry(self):
-        for clause in ("On timeout inspect the checkpoint and failed", "preserve completed proof",
-                       "narrow only the diagnosed remaining work", "Rotation is not retry authority"):
+        for clause in ("Inspect a failed\nrun and its invocation", "unknown cause stops blind retries",
+                       "Preserve partial and unrelated work"):
             self.assert_clause_required("coordinator", clause, "validation-timeout")
 
     def test_reuse_and_causal_repairs_avoid_repeated_intake(self):
@@ -737,12 +737,12 @@ class InstructionTests(unittest.TestCase):
             ("tasks", "stable task-local references", "unstable references", "task-contract:"),
             ("brainstorm", "no more than three items", "unbounded agenda", "brainstorm:"),
             ("brainstorm", "Only in selected-production", "In any mode", "brainstorm:"),
-            ("coordinator", "Commit each task's verified changes as one focused owned-path commit", "Commit each batch", "execution-checkpoints:"),
-            ("coordinator", "sequentially, never in parallel", "foreground is fine", "execution-sequential:"),
+            ("coordinator", "checkpoint per implementation/repair task", "checkpoint per batch", "execution-checkpoints:"),
+            ("coordinator", "Only satisfied REQUIRED items and fulfilled original gates release", "Any report releases", "execution-sequential:"),
             ("coordinator", "TinySpec needs separate source/tasks", "source checklist only", "intake:"),
-            ("coordinator", "Copy the owner-selected exact profile", "Use an agent default", "execution-selection:"),
-            ("coordinator", "at assignment and dispatch", "at assignment only", "execution-selection:"),
-            ("coordinator", "Completing tasks does not change that strategy", "Recount incomplete tasks", "execution-strategy:"),
+            ("coordinator", "approved exact implementation/repair bindings", "agent default bindings", "execution-selection:"),
+            ("coordinator", "separately from planning/reviewer profiles", "inferred from planning profiles", "execution-selection:"),
+            ("coordinator", "never fresh-session substitution", "use a fresh session", "execution-strategy:"),
             ("adoption", "every unrelated byte", "custom content", "adoption:"),
             ("docs", "not substantive implementation authorization", "implementation authorization", "docs:"),
         ]
@@ -1198,7 +1198,7 @@ class ProjectCoordinationWiringTests(unittest.TestCase):
         text = texts["coordinator"]
         self.assertNotIn("### Coordination evidence checkpoint", text)
         self.assertNotIn("## Coordination reflection and guideline approval", text)
-        self.assertIn("No extra\nevidence-only checkpoint", text)
+        self.assertIn("No extra evidence-only checkpoint", " ".join(text.split()))
         for clause in ("No feedback means no write", "without a routine second exact-content approval", "never history/index/run scaffolding"):
             changed = dict(texts)
             changed["coordination"] = re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", changed["coordination"])
@@ -1952,12 +1952,34 @@ class ComparativeCarrierTests(unittest.TestCase):
             ("routing", "Family explains sufficient capability versus the named adequate alternative", "routing-comparison:"),
             ("routing", "pending readiness is not inadequacy", "routing-comparison:"),
             ("routing", "strict requirement versus a default preference", "routing-comparison:"),
-            ("coordinator", "separate comparative Family and Effort rationales", "routing-tradeoff:"),
+            ("coordinator", "cannot select tasks, models, sessions, retries, repairs, commits or acceptance", "runtime-authority:"),
         ):
             with self.subTest(clause=clause):
                 changed = dict(texts)
                 changed[key] = changed[key].replace(clause, "REMOVED", 1)
                 self.assertTrue(any(e.startswith(label) for e in checker.check_contracts(changed)))
+
+
+class PlanningSeedPreservationTests(unittest.TestCase):
+    """Planning-only safety from retired execution seed; no callable ranking oracle."""
+    def test_six_factors_family_effort_and_evidence_boundaries_survive_owner_move(self):
+        text=(ROOT/checker.PATHS['routing']).read_text()
+        for factor in ('Residual reasoning','Agentic/tool depth','Verification blind spots',
+                       'Scope/coupling','Failure cost/reversibility','Applicable approved guidance'):
+            self.assertIn(factor,checker.section(text,'## Assess all six factors'))
+        body=checker.section(text,'## Provisional family and effort choices')
+        rows=[line.split('|')[1].strip() for line in body.splitlines() if line.startswith('| ')]
+        self.assertEqual(rows[2:6],['Luna','Sol','Astra','Terra'])
+        for clause in ('Family rationale','Effort rationale','Luna/max','no universal ladder',
+                       'family does not imply an effort','no fixed family-to-effort step follows',
+                       'no family ranking follows','neither require equal proposal rows nor enumerate variants'):
+            self.assertIn(clause,body)
+            self.assertNotIn(clause,body.replace(clause,'REMOVED'))
+        evidence=checker.section(text,'## Evidence limits')
+        for clause in ('Unlike harnesses','no row supplies Pi probabilities','causal effort gains',
+                       'Evidence absence/non-reliance is explicit'):
+            self.assertIn(clause,evidence)
+        self.assertIn('cannot bypass a manager-governed Standard rule',text)
 
 
 class RuntimeHandoffTests(unittest.TestCase):

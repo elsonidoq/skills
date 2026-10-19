@@ -28,7 +28,6 @@ PATHS = {
 # A7 bounded inventory: each consumer carries A1/A2 pending, A3 first-launch readiness,
 # A4 independent comparison and A5/A6 exact selection through its existing dispatch guards.
 ROUTING_CARRIERS = (
-    ("rubric-coordinator", "coordinator", "## Prepare Approved Execution"),
     ("rubric-planner", "planner", "## Shared routing selection"),
     ("rubric-helper", "helper", "## Preflight"),
     ("rubric-brainstorm", "brainstorm", "## Capability preflight"),
@@ -138,7 +137,7 @@ def check_contracts(texts):
         require(label, body, *ROUTING_SEQUENCE)
         reject(label, body, "compare only verified alternatives", "verify readiness before proposing",
                "silently substitute Sol", "always audit provider source before comparison")
-    for label, key, heading in ROUTING_CARRIERS[:2]:
+    for label, key, heading in ROUTING_CARRIERS[:1]:
         require(label, section(texts[key], heading),
                 "Start the first proposal with demands/oracles, inspect material evidence or state non-reliance",
                 "then compare suitable family/effort options before readiness")
@@ -338,20 +337,22 @@ def check_contracts(texts):
     require("validation-execution", section(c, "## Execute and Integrate"),
             "REQUIRED checks", "optional checks cannot compensate", "manual/permission gates block reliance",
             "smallest sufficient layer", "same original contracts")
-    require("validation-timeout", section(c, "## Delegate"), "On timeout inspect the checkpoint and failed",
-            "preserve completed proof", "narrow only the diagnosed remaining work", "Rotation is not retry authority")
+    require("validation-timeout", section(c, "## Recover Context"),
+            "Inspect a failed run and its invocation", "unknown cause stops blind retries",
+            "Preserve partial and unrelated work")
     require("execution-checkpoints", section(c, "## Execute and Integrate"),
-            "Commit each task's verified changes as one focused owned-path commit",
-            "No extra evidence-only checkpoint", "failed recovery stops dispatch", "Healthy internal tasks continue")
-    require("execution-sequential", section(c, "## Prepare Approved Execution"),
-            "sequentially, never in parallel", "never silently reorder", "One writer verifies and commits each producer")
+            "runner establishes baseline HEAD", "one focused verified owned-path",
+            "checkpoint per implementation/repair task", "before subsequent mutation or handoff",
+            "No extra evidence-only checkpoint", "Runner alone reconciles matching checkpoint receipts")
+    require("execution-sequential", section(c, "## Execute and Integrate"),
+            "Only satisfied REQUIRED items and fulfilled original gates release", "dependents")
     require("execution-selection", section(c, "## Prepare Approved Execution"),
-            "one exact profile per invocation", "Family and Effort rationales", "at assignment and dispatch",
-            "supported effort", "callable binding", "Copy the owner-selected exact profile",
-            "no silent settings/agent override", "binding/effort is unknown")
-    require("execution-strategy", section(c, "## Prepare Approved Execution"),
-            "Up to three bounded tasks", "More than three require delegation", "Completing tasks does not change that strategy",
-            "current owner-selected exact profile", "observed context")
+            "approved exact implementation/repair bindings", "separately from planning/reviewer profiles",
+            "unobservable actual binding/effort is unknown", "Do not install, refresh auth",
+            "substitute bindings")
+    require("execution-strategy", section(c, "## Interface Actions"),
+            "explicit implementation scope", "all original gates", "Received, queued, SDK-delivered",
+            "ORIGINAL saved worker conversation", "never fresh-session substitution")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
@@ -498,8 +499,9 @@ def check_contracts(texts):
             "actual shortfall or select the adequate candidate without an unsupported premium", "pending readiness is not inadequacy",
             "orchestration overhead", "stateful tooling/recovery",
             "strict requirement versus a default preference")
-    require("routing-tradeoff", section(c, "## Prepare Approved Execution"),
-            "separate comparative Family and Effort rationales", "material profile, context, permission, owner-gate")
+    require("runtime-authority", section(c, "# Coordinate Implementation"),
+            "cannot select tasks, models, sessions, retries, repairs, commits or acceptance",
+            "No background LLM decides workflow transitions")
     dispatch = section(p, "## Selected production and stage handoffs")
     require("stage-dispatch", dispatch, "direct asynchronous single-stage dispatch",
             "selected profile unchanged", "Inspect the returned artifact/checkpoint",
@@ -717,11 +719,11 @@ VERIFICATION_CARRIERS = (
      ("item mappings unchanged", "whole task contract before", "legacy producing review/renewal")),
     ("verification-oracle", "routing", "## Assess all six factors",
      ("implementation difficulty", "oracle quality, check cost and observability", "weakest material", "practical combined verification feasibility")),
-    ("verification-graph", "coordinator", "## Prepare Approved Execution",
-     ("One writer verifies and commits each producer before its consumer", "approved order")),
+    ("verification-graph", "coordinator", "## Execute and Integrate",
+     ("runner establishes baseline HEAD", "before subsequent mutation or handoff")),
     ("verification-audit", "coordinator", "## Execute and Integrate",
      ("actual diff", "focused commit/SHA", "REQUIRED outputs", "residual owned changes",
-      "criterion relevance", "current revision/ environment", "Only satisfied REQUIRED items",
+      "current revision/environment", "Only satisfied REQUIRED items",
       "Representative-sample manual STOP", "inspectable sample and explicit owner approval")),
     ("verification-repair", "coordinator", "## Execute and Integrate",
      ("Targeted repair retains", "same original contracts", "Unknown cause blocks blind restart",
@@ -773,12 +775,45 @@ def load_texts(root=ROOT):
     return texts
 
 
+ACTIVE_EXECUTION_CONSUMERS = (
+    'skills/coordinate-implementation/SKILL.md',
+    'skills/planner/SKILL.md','skills/task-generation/SKILL.md',
+    'skills/planning-brainstorming/SKILL.md','skills/tiny-spec/SKILL.md',
+    'skills/delegating-architectural-planning/SKILL.md',
+    'skills/requesting-code-review/SKILL.md','skills/requesting-code-review/code-reviewer.md',
+    'skills/receiving-code-review/SKILL.md','skills/scientific-method-debugging/SKILL.md',
+    'skills/handoff-prompt/SKILL.md','skills/finish-session/SKILL.md',
+    'skills/initialize-coherence/SKILL.md','README.md','REQUIREMENTS.md','AGENTS.md',
+    'docs/index.md','docs/pi-settings-sample.md','docs/coordinate-implementation.md',
+    '.pi/prompts/speckit.implement.md','.pi/prompts/speckit.tasks.md',
+    '.specify/templates/tasks-template.md',
+)
+
+
+def active_consumer_errors(root=ROOT):
+    errors=[]
+    for path in ACTIVE_EXECUTION_CONSUMERS:
+        text=(root/path).read_text()
+        for retired in ('references/batch-routing.md','Up to three bounded tasks',
+                        'More than three require delegation','Coordinator alone selects models/strategy/batches',
+                        'The legacy skill remains the default','explicit batch/profile approval'):
+            if retired in text:errors.append(path+': retired execution authority '+retired)
+    if (root/'skills/coordinate-implementation/references/batch-routing.md').exists():
+        errors.append('retired execution routing owner still active')
+    return errors
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--active-consumers", action="store_true")
     args = parser.parse_args()
     try:
-        errors = check_contracts(load_texts(args.root))
+        if args.active_consumers:
+            errors=active_consumer_errors(args.root)
+            for path in ACTIVE_EXECUTION_CONSUMERS:print('ActiveConsumersTests: inspected '+path)
+        else:
+            errors = check_contracts(load_texts(args.root))
     except (OSError, ValueError) as exc:
         errors = [str(exc)]
     for error in errors:

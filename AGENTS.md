@@ -75,14 +75,19 @@ rules above for reusable skills and commands.
 - Gotcha memory: this repository's associated store is `memory/`, with `MEMORY.md` as
   its index and optional trigger-first entries. Follow `memory-handling`: read the whole
   index first, then only matching entries; recheck it after writes. Do not substitute
-  global memory. Relevant existing coordination feedback guidance is in
-  `memory/coordination/`; missing store is nonblocking. Only explicit future-directed user
+  global memory. Planning/manual feedback guidance is in
+  `memory/coordination/`; executable runs consume approved task constraints, not routing feedback.
+  Missing store is nonblocking. Only explicit future-directed user
   feedback authorizes guideline changes, never agent-inferred lessons or routine records.
 - Recovery: no automatic STATE maintenance, summaries/index updates, evidence-only commits
   or reflection. Preserve existing STATE/custom content. Use available conversation summary/
   recent context, selective artifact/Git/check reconstruction and active-child reconciliation
-  under the coordinator's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
+  under the executable interface's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
   Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
+- Execution: `coordinate-implementation` is the thin CLI facade; LangGraph/SQLite owns task/session
+  selection, checks, focused commits and durable operational state. Keep bootstrap writer checkpoints
+  distinct from future runner-owned Git. Standalone is portable; interactive mode needs verified
+  same-parent actual ask_user. No automatic install, reload, legacy restart or mass conversion.
 - Documentation: `docs/index.md` is the routing guide and root directory index;
   `docs/plans/index.md` and `docs/plans/reviews/index.md` map their direct files.
   `README.md` owns setup/workflow, `REQUIREMENTS.md` runtime requirements,

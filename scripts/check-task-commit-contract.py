@@ -47,8 +47,8 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text
         errors.append("routine evidence-only checkpoint reintroduced")
     coordinator = coordinator_text if coordinator_text is not None else (root / "skills/coordinate-implementation/SKILL.md").read_text()
     for phrase in (
-        "no skip/defer question", "No-Git fallback", "never adopts or commits unknown work",
-        "coordinator alone may recover", "failed recovery stops dispatch", "No extra",
+        "No skip/defer", "No-Git fallback", "never adopts or commits unknown work",
+        "Runner alone reconciles matching checkpoint receipts", "ownership conflict block", "No extra",
     ):
         if phrase not in coordinator:
             errors.append(f"coordinator checkpoint guard missing: {phrase!r}")
@@ -56,7 +56,7 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text
         errors.append("coordinator checkpoint waiver reintroduced")
     for location, text in (("contract", contract_text), ("coordinator", coordinator)):
         normalized = " ".join(text.split())
-        if "without routine coordinator approval" not in normalized:
+        if location == "contract" and "without routine coordinator approval" not in normalized:
             errors.append(f"{location} batch autonomy guard missing")
         if "wait for coordinator validation before next-task writes" in normalized:
             errors.append("routine per-task coordinator barrier reintroduced")

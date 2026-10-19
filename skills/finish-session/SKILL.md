@@ -159,6 +159,14 @@ active/unknown children before replacement, never guess completion or blindly re
 
 Check that links, issue references, memory-index entries, and supersession pointers introduced or changed by this closeout resolve. Do not conduct a whole-repository link audit.
 
+## Executable acceptance boundary
+
+Read authoritative runner status and its operating/schema owners; do not infer acceptance
+from worker reports or implementation_complete. Require all REQUIRED/gates and fresh current
+full-range independent review with resolved findings. Preserve SQL/Pi evidence, focused commits,
+custom STATE/history/gotchas and unrelated dirty work; no execution-memory closeout ledger.
+Report implementation completion and final acceptance separately with actual proof/unknowns.
+
 ## Step 8: Report
 
 State separately whether the session's work is implemented, verified, and deployable; each positive claim must cite evidence. List:

@@ -32,6 +32,15 @@ Apply fixes in an order supported by dependencies and risk:
 
 Do not implement speculative infrastructure or compatibility behavior without observable use, a stated requirement, persisted data, or an external consumer.
 
+## Executable corrections
+
+In executable runs the runner records each schema finding disposition and admits only an
+explicit authorized correction contract. The reviewer stays read-only and never repairs.
+A correction preserves original REQUIRED/gates, gets its own focused verified runner commit,
+and renews affected checks/current full-range independent review; scope changes return to
+owner/producing approval. Missing authority or exhausted configured repair bound blocks,
+never model escalation or confidence-only acceptance.
+
 ## Implement And Verify
 
 - Reproduce a reported defect when feasible before changing code.

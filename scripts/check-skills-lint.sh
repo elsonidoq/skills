@@ -2,8 +2,13 @@
 # Static lint for the pi skill suite. Deterministic; needs no model.
 # Usage: scripts/check-skills-lint.sh [skills-dir]
 set -u
+if [ "${1:-}" = --active-consumers ]; then
+  script_dir="$(cd "$(dirname "$0")" && pwd)"
+  exec "${COHERENCE_PYTHON:-python3}" "$script_dir/check-planner-workflow.py" --active-consumers
+fi
 SKILLS_DIR="${1:-$(cd "$(dirname "$0")/.." && pwd)/skills}"
 fail=0
+PYTHON="${COHERENCE_PYTHON:-python3}"
 
 FORBIDDEN=(
   '~/.claude'
@@ -55,20 +60,26 @@ if [ "$fail" -eq 0 ]; then
   suite_skills="$(cd "$scripts_dir/../skills" && pwd)"
   selected_skills="$(cd "$SKILLS_DIR" && pwd)"
   if [ "$selected_skills" = "$suite_skills" ]; then
-    python3 "$scripts_dir/check-planner-workflow.py" || fail=$((fail + 1))
-    python3 "$scripts_dir/check-task-commit-contract.py" || fail=$((fail + 1))
-    python3 "$scripts_dir/test-planner-workflow.py" || fail=$((fail + 1))
+    "$PYTHON" "$scripts_dir/check-planner-workflow.py" || fail=$((fail + 1))
+    "$PYTHON" "$scripts_dir/check-task-commit-contract.py" || fail=$((fail + 1))
+    "$PYTHON" "$scripts_dir/test-planner-workflow.py" || fail=$((fail + 1))
     for focused in \
       "$scripts_dir/../skills/initialize-coherence/scripts/test_contract.py" \
       "$scripts_dir/../skills/planning-brainstorming/scripts/test_contract.py" \
       "$scripts_dir/../skills/task-generation/scripts/test_contract.py" \
-      "$scripts_dir/../skills/task-generation/scripts/test_check_task_order.py" \
       "$scripts_dir/../skills/coordinate-implementation/scripts/test_batching_contract.py" \
       "$scripts_dir/../skills/coordinate-implementation/scripts/test_intake_contract.py" \
       "$scripts_dir/../skills/coordinate-implementation/scripts/test_state_contract.py" \
       "$scripts_dir/test-task-commit-contract.py"; do
-      python3 "$focused" || fail=$((fail + 1))
+      "$PYTHON" "$focused" || fail=$((fail + 1))
     done
+    if "$PYTHON" -c 'import jsonschema, langgraph, yaml' >/dev/null 2>&1; then
+      "$PYTHON" "$scripts_dir/../skills/task-generation/scripts/test_check_task_order.py" || fail=$((fail + 1))
+    else
+      "$PYTHON" "$scripts_dir/../skills/task-generation/scripts/test_check_task_order.py" TaskOrderTests || fail=$((fail + 1))
+      echo "Structured runtime adapter checks: NOT VERIFIED (optional runtime dependencies unavailable; select ready COHERENCE_PYTHON). Not production acceptance."
+    fi
+    "$PYTHON" "$scripts_dir/check-planner-workflow.py" --active-consumers || fail=$((fail + 1))
   else
     echo "SKIP planner workflow checks (custom skills directory; suite-wide artifacts unavailable)"
   fi

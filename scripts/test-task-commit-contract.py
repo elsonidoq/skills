@@ -68,10 +68,10 @@ class StaticContractMutationTests(unittest.TestCase):
         text = COORDINATOR.read_text()
         self.assertEqual(checker.check(), [])
         mutations = (
-            (text.replace("no skip/defer question", "ask whether to skip/defer"), "coordinator checkpoint guard missing"),
+            (text.replace("No skip/defer", "ask whether to skip/defer"), "coordinator checkpoint guard missing"),
             (text.replace("never adopts or commits unknown work", "may commit unknown inherited work"), "coordinator checkpoint guard missing"),
-            (text.replace("coordinator alone may recover", "implementer may recover"), "coordinator checkpoint guard missing"),
-            (text.replace("failed recovery stops dispatch", "failed recovery may continue"), "coordinator checkpoint guard missing"),
+            (text.replace("Runner alone reconciles matching checkpoint receipts", "implementer may recover"), "coordinator checkpoint guard missing"),
+            (text.replace("ownership conflict block", "ownership conflict may continue"), "coordinator checkpoint guard missing"),
             (text + "\nA coordinator may proceed without per-task commits.\n", "coordinator checkpoint waiver reintroduced"),
         )
         for mutation, diagnostic in mutations:
@@ -82,15 +82,14 @@ class StaticContractMutationTests(unittest.TestCase):
         contract = " ".join(CONTRACT.read_text().split())
         coordinator = " ".join(COORDINATOR.read_text().split())
         self.assertIn("without routine coordinator approval", contract)
-        self.assertIn("without routine coordinator approval", coordinator)
         self.assertEqual(checker.check(), [])
         barrier = "wait for coordinator validation before next-task writes"
         for location in ("contract", "coordinator"):
             overrides = {f"{location}_text": (contract if location == "contract" else coordinator) + "\n" + barrier}
             errors = checker.check(**overrides)
             self.assertIn("routine per-task coordinator barrier reintroduced", errors)
-        for location in ("contract", "coordinator"):
-            text = contract if location == "contract" else coordinator
+        for location in ("contract",):
+            text = contract
             mutated = text.replace("without routine coordinator approval", "with routine coordinator approval")
             self.assertNotEqual(mutated, text)
             errors = checker.check(**{f"{location}_text": mutated})

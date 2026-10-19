@@ -209,9 +209,8 @@ class Paseo:
         raise Blocked(last or 'required parent transport unavailable')
 
     def facade_command(self, operation, nonce, event=None):
-        launcher=Path(__file__).resolve().parents[3]/'scripts/coordinate-implementation'
-        if not launcher.is_file():raise Blocked('registered facade launcher unavailable')
-        argv=['env','COHERENCE_PYTHON='+sys.executable,str(launcher),operation,'--project',str(self.authority.project),
+        # Use the actual approved interpreter/package, not a source-checkout-relative script.
+        argv=[sys.executable,'-m','coherence_workflow.cli',operation,'--project',str(self.authority.project),
               '--run',self.run,'--nonce',nonce]
         if event:argv+=['--event',event]
         label={'parent-ready':'READY','parent-received':'RECEIVED','parent-answer':'ANSWER'}[operation]

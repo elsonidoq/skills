@@ -1,16 +1,16 @@
 # Coordinate Implementation runtime
 
-## Current delivery: opt-in standalone task execution
+## Current delivery: executable implementation entry
 
-The legacy skill remains the default; there is no global entry cutover. The standalone
+The suite skill is a thin executable interface; runtime installation remains optional/explicit.
+No global installation or automatic reload is performed. The standalone
 `scripts/coordinate-implementation` composes the foundation and pinned SDK with structured
 intake, authority preflight, real registered checks and focused runner checkpoints.
 The packaged task-progress graph uses bounded logical visits in the same LangGraph,
 not a separate scheduler. Bounded diagnosed repairs and fresh independent read-only
 full-range review now compose that graph. `implementation_complete` is not acceptance:
 only current REQUIRED/gates, focused checkpoints, resolved findings and an exact current
-full-range independent pass permit acceptance. Interaction commands explicitly block
-until their interaction capability is delivered. `load_workflow(Registry())` still blocks
+full-range independent pass permit acceptance. Interaction commands require their delivered mode-specific authority/capability. `load_workflow(Registry())` still blocks
 without concrete registered task-handler capabilities. Its selected
 profile is a declaration, not proof of a usable model or permission to send requests.
 The schema-file settings manifest is only a pinned declaration resource, not effective
@@ -27,7 +27,8 @@ Python >=3.10 syntax is used; validation is on Python 3.12/Linux, local SQLite a
 `runtime/pyproject.toml` pins LangGraph 1.2.16, checkpoint-sqlite 3.1.2, PyYAML 6.0.3,
 jsonschema 4.26.0 and build tools. `runtime/requirements.lock` pins/hashes the complete
 resolved environment, including required upstream transitive packages. No LangChain agent
-abstractions are instantiated. The wheel contains Python helpers, one YAML and eight schemas.
+abstractions are instantiated. The wheel contains Python helpers, one YAML, eight schemas, the single pinned SDK host
+and its npm manifest/lock; installed console entry is coordinate-implementation.
 The supplied lock hashes cover the tested CPython 3.12 Linux x86_64 wheels; other wheel
 platforms require a separately validated lock, not an unhashed fallback.
 
@@ -40,8 +41,9 @@ The Python foundation has no Paseo dependency. SDK use additionally requires Nod
 22.23.3–22.x and the exact local official Pi SDK 0.87.1 lock under `runtime/pi-host/`.
 With explicit setup/network permission, run `npm ci --prefix runtime/pi-host --ignore-scripts`
 using worktree-local TMPDIR/npm cache. No installation runs on import or host startup.
-The host is a separate source asset, not bundled into the Python wheel yet; installed
-Python callers must pass its verified `host_path` explicitly.
+Host discovery uses the source suite or installed wheel data scheme, never the target
+project layout. Installed start/resume additionally require --suite-root for approved skill/
+settings resources; --project always names the separate execution worktree.
 
 ## Actual interfaces and custody
 
@@ -641,3 +643,46 @@ separate source/tasks and combined approval. Planning-only approval never launch
 Ordinary model tokens have no financial approval/cap/reservation; separately chargeable service
 actions retain purpose/cost-impact and explicit scoped authority. Adopt changed skills/prompts
 with `/reload` in pi; this does not automatically activate a global installation.
+
+## Explicit portable setup and cutover
+
+With scoped owner install/network authority, use `scripts/install-workflow.sh --prefix
+NEW_ABSOLUTE_DIRECTORY --allow-network` (or install.sh --workflow-prefix with the same arguments).
+It refuses existing/foreign prefixes and missing network opt-in before mutation. It creates
+only the selected isolated environment, installs pinned dependencies/host lock and prints the
+entry; ordinary entry/adoption never invokes it. No global settings/auth/service edits occur.
+Source launcher uses suite-relative imports; wheel console/resources work from unrelated projects.
+Core CLI has no Paseo dependency. Mode-specific capability blockers remain precise at use.
+
+Default entry cutover requires actual composed multiple-task + fresh independent review +
+scoped correction + owner answer + restart + unrelated dirty-index/custom/STATE preservation,
+portable installation/resource proof and legacy-active denial. Separate earlier green seams
+alone cannot establish composition. Reconcile existing active/unknown legacy workers before
+origin reuse; never run both controllers or auto-convert old contracts. The CLI deliberately
+blocks unresolved legacy writer state; approval booleans cannot bypass that boundary.
+
+On failed acceptance/unsupported capability, stop dispatch, use bound pause/cancel and validated
+own-child drain, reconcile partial files/Git and preserve authoritative DB/Pi evidence/commits/
+unrelated work. Disable the new entry through a scoped reviewed focused change. Do not reset,
+downgrade the DB, erase history or automatically restart legacy. Legacy requires explicit
+compatible current authority and proven no live/unknown writer; otherwise remain blocked.
+Implementation completion is not final acceptance; fresh full-range migration review is required.
+
+### Pinned dependency security residual
+
+The pinned SDK0.87.1 lock contains minimatch10.2.6 → nested brace-expansion5.0.9 at
+`node_modules/@earendil-works/pi-coding-agent/node_modules/brace-expansion`. Current online
+npm audit reports high severity: GHSA-6j4f-fj2g-mc7p (recursive comma parsing, fixed5.0.10),
+GHSA-qhr7-859c-m2p7 (nested-brace recursion, fixed5.0.11), and GHSA-q2hr-2g5m-vwhr
+(quadratic rewrite, fixed5.0.12). A patch is available; no lock/SDK upgrade or audit-fix was
+performed. An empty OFFLINE audit lacks advisory data and is not clearance.
+
+For this bounded host the explicit exact getModel/createAgentSession binding and verified
+single-file skills/includeDefaults:false/custom empty-extension resource loader bypass the
+SDK package-manager include/exclude-glob and model-scope wildcard expansion paths identified
+by source inspection. No affected-input route is established in supported startup/prompt/
+original-continuation settings. This is a parent-reviewed nonblocking residual for the current
+restricted host, not blanket SDK immunity, zero vulnerabilities, or general CLI safety.
+Exposing default/package resources, model-scope/cycle/glob APIs, or finding a supported-input
+route immediately invalidates this rationale and blocks acceptance pending a narrow remedy.
+The independent full-range migration reviewer must inspect this residual and its rationale.

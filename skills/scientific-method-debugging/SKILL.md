@@ -17,6 +17,17 @@ Reasoning about code in your head is unreliable. The running system is the sourc
 
 ---
 
+## Executable attempt boundary
+
+Consume actual failed invocation, attempt/effect/lifecycle/check/input evidence before retry.
+Unknown cause blocks blind restart; preserve valid partial work and prior attempts. Technical
+implementation/debugging and approved isolated tests stay autonomous inside the verified
+profile/capability/action envelope; no repetitive owner mechanics/token-cost questions.
+Separately chargeable external actions still need purpose/cost-impact and scoped authority.
+Diagnosed in-scope fixes preserve original acceptance and show fail-then-pass at the actual
+seam. Runner owns bounded repair, real checks, custody reconciliation and focused commits;
+workers do not stage/commit, broaden scope or bypass original approval/manual gates.
+
 ## Step 1 — Form a coarse hypothesis to guide where you look
 
 Before instrumenting anything, it is fine — and useful — to have a rough idea of which part of the system is involved. This is not a hypothesis about *what* is wrong, but about *where to look*:

@@ -122,67 +122,43 @@ Approval evidence: [combined approval, or specification and overall approvals]
 Approved current content/revisions and implementation scope: [evidence]
 ```
 
-Coordinator revalidates the handoff and preserves one shared execution graph: up to three
-bounded tasks may run locally only when owner-selected exact profile/context fit; larger
-complete lists use asynchronous sequential delegation. Tasks carry stable REQUIRED item contracts,
-not implementation-model classes or shares. Normally 2–5 consecutive related tasks share one
-exact binding plus independently justified effort per invocation when feasible; this is not a quota.
-The [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md) and relevant
-approved project guidelines inform owner selection; empty guidelines invent no success history.
-Before implementation, coordinator presents the complete batch table with one/two-sentence batch
-descriptions, exact proposed model/effort and separate family/effort rationales, then obtains
-explicit approval of batch boundaries and profiles. Implementation approval alone does not approve
-routing. Reuse verified unchanged routing approval on resume; approve changed rows before execution.
-No universal Sol/medium default or forced model diversity applies. Apply **rubric first,
-capability verification second**: **Prior launch success establishes availability, not superiority**.
-First proposals inspect demands/oracles, then material evidence or explicit non-reliance, then compare
-family and effort independently before proposing. Compare suitable options—even when an alternative has no
-previous launch history—and retain a suitable proposal as pending rather than treating incomplete readiness as inadequacy.
-Catalog evidence is distinct from authoritative authenticated/runtime readiness and observed launch.
-Reuse applicable passive proof; a conditional source audit is warranted only by concrete uncertainty,
-contradiction, clamping risk, or absent necessary support evidence. If verification is insufficient,
-surface the gap and ask for necessary authorization or an explicit fallback choice—not silently
-substitute Sol. A fallback needs independent rationale, readiness, and exact owner selection; model
-variety is not itself a goal.
-Verify permitted callable binding, supported effort, tools and owner gates at assignment/dispatch,
-and ensure settings do not silently override actual dispatch arguments. Actual profile stays
-unknown when unobservable, never inferred from selection.
-The [coordinator dispatch seam](skills/coordinate-implementation/SKILL.md#delegate)
-ends preparation once mandatory conditions are satisfied (no state-specific intent commit), reopening only
-for concrete affected invalidation. One worker implementing one batch normally uses direct
-asynchronous delegation, including multiple internal sequential tasks; a workflow needs a
-concrete orchestration reason in the existing brief, not merely a batch label.
+Coordinate Implementation is now an executable workflow, not an LLM coordinator. The skill
+is a thin start/status/pending/answer/control/authorized-resume facade; LangGraph/SQLite selects
+dependency-ready tasks and role-safe sessions from approved exact configuration, audits real
+REQUIRED evidence/original gates and commits one focused verified task/repair before consumers.
+No subjective implementation batches, task-count thresholds, escalation or execution-feedback
+paperwork. Planning profile selection remains skill-owned under the
+[planning rubric](skills/planner/references/profile-selection.md), including the Standard
+Sol/medium plan-stage exception; planning-producer profiles do not supply executor intent.
 
-Verification per task; execution per coherent batch. Practical producer contracts retain
-criterion/check/evidence/gates and optional distinction through both adapters. In the sole
-six-factor rubric compare closed design/implementation difficulty with weakest oracle quality,
-check cost and observability; combined verification must be feasible and failures attributable.
-Preserve consecutive order and producer verification before consumer work.
-Dispatch supplies the whole unchanged REQUIRED union before coding; shared checks run once
-with every distinct task/item mapping. Cheap audit checks coverage, relevance to each original
-criterion, current revision/environment, consistency, every actual task diff/checkpoint and
-owned scope/gates, not general full rereview. Executor pass/fail/not_verified maps through proof
-to satisfied/failed/insufficient-evidence: failed needs demonstrated criterion violation;
-missing/irrelevant/stale/conflicting/unrun proof is insufficient unless valid observations
-independently prove a defect. Retain defect and evidence limitation together. Only satisfied
-REQUIRED items and gates release dependents; optional green cannot compensate. Source-required
-representative-sample manual STOP needs inspectable sample and explicit user approval before
-downstream/full expensive operation, permitting only scoped continuation; LLM self-review
-cannot replace it. Ordinary tasks need no invented manual ceremony. Inadequate approved/legacy
-contracts return to producing review/renewal, never weaker post-hoc acceptance.
-A passing contract needs no mandatory strong per-batch reviewer. Inspect failure/run/invocation/
-partial commits and proof before authorized stronger implementation continuation for exact gaps
-under the same original contracts, not generic strong review. Carry current SHA/state, prior
-proof, dependencies and invalidations, retain valid work/attempts, rerun invalidated checks and
-reuse only confirmed-valid evidence without a fixed ladder. Unknown/non-model/manual/permission/
-contract gaps do not automatically escalate. Clean retry is exceptional: documented justification,
-ownership/safe repository mechanics and required owner/project gates, never automatic reset/discard.
-Each task has its own verified focused commit with concrete task/runtime proof;
-one fresh independent final review covers the complete committed range. Planning depth and
-unrelated planning/reviewer selections remain separate from implementation selection.
-Static/symbolic fixtures demonstrate contracts, not live model performance, provider acceptance,
-or obedience; live support/callability checks require separate permission and usable runtime
-capabilities. After global-contract changes, run `/reload` in pi.
+Resolve explicit coding class/effort before architecture/decomposition and carry assumptions,
+provenance, resolution and rationale through human/machine tasks. Runtime resolves approved
+compatible exact bindings before dispatch; missing/incompatible historical intent returns to
+producing assessment/renewal, no invented approvals or mass conversion. TinySpec/Standard/legacy
+source shapes and original gates remain. Known separately chargeable service actions need
+purpose/cost-impact and scoped authority; ordinary model tokens have no financial gate/cap.
+
+Optional setup is explicit: `scripts/install-workflow.sh --prefix NEW_ABSOLUTE_DIRECTORY
+--allow-network` only with owner-scoped install/network authority. Ordinary entry/adoption never
+installs or refreshes auth. Source launcher: `scripts/coordinate-implementation --help`;
+installed wheel provides `coordinate-implementation`. `start`/`resume` take explicit `--project`,
+`--workflow`, `--tasks`, `--owner-catalog`, `--manifest`, `--containment`, `--run`; wheel users
+also supply `--suite-root` for approved skill/settings resources. See
+[operation/security/cutover/rollback](docs/coordinate-implementation.md) and
+[actual schema/state owners](docs/coordinate-implementation-schema.md).
+
+Standalone mode has no Paseo dependency. Interactive mode requires verified actual same-parent
+transport/ask_user; no polling fallback or fabricated receipts. Accepted questions reopen the
+original conversation only, never a fresh substitute; missing/unsafe/unknown headroom blocks.
+Host exit stops work; status is a separate no-agent reader, not background continuation.
+Core supports trusted single-host/same-UID Linux cgroup-v2 custody, not an adversarial filesystem
+sandbox, remote effects or physical-power-loss promise. Missing capability blocks before reliance.
+
+Default cutover is guarded by actual composed multiple-task/independent-review/correction/
+owner-answer/restart/dirty-work proof, portable distribution and legacy-active denial. There
+is no automatic global activation or legacy restart. Fresh independent full-range migration
+review remains required for final acceptance. Use `/reload` inside pi when adopting changed
+skills/prompts.
 
 ## Context-first recovery and coordination feedback
 
@@ -206,7 +182,7 @@ Required adopted gotcha-memory discovery/retrieval stays separate.
 Planner defaults to direct async stage → parent artifact/checkpoint inspection → next
 authorized stage with selected profile unchanged. A workflow needs earned branching,
 parallel independent work or other orchestration beyond convenience/single-child/sequential
-wrapping; stage authority/reviewer independence remain. Implementation batches stay sequential.
+wrapping; stage authority/reviewer independence remain. Executable implementation remains single-writer and dependency-ordered.
 Coordinator trusts settled approved design, cheaply audits actual diffs/focused commits/
 REQUIRED outputs, then advances ready tasks. Only concrete invalidation reopens affected
 work; no routine replanning or unchanged preflight loops. Independent final review remains.
@@ -242,9 +218,8 @@ For authorized retained repository output, the shared [task-commit contract](ski
 requires a focused, verified per-task commit before later task work, completion reporting, or handoff. A task is an
 independently verifiable work unit, not a tool call or batch. Read-only, no-change, scratch, and external-only work
 creates no empty commit. Preserve unrelated staged/unstaged work; ambiguous ownership, unavailable Git, failed hooks,
-or incompatible policy stops rather than waives the checkpoint. Coordinators independently inspect task diffs/checks
-and may recover only understood verified contextual changes; fresh implementers never commit unknown work. Subagents
-verify and commit each internal task and continue without routine coordinator pauses; the coordinator audits all task
-checkpoints when the batch returns, before acceptance or external dependents. Failed checkpoints and genuine owner
-gates still stop execution. No routine evidence-only checkpoints are required. This is instruction-managed with static/Git-fixture evidence, not
-runtime proof that a model obeys it. After these global skill changes, run `/reload` in pi.
+or incompatible policy stops rather than waives the checkpoint. Executable runs use runner-owned real verification, diff audits, focused commits and receipt
+reconciliation; workers do not stage/commit or own workflow state. Planning/standalone and an
+ongoing instruction-managed bootstrap keep their authorized writer checkpoints. The interface
+cannot waive safety or create routine evidence-only checkpoints. Static/Git fixtures are not
+universal model-obedience proof. After changed global skills/prompts are adopted, run `/reload`.

@@ -73,6 +73,19 @@ first unchecked item is not necessarily ready. Distinguish verified facts from
 agent reports and proposals from owner-approved decisions. Include non-obvious
 runtime findings and conversation-only rationale that files do not preserve.
 
+## Executable continuation
+
+Carry the actual run ID, effective config/input/schema/environment/host/resource identities,
+source/task/approval provenance, exact selected versus observed profiles, executor intent and
+authorization envelope/action limits. Cite authoritative SQLite/status and baseline/result
+commits/evidence, not a new narrative ledger. Pending questions carry original session/role/
+branch pin, gate/input/nonce and accepted-versus-delivered state. Interactive mode carries
+verified actual launching-parent/transport/question-tool generation; never replay historical
+recipients or invent tool receipts. Low/unknown/unsafe original or live/unknown writers block;
+no automatic fresh replacement or legacy restart. Next action is an authorized CLI status/
+input/resume operation, never LLM work/model/session selection. Host exit means stopped, not
+background progress. Preserve STATE/custom/history/unrelated work and original gates.
+
 ## Delegation Capability
 
 Before recommending delegation, check that the runtime exposes an allowed

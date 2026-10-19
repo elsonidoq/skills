@@ -22,16 +22,16 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Context-first implementation recovery | [Coordinator recovery contract](../skills/coordinate-implementation/SKILL.md#recover-context); summary/recent context then selective artifact/Git/check/runtime reconstruction, no automatic STATE writes |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
-| Opt-in Coordinate Implementation runtime operation, custody and supported limits | [Runtime operating guide](coordinate-implementation.md); legacy remains default |
+| Coordinate Implementation executable operation, custody and supported limits | [Runtime operating guide](coordinate-implementation.md); optional explicit runtime setup, thin executable interface |
 | Delivered runtime SQLite and packaged versioned contract schemas | [Runtime schema owner](coordinate-implementation-schema.md) |
 
 This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
 [gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
 Coordination memory remains a separate project-local explicit-feedback store at
 `memory/coordination/`; consult relevant existing guidance without auto-initialization. No
-default suite-level database is created by adoption. The opt-in workflow foundation has a
-[separate schema owner](coordinate-implementation-schema.md); it does not replace the legacy
-entry or initialize state in unrelated projects. The legacy port retains its own boundaries.
+default suite-level database is created by adoption. The executable workflow has a
+[separate schema owner](coordinate-implementation-schema.md) and thin executable interface;
+adoption never initializes execution state in unrelated projects. The legacy port retains its own boundaries.
 
 ## Project Guidance
 
@@ -41,7 +41,7 @@ entry or initialize state in unrelated projects. The legacy port retains its own
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
-- [Coordinator batch approval](../skills/coordinate-implementation/SKILL.md#prepare-approved-execution): Complete table with batch descriptions and exact model/effort requires explicit routing approval before implementation; unchanged verified approval is reusable, not a universal profile default.
+- [Executable implementation entry](../skills/coordinate-implementation/SKILL.md): Thin CLI/interactive facade; deterministic runtime owns tasks, configured bindings, sessions, REQUIRED/gates, focused commits and acceptance. [Operating](coordinate-implementation.md) and [schema](coordinate-implementation-schema.md) owners cover actual interfaces/cutover/rollback.
 - [Qualified routing rubric](../skills/planner/references/profile-selection.md): Canonical first-proposal and six-factor planning/advisory selection prior: demands/oracles → material evidence or explicit non-reliance → independent family/effort comparison → proposal; suitability remains separate from authenticated/runtime readiness and observed launch. Standard `plan_create` requires Sol/medium for its entire delegated non-helper/helper pass, with no unavailable-profile substitution. Implementation-only batching rules are not planning prerequisites.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
 - [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Relevant existing guidance, selective history and explicit future-directed user feedback; no routine persistence or inferred learning.
@@ -53,7 +53,7 @@ entry or initialize state in unrelated projects. The legacy port retains its own
 
 ## Implementation Plans
 
-- [Coordinate Implementation executable workflow — Standard specification](../specs/003-coordinate-workflow/spec.md) and [architecture plan](../specs/003-coordinate-workflow/plan.md): [canonical research](../specs/003-coordinate-workflow/research.md), [data model](../specs/003-coordinate-workflow/data-model.md), [contracts](../specs/003-coordinate-workflow/contracts/README.md) and [validation guide](../specs/003-coordinate-workflow/quickstart.md). Later owner direction authorizes scoped implementation; historical planning-only records retain their original provenance. T001 delivers only the [opt-in durable foundation](coordinate-implementation.md) and [schema owner](coordinate-implementation-schema.md); legacy remains default and SDK/task execution/policy cutover are not yet delivered.
+- [Coordinate Implementation executable workflow — Standard specification](../specs/003-coordinate-workflow/spec.md) and [architecture plan](../specs/003-coordinate-workflow/plan.md): [canonical research](../specs/003-coordinate-workflow/research.md), [data model](../specs/003-coordinate-workflow/data-model.md), [contracts](../specs/003-coordinate-workflow/contracts/README.md) and [validation guide](../specs/003-coordinate-workflow/quickstart.md). Later owner direction authorizes scoped implementation; historical planning-only records retain their original provenance. T001 originally delivered the durable foundation; T002–T009 add SDK/task/interaction execution, approved policy integration and the thin executable entry. [Operating](coordinate-implementation.md) and [schema](coordinate-implementation-schema.md) owners describe current delivered behavior; final migration acceptance still needs independent full-range review.
 - [Plans directory index](plans/index.md): Direct plan records and the nested review index.
 - [Pragmatic planning — TinySpec](plans/pragmatic-planning-tinyspec.md): outcome-oriented decomposition, proportional proof and tagged informational prototypes; exact-content approval in [review](plans/reviews/pragmatic-planning-review.md).
 - [Pragmatic planning — tasks](plans/pragmatic-planning-tasks.md): one coherent contract/regression/operative-doc delivery; A1–A6 REQUIRED evidence and gates preserved, execution-profile selection and independent final review remain required.

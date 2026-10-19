@@ -307,7 +307,9 @@ class CandidateTests(unittest.TestCase):
         self.assertIn("[gotcha-memory index](../memory/MEMORY.md)", index)
         self.assertIn("[Plans directory index](plans/index.md)", index)
         self.assertIn("coordination memory remains a separate", normalized(index))
-        self.assertIn("no suite-level persistent database/schema owner", normalized(index))
+        self.assertIn("no default suite-level database is created by adoption", normalized(index))
+        self.assertIn("[Runtime schema owner](coordinate-implementation-schema.md)", index)
+        self.assertIn("thin executable interface", normalized(index))
 
 
 class WorkflowOwnershipOutputTests(unittest.TestCase):

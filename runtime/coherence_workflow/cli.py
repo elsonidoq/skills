@@ -17,7 +17,7 @@ from .authority import AuthorityAdmission
 from .engine import Engine, StrictLoader, load_workflow
 from .git_effects import GitEffects, assert_safe_git_inputs
 from .intake import Approvals, admit, content_hash, load_contract, verify_execution_intent
-from .pi_adapter import PiAdapter
+from .pi_adapter import PiAdapter, host_resource
 from .registry import CHECKS, Handler, Registry, validate_schema
 from .sessions import select_session, retained_candidates, manifest_compatibility, open_manifest
 from .interaction import Interaction, OwnerChannel, QUESTION_SCHEMA
@@ -79,7 +79,7 @@ class Coordinate:
         self.authority, self.store, self.run = authority, authority.store, run
         self.contract, self.config, self.manifest = contract, config, manifest
         self.catalog, self.containment, self.environment = catalog, containment, environment
-        self.host_hash = content_hash(ROOT / 'runtime/pi-host/host.mjs')
+        self.host_hash = content_hash(host_resource())
         self.gateway = Gateway(authority, run, containment, {})
         self.git = GitEffects(authority, run, self.gateway)
         self.verification = Verification(authority, run, registered_checks(authority.project,self.gateway))
@@ -116,7 +116,7 @@ class Coordinate:
         self.contract, receipt = admit(self.authority.project, self.contract,
             Approvals(self.authority.project, self.catalog), digest(self.config), legacy_settled=False)
         pin = digest({'contract': self.contract, 'config': self.config, 'manifest': self.manifest,
-                      'environment': self.environment, 'host_hash': content_hash(ROOT / 'runtime/pi-host/host.mjs')})
+                      'environment': self.environment, 'host_hash': content_hash(host_resource())})
         with self.store.transaction() as db:
             old = db.execute('SELECT * FROM wf_run_inputs WHERE run_id=?', (self.run,)).fetchone()
             if old:
@@ -406,7 +406,7 @@ class Coordinate:
                               role=binding['role'],attempt=pin['attempt'],continuation=gate)
 
     def implement(self, context, *, role='implement', attempt=0, before_prompt=None, continuation=None):
-        if content_hash(ROOT / 'runtime/pi-host/host.mjs') != self.host_hash:
+        if content_hash(host_resource()) != self.host_hash:
             raise Blocked('active SDK host content drift')
         row = self.current()
         if not row or row['state'] != 'active':
@@ -531,7 +531,7 @@ class Coordinate:
         manifest=copy.deepcopy(self.manifest)
         if (manifest['profile']!=self.config['profiles'][node['profile']] or len(manifest['skills'])!=1 or
                 manifest['skills'][0]['sha256']!=self.config['skills'][node['skill']]['sha256'] or
-                content_hash(ROOT/'runtime/pi-host/host.mjs')!=self.host_hash):
+                content_hash(host_resource())!=self.host_hash):
             raise Blocked('review exact profile/resource/host mismatch')
         manifest['tools']=[dict(name=t.id,version=t.version,description='Read bounded authorized current source bytes.',parameters=t.arguments,permission=t.id) for t in self.gateway.tools.values()]
         manifest['permissions']=['read_file']
@@ -817,6 +817,7 @@ def main(argv=None):
         for flag in ('project','workflow','tasks','owner-catalog','manifest','containment'):
             p.add_argument('--' + flag, required=True)
         p.add_argument('--run', required=True)
+        p.add_argument('--suite-root', help='explicit approved skill/settings resource root (required for installed wheel)')
         p.add_argument('--parent-binding')
         if name == 'resume': p.add_argument('--resume-authority',required=True)
     p = subs.add_parser('intake')
@@ -911,6 +912,9 @@ def main(argv=None):
         try:config=yaml.load(workflow_bytes,Loader=StrictLoader)
         except (yaml.YAMLError,ValueError,RecursionError):raise Blocked('invalid bounded workflow YAML') from None
         validate_schema('workflow.schema.json',config)
+        suite_root=Path(args.suite_root).resolve(strict=True) if args.suite_root else ROOT
+        if not args.suite_root and not (suite_root/'skills/coordinate-implementation/SKILL.md').is_file():
+            raise Blocked('approved suite resource root unavailable; provide --suite-root, no automatic installation')
         manifest = json.loads(Path(args.manifest).read_text())
         environment = {k:v for k,v in os.environ.items() if k in ('PATH','HOME','PYTHONPATH','PYTHONDONTWRITEBYTECODE','TMPDIR','PI_OFFLINE')}
         with Authority(args.project) as authority:
@@ -927,11 +931,11 @@ def main(argv=None):
             elif args.parent_binding:
                 raise Blocked('standalone mode cannot silently adopt a parent transport')
             registry = coordinate.registry()
-            load_workflow(registry, workflow_bytes, ROOT)
+            load_workflow(registry, workflow_bytes, suite_root)
             maximum=max([config['defaults']['max_repair_attempts'],*[n.get('max_repair_attempts',0) for n in config['nodes']]])
-            engine = Engine(authority,args.run,config,registry,ROOT,boundary_hook=coordinate.controls_boundary,max_task_visits=len(contract['tasks'])*(maximum+1)+maximum+1,
+            engine = Engine(authority,args.run,config,registry,suite_root,boundary_hook=coordinate.controls_boundary,max_task_visits=len(contract['tasks'])*(maximum+1)+maximum+1,
                             input_identity={'contract':contract,'catalog_hash':digest(catalog),'manifest':manifest,'environment':environment,
-                                            'host_hash':content_hash(ROOT/'runtime/pi-host/host.mjs')})
+                                            'host_hash':content_hash(host_resource())})
             coordinate.publish_run_binding()
             try:
                 if args.command == 'resume':

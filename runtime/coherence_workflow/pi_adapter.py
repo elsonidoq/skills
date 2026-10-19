@@ -50,6 +50,28 @@ def failure_diagnostic(exc, *, phase, host_op, operation_id, pending):
             'phase':phase,'host_op':host_op,'operation_id':operation_id,'pending_tool_operations':sorted(pending)}
 
 
+def host_resource():
+    """One shipped host, in a source suite or installed wheel data (never provisioning)."""
+    source=Path(__file__).resolve().parents[1]/'pi-host/host.mjs'
+    if source.is_file():
+        return source.resolve(strict=True)
+    from importlib.metadata import distribution, PackageNotFoundError
+    try:
+        installed=distribution('coherence-workflow')
+        import sysconfig
+        # pip --target places wheel data beneath the target; normal prefix installs
+        # use the interpreter's data scheme. RECORD may omit relocated --target data.
+        relative='share/coherence-workflow/pi-host/host.mjs'
+        candidates=[installed.locate_file(relative),Path(sysconfig.get_path('data'))/relative]
+        candidates += [installed.locate_file(p) for p in installed.files or []
+                       if str(p).endswith('/pi-host/host.mjs')]
+        for candidate in candidates:
+            if candidate.is_file():return candidate.resolve(strict=True)
+    except PackageNotFoundError:
+        pass
+    raise Blocked('packaged pinned SDK host unavailable; explicit isolated setup required')
+
+
 class Decoder:
     def __init__(self, limit=MAX_RECORD):
         self.limit, self.buffer = limit, bytearray()
@@ -226,7 +248,7 @@ class PiAdapter:
         self.closed=False
         self.records=[]
         self.snapshot=None
-        self.host_path=Path(host_path or Path(__file__).resolve().parents[1]/'pi-host'/'host.mjs').resolve(strict=True)
+        self.host_path=Path(host_path).resolve(strict=True) if host_path is not None else host_resource()
         node_binary=Path(shutil.which('node') or '').resolve(strict=True)
         boot_r,boot_w=os.pipe();command_r,self.command_w=os.pipe();self.event_r,event_w=os.pipe()
         fds=(boot_r,command_r,event_w)

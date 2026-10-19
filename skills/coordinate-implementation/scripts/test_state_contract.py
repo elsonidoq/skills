@@ -12,8 +12,8 @@ TEXT = (ROOT / "skills/coordinate-implementation/SKILL.md").read_text()
 
 def contract_errors(text):
     start = text.find("## Recover Context")
-    end = text.find("## Prepare Approved Execution", start)
-    body = " ".join(text[start:end].split()) if start >= 0 else ""
+    end = text.find("\n## ", start + len("## Recover Context"))
+    body = " ".join((text[start:] if end < 0 else text[start:end]).split()) if start >= 0 else ""
     clauses = (
         "available conversation summary/recent context", "do not assume retained tokens",
         "Selectively reconstruct only uncertain authorization, completion",

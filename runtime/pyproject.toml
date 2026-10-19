@@ -20,3 +20,9 @@ include = ["coherence_workflow*"]
 
 [tool.setuptools.package-data]
 coherence_workflow = ["schemas/*.json", "workflows/*.yaml"]
+
+[project.scripts]
+coordinate-implementation = "coherence_workflow.cli:main"
+
+[tool.setuptools.data-files]
+"share/coherence-workflow/pi-host" = ["pi-host/host.mjs", "pi-host/package.json", "pi-host/package-lock.json"]
