@@ -253,3 +253,50 @@ atomic spawn, reboot/power-loss or general sandbox proof. No repeated feasibilit
 service setup is requested. Production must verify approved portable delegation and block
 unknown ownership/quiescence, never silently use PID-only fallback. Renew revised spec
 approval before tasks; planning-only boundary remains.
+
+### Owner interaction and maximum-autonomy additions (after d6acc13)
+
+Provenance: parent-supplied owner conversation excerpts after the original architecture
+bundle completed, followed by parent-witnessed executed interactive evidence. Excerpts
+below are preserved verbatim as supplied, not fabricated approval/tool IDs:
+
+> 'we will need the user to be able to intervene at any given point in time ... mechanism for an agent to stop to ask the user a question ... arrives ... using the ask_user tool. The agent that uses the ask_user tool is the one that launched the workflow script and can answer "what's the status?" ... after user responds ... relaunches it ... guaranteed ... agent that asked ... resumed with the answer ... user ... communicate ... worker ... running right now ... asking "is the current worker considering this or that?" ... steering ... "Make sure that this happens".'
+
+Owner confirmed the parent's structured-gate/original-conversation/steering proposal:
+
+> 'Okay, this makes sense a lot ... make sure this is in the plan ... make sure this is tested ... launch a workflow and steer it ... workers do not ask ... every thing only ... technical manager with no knowledge ... could answer ... more product things or unexpected things ... really increase complexity ... time ... small isolated tests are approved ... plan should include whether spending money is approved or not beforehand ... if spending money is approved ... task should never ask ... tasks require something ... not ... pre-approved ... pre-flight should catch ... ask ... workflow ... as autonomously as possible ... very few cases ... user input ... really needed ... worker found ... or user thought ... wants ... happens.'
+
+Further emphasis:
+
+> 'we need to make sure the agent that is running the workflow script wakes up and does use ask_user tool.'
+
+Owner approved the tiny local bridge test, but stated:
+
+> 'I'm using paseo, I cannot run reload. What do you recommend doing?'
+
+The parent selected the supported installed Paseo CLI adapter without extension reload.
+The temporary project extension was removed unused; no global settings/install remained.
+Owner witnessed the actual product question/steering and said:
+
+> 'perfect. Is the planning subagent running then?'
+
+Parent independently accepted [interactive fixture evidence](../../docs/evidence/workflow-interaction-validation/README.md)
+at commit `65347630ffeb042f9c9c7b23e7216e70b9ac1244`, including actual same launching-parent
+wake/ask_user, original persisted worker reopen and live SDK steering/worker acknowledgement.
+This authorizes incorporating the requirements and tested bounds into this same originating
+plan, not implementation or a repeated experiment. Required original-session continuity
+means pin the conversation and deliver its answer before continuing; unsafe/missing/unknown-
+headroom original blocks for explicit owner recovery, never automatic fresh substitution.
+A different process may open the same conversation. Parent is a dialog/status facade, not
+an LLM coordinator. Required question-delivery capability is distinct from optional status
+notifications. CLI can answer independently; UI loss leaves a durable pending gate.
+
+Maximum autonomy means declare paid/model/service/test/network/external/mutation authority
+and approval provenance up front; aggregate known gaps before dispatch. No routine technical
+or already-approved test/spend questions, no universal fabricated cost/time threshold, no
+implicit production spend approval from this fixture or planning-only selection. Unexpected
+material product/scope/priority/complexity/time/cost choices still need manager-readable
+options/impacts; unknown safety/auth/permissions remain fail-closed. Control can be submitted
+any time, but queue, SDK delivery and worker acknowledgement are distinct; no instant shell
+preemption/private-reasoning/semantic-compliance guarantee. Scope-changing answers/steers
+retain original producing approval gates. Renew all revised specification bytes before tasks.

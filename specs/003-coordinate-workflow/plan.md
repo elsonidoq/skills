@@ -102,6 +102,9 @@ runtime/
     engine.py                   # YAML→actual StateGraph, sync SqliteSaver
     registry.py                 # trusted handler/profile/skill capabilities
     intake.py                   # shared structured task/approval adapters
+    authority.py                # upfront capability/spend admission from verified approvals
+    interaction.py              # bound owner gate/input/control + durable outbox
+    notifications/paseo.py      # explicit optional-mode public CLI UI adapter, no policy
     store.py                    # application transactions and migrations, same SQLite file
     projections.py              # state/events/metrics derived publication
     sessions.py                 # sole deterministic role-safe selector
@@ -172,6 +175,8 @@ request/operation IDs. A separate host process per session owns one Pi AgentSess
 loads exact pinned SDK, explicit cwd, exact model/effort, verified resources/skills and
 allowed tools/permissions; reports effective prompt/skill/tool hashes and model fallback.
 It never chooses the next task, another session, profile, retry policy or owner answer.
+Custom request_owner_input and bound steer/followUp/input delivery use the interaction
+protocol below; workers never receive the parent ask_user tool.
 No background cache-warming/unsolicited model work; configured internal provider retries
 are observed and bounded, not new workflow attempts. User-supplied extensions/config cannot
 silently add tools, mutate bindings, execute arbitrary startup code or bypass approvals.
@@ -203,7 +208,10 @@ permission is containment, or advertise path/tool instructions as OS isolation.
 
 ### Session rotor and lifecycle
 
-One selector applies to **every agent node**, with configurable policies:
+One selector applies to **every agent node**, with configurable policies. A parked owner
+question continuation is a higher-priority **original-conversation pin**, not a new greedy
+assignment: see interaction below. Missing/unsafe/insufficient/unknown headroom blocks that
+continuation for explicit owner recovery, never substitutes fresh. For ordinary assignments:
 
 1. Require dependency-ready authorized work, no unresolved live work, matching role family,
    exact profile/model/effort, skill/resource hashes, tools, permission/trust/settings envelope,
@@ -223,8 +231,11 @@ No billed-token cutoff, task batches or inference-based routing. Reuse never mer
 contracts/checkpoints. Request settings remain unchanged; different profile starts fresh.
 After host restart, exact saved conversation may be opened only after process/tool quiescence,
 identity/branch/resource/profile verification and new telemetry; in-process PoC reuse did
-not prove durable reattachment. Unknown continuation or corrupt session blocks reuse; after
-safe reconciliation an authorized resume may use fresh session instead.
+not prove durable reattachment. The later accepted interactive fixture demonstrates one
+original conversation reopened after orderly question park (new PID), not arbitrary recovery
+or pressure-safe continuation. Unknown continuation or corrupt session blocks reuse; after
+safe reconciliation an authorized resume of **ordinary non-pinned work** may use fresh
+session instead. A pending owner-answer continuation remains original-only or blocked.
 
 Subscribe before prompt; drain stdout continuously, correlate responses, serialize prompts
 through current start/settled generation; stale events cannot settle current work. Accepted
@@ -346,6 +357,132 @@ and reviewer loop. Reviewer never becomes producer. Scope-changing finding retur
 no silent task invention. Final acceptance requires all dispositions resolved and independent
 review of current full range; implementation completion remains a separate status.
 
+## Interaction and maximum autonomy (owner-directed correction)
+
+### Upfront authority and known-gap aggregation
+
+Task intake/run config declare an authorization envelope with exact selected profiles and
+paid model/service/test/network/external/mutation capability/action scopes plus verifiable
+owner approval references. Production numeric budgets are **not selected** by this plan or
+its PoCs; unresolved/denied/absent authority blocks affected paid dispatch. Preflight computes
+all **known** missing permissions/capabilities/spend choices together before any task starts,
+using manager-readable impact/options. Persist usable runtime/package/catalog/credential
+references and environment manifest before launch; revalidate on separate-process answer/
+resume, not depend on transient parent environment (observed missing-env failure).
+
+Within approved scope, worker resolves technical implementation/debugging and small isolated
+preapproved tests without cost/tool-trivia questions. Only necessary manager-answerable
+product/priority or genuinely unexpected material scope/complexity/time/cost deviation asks,
+with why blocked, options/recommendation and impact. Unknown auth/safety/permissions still
+fail closed; autonomy is not permission to spend or expand scope. Category/schema checks,
+existing envelope constraints and recorded rationale assist, but cannot universally judge
+question relevance; the fixture's forced cosmetic title is not a policy to ask every default.
+
+Where owner sets limits, persist run-wide reservations before outbound admission, including
+all attempts/host restarts/allowed retries/summaries, and reconcile unknown spent reservations
+without refund-by-guess. Disable unsupported hidden/background retries/warming. Request
+admission limits are enforceable only at verified send boundaries; provider hard limits need
+registered version-matched proof. Generic maxTokens was ignored by the tested Codex builder;
+do not advertise token/dollar hard caps or invoice accuracy from it, per-host max5 or catalog
+estimates. An approved scoped-spend envelope may have no numeric cap only by explicit owner
+selection; never invent an amount or infer permission from the planning/fixture approval.
+
+### Rare worker question: normal tool completion, durable park, original answer
+
+Worker uses registered schema-valid **request_owner_input**, never ask_user. The tool request
+is persisted as an operation tied to run/task/node/attempt/role/original session+branch,
+source/task/approval/config/resource hashes and gate nonce. Enter parking, freeze new
+conflicting tool/model work and drain current operations; the custom tool returns a **normal
+completed result with terminate:true**, not an unfinished tool suspended for a human.
+Pi0.87.1 ends automatic follow-up only when all tools in that batch terminate. Require an
+exclusive question batch or verified all-tools termination; mixed/unsettled/unknown cases
+block safely rather than treating the single-tool fixture as universal arbitrary-tool proof.
+Await current prompt+agent_settled+idle and actual task-tool quiescence before SQL pending gate
+and LangGraph park interrupt. ToolUse stop reason here is expected, not implementation success.
+Persist the question/receipt before exit; crash around tool result/checkpoint requires operation
+reconciliation, not blind prompt replay. Only after durable park may notification publish.
+Configured agent handlers declare
+owner_input_required→registered park/continue_original transitions with saved originating
+node/visit; do not re-run the original ask node or add a second scheduler.
+
+The pending gate **pins ORIGINAL persisted conversation and role**, not OS process. Parent
+answer or CLI input must match pending gate/input IDs+nonce, exact original session/branch,
+current source/task/approval/config hashes and verified owner provenance. Accept once in SQL
+with input ID UNIQUE, invalidate stale authority, and persist answer plus delivery obligation
+before dispatch. Reopen exact saved conversation after safe custody/role/profile/resources/
+headroom validation, deliver answer as a new bound user envelope **before continuation**,
+then require delivery receipt/current settlement. Never reask merely because transport/reentry
+failed after acceptance. Unknown delivery is reconciled from persisted conversation/input ID,
+not sent twice blindly. No >=150k fresh-session shortcut while answering; missing/unsafe/
+insufficient or unknown original headroom is BLOCKED for explicit owner recovery/cancel or
+separately approved remediation. Source/scope-changing answers renew producing approvals;
+original session pin never authorizes profile/role/context mixing or bypasses permissions.
+
+### Required interactive parent wake, portable standalone mode
+
+Core engine+CLI has no Paseo dependency. Run selects **standalone** (pending/answer/control CLI)
+or **interactive_parent** with an explicitly registered question transport and question tool.
+For the tested mode use public pinned Paseo0.9.2 inspect/send --no-wait --prompt-file, fixed
+argv, exact registered launching recipient; no commands/addresses from worker prose. Do not
+build a generic messaging platform or simultaneously implement a native-Pi plugin. Public
+pi.sendMessage(triggerTurn/followUp) extension is an unproven alternative needing explicitly
+loaded approved capability and its own proof; no raw private supervisor-channel/file writes.
+
+Production launch interface captures current actual parent runtime identity, target worktree,
+selected adapter/capability/permissions and question-tool availability. Cross-check public
+transport inspection plus a run-bound parent readiness challenge/ACK and actual runtime
+session/tool provenance, not caller flags/nonce alone. Fixture IDs bind but do not authenticate
+arbitrary users; production trusts restricted local runtime/SQLite ownership and genuine owner
+input path, not worker-written approved files or fabricated opaque tool IDs. Changed recipient/
+session or permissions requires explicit rebind verification before any owner-question delivery.
+
+Runner transactionally records an outbox item for eligible parked question. Adapter wakes the
+**same launching/status parent**, whose thin interface reads authoritative pending status,
+actually calls its registered **ask_user**, and submits the real answer receipt through runner
+answer API. Parent may explain status/relay controls, not choose tasks/profiles/sessions,
+acceptance/repair or Git. This reconciles “No background LLM wakes up to decide what to do.”:
+a parent wakes for prescribed tool/dialog facade work, not orchestration decisions.
+Interactive launch preflight fails without selected transport+ask_user readiness; never silently
+substitute manual polling. Actual tool invocation/answer provenance must be observed; prose
+claims cannot release the gate. If facade does not invoke it, pending delivery is visible and
+no worker resumes. Scope/approval decisions still use original owner gates.
+
+Outbox stages `recorded → transport_queued → parent_received → question_tool_invoked →
+answered` are distinct. Stable event/input IDs permit at-least-once transport, parent dedup
+before asking and durable answer acknowledgement. Crash around UI invocation before receipt
+must reconcile actual tool provenance; unknown state blocks reasking, not an exactly-once
+external-dialog guarantee. Busy delivery must use verified supported
+queue semantics or bounded retry; do not assume a send receipt means the parent woke. While
+runner lives, deterministic adapter retries under bounded policy; on host exit/outage no
+background progress is promised. UI loss leaves durable pending/transport blocker; independent
+CLI pending/answer stays usable. Reconnect/reentry validates parent/run identity and resumes
+only unresolved outbox items without reasking answered gates. No required always-on daemon/
+LLM scheduler. Production parent-busy/outage/reconnect/dedup/auth/crash tests remain required;
+fixture tested actual idle wakes, not those guarantees. Optional completion/block/failure
+notifications remain nonblocking and never replace this required question delivery path.
+
+### Anytime owner inquiry/steer/follow-up/pause
+
+Accept bound owner control at any time via CLI or parent facade; persist input IDs, source/
+approval/config/run/task/attempt/session/role and intended action. Receipt is not delivery.
+At an idle/preflight boundary, run-scoped inquire/pause/cancel
+has no fabricated worker/session identity; steer/followUp requires an actual current session.
+Known upfront authority gates are startup permission decisions, not worker technical questions.
+Runner validates active identity/scope/envelope, routes supported SDK steer/followUp at an
+execution boundary, records **received / queued / SDK-delivered / worker-acknowledged**
+separately with evidence. Wrong/stale/duplicate controls cannot dispatch/restart or silently
+move to another role/session. Out-of-scope controls are blocked for producing approval; a
+new approved binding/input is needed after scope changes. Pending question controls do not
+unpin its original conversation or masquerade as the answer.
+
+Inquiry returns recorded facts, or queues a worker inquiry with an observable response;
+no reading private reasoning or promising that acknowledgement proves understanding or
+compliance. SDK enqueue does not stop a running shell. Explicit pause/cancel uses existing
+abort/drain/cgroup+partial-file/Git reconciliation before checks/commits/replacement. Orderly
+question park and cooperative fixture controlled_wait are not arbitrary preemption proofs.
+The user may cancel/pause even while question delivery is unavailable, subject to actual safe
+quiescence; unknown tool state remains a visible blocker/orphan alarm, never false paused.
+
 ## Ordered rollout stages (architecture outcomes, not tasks)
 
 ### Stage A — Remaining integration risk bounded before reliance
@@ -354,7 +491,9 @@ Consume the **completed**, parent-accepted SDK and four-case local lifecycle pro
 canonical research; do not repeat them or stack selection. The SDK probe's real negative
 result (dead host leaves detached tool writing) makes durable supervisor/tool-launch custody a prerequisite to the first production
 mutation. Establish actual production worktree-wide lock + operation/process registry +
-gated-start/drain helper before enabling mutating tools; test crash between launch intent,
+gated-start/drain helper before enabling mutating tools; also consume completed interactive
+proof (R13), and establish durable input/pin/outbox/authority before enabling interactive
+dispatch. No repeated interactive PoC. Test crash between launch intent,
 identity persistence, release and settlement. This remaining risk reduction belongs to the
 production helper delivery with permanent realistic tests, not another disposable selection
 experiment. Durable reattachment and real pressure/compaction/retry remain unproven: prove
@@ -365,14 +504,16 @@ stack/SDK/process probes through consumers; no duplicate harness/platform or sep
 ### Stage B — Usable durable runner alongside legacy, opt-in only
 
 Deliver real graph adapter/registry/schema/intake-independent engine, SQLite operation ledger,
-Pi host using Stage A custody, checks/commits/status/projections and explicit resume, with permanent
+Pi host using Stage A custody, authority admission and question/control protocol,
+checks/commits/status/projections/pending/answer/control and explicit resume, with permanent
 unit+integration tests of the actual helpers. Stage A evidence must apply to shipped composition.
 Legacy remains default only temporarily; never both controllers mutate one worktree/run.
 No entry cutover until correctness/permissions/recovery checks pass.
 
 ### Stage C — Approved task contracts and operative policy integration
 
-Both task adapters emit the shared structured subset and reviewer/repair/owner gates preserve
+Both task adapters emit the shared structured subset including explicit upfront authorization
+envelope and preserve known-gap preflight/inside-envelope autonomy. Reviewer/repair/owner gates preserve
 origin semantics. Review exact constitution/task-commit adaptations and obtain their required
 owner approval before operative changes. Test TinySpec/Standard/legacy intake and stale/denied
 manual cases, including in-progress-worker reconciliation. Planning profiles remain owner-selected;
@@ -381,7 +522,9 @@ only a complete approved contract, never silently reinterpret old artifacts.
 
 ### Stage D — Coordinate Implementation entry cutover
 
-Replace execution skill with thin start/status/authorized-resume interface to the CLI. Update
+Replace execution skill with thin start/status/pending/answer/control/authorized-resume
+interface to the CLI. Interactive mode must automatically wake the original interface and
+actually use ask_user with verified receipts; standalone remains independent. Update
 planner/handoff/adoption/review/debugging consumers to runtime ownership; preserve planning
 stage order/delegation/approvals. Cut over only after real multiple-task, repair/final-review,
 manual-owner, restart/dirty-tree/no-duplicate evidence passes. Explicitly stop/reconcile legacy
@@ -425,16 +568,16 @@ carriers/classes rather than treated as runtime proof. Reinspect exact bytes bef
 
 | Existing path | Planned action / preserved contract |
 | --- | --- |
-| `skills/coordinate-implementation/SKILL.md` | Replace LLM load/prepare/delegate/execute/recover control with CLI interface and exact blockers; retain name, approved origin intake and independence |
+| `skills/coordinate-implementation/SKILL.md` | Replace LLM control with launch/status/pending/answer/control facade; interactive original parent must wake+actually ask_user, no orchestration authority; preserve origin/independence |
 | `skills/coordinate-implementation/references/batch-routing.md` | Remove implementation applicability/batching/escalation authority; retain planning six-factor selection in renamed `skills/planner/references/profile-selection.md`, update links; historical research remains |
 | `skills/coordinate-implementation/scripts/test_batching_contract.py` | Remove obsolete symbolic routing/batch/escalation/feedback tests; move planning-only rubric cases to planner tests; migrate item_dispositions, readiness, invalidation and Git safety semantics to actual runtime tests, not delete them |
 | `skills/coordinate-implementation/scripts/test_intake_contract.py` | Replace local<=3/batch-table obligations with thin entry/no-authority and real intake schema/approval coverage |
 | `skills/coordinate-implementation/scripts/test_state_contract.py` | Preserve no STATE/custom dirt/unknown-active safeguards; replace conversational recovery walkthrough with CLI/reconciliation assertions |
-| `skills/task-generation/SKILL.md` | Both adapters emit structured versioned subset, context_group and unchanged REQUIRED contract; remove batch-selection/handoff/profile-assessment language, keep no task-profile assignment and producing renewal |
+| `skills/task-generation/SKILL.md` | Both adapters emit structured versioned subset, context_group, upfront authorization envelope and unchanged REQUIRED contract; remove batch-selection/handoff/profile-assessment language, keep no task-profile assignment and producing renewal |
 | `skills/task-generation/scripts/check-task-order.py` | Preserve source-order/story/dependency checks; add structured contract order/ID validation without inferring contracts from prose |
 | `skills/task-generation/scripts/test_check_task_order.py` | Add structured parity/negative fixtures; preserve existing earlier-prerequisite/contiguity cases |
 | `skills/task-generation/scripts/test_contract.py` | Both adapters retain acceptance/dependency/manual semantics and prototype lifetime; replace batch brief expectations with task-envelope mappings |
-| `skills/planner/SKILL.md` | Handoff to runtime start under original planning-only exception; replace whole-batch union/implementation batching selection references, keep planning selection/delegation/Stage gates unchanged |
+| `skills/planner/SKILL.md` | Handoff pinned authority/runtime/interactive-launch provenance to runtime start under original planning-only exception; replace whole-batch union/implementation batching selection references, keep planning selection/delegation/Stage gates unchanged |
 | `skills/planner/references/approval-and-recovery.md` | Preserve current-content/brief/mechanical/legacy approvals; add executable origin intake and external scoped gate evidence, no implied implementation |
 | `skills/planner/references/dependency-research.md` | Preserve canonical spans/classification/bounded writes; update only execution-owner terminology if necessary |
 | `skills/planner/references/early-risk-reduction.md` | Preserve proof scope/lifetime/producer boundaries; runtime release consumer, no extra mandatory prototype |
@@ -442,13 +585,13 @@ carriers/classes rather than treated as runtime proof. Reinspect exact bytes bef
 | `skills/planning-brainstorming/scripts/test_contract.py` | Repoint routing/handoff carriers; retain preselection/read-only/owner-answer boundaries |
 | `skills/tiny-spec/SKILL.md` | Update final handoff/context_group consumer, preserve compact source/direct tasks/combined approval and planning profile policy |
 | `skills/delegating-architectural-planning/SKILL.md` | Keep installed one-pass Sol/medium adapter; update execution handoff/rubric links only |
-| `skills/requesting-code-review/SKILL.md` | Runtime independent full-range review request integration; generic self-review fallback cannot satisfy workflow independence |
+| `skills/requesting-code-review/SKILL.md` | Runtime independent full-range review request integration, same role-safe question pin if review asks; generic self-review fallback cannot satisfy workflow independence |
 | `skills/requesting-code-review/code-reviewer.md` | Add schema-bound findings interface while retaining evidence/location/severity/read-only/no invented base |
 | `skills/receiving-code-review/SKILL.md` | Route authorized correction task+commit and owner scope gate, never direct reviewer writes |
-| `skills/scientific-method-debugging/SKILL.md` | Empirical diagnosis consumes attempt/effect evidence; prohibit unknown retry, preserve focused fail-then-pass fixes/permissions |
-| `skills/handoff-prompt/SKILL.md` | Runtime run/config/approval identities and blockers, no invented session portability or required narrative ledger |
+| `skills/scientific-method-debugging/SKILL.md` | Empirical diagnosis consumes attempt/effect/input evidence, autonomously resolves approved mechanics/tests; prohibit unknown retry, preserve focused fail-then-pass fixes/permissions |
+| `skills/handoff-prompt/SKILL.md` | Runtime run/config/approval/parent/question-pin/input identities, spend envelope and blockers, no invented session portability or required narrative ledger |
 | `skills/finish-session/SKILL.md` | Read actual runtime acceptance/status and schema owner, no narrative persistence; preserve docs/feedback safety |
-| `skills/initialize-coherence/SKILL.md` | Optional runtime capability/reporting, approved marked association refresh; authoritative runtime schema docs required; no silent install/mass task conversion |
+| `skills/initialize-coherence/SKILL.md` | Optional runtime and mode-specific interactive transport/question-tool capability reporting, approved marked association refresh; authoritative runtime schema docs required; no silent install/mass task conversion |
 | `skills/initialize-coherence/scripts/test_contract.py` | Adjust association/runtime owners while preserving custom/dirty/approval/SpecKit capabilities |
 | `skills/initialize-coherence/scripts/fixtures/workflow-ownership-outputs.json` | Add bounded runtime-owner association cases; preserve custom content |
 | `skills/initialize-coherence/scripts/fixtures/source-contract.json` | Preserve immutable historical source ledger; adapt only active-consumer mapping if operative behavior changes |
@@ -485,14 +628,14 @@ carriers/classes rather than treated as runtime proof. Reinspect exact bytes bef
 | `.specify/integrations/speckit.manifest.json` | Reconcile intentional template hash when adapted, preserve installation provenance |
 | `.gitignore` | Narrow nested-host manifests/lock exceptions and local venv/runtime ignores, no credentials |
 | `README.md` | Replace implementation batch/routing/control text with actual install/start/status/resume/limits; retain planning path/profile/approval rules |
-| `REQUIREMENTS.md` | Replace implementation selection section with configured runtime/SDK/schema requirements; preserve planning Sol/medium/shared profile policy and installed SpecKit gates |
+| `REQUIREMENTS.md` | Replace implementation selection section with configured runtime/SDK/schema and optional-mode Paseo transport requirements (no core Paseo dependency); preserve planning Sol/medium/shared profile policy and installed SpecKit gates |
 | `AGENTS.md` | Approved marked local association: runtime ownership/recovery/docs links; preserve portability/custom content |
 | `.specify/memory/constitution.md` | Explicit owner-governed amendments above, not silent rewriting or reopening stack choice |
 | `docs/index.md` | Route future runtime schema/operating owners, replace active coordinator batch/recovery links, preserve historical research discoverability |
 | `docs/plans/planner-regression.md` | Update actual runtime-handoff validation scope; preserve static/live distinctions |
 | `docs/pi-settings-sample.md` | Compare actual defaults with new configured profiles; remove execution override/routing contradictions only, retain attributed planning configuration |
 | `stack-validation-report.md` and `docs/evidence/workflow-stack-validation/**` | Preserve immutable completed PoC evidence/limits; no repeated selection or retroactive SDK claim |
-| `docs/evidence/workflow-sdk-validation/**` and `docs/evidence/workflow-process-validation/**` | Preserve canonical completed focused probes, real negative findings/limits; no repeat or copying toy code into production |
+| `docs/evidence/workflow-sdk-validation/**`, `docs/evidence/workflow-process-validation/**` and `docs/evidence/workflow-interaction-validation/**` | Preserve canonical completed focused probes, real negative findings/limits; no repeat or copying toy code into production |
 | `memory/**`, existing STATE/custom docs, historical plans/reviews, unrelated skills | Preserve; no execution cleanup deletes evidence or technical guidance |
 
 New permanent documentation owners proposed with runtime delivery: `docs/coordinate-implementation.md`
@@ -519,11 +662,15 @@ task producer maps them to task-local REQUIRED IDs without weakening criteria.
 | V-evidence | Actual REQUIRED oracle failure vs insufficient proof, affected invalidation/shared mappings, manual sample STOP, optional green cannot release | FR-022–023 |
 | V-review | Real/schema review findings, diagnosed bounded repair zero/two/exhaustion and separate focused correction commits, renewed full-range independent review | FR-027–030 |
 | V-status | Separate no-agent status, host-exit interrupted status, projection torn-tail/replay idempotency, authoritative ordering/schema | FR-018–021, 024 |
+| V-authority | Declared paid/service/test/network/external/mutation envelope, real approval refs and all-known-gap preflight; no paid dispatch absent/denied/unknown authority, no repeated inside-envelope technical questions | FR-035 |
+| V-interaction | Actual same-parent wake+ask_user, completed safe question park, original saved conversation answer-before-continuation, bound inputs/outbox/dedup; missing/unsafe/unknown-headroom original blocks, never fresh substituted | FR-036–038 |
+| V-control | Active inquiry/steer/followUp receipts vs enqueue vs observed ACK; scope renewal, pause/cancel drain/cgroup; UI busy/outage/reconnect failure visible with CLI answer, no manual-polling fallback in interactive mode | FR-037–039 |
 | V-migration | Stage-cutover/legacy return/rollback rehearsal, obsolete execution obligations gone, planning profile rules/gotchas/history intact, docs match CLI/schema | FR-031–034 |
 
-Coverage review: FR-001–034 all map above; SC-001→V-intake/evidence/custody, SC-002→V-config/binding,
+Coverage review: FR-001–039 all map above; SC-001→V-intake/evidence/custody, SC-002→V-config/binding,
 SC-003→V-session/binding, SC-004→V-recovery/custody, SC-005→V-metrics/status,
-SC-006→V-evidence/review, SC-007→V-migration/intake. Original source→FR mapping remains in spec.
+SC-006→V-evidence/review, SC-007→V-migration/intake, SC-008→V-interaction/control,
+SC-009→V-authority/control. Original source→FR mapping remains in spec.
 Known local unit checks use fixtures; actual SQLite/Git/host process seams need integration.
 Live provider, external tools, installs and paid checks need explicit scoped authorization;
 NOT RUN is not PASS and cannot release their consumers. No synthetic sandbox/security or
@@ -531,7 +678,8 @@ power-loss/multi-host claim. Final independent review is required, not this self
 
 Task producer must read current renewed spec first, this derived sequence and canonical
 research; emit complete versioned task envelopes and human tasks with stable IDs, approved
-source provenance, deps/context_group/owned paths, REQUIRED criterion/check/pass/evidence and
+source provenance, deps/context_group/owned paths, actual upfront authorization/spend envelope, interface mode/
+required parent delivery capability and original-session pin/input contracts, REQUIRED criterion/check/pass/evidence and
 original manual/permission gates. Do not put execution family classes on tasks; profiles live
 in approved configuration. Identify only genuine proof producer dependencies, preserve proof
 lifetime/permanent acceptance and no implementation authority. Do not run tasks now.
@@ -560,8 +708,10 @@ pre-send enforcement and onPayload alone misses summary requests; native RPC lac
 threshold; saver/application commits are not
 one atomic transaction; kernel lock release does not prove orphan quiescence; status must
 be independently read-only; Git subject matching alone is not recovery identity; per-task
-tool survivors alarm durably without treating a reusable idle Pi host as orphan. No unresolved
-material choice remains beyond explicit approval renewal and future proof/permission gates.
+tool survivors alarm durably without treating a reusable idle Pi host as orphan. The later
+owner-directed interaction/autonomy correction is described above and in R13;
+its proof is feasibility, not production auth/outbox/budget/pressure certification. Explicit
+production spend choices remain owner gates; no amount is silently selected.
 
 ## Complexity Tracking
 
@@ -574,7 +724,7 @@ Neither extension is a second orchestrator, a daemon, or a permission waiver. Im
 remains gated by specification renewal, separate tasks/independent overall review/final artifact
 approval and a later explicit implementation request (this request is planning-only).
 
-### Producer validation result (planning artifacts only)
+### Initial producer validation result (historical d6acc13; correction rechecked below)
 
 Full authored bundle reread and self-reviewed after both owner-directed pauses. Declarative
 checks passed: seven draft-2020-12 schemas, nine positive examples and sixteen targeted
@@ -593,3 +743,28 @@ Constitution post-design check retains explicit amendments/approval gates above.
 path-limited diff/whitespace/sensitive-value checks accompany the focused bundle checkpoint.
 Parent inspection and renewed specification approval remain mandatory, not implied by these
 checks, self-review or commit. Independent overall review belongs after separate task creation.
+
+### Same-origin interaction correction (baseline 6534763)
+
+Owner explicitly required the interaction/autonomy changes after d6acc13 and witnessed the
+accepted integrated fixture. Same observed Sol/medium producer corrected existing artifacts,
+not a new plan/setup pass. Spec FR-019 is aligned; US6, FR-035–039 and SC-008/009 are new
+owner-directed requirements. R13 distinguishes actual idle-parent ask_user/steering proof
+from unproven production launch/auth/outbox/pressure/budget integration. Historical approval
+remains unchanged; **RENEW_SPEC_APPROVAL** is mandatory before separate fresh task generation.
+No task/implementation/extra probe/extension/global changes or 123-test rerun in this correction.
+
+Correction producer self-review/validation: eight declarative schemas, eighteen positive
+fixtures, thirty-five negative schema mutations and six explicit binding/duplicate fixture
+assertions pass. These demonstrate design serialization/invariants, not production receipt
+authentication, temporal exactly-once, semantic question eligibility or dispatch enforcement.
+Reconciled original-pin vs ordinary rotor, required dialog vs optional notifications,
+run-scoped controls without fabricated idle worker, queued vs actual acknowledgement,
+accepted input vs failed transport, and paid authority vs advisory/provider limits. Source
+prefix/historical approval and all original FR/SC IDs remain; only existing FR-019 changes,
+plus FR-035–039/US6/SC-008–009. Full correction diff/new schema/examples read and reviewed.
+Constitution 3.0.0 review retains explicit owner gates, portable standalone assets, one-writer/
+checkpoint safety, independent reviewer and no narrative memory; prescribed parent dialog is
+not LLM orchestration. Future actual policy amendments above remain approval-gated. Final
+links/coverage/secret/path/whitespace/scope checks are reported with the focused correction
+checkpoint. RENEW_SPEC_APPROVAL remains the next gate, not waived by these checks or commit.

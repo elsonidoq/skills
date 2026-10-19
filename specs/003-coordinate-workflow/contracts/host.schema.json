@@ -53,7 +53,10 @@
         "drain",
         "close",
         "tool",
-        "observe"
+        "observe",
+        "steer",
+        "follow_up",
+        "owner_answer"
       ]
     },
     "payload_schema": {

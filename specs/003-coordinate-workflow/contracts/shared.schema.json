@@ -506,6 +506,188 @@
         "source",
         "mapping_version"
       ]
+    },
+    "authorization_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "paid_authority": {
+          "enum": [
+            "denied",
+            "unresolved",
+            "owner_scoped"
+          ]
+        },
+        "approval_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/approval"
+          },
+          "minItems": 0
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/profile"
+          },
+          "minItems": 0
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "shared.schema.json#/$defs/id"
+              },
+              "action_scope": {
+                "type": "string",
+                "minLength": 1
+              },
+              "effects": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "paid_model",
+                    "paid_service",
+                    "test",
+                    "network",
+                    "external",
+                    "mutation"
+                  ]
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "id",
+              "action_scope",
+              "effects"
+            ]
+          },
+          "minItems": 0
+        },
+        "limits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "metric": {
+                "enum": [
+                  "requests",
+                  "cost_usd",
+                  "tokens",
+                  "elapsed_ms"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              },
+              "scope": {
+                "const": "run"
+              },
+              "enforcement": {
+                "enum": [
+                  "runner_admission",
+                  "provider_verified",
+                  "advisory"
+                ]
+              },
+              "proof_ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "metric",
+              "value",
+              "scope",
+              "enforcement",
+              "proof_ref"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "enforcement": {
+                      "const": "provider_verified"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "proof_ref": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "enforcement": {
+                      "const": "runner_admission"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "metric": {
+                      "const": "requests"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "id",
+        "paid_authority",
+        "approval_refs",
+        "profiles",
+        "capabilities",
+        "limits"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "paid_authority": {
+                "const": "owner_scoped"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "approval_refs": {
+                "minItems": 1,
+                "contains": {
+                  "properties": {
+                    "action": {
+                      "const": "approve"
+                    }
+                  },
+                  "required": [
+                    "action"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

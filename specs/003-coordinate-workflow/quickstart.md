@@ -4,7 +4,8 @@ Status: design guide only. The runner/commands below are **NOT IMPLEMENTED**. No
 live provider test, install or service configuration is authorized by this planning pass.
 Canonical [stack proof](../../docs/evidence/workflow-stack-validation/README.md) and
 [accepted SDK probe](../../docs/evidence/workflow-sdk-validation/README.md) and
-[local lifecycle probe](../../docs/evidence/workflow-process-validation/README.md) already ran; do not
+[local lifecycle probe](../../docs/evidence/workflow-process-validation/README.md) and
+[interactive fixture](../../docs/evidence/workflow-interaction-validation/README.md) already ran; do not
 repeat their selection/telemetry experiment as a future task. Permanent checks below exercise
 the shipped helper/adapter, not duplicate disposable demo scaffolding.
 
@@ -19,12 +20,19 @@ the shipped helper/adapter, not duplicate disposable demo scaffolding.
    Verify actual packaged schemas/YAML/resources/host version, not installation names alone.
    Optional `scripts/install-workflow.sh` will provision only approved isolated runtime;
    network/install permission required. No installs during planning or auto-auth refresh.
+   Interactive-parent mode additionally needs its explicitly selected transport (Paseo0.9.2
+   tested), launching identity/permissions/readiness and registered ask_user; core CLI has no
+   Paseo requirement. Do not silently fall back to polling if interactive capability is missing.
 3. Isolated disposable project/worktree with known owned paths, baseline commit and retained
    unrelated staged/unstaged/untracked/STATE/custom bytes. Never point a kill test at active
    owner work. One writer per worktree across all run dirs; status can be a separate reader.
 4. Explicit permitted exact profile/effort, resource/skill hashes, read-only ready credential
    and catalog, exact registered observer mapping and tool/permission policy. Expiry blocks
    rather than refresh shared auth. Planning Sol/medium selection is not production assignment.
+   Declare actual paid/service/test/network/external/mutation authority and selected profiles
+   with owner approval refs before dispatch. Aggregate known gaps once before tasks; unresolved/
+   denied/absent paid envelope blocks. No production amount or blanket spend is approved here;
+   routine approved tests/technical work must not reask inside-envelope questions.
 5. Preexisting approved containment capability for tools requiring full-subtree custody,
    and actual empty-group/quiescence checks. cgroup files/systemd-run presence is insufficient;
    owner-enabled Linux cgroup-v2 delegation and four real local lifecycle cases are now
@@ -43,6 +51,10 @@ the shipped helper/adapter, not duplicate disposable demo scaffolding.
 coordinate-implementation start --project "$PROJECT" --workflow "$WORKFLOW" --tasks "$TASKS"
 # From a different process; no host/LLM launch, no mutation or guessed background progress:
 coordinate-implementation status --project "$PROJECT" --run "$RUN_ID" --json
+# Pending/answer/control interfaces (illustrative future flags, not implemented):
+coordinate-implementation pending --project "$PROJECT" --run "$RUN_ID"
+coordinate-implementation answer --project "$PROJECT" --run "$RUN_ID" --input "$BOUND_ANSWER"
+coordinate-implementation control --project "$PROJECT" --run "$RUN_ID" --input "$BOUND_CONTROL"
 # Only after actual scoped external owner answer/remediation and reconciled writers:
 coordinate-implementation resume --project "$PROJECT" --run "$RUN_ID" --authorization "$ANSWER"
 ```
@@ -69,6 +81,9 @@ No fake `runner.py` or simulated slash command is required to satisfy planning.
 | Independent status/projections — V-status | Separate process reads SQL without Node/LLM, sees stopped/interrupted host and exact blockers/config/checkpoints. Torn JSONL tail, append-before-cursor and stale state rebuilt by authorized publisher from committed SQL; record IDs/order deduplicate, status reports lag read-only | Offline actual SQLite/file/process integration; power loss/multi-host guarantees excluded |
 | Checks/owner gates — V-evidence | Real REQUIRED oracle deliberately fails, irrelevant/missing/stale/conflicting/unrun evidence is insufficient, shared output maps all IDs, optional green cannot release. Inspectable sample STOP awaits explicit scoped answer; denial/cancel/hash/config drift invalidates only affected gate/evidence | Local mechanical checks plus real external owner-answer integration; never model-generated approval or narrative parsing |
 | Repair/final review — V-review | Diagnosed in-scope failure dispatches configured repair without escalation, zero/two/exhaustion/unknown cases stop appropriately. Current independent read-only full-range review uses schema findings, each visible disposition. Authorized focused correction task+commit then affected checks and eligible reviewer loop. Scope changes gate owner | Offline budget/schema tests plus authorized real SDK review/repair integration. No mandatory per-task review; reviewer never produces fix |
+| Upfront autonomy — V-authority | Missing/denied/unresolved paid profile/service/test/network/external/mutation authority blocks before send; preflight aggregates known gaps and manager-readable options. Inside-envelope technical/test actions do not trigger routine cost questions; unexpected material/safety gaps remain gated | Offline intake+actual admission/reservation helper checks. No provider call to test denied spend. Do not invent numeric hard caps; verify supported enforcement separately |
+| Owner roundtrip — V-interaction | Actual registered launch captures parent/transport/question capability; code wakes that same parent which actually calls ask_user. Completed question tool→settled/drained SQL+LangGraph park; original persisted conversation answer before continuing. Duplicate/stale/wrong-session/role/source/config inputs do not dispatch; accepted answer survives failed resume without reask | Accepted interactive fixture is feasibility, not repeated PoC. Permanent shipped helpers test mixed batches, input/checkpoint/delivery crash windows, unknown/low-headroom original blocks without fresh fallback; explicit live permissions only where needed |
+| Active controls/UI loss — V-control | Separate received/queued/SDK-delivered/worker-ACK and inquiry response; no private reasoning/compliance claim. Scope-changing input blocks renewal, pause abort/drains tool scopes before commit. Busy/outage/reconnect dedup and genuine ask_user receipt tested, CLI pending/answer remains independent; optional status notifications cannot replace required question transport | Controlled actual host/facade integration plus synthetic denial/binding fixtures; no arbitrary shell-preemption promise from cooperative wait. Durable gate/transport blocker instead of silent polling or success |
 | Migration/rollback/docs — V-migration | Representative adopted projects retain TinySpec/Standard/legacy semantics, planning profile policy and technical gotchas/history/custom STATE. Legacy live writers reconciled before cutover; failure stops new entry, durable evidence/commits retained. Re-enabling legacy requires explicit compatible reconciled authority. Compare CLI/schema/docs and run existing focused suite guards | Offline isolated adoption/install/cutover fixtures; no mass conversion/deletion/reset/service setup |
 
 Every scenario maps into future stable task-local REQUIRED IDs with criterion, smallest
@@ -86,3 +101,11 @@ and containment/telemetry limits. Distinguish implementation completion, indepen
 and final acceptance. No narrative STATE, coordination memory paperwork, model-routing
 optimizer, escalation, background deciding LLM or daemon promise. Notify `/reload` after
 future global skills change; this planning bundle changes none.
+
+
+Interactive fixture used compaction off and a deliberate forced cosmetic choice: neither is
+production question/threshold policy. Reopened original conversation there does not prove
+normal pressure recovery; queued steering is not worker acknowledgement. Read R13 for two
+inspected local failures, actual five requests/cumulative usage and limits. Do not repeat the
+completed fixture or send to its historical parent. Future runtime must persist environment/
+original-session/authority before dispatch; no extension reload/install is presumed.

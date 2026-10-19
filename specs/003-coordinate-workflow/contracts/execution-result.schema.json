@@ -23,7 +23,10 @@
         "failed",
         "blocked",
         "interrupted",
-        "ORPHAN_PROCESS"
+        "ORPHAN_PROCESS",
+        "parking",
+        "waiting_owner_input",
+        "paused"
       ]
     },
     "original_worker_outcome": {
@@ -91,6 +94,12 @@
         "string",
         "null"
       ]
+    },
+    "question_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "required": [
@@ -152,6 +161,29 @@
         "properties": {
           "outcome": {
             "const": "ORPHAN_PROCESS"
+          },
+          "replacement_allowed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "waiting_owner_input"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "question_ref"
+        ],
+        "properties": {
+          "question_ref": {
+            "type": "string",
+            "minLength": 1
           },
           "replacement_allowed": {
             "const": false

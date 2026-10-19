@@ -88,6 +88,9 @@
               "$ref": "shared.schema.json#/$defs/gate"
             },
             "minItems": 0
+          },
+          "authorization_envelope_id": {
+            "$ref": "shared.schema.json#/$defs/id"
           }
         },
         "required": [
@@ -99,10 +102,14 @@
           "owned_paths",
           "required",
           "optional",
-          "gates"
+          "gates",
+          "authorization_envelope_id"
         ]
       },
       "minItems": 0
+    },
+    "authorization_envelope": {
+      "$ref": "shared.schema.json#/$defs/authorization_envelope"
     }
   },
   "required": [
@@ -111,6 +118,7 @@
     "legacy_origin",
     "sources",
     "approval_refs",
-    "tasks"
+    "tasks",
+    "authorization_envelope"
   ]
 }

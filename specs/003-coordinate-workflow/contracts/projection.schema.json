@@ -41,7 +41,10 @@
                 "reviewing",
                 "accepted",
                 "cancelled",
-                "final_failure"
+                "final_failure",
+                "parking",
+                "waiting_owner_input",
+                "paused"
               ]
             },
             "acceptance": {
@@ -100,6 +103,34 @@
               "items": {
                 "$ref": "shared.schema.json#/$defs/alarm"
               }
+            },
+            "pending_question_ref": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "outbox_ref": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "control_stage": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                null,
+                "received",
+                "queued",
+                "sdk_delivered",
+                "worker_acknowledged",
+                "blocked",
+                "cancelled",
+                "reconciled"
+              ]
             }
           },
           "required": [
@@ -140,6 +171,26 @@
                   },
                   "acceptance": {
                     "const": "blocked"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "waiting_owner_input"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "pending_question_ref"
+                ],
+                "properties": {
+                  "pending_question_ref": {
+                    "type": "string",
+                    "minLength": 1
                   }
                 }
               }
@@ -400,7 +451,9 @@
                 "stopped",
                 "interrupted",
                 "orphan",
-                "unknown"
+                "unknown",
+                "parked",
+                "continuing"
               ]
             },
             "retry_count": {

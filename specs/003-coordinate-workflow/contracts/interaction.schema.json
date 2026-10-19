@@ -1,0 +1,875 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coherence.invalid/design/v1/interaction.schema.json",
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "task_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "node_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "attempt_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "session_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "role": {
+          "enum": [
+            "implement",
+            "repair",
+            "review"
+          ]
+        },
+        "source_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "task_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "approval_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "config_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        }
+      },
+      "required": [
+        "run_id",
+        "task_id",
+        "node_id",
+        "attempt_id",
+        "session_id",
+        "role",
+        "source_hash",
+        "task_hash",
+        "approval_hash",
+        "config_hash"
+      ]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "product_priority",
+            "unexpected_material_change"
+          ]
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "why_owner_needed": {
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 2
+        },
+        "recommendation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "impact": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "type": "string",
+              "minLength": 1
+            },
+            "complexity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "time": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cost": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "scope",
+            "complexity",
+            "time",
+            "cost"
+          ]
+        }
+      },
+      "required": [
+        "category",
+        "question",
+        "why_owner_needed",
+        "options",
+        "recommendation",
+        "impact"
+      ]
+    },
+    "parent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipient_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "runtime_session_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "capability_receipt_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "adapter",
+        "version",
+        "recipient_id",
+        "runtime_session_id",
+        "capability_receipt_ref",
+        "generation"
+      ]
+    },
+    "control_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "task_id": {
+          "oneOf": [
+            {
+              "$ref": "shared.schema.json#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "node_id": {
+          "oneOf": [
+            {
+              "$ref": "shared.schema.json#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attempt_id": {
+          "oneOf": [
+            {
+              "$ref": "shared.schema.json#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session_id": {
+          "oneOf": [
+            {
+              "$ref": "shared.schema.json#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "enum": [
+            "implement",
+            "repair",
+            "review",
+            null
+          ]
+        },
+        "source_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "task_hash": {
+          "oneOf": [
+            {
+              "$ref": "shared.schema.json#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "approval_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "config_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        }
+      },
+      "required": [
+        "run_id",
+        "task_id",
+        "node_id",
+        "attempt_id",
+        "session_id",
+        "role",
+        "source_hash",
+        "task_hash",
+        "approval_hash",
+        "config_hash"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "kind": {
+          "const": "owner_question"
+        },
+        "gate_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "nonce": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "pin_policy": {
+          "const": "original_only"
+        },
+        "original_session_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "original_branch_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "stage": {
+          "enum": [
+            "parking",
+            "pending",
+            "answered",
+            "blocked",
+            "cancelled"
+          ]
+        },
+        "park_proof_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "blocker": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "binding",
+        "kind",
+        "gate_id",
+        "nonce",
+        "pin_policy",
+        "original_session_ref",
+        "original_branch_ref",
+        "request",
+        "stage",
+        "park_proof_ref",
+        "blocker"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "pending"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "park_proof_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "kind": {
+          "const": "owner_answer"
+        },
+        "input_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "gate_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "nonce": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "pin_policy": {
+          "const": "original_only"
+        },
+        "answer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "parent_ask_user",
+                "cli_owner"
+              ]
+            },
+            "actor": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_ref": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_sha256": {
+              "$ref": "shared.schema.json#/$defs/digest"
+            },
+            "authority_ref": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "source",
+            "actor",
+            "record_ref",
+            "record_sha256",
+            "authority_ref"
+          ]
+        },
+        "delivery": {
+          "enum": [
+            "accepted",
+            "queued_original",
+            "sdk_delivered",
+            "worker_acknowledged",
+            "blocked"
+          ]
+        },
+        "original_session_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delivery_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "binding",
+        "kind",
+        "input_id",
+        "gate_id",
+        "nonce",
+        "pin_policy",
+        "answer",
+        "receipt",
+        "delivery",
+        "original_session_ref",
+        "delivery_ref"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "delivery": {
+                "enum": [
+                  "sdk_delivered",
+                  "worker_acknowledged"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "delivery_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "binding": {
+          "$ref": "#/$defs/control_binding"
+        },
+        "kind": {
+          "const": "owner_control"
+        },
+        "input_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "action": {
+          "enum": [
+            "inquire",
+            "steer",
+            "follow_up",
+            "pause",
+            "cancel"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "within_envelope",
+            "requires_approval"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner_authority_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "enum": [
+            "received",
+            "queued",
+            "sdk_delivered",
+            "worker_acknowledged",
+            "blocked",
+            "cancelled",
+            "reconciled"
+          ]
+        },
+        "evidence_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_scope": {
+          "enum": [
+            "run",
+            "active_session"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "binding",
+        "kind",
+        "input_id",
+        "action",
+        "scope",
+        "message",
+        "owner_authority_ref",
+        "stage",
+        "evidence_ref",
+        "target_scope"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "requires_approval"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "stage": {
+                "const": "blocked"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "worker_acknowledged"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evidence_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "enum": [
+                  "steer",
+                  "follow_up"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target_scope": {
+                "const": "active_session"
+              },
+              "binding": {
+                "$ref": "#/$defs/binding"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "target_scope": {
+                "const": "active_session"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "binding": {
+                "$ref": "#/$defs/binding"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "reconciled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "enum": [
+                  "pause",
+                  "cancel"
+                ]
+              },
+              "evidence_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "sdk_delivered"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evidence_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "binding": {
+          "$ref": "#/$defs/control_binding"
+        },
+        "kind": {
+          "const": "parent_delivery"
+        },
+        "event_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "gate_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "parent": {
+          "$ref": "#/$defs/parent"
+        },
+        "stage": {
+          "enum": [
+            "recorded",
+            "transport_queued",
+            "parent_received",
+            "question_tool_invoked",
+            "answered",
+            "blocked"
+          ]
+        },
+        "receipt_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gate_origin": {
+          "enum": [
+            "startup",
+            "worker"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "binding",
+        "kind",
+        "event_id",
+        "gate_id",
+        "parent",
+        "stage",
+        "receipt_ref",
+        "gate_origin"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "enum": [
+                  "parent_received",
+                  "question_tool_invoked",
+                  "answered"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "receipt_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "gate_origin": {
+                "const": "worker"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "binding": {
+                "$ref": "#/$defs/binding"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "preflight_authority"
+        },
+        "run_id": {
+          "$ref": "shared.schema.json#/$defs/id"
+        },
+        "envelope_hash": {
+          "$ref": "shared.schema.json#/$defs/digest"
+        },
+        "paid_authority": {
+          "enum": [
+            "denied",
+            "unresolved",
+            "owner_scoped"
+          ]
+        },
+        "verified_approval_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "missing_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "pending_gate_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "blocked"
+          ]
+        },
+        "paid_dispatch_allowed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "run_id",
+        "envelope_hash",
+        "paid_authority",
+        "verified_approval_refs",
+        "missing_capabilities",
+        "pending_gate_refs",
+        "status",
+        "paid_dispatch_allowed"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "paid_dispatch_allowed": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "ready"
+              },
+              "paid_authority": {
+                "const": "owner_scoped"
+              },
+              "verified_approval_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ready"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "missing_capabilities": {
+                "maxItems": 0
+              },
+              "pending_gate_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "blocked"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "paid_dispatch_allowed": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

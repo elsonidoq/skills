@@ -198,3 +198,56 @@ security sandbox. Remote/container/different-user/adversarial effects require an
 approved lifecycle capability or BLOCKED. No automatic services, cgroup/global configuration
 or additional platform adoption. Production verifies actual child-control readiness and
 retains fail-closed ownership/quiescence checks without downgrading to PID-only.
+
+## R13 — Accepted actual parent interaction; autonomy and original-session pin
+
+**Owner direction / repository evidence:** after completed d6acc13 plan, owner requested
+actual automatic launching-parent wake+ask_user, original saved worker answer continuity,
+active steering and maximum autonomy/upfront spend authority. [Source excerpts](source-request.md#owner-interaction-and-maximum-autonomy-additions-after-d6acc13)
+are requirements, not inferred lessons. Parent independently accepted interaction commit
+`65347630ffeb042f9c9c7b23e7216e70b9ac1244` after participating and reading code/events and
+rerunning seven offline tests. This same producer fully read canonical
+[README](../../docs/evidence/workflow-interaction-validation/README.md),
+[host](../../docs/evidence/workflow-interaction-validation/poc/host.mjs),
+[runner](../../docs/evidence/workflow-interaction-validation/poc/runner.py),
+[notify adapter](../../docs/evidence/workflow-interaction-validation/poc/notify.py),
+[test source](../../docs/evidence/workflow-interaction-validation/poc/test_validation.py),
+[events](../../docs/evidence/workflow-interaction-validation/recorded/events.jsonl),
+[parent witness](../../docs/evidence/workflow-interaction-validation/recorded/parent-witness.json),
+session metadata, validation, inspected failures, negative inputs, checkpoints and toy output.
+No new probe/provider/extension load or test rerun by this producer; evidence read-only.
+
+| Supporting span / classification | Constraint derived | Required smallest production check |
+| --- | --- | --- |
+| `host.mjs` request_owner_input tool and prompt+idle; `runner.py graph.ask/park/continue_original`; real tool_execution_end→settled→durable_pending→answer_accepted events | Normal completed terminating question result, safe batch settlement before LangGraph interrupt/checkpoint, original conversation pin. ToolUse here is expected park, not completion | Actual shipped adapter single/mixed batch park and crash-before/after input/checkpoint; no pending uncompleted tool or duplicate prompt |
+| Installed Pi0.87.1 extensions/types.d.ts:882–895 terminate contract; pi-agent-core agent-loop.js:461–465 all finalized calls terminate; agent-session.d.ts:428–449 steer/followUp queue | Terminate:true alone does not stop arbitrary mixed batches. SDK enqueue happens at execution boundary, not instant shell preemption | Actual mixed-batch guard, separate controlled delivery/ack; pause tests use existing drain+cgroup rather than this cooperative wait |
+| `notify.py notify/probe/ack`, four queued receipts, actual parent-witness callbacks1–4 and ask_user return | Public Paseo0.9.2 fixed-argv callback can wake same parent; require interactive readiness, actual parent/session/tool receipt, not coding agent manual log relay | Production launch+busy/outage/reconnect/outbox dedup and genuine ask_user receipt. Generic Pi extension remains NOT proven; no private channel sender |
+| `runner.py answer/validate_binding/exclusive_json`; actual wrong/duplicate/stale inputs rejected with unchanged ledger | Inputs/gates pinned source/task/config/approval/session/role+nonce and unique IDs, answer acceptance durable independent of resume transport | SQL UNIQUE/CAS across concurrent clients/crash; validate actual owner authority, reject worker-written approvals and stale bindings before dispatch |
+| New host PID reopens same worker session with7 stored messages; answer/steer incoming flags, write_note explicit receipt IDs and actual output | Original means persisted conversation, not same process; answer before continuation, no rotor fresh substitution. Observed ACK distinct from enqueued | Production pinned reopen with normal threshold/pressure/current resources; missing/unknown/unsafe original BLOCKED for explicit recovery |
+| `controlled_wait` + steer CLI/enqueued + worker_acknowledged event/output | Controls durable received→queued→SDK-delivered→acknowledged; inquiry facts/observable response, not private thoughts/compliance | Actual active identity/scope checks and pause/steer races before verify/commit/replacement; unsupported timing remains visible |
+| Synthetic preflight/category/UI-loss controls in test_validation and negative-tests; forced cosmetic title is fixture only | Catch known missing authority before dispatch; resolve ordinary technical/approved tests autonomously. Category schema does not prove semantic necessity | Intake/envelope admission and known-gap aggregation; genuine product/unexpected impact rationale, out-of-scope gate; do not ask every cosmetic default |
+
+**Inspected failures become constraints, not retry permission:** first duplicate logger keyword/
+EPIPE and custom tools allowlist bug caused one235-token request, no tools; corrected in same
+persisted failed session. Second missing PI_PACKAGE_DIR failed before host/API after answer
+persisted; targeted continue_original retry used accepted answer without reasking. Production
+must persist/revalidate runtime inputs before dispatch and reconcile attempts/inputs/outbox
+separately; no raw run ledger duplication or automatic retry of unknown effects.
+
+**Measured cost limits:** five real requests, cumulative3445 input+196 output=3641 tokens,
+$0.00885 SDK catalog estimate including failure. Not root/coding/UI total or invoice. Generic
+maxTokens is ignored by installed Codex builder, and max5 was per host, not durable run-wide
+budget. No hard dollar/token cap or production spend approval is demonstrated. Production
+request-admission reservations and any provider-enforced limits require actual supported
+mapping/checks and explicit owner envelope, not fabricated amounts.
+
+**Tested bounds:** actual idle-parent Paseo wake and ask_user, orderly original-session reopen,
+cooperative active SDK steering/ACK, actual negative CLI binding rejection. Compaction disabled;
+150k/pressure pin policy not integrated here. Parent outage/reconnect/busy races, arbitrary
+pause, production registered launch/auth/transaction/outbox/budget are NOT proven. Fixture
+flags/nonce are binding, not OS identity authentication or exactly-once. Native Pi extension
+pi.sendMessage(triggerTurn:true, deliverAs:followUp) was researched/syntax-checked but never
+loaded; temporary file removed due owner unable to reload. Public injected child contact_supervisor
+is not a standalone sender; never use raw private channel files. No generalized messaging
+platform/daemon or second interactive feasibility PoC is justified. Preserve R1–R12 and consume
+these findings in permanent tests of actual shipped seams before their consumers rely on them.

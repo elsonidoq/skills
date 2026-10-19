@@ -220,3 +220,107 @@ pressure/compaction/retry tests at earliest supported seam with explicit permiss
 probes inform constraints, not substitute for these shipped-helper tests. Failed/NOT RUN
 required proof blocks its consumers; missing containment is a capability blocker, not model
 failure or permission to install/escalate.
+
+## Owner interaction, input authority and durable delivery
+
+This correction extends the same SQLite authority, not a parallel interaction file store.
+Pi conversation files hold original worker context; worker cannot write trusted answer/
+approval files. Public CLI inputs are authenticated/authorized through the selected trusted
+local owner/runtime path and restricted store ownership. Hashes/nonces alone bind messages,
+not arbitrary OS users. Reject secrets/sensitive payloads before first durable write; store
+only bounded safe question/answer/control content or permitted sanitized evidence reference.
+No narrative coordinator memory, raw reasoning or transcript export.
+
+| Extension | Identity / authoritative fields | Invariants |
+| --- | --- | --- |
+| `wf_gates` owner_question | gate/input ID, kind/category, manager-readable why/options/recommendation/impact; original run/task/node/attempt/role/session+branch/file-ref; source/task/approval/config/resource hashes; nonce; parking/pending/answered/blocked/cancelled | Pending only after normal completed question result+prompt/settled/idle+tool quiescence; a pin blocks ordinary selector substitution |
+| `wf_owner_inputs` | UNIQUE(run,input_id), gate or active-control target, kind, bound original/active session+role and hashes, owner/parent provenance+answer receipt, safe payload hash, accepted/delivery stage, supersedes/cancellation | Same input+hash returns old receipt without resend; conflicting duplicate rejects; stale/wrong/unauthorized binding never dispatches. Accepted answer is not transport success |
+| `wf_outbox` | UNIQUE(run,event_id,parent_generation), recipient capability/version/actual-parent binding, gate/input ref, recorded/transport_queued/parent_received/question_tool_invoked/answered/blocked, attempt/deadline/error/ACK refs | App transaction with pending gate; send only committed rows. Actual parent delivery/tool call receipts required, not opaque send flag; bounded retry, no authority in notifier |
+| `wf_spend_reservations` | UNIQUE(run,outbound_request_id), envelope+approval hash, requested profile/action, reserved admission units/owner-selected limits, sent/unknown/reconciled observations | Counts all attempts/hosts/allowed retries/summary requests; unknown send cannot be refunded by restart; no exactly-once external bill claim |
+| `wf_inputs` authorization/launch manifest | pinned envelope/profile/capability/test/network/external/mutation scope, real approval refs, explicit selected CLI-only or interactive adapter/parent/question-tool/runtime-env manifest | Known-gap preflight aggregates before tasks. Missing/denied/unknown paid authority blocks send. Scope drift renews approval, not boolean trust |
+
+Run gains `parking`, `waiting_owner_input`, `paused`; task gains waiting-owner/control phases;
+attempt gains parked/continuing segments. Parked is not completed task and cannot release
+dependents or create an implementation commit. Parked run retains the worktree reservation
+in wf_runs even if its process/advisory lock exits; a new start must not bypass it.
+Original attempt can continue in a new host
+with separately identified invocation/telemetry segments; aggregate deltas once, preserve
+idle-wait vs active-time provenance and prior failed work. Source/task/approval/config changes
+invalidate affected gates/input authority; accepted content remains historical, not erased.
+
+### Transaction/order at question park and answer
+
+1. Runner validates request category/rationale and envelope; persists request operation/pin,
+   freezes conflicting tool and outbound admission. Custom tool completes normal terminate:true
+   result. Require supported exclusive/all-terminating batch; otherwise safe blocker, not a
+   claim arbitrary in-flight tools are paused. Await prompt+current settled/idle+tool custody.
+2. Commit gate pending+outbox, return handler result, sync LangGraph checkpoint/interrupt.
+   Outbox publish requires verified parked graph/application state. A crash with request
+   intent but missing gate/checkpoint reconciles actual session/tool entry IDs before action;
+   do not replay ask to duplicate question. No human waits on an unfinished tool result.
+3. Same launching parent is awakened through configured transport, reads authoritative gate,
+   actually uses ask_user and submits genuine receipt. CLI owner may independently answer;
+   distinguish receipt source. One SQL transaction verifies current binding/external authority,
+   deduplicates input, stores accepted answer and original-session delivery obligation. Mere
+   actor/nonce/CLI flags are not authentication; worker-created files cannot approve scope.
+4. Resume is deterministic continuation of the original conversation/role, not selector
+   reassignment. Revalidate stored runtime inputs, safe original leaf/profile/resources/
+   permissions and normal reliable headroom policy. If unavailable/unsafe/unknown or below
+   required headroom, block for explicit owner recovery; never fresh-substitute the answer.
+5. Deliver a new user envelope containing accepted input ID in that saved conversation before
+   next model request. Record SDK/session entry receipt. Crash after acceptance/delivery does
+   not reask or resend blindly: reconcile pending input+actual saved entry/current live work.
+   If delivery cannot be proved, block. Scope-changing answer requires original producing
+   approval, not permission to continue merely because input was delivered.
+
+### Outbox, parent/UI continuity and live controls
+
+Interactive launch records actual launching-parent runtime/session/transport recipient and
+permissions through supported launch integration, public inspection and bound readiness ACK;
+verify underlying parent/question tool provenance, not fabricated opaque IDs. Restrict local
+SQLite/IPC ownership. Selected Paseo public CLI is tested; no private supervisor file sender.
+Standalone core has no UI/Paseo requirement. In interactive mode required question delivery
+must preflight; no silent manual polling. Actual ask_user invocation/answer receipt is an
+observable release condition; facade noncompliance leaves gate pending, not fake success.
+
+Transport is at-least-once: outbox event IDs and parent gate receipt dedup prevent repeated
+questions; an answered gate always returns its prior receipt. A crash around the actual
+external ask_user call needs durable claim and actual tool receipt reconciliation; unknown
+invocation blocks reasking, not an exactly-once dialog guarantee. Bounded retries while runner
+alive use verified busy queue/identity; separate reentry/reconnect reloads unresolved outbox
+and revalidates parent generation. UI unavailable leaves waiting_owner_input plus explicit
+transport blocker. CLI pending/status/answer still works. Process exit promises no automatic
+background retry, no always-on daemon or background deciding LLM. Parent reconnect/provenance/
+duplicate UI races require permanent production tests, not assumed from four idle wakes.
+
+Control inputs may arrive anytime. Run-scoped inquire/pause/cancel between tasks or during
+preflight has null worker identity and uses verified run/owner binding; steer/followUp needs
+an actual active session. Startup authority decisions are preflight gates, not worker
+technical questions. `inquire|steer|follow_up|pause|cancel` binds active task/
+attempt/session/role+hashes and owner envelope. Record received→queued→SDK-delivered→worker-
+acknowledged independently; SDK queue ACK isn't worker receipt or semantic compliance.
+Inquire reports observable facts/worker response, no private reasoning access. Changed scope
+is blocked for approval, not injected as an accepted answer. Pending-question pin cannot be
+bypassed by a steering message. Pause/cancel transitions require supported abort/drain,
+validated task-tool group empty and partial-file/Git reconciliation before paused/check/
+commit/reuse/replacement; surviving tools still trigger ORPHAN_PROCESS. Idle reusable host
+lifetime remains distinct. Pause/cancel records reconciled quiescence evidence without
+pretending the stopped worker acknowledged it. Unknown delivery/quiescence retains exact blocker and inputs.
+
+### Upfront autonomy and budget enforcement boundary
+
+Authorization envelope is part of approved task/run identity, not permission inferred from
+fixture or planning model choice. Preflight enumerates all known missing capabilities/
+permissions/spend choices before any task dispatch; no repeated routine cost/technical/test
+questions inside verified scope. Unexpected necessary manager choice includes impact/options;
+unknown safety/auth remains blocked. Eligibility cannot be solved universally by category enum.
+
+If owner approves numeric limits, SQL reservations are run-wide before each supported final
+outbound send, not per-process counters. Host requests runner admission via registered guard
+before provider transport; versioned observer must cover retry/summary paths or disable those
+paths. Admission-count bounds are distinct from provider-confirmed token/dollar enforcement;
+unsupported hard cap claims block configuration. Unknown invoice/partial sent usage remains
+unknown/reserved, no automatic refund. No numeric production cap is selected here. An explicit
+owner-scoped allowance without numeric limit is a possible envelope decision, never default
+implicit spend; missing references fail closed. Permanent tests must verify send/reservation/
+input/outbox crash windows and all original manual/permission/current-content gates.

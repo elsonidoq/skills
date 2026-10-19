@@ -349,6 +349,68 @@
         "path",
         "sha256"
       ]
+    },
+    "interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "standalone",
+            "interactive_parent"
+          ]
+        },
+        "question_transport": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parent_binding_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "question_tool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "mode",
+        "question_transport",
+        "parent_binding_ref",
+        "question_tool"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "interactive_parent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "question_transport": {
+                "type": "string",
+                "minLength": 1
+              },
+              "parent_binding_ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "question_tool": {
+                "const": "ask_user"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "required": [
@@ -364,6 +426,7 @@
     "permissions",
     "tool_capabilities",
     "containment_capability",
-    "settings_manifest"
+    "settings_manifest",
+    "interaction"
   ]
 }

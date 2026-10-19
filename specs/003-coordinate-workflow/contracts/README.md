@@ -20,6 +20,8 @@ execution authority. Future code packages reviewed schemas under runtime resourc
 - [host.schema.json](host.schema.json): one trusted local session host command/event
   envelope. Op-specific constraints in this contract are also mandatory.
 - [projection.schema.json](projection.schema.json): state/event/attempt-metric projections.
+- [interaction.schema.json](interaction.schema.json): original-session question pin, answer/control
+  binding, required parent delivery and upfront authority preflight.
 - [examples.json](examples.json): declarative schema-check examples only, not runnable work.
 
 Schema validation is necessary, not sufficient. Runtime semantic/registry/current-approval
@@ -35,10 +37,16 @@ structured subset may be normalized losslessly, retaining original IDs/order/sou
 and original approval evidence. Arbitrary legacy Markdown is not automatically parsed or
 converted. Inadequate contracts return to producing review/renewal.
 
+Task root authorization_envelope and each authorization_envelope_id retain the explicit
+paid/profile/service/test/network/external/mutation scope and owner approval refs. Unresolved
+authority may exist during preparation, but cannot pass paid preflight. No numeric production
+budget is selected by an example.
+
 Task `required` retains every item ID, objective criterion, registered check+version/arguments,
 pass condition, evidence expectation, producer dependencies and gate IDs. `optional` uses
 same item shape but cannot release REQUIRED failures. `context_group` initially story; no
-model class/profile on tasks. Paths are explicit ownership bounds, not a filesystem sandbox.
+complexity-based task model labels. Envelope allowed profiles constrain the approved YAML
+node bindings, not runtime model selection. Paths are explicit ownership bounds, not a filesystem sandbox.
 Check arguments are validated by the registered check's own schema; no shell/eval from YAML.
 
 `origin`, `sources` and `approval_refs` carry source/input hashes and external approval provenance.
@@ -96,7 +104,10 @@ Model supplies one schema-valid result object through an explicitly named comple
 or bounded final JSON value. It cannot select a graph edge by prose. Host attaches observed
 lifecycle/capability/telemetry; runner derives verification/commit/acceptance. Implementation
 `produced` means proposed owned changes, **not** verified success. `read_only` permits no
-empty commit after actual audit. Missing/invalid result blocks even if narrative claims green.
+empty commit after actual audit. Missing/invalid result blocks even if narrative claims green. A recognized completed
+request_owner_input may yield owner_input_required and a safely parked execution result
+instead of final implementation/review JSON; its question ref/normal completed tool receipt
+and settled checkpoint are mandatory. ToolUse stop here is not task acceptance.
 
 Worker evidence pointers are untrusted proposals until runner executes/revalidates checks
 on actual bytes/environment. Preserve worker `pass|fail|not_verified` separately from runner
@@ -127,6 +138,7 @@ do not discard unmatched early events. Never use low-level agent_end as completi
 | Controller→`create` | Explicit canonical project cwd, private agentDir, profile/skill/resource/tool/permission/settings manifest hashes; exact requested IDs/effort; runner-assigned host/session operation identity; read-only credential/catalog references not secrets |
 | Controller→`open` | All create fields plus exact previously reconciled session reference/identity/branch; no continueRecent, no auto profile switch/fallback |
 | Controller→`prompt` | Current attempt/operation/contract hash, full REQUIRED brief, task-owned paths, explicit skill invocation/instructions; only one active prompt |
+| Controller→`steer`, `follow_up`, `owner_answer` | Runner-validated input ID/current target or original pin+hashes, authorized payload; SDK delivery receipt is not worker acknowledgement |
 | Controller→`telemetry` | Current expected session/generation; source version/settings/model/branch and known/null values returned |
 | Controller→`abort`, `drain`, `close` | Expected operation/session, cause; abort+waitForIdle/dispose only; does not prove controller tool descendants drained |
 | Host→`response` | Same command ID, accepted/failed and sanitized structured error; prompt acceptance is not completion |
@@ -161,11 +173,15 @@ Resume authorization binds exact gate nonce, remediation/evidence, run/input/con
 actor/authority and scoped action; denial/cancellation/ambiguous/stale records do not resume.
 Changing scope/profile/graph requires affected producing review/approval, not a resume flag.
 
+Standalone pending/status/answer/control commands remain independent of UI. Required question
+transport is preflighted in interactive mode, not silently replaced by manual polling.
+
 Status is read-only SQL, no Pi/LLM and no file projection mutation. JSON exit/result values
 are enumerated: `accepted`, `implementation_complete`, `blocked`, `interrupted`, `cancelled`,
-`final_failure`; running status may additionally show `running|reviewing|preflight`. Invalid
+`final_failure`; running status may additionally show `running|reviewing|preflight|parking|waiting_owner_input|paused`. Invalid
 input/command returns nonzero with structured error; blocked is not process success-as-
-acceptance. Notifications are optional non-authoritative and cannot delay the workflow.
+acceptance. Completion/block/failure notifications are optional non-authoritative and cannot delay
+the workflow; required pending-owner-question transport is distinct.
 
 ## Published records
 
@@ -194,3 +210,56 @@ bypass the runner gateway. Supported first adapter uses approved Linux delegated
 own children for trusted local processes; no ancestor/service-root kills or PID-only fallback.
 Accepted four-case evidence is feasibility, not malicious same-UID escape prevention or
 production durable registry/atomic-spawn/remote effects proof. No service setup is automatic.
+
+## Bound question, owner input and upfront authority
+
+Interaction schema distinguishes worker request payload (`$defs/request`) from runner-owned
+owner_question, owner_answer, owner_control, parent_delivery and preflight_authority records.
+Worker gates/answers bind run/task/node/attempt/session/role and source/task/approval/config
+hashes. Run-scoped startup delivery/inquire/pause/cancel uses null worker fields instead of
+fabricating a session; steer/followUp requires an actual session target.
+Worker cannot select recipient or approve its own envelope. SQL/registry semantic validation
+must compare exact current expected identities and trusted owner evidence; schema equality
+of strings/nonces is not authentication. Duplicate identical input returns prior receipt,
+conflicting duplicate/stale/wrong target rejects; no second delivery/dispatch without actual
+session/operation reconciliation. Positive fixtures are not real approval records.
+
+Pending question requires original_only pin and settled park proof. `waiting_owner_input`
+status/execution result requires question ref and blocks replacement. Pin takes precedence
+over normal greedy reuse/fresh selection; unknown/insufficient headroom or missing/unsafe
+original cannot select fresh automatically. A new process may open that original conversation,
+receive accepted answer envelope before continuation, and record session-entry receipt.
+Scope-changing answer needs producing approval first. Preserve accepted answer when transport
+or resume fails; do not reask or replay blindly. Completed normal terminate:true question tool
+needs exclusive/all-terminating batch semantics plus prompt/idle/tool drain; mixed batch is
+not proven safe merely because this fixture terminated one question tool.
+
+Interactive parent launch records a supported transport capability, exact actual launching
+parent and verified readiness/permissions/ask_user receipt. Tested Paseo0.9.2 public fixed-argv
+adapter is mode-specific, not a core dependency or authenticated identity solely from flags.
+Parent receives committed outbox event, reads pending gate and actually calls ask_user; genuine
+response travels through runner input API, never worker-approved files. No private supervisor
+channels or universal native-Pi extension assumption. Busy/outage/reconnect/retry/dedup remain
+permanent integration tests. A crash around the actual external dialog requires receipt/
+invocation reconciliation before any reask; no exactly-once UI side effect is claimed.
+Missing UI leaves pending transport blocker; CLI can answer.
+No implicit manual polling substitute, required daemon or LLM orchestration in facade.
+
+Owner controls inquire/steer/follow_up/pause/cancel are accepted anytime with active target and
+authority binding. received/queued/sdk_delivered/worker_acknowledged are distinct. For steering,
+sdk_delivered means the SDK enqueue command was accepted, not that the worker has consumed
+or understood it; use actual entry/response/tool acknowledgement for observed receipt. Scope outside
+envelope stays blocked for approval; a new approved binding/input is needed afterward. Acknowledged
+requires evidence and is not semantic compliance. Inquiry cannot expose private reasoning.
+SDK queue does not preempt shell; pause/cancel still needs abort/drain/cgroup/partial-files/Git.
+Pause/cancel may finish as reconciled with quiescence evidence, without inventing a worker ACK.
+
+Envelope has selected profiles, effect capabilities/action scopes, real owner approval refs,
+paid authority and any owner-selected run limits/enforcement proof. Known gaps are aggregated
+before tasks; unresolved/denied authority blocks paid dispatch. Scope-approved technical work,
+debugging and small isolated tests do not reask routine cost/mechanics. Only product/priority
+or unexpected material impact asks with rationale/options/recommendation. Enum categories
+cannot decide semantic eligibility universally. Unexpected safety/auth remains fail-closed.
+No universal cost/time threshold, model routing optimizer or production spend inferred from
+PoC. Run-wide reservation semantics and supported hard-limit provenance are required; generic
+maxTokens/per-host counts/catalog estimates are not hard token/dollar guarantees.

@@ -66,3 +66,20 @@
   source/owner addenda, all 34 FR IDs and existing SC IDs. Only FR-002/FR-017 normative text
   changed; source byte prefix and historical approval remain intact. Plan schemas/examples
   and local links were checked separately, not represented as production tests or approval.
+
+## Owner interaction/autonomy correction after d6acc13
+
+- New owner excerpts and accepted interactive proof are preserved in the source addendum/D10.
+  US6, FR-035–039 and SC-008/009 cover upfront authority, rare manager-answerable questions,
+  required automatic same-parent ask_user, original-session pin and bound controls.
+- FR-019 now distinguishes mandatory question delivery from optional status notifications.
+  Original FR/SC IDs/defaults, role-safe rotor, cgroup alarms, approvals and focused commits
+  remain. Same-session pin takes precedence over normal fresh selection during question resume.
+- Paid fixture authority is not production spend approval; category enum is not semantic
+  judgment, queued is not acknowledged, reopened conversation is not same OS process.
+- Scope is a substantive owner-directed correction, not cosmetic equivalence. Original
+  spec-approval.md remains unchanged; RENEW_SPEC_APPROVAL before separate task production.
+- Correction self-review checked 39 FRs, 9 SCs and 6 stories against source/new owner excerpts.
+  Eight schemas/eighteen positive fixtures/thirty-five negative schema mutations plus six
+  binding/duplicate invariants passed. These are declarative checks, not production auth,
+  semantic relevance, budget or exactly-once proof. Renewed owner approval still required.

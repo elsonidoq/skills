@@ -29,7 +29,8 @@
             "produced",
             "read_only",
             "failure",
-            "blocked"
+            "blocked",
+            "owner_input_required"
           ]
         },
         "changed_paths": {
@@ -47,6 +48,12 @@
           "minItems": 0
         },
         "blocker": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "question_ref": {
           "type": [
             "string",
             "null"
@@ -97,6 +104,26 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "owner_input_required"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "question_ref"
+            ],
+            "properties": {
+              "question_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
         }
       ]
     },
@@ -123,7 +150,8 @@
           "enum": [
             "pass",
             "correction",
-            "blocked"
+            "blocked",
+            "owner_input_required"
           ]
         },
         "range_base": {
@@ -195,6 +223,12 @@
             "string",
             "null"
           ]
+        },
+        "question_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -253,6 +287,26 @@
           "then": {
             "properties": {
               "blocker": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "owner_input_required"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "question_ref"
+            ],
+            "properties": {
+              "question_ref": {
                 "type": "string",
                 "minLength": 1
               }

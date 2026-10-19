@@ -44,9 +44,18 @@
               }
             ],
             "optional": [],
-            "gates": []
+            "gates": [],
+            "authorization_envelope_id": "fixture-envelope"
           }
-        ]
+        ],
+        "authorization_envelope": {
+          "id": "fixture-envelope",
+          "paid_authority": "unresolved",
+          "approval_refs": [],
+          "profiles": [],
+          "capabilities": [],
+          "limits": []
+        }
       }
     },
     {
@@ -148,6 +157,12 @@
         "settings_manifest": {
           "path": "fixture/settings.json",
           "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "interaction": {
+          "mode": "standalone",
+          "question_transport": null,
+          "parent_binding_ref": null,
+          "question_tool": null
         }
       }
     },
@@ -346,6 +361,249 @@
           },
           "supersedes": null
         }
+      }
+    },
+    {
+      "schema": "interaction.schema.json",
+      "value": {
+        "schema_version": 1,
+        "kind": "owner_question",
+        "binding": {
+          "run_id": "fixture-run",
+          "task_id": "fixture-task",
+          "node_id": "fixture-node",
+          "attempt_id": "fixture-attempt",
+          "session_id": "fixture-original",
+          "role": "implement",
+          "source_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "task_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "approval_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "config_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "gate_id": "fixture-gate",
+        "nonce": "fixture-nonce",
+        "pin_policy": "original_only",
+        "original_session_ref": "fixture/session.jsonl",
+        "original_branch_ref": "fixture-leaf",
+        "request": {
+          "category": "product_priority",
+          "question": "Which approved product priority takes precedence?",
+          "why_owner_needed": "Conflicting source priorities cannot be resolved technically",
+          "options": [
+            "Option A",
+            "Option B"
+          ],
+          "recommendation": "Option A",
+          "impact": {
+            "scope": "No extra scope or spend proposed",
+            "complexity": "No extra scope or spend proposed",
+            "time": "No extra scope or spend proposed",
+            "cost": "No extra scope or spend proposed"
+          }
+        },
+        "stage": "pending",
+        "park_proof_ref": "fixture/settled-and-checkpoint",
+        "blocker": null
+      }
+    },
+    {
+      "schema": "interaction.schema.json",
+      "value": {
+        "schema_version": 1,
+        "kind": "owner_answer",
+        "binding": {
+          "run_id": "fixture-run",
+          "task_id": "fixture-task",
+          "node_id": "fixture-node",
+          "attempt_id": "fixture-attempt",
+          "session_id": "fixture-original",
+          "role": "implement",
+          "source_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "task_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "approval_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "config_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "input_id": "fixture-answer",
+        "gate_id": "fixture-gate",
+        "nonce": "fixture-nonce",
+        "pin_policy": "original_only",
+        "answer": "Option A",
+        "receipt": {
+          "source": "parent_ask_user",
+          "actor": "fixture-parent",
+          "record_ref": "fixture/actual-ui-return",
+          "record_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "authority_ref": "fixture/owner-authority"
+        },
+        "delivery": "accepted",
+        "original_session_ref": "fixture/session.jsonl",
+        "delivery_ref": null
+      }
+    },
+    {
+      "schema": "interaction.schema.json",
+      "value": {
+        "schema_version": 1,
+        "kind": "owner_control",
+        "binding": {
+          "run_id": "fixture-run",
+          "task_id": "fixture-task",
+          "node_id": "fixture-node",
+          "attempt_id": "fixture-attempt",
+          "session_id": "fixture-original",
+          "role": "implement",
+          "source_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "task_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "approval_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "config_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "input_id": "fixture-control",
+        "action": "steer",
+        "scope": "within_envelope",
+        "message": "Preserve the existing approved behavior",
+        "owner_authority_ref": "fixture/owner-authority",
+        "stage": "queued",
+        "evidence_ref": null,
+        "target_scope": "active_session"
+      }
+    },
+    {
+      "schema": "interaction.schema.json",
+      "value": {
+        "schema_version": 1,
+        "kind": "parent_delivery",
+        "binding": {
+          "run_id": "fixture-run",
+          "task_id": "fixture-task",
+          "node_id": "fixture-node",
+          "attempt_id": "fixture-attempt",
+          "session_id": "fixture-original",
+          "role": "implement",
+          "source_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "task_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "approval_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "config_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "event_id": "fixture-event",
+        "gate_id": "fixture-gate",
+        "parent": {
+          "adapter": "fixture-paseo",
+          "version": "0.9.2",
+          "recipient_id": "fixture-parent",
+          "runtime_session_id": "fixture-parent-session",
+          "capability_receipt_ref": "fixture/ready-receipt",
+          "generation": 1
+        },
+        "stage": "question_tool_invoked",
+        "receipt_ref": "fixture/actual-tool-invocation",
+        "gate_origin": "worker"
+      }
+    },
+    {
+      "schema": "interaction.schema.json",
+      "value": {
+        "schema_version": 1,
+        "kind": "preflight_authority",
+        "run_id": "fixture-run",
+        "envelope_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "paid_authority": "unresolved",
+        "verified_approval_refs": [],
+        "missing_capabilities": [
+          "fixture-paid-authority"
+        ],
+        "pending_gate_refs": [
+          "fixture-startup-gate"
+        ],
+        "status": "blocked",
+        "paid_dispatch_allowed": false
+      }
+    },
+    {
+      "schema": "interaction.schema.json",
+      "value": {
+        "schema_version": 1,
+        "kind": "owner_control",
+        "binding": {
+          "run_id": "fixture-run",
+          "task_id": null,
+          "node_id": null,
+          "attempt_id": null,
+          "session_id": null,
+          "role": null,
+          "source_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "task_hash": null,
+          "approval_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "config_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "input_id": "fixture-idle-pause",
+        "action": "pause",
+        "scope": "within_envelope",
+        "message": "Preserve the existing approved behavior",
+        "owner_authority_ref": "fixture/owner-authority",
+        "stage": "received",
+        "evidence_ref": null,
+        "target_scope": "run"
+      }
+    },
+    {
+      "schema": "execution-result.schema.json",
+      "value": {
+        "schema_version": 1,
+        "run_id": "fixture-run",
+        "task_id": "fixture-task",
+        "attempt_id": "fixture-attempt",
+        "outcome": "waiting_owner_input",
+        "original_worker_outcome": "produced",
+        "replacement_allowed": false,
+        "alarms": [],
+        "items": [],
+        "baseline_sha": "fixture-base",
+        "result_sha": null,
+        "blocker": "Waiting for original conversation answer",
+        "question_ref": "fixture-gate"
+      }
+    },
+    {
+      "schema": "projection.schema.json",
+      "value": {
+        "schema_version": 1,
+        "run_id": "fixture-run",
+        "seq": 0,
+        "record_id": "fixture-state",
+        "timestamp": "2026-10-18T00:00:00Z",
+        "kind": "state",
+        "payload": {
+          "status": "waiting_owner_input",
+          "acceptance": "pending",
+          "config_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "checkpoint_ref": null,
+          "task_id": null,
+          "node_id": null,
+          "attempt_id": null,
+          "gate_ref": null,
+          "blocker": "Synthetic example; approvals absent",
+          "projection_lag": 0,
+          "alarms": [],
+          "pending_question_ref": "fixture-gate",
+          "outbox_ref": "fixture-event"
+        }
+      }
+    },
+    {
+      "schema": "interaction.schema.json",
+      "value": {
+        "schema_version": 1,
+        "kind": "preflight_authority",
+        "run_id": "fixture-run",
+        "envelope_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "paid_authority": "owner_scoped",
+        "verified_approval_refs": [
+          "fixture/verified-approval-shape-only"
+        ],
+        "missing_capabilities": [],
+        "pending_gate_refs": [],
+        "status": "ready",
+        "paid_dispatch_allowed": true
       }
     }
   ]

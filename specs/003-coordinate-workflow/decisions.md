@@ -237,3 +237,37 @@ until cleanup+partial-work reconciliation. Reusable idle session host is separat
 tool lifetimes. Optional notifications do not replace the authoritative alarm. Original
 approval remains immutable; revised spec (FR-002/017 and provenance/status/assumption text)
 needs **RENEW_SPEC_APPROVAL** before tasks. All other defaults and planning-only gates remain.
+
+## D10 — Owner interaction/autonomy correction; integrated evidence accepted
+
+After completed plan commit d6acc13, owner required anytime inquiry/steer/pause, necessary
+worker product questions reaching the actual launching agent's ask_user, original saved
+conversation answer continuity and maximum inside-envelope autonomy. [Verbatim supplied
+excerpts/provenance](source-request.md#owner-interaction-and-maximum-autonomy-additions-after-d6acc13)
+record authority; renewed revised specification approval remains required before tasks.
+
+Parent accepted `65347630ffeb042f9c9c7b23e7216e70b9ac1244` after participating in the real
+question/steering and inspecting source/logs plus seven offline tests. This producer read
+all named source/evidence fully; no rerun/probe. R13 in canonical research owns source→
+constraints→checks. Actual Paseo0.9.2 callback woke same parent (probe/question/active/done),
+actual ask_user returned Release note, new SDK host reopened ORIGINAL saved session and
+received answer before continuation; real SDK steer then tool ACK/output proved receipt at
+execution boundary. This proves bounded interaction feasibility, not production launch/
+authentication/outage/compaction/budget/exactly-once or arbitrary pause integration.
+
+Smallest integration: keep portable standalone CLI and deterministic LangGraph/SQLite;
+add structured owner request/gate/input/control records and transactional outbox. Interactive
+Paseo launch selects the tested public CLI transport as an explicit registered capability;
+require startup same-parent identity/tool/permission handshake and actual ask_user receipt.
+No silent polling fallback, raw private supervisor-channel writes, worker ask_user or generic
+messaging platform. Generic Pi extension alternative is documented but NOT loaded/proven or
+built alongside this adapter; selecting it requires its own explicit capability/proof.
+
+Pending input pins original conversation/role with source/task/config/approval hashes.
+Missing/unsafe/unknown-headroom original blocks for explicit recovery; no fresh substitution.
+Steer/followUp delivery stages differ from worker acknowledgement; inquiry cannot read private
+thoughts, pause drains actual tool scopes. Known permissions and paid model/service/test/
+network/external/mutation envelope must be reviewed up front; no blanket production spend
+approval or numeric cap invented. Worker autonomously resolves technical/debug/test mechanics
+inside that envelope; only necessary product/priority or unexpected material impact asks.
+Category/schema is not universal semantic eligibility. Scope changes retain producing gates.
