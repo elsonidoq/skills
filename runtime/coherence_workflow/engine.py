@@ -87,17 +87,24 @@ def load_workflow(registry, source=None, resource_root=None):
                 raise Blocked('unknown node profile/skill')
             if not set(node['tools']) <= set(config['tool_capabilities']) or not set(node['permissions']) <= set(config['permissions']):
                 raise Blocked('node permission/tool escalation')
-            if node['role']=='review' and (node['side_effects'] or node['session_policy']['reuse_preference'] not in ('own_reviewer','role_default')):
+            if node['role']=='review' and (set(node['side_effects']) - {'read'} or node['session_policy']['reuse_preference'] not in ('own_reviewer','role_default')):
                 raise Blocked('review must be independent read-only')
         # T001 has no task-progress or retry capability: every cycle is unsupported.
         if node.get('max_retries',0):
             raise Blocked('retry capability unavailable; no blind external replay')
+    selectors = [id for id, handler in handlers.items() if handler.stage == 'task_select']
+    if len(selectors) > 1:
+        raise Blocked('one bounded task-progress selector required')
+    progress = selectors[0] if selectors else None
     required = ('intake','authority','custody','verification','checkpoint','review')
     reached = set()
     validated = set()
 
     def walk(id, stack, stages):
         if id in stack:
+            if (id == progress and stages == required[:5] and
+                    handlers[stack[-1]].stage == 'checkpoint'):
+                return
             raise Blocked('unbounded/unsupported graph cycle')
         key = (id,stages)
         if key in validated:
@@ -105,6 +112,13 @@ def load_workflow(registry, source=None, resource_root=None):
         reached.add(id)
         handler = handlers[id]
         stage = handler.stage
+        if progress and id == progress and stages == required[:3]:
+            # The done edge can reach final review without manufacturing an empty
+            # task/checkpoint; the work edge is checked separately below.
+            for outcome, target in nodes[id]['transitions'].items():
+                walk(target, stack+(id,), required[:5] if outcome == 'done' else stages)
+            validated.add(key)
+            return
         if stage in required:
             index = required.index(stage)
             if index != len(stages):
@@ -121,6 +135,11 @@ def load_workflow(registry, source=None, resource_root=None):
     walk(config['start'],(),())
     if reached != nodes.keys():
         raise Blocked('unreachable node')
+    if progress:
+        node = nodes[progress]
+        if (handlers[progress].outcomes != ('work','done') or
+                not any(handlers[n].stage == 'checkpoint' and progress in nodes[n]['transitions'].values() for n in nodes)):
+            raise Blocked('invalid task-progress cycle')
     return config
 
 
@@ -130,16 +149,23 @@ class GraphState(TypedDict):
 
 
 class Engine:
-    def __init__(self, authority, run_id, config, registry, resource_root, phase_hook=None):
+    def __init__(self, authority, run_id, config, registry, resource_root, phase_hook=None, *, max_task_visits=None, input_identity=None):
         self.authority, self.store = authority, authority.store
         config = load_workflow(registry, yaml.safe_dump(config), resource_root)
         self.run_id, self.config, self.registry = run_id, config, registry
         self.registry_hash, self.config_hash = registry.identity(), digest(config)
+        self.input_identity = input_identity
+        self.input_hash = digest(input_identity)
         # Revalidate even programmatic configs; callers cannot bypass the YAML seam.
         self.hash = digest({'config':config,'registry':registry.identity(),'schemas':schemas(),
                             'engine':'0.1.0','langgraph':'1.2.16','saver':'3.1.2',
+                            'inputs':input_identity, 'task_visit_bound':max_task_visits,
                             'code':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                                     for p in files('coherence_workflow').iterdir() if p.name.endswith('.py')}})
+        self.progress = any(registry.handler(n).stage == 'task_select' for n in config['nodes'])
+        if self.progress and (type(max_task_visits) is not int or not 0 <= max_task_visits <= 10000):
+            raise Blocked('bounded approved task count required')
+        self.max_task_visits = max_task_visits
         self.hook = phase_hook or (lambda phase, op: None)
         self.store.reserve(run_id,self.hash)
         self.saver_db = sqlite3.connect(authority.database,check_same_thread=False,timeout=5)
@@ -158,7 +184,7 @@ class Engine:
             else:
                 graph.add_conditional_edges(node['id'],lambda state: state['outcome'],node['transitions'])
         self.graph = graph.compile(checkpointer=self.saver)
-        self.thread = {'configurable':{'thread_id':run_id},'recursion_limit':256}
+        self.thread = {'configurable':{'thread_id':run_id},'recursion_limit':256 if not self.progress else 16+8*max_task_visits}
 
     def _node(self, node):
         handler = self.registry.handler(node)
@@ -166,11 +192,16 @@ class Engine:
             self.authority.assert_held()
             self._assert_pins()
             self.store.assert_dispatchable(self.run_id)
-            args = {'config_hash':self.hash,'node':node,'trace':state.get('trace',[])}
+            trace_before = state.get('trace',[])
+            visit = sum(item['node'] == node['id'] for item in trace_before)
+            if self.progress and visit > self.max_task_visits:
+                raise Blocked('task-progress visit bound exhausted')
+            logical = node['id'] + ':' + str(visit) if self.progress else node['id']
+            args = {'config_hash':self.hash,'node':node,'trace':trace_before}
             details = {'handler':handler.id,'version':handler.version,'input_hash':digest(args)}
             old = self.store.db.execute('SELECT * FROM wf_operations WHERE run_id=? AND node_id=? AND kind=?',
-                                         (self.run_id,node['id'],'graph')).fetchone()
-            op = self.store.intent(self.run_id,node['id'],'graph',args,details)
+                                         (self.run_id,logical,'graph')).fetchone()
+            op = self.store.intent(self.run_id,logical,'graph',args,details)
             if old:
                 if op['phase'] != 'completed' or op['result'] is None:
                     raise Blocked('uncertain graph effect; explicit reconciliation required')
@@ -205,7 +236,8 @@ class Engine:
         return execute
 
     def _assert_pins(self):
-        if self.registry.identity() != self.registry_hash or digest(self.config) != self.config_hash:
+        if (self.registry.identity() != self.registry_hash or digest(self.config) != self.config_hash or
+                digest(self.input_identity) != self.input_hash):
             raise Blocked('active registry/config drift; renewal required')
 
     def invoke(self):
@@ -233,7 +265,9 @@ class Engine:
             handler = self.registry.handler(node)
             op = self.store.operation(item['operation_id'])
             args = {'config_hash':self.hash,'node':node,'trace':prefix}
-            if (op['run_id'] != self.run_id or op['node_id'] != item['node'] or
+            visit = sum(entry['node'] == item['node'] for entry in prefix)
+            logical = item['node'] + ':' + str(visit) if self.progress else item['node']
+            if (op['run_id'] != self.run_id or op['node_id'] != logical or
                 op['phase']!='completed' or not op['result'] or op['args_hash'] != digest(args)):
                 raise Blocked('graph success without applicable application proof')
             result = json.loads(op['result'])

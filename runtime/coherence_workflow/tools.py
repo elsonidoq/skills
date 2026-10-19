@@ -81,6 +81,7 @@ class ProcessTool:
     build_argv: object
     owned_paths: tuple
     environment: dict
+    result_reader: object = None
 
     def argv(self, args):
         Draft202012Validator(self.arguments).validate(args)
@@ -100,6 +101,44 @@ class Gateway:
         self.run = run
         self.containment = Cgroup(containment_parent)
         self.tools = dict(tools)
+        self.task_origin = None
+
+    def bind_task_origin(self, prefix, owned, baseline):
+        if snapshot(self.authority.project, owned) != baseline:
+            raise Blocked('task origin is not current verified baseline')
+        self.task_origin = (prefix, tuple(owned), baseline)
+
+    def _owned_admission(self, owned):
+        if not self.task_origin or tuple(owned) != self.task_origin[1]:
+            clean_owned(self.authority.project, owned)
+            return
+        prefix, _, expected = self.task_origin
+        rows = self.store.db.execute("""SELECT o.* FROM wf_operations o JOIN wf_events e
+            ON e.op_id=o.op_id AND e.kind='intent' WHERE o.run_id=? AND o.kind='process' ORDER BY e.seq""", (self.run,)).fetchall()
+        matched = False
+        for row in rows:
+            if not row['node_id'].startswith(prefix):
+                continue
+            details = json.loads(row['intent'])
+            if details['scope_kind'] != 'task_tools':
+                continue
+            if row['phase'] != 'completed':
+                raise Blocked('unsettled task-origin operation')
+            process, receipt = self._record(row['op_id'])
+            result = json.loads(row['result'])
+            if (self.containment.populated(receipt) or not result.get('replacement_allowed') or
+                    any(details['baseline'][k] != expected[k] for k in ('head','index','files'))):
+                raise Blocked('task-origin audit chain gap')
+            event = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='completed'", (row['op_id'],)).fetchone()
+            if not event or event[0] != row['result'] or process['reconciliation'] != canonical(result['reconciliation']):
+                raise Blocked('task-origin result/event mismatch')
+            expected = result['reconciliation']
+            matched = True
+        now = snapshot(self.authority.project, owned)
+        if any(now[k] != expected[k] for k in ('head','index','files')):
+            raise Blocked('unexplained task-origin drift')
+        if not matched:
+            clean_owned(self.authority.project, owned)
 
     def launch(self, node, tool_id, version, args, phase_hook=None, *, scope_kind='task_tools',
                inherited_fds=(), admitted_host_ops=()):
@@ -126,7 +165,7 @@ class Gateway:
         owned = list(tool.owned_paths)
         if len(set(owned)) != len(owned):
             raise Blocked('duplicate owned paths')
-        clean_owned(self.authority.project, owned)
+        self._owned_admission(owned)
         baseline = snapshot(self.authority.project, owned)
         nonce = uuid.uuid4().hex
         name = self.containment.reserve_name()
@@ -322,8 +361,12 @@ class Gateway:
         details = json.loads(operation['intent'])
         if operation['phase'] == 'completed':
             recorded = json.loads(operation['result'])
-            current = (snapshot(self.authority.project,details['owned_paths']) if row['scope_kind']=='host'
-                       else reconcile(self.authority.project,details['owned_paths'],details['baseline']))
+            if details['tool'] == 'runner-git-commit':
+                from .git_effects import reconcile_commit_process
+                current = reconcile_commit_process(self.authority, op)
+            else:
+                current = (snapshot(self.authority.project,details['owned_paths']) if row['scope_kind']=='host'
+                           else reconcile(self.authority.project,details['owned_paths'],details['baseline']))
             if (self.containment.populated(receipt) != 0 or current != recorded['reconciliation']):
                 raise Blocked('completed tool receipt no longer applicable')
             return recorded
@@ -331,7 +374,10 @@ class Gateway:
             'containment': receipt, 'populated': self.containment.populated(receipt), 'observed_ns':time.time_ns()}
         if empty['populated'] != 0:
             raise Blocked('task tools not quiescent')
-        if row['scope_kind'] == 'host':
+        if details['tool'] == 'runner-git-commit':
+            from .git_effects import reconcile_commit_process
+            observed, chain = reconcile_commit_process(self.authority, op), []
+        elif row['scope_kind'] == 'host':
             observed, chain = self._host_reconciliation(operation, details)
         else:
             observed, chain = reconcile(self.authority.project, details['owned_paths'], details['baseline']), []

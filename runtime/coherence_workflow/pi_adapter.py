@@ -299,7 +299,7 @@ class PiAdapter:
         Draft202012Validator(spec['parameters']).validate(p['args'])
         op,proc=self.gateway.launch(self.current['attempt_id']+':'+p['call'],name,tool.version,p['args'],
                                     admitted_host_ops=(self.host_op,))
-        self.pending[p['call']]={'op':op,'proc':proc}
+        self.pending[p['call']]={'op':op,'proc':proc,'tool':tool,'args':p['args']}
 
     def _poll_tools(self):
         for call,tool in list(self.pending.items()):
@@ -308,8 +308,13 @@ class PiAdapter:
             receipt=self.gateway.settle(tool['op'],code)
             if not receipt.get('replacement_allowed'):
                 raise Blocked('ORPHAN_PROCESS: tool result cannot release prompt')
+            output = {'exit_code':code,'operation_id':tool['op']}
+            if tool['tool'].result_reader is not None:
+                output['output'] = tool['tool'].result_reader(tool['args'], receipt)
+                if len(canonical(output).encode()) > 65536:
+                    raise Blocked('registered tool result byte limit')
             self.send('tool',{'generation':self.lifecycle.generation,'call':call,
-                'result':{'content':[{'type':'text','text':canonical({'exit_code':code,'operation_id':tool['op']})}],
+                'result':{'content':[{'type':'text','text':canonical(output)}],
                           'details':{'operation_id':tool['op'],'quiescent':True}}})
             del self.pending[call]
 

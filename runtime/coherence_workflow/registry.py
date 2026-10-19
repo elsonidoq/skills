@@ -115,5 +115,7 @@ CHECKS = {
             'properties':{'test_file':{'const':'runtime/tests/'+file},'selector':{'const':selector}},
             'required':['test_file','selector']}}
     for file, selector in [('test_engine.py','ConfigGraphTests'),('test_custody.py','CustodyTests'),
-                           ('test_custody.py','LaunchCrashTests'),('test_engine.py','LedgerCheckpointTests')]
+                           ('test_custody.py','LaunchCrashTests'),('test_engine.py','LedgerCheckpointTests'),
+                           ('test_intake.py','OriginIntakeTests'),('test_authority.py','AuthorityAdmissionTests'),
+                           ('test_verification.py','RequiredEvidenceTests'),('test_git_effects.py','FocusedCheckpointTests')]
 }

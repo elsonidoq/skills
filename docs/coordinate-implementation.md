@@ -1,12 +1,15 @@
 # Coordinate Implementation runtime
 
-## Current delivery: opt-in foundation and SDK adapter
+## Current delivery: opt-in standalone task execution
 
-The legacy skill remains the default. `runtime/` now provides an opt-in Python library,
-not the production task runner or a replacement slash command. T002 adds a pinned SDK
-host, deterministic session policy and telemetry segments. There is **no CLI, task
-scheduler, approval adapter, verification/commit handler or policy cutover** in this delivery. The packaged `workflows/coordinate.yaml` declares future boundaries;
-`load_workflow(Registry())` blocks on unavailable registered capabilities. Its selected
+The legacy skill remains the default; there is no global entry cutover. The standalone
+`scripts/coordinate-implementation` composes the foundation and pinned SDK with structured
+intake, authority preflight, real registered checks and focused runner checkpoints.
+The packaged task-progress graph uses bounded logical visits in the same LangGraph,
+not a separate scheduler. Final acceptance remains blocked pending independent full-range
+review; `implementation_complete` is not acceptance. Interaction commands explicitly block
+until their interaction capability is delivered. `load_workflow(Registry())` still blocks
+without concrete registered task-handler capabilities. Its selected
 profile is a declaration, not proof of a usable model or permission to send requests.
 The schema-file settings manifest is only a pinned declaration resource, not effective
 Pi settings. No agents or tools launch on import or configuration validation.
@@ -252,3 +255,64 @@ SDK gateway tools/cgroups with outside sentinels; synthetic cutoff fixtures do n
 high-pressure behavior. No provider calls test separately chargeable-service denial here;
 that authority belongs to T003. Normal model traffic has no financial/token reservation gate.
 EOF/deadline/pressure/failed settlement leave null final usage/cost and poisoned reuse.
+
+## Standalone task commands and authority
+
+Use the approved Python environment explicitly; the launcher never installs dependencies:
+
+```sh
+COHERENCE_PYTHON=/approved/venv/bin/python scripts/coordinate-implementation start \
+  --project /canonical/project --run RUN_ID --workflow /approved/workflow.yaml \
+  --tasks /approved/tasks.json --owner-catalog /private/owner-catalog.json \
+  --manifest /approved/sdk-manifest.json --containment /approved/delegated-parent
+scripts/coordinate-implementation status --project /canonical/project --run RUN_ID
+```
+
+`intake --project PATH --tasks FILE --owner-catalog FILE --config-hash HASH` performs
+non-dispatching structured intake and returns source/contract/scope hashes and task IDs.
+The catalog is explicit trusted operator input: a private, owned, single-link regular
+file **outside** the agent worktree. Keys are authority refs; values contain exact actor,
+record_ref, record_sha256, scope_hash, gate_kind and action. It must represent genuine
+external owner evidence, never a worker-created approved file. This is a trusted local
+operator interface, not authentication against malicious same-UID processes. The runner
+also verifies referenced record bytes and current sources. Specification scope is its
+spec source hash; overall/combined/documented legacy scope is the source-list digest;
+implementation scope is `approval_scope(contract, config_hash)`. Gate-specific records
+bind the exact gate without approval_ref, task ID and config hash. Deny/cancel/drift blocks.
+Planning approval alone cannot provide the separate implementation approval.
+
+TinySpec retains separate source/tasks and combined authority; Standard needs spec/plan/
+tasks/review plus specification/overall/implementation authority. Structured documented
+legacy admits only through a caller-verified settled origin; CLI legacy start currently
+blocks rather than inventing a settlement receipt. There is no prose conversion or Epic.
+Each dependency must occur earlier; whole REQUIRED/manual/permission contracts survive.
+
+The SDK manifest uses the already delivered explicit settings/resources/auth/catalog
+contract. Exact graph profile and skill hashes must agree with delivered SDK resources.
+Current node policy may choose fresh-only; this standalone composition closes its settled
+host before runner Git effects. Registered `read_file` returns bounded actual authorized
+bytes through the gateway; `write_file` has explicit task paths and bounded text. No SDK
+built-in shell, Git or ask_user is exposed. Repeated owned writes require the immutable
+task-origin baseline plus the complete kernel-empty registered tool audit chain; unexplained
+dirty ownership never becomes implicitly admitted. This is not an OS filesystem sandbox.
+
+Preflight aggregates known registered capability, permission, profile, REQUIRED-check and
+gate gaps before any task. Ordinary approved-profile model traffic/retries/summaries have
+no financial cap or approval/reservation. Separately chargeable service actions require
+purpose/cost-impact/scoped authority and durable intent before sending; uncertain/attempted
+external effects cannot blindly resend. They are not exposed as generic model tools.
+
+`workflow.FileBytes` is a real exact-file oracle. Registered versioned unittest selectors
+are closed code capabilities, not task-supplied shell commands. Missing/unrun/empty/stale/
+conflicting proof remains insufficient; optional output cannot release it. Evidence is
+persisted by item, environment and final owned bytes; shared checks run once with all item
+mappings. Scoped sample STOP APIs persist inspectable bytes/nonce and require an external
+owner answer; approval of a sample does not turn an unrun check into success.
+
+Runner Git intent captures baseline, complete files/index, expected tree entries and
+operation identity. Explicit owned-only staging and `commit --only -- paths` retain
+unrelated staging. Hooks/signing/identity remain enabled and unmodified. Git runs in its
+own receipt-validated task-tool scope; nonempty descendants block. Actual parent, tree,
+operation trailer, owned diff, residual files and index must all match before a receipt.
+A failed or uncertain checkpoint is not replayed. No-change creates no empty commit.
+`resume` never redispatches an uncertain partial task; unsupported recovery blocks precisely.

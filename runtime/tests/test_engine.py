@@ -43,7 +43,8 @@ class ConfigGraphTests(unittest.TestCase):
             source = Path('specs/003-coordinate-workflow/contracts')/name
             if source.exists(): self.assertEqual(schema,json.loads(source.read_text()))
         self.assertTrue(files('coherence_workflow').joinpath('workflows/coordinate.yaml').is_file())
-        self.assertEqual(len(CHECKS),4)
+        self.assertTrue({'workflow.ConfigGraphTests','workflow.CustodyTests',
+                         'workflow.LaunchCrashTests','workflow.LedgerCheckpointTests'} <= CHECKS.keys())
         for check in CHECKS.values():
             args={k:v['const'] for k,v in check['schema']['properties'].items()}
             Draft202012Validator(check['schema']).validate(args)

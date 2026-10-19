@@ -175,3 +175,27 @@ The four T002 selector contracts (`workflow.BindingTests`, `workflow.SessionPoli
 `workflow.LifecycleTests`, `workflow.UsageSegmentsTests`, version 1) have their approved
 source-named test classes. Their executable check-registry integration belongs to T003;
 T002 does not change the production registry or pretend task dispatch is available.
+
+## Standalone task/checkpoint extension
+
+T003 adds runner-only `wf_run_inputs` (run identity, canonical contract and owner-catalog
+hash) and `wf_tasks` (run/task primary key, unique source order, immutable canonical task,
+state, baseline, REQUIRED evidence and checkpoint receipt). `wf_checks` retains evidence ID,
+run/task/item, applicability and canonical receipt; `wf_gates` retains exact manual binding,
+pending/approve/deny/cancel state and truthful external answer. They share the application
+connection and WAL/FULL/foreign-key policy; they do not make saver commits atomic.
+
+Graph operations use `node:visit` logical identities only for the registered bounded
+`task_select` cycle. The approved task-count bound and external input identity are in the
+engine hash. A checkpoint-to-selector backedge is the only task-progress cycle admitted;
+other cycles remain blocked. Registry CHECKS contains closed v1 selectors. Check receipts
+contain source revision, exact check arguments, item mappings, Python/platform identity,
+collected count, exit, bounded output, timestamps, applicability and disposition. Applicability
+binds the whole item, owned bytes and environment. Unknown/unrun is not zero or pass.
+
+`git-checkpoint` operations persist exact baseline/file/index and expected tree-entry maps
+before launch. Their process node is `commit:OP_ID`; runner Git argv and operation trailer
+must match that original intent. Results contain actual SHA, parent/tree, owned paths and
+full reconciled files/index. Original process snapshots are not overwritten to admit Git.
+The commit gateway has a narrowly registered exact-checkpoint reconciler; ordinary process
+HEAD/index drift still blocks. Host and task-tool lifetimes remain separate.

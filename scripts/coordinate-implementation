@@ -1,0 +1,6 @@
+#!/bin/sh
+# Suite-relative resources; no install, auth refresh or project inference.
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+export PYTHONPATH="$ROOT/runtime${PYTHONPATH:+:$PYTHONPATH}"
+exec "${COHERENCE_PYTHON:-python3}" -m coherence_workflow.cli "$@"
