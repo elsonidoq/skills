@@ -16,7 +16,7 @@ from jsonschema.exceptions import ValidationError
 from .authority import AuthorityAdmission
 from .engine import Engine, StrictLoader, load_workflow
 from .git_effects import GitEffects, assert_safe_git_inputs
-from .intake import Approvals, admit, content_hash, load_contract
+from .intake import Approvals, admit, content_hash, load_contract, verify_execution_intent
 from .pi_adapter import PiAdapter
 from .registry import CHECKS, Handler, Registry, validate_schema
 from .sessions import select_session, retained_candidates, manifest_compatibility, open_manifest
@@ -131,6 +131,8 @@ class Coordinate:
         return {'outcome': 'ok'}
 
     def authority_check(self, context):
+        verify_execution_intent(self.contract, [self.config['profiles'][node['profile']]
+            for node in self.config['nodes'] if node['type']=='agent' and node['role'] in ('implement','repair')])
         envelope = self.contract['authorization_envelope']
         capabilities = ['read_file', 'write_file', 'request_owner_input', *registered_checks(self.authority.project)]
         admission = AuthorityAdmission(envelope, self.config['profiles'], capabilities, self.config['permissions'],

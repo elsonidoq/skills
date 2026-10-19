@@ -17,7 +17,8 @@ creation, uploads, external operations, guideline changes, adaptation, nor plann
 
 ## Required checkpoint
 
-Before subsequent task writes, completion reporting, or handoff, the implementer must:
+Before subsequent task writes, completion reporting, or handoff, the authorized checkpoint owner must
+(the writer in instruction-managed/planning work; the runner in executable runs):
 
 1. establish a task baseline and allowed paths, and inspect the current index/worktree;
 2. make only assigned, understood changes and run the required verification;
@@ -38,6 +39,14 @@ unrelated staged or unstaged work. Preserve it, including shared-path changes. S
 other ambiguous ownership blocks automatic staging and committing. A workflow that explicitly
 uses an initially clean isolated workspace may require whole-worktree cleanliness only for
 that workflow.
+
+## Executable run responsibility
+
+For authorized executable Coordinate Implementation runs, workers may propose/produce owned task changes but do not stage, commit, select work or own workflow persistence. The runner establishes baseline/ownership and durable effect identity, executes and audits real REQUIRED checks and original gates, inspects actual owned diffs, and creates one focused verified owned-path task or repair commit before subsequent mutation or handoff. It alone may reconcile a matching existing checkpoint using baseline, actual diff/tree, current Git state and durable receipt, never blind Git replay. Unknown/live work, missing verification/Git authority, failed hooks/checks/signing, ownership conflict or unresolved effects block; no configure-around, broad staging, reset, history rewrite or discard. Read-only/no-change creates no empty commit. Planning/standalone retained artifacts continue to use their authorized writer's existing focused task-checkpoint contract. Minimal runner-owned SQLite operational state and derived projections are permitted; no agent-written narrative STATE, routine summaries/indexes, reflection or inferred guidance. Preserve independent review, existing STATE/custom content, technical gotchas, history, unrelated dirty work and explicit scope/permission approvals.
+
+This scope is specific to authorized executable runs. Instruction-managed bootstrap work
+continues its existing writer checkpoints; do not recursively transfer an ongoing migration.
+The following coordinator/implementer duties apply to instruction-managed execution only.
 
 ## Coordinator and fresh implementer duties
 

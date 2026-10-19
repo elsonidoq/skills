@@ -83,5 +83,62 @@ class TaskOrderTests(unittest.TestCase):
         self.assertTrue(any("not numbered immediately after" in error for error in errors))
 
 
+
+class AdapterParityTests(unittest.TestCase):
+    """Static propagation + actual shared intake; no LLM-obedience claims."""
+    def test_same_acceptance_different_executor_scaffolding_both_origins(self):
+        import copy
+        import sys
+        import tempfile
+        root = Path(__file__).resolve().parents[3]
+        sys.path[:0] = [str(root/'runtime'),str(root/'runtime/tests')]
+        from test_intake import approved_fixture
+        from fixtures.support import make_project
+        from coherence_workflow.registry import validate_schema
+        for origin in ('TinySpec','Standard'):
+            with tempfile.TemporaryDirectory() as tmp:
+                project=make_project(Path(tmp)/'project')
+                contract,_=approved_fixture(project,'config',origin)
+                for index,task in enumerate(contract['tasks']):
+                    task['id']=f'T{index+1:03d}';task['order']=index
+                    task['depends']=['T001'] if index else []
+                luna=copy.deepcopy(contract);sol=copy.deepcopy(contract)
+                planner_profile={'model_class':'Sol','effort':'medium'}
+                luna['execution_intent']['model_class']='Luna'
+                luna['execution_intent']['resolution']='unresolved'
+                luna['execution_intent']['compatible_bindings']=[]
+                self.assertNotEqual(planner_profile['model_class'],luna['execution_intent']['model_class'])
+                self.assertNotIn('planner_profile',luna['execution_intent'])
+                luna['execution_intent']['decomposition_rationale']='Name exact byte interface, ordered read/replace guidance and edge cases; narrow outcomes, no implicit architecture'
+                sol['execution_intent']['decomposition_rationale']='Exact outcome and invariants; routine editing choices left open'
+                self.assertEqual(luna['tasks'],sol['tasks'])
+                for value in (luna,sol):
+                    validate_schema('task.schema.json',value)
+                    self.assertEqual(module.check_structured(value,value['execution_intent']),[])
+                    wrong=copy.deepcopy(value['execution_intent']);wrong['effort']='low'
+                    self.assertIn('human/machine',module.check_structured(value,wrong)[0])
+                    missing=copy.deepcopy(value);del missing['execution_intent']
+                    self.assertIn('missing executor',module.check_structured(missing)[0])
+                for bad in ('id','depends','context_group'):
+                    value=copy.deepcopy(sol)
+                    if bad=='id':value['tasks'][1]['id']='T004'
+                    elif bad=='depends':value['tasks'][0]['depends']=['T002']
+                    else:
+                        value['tasks'] += [copy.deepcopy(value['tasks'][0])]
+                        value['tasks'][1]['context_group']='other'
+                    self.assertTrue(module.check_structured(value))
+
+    def test_origin_cli_and_intent_denials_use_real_runtime_intake(self):
+        import os,subprocess,sys
+        root=Path(__file__).resolve().parents[3]
+        result=subprocess.run([sys.executable,'-m','unittest','test_intake'],cwd=root,
+            env=dict(os.environ,PYTHONPATH='runtime:runtime/tests',PYTHONDONTWRITEBYTECODE='1'),
+            capture_output=True,text=True,timeout=30)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertIn('Ran 8 tests',result.stderr)
+        self.assertIn('TinySpec actual CLI intake 0',result.stdout)
+        self.assertIn('Standard actual CLI intake 0',result.stdout)
+        print(result.stdout,result.stderr)
+
 if __name__ == "__main__":
     unittest.main()

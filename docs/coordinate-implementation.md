@@ -629,3 +629,15 @@ reconnects and revalidates the exact permission before responding; it is not shi
 answer logic or a fabricated human click. It also injects a local command outage then uses the
 actual public CLI again; this is controlled fault proof, not a natural daemon outage or hostile
 same-UID security certification. Existing valid SDK/settings/custody/control proof is reused.
+
+## Planning intent compatibility
+
+Both task adapters retain whole REQUIRED maps, original source/approval shape and a separate
+root executor class/effort intent with assumptions, resolution, provenance and decomposition
+rationale. Resolve and approve exact compatible execution bindings before dispatch; unknown,
+missing or incompatible intent returns to producing assessment/renewal while preserving the
+original snapshot. Standard retains specification and overall/final approval; TinySpec retains
+separate source/tasks and combined approval. Planning-only approval never launches execution.
+Ordinary model tokens have no financial approval/cap/reservation; separately chargeable service
+actions retain purpose/cost-impact and explicit scoped authority. Adopt changed skills/prompts
+with `/reload` in pi; this does not automatically activate a global installation.

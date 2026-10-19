@@ -25,6 +25,13 @@ def approved_fixture(project, config_hash, origin='TinySpec'):
                 'producer_dependencies':depends,'gates':[]}], 'optional':[], 'gates':[]}
     contract = {'schema_version':1,'origin':origin,'legacy_origin':'documented-structured-v1' if origin=='legacy' else None,
         'sources':sources,'approval_refs':[], 'tasks':[task('A',0,[],'owned.txt','first\n'),task('B',1,['A'],'second.txt','second\n')],
+        'execution_intent':{'model_class':'Sol','effort':'medium','resolution':'resolved',
+            'assumptions':['Bounded exact-byte fixture; all acceptance and safety gates retained'],
+            'provenance':'Current isolated-test authority; synthetic planning intent, not historical production approval',
+            'decomposition_rationale':'Explicit file bytes and dependency order; routine editing choices remain open',
+            'compatible_bindings':[{'provider':'openai-codex','model':'gpt-6.1-sol','effort':'medium',
+                'assessment':'Exact owner-selected isolated implementation binding; no capability ranking inferred',
+                'provenance':'Current owner preapproval for mandatory isolated tests'}]},
         'authorization_envelope':{'id':'isolated','approval_refs':[],'profiles':[],
             'capabilities':[], 'limits':[], 'external_paid_authority':'denied'}}
     catalog = {}
@@ -101,3 +108,40 @@ class OriginIntakeTests(unittest.TestCase):
         with self.assertRaises(Blocked):admit(self.project,contract,Approvals(self.project,catalog),'config')
         bad=copy.deepcopy(contract);del bad['tasks'][0]['required'][0]['pass_condition']
         with self.assertRaises(Exception):admit(self.project,bad,Approvals(self.project,catalog),'config')
+
+
+class ExecutionIntentTests(unittest.TestCase):
+    setUp = OriginIntakeTests.setUp
+    def test_missing_intent_returns_precise_producing_renewal(self):
+        contract,catalog=approved_fixture(self.project,'config')
+        contract.pop('execution_intent',None)
+        with self.assertRaisesRegex(Blocked,'execution intent.*producing'):
+            admit(self.project,contract,Approvals(self.project,catalog),'config')
+
+    def test_binding_is_explicit_not_inferred_from_planner_or_reviewer(self):
+        from coherence_workflow.intake import verify_execution_intent
+        contract,_=approved_fixture(self.project,'config')
+        profile={'provider':'openai-codex','model':'gpt-6.1-sol','effort':'medium'}
+        verify_execution_intent(contract,[profile])
+        for update in ({'model':'different'},{'effort':'low'}):
+            with self.assertRaisesRegex(Blocked,'compatibility.*producing'):
+                verify_execution_intent(contract,[{**profile,**update}])
+        contract['execution_intent']['resolution']='unresolved'
+        with self.assertRaisesRegex(Blocked,'unresolved.*producing'):
+            verify_execution_intent(contract,[profile])
+
+    def test_authority_consumer_checks_only_execution_roles_before_other_effects(self):
+        from coherence_workflow.cli import Coordinate
+        from types import SimpleNamespace
+        contract,_=approved_fixture(self.project,'config')
+        exact={'provider':'openai-codex','model':'gpt-6.1-sol','effort':'medium'}
+        fake=SimpleNamespace(contract=contract,config={'profiles':{'coding':exact,
+            'reviewer':dict(exact,model='different-reviewer')},'nodes':[
+                {'type':'agent','role':'implement','profile':'coding'},
+                {'type':'agent','role':'repair','profile':'coding'},
+                {'type':'agent','role':'review','profile':'reviewer'}]})
+        # Past intent validation the next ordinary authority dependency is deliberately absent.
+        with self.assertRaises(AttributeError):Coordinate.authority_check(fake,{})
+        fake.config['profiles']['coding']=dict(exact,effort='low')
+        with self.assertRaisesRegex(Blocked,'compatibility.*producing'):
+            Coordinate.authority_check(fake,{})

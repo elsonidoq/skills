@@ -34,7 +34,7 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
 
     def test_capability_stop_and_portable_binding(self):
         self.assertIn("owner-selected profile", self.text)
-        self.assertIn("[qualified seed rubric](../coordinate-implementation/references/batch-routing.md)", self.text)
+        self.assertIn("[qualified seed rubric](../planner/references/profile-selection.md)", self.text)
         self.assertIn("effort independently", self.text)
         self.assertIn("unknown actual model or effort stays unknown", self.text)
         self.assertNotIn("sonnet-class", self.text)

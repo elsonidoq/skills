@@ -101,7 +101,7 @@ research capabilities only when needed; configuration names are not usability pr
 
 ## Shared routing selection
 
-Use the [qualified seed rubric](../coordinate-implementation/references/batch-routing.md)
+Use the [qualified seed rubric](references/profile-selection.md)
 for each planning/advisory invocation, including brainstorming assessment/application,
 TinySpec source/tasks/review, and Standard specification/tasks/independent review.
 Assess all six applicable factors, especially the weakest verification blind spot. Start the
@@ -248,6 +248,35 @@ broader authority than presented. Never reinterpret an older preparation-only ap
 as execution permission. Denied/cancelled/ambiguous answers, missing capabilities,
 new material owner gates and explicit stop boundaries still prevent unsafe continuation.
 
+## Intended executor before decomposition
+
+Before Standard architecture or TinySpec task decomposition, capture the intended coding
+model class and effort; unknown input blocks planning intake, never infer it from the
+planner/producer/reviewer profile. Pass it unchanged to each architecture/task producer.
+Root `execution_intent` in the authoritative task JSON and matching human summary carry
+`model_class`, `effort`, `resolution` (unresolved/resolved), `assumptions`, `provenance`,
+`decomposition_rationale` and `compatible_bindings`. Each compatible binding records exact
+`provider`, `model`, `effort`, an `assessment` and its `provenance`; execution preflight
+checks the actual implementation/repair bindings only, not planning/reviewer profiles.
+This is planning intent, not execution permission or separately chargeable service authority.
+
+Use owner-guided qualitative scaffolding, not universal rankings or fixed thresholds:
+Luna: narrow coherent outcomes, named interfaces/invariants, context/edge-case pointers and
+ordered guidance where useful. Terra: clear boundaries, non-obvious decisions and moderate
+scaffolding. Sol: outcome-oriented instructions may leave routine choices open when justified.
+Effort and verified guidance refine assumptions; unknown/unlisted classes default to explicit
+instructions without unnecessary micro-tasks. A more capable planner must not leave architecture
+implicit for a smaller executor. Record what is explicit/bounded, what choices remain open and
+uncertainty. REQUIRED acceptance, dependencies, safety and approval gates never shrink.
+
+Changed class/effort or exact binding requires a documented compatibility/revision assessment
+of affected boundaries/detail/assumptions, with producing review/current-content renewal where
+needed. Preserve unaffected tasks; no silent substitution, auto-escalation or unconditional
+whole-plan regeneration. Resolve approved exact compatible bindings before dispatch using
+explicit trusted owner/registry provenance; unresolved/incompatible intent blocks execution.
+Historical handoffs lacking intent return to the earliest affected producing renewal gate,
+preserving original source and approval evidence, never fabricated historical metadata.
+
 ## Selected production and stage handoffs
 
 Apply the shared early-risk and task-boundary contracts in stage briefs and source/task
@@ -319,11 +348,11 @@ verification needs through both adapters to task generation and coordinator. Eac
 its pass criterion, smallest sufficient check, expected evidence and manual/permission gates;
 include accessible proof/pass conditions, explicit earlier producer dependencies and original
 permission/manual gates in the inline REQUIRED brief for both adapters. Missing, weakened or
-unrun REQUIRED proof blocks downstream reliance. Optional checks stay distinct. Preserve item mappings unchanged into the whole batch union before
+unrun REQUIRED proof blocks downstream reliance. Optional checks stay distinct. Preserve item mappings unchanged into the whole task contract before
 coding, including both adapters and legacy producing review/renewal when contracts are inadequate.
-The [qualified seed rubric](../coordinate-implementation/references/batch-routing.md)
+The [qualified seed rubric](references/profile-selection.md)
 also informs planning selection under Shared routing selection; planning-stage bindings are
-not implementation-task assignments. Its implementation batching rules remain coordinator-only.
+not implementation-task assignments. It grants no implementation batching or runtime routing authority.
 Missing or ambiguous contracts, including old approved tasks, return to the producing review/approval
 gate for affected review and renewed approval, never fabricated historical requirements.
 
@@ -498,8 +527,9 @@ Use established artifact/decision conventions; no mandatory new state/handoff fi
 After final approval, supply this complete handoff and automatically invoke `coordinate-implementation`
 in the same session, unless the owner explicitly requested planning-only or a separate-session
 handoff. Do not stop at a readiness summary or require a second execution request. Planner
-never executes tasks itself; Coordinator alone selects models/strategy/batches and verifies
-its execution preflight. If a capability/gate blocks continuation, report the precise blocker
+never executes tasks itself; the executable runner alone selects dependency-ready work and
+compatible role-safe sessions from approved exact configuration, verifies REQUIRED evidence
+and gates, and creates focused task checkpoints. The interface cannot choose models/batches. If a capability/gate blocks continuation, report the precise blocker
 and preserve the handoff rather than silently stopping. For an explicitly bounded planning-only
 request report readiness, not implementation completion or feature acceptance.
 

@@ -7,7 +7,8 @@ reusable global skills.
 ## Read existing guidance
 
 Consult relevant existing compact `GUIDELINES.md` during understanding, including
-standalone planning/task/execution entry. Resolve the selected project root and declared
+standalone planning/task entry. Executable runs use approved task constraints and technical
+gotchas, not an execution-feedback/routing intake obligation. Resolve the selected project root and declared
 coordination owner; otherwise look for `memory/coordination/GUIDELINES.md` locally.
 Missing store or STATE is nonblocking: do not auto-initialize anything.
 Carry exact applicable constraints through source criteria → task dependencies/REQUIRED

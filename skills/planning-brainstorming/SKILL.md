@@ -14,7 +14,7 @@ Before using this skill, verify that the runtime can ask the owner questions and
 planner can retain the selected source bounds, decisions, deferrals and handoff. In
 preselection mode use available session history only; in selected-production or legacy
 repair mode use established project artifacts. Use the
-[qualified seed rubric](../coordinate-implementation/references/batch-routing.md) for gate
+[qualified seed rubric](../planner/references/profile-selection.md) for gate
 assessment and decision application: assess all six applicable factors, including the
 weakest verification blind spot, and justify family and supported effort independently.
 Compare suitable family/effort options before readiness, including a smaller never-launched pending proposal,
@@ -93,7 +93,8 @@ rewrite unrelated sections, or replace the next stage with a plan.
 
 Planning gate bindings are not implementation-task assignments. Carry settled source constraints,
 research links, applicable guidelines and observable verification needs into the next-stage handoff;
-leave task-local REQUIRED items to task generation and batch profiles to the coordinator.
+leave task-local REQUIRED items and inherited executor intent to task generation; executable
+runtime bindings are approved separately, not selected by the brainstorming producer.
 
 ## Durable handoff and resume
 

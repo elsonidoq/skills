@@ -21,7 +21,7 @@ PATHS = {
     "risk": "skills/planner/references/early-risk-reduction.md",
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
-    "routing": "skills/coordinate-implementation/references/batch-routing.md",
+    "routing": "skills/planner/references/profile-selection.md",
 }
 
 
@@ -191,7 +191,7 @@ def check_contracts(texts):
             "Standard-only SpecKit/reviewer/constitution checks happen after Standard")
     require("handoff", p, "constraints **verbatim**", "prior-stage handoff", "Resume originating",
             "Re-present unanswered questions", "selected depth", "current content/revision evidence",
-            "Explicit approved implementation scope", "Coordinator alone")
+            "Explicit approved implementation scope", "executable runner alone")
     tiny = section(p, "### TinySpec path")
     require("tiny-flow", tiny, "**Source creation — shared routing selection", "**Tasks — shared routing selection",
             "**Review — planner-owned, shared routing selection",
@@ -229,7 +229,7 @@ def check_contracts(texts):
             "one material item", "recorded owner decisions", "preselection", "read-only",
             "session history", "Only in selected-production", "owner's rationale")
     # Routing obligations must reach operational consumers, not a summary keyword.
-    routing_link = "[qualified seed rubric](../coordinate-implementation/references/batch-routing.md)"
+    routing_link = "[qualified seed rubric](references/profile-selection.md)"
     selection = section(p, "## Shared routing selection")
     require("planning-selection", selection, routing_link,
             "all six applicable factors", "weakest verification blind spot",
@@ -243,7 +243,7 @@ def check_contracts(texts):
             "owner-selected exact profiles", "Apply the shared routing selection")
     for key, heading in (("brainstorm", "## Capability preflight"), ("helper", "## Preflight")):
         carrier = section(texts[key], heading)
-        require("routing-" + key, carrier, routing_link, "all six",
+        require("routing-" + key, carrier, "[qualified seed rubric](../planner/references/profile-selection.md)", "all six",
                 "weakest verification blind spot", "effort independently", "one exact",
                 "owner-selected profile", "permissions, tools", "callable binding and supported effort",
                 "assignment", "dispatch", "selected binding/effort", "unchanged",
@@ -714,7 +714,7 @@ VERIFICATION_CARRIERS = (
     ("verification-planner", "planner", "## Proportionate validation",
      ("practical observables", "generic green suite", "STOP and explicit user approval")),
     ("verification-handoff", "planner", "## Selected production and stage handoffs",
-     ("item mappings unchanged", "whole batch union before", "legacy producing review/renewal")),
+     ("item mappings unchanged", "whole task contract before", "legacy producing review/renewal")),
     ("verification-oracle", "routing", "## Assess all six factors",
      ("implementation difficulty", "oracle quality, check cost and observability", "weakest material", "practical combined verification feasibility")),
     ("verification-graph", "coordinator", "## Prepare Approved Execution",

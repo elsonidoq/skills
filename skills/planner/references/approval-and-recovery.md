@@ -114,3 +114,17 @@ Existing approved tasks with inadequate REQUIRED contracts block dispatch and re
 producing review/approval gate for correction and renewed affected approval. Preserve original
 source provenance, valid approvals and task-embedded legacy requirements; do not fabricate
 historical contracts or add requirements retroactively under old approval.
+
+## Executable intake handoff
+
+Preserve original source/approval origin and whole REQUIRED maps in both human/machine
+handoffs. Carry root execution intent separately from planning producers. Missing executor
+class/effort blocks before architecture/decomposition; changed intent requires affected
+compatibility assessment/producing renewal, never automatic whole-plan regeneration.
+Missing historical intent returns to earliest affected producing renewal, not an opaque schema error.
+An exact compatible implementation/repair binding is resolved and verified before dispatch.
+Known separately chargeable action gaps stop that action; ordinary model tokens have no
+financial gate. Current-content scope/approval remains mandatory. Reconcile active/unknown
+legacy writers first; preserve STATE/custom/history/gotchas without automatic conversion.
+Planning-only final approval never launches implementation; later explicit implementation
+scope and all original gates remain required for that origin.

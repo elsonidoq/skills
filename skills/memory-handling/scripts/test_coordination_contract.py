@@ -9,7 +9,7 @@ TEXT = (ROOT / "skills/memory-handling/references/project-coordination.md").read
 
 GUARDS = {
     "Read existing guidance": (
-        "standalone planning/task/execution entry", "Missing store or STATE is nonblocking",
+        "standalone planning/task entry", "not an execution-feedback/routing intake obligation", "Missing store or STATE is nonblocking",
         "do not auto-initialize", "source criteria → task dependencies/REQUIRED checks → worker brief",
         "Empty guidance means no applicable guidance", "explicit relevant need",
         "read it first and open only matching records", "Do not recursively load history",

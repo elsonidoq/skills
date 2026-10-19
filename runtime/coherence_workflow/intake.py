@@ -47,6 +47,8 @@ class Approvals:
 
 def admit(project, contract, approvals, config_hash, *, legacy_settled=False):
     """Both adapters supply this exact object; legacy has no prose conversion."""
+    if 'execution_intent' not in contract:
+        raise Blocked('missing execution intent; earliest affected producing review/renewal required; preserve original sources and approvals')
     validate_schema('task.schema.json', contract)
     if contract['origin'] == 'legacy' and (not contract['legacy_origin'] or not legacy_settled):
         raise Blocked('legacy origin/writer reconciliation required')
@@ -146,3 +148,22 @@ def load_contract(path):
             result[key] = value
         return result
     return json.loads(path.read_text(), object_pairs_hook=unique)
+
+
+def verify_execution_intent(contract, execution_profiles):
+    """Explicit reviewed compatibility, never a model-name/class ranking heuristic.
+
+    Only implementation/repair bindings belong here; planning/review profiles are separate.
+    Existing exact-profile runtime/provider checks still establish observed support.
+    """
+    intent = contract.get('execution_intent')
+    if not intent:
+        raise Blocked('missing execution intent; producing review/renewal required')
+    if intent['resolution'] != 'resolved':
+        raise Blocked('unresolved execution intent; producing compatibility assessment/renewal required')
+    for profile in execution_profiles:
+        matches = [binding for binding in intent['compatible_bindings']
+                   if all(binding[key] == profile[key] for key in ('provider','model','effort'))]
+        if (profile['effort'] != intent['effort'] or len(matches) != 1 or
+                not matches[0]['assessment'].strip() or not matches[0]['provenance'].strip()):
+            raise Blocked('execution intent compatibility unresolved; affected producing assessment/renewal required, no automatic plan regeneration')

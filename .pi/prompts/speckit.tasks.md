@@ -72,7 +72,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - If research.md exists: Extract decisions for setup tasks
    - Generate tasks organized by user story (see Task Generation Rules below)
    - Generate dependency graph showing user story completion order
-   - Create parallel execution examples per user story
+   - Preserve one sequential implementation writer and explicit earlier prerequisites
    - Validate task completeness (each user story has all needed tasks, independently testable)
 
 4. **Generate tasks.md**: Use TASKS_TEMPLATE_CONTENT (from the JSON output above) as the structure. For compatibility with older setup scripts that omit TASKS_TEMPLATE_CONTENT, read TASKS_TEMPLATE instead. Fill with:
@@ -85,7 +85,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - All tasks must follow the strict checklist format (see Task Generation Rules below)
    - Clear file paths for each task
    - Dependencies section showing story completion order
-   - Parallel execution examples per story
+   - Sequential producer verification/checkpoints before consumers
    - Implementation strategy section (MVP first, incremental delivery)
 
 ## Mandatory Post-Execution Hooks
@@ -127,7 +127,7 @@ Check if `.specify/extensions.yml` exists in the project root.
 Output path to generated tasks.md and summary:
 - Total task count
 - Task count per user story
-- Parallel opportunities identified
+- Dependency order and one-writer boundary
 - Independent test criteria for each story
 - Suggested MVP scope (typically just User Story 1)
 - Format validation: Confirm ALL tasks follow the checklist format (checkbox, ID, labels, file paths)
@@ -140,21 +140,21 @@ The tasks.md should be immediately executable - each task must be specific enoug
 
 **CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
 
-**Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
+**Verification is REQUIRED**: Preserve every source/owner/safety acceptance check and manual/permission gate; optional hardening stays distinct. Tests normally remain inside each coherent task.
 
 ### Checklist Format (REQUIRED)
 
 Every task MUST strictly follow this format:
 
 ```text
-- [ ] [TaskID] [P?] [Story?] Description with file path
+- [ ] [TaskID] [Story?] Description with file path
 ```
 
 **Format Components**:
 
 1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
 2. **Task ID**: Sequential number (T001, T002, T003...) in execution order
-3. **[P] marker**: Include ONLY if task is parallelizable (different files, no dependencies on incomplete tasks)
+3. **Sequential execution**: One writer; each verified focused task checkpoint precedes dependent mutation.
 4. **[Story] label**: REQUIRED for user story phase tasks only
    - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
    - Setup phase: NO story label
@@ -166,8 +166,8 @@ Every task MUST strictly follow this format:
 **Examples**:
 
 - ✅ CORRECT: `- [ ] T001 Create project structure per implementation plan`
-- ✅ CORRECT: `- [ ] T005 [P] Implement authentication middleware in src/middleware/auth.py`
-- ✅ CORRECT: `- [ ] T012 [P] [US1] Create User model in src/models/user.py`
+- ✅ CORRECT: `- [ ] T005 Implement authentication middleware in src/middleware/auth.py`
+- ✅ CORRECT: `- [ ] T012 [US1] Create User model in src/models/user.py`
 - ✅ CORRECT: `- [ ] T014 [US1] Implement UserService in src/services/user_service.py`
 - ❌ WRONG: `- [ ] Create User model` (missing ID and Story label)
 - ❌ WRONG: `T001 [US1] Create model` (missing checkbox)
@@ -187,7 +187,7 @@ Every task MUST strictly follow this format:
 
 2. **From Contracts**:
    - Map each interface contract → to the user story it serves
-   - If tests requested: Each interface contract → contract test task [P] before implementation in that story's phase
+   - If tests requested: Each interface contract → contract test task before implementation in that story's phase
 
 3. **From Data Model**:
    - Map each entity to the user story(ies) that need it
@@ -200,14 +200,29 @@ Every task MUST strictly follow this format:
    - Foundational/blocking tasks → Foundational phase (Phase 2)
    - Story-specific setup → within that story's phase
 
-### Phase Structure
+### Outcome boundaries and structured handoff
 
-- **Phase 1**: Setup (project initialization)
-- **Phase 2**: Foundational (blocking prerequisites - MUST complete before user stories)
-- **Phase 3+**: User Stories in priority order (P1, P2, P3...)
-  - Within each story: Tests (if requested) → Models → Services → Endpoints → Integration
-  - Each phase should be a complete, independently testable increment
-- **Final Phase**: Polish & Cross-Cutting Concerns
+Read and apply `skills/task-generation/SKILL.md` from the authorized suite installation:
+the Standard adapter is create-only when managed by planner; do not self-review/fix then
+silently launch implementation. Resolve paths through that installation, not a presumed
+project layout. Missing shared contract/stage capability blocks; never simulate slash tools.
+Produce only independently necessary work units, not one task per phase/test/entity noun.
+Preserve contiguous stories and all explicit earlier dependencies.
+
+Before task decomposition require the intended coding class/effort captured before architecture,
+separate from producer/reviewer profiles. Carry assumptions/provenance/resolution and executor-
+specific decomposition rationale to matching human summary and root `execution_intent`.
+Unknown intent returns to planning intake; changed intent requires affected compatibility
+assessment/renewal, no automatic full regeneration or weakened acceptance.
+
+Emit one authoritative adjacent or fenced JSON matching delivered task.schema.json; retain
+sources/approval origins, IDs/order/deps/context_group/owned_paths and whole REQUIRED criterion,
+registered check/version/args/pass condition/evidence/producer dependencies/gates, optional
+items and authorization_envelope. Preparation may have unresolved/denied refs; never fabricate
+owner authority. Ordinary model tokens have no financial gate; separately chargeable actions
+need purpose/cost-impact and explicit scoped approval. Standard retains spec/plan/tasks,
+specification approval, independent overall review and final approval. Inadequate legacy
+returns to producing renewal with original provenance, not automatic conversion.
 
 ## Done When
 

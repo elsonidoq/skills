@@ -110,6 +110,87 @@
     },
     "authorization_envelope": {
       "$ref": "shared.schema.json#/$defs/authorization_envelope"
+    },
+    "execution_intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resolution": {
+          "enum": [
+            "unresolved",
+            "resolved"
+          ]
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "provenance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decomposition_rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compatible_bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "type": "string",
+                "minLength": 1
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1
+              },
+              "effort": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assessment": {
+                "type": "string",
+                "minLength": 1
+              },
+              "provenance": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "provider",
+              "model",
+              "effort",
+              "assessment",
+              "provenance"
+            ]
+          }
+        }
+      },
+      "required": [
+        "model_class",
+        "effort",
+        "resolution",
+        "assumptions",
+        "provenance",
+        "decomposition_rationale",
+        "compatible_bindings"
+      ]
     }
   },
   "required": [

@@ -49,6 +49,8 @@ This does not grant write, guideline, adaptation, external-operation, or runtime
 failed delegated run and its invocation before retrying, resuming, or relaunching; unknown failures MUST be
 reported rather than blindly rerun.
 
+For authorized executable Coordinate Implementation runs, workers may propose/produce owned task changes but do not stage, commit, select work or own workflow persistence. The runner establishes baseline/ownership and durable effect identity, executes and audits real REQUIRED checks and original gates, inspects actual owned diffs, and creates one focused verified owned-path task or repair commit before subsequent mutation or handoff. It alone may reconcile a matching existing checkpoint using baseline, actual diff/tree, current Git state and durable receipt, never blind Git replay. Unknown/live work, missing verification/Git authority, failed hooks/checks/signing, ownership conflict or unresolved effects block; no configure-around, broad staging, reset, history rewrite or discard. Read-only/no-change creates no empty commit. Planning/standalone retained artifacts continue to use their authorized writer's existing focused task-checkpoint contract. Minimal runner-owned SQLite operational state and derived projections are permitted; no agent-written narrative STATE, routine summaries/indexes, reflection or inferred guidance. Preserve independent review, existing STATE/custom content, technical gotchas, history, unrelated dirty work and explicit scope/permission approvals.
+
 ### VI. Compatibility and Ownership
 
 New capabilities MUST preserve existing TinySpec, Standard, and documented legacy workflows
@@ -71,8 +73,7 @@ or configuration; otherwise use `<project-root>/memory/coordination/`. Resolve t
 root from its selected repository/workspace, never from the global skill installation. Every
 coordination destination MUST stay inside that project. Gotcha-memory adoption remains a separate
 contract and MUST NOT be implicitly initialized by coordination-store setup. Do not store secrets, tokens, personal data,
-or sensitive payloads in memory or execution evidence. Avoid a new framework when a bounded
-extension of the existing skills suffices.
+or sensitive payloads in memory or execution evidence. Prefer bounded skill changes when sufficient. The owner-approved Coordinate Implementation migration permits one bounded reusable Python LangGraph/SQLite workflow plus a thin pinned official Pi SDK host for implementation only; it does not authorize a generalized platform, automatic installations, planning-workflow rewrite or other runtime extensions.
 
 ## Development Workflow
 
@@ -80,14 +81,7 @@ Planner presents TinySpec and Standard and obtains the owner's choice; each rout
 its established artifact and approval gates before coordinator execution. The coordinator
 verifies authorization, task evidence, integration, and required independent review. Changes
 to shared skill contracts MUST be checked with focused fixtures and the relevant existing
-suite checks. Trust approved settled design and task contracts: bounded delegation,
-actual diff/focused commit/REQUIRED audit, dependency-ready advance and independent final
-review. No routine replanning, unchanged preflight loops or broad redundant checks.
-Concrete invalidation reopens only affected decisions/checks; reuse applicable proof elsewhere.
-Planner defaults to direct asynchronous single-stage dispatch with parent inspection before
-next-stage release. Workflow wrappers need earned orchestration, not a single child or
-sequential convenience; they preserve stage authority/reviewer independence and never
-imply parallel implementation permission. Global skill/prompt changes require `/reload` in pi.
+suite checks. Trust approved settled design and task contracts. For the executable Coordinate Implementation path, the runner deterministically admits approved dependency-ready tasks, verifies actual task-local REQUIRED evidence and gates, audits owned diffs, creates focused task checkpoints and selects compatible role-safe sessions from approved configuration. There is no subjective implementation batching, complexity routing, automatic model escalation or routine execution-memory feedback. One writer per worktree and fresh independent full-range final review remain mandatory. Concrete invalidation reopens only affected authority/checks; valid proof is reused. Planning remains skill-based: direct asynchronous single-stage delegation, fresh artifact producers, parent inspection before dependent-stage release, and existing owner choice/current-content approval gates remain required. A planning workflow wrapper still needs earned branching, parallel-independent or aggregation justification; it grants no parallel implementation writers. No background LLM decides workflow transitions. Global skill/prompt changes require `/reload` in pi.
 
 ## Governance
 
@@ -99,7 +93,21 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 3.0.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-12
+**Version**: 4.0.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-19
+
+Amendment 4.0.0 records the current owner's actual ask_user decision **“Approve policy amendments”**
+for the three exact operative proposals in `specs/003-coordinate-workflow/tasks.md`,
+section SHA256 `a318e50bf8914fce910f62d9aedf8700e3b9a1bb0b804a08281e46b0423bdcea`,
+unchanged from independent planning review at `79faff9` and confirmed by the parent.
+Reproduce the approved section with UTF-8 `read_text().split('## T008 exact operative amendment proposals', 1)[1].split('Remaining constitution/task-commit safeguards', 1)[0]`, without normalization
+(3843 bytes); the marker is excluded, its trailing heading text included.
+Rationale: replace subjective implementation coordination with the approved bounded
+executable runtime while retaining authority, verification, checkpoints and independence.
+MAJOR reflects incompatible verifier/committer responsibility changes. Affected owners:
+this constitution, shared task-commit contract, planning/task adapters and executable-entry
+consumers/templates. No receipt ID or final production acceptance is invented. The current
+instruction-managed migration continues its worker-owned verified checkpoints; the runner
+clause governs authorized executable runs, not recursive migration cutover mid-session.
 
 Amendment 3.0.0 records the explicit owner decision in the
 [approved review](../../docs/plans/reviews/coordinator-no-bookkeeping-planning-review.md):

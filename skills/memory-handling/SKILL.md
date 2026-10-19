@@ -63,6 +63,10 @@ similarly named index as project association without repository evidence.
 
 ## Project coordination feedback
 
+Executable runs consume technical gotchas and approved constraints carried by task contracts,
+not LLM coordination-feedback/routing obligations. The following explicit-feedback owner is
+for separately authorized planning/manual feedback, never routine runtime paperwork.
+
 Apply the shared [project coordination contract](references/project-coordination.md).
 Read relevant existing compact guidance; missing coordination store or STATE is nonblocking.
 No auto-initialization, routine summaries/index updates, reflection or inferred lessons.

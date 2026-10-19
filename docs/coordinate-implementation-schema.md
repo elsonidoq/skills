@@ -389,3 +389,22 @@ explicit blockers; it is not accepted completion or a manual-polling fallback. T
 adapter uses public Paseo0.9.2 inspect/send only. Test-only public package-root SDK response driving
 is separate: it validates an exact current permission question/options/nonce, reconnects and responds
 only to that preapproved isolated UI request. No fabricated tool/user events or historical recipients.
+
+## Executor-aware task handoff (v1 additive metadata)
+
+Root `execution_intent` is separate from producer/reviewer profiles and from runtime action
+authority. It carries `model_class`, `effort`, `resolution` (`unresolved|resolved`), nonempty
+`assumptions`, `provenance`, `decomposition_rationale` and `compatible_bindings`. Each binding
+has exact `provider/model/effort`, `assessment` and `provenance`. New planning paths capture
+class/effort before Standard architecture or TinySpec decomposition. Human summary must agree
+with machine metadata. Runtime authority preflight checks actual implementation/repair profiles
+against explicit approved compatible bindings and effort; reviewers do not supply executor
+intent. Existing binding/observer/tool/permission validation is still mandatory.
+
+The v1 schema accepts absent historical metadata so historical documents remain representable;
+`admit` explicitly blocks such execution with the earliest affected producing review/renewal
+path, rather than fabricating old intent or treating an opaque schema failure as migration.
+Unresolved/incompatible execution intent blocks dispatch. Changed intent assesses affected
+boundaries/detail/assumptions and renews affected current-content approvals; no automatic full
+regeneration/escalation. The approved original migration task/source snapshot remains unchanged;
+new schema bytes and renewed fixture approval hashes are not historical owner approval.

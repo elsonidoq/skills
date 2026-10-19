@@ -209,5 +209,26 @@ class GitProtocolFixtureTests(unittest.TestCase):
         self.assertEqual(run(repo, "diff", "--cached", "--name-only").stdout, "")
 
 
+class RuntimePolicyCompatibilityTests(GitProtocolFixtureTests):
+    def test_historical_custom_and_original_source_bytes_preserved(self):
+        baseline='5ec94a87ffc4cc5747adaf93e290c2cf8526e594'
+        paths=['memory','.pi/STATE.md','specs/003-coordinate-workflow/tasks.json',
+               'specs/003-coordinate-workflow/spec.md','specs/003-coordinate-workflow/planning-approval.md',
+               'specs/003-coordinate-workflow/spec-approval.md','docs/evidence',
+               'skills/initialize-coherence/scripts/fixtures/old-initialize-coherence.txt']
+        result=run(ROOT,'diff',baseline,'--',*paths)
+        self.assertEqual(result.stdout,'')
+        source=(ROOT/'skills/planner/references/approval-and-recovery.md').read_text()
+        for phrase in ('active/unknown','earliest affected producing renewal','original source/approval origin'):
+            self.assertIn(phrase,source)
+        contract=CONTRACT.read_text()
+        self.assertIn('workers may propose/produce owned task changes but do not stage, commit',contract)
+        self.assertTrue(any('executable checkpoint responsibility' in error for error in
+            checker.check(contract_text=contract.replace('do not stage, commit','may stage and commit'))))
+        self.assertIn('Unknown/live work, missing verification/Git authority',contract)
+        self.assertIn('Planning/standalone retained artifacts continue',contract)
+        self.assertEqual(checker.check(),[])
+
+
 if __name__ == "__main__":
     unittest.main()

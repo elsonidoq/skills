@@ -943,7 +943,7 @@ class ActivePlanningRoutingTests(unittest.TestCase):
             for key in ("planner", "brainstorm", "helper"):
                 target = root / checker.PATHS[key]
                 original = target.read_text()
-                target.write_text(original.replace("../coordinate-implementation/references/batch-routing.md", "../absent.md"))
+                target.write_text(original.replace("references/profile-selection.md", "references/absent.md"))
                 with self.assertRaisesRegex(ValueError, "routing-reference: " + key):
                     checker.load_texts(root)
                 target.write_text(original)
@@ -1958,6 +1958,59 @@ class ComparativeCarrierTests(unittest.TestCase):
                 changed = dict(texts)
                 changed[key] = changed[key].replace(clause, "REMOVED", 1)
                 self.assertTrue(any(e.startswith(label) for e in checker.check_contracts(changed)))
+
+
+class RuntimeHandoffTests(unittest.TestCase):
+    def test_exact_approved_policy_carriers_and_mutations(self):
+        import hashlib
+        source=(ROOT/'specs/003-coordinate-workflow/tasks.md').read_text()
+        approved=source.split('## T008 exact operative amendment proposals',1)[1].split('Remaining constitution/task-commit safeguards',1)[0]
+        self.assertEqual(hashlib.sha256(approved.encode()).hexdigest(),'a318e50bf8914fce910f62d9aedf8700e3b9a1bb0b804a08281e46b0423bdcea')
+        clauses=[line[5:] for line in approved.splitlines() if line.startswith('   > ')]
+        constitution=(ROOT/'.specify/memory/constitution.md').read_text()
+        checkpoint=(ROOT/'skills/memory-handling/references/task-commit-contract.md').read_text()
+        self.assertEqual(len(clauses),3)
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('checkpoint_policy',ROOT/'scripts/check-task-commit-contract.py')
+        policy=importlib.util.module_from_spec(spec);spec.loader.exec_module(policy)
+        self.assertEqual(policy.operative_amendment_errors(constitution,checkpoint,clauses),[])
+        for clause in clauses:
+            changed=constitution.replace(clause,'REMOVED',1)+'\n## Footer\n'+clause
+            self.assertTrue(policy.operative_amendment_errors(changed,checkpoint,clauses))
+
+        for clause in clauses:
+            self.assertIn(clause,constitution)
+            self.assertNotIn(clause,constitution.replace(clause,'REMOVED',1))
+        self.assertIn(clauses[2],checkpoint)
+        self.assertIn('Version**: 4.0.0',constitution)
+        self.assertIn('Approve policy amendments',constitution)
+        self.assertIn('instruction-managed migration continues',constitution)
+
+    def test_installed_adapter_template_is_sequential_and_hashes_honest(self):
+        import hashlib,json
+        for path,manifest in [('.pi/prompts/speckit.tasks.md','.specify/integrations/pi.manifest.json'),
+                              ('.specify/templates/tasks-template.md','.specify/integrations/speckit.manifest.json')]:
+            text=(ROOT/path).read_text()
+            self.assertNotIn('parallelizable',text)
+            self.assertNotIn('Tests are OPTIONAL',text)
+            self.assertIn('execution_intent',text)
+            metadata=json.loads((ROOT/manifest).read_text())
+            actual=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
+            self.assertEqual(metadata['files'][path],actual)
+            self.assertEqual(metadata['local_overrides'][path]['current_sha256'],actual)
+            self.assertNotEqual(metadata['local_overrides'][path]['upstream_sha256'],actual)
+
+    def test_intent_operational_carriers_not_a_footer(self):
+        for path in ('skills/planner/SKILL.md','skills/tiny-spec/SKILL.md',
+                     'skills/task-generation/SKILL.md','skills/delegating-architectural-planning/SKILL.md'):
+            text=(ROOT/path).read_text()
+            carrier=checker.section(text,'## Intended executor before decomposition')
+            for phrase in ('unknown input blocks planning intake','planner/producer/reviewer profile',
+                           'decomposition_rationale','REQUIRED acceptance, dependencies, safety and approval gates never shrink',
+                           'no silent substitution, auto-escalation or unconditional'):
+                self.assertIn(phrase,carrier,path)
+                self.assertNotIn(phrase,carrier.replace(phrase,'REMOVED',1))
+        self.assertEqual(checker.check_contracts(checker.load_texts()),[])
 
 
 if __name__ == "__main__":

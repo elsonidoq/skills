@@ -48,7 +48,7 @@ staging/target proposal still needs explicit approval; unresolved selections/rec
 Implementation tasks carry objective REQUIRED task-local verification items, expected
 outputs, smallest sufficient checks and manual/permission gates through
 [task-generation](skills/task-generation/SKILL.md), not mandatory model classes or shares.
-The coordinator uses the [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md)
+The instruction-managed coordinator uses the [qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md)
 plus applicable approved project guidance to assess consecutive sequential batches. First proposals inspect
 demands/oracles, then material evidence or explicit non-reliance, then family and effort comparison before proposing;
 normally
@@ -118,7 +118,7 @@ and usable permitted binding/effort/tool support; fixture success never substitu
 ### Planning/advisory selection
 
 Planning/advisory invocations use the same
-[qualified seed rubric](skills/coordinate-implementation/references/batch-routing.md): assess
+[qualified seed rubric](skills/planner/references/profile-selection.md): assess
 all six applicable factors, including the weakest verification blind spot, and justify family
 and supported effort independently. Proposal precedes readiness: a suitable never-launched
 option may remain pending while passive, authoritative readiness evidence is incomplete. Distinguish

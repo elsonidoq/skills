@@ -2,6 +2,7 @@
 """Check explicit task dependencies and story grouping in a numbered Markdown task list."""
 
 import argparse
+import json
 import re
 from pathlib import Path
 
@@ -86,6 +87,43 @@ def check(text: str) -> list[str]:
     return errors
 
 
+def check_structured(contract, human_intent=None):
+    """Validate explicit structured adapter output, never derive criteria from prose."""
+    errors = []
+    intent = contract.get('execution_intent')
+    fields = ('model_class','effort','resolution','assumptions','provenance',
+              'decomposition_rationale','compatible_bindings')
+    if not isinstance(intent, dict) or any(key not in intent or not intent[key] for key in fields[:-1]):
+        errors.append('missing executor input; planning intake/producing renewal required')
+    if human_intent is not None and human_intent != intent:
+        errors.append('human/machine execution intent mismatch')
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'runtime'))
+    try:
+        from coherence_workflow.registry import validate_schema
+        validate_schema('task.schema.json', contract)
+    except ImportError:
+        return errors + ['structured schema validator unavailable; verify runtime dependencies or inspect manually, NOT VERIFIED']
+    except Exception as exc:
+        from jsonschema.exceptions import ValidationError
+        if not isinstance(exc, ValidationError):
+            raise
+        return errors + ['structured task schema invalid; producing review/renewal required']
+    finally:
+        sys.path.pop(0)
+    seen, groups, last_group = set(), set(), None
+    for index, task in enumerate(contract.get('tasks', [])):
+        if task['id'] != f'T{index+1:03d}' or task['order'] != index:
+            errors.append('task IDs/order must be contiguous from T001')
+        if not set(task['depends']) <= seen:
+            errors.append('missing/later prerequisite; producing review required')
+        group = task['context_group']
+        if group != last_group and group in groups:
+            errors.append('noncontiguous story/context group')
+        seen.add(task['id']); groups.add(group); last_group=group
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("tasks", type=Path, help="Path to the Markdown task list")
@@ -94,7 +132,10 @@ def main() -> int:
         text = args.tasks.read_text(encoding="utf-8")
     except OSError as error:
         parser.error(str(error))
-    errors = check(text)
+    if args.tasks.suffix == '.json':
+        errors = check_structured(json.loads(text))
+    else:
+        errors = check(text)
     for error in errors:
         print(error)
     if errors:

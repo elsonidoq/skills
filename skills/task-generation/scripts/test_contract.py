@@ -144,7 +144,7 @@ class TaskGenerationContractTests(unittest.TestCase):
     def test_guidance_changes_dependency_check_and_brief_in_both_adapters(self):
         preflight = TEXT.split("## Preconditions and adapters", 1)[1].split("## Task contract", 1)[0]
         for clause in ("including direct entry without planner", "relevant decision",
-                       "dependency/check and coordinator brief", "not merely a link"):
+                       "dependency/check and runtime brief", "not merely a link"):
             self.assertIn(clause, preflight)
             self.assertNotIn(clause, preflight.replace(clause, "REMOVED", 1))
 
@@ -165,7 +165,7 @@ class TaskGenerationContractTests(unittest.TestCase):
             "REQUIRED", "optional checks separately", "files or interfaces",
             "required capabilities", "shared context", "not an execution assignment",
             "producing review/approval gate", "Do not fabricate historical contracts",
-            "../coordinate-implementation/references/batch-routing.md",
+            "../planner/references/profile-selection.md",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, TEXT)

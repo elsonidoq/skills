@@ -55,6 +55,35 @@ authority stops affected design: return exact gaps, affected decisions and evide
 needed to planner (or the owner on direct entry) for explicit bounded deferral with
 impact, allowed bounds and outstanding validation, never automatic deferral.
 
+## Intended executor before decomposition
+
+Before Standard architecture or TinySpec task decomposition, capture the intended coding
+model class and effort; unknown input blocks planning intake, never infer it from the
+planner/producer/reviewer profile. Pass it unchanged to each architecture/task producer.
+Root `execution_intent` in the authoritative task JSON and matching human summary carry
+`model_class`, `effort`, `resolution` (unresolved/resolved), `assumptions`, `provenance`,
+`decomposition_rationale` and `compatible_bindings`. Each compatible binding records exact
+`provider`, `model`, `effort`, an `assessment` and its `provenance`; execution preflight
+checks the actual implementation/repair bindings only, not planning/reviewer profiles.
+This is planning intent, not execution permission or separately chargeable service authority.
+
+Use owner-guided qualitative scaffolding, not universal rankings or fixed thresholds:
+Luna: narrow coherent outcomes, named interfaces/invariants, context/edge-case pointers and
+ordered guidance where useful. Terra: clear boundaries, non-obvious decisions and moderate
+scaffolding. Sol: outcome-oriented instructions may leave routine choices open when justified.
+Effort and verified guidance refine assumptions; unknown/unlisted classes default to explicit
+instructions without unnecessary micro-tasks. A more capable planner must not leave architecture
+implicit for a smaller executor. Record what is explicit/bounded, what choices remain open and
+uncertainty. REQUIRED acceptance, dependencies, safety and approval gates never shrink.
+
+Changed class/effort or exact binding requires a documented compatibility/revision assessment
+of affected boundaries/detail/assumptions, with producing review/current-content renewal where
+needed. Preserve unaffected tasks; no silent substitution, auto-escalation or unconditional
+whole-plan regeneration. Resolve approved exact compatible bindings before dispatch using
+explicit trusted owner/registry provenance; unresolved/incompatible intent blocks execution.
+Historical handoffs lacking intent return to the earliest affected producing renewal gate,
+preserving original source and approval evidence, never fabricated historical metadata.
+
 ## Compact source contract
 
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
@@ -119,7 +148,7 @@ reuse/skip or refresh rationale, canonical owner/discovery links, supporting spa
 constraints → checks, capability/permission gaps and explicit deferral bounds.
 Return source verification needs for stable task-local REQUIRED items in task generation,
 with pass criteria, smallest sufficient checks, expected evidence and manual/permission gates.
-Do not assign implementation-task profiles; the coordinator owns batch selection.
+Preserve root execution intent separately from producer profiles; no per-task runtime routing.
 Planner owns source/task review and
 one combined approval, including an executive brief before `ask_user`. A standalone
 TinySpec approval before task production is not required. Report source production,

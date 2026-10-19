@@ -13,6 +13,18 @@ SKILLS = (
 ).split()
 
 
+def operative_amendment_errors(constitution, checkpoint, clauses):
+    """Exact approved text must occupy its operative owner, never only a footer."""
+    errors=[]
+    sections = [(constitution.split('## Project Constraints',1)[-1].split('## Development Workflow',1)[0], clauses[0]),
+                (constitution.split('## Development Workflow',1)[-1].split('## Governance',1)[0], clauses[1]),
+                (constitution.split('### V. Safe Execution and Recovery',1)[-1].split('### VI.',1)[0], clauses[2]),
+                (checkpoint.split('## Executable run responsibility',1)[-1].split('## Coordinator and fresh implementer duties',1)[0], clauses[2])]
+    for index,(section,clause) in enumerate(sections):
+        if clause not in section:errors.append(f'operative amendment carrier {index+1} missing')
+    return errors
+
+
 def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text=None, contract_text=None):
     errors = []
     contract = root / "skills/memory-handling/references/task-commit-contract.md"
@@ -22,6 +34,15 @@ def check(root=ROOT, coordinator_text=None, prompt_text=None, architectural_text
     for phrase in ("no skip/defer question", "fresh implementer", "path-limited task commit", "No automatic STATE maintenance"):
         if phrase not in contract_text:
             errors.append(f"task-commit contract: missing {phrase!r}")
+    executable = contract_text.split('## Executable run responsibility', 1)[-1].split('## Coordinator and fresh implementer duties', 1)[0]
+    for phrase in ('workers may propose/produce owned task changes but do not stage, commit',
+                   'runner establishes baseline/ownership and durable effect identity',
+                   'one focused verified owned-path task or repair commit',
+                   'Unknown/live work, missing verification/Git authority',
+                   'Planning/standalone retained artifacts continue',
+                   'no agent-written narrative STATE'):
+        if phrase not in executable:
+            errors.append(f'executable checkpoint responsibility missing: {phrase!r}')
     if "After a task commit, capture its SHA and commit" in contract_text:
         errors.append("routine evidence-only checkpoint reintroduced")
     coordinator = coordinator_text if coordinator_text is not None else (root / "skills/coordinate-implementation/SKILL.md").read_text()
