@@ -7,10 +7,25 @@ import sys
 from .containment import Cgroup, process_identity
 
 
+MAX_MANIFEST_BYTES=1024*1024
+
+
+def control_line(fd, limit):
+    data=bytearray()
+    while len(data)<=limit:
+        chunk=os.read(fd,min(4096,limit+1-len(data)))
+        if not chunk:raise EOFError('controller pipe closed before release')
+        data.extend(chunk)
+        if b'\n' in chunk:
+            if not data.endswith(b'\n') or data.count(b'\n')!=1:raise ValueError('invalid control frame')
+            return bytes(data[:-1])
+    raise ValueError('control frame byte limit')
+
+
 def main():
     gate, ready = int(sys.argv[1]), int(sys.argv[2])
-    manifest = json.loads(sys.argv[3])
     try:
+        manifest = json.loads(control_line(gate,MAX_MANIFEST_BYTES))
         capability = Cgroup(manifest['containment']['parent'])
         path = capability.validate(manifest['containment'])
         (path / 'cgroup.procs').write_text(str(os.getpid()))
@@ -18,21 +33,15 @@ def main():
         capability.member(manifest['containment'], identity, manifest['nonce'])
         os.write(ready, (json.dumps(identity) + '\n').encode())
         os.close(ready)
-        # Strictly bounded control protocol, no stdout parsing or executable YAML.
-        data = b''
-        while len(data) < 128:
-            chunk = os.read(gate, 1)
-            if not chunk:
-                return 125
-            data += chunk
-            if chunk == b'\n':
-                break
+        # The private launch payload and later release nonce are separate bounded frames.
+        data=control_line(gate,128)
         os.close(gate)
-        if data != (manifest['nonce'] + '\n').encode():
-            return 125
+        if data != manifest['nonce'].encode():return 125
         capability.member(manifest['containment'], identity, manifest['nonce'])
         os.chdir(manifest['cwd'])
         os.execve(manifest['argv'][0], manifest['argv'], manifest['environment'])
+    except EOFError:
+        return 125
     except BaseException:
         return 126
 

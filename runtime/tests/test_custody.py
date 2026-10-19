@@ -18,7 +18,7 @@ import unittest
 from unittest.mock import patch
 
 from coherence_workflow.containment import Cgroup, process_identity, validate_process
-from coherence_workflow.store import Authority, Blocked, canonical, git, safe_path
+from coherence_workflow.store import Authority, Blocked, canonical, digest, git, safe_path
 from coherence_workflow.tools import Gateway, clean_owned, reconcile, snapshot
 from fixtures.support import make_project
 from fixtures.custody_support import process_tool
@@ -371,3 +371,141 @@ class HelperPackageBindingTests(IsolatedCustody):
                     registered=json.loads(owner.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='prepared'",(op,)).fetchone()[0])
                     self.assertEqual(registered['pid'],process.pid)
                 finally:os.chdir(original)
+
+
+class PayloadPrivacyTests(IsolatedCustody):
+    def registered_write(self,owner):
+        from types import SimpleNamespace
+        from coherence_workflow.cli import Coordinate
+        from test_pi_adapter import environment
+        c=SimpleNamespace(authority=owner,contract={'sources':[],'approval_refs':[]},environment=environment())
+        tools=Coordinate._tools(c,{'owned_paths':['owned.txt']})
+        return Gateway(owner,'run',self.parent,tools)
+
+    def assert_private(self,owner,marker):
+        from coherence_workflow.projections import Publisher
+        for table in ('wf_operations','wf_events'):
+            rows=[tuple(row) for row in owner.store.db.execute('SELECT * FROM '+table)]
+            self.assertNotIn(marker,canonical(rows),table+' unnecessarily retains write payload')
+        publisher=Publisher(owner,'run');publisher.publish()
+        for p in publisher.root.glob('*.json*'):
+            self.assertNotIn(marker,p.read_text(),str(p))
+
+    def test_registered_write_body_absent_from_intent_event_and_projection_before_child(self):
+        class StopBeforeChild(Exception):pass
+        marker='R006_INNOCUOUS_FILE_BODY_NOT_SQL'
+        with Authority(self.project) as owner:
+            owner.store.reserve('run',digest('fixture'));gateway=self.registered_write(owner)
+            def stop(phase,op):
+                if phase=='intent':raise StopBeforeChild()
+            with self.assertRaises(StopBeforeChild):gateway.launch('private-write','write_file','1',{'path':'owned.txt','text':marker},phase_hook=stop)
+            self.assertEqual((self.project/'owned.txt').read_text(),'base')
+            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes WHERE containment IS NOT NULL').fetchone()[0],0)
+            self.assert_private(owner,marker)
+            operation=owner.store.db.execute("SELECT args_hash,intent FROM wf_operations WHERE kind='process'").fetchone()
+            self.assertEqual(operation['args_hash'],digest({'path':'owned.txt','text':marker}))
+
+    def test_actual_private_pipe_write_preserves_bytes_hashes_custody_and_git_identity(self):
+        from coherence_workflow.git_effects import GitEffects,reconcile_commit_process
+        from coherence_workflow.store import digest
+        marker='R006_ACTUAL_INNOCUOUS_BODY'
+        body=marker+'\n'+('z'*18000)+('ñ'*1000)
+        with Authority(self.project) as owner:
+            owner.store.reserve('run',digest('fixture'));gateway=self.registered_write(owner)
+            baseline=snapshot(self.project,['owned.txt']);args={'path':'owned.txt','text':body}
+            try:
+                op,process=gateway.launch('private-write','write_file','1',args,
+                    phase_hook=lambda phase,operation:self.capture(phase,operation,owner))
+                receipt=gateway.settle(op,process.wait(timeout=10))
+                self.assertTrue(receipt['replacement_allowed']);self.assertEqual(receipt['empty_receipt']['populated'],0)
+                self.assertEqual((self.project/'owned.txt').read_text(),body)
+                operation=owner.store.operation(op);intent=json.loads(operation['intent'])
+                self.assertEqual(operation['args_hash'],digest(args));self.assertEqual(intent['argv_hash'],digest(gateway.tools['write_file'].argv(args)))
+                self.assertNotIn('argv',intent)
+                task={'id':'privacy-checkpoint','owned_paths':['owned.txt'],'required':[{'id':'privacy/V1'}]}
+                checkpoint=GitEffects(owner,'run',gateway).checkpoint(task,baseline,[{'item_id':'privacy/V1','status':'satisfied'}],gates_satisfied=True)
+                self.assertEqual(checkpoint['parent'],baseline['head'])
+                git_process=owner.store.db.execute("SELECT op_id,intent FROM wf_operations WHERE kind='process' AND node_id LIKE 'commit:%'").fetchone()
+                self.assertIn('argv',json.loads(git_process['intent']),'safe exact commit command identity must survive minimization')
+                self.assertEqual(reconcile_commit_process(owner,git_process['op_id'])['head'],checkpoint['sha'])
+                self.assert_private(owner,marker)
+            finally:
+                for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
+                    scope=json.loads(row[0])
+                    if scope not in self.receipts:self.receipts.append(scope)
+
+    def test_actual_intent_crash_keeps_only_identity_and_cannot_replay_lost_private_payload(self):
+        marker='R006_CRASH_NON_SECRET_BODY'
+        code='''import os,sys
+from pathlib import Path
+from types import SimpleNamespace
+from coherence_workflow.store import Authority,digest
+from coherence_workflow.tools import Gateway
+from coherence_workflow.cli import Coordinate
+with Authority(sys.argv[1]) as owner:
+ owner.store.reserve('run',digest('fixture'))
+ c=SimpleNamespace(authority=owner,contract={'sources':[],'approval_refs':[]},environment={'PATH':'/usr/bin:/bin'})
+ gateway=Gateway(owner,'run',sys.argv[2],Coordinate._tools(c,{'owned_paths':['owned.txt']}))
+ def crash(phase,op):
+  if phase=='intent':os._exit(74)
+ gateway.launch('crashed-write','write_file','1',{'path':'owned.txt','text':sys.argv[3]},phase_hook=crash)
+'''
+        result=subprocess.run([sys.executable,'-c',code,str(self.project),self.parent,marker],capture_output=True,text=True,timeout=20)
+        self.assertEqual(result.returncode,74,result.stdout+result.stderr)
+        with Authority(self.project) as owner:
+            gateway=self.registered_write(owner);self.assert_private(owner,marker)
+            self.assertEqual((self.project/'owned.txt').read_text(),'base')
+            with self.assertRaisesRegex(Blocked,'unreconciled'):owner.store.assert_dispatchable('run')
+            with self.assertRaises(Blocked):gateway.recover()
+            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes WHERE containment IS NOT NULL').fetchone()[0],0)
+
+    def test_pipe_eof_after_spawn_before_private_payload_executes_no_tool(self):
+        class ClosedController(Exception):pass
+        marker='R006_PRIVATE_PAYLOAD_NOT_RELEASED'
+        with Authority(self.project) as owner:
+            owner.store.reserve('run',digest('fixture'));gateway=self.registered_write(owner)
+            def close(phase,op):
+                self.capture(phase,op,owner)
+                if phase=='spawned_before_payload':raise ClosedController()
+            with self.assertRaises(ClosedController):gateway.launch('no-payload','write_file','1',{'path':'owned.txt','text':marker},phase_hook=close)
+            self.assertEqual((self.project/'owned.txt').read_text(),'base')
+            self.assert_private(owner,marker)
+            self.assertTrue(all(gateway.containment.populated(receipt)==0 for receipt in self.receipts))
+            with self.assertRaises(Blocked):gateway.recover()
+
+    def test_malformed_oversized_truncated_and_wrong_release_frames_fail_without_effect_or_echo(self):
+        from coherence_workflow.tool_process import MAX_MANIFEST_BYTES
+        real_write=os.write
+        for mode in ('malformed','oversized','truncated','wrong-release'):
+            self.project=make_project(self.root/('frame-'+mode))
+            marker='R006_FRAME_BODY_NOT_EVIDENCE'
+            with Authority(self.project) as owner:
+                owner.store.reserve('run',digest('fixture'));gateway=self.registered_write(owner)
+                writes=[]
+                def write(fd,data):
+                    writes.append(bytes(data))
+                    if len(writes)==1 and mode!='wrong-release':
+                        replacement=(b'{}\n' if mode=='malformed' else
+                                     b'x'*(MAX_MANIFEST_BYTES+2)+b'\n' if mode=='oversized' else b'{"argv":')
+                        real_write(fd,replacement)
+                        return len(data)
+                    if len(writes)==2 and mode=='wrong-release':
+                        real_write(fd,b'not-the-release-nonce\n');return len(data)
+                    return real_write(fd,data)
+                try:
+                    with patch('coherence_workflow.tools.os.write',side_effect=write):
+                        if mode=='wrong-release':
+                            op,process=gateway.launch('bad-frame','write_file','1',{'path':'owned.txt','text':marker},
+                                phase_hook=lambda phase,operation:self.capture(phase,operation,owner))
+                            self.assertEqual(process.wait(timeout=10),125)
+                            self.assertFalse(gateway.settle(op,125)['task_accepted'])
+                        else:
+                            with self.assertRaises((Blocked,BrokenPipeError)):
+                                gateway.launch('bad-frame','write_file','1',{'path':'owned.txt','text':marker},
+                                    phase_hook=lambda phase,operation:self.capture(phase,operation,owner))
+                    self.assertEqual((self.project/'owned.txt').read_text(),'base')
+                    self.assert_private(owner,marker)
+                finally:
+                    for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
+                        scope=json.loads(row[0])
+                        if scope not in self.receipts:self.receipts.append(scope)

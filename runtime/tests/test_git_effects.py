@@ -198,3 +198,19 @@ class GitCapabilityTests(IsolatedCustody):
                 for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
                     receipt=json.loads(row[0])
                     if receipt not in self.receipts:self.receipts.append(receipt)
+
+    def test_only_exact_bound_noncontent_commit_argv_may_enter_intent(self):
+        from coherence_workflow.tools import ProcessTool
+        marker='R006_NON_SECRET_NOT_A_COMMIT_MESSAGE'
+        with Authority(self.project) as owner:
+            owner.store.reserve('run',digest('fixture'))
+            planned=owner.store.intent('run','planned','git-checkpoint',{},
+                {'task_id':'A','owned_paths':['owned.txt']})['op_id']
+            tool=ProcessTool('runner-git-commit','1',{'type':'object','additionalProperties':False},
+                lambda args:['/usr/bin/git','-C',str(self.project),'commit','--only','-m',marker,'--','owned.txt'],(),{'PATH':'/usr/bin:/bin'})
+            gateway=Gateway(owner,'run',self.parent,{tool.id:tool})
+            with self.assertRaisesRegex(Blocked,'argv/operation mismatch'):
+                gateway.launch('commit:'+planned,tool.id,'1',{})
+            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE kind='process'").fetchone()[0],0)
+            self.assertNotIn(marker,str([tuple(row) for row in owner.store.db.execute('SELECT * FROM wf_events')]))
+            self.assertEqual((self.project/'owned.txt').read_text(),'base')

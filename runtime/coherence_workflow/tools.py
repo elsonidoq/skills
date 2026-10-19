@@ -14,6 +14,7 @@ import uuid
 from jsonschema import Draft202012Validator
 
 from .containment import Cgroup, process_identity, validate_process
+from .tool_process import MAX_MANIFEST_BYTES
 from .store import Blocked, canonical, digest, git, safe_path
 
 
@@ -153,6 +154,22 @@ class Gateway:
         if not matched:
             clean_owned(self.authority.project, owned)
 
+    def command_identity(self, node, tool_id, argv, environment):
+        """Executable payload is private; only safe commit argv is required for replay audit."""
+        identity={'executable':argv[0],'argv_hash':digest(argv),'environment_hash':digest(environment)}
+        if tool_id=='runner-git-commit':
+            if not node.startswith('commit:'):raise Blocked('runner commit lacks exact checkpoint identity')
+            checkpoint=self.store.operation(node.removeprefix('commit:'))
+            planned=json.loads(checkpoint['intent'])
+            expected=[argv[0],'-C',str(self.authority.project),'commit','--only','-m',
+                      'workflow: '+planned['task_id']+'\n\nCoherence-Operation: '+checkpoint['op_id'],
+                      '--',*planned['owned_paths']]
+            if (checkpoint['kind']!='git-checkpoint' or checkpoint['phase']!='intent' or
+                    checkpoint['run_id']!=self.run or argv!=expected):
+                raise Blocked('runner commit argv/operation mismatch')
+            identity['argv']=argv
+        return identity
+
     def launch(self, node, tool_id, version, args, phase_hook=None, *, scope_kind='task_tools',
                inherited_fds=(), admitted_host_ops=()):
         """phase_hook is a trusted test fault seam, never supplied by workflow data."""
@@ -184,7 +201,7 @@ class Gateway:
         baseline = snapshot(self.authority.project, owned)
         nonce = uuid.uuid4().hex
         name = self.containment.reserve_name()
-        details = {'tool': tool_id, 'version': version, 'argv': argv, 'environment': tool.environment,
+        details = {'tool': tool_id, 'version': version, **self.command_identity(node,tool_id,argv,tool.environment),
                    'owned_paths': owned, 'baseline': baseline, 'nonce': nonce, 'name': name,
                    'scope_kind':scope_kind}
         # Node identity is unique; uncertain launch cannot be regenerated under the same key.
@@ -204,20 +221,30 @@ class Gateway:
             db.execute('UPDATE wf_processes SET containment=? WHERE op_id=?', (canonical(receipt),op))
         self.store.transition(op,'intent','contained',receipt)
         hook('identity_persisted',op)
-        read_gate, write_gate = os.pipe()
-        read_ready, write_ready = os.pipe()
         manifest = {'containment': receipt, 'nonce': nonce, 'argv': argv,
                     'cwd': str(self.authority.project), 'environment': tool.environment}
+        payload=(canonical(manifest)+'\n').encode()
+        if len(payload)>MAX_MANIFEST_BYTES:raise Blocked('private process payload byte limit')
+        read_gate, write_gate = os.pipe()
+        read_ready, write_ready = os.pipe()
         proc = None
         gate_released = False
         try:
             proc = subprocess.Popen(runtime_python(
                                      'import runpy;runpy.run_module("coherence_workflow.tool_process",run_name="__main__",alter_sys=True)',
-                                     str(read_gate), str(write_ready), canonical(manifest)),
+                                     str(read_gate), str(write_ready)),
                                     pass_fds=(read_gate,write_ready,*inherited_fds), stdin=subprocess.DEVNULL,
                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             os.close(read_gate); read_gate = -1
             os.close(write_ready); write_ready = -1
+            hook('spawned_before_payload',op)
+            # Existing inherited controller pipe, never SQL/event/argv or a persistent cache.
+            remaining=memoryview(payload)
+            while remaining:
+                written=os.write(write_gate,remaining)
+                if written<=0:raise Blocked('private process payload pipe closed')
+                remaining=remaining[written:]
+            # 'spawned' retains its original input-ready, identity-unobserved boundary.
             hook('spawned',op)
             sel = selectors.DefaultSelector()
             try:
