@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "origin": "Standard",
+  "legacy_origin": null,
+  "sources": [
+    {"path":"specs/004-workflow-monitor/spec.md","section":"FR-016, FR-017, SC-006; acceptance and executor gates","sha256":"f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55","kind":"spec"},
+    {"path":"specs/004-workflow-monitor/plan.md","section":"Small prerequisite — reference-based independent review; ordered delivery stage 1","sha256":"abb9159ef09824e74e7f4fd9cc0418d1976d0463367a43186e68862c30633004","kind":"plan"},
+    {"path":"specs/004-workflow-monitor/contracts/validation.md","section":"Small reference-based prerequisite and admission; unchanged shipped runtime and executable checks","sha256":"834de3891658417543747dd47ab04a2ca725d0e4f6bcd0d24ac30c368348dad4","kind":"source"},
+    {"path":"specs/004-workflow-monitor/research.md","section":"Minimal reviewer-reference adjustment; repository-first evidence","sha256":"f7cacb7d9185efeaed48ae5964042be91c42a4f6080c349d6fdf9046bc5d527a","kind":"source"},
+    {"path":"specs/004-workflow-monitor/specification-approval.md","section":"Current specification renewal — 2026-10-19; planning authority only","sha256":"3a816bb8513471a6e6eeba2685364f224a6d28e552a7f7258609c7e48ec2c188","kind":"decision"}
+  ],
+  "approval_refs": [],
+  "execution_intent": {
+    "model_class": "Sol",
+    "effort": "medium",
+    "resolution": "resolved",
+    "assumptions": [
+      "Instruction-managed bootstrap preparation only, NOT a CLI-dispatched app task or approved runtime mutation. Final owner approval must explicitly select this execution mode and exact precursor scope before implementation.",
+      "One implementer writer; named reference/byte/custody seams and REQUIRED checks are explicit, routine helper implementation choices remain open. Fresh independent full-original-range review and current acceptance precede source-local app runtime admission.",
+      "Existing cli.py is 77250 bytes: only a small bootstrap wiring edit is proposed as an explicitly approved exception. No worker-wide size waiver or large-module refactor. Every new helper/test and every later app worker-managed source/test/doc/config/lock file is strictly below 32768 UTF-8 bytes.",
+      "Existing read_file permissions, admitted source/approval hashes, SQLite custody and SDK protocol are reused. No immutable historical wheel is assumed. Accepted runtime stays unchanged throughout the app build."
+    ],
+    "provenance": "Owner separately selected implementation Sol/medium, clarified 'use 6.1 sol medium', retained in spec.md and current specification-approval.md. Parent task brief preserves exact target openai-codex/gpt-6.1-sol:medium independently of planning selection. Later owner direction: references rather than copying; 'Yes, make sure the changes are small and continue. You blocked yourself with a tiny issue that was really easy to fix.' This authorizes preparation, not runtime edits or bootstrap-mode acceptance.",
+    "decomposition_rationale": "One independently necessary precursor outcome: reference-delivered independent review with strict UTF-8 file guards, permanent actual-helper tests, smallest composed existing runtime review, aligned operating docs and focused checkpoint. Keep code/tests/docs/evidence together; no prototype or administrative task chain. Sol/medium receives exact invariants and gates without routine microtasks. No model superiority or effort-benefit claim.",
+    "compatible_bindings": [
+      {"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium","assessment":"Compatible intended implementation/repair target for this bounded explicit contract; actual fresh usable tools/resources/auth/effort and separate reviewer readiness remain required. Not execution authority.","provenance":"Exact owner implementation selection, recorded in spec.md and specification-approval.md and unchanged parent task brief; existing runtime operating guide supports codex-final-payload observer version 1 only for this binding."}
+    ]
+  },
+  "authorization_envelope": {
+    "id": "monitor-runtime-bootstrap-draft",
+    "approval_refs": [],
+    "profiles": [{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium","observer_id":"codex-final-payload","observer_version":"1"}],
+    "capabilities": [],
+    "limits": [],
+    "external_paid_authority": "denied"
+  },
+  "tasks": [
+    {
+      "id": "T001",
+      "order": 0,
+      "outcome": "Separately prepare and accept the smallest reference-delivered independent-review and strict UTF-8 file-boundary runtime adjustment before any app execution; never mutate an executing app runtime or claim this is a CLI-dispatched bootstrap.",
+      "depends": [],
+      "context_group": "runtime-bootstrap",
+      "owned_paths": [
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/verification.py",
+        "runtime/coherence_workflow/intake.py",
+        "runtime/coherence_workflow/review_documents.py",
+        "runtime/tests/test_review_documents.py",
+        "runtime/tests/test_review_repair.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "authorization_envelope_id": "monitor-runtime-bootstrap-draft",
+      "required": [
+        {
+          "id": "T001/V1",
+          "criterion": "Complete pinned source/approval reference inventory replaces only redundant document bodies; original authoritative contract, full binary original-base-to-current-head patch, REQUIRED items, states, evidence, checkpoints, findings and dynamic correction contracts remain available. Remove a per-task receipt contract copy only when exact canonical identity to its authoritative original task proves equivalence; unequal/dynamic contracts remain intact. Final bundle stays within unchanged 120000-byte guard and SDK 262144-byte protocol.",
+          "check": {"id":"bootstrap.ReferenceBundleTests","version":"1","args":{"argv":[".pi/workflow-validation/venv/bin/python","-B","-m","unittest","test_review_documents.ReferenceBundleTests","-v"],"env":{"PYTHONPATH":"runtime:runtime/tests","PYTHONDONTWRITEBYTECODE":"1"},"mode":"instruction-managed unittest; NOT registered runtime capability; proposed permanent class"}},
+          "pass_condition": "Positive test collection, no skip/error/failure; compare complete admitted reference set and raw binary patch/evidence before/after; equal-contract receipts use canonical identity, unequal/dynamic contracts survive. Measure actual final serialized bundle bytes and reject genuine oversize without truncation or increased limits.",
+          "expected_evidence": "Nonempty unittest output with count/exit and assertions for exact inventory, task-identity equivalence, full-range patch/evidence preservation, actual payload byte measurement and oversize rejection, bound to tested precursor revision/environment.",
+          "producer_dependencies": [],
+          "gates": ["T001/G1","T001/G2"]
+        },
+        {
+          "id": "T001/V2",
+          "criterion": "Every required reference is actually read through existing authorized read_file. Validate safe file identity, strict UTF-8 bytes and immutable raw pinned hash on the SAME bytes returned. Before record_review/finding resolution/acceptance, audit minimal read receipts against the originating independent review host/turn, process operation and exact bundle/range/reference identity. No model-prose read claim, arbitrary path expansion, separate hash-then-reread race, content transcript ledger or previous/wrong-host coverage.",
+          "check": {"id":"bootstrap.ReferenceDeliveryTests","version":"1","args":{"argv":[".pi/workflow-validation/venv/bin/python","-B","-m","unittest","test_review_documents.ReferenceDeliveryTests","-v"],"env":{"PYTHONPATH":"runtime:runtime/tests","PYTHONDONTWRITEBYTECODE":"1"},"mode":"instruction-managed unittest; NOT registered runtime capability; proposed permanent class"}},
+          "pass_condition": "Actual production read/bundle/coverage helpers exercised; positive exact delivery succeeds; missing, changed, deleted, unsafe/symlink, unrelated unauthorized, unread, wrong-hash, wrong-host/turn/range or undelivered reads reject before acceptance side effects. Coverage joins real process/SDK turn settlement and returned-byte hash, not just file-open intent. Original continuation may reuse proof only with exact applicable independent lineage/bundle and current validated delivered receipts.",
+          "expected_evidence": "Nonempty named positive/negative unittest assertions and exit/count; show actual returned-byte SHA matching pinned ref and receipt, complete required coverage and zero acceptance/finding-resolution effects for rejected coverage. Helper fixtures alone are not composed SDK proof; V4 supplies that boundary.",
+          "producer_dependencies": [],
+          "gates": ["T001/G1","T001/G2"]
+        },
+        {
+          "id": "T001/V3",
+          "criterion": "Enforce strictly less than 32768 UTF-8 bytes for worker file reads/writes and admitted source/approval documents, including final actual owned-file set before checkpoint. Measure the same bytes decoded/returned or encoded/written; reject invalid UTF-8, oversize and exactly 32768 before file/directory creation, replacement or partial writes. Existing oversized bootstrap-owned runtime/operating-doc files are explicit G1 exceptions, not eligible app worker files.",
+          "check": {"id":"bootstrap.WorkerFileByteTests","version":"1","args":{"argv":[".pi/workflow-validation/venv/bin/python","-B","-m","unittest","test_review_documents.WorkerFileByteTests","-v"],"env":{"PYTHONPATH":"runtime:runtime/tests","PYTHONDONTWRITEBYTECODE":"1"},"mode":"instruction-managed unittest; NOT registered runtime capability; proposed permanent class"}},
+          "pass_condition": "Use actual _tools read result/write argv and admission/final-file guard paths: 32767-byte valid text succeeds; 32768 and larger ASCII/multibyte payloads and invalid UTF-8 fail. Character-count-small/UTF-8-byte-large negatives fail with unchanged existing file and no newly created parent/file. No append/range tool or limit increase; guard final real files, not JSON character length.",
+          "expected_evidence": "Nonempty unittest output count/exit with actual byte sizes, returned/written byte identity, exact-boundary/multibyte cases and before/after filesystem assertions; final per-owned-path UTF-8 byte inventory listing only explicitly approved preexisting bootstrap exceptions.",
+          "producer_dependencies": [],
+          "gates": ["T001/G1","T001/G2"]
+        },
+        {
+          "id": "T001/V4",
+          "criterion": "Smallest composed shipped-runtime independent-review exercise proves actual reference delivery and coverage enforcement BEFORE acceptance while preserving fresh read-only independent role, original full-range patch, real REQUIRED/checkpoint/correction/rereview evidence, custody and original gates. Extend the existing isolated review/correction test, not a new framework or fake production receipt.",
+          "check": {"id":"bootstrap.ComposedIndependentReview","version":"1","args":{"argv":[".pi/workflow-validation/venv/bin/python","-B","-m","unittest","test_review_repair.IndependentReviewTests.test_actual_sdk_independent_review_finding_authorized_correction_and_full_rereview","-v"],"env":{"PYTHONPATH":"runtime:runtime/tests","PYTHONDONTWRITEBYTECODE":"1","COHERENCE_LIVE":"1"},"required_external_inputs":["COHERENCE_TEST_CGROUP_PARENT: explicitly approved existing delegated parent","COHERENCE_AUTH_PATH: approved read-only current auth","COHERENCE_CATALOG_PATH: approved read-only current catalog","TMPDIR: explicitly owned isolated scratch"],"mode":"instruction-managed existing local unittest, NOT CLI check dispatch; live run separately gated"}},
+          "pass_condition": "Actual isolated CLI/SDK/Gateway review obtains every pinned ref and retains same-byte read receipts tied to the review host/turn/process before passing review. Original range, finding/correction/checkpoint chain and current acceptance survive. Against real settled proof, remove or mismatch coverage and assert acceptance/recording rejects, then restore original proof for a valid acceptance audit. Nonempty process/cgroup and SDK proof, positive collection/no skips, exact Sol/medium requests; no stale identities/catalogs/receipts or mock-only positive claim.",
+          "expected_evidence": "Existing test output plus added reference coverage assertions, isolated run/base/head/review-host/turn/read-process/hash correlations, denied incomplete/wrong-review acceptance assertions and actual final acceptance/custody receipts. Preserve all failed-attempt diagnostics; test-only standing approval provenance never claims human production approval.",
+          "producer_dependencies": [],
+          "gates": ["T001/G1","T001/G2"]
+        },
+        {
+          "id": "T001/V5",
+          "criterion": "Update only affected runtime operating/schema descriptions to match actual pinned-reference, delivered-read coverage and strict-byte behavior. Existing protocol, authority scopes/effects, external-catalog authenticity, REQUIRED/gates, original patch, custody, signing/hooks and runner-only app checkpoint semantics remain unchanged. No new schema field, generic artifact platform, registry/dependency expansion or runtime redesign.",
+          "check": {"id":"bootstrap.DiffAndDocumentationInspection","version":"1","args":{"mode":"instruction-managed manual source/diff inspection; NOT registered runtime capability","paths":["docs/coordinate-implementation.md","docs/coordinate-implementation-schema.md"],"compare_symbols":["Coordinate._tools","Coordinate.review_boundary","Coordinate.checkpoint","ReviewRepair.bundle","ReviewRepair.record_review","ReviewRepair.acceptance","admit","review_documents helpers"],"baseline":"exact approved precursor implementation baseline captured before mutation","git_argv":["git","diff","--no-ext-diff","--no-textconv","--check"]}},
+          "pass_condition": "Diff check exits zero; explicit symbol-to-doc comparison matches observed behavior and error/limit semantics. Actual diff touches only eight owned paths, narrow wiring in cli.py, focused helper/tests/docs; no app/lock/config/host/schema/skill changes or runtime constant increases. All newly added helper/test files strictly below32768 UTF-8 bytes; explicit G1 exceptions only for existing oversized bootstrap files.",
+          "expected_evidence": "Nonempty symbol/doc comparison notes, exact owned diff/stat/byte inventory, diff-check output/exit and explicit confirmation that 120000/262144 and authority/custody/approval semantics remain unchanged. Any new required path or material scope change returns to producing review/current approval, not opportunistic implementation expansion.",
+          "producer_dependencies": [],
+          "gates": ["T001/G1","T001/G2"]
+        },
+        {
+          "id": "T001/V6",
+          "criterion": "Checkpoint this coherent precursor with explicit owned paths after V1-V5 verification, then obtain fresh separate independent full-original-range implementation review and current acceptance before app baseline admission. This bootstrap is instruction-managed, not dispatched by CLI and never marked as an app task completed. Accepted adjusted source-local runtime is immutable during the later app run; preserve all SC-001–006 and same-build retrospective/live dogfooding without demonstration replacement.",
+          "check": {"id":"bootstrap.IndependentAcceptance","version":"1","args":{"mode":"instruction-managed focused writer checkpoint plus separate fresh independent review; NOT registered runtime capability","review_profile":"openai-codex/gpt-6.1-sol:medium","range":"approved precursor implementation baseline through exact final precursor head including any focused corrections","reviewer_history":"fresh; no implementer history; full source/task/patch/REQUIRED evidence","release":"parent inspects exact checkpoint, independent findings/dispositions, current acceptance and refreshed runtime identities before app start"}},
+          "pass_condition": "V1-V5 have current nonempty required evidence. Writer validates/inspects actual diff, stages/commits only eight owned paths preserving unrelated work/hooks/signing/identity. Separate fresh reviewer accepts exact current full range with no unresolved findings and verifies original REQUIRED/gates; corrections require authorized focused verified checkpoints and affected rereview. Parent explicitly admits this accepted revision as later app runtime baseline; no runtime already executing from it during edits. Missing proof/authority blocks app reliance.",
+          "expected_evidence": "Implementation baseline/result SHAs and path-limited commit/tree/diff, all V1-V5 evidence refs and current applicability, separate reviewer identity/range/findings/dispositions/current acceptance, refreshed source/config/registry/resource identities and parent baseline admission. This task file and static checks provide none of that implementation evidence yet.",
+          "producer_dependencies": [],
+          "gates": ["T001/G1","T001/G2"]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T001/G1",
+          "kind": "manual",
+          "criterion": "UNRESOLVED: independent overall planning review and genuine current-content owner approval must explicitly authorize this separate instruction-managed bootstrap execution mode, eight-path runtime scope and narrow edits to preexisting oversized cli.py/operating docs. App specification renewal alone grants no runtime mutation authority.",
+          "scope": "Exact current prerequisite-tasks.md/json and supporting Standard source/plan identities; proposed bootstrap only, before app CLI run. No source amendment, TinySpec/legacy relabel, app implementation, installs or existing live-runtime mutation.",
+          "expected_evidence": "Actual parent owner-tool answer bound to reviewed current contents and exact bootstrap mode/owned exceptions, independently reviewed scope and execution release; denial/cancellation/drift blocks. No worker-authored external authority catalog or invented approval_ref.",
+          "approval_ref": null
+        },
+        {
+          "id": "T001/G2",
+          "kind": "capability",
+          "criterion": "Before implementation/tests, recheck sole writer/no active or unknown runtime using mutable source, current baseline/Git hooks/signing, actual local Python dependencies and exact profile/resources. Before V4 additionally verify scoped local live/model/test/cgroup/read-only auth/catalog/scratch authority and genuine standing test-only approvals. No install/auth/config workaround or uninspected retry.",
+          "scope": "Bootstrap writer and named unittest commands only; existing isolated tests may use real runtime custody in a separate test-owned project. No app run dispatch, paid service, historical wheel adoption or old run/receipt/catalog reuse.",
+          "expected_evidence": "Current writer/resource/baseline admission; actual interpreter/import readiness; explicit approved scratch and existing delegated containment identity with verified readiness; genuine current auth/catalog/profile/tool availability and test-only scope. Missing capabilities mean NOT VERIFIED, never skip-to-pass.",
+          "approval_ref": null
+        }
+      ]
+    }
+  ]
+}
