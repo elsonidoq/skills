@@ -6,7 +6,7 @@ Owner approval captured 2026-10-19 through actual parent `ask_user` in Pi sessio
 The earlier cancelled dialog granted no approval; the later prose approval was
 confirmed through this tool gate. No receipt identifier or external catalog authority is invented.
 
-## Approved content
+## Original approved content (superseded by renewal below)
 
 At source checkpoint `053753995dec97fff3a1ef2ce273074b6c846690`:
 
@@ -41,3 +41,35 @@ and clean Git state. Specification checklist: 16/16. Application/runtime tests:
 NOT RUN in specification preparation. Active-read safety, sanitization, graph
 semantics and dogfooding still require designed and executed acceptance checks.
 Material specification changes require renewed current-content approval.
+
+## Current specification renewal — 2026-10-19
+
+After an updated executive brief, actual parent `ask_user` in the same session
+returned **Approve revised specification**. This renewal supersedes the original
+content identities above, preserving their historical provenance.
+
+At correction checkpoint `999c05e552725eba363019ca1443740632a39531`:
+
+- [Specification](spec.md), raw SHA-256
+  `f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55`.
+- Supporting [quality checklist](checklists/requirements.md), raw SHA-256
+  `1b223d3a2f262b6071380ab3e8510c97a679eb17190c5a4854520798d4252ac2`.
+
+Owner direction: “older runs are irrelevant. Do nothing to include them”.
+Compatibility is limited to new monitoring-contract runs, including this app's
+build; no pre-feature/runtime-migration adapter, import, archival extension or
+incomplete-history fallback. New supported runs must retain the actual definition
+verified against runtime configuration and preserve all completed, failed,
+recovered and same-spec histories. All SC-001–006 remain REQUIRED.
+
+The owner separately delegated graph/backend technical selection against established
+community use and adequate version-specific documentation. Agent-derived proposals
+are React Flow/ELK and Starlette/Uvicorn, not owner-selected package brands or pins.
+Complete architecture/task review and final implementation approval remain pending.
+
+Parent inspected the actual focused correction diff, current hashes and clean Git
+state. Source-quality checklist remains 16/16; application/runtime tests NOT RUN.
+This renewal immediately resumes the existing managed architectural pass at
+`openai-codex/gpt-6.1-sol:medium`, with unchanged bounded preparation authority,
+local-only skills, security boundaries and downstream implementation gates.
+No external authority/catalog receipt is fabricated by this record.
