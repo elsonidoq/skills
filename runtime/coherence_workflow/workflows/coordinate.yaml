@@ -1,0 +1,134 @@
+# Opt-in declaration only: future capabilities fail closed; no SDK/tasks enabled.
+schema_version: 1
+workflow_id: coordinate
+registry_version: '1'
+start: intake
+nodes:
+- id: intake
+  handler: intake
+  handler_version: '1'
+  type: code
+  outcomes:
+  - ok
+  transitions:
+    ok: authority
+  side_effects: []
+  max_retries: 0
+- id: authority
+  handler: authority
+  handler_version: '1'
+  type: gate
+  outcomes:
+  - ok
+  transitions:
+    ok: custody
+  side_effects: []
+  max_retries: 0
+- id: custody
+  handler: custody
+  handler_version: '1'
+  type: code
+  outcomes:
+  - ok
+  transitions:
+    ok: implement
+  side_effects: []
+  max_retries: 0
+- id: implement
+  handler: implement
+  handler_version: '1'
+  type: agent
+  outcomes:
+  - ok
+  transitions:
+    ok: verify
+  side_effects: []
+  max_retries: 0
+  role: implement
+  profile: sol-medium
+  skill: coordinate
+  session_policy:
+    mode: fresh_only
+    min_free_tokens_before_compaction: 150000
+    reuse_preference: same_group
+  max_repair_attempts: 2
+  tools: []
+  permissions: []
+- id: verify
+  handler: verify
+  handler_version: '1'
+  type: code
+  outcomes:
+  - ok
+  transitions:
+    ok: checkpoint
+  side_effects: []
+  max_retries: 0
+- id: checkpoint
+  handler: checkpoint
+  handler_version: '1'
+  type: code
+  outcomes:
+  - ok
+  transitions:
+    ok: review
+  side_effects: []
+  max_retries: 0
+- id: review
+  handler: review
+  handler_version: '1'
+  type: agent
+  outcomes:
+  - ok
+  transitions:
+    ok: accept
+  side_effects: []
+  max_retries: 0
+  role: review
+  profile: sol-medium
+  skill: coordinate
+  session_policy:
+    mode: fresh_only
+    min_free_tokens_before_compaction: 150000
+    reuse_preference: own_reviewer
+  max_repair_attempts: 2
+  tools: []
+  permissions: []
+- id: accept
+  handler: accept
+  handler_version: '1'
+  type: terminal
+  outcomes: []
+  transitions: {}
+  side_effects: []
+profiles:
+  sol-medium:
+    provider: openai-codex
+    model: gpt-6.1-sol
+    effort: medium
+    observer_id: codex-final-payload
+    observer_version: '1'
+skills:
+  coordinate:
+    path: skills/coordinate-implementation/SKILL.md
+    sha256: c22609ddd7b72ea0fe5407dd122585eb09f941e4008e59f942d690ecda0e7958
+    resource_hash: c22609ddd7b72ea0fe5407dd122585eb09f941e4008e59f942d690ecda0e7958
+defaults:
+  max_repair_attempts: 2
+  min_free_tokens_before_compaction: 150000
+  monitor_interval_ms: 1000
+  telemetry_max_age_ms: 2000
+storage:
+  checkpoint: .coherence/workflow/workflow.sqlite
+  event_root: .coherence/workflow/runs
+permissions: []
+tool_capabilities: []
+containment_capability: null
+settings_manifest:
+  path: runtime/coherence_workflow/schemas/workflow.schema.json
+  sha256: 9bc47a1227f225d5928b80d0ac778171f5557da617a046119c4da8db7b096a78
+interaction:
+  mode: standalone
+  question_transport: null
+  parent_binding_ref: null
+  question_tool: null

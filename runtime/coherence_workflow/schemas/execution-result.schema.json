@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coherence.invalid/design/v1/execution-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "task_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "attempt_id": {
+      "$ref": "shared.schema.json#/$defs/id"
+    },
+    "outcome": {
+      "enum": [
+        "verified",
+        "read_only_complete",
+        "failed",
+        "blocked",
+        "interrupted",
+        "ORPHAN_PROCESS",
+        "parking",
+        "waiting_owner_input",
+        "paused"
+      ]
+    },
+    "original_worker_outcome": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "replacement_allowed": {
+      "type": "boolean"
+    },
+    "alarms": {
+      "type": "array",
+      "items": {
+        "$ref": "shared.schema.json#/$defs/alarm"
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "$ref": "shared.schema.json#/$defs/id"
+          },
+          "disposition": {
+            "enum": [
+              "satisfied",
+              "failed",
+              "insufficient-evidence"
+            ]
+          },
+          "evidence_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "item_id",
+          "disposition",
+          "evidence_ref",
+          "reason"
+        ]
+      }
+    },
+    "baseline_sha": {
+      "type": "string",
+      "minLength": 1
+    },
+    "result_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blocker": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "question_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "task_id",
+    "attempt_id",
+    "outcome",
+    "original_worker_outcome",
+    "replacement_allowed",
+    "alarms",
+    "items",
+    "baseline_sha",
+    "result_sha",
+    "blocker"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "ORPHAN_PROCESS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "replacement_allowed": {
+            "const": false
+          },
+          "alarms": {
+            "minItems": 1
+          },
+          "blocker": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "alarms": {
+            "contains": {
+              "properties": {
+                "state": {
+                  "const": "active"
+                }
+              },
+              "required": [
+                "state"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outcome": {
+            "const": "ORPHAN_PROCESS"
+          },
+          "replacement_allowed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "waiting_owner_input"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "question_ref"
+        ],
+        "properties": {
+          "question_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "replacement_allowed": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

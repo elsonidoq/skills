@@ -22,13 +22,16 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Context-first implementation recovery | [Coordinator recovery contract](../skills/coordinate-implementation/SKILL.md#recover-context); summary/recent context then selective artifact/Git/check/runtime reconstruction, no automatic STATE writes |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
+| Opt-in Coordinate Implementation runtime operation, custody and supported limits | [Runtime operating guide](coordinate-implementation.md); legacy remains default |
+| Delivered runtime SQLite and packaged versioned contract schemas | [Runtime schema owner](coordinate-implementation-schema.md) |
 
 This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
 [gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
 Coordination memory remains a separate project-local explicit-feedback store at
 `memory/coordination/`; consult relevant existing guidance without auto-initialization. No
-suite-level persistent database/schema owner is declared. Unrelated projects and the
-legacy port retain their own documentation and memory boundaries.
+default suite-level database is created by adoption. The opt-in workflow foundation has a
+[separate schema owner](coordinate-implementation-schema.md); it does not replace the legacy
+entry or initialize state in unrelated projects. The legacy port retains its own boundaries.
 
 ## Project Guidance
 
@@ -50,7 +53,7 @@ legacy port retain their own documentation and memory boundaries.
 
 ## Implementation Plans
 
-- [Coordinate Implementation executable workflow — revised Standard specification](../specs/003-coordinate-workflow/spec.md) and [draft architecture plan](../specs/003-coordinate-workflow/plan.md): [canonical research](../specs/003-coordinate-workflow/research.md), [data model](../specs/003-coordinate-workflow/data-model.md), [contracts](../specs/003-coordinate-workflow/contracts/README.md) and [validation guide](../specs/003-coordinate-workflow/quickstart.md). SDK/local lifecycle/actual parent-question and steering evidence consumed; upfront autonomy/spend envelope and pinned original-session controls designed. Renewed specification approval required before tasks. No implementation authorized.
+- [Coordinate Implementation executable workflow — Standard specification](../specs/003-coordinate-workflow/spec.md) and [architecture plan](../specs/003-coordinate-workflow/plan.md): [canonical research](../specs/003-coordinate-workflow/research.md), [data model](../specs/003-coordinate-workflow/data-model.md), [contracts](../specs/003-coordinate-workflow/contracts/README.md) and [validation guide](../specs/003-coordinate-workflow/quickstart.md). Later owner direction authorizes scoped implementation; historical planning-only records retain their original provenance. T001 delivers only the [opt-in durable foundation](coordinate-implementation.md) and [schema owner](coordinate-implementation-schema.md); legacy remains default and SDK/task execution/policy cutover are not yet delivered.
 - [Plans directory index](plans/index.md): Direct plan records and the nested review index.
 - [Pragmatic planning — TinySpec](plans/pragmatic-planning-tinyspec.md): outcome-oriented decomposition, proportional proof and tagged informational prototypes; exact-content approval in [review](plans/reviews/pragmatic-planning-review.md).
 - [Pragmatic planning — tasks](plans/pragmatic-planning-tasks.md): one coherent contract/regression/operative-doc delivery; A1–A6 REQUIRED evidence and gates preserved, execution-profile selection and independent final review remain required.

@@ -10,6 +10,13 @@ opencode.jsonc
 __pycache__
 *.pyc
 
+# Opt-in workflow runtime: private local state and isolated package/build artifacts.
+.coherence/workflow/
+runtime/.venv/
+runtime/build/
+runtime/dist/
+runtime/*.egg-info/
+
 # The ported plugin under opencode-claude-memory-v2-port/ is tracked as source.
 # Track its manifest and lockfile so `bun install && bun run build` reproduces it;
 # node_modules/ and its build output dist/ stay ignored (owned by the port's own .gitignore).

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coherence.invalid/design/v1/task.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "origin": {
+      "enum": [
+        "TinySpec",
+        "Standard",
+        "legacy"
+      ]
+    },
+    "legacy_origin": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "shared.schema.json#/$defs/source"
+      },
+      "minItems": 1
+    },
+    "approval_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "shared.schema.json#/$defs/approval"
+      },
+      "minItems": 0
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "shared.schema.json#/$defs/id"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "outcome": {
+            "type": "string",
+            "minLength": 1
+          },
+          "depends": {
+            "type": "array",
+            "items": {
+              "$ref": "shared.schema.json#/$defs/id"
+            },
+            "minItems": 0
+          },
+          "context_group": {
+            "$ref": "shared.schema.json#/$defs/id"
+          },
+          "owned_paths": {
+            "type": "array",
+            "items": {
+              "$ref": "shared.schema.json#/$defs/path"
+            },
+            "minItems": 0
+          },
+          "required": {
+            "type": "array",
+            "items": {
+              "$ref": "shared.schema.json#/$defs/item"
+            },
+            "minItems": 1
+          },
+          "optional": {
+            "type": "array",
+            "items": {
+              "$ref": "shared.schema.json#/$defs/item"
+            },
+            "minItems": 0
+          },
+          "gates": {
+            "type": "array",
+            "items": {
+              "$ref": "shared.schema.json#/$defs/gate"
+            },
+            "minItems": 0
+          },
+          "authorization_envelope_id": {
+            "$ref": "shared.schema.json#/$defs/id"
+          }
+        },
+        "required": [
+          "id",
+          "order",
+          "outcome",
+          "depends",
+          "context_group",
+          "owned_paths",
+          "required",
+          "optional",
+          "gates",
+          "authorization_envelope_id"
+        ]
+      },
+      "minItems": 0
+    },
+    "authorization_envelope": {
+      "$ref": "shared.schema.json#/$defs/authorization_envelope"
+    }
+  },
+  "required": [
+    "schema_version",
+    "origin",
+    "legacy_origin",
+    "sources",
+    "approval_refs",
+    "tasks",
+    "authorization_envelope"
+  ]
+}
