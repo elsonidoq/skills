@@ -92,7 +92,7 @@ class AdapterParityTests(unittest.TestCase):
         import tempfile
         root = Path(__file__).resolve().parents[3]
         sys.path[:0] = [str(root/'runtime'),str(root/'runtime/tests')]
-        from test_intake import approved_fixture
+        from test_intake import approved_fixture, declare_builtin_actions
         from fixtures.support import make_project
         from coherence_workflow.registry import validate_schema
         for origin in ('TinySpec','Standard'):
@@ -102,6 +102,12 @@ class AdapterParityTests(unittest.TestCase):
                 for index,task in enumerate(contract['tasks']):
                     task['id']=f'T{index+1:03d}';task['order']=index
                     task['depends']=['T001'] if index else []
+                    for number,item in enumerate(task['required'],1):
+                        item['id']=task['id']+'/V'+str(number)
+                        item['producer_dependencies']=list(task['depends'])
+                # These are draft planning examples, not fictional current owner approvals.
+                contract['approval_refs']=[]
+                declare_builtin_actions(contract)
                 luna=copy.deepcopy(contract);sol=copy.deepcopy(contract)
                 planner_profile={'model_class':'Sol','effort':'medium'}
                 luna['execution_intent']['model_class']='Luna'
@@ -111,7 +117,27 @@ class AdapterParityTests(unittest.TestCase):
                 self.assertNotIn('planner_profile',luna['execution_intent'])
                 luna['execution_intent']['decomposition_rationale']='Name exact byte interface, ordered read/replace guidance and edge cases; narrow outcomes, no implicit architecture'
                 sol['execution_intent']['decomposition_rationale']='Exact outcome and invariants; routine editing choices left open'
-                self.assertEqual(luna['tasks'],sol['tasks'])
+                separator='\nImplementation guidance: '
+                for explicit,outcome_oriented in zip(luna['tasks'],sol['tasks']):
+                    path=explicit['owned_paths'][0]
+                    objective=explicit['outcome']
+                    explicit['outcome']=objective+separator+(
+                        '1. Use read_file on '+path+'; its complete current bytes are the input interface. '
+                        '2. Use write_file to replace that file with the EXACT bytes in the objective; preserve the final newline. '
+                        'Do not append or change other paths. 3. Preserve the dependency checkpoint before the consumer; '
+                        'the unchanged FileBytes oracle verifies the exact result, not a success narrative.')
+                    outcome_oriented['outcome']=objective+separator+(
+                        'Meet the exact file-byte objective and all original ownership/dependency/REQUIRED gates; '
+                        'routine choice of editing steps remains open. No acceptance or safety reduction.')
+                    self.assertEqual(explicit.keys(),outcome_oriented.keys(),'no unnecessary public guidance schema fields')
+                    self.assertEqual(explicit['outcome'].split(separator,1)[0],outcome_oriented['outcome'].split(separator,1)[0])
+                    self.assertNotEqual(explicit['outcome'],outcome_oriented['outcome'])
+                    for field in explicit.keys()-{'outcome'}:
+                        self.assertEqual(explicit[field],outcome_oriented[field],field)
+                    self.assertIn('read_file on '+path,explicit['outcome'])
+                    self.assertIn('preserve the final newline',explicit['outcome'])
+                self.assertEqual(len(luna['tasks']),len(sol['tasks']))
+                self.assertEqual(len(luna['tasks']),2,'no extra micro-tasks or routing quotas')
                 for value in (luna,sol):
                     validate_schema('task.schema.json',value)
                     self.assertEqual(module.check_structured(value,value['execution_intent']),[])
