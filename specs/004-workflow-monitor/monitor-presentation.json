@@ -1,0 +1,22 @@
+{
+  "monitor_version": 1,
+  "workflow_sha256": "a9e85751a75fe7d8c53504b437947e26f5eb2c666be66afdc55a8dfe282ee9f5",
+  "tasks": {
+    "T001": {
+      "label": "Verified read seam",
+      "executive_summary": "Read new monitored runs safely and prove their pinned definitions and recorded inventory."
+    },
+    "T002": {
+      "label": "Usable run graph",
+      "executive_summary": "Select a run and explore its production read-only graph and safe details."
+    },
+    "T003": {
+      "label": "Faithful live history",
+      "executive_summary": "Preserve failures, recovery, questions and evidence while observing live changes safely."
+    },
+    "T004": {
+      "label": "Own-build evidence and guide",
+      "executive_summary": "Verify this build retrospectively and live, and document safe local operation."
+    }
+  }
+}
