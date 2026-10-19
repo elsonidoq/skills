@@ -64,16 +64,16 @@ workflow_monitor/
 ├── __main__.py / app.py            # fixed CLI/ASGI/closed boundary
 ├── reader.py / pins.py             # read-only snapshots/actual config pins
 ├── mapping.py / public.py / schemas/
-├── pyproject.toml / requirements.lock / README.md
+├── pyproject.toml / README.md       # worker-written exact direct dependencies
 ├── web/
-│   ├── package.json / package-lock.json / vite.config.js
+│   ├── package.json / vite.config.js # worker-written; immutable locks external
 │   ├── src/                       # run list/one graph/details/ELK worker
 │   └── tests/                     # real browser assertions
 └── tests/                         # permanent helpers/fixtures/composed tests
     └── acceptance_*.py            # bounded registered PythonAnswer entrypoints
 ```
 
-**Structure Decision**: app outside active runtime package. No runtime/config/schema/host/skill edits during app build. Sensible modules, no larger read/write/ranged tools or new file-size guards. Required retained source/locks/config stay under runner custody/full review. Build/venv/node_modules/test output live in explicitly owned isolated environment/scratch, not Git or observer-created files. A test check cannot generate retained worktree artifacts.
+**Structure Decision**: app outside active runtime package. No runtime/config/schema/host/skill edits during app build. Sensible modules, no larger read/write/ranged tools or new file-size guards. All app source, direct-dependency manifests and config are written DURING this run under runner custody/full review. Before final app binding/start, separately approved operator setup resolves the already-selected exact direct versions, complete integrity/hash locks, audited installed trees and tools in external scratch; these immutable dependency inputs are reviewable, not app source or a staging route. The fixed `TMPDIR/monitor-inputs.json` descriptor is raw-hash-bound through the existing pinned quickstart source; [validation](contracts/validation.md#pre-admitted-dependency-inputs-and-launch-binding) defines the concrete no-cycle recipe and actual record checks. No routine setup question/answer courier or raw third-party lock copying. Build/test output stays in separate approved writable scratch; no check generates retained app artifacts.
 
 ## Phase 0 — research and decisions
 

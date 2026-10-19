@@ -1,6 +1,6 @@
 # Tasks: Read-only workflow monitor app
 
-**Origin**: Standard; schema_version1; legacy_origin null. **Authoritative machine contract**: [tasks.json](tasks.json), one adjacent JSON. **Input**: approved [spec](spec.md), derived [plan](plan.md), [research](research.md), [data model](data-model.md), [monitor-v1](contracts/monitor-v1.md), [validation](contracts/validation.md) and [quickstart](quickstart.md). **Status**: preparation/correction complete, independent overall review and final implementation authority pending. These are FOUR app outcomes, not the separately proposed runtime prerequisite.
+**Origin**: Standard; schema_version1; legacy_origin null. **Authoritative machine contract**: [tasks.json](tasks.json), one adjacent JSON. **Input**: approved [spec](spec.md), derived [plan](plan.md), [research](research.md), [data model](data-model.md), [monitor-v1](contracts/monitor-v1.md), [validation](contracts/validation.md) and [quickstart](quickstart.md). **Status**: independent review found F1 setup courier; bounded correction prepared for affected rereview/final authority. These are FOUR app outcomes, not the separately proposed runtime prerequisite.
 
 ## Shared implementation context and real gates
 
@@ -18,11 +18,11 @@ Initial cumulative owned sets below make predecessor app files accessible throug
 
 Existing mechanics unchanged: read_file32768 bytes, write schema32768 characters, task JSON loader2_000_000 bytes, review120000/wire262144. NOT universal artifact-size or new final-file guards. Machine JSON need not be worker-readable. No larger/ranged tools, invented integrity/lock splitting or speculative capacity work; measure actual remaining review/receipt/full-diff payload at applicable admission/review.
 
-Setup remains explicitly scoped: worker writes manifests DURING run; separately authorized operator resolves exact hash/integrity locks, audits/licenses and installed Python/Node/browser tools in EXTERNAL scratch. Genuine original request_owner_input -> bound CLI answer/resume supplies lock text/descriptor; original worker writes retained locks via owned write_file. No pre-run app source staging, oracle installs/network, automatic pip/npm/npx/browser downloads/auth/global/paid actions. Baseline tool/setup authority before task; installed task-specific dependencies before affected check, not before future manifests exist.
+PRE-ADMIT dependency inputs BEFORE final app binding/start: separately authorized operator resolves selected exact versions into reviewable external integrity/hash locks and installed trees, audits/licenses/tools and enforced read-only custody. Worker writes direct manifests and ALL app source DURING run; no raw-lock copying, prebuilt app source, oracle install/network/auth/global/paid actions. Existing pinned quickstart launch lines hold actual descriptor SHA/fresh app run ID only after setup, before final source-pin/scope/review/approval binding. UNRESOLVED now; concrete no-cycle recipe in validation, not permission.
 
 PythonAnswer v1 EXACT {path,expected:1}: trusted owned answer(),15s wait, ZERO worktree-owned paths, only PATH/HOME/PYTHONPATH/PYTHONDONTWRITEBYTECODE/TMPDIR inherited. Positive collection/no skips/all mapped assertions before integer1; unavailable/empty/exception NOT VERIFIED. Fixed shell=False argv for installed locked Python/Node/Vite/Chrome/Playwright, -B/bytecode off; cache/build/results only approved external scratch, no retained source/config/lock/dist/vendor/cache pollution. Tests read only declared source/approval/app-file union and descriptor-bound runtime inputs, not arbitrary paths/private transcripts.
 
-Long isolated shipped CLI/SDK scenarios are separately authorized OPERATOR-owned harness work under standing test-only authority/custody, not15s oracle children/fake production receipts. TMPDIR/monitor-inputs.json delivered through genuine original answer binds safe exact project/run/source/config/receipts/tool/scratch identities; setup_inputs validates and reopens real records, not green reports. Bounded observation slices must fit15s and drain all check server/browser descendants; no assumed live/auth/catalog/cgroup env, unregistered unittest IDs or timeout increase. Reuse unchanged applicable proof only.
+Long shipped CLI/SDK scenarios stay separately authorized OPERATOR-owned under standing test-only authority/custody, not15s oracle children. setup_inputs hashes SAME fixed TMPDIR/monitor-inputs.json bytes against quickstart as pinned in actual wf_run_inputs; validates frozen locks/tree/tools, worker manifests and real project/run/source/config/receipt bindings by reopening stores, not green reports/selfclaims. No descriptor reverse hash of tasks/quickstart/future receipts. Routine setup never uses request_owner_input (genuine product_priority/unexpected_material_change only; answer cap16384UTF8bytes). Drain all check descendants; no extra env/tools/timeout. Reuse applicable proof only.
 
 After usable T002 checkpoint, separately authorized OPERATOR-owned readonly viewer inspects earlier THIS-build records retrospectively and observes genuine later T003/T004 LIVE. Not a task/check descendant, second writer, scheduler or pause/resume prerequisite. No busywork/demo/fixtures/other-run substitute; missing same-run live interval is SC-006 NOT VERIFIED.
 
@@ -38,14 +38,14 @@ Exact raw whole-file source paths/sections/SHA256 are in authoritative tasks.jso
 
 Monitoring pins: existing runtime/coherence_workflow/workflows/coordinate.yaml is kind=config, section=monitor-workflow/v1; adjacent monitor-presentation.json is kind=config, section=monitor-presentation/v1. Sections are markers, not partial hashing. Presentation is curated public brief text for exact four tasks with actual workflow raw hash; no extra YAML needed.
 
-Envelope monitor-app-draft: approval_refs=[], limits=[], external_paid_authority=denied; profile openai-codex/gpt-6.1-sol:medium, codex-final-payload:1. Canonical action_scope strings retained once in JSON, generated by actual authority.action_requirement: read_file/external, write_file/mutation, request_owner_input/external, runner-git-commit/mutation, workflow.PythonAnswer/test (trusted-project-python). Exact task/path stream, sorted source/approval/owned readable union and every REQUIRED check/version/args_hash preserved. This proposed envelope is NOT current permission; ordinary model traffic has no financial gate.
+Draft envelope monitor-app-draft: approval_refs=[], limits=[], external_paid_authority=denied; openai-codex/gpt-6.1-sol:medium, codex-final-payload:1. JSON stores all five exact authority.action_requirement scopes/effects: read, write, genuine question, runner Git and trusted-project Python checks, with complete task/path/readable/check/version/args_hash streams. No current permission inferred; ordinary model traffic has no financial gate.
 
 Candidate workflow restrictions match: implement/repair/continuations read/write/question with files/process/conversation; independent review/continuation read/question only with read effects; verify read/process; checkpoint git/process. All original manual/permission gates survive. Each task has a distinct G1 ID below, approval_ref:null; unchanged common gate fields follow (not a pointer replacing machine gate fields):
 
 - **kind**: capability
-- **criterion**: UNRESOLVED: current independent overall planning review/final owner scope, separately verified and independently accepted reference-only precursor, refreshed affected pins, sole writer, exact SDK/catalog/resources/profile and containment; scoped operator setup/test authority and baseline tools. Before each affected check, actual installed locked dependencies and bound test inputs must be ready. No install/auth/paid/runtime-change permission inferred.
-- **scope**: Fresh app run; exact read/write/question and runner Git/check streams declared in the envelope. External operator setup/live harness/viewer require separately scoped custody, never worker shell or leaked task descendants. Setup may complete during the task through genuine original-question/answer delivery; missing proof cannot pass an oracle.
-- **expected_evidence**: Genuine current-content approvals/catalog, accepted precursor revision and current runtime/config/SDK identities; kernel custody and baseline tool readiness, scoped isolated TMPDIR/setup permissions; actual descriptor/locks/tools before affected checks. Verify standalone CLI-answer/resume readiness, or review matching changed config and genuine interactive-parent readiness. No skipped/empty pass.
+- **criterion**: UNRESOLVED: current independent overall planning review/final owner scope, separately verified and independently accepted reference-only precursor, refreshed affected pins, sole writer, exact SDK/catalog/resources/profile and containment; scoped operator setup/test authority and baseline tools. Before final app binding/start, immutable external dependencies/descriptor and actual quickstart launch pins must be ready; real scenario records must exist before affected checks. No install/auth/paid/runtime-change permission inferred.
+- **scope**: Fresh app run; exact read/write/question and runner Git/check streams declared in the envelope. External operator setup/live harness/viewer require separately scoped custody, never worker shell or leaked task descendants. Routine dependency setup precedes final binding, never question/answer delivery; missing proof cannot pass an oracle.
+- **expected_evidence**: Genuine current-content approvals/catalog, accepted precursor revision and current runtime/config/SDK identities; kernel custody and baseline tool readiness, scoped isolated TMPDIR/setup permissions; actual frozen descriptor/locks/tree/tools and pinned quickstart digest/run ID before binding, real records before checks. Verify standalone answer/resume for genuine questions only, or reviewed matching interactive-parent readiness. No skipped/empty pass.
 - **approval_ref**: null
 ## Phase 1–2 — setup and foundation: real read seam
 
@@ -64,7 +64,6 @@ Candidate workflow restrictions match: implement/repair/continuations read/write
     - `workflow_monitor/public.py`
     - `workflow_monitor/snapshot.schema.json`
     - `workflow_monitor/pyproject.toml`
-    - `workflow_monitor/requirements.lock`
     - `workflow_monitor/tests/test_reader.py`
     - `workflow_monitor/tests/accept_reader.py`
     - `workflow_monitor/tests/setup_inputs.py`
@@ -80,9 +79,9 @@ Candidate workflow restrictions match: implement/repair/continuations read/write
 
 ### REQUIRED T001/V2
 
-- **criterion**: SC-005/006, FR-013-017: real production reader observes actual isolated accepted shipped-runtime records while writer progresses, before UI relies on it. Fixed worktree DB mode=ro/query_only/deny authorizer, short thread-owned <=500ms snapshot/250ms busy budget, existing sidecars, no immutable/nolock/saver/Authority/Publisher/DDL/repair route. Exact installed Python pins Starlette1.9.0/Uvicorn0.54.0/PyYAML6.0.3; worker-owned lock and setup validation through actual owned write_file and scoped setup authority.
+- **criterion**: SC-005/006, FR-013-017: real production reader observes actual isolated accepted shipped-runtime records while writer progresses, before UI relies on it. Fixed worktree DB mode=ro/query_only/deny authorizer, short thread-owned <=500ms snapshot/250ms busy budget, existing sidecars, no immutable/nolock/saver/Authority/Publisher/DDL/repair route. Exact installed Python pins Starlette1.9.0/Uvicorn0.54.0/PyYAML6.0.3; worker writes direct manifest in-run matching pre-admitted external locks/tree; scoped immutable setup validation, no lock courier.
 - **check**: {"id":"workflow.PythonAnswer","version":"1","args":{"path":"workflow_monitor/tests/accept_reader.py","expected":1}}
-- **pass_condition**: Actual operator-owned isolated shipped CLI/SDK harness supplies fresh bound records and controller progress; oracle reopens the real DB read-only and compares causal events/quiescent authoritative/projection fingerprints before/after reads, proving zero viewer effects and controller progress (not naive active DB byte equality). Snapshot closes before network. Trusted setup_inputs validates approved scratch descriptor, actual locked installed versions/hash/license/audit results and current source/lock identity; no check generates retained files. All children drain.
+- **pass_condition**: Actual operator-owned isolated shipped CLI/SDK harness supplies fresh bound records and controller progress; oracle reopens the real DB read-only and compares causal events/quiescent authoritative/projection fingerprints before/after reads, proving zero viewer effects and controller progress (not naive active DB byte equality). Snapshot closes before network. Trusted setup_inputs verifies descriptor bytes against quickstart's admitted raw pin, actual app/fixture stores and immutable dependency/tool/lock/inventory identities, exact worker direct manifests and license/audit provenance. Fixed installed tools may build a hash-bound copy of current owned source only in writable scratch with admitted read-only node_modules; no hidden app source/install or retained-file generation. All children drain.
 - **expected_evidence**: Actual isolated run/config/source/controller/read observations and causal noninterference evidence; lock provenance, real dependency/browser readiness or exact unavailable gap. Setup/live harness are separately authorized operator processes, not completed by this 15s PythonAnswer or fixture-only green.
 - **producer_dependencies**: []
 - **gates**: ["T001/G1"]
@@ -104,14 +103,12 @@ Candidate workflow restrictions match: implement/repair/continuations read/write
     - `workflow_monitor/public.py`
     - `workflow_monitor/snapshot.schema.json`
     - `workflow_monitor/pyproject.toml`
-    - `workflow_monitor/requirements.lock`
     - `workflow_monitor/tests/test_reader.py`
     - `workflow_monitor/tests/accept_reader.py`
     - `workflow_monitor/tests/setup_inputs.py`
     - `workflow_monitor/__main__.py`
     - `workflow_monitor/app.py`
     - `workflow_monitor/web/package.json`
-    - `workflow_monitor/web/package-lock.json`
     - `workflow_monitor/web/vite.config.js`
     - `workflow_monitor/web/index.html`
     - `workflow_monitor/web/src/main.jsx`
@@ -156,14 +153,12 @@ Candidate workflow restrictions match: implement/repair/continuations read/write
     - `workflow_monitor/public.py`
     - `workflow_monitor/snapshot.schema.json`
     - `workflow_monitor/pyproject.toml`
-    - `workflow_monitor/requirements.lock`
     - `workflow_monitor/tests/test_reader.py`
     - `workflow_monitor/tests/accept_reader.py`
     - `workflow_monitor/tests/setup_inputs.py`
     - `workflow_monitor/__main__.py`
     - `workflow_monitor/app.py`
     - `workflow_monitor/web/package.json`
-    - `workflow_monitor/web/package-lock.json`
     - `workflow_monitor/web/vite.config.js`
     - `workflow_monitor/web/index.html`
     - `workflow_monitor/web/src/main.jsx`
@@ -212,14 +207,12 @@ Candidate workflow restrictions match: implement/repair/continuations read/write
     - `workflow_monitor/public.py`
     - `workflow_monitor/snapshot.schema.json`
     - `workflow_monitor/pyproject.toml`
-    - `workflow_monitor/requirements.lock`
     - `workflow_monitor/tests/test_reader.py`
     - `workflow_monitor/tests/accept_reader.py`
     - `workflow_monitor/tests/setup_inputs.py`
     - `workflow_monitor/__main__.py`
     - `workflow_monitor/app.py`
     - `workflow_monitor/web/package.json`
-    - `workflow_monitor/web/package-lock.json`
     - `workflow_monitor/web/vite.config.js`
     - `workflow_monitor/web/index.html`
     - `workflow_monitor/web/src/main.jsx`
@@ -248,7 +241,7 @@ Candidate workflow restrictions match: implement/repair/continuations read/write
 
 ### REQUIRED T004/V2
 
-- **criterion**: SC-001-006 and documentation: app README launch/setup/trust/read-only/new-contract/freshness/privacy/unknown/limits/rollback agrees with implementation; docs/index routes it. All permanent required checks/current evidence remain valid, exact locks/licenses/audits retained. Full original-range fresh independent review/finding correction/current acceptance remain runner-owned AFTER task checkpoint, not implementer work or inferred green.
+- **criterion**: SC-001-006 and documentation: app README launch/setup/trust/read-only/new-contract/freshness/privacy/unknown/limits/rollback agrees with implementation; docs/index routes it. All permanent required checks/current evidence remain valid; external immutable locks/tree/provenance/licenses/audits stay reviewable, worker direct manifests match. Full original-range fresh independent review/finding correction/current acceptance remain runner-owned AFTER task checkpoint, not implementer work or inferred green.
 - **check**: {"id":"workflow.PythonAnswer","version":"1","args":{"path":"workflow_monitor/tests/accept_build.py","expected":1}}
 - **pass_condition**: Compare delivered --project/--assets/--port launcher and fixed API/schema/error/guard behavior against README examples in focused tests; validate source/lock/pin identities and no retained cache/build/vendor pollution. Stop only viewer preserves DB/WAL/Git/private history, never control/repair/reset/legacy restart. All SC mappings have nonempty current proof; longer/operator proof provenance is validated against real source records. Measure actual current task contract/full-diff/receipt payload against unchanged120000 review/262144 wire guards at admission/review; oversize blocks, no truncation/limit workaround.
 - **expected_evidence**: Executable launcher/doc assertions, source/lock/license checks and complete SC->item proof references with PASS/FAIL/NOT VERIFIED; actual remaining payload measurement, test exit/count/child drain. No claim of final acceptance, no per-task independent-review task or extra report chain.
@@ -259,4 +252,4 @@ Candidate workflow restrictions match: implement/repair/continuations read/write
 
 T001 -> T002 -> T003 -> T004; one writer, verified focused checkpoint before consumers. T001 actual seam proof precedes UI reliance; T001/T002 are usable US1 MVP, not full acceptance. US2 history and US3 same-build live/docs remain required. Permanent helpers plus real composition, no prototype/admin chain; unrelated regression/cross-browser/benchmark/remote deployment optional.
 
-Actual .pi/prompts/speckit.tasks.md and checkout template followed; setup-tasks/resolve-template/check-prerequisites JSON commands with NO_PERSIST passed, branch unchanged; before/after hooks absent. Parent-assigned correction, NOT independent overall review. Static validation only, no app/runtime/browser/provider proof or installs. Next: parent inspection -> fresh independent planning review -> current-content final owner approval and real admission.
+SpecKit task setup/template/order checks followed, NO_PERSIST and absent hooks. Fresh independent overall review covered17FR/6SC/four outcomes; F1 correction only here, not independent rereview. Static checks only; no installs/runtime/browser/provider proof. Next: parent inspection -> same independent reviewer affected-boundary rereview -> current-content approval/admission.

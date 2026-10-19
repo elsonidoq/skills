@@ -5,19 +5,32 @@
 ## Prerequisites in order
 
 1. Parent inspects architecture and routes **small reference-based reviewer prerequisite** into concrete source/task/current approval. Independently validate/accept before app build; no limit increase or active-runtime mutation. Preserve full original-range independent review, actual verified referenced-document reads, all REQUIRED/gates/custody. Exact scope/proof in [plan](plan.md#small-prerequisite--reference-based-independent-review).
-2. Separate fresh app task producer, independent overall review, actual final current-content implementation approval. Sol/medium target is intent, not permission. Final contract preserves every SC check/version/args/pass/evidence/dependency/gate.
-3. Under explicit isolated dependency/setup/network authority, prepare reviewed exact-lock app Python/frontend/test environments, inspect advisories/licenses, verify actual Node/Chrome/Playwright/containment. No automatic pip/npm/npx/browser download or auth/global changes. Retained source/locks/config stay under runner writes/full review; tests only generate explicit isolated scratch.
+2. Review the four app tasks independently; preserve every SC check/version/args/pass/evidence/dependency/gate. Sol/medium is intent, not permission. Scoped operator setup approval is separate from final app implementation authority; obtain final current-content app approval only after the real launch pins/source hashes in step5 are complete.
+3. BEFORE final app binding/start, under separately explicit dependency/setup/network authority, the operator resolves the already-selected exact direct versions into reviewable external locks/installed Python/frontend/test environments, audits licenses/advisories and verifies actual Node/Chrome/Playwright/containment. Freeze dependency inputs in enforced read-only custody; no app source/config/helper is prepared outside runner. Follow [concrete descriptor/binding recipe](contracts/validation.md#pre-admitted-dependency-inputs-and-launch-binding), not question/answer delivery. Worker later writes exact direct manifests and all app source DURING this build; tests only generate approved writable scratch.
 4. Before first app run, committed retained raw-hash config and public presentation sources carry v1 markers. Verify workflow canonical digest against **actual** `wf_run_bindings.config_hash`, not combined Engine hash; preserve Git objects. No old-run conversion.
-5. Supply fresh actual external owner catalog, approved tasks/config, exact SDK manifest/local resources and cgroup/mode-specific authority. Start THAT app build using actual shipped CLI from runtime operating guide, fresh run ID, accepted adjusted runtime unchanged. No migration receipts/IDs, hand implementation or app prerequisite on unfinished viewer.
+5. Prepare immutable external `TMPDIR/monitor-inputs.json` and fill the two launch pins below from its actual raw bytes/fresh preselected app run ID. Refresh this source's raw hash in tasks.json and affected canonical scopes; obtain current-content final review/approval and genuine external catalog/config/SDK/local-resource/cgroup/mode readiness. Start actual shipped CLI with that exact fresh `--run` ID and inherited TMPDIR; accepted adjusted runtime/inputs stay unchanged throughout build. No fabricated approval, event or future receipt. No migration IDs, hand implementation or unfinished-viewer prerequisite.
+
+## Prelaunch pins — intentionally unresolved
+
+```text
+monitor_inputs_sha256: UNRESOLVED
+monitor_app_run_id: UNRESOLVED
+```
+
+These exact lines are consumed by worker-written `workflow_monitor/tests/setup_inputs.py` and pinned through this existing quickstart source in the immutable admitted contract. They are NOT currently executable launch input: fill with actual descriptor raw SHA256 (64 lowercase hex) and fresh preselected CLI run ID only after authorized setup, then refresh source hashes/review/approval BEFORE binding/start. No fake values or new artifact required. Descriptor excludes this document/task/final-approval hashes, so no cycle. Its exact canonical project/run/source/config/tool/lock/tree/fixture bindings are checked against real read-only stores. At each check the expected descriptor hash must come from this source as pinned in actual `wf_run_inputs.contract.sources`, not descriptor self-attestation. A preselected ID does not establish any runtime event.
+
+Keep `request_owner_input`/CLI answer/resume only for genuine product-priority/unexpected-material-change questions, never anticipated technical setup or approved tests; genuine answers are separately capped at16384 UTF-8 bytes.
 
 ## Intended delivered commands
 
 Application README must confirm exact supported flags/owned paths before use:
 
 ```sh
-# Build via already installed locked Vite into explicitly owned isolated scratch.
-# Never invoke npx fetching or generate retained worktree files through a test oracle.
-"$APP_NODE_ENV/node_modules/.bin/vite" build "$WEB_SOURCE" --outDir "$OWNED_ASSET_OUTPUT"
+# After validating the frozen descriptor and current worker manifests/source:
+# copy CURRENT owned web/test/config bytes into approved scratch; bind source hashes.
+# Scratch-only node_modules links the admitted immutable tree; no worktree link/install.
+# Actual paths/argv come from validated descriptor, not arbitrary environment input.
+"$APP_NODE_ENV/node_modules/.bin/vite" build "$SCRATCH_WEB_SOURCE" --outDir "$OWNED_ASSET_OUTPUT"
 
 # Separately operator-owned read-only viewer after early usable checkpoint:
 "$APP_PYTHON" -B -m workflow_monitor --project "$CANONICAL_WORKTREE" \

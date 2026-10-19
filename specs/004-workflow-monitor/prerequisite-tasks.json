@@ -4,9 +4,9 @@
   "legacy_origin": null,
   "sources": [
     {"path":"specs/004-workflow-monitor/spec.md","section":"FR-016, FR-017, SC-006; acceptance and executor gates","sha256":"f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55","kind":"spec"},
-    {"path":"specs/004-workflow-monitor/plan.md","section":"Small prerequisite — reference-based independent review; ordered delivery stage 1","sha256":"dced212bf5d908af1c37f66f34dabb24d2da7886abc43290355ee48cc0ee113b","kind":"plan"},
-    {"path":"specs/004-workflow-monitor/contracts/validation.md","section":"Small reference-based prerequisite and admission; unchanged shipped runtime and executable checks","sha256":"9c248047eee2df75b2bcbc2888ff2dfc527a2b63f27be4536a0bc3add130e035","kind":"source"},
-    {"path":"specs/004-workflow-monitor/research.md","section":"Minimal reviewer-reference adjustment; repository-first evidence","sha256":"fd6f2bb47cb570f6848aa9fe3261c32abbcff6f1087d1396c978c0a19d43f15e","kind":"source"},
+    {"path":"specs/004-workflow-monitor/plan.md","section":"Small prerequisite — reference-based independent review; ordered delivery stage 1","sha256":"b6e1276960f1805747f85de95420cb5403a7ec032ba7726b043c9a0382f29a9e","kind":"plan"},
+    {"path":"specs/004-workflow-monitor/contracts/validation.md","section":"Small reference-based prerequisite and admission; unchanged shipped runtime and executable checks","sha256":"665afb0ac346fd4e9ed3fbf9d6cb22a2ef72f9ff2d4f52444c27abf1983f4734","kind":"source"},
+    {"path":"specs/004-workflow-monitor/research.md","section":"Minimal reviewer-reference adjustment; repository-first evidence","sha256":"bed2c5b351c8543ceeec2ba58a2506919c1271b3ed1753737c98586d5289a73c","kind":"source"},
     {"path":"specs/004-workflow-monitor/specification-approval.md","section":"Current specification renewal — 2026-10-19; planning authority only","sha256":"3a816bb8513471a6e6eeba2685364f224a6d28e552a7f7258609c7e48ec2c188","kind":"decision"}
   ],
   "approval_refs": [],
