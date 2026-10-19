@@ -4,6 +4,12 @@
   "legacy_origin": null,
   "sources": [
     {
+      "path": "specs/003-coordinate-workflow/execution-profile-planning.md",
+      "section": null,
+      "sha256": "49565ac4f3947ed9d32252ed318cc518d0a891d8117c1e649298d2338ddda4f0",
+      "kind": "source"
+    },
+    {
       "path": "specs/003-coordinate-workflow/source-request.md",
       "section": null,
       "sha256": "8903a3cd31f4fb4da8aae9fb5cfb09fe07c1cbfd89d096d61b140aab7a9d4ea8",
@@ -12,13 +18,13 @@
     {
       "path": "specs/003-coordinate-workflow/spec.md",
       "section": null,
-      "sha256": "766f46a18e60066d1597f5465678ab509efb5c22b178ed5659b6a7eb8c2f1f51",
+      "sha256": "e95ef7593e938a923f9a36efe9e5cb66b01e349d55ca7e4d46d3d28b572d9009",
       "kind": "spec"
     },
     {
       "path": "specs/003-coordinate-workflow/plan.md",
       "section": null,
-      "sha256": "99422b55914e636e92e3ebb5bc9d4c78b540f044a89dc78cbf1c68576090823d",
+      "sha256": "fa0b53b0c18f3464b15dfd68c5a853e757a646bf997c293335d173e0301a310d",
       "kind": "plan"
     },
     {
@@ -1071,6 +1077,8 @@
       ],
       "context_group": "US5",
       "owned_paths": [
+        "specs/003-coordinate-workflow/contracts/task.schema.json",
+        "runtime/coherence_workflow/schemas/task.schema.json",
         "skills/task-generation/SKILL.md",
         "skills/task-generation/scripts/check-task-order.py",
         "skills/task-generation/scripts/test_check_task_order.py",
@@ -1111,7 +1119,7 @@
       "required": [
         {
           "id": "T008/V1",
-          "criterion": "Both task adapters preserve identical full contract and unresolved/denied/actual owner envelope semantics, human/machine parity and original source/approval origins; inadequate legacy returns producing renewal.",
+          "criterion": "Both task adapters preserve identical full contract and unresolved/denied/actual owner envelope semantics, human/machine parity and original source/approval origins; inadequate legacy returns producing renewal. Implement FR-040 per execution-profile-planning.md: capture coding class/effort before architecture/decomposition, tailor specificity with explicit assumptions, preserve intent/rationale separately from producer profiles and assess changed intent without weakening acceptance.",
           "check": {
             "id": "workflow.AdapterParityTests",
             "version": "1",
@@ -1120,7 +1128,7 @@
               "selector": "AdapterParityTests"
             }
           },
-          "pass_condition": "TinySpec separate source/tasks combined approval; Standard spec/plan/tasks+specification+overall review/final approval; documented legacy original gates unchanged. IDs contiguous, earlier deps and story continuity enforced, no inference from narrative. Known spend gap before dispatch and whole REQUIRED mappings maintained.",
+          "pass_condition": "TinySpec separate source/tasks combined approval; Standard spec/plan/tasks+specification+overall review/final approval; documented legacy original gates unchanged. IDs contiguous, earlier deps and story continuity enforced, no inference from narrative. Known spend gap before dispatch and whole REQUIRED mappings maintained. Standard/TinySpec fixtures cover missing executor input, differing planner/executor profiles, Luna/Sol scaffolding with unchanged acceptance, human/machine intent parity, and changed-profile compatibility without silent substitution or automatic full regeneration.",
           "expected_evidence": "Updated existing adapter/order/contract fixtures plus actual runtime CLI intake for each origin, parity/schema/negative cases. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
           "producer_dependencies": [
             "T003",

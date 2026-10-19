@@ -517,7 +517,7 @@ envelope and preserve known-gap preflight/inside-envelope autonomy. Reviewer/rep
 origin semantics. Review exact constitution/task-commit adaptations and obtain their required
 owner approval before operative changes. Test TinySpec/Standard/legacy intake and stale/denied
 manual cases, including in-progress-worker reconciliation. Planning profiles remain owner-selected;
-implementation profiles move to approved config, not complexity tables. New runner may consume
+implementation profiles move to approved config, not complexity tables. FR-040 adds [execution-profile-aware planning](execution-profile-planning.md): collect intended coding class/effort before architecture/decomposition, separate it from planner profiles, tailor task scaffolding with explicit qualitative assumptions, and preserve intent/rationale through both task adapters. T008 implements and verifies this without per-task routing or weakened acceptance. Historical approval/review does not cover this amendment. New runner may consume
 only a complete approved contract, never silently reinterpret old artifacts.
 
 ### Stage D — Coordinate Implementation entry cutover

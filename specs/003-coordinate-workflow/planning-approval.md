@@ -1,5 +1,7 @@
 # Final planning approval and bounded handoff
 
+> Current-content notice: the subsequent owner-requested [execution-profile-aware planning amendment](execution-profile-planning.md) changes spec.md, plan.md and T008 in both task representations. The snapshot and review below remain historical, not approval of the amended bytes. A later owner requested implementation, but current profile/spend/capability gates remain unresolved; affected review/approval renewal is required before amended-task dispatch.
+
 **Producer:** planner. **Depth:** Standard. **Date:** 2026-10-19 UTC.
 **Status:** planning package approved; implementation NOT authorized and NOT started.
 
