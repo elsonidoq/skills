@@ -13,7 +13,7 @@ Status: designed, NOT implemented/accepted. [Data model](../data-model.md) suppl
 - `http.create_app(reader,assets) -> ASGI`: closed same-origin GET routes, bounded in-memory sanitized snapshot cache, immutable versioned DTOs. Synchronous DB work runs on bounded thread worker, connection created/closed there; no shared connection/cursor.
 - `graph.layout(topology,dimensions,generation)`: frontend-only positions/routes on copy; React Flow uses stable IDs. Layout never changes domain topology.
 
-Separate contexts explicitly enforce absence of a viewer→runtime effect route. Versioned monitoring schema belongs to app, not existing projection schema or runner DDL. All worker-managed source/test/doc/config/lock files must be strictly <32768 UTF-8 bytes; the separately approved prerequisite adds actual byte guards without increasing transport/file limits.
+Separate contexts explicitly enforce absence of a viewer→runtime effect route. Versioned monitoring schema belongs to app, not existing projection schema or runner DDL. The separately approved prerequisite changes review document delivery only; existing tool/protocol semantics stay unchanged, with no universal artifact-size rule.
 
 ## Eligible runs and pin proof
 
