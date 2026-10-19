@@ -195,6 +195,42 @@ class DiagnosticRetentionTests(IsolatedCustody):
 
 
 class CliPreflightTests(IsolatedCustody):
+    def test_restrictive_nodes_are_never_widened_before_sdk_launch(self):
+        from unittest.mock import patch
+        from coherence_workflow.cli import Coordinate
+        from coherence_workflow.store import Authority, Blocked
+        from test_review_repair import coordinate_fixture
+        with Authority(self.project) as owner:
+            coordinate=coordinate_fixture(self.project,owner)
+            coordinate.select({})
+            coordinate.manifest['skills'][0]['sha256']=coordinate.config['skills']['coordinate']['sha256']
+            def forbidden_launch(gateway,manifest,**unused):
+                raise AssertionError('unauthorized SDK launch manifest: '+canonical({'tools':[t['name'] for t in manifest['tools']],'permissions':manifest['permissions']}))
+            with patch('coherence_workflow.cli.PiAdapter',side_effect=forbidden_launch) as launch:
+                for role in ('implement','repair'):
+                    original=next(n for n in coordinate.config['nodes'] if n['id']==role)
+                    for tools,permissions in ((['read_file'],['read_file']),
+                                              (['read_file','write_file'],['read_file']),([],[])):
+                        node={**original,'tools':tools,'permissions':permissions}
+                        with self.subTest(role=role,tools=tools,permissions=permissions):
+                            with self.assertRaisesRegex(Blocked,'node tool/permission'):
+                                coordinate.implement({'node':node},role=role)
+                coordinate.current=lambda:None
+                coordinate.reconcile_effect=lambda *unused:True
+                coordinate.review_repair.refresh_evidence=lambda:None
+                coordinate.review_repair.bundle=lambda:{'range_base':'base','range_head':'head'}
+                review=next(n for n in coordinate.config['nodes'] if n['id']=='review')
+                for tools,permissions in (([],[]),(['read_file'],[]),(['read_file','write_file'],['read_file','write_file'])):
+                    with self.subTest(role='review',tools=tools,permissions=permissions):
+                        with self.assertRaisesRegex(Blocked,'node tool/permission'):
+                            coordinate.review_boundary({'node':{**review,'tools':tools,'permissions':permissions}})
+                launch.assert_not_called()
+            task=json.loads(coordinate.store.db.execute('SELECT contract FROM wf_tasks WHERE task_id=?',('A',)).fetchone()[0])
+            actual=coordinate._tools(task)
+            Coordinate.admit_node_tools({'tools':list(actual),'permissions':list(actual)},actual)
+            self.assertEqual(set(actual),{'read_file','write_file'})
+            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
+
     def test_raw_cli_yaml_rejects_alias_duplicate_tag_and_oversize_before_store_or_dispatch(self):
         contract,catalog=approved_fixture(self.project,'not-dispatchable-invalid-workflow')
         paths={name:self.root/name for name in ('tasks.json','catalog.json','manifest.json','workflow.yaml')}

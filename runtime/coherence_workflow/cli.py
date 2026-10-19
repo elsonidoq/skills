@@ -199,6 +199,14 @@ class Coordinate:
             approvals.verify(refs[0], digest({'gate': {**gate, 'approval_ref': None}, 'task_id': task['id'], 'config': digest(self.config)}))
         return True
 
+    @staticmethod
+    def admit_node_tools(node, tools):
+        """Registered tool permission IDs are fixed; configuration cannot widen them."""
+        expected=set(tools)
+        if (set(node['tools'])!=expected or len(node['tools'])!=len(expected) or
+                not expected <= set(node['permissions'])):
+            raise Blocked('configured node tool/permission restrictions do not admit registered tool manifest')
+
     def _tools(self, task, *, review=False):
         project = self.authority.project
         readable = set(task['owned_paths']) | {s['path'] for s in self.contract['sources']} | {r['record_ref'] for r in self.contract['approval_refs']}
@@ -256,6 +264,7 @@ class Coordinate:
         task = json.loads(row['contract'])
         node = context['node']
         self.gateway.tools = self._tools(task)
+        self.admit_node_tools(node,self.gateway.tools)
         origin = json.loads(row['baseline']) if role=='implement' else snapshot(self.authority.project,task['owned_paths'])
         self.gateway.bind_task_origin(task['id'] + ':' + str(attempt) + ':', task['owned_paths'], origin)
         manifest = copy.deepcopy(self.manifest)
@@ -341,6 +350,7 @@ class Coordinate:
         bundle=self.review_repair.bundle();node=context['node']
         task={'id':'final-review','owned_paths':sorted({path for t in self.contract['tasks'] for path in t['owned_paths']})}
         self.gateway.tools=self._tools(task,review=True)
+        self.admit_node_tools(node,self.gateway.tools)
         manifest=copy.deepcopy(self.manifest)
         if (manifest['profile']!=self.config['profiles'][node['profile']] or len(manifest['skills'])!=1 or
                 manifest['skills'][0]['sha256']!=self.config['skills'][node['skill']]['sha256'] or
