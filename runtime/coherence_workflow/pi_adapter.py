@@ -356,8 +356,11 @@ class PiAdapter:
         if name == 'request_owner_input':
             if not spec or spec['version'] != p.get('version') or self.interaction is None:
                 raise Blocked('unregistered question tool')
-            if self.pending or self.tool_queue or self.tool_calls_seen:
+            if self.pending or self.tool_queue:
                 raise Blocked('question batch has unsettled task tools')
+            # Replay IDs span the prompt; they are not the current batch's liveness.
+            # A completed earlier tool is safe only with durable process quiescence.
+            self.gateway.store.assert_dispatchable(self.gateway.run, admitted_host_ops=(self.host_op,))
             Draft202012Validator(spec['parameters']).validate(p['args'])
             binding = {**self.question_binding, 'session_id': self.session_id}
             result = self.interaction.request(self.current['operation_id'], call, binding, p['args'], batch=p.get('batch'))

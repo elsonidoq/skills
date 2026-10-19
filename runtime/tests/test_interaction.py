@@ -534,3 +534,80 @@ class AutonomyAdmissionTests(IsolatedCustody):
         with self.assertRaisesRegex(Blocked,'recommendation'):validate_question(invalid)
         invalid=question();invalid['category']='ordinary_debugging'
         with self.assertRaises(Exception):validate_question(invalid)
+
+
+class CompletedToolQuestionTests(IsolatedCustody):
+    """R002: current exclusive batch, lifetime replay IDs and durable tool quiescence."""
+    def adapter(self,owner):
+        from test_pi_adapter import ToolBatchTests
+        adapter,cleanup=ToolBatchTests.batch_adapter(self,owner)
+        facts=binding(adapter.session_id);facts['role']='review';facts['attempt_id']=adapter.current['attempt_id']
+        operation=owner.store.intent('run','offline-question','sdk-turn',{},
+            {'task_id':facts['task_id'],'attempt_id':facts['attempt_id'],'role':facts['role'],
+             'before':{'session_id':adapter.session_id}})
+        adapter.current['operation_id']=operation['op_id']
+        adapter.interaction=Interaction(owner.store,'run');adapter.question_binding=facts
+        adapter.manifest['tools'].append({'name':'request_owner_input','version':'1','parameters':QUESTION_SCHEMA,'permission':'request_owner_input'})
+        return adapter,cleanup
+
+    def request(self,adapter,call='question'):
+        return {**adapter.binding,'command_id':adapter.current['command_id'],'operation_id':adapter.current['operation_id'],
+            'attempt_id':adapter.current['attempt_id'],'session_id':adapter.session_id,
+            'payload':{'call':call,'tool':'request_owner_input','version':'1','generation':adapter.lifecycle.generation,
+                       'args':question(),'batch':[{'call':call,'tool':'request_owner_input'}]}}
+
+    def read_request(self,adapter,call):
+        from test_pi_adapter import ToolBatchTests
+        return ToolBatchTests.request(self,adapter,call)
+
+    def drain(self,adapter):
+        deadline=time.monotonic()+10
+        while adapter.pending or adapter.tool_queue:
+            adapter._poll_tools()
+            if time.monotonic()>deadline:self.fail('bounded real read did not settle')
+            time.sleep(.01)
+
+    def test_completed_read_then_new_exclusive_question_preserves_replay_set_and_park_order(self):
+        with Authority(self.project) as owner:
+            adapter,cleanup=self.adapter(owner)
+            try:
+                adapter._launch_tool(self.read_request(adapter,'completed-read'));self.drain(adapter)
+                self.assertIn('completed-read',adapter.tool_calls_seen)
+                self.assertTrue(adapter.tool_results[0]['result']['details']['quiescent'])
+                adapter._launch_tool(self.request(adapter))
+                self.assertEqual(adapter.tool_calls_seen,{'completed-read','question'})
+                self.assertEqual(adapter.interaction.question(adapter.question_gate)['stage'],'parking')
+                self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_outbox').fetchone()[0],0)
+                with self.assertRaisesRegex(Blocked,'duplicate'):adapter._launch_tool(self.request(adapter))
+                with self.assertRaisesRegex(Blocked,'freeze'):adapter._launch_tool(self.read_request(adapter,'after-question'))
+                self.assertTrue(adapter.tool_results[-1]['result']['terminate'])
+            finally:cleanup()
+
+    def test_current_mixed_queued_pending_stale_duplicate_and_unreconciled_negatives(self):
+        with Authority(self.project) as owner:
+            adapter,cleanup=self.adapter(owner)
+            try:
+                adapter._launch_tool(self.read_request(adapter,'one'))
+                with self.assertRaisesRegex(Blocked,'unsettled'):adapter._launch_tool(self.request(adapter))
+                adapter._launch_tool(self.read_request(adapter,'two'))
+                self.assertTrue(adapter.pending and adapter.tool_queue)
+                with self.assertRaisesRegex(Blocked,'unsettled'):adapter._launch_tool(self.request(adapter))
+                self.drain(adapter)
+                with self.assertRaisesRegex(Blocked,'duplicate'):adapter._launch_tool(self.request(adapter,'one'))
+                for field in ('command_id','session_id','attempt_id','operation_id'):
+                    stale=self.request(adapter);stale[field]='stale'
+                    with self.assertRaisesRegex(Blocked,'outside current'):adapter._launch_tool(stale)
+                stale=self.request(adapter);stale['payload']['generation']+=1
+                with self.assertRaisesRegex(Blocked,'outside current'):adapter._launch_tool(stale)
+                for batch in (None,[],[{'call':'question','tool':'request_owner_input'},{'call':'other','tool':'read_fixture'}]):
+                    mixed=self.request(adapter);mixed['payload']['batch']=batch
+                    with self.assertRaisesRegex(Blocked,'exclusive'):adapter._launch_tool(mixed)
+                # An unknown outstanding registered process cannot hide behind empty Python queues.
+                op,process=adapter.gateway.launch('unreconciled-read','read_fixture','1',{'path':'owned.txt'},
+                    admitted_host_ops=(adapter.host_op,))
+                process.wait(timeout=10)
+                with self.assertRaisesRegex(Blocked,'unreconciled'):adapter._launch_tool(self.request(adapter))
+                self.assertTrue(adapter.gateway.settle(op,process.returncode)['replacement_allowed'])
+                self.assertFalse(adapter.question_gate)
+                self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_questions').fetchone()[0],0)
+            finally:cleanup()
