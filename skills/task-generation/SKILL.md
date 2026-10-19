@@ -43,7 +43,11 @@ Use the adapter matching the producing workflow:
   stage capability is a stop. Specification is requirements truth; approved plan is derived
   sequencing only. No SDD forwarding/rereading as direct requirements input. Trace source
   criteria into task checks. Governing instructions/contracts, memory and permission/safety
-  still apply. Keep the stage create-only when its producer requires it.
+  still apply. Keep the stage create-only when its producer requires it: ordinary drafting,
+  revision, shortening and mechanical validation of unsubmitted output are permitted within
+  authorized scope, without a supervisor gate. Production does not substitute for independent
+  review or authorize upstream requirement changes. Submitted defects follow the producing
+  workflow's review/correction route.
 - A direct adapter derives tasks from an owner-authorized durable TinySpec or legacy
   requirement/source and does not
   require a plan or SpecKit; final approval follows the produced-artifact review. TinySpec/
@@ -115,6 +119,18 @@ material context incompatibility. Test writing/running, evidence, verification, 
 preparation and routine teardown normally stay inside that outcome. Do not split by a workflow
 noun or task-count quota; preserve real dependencies and gates rather than mechanically merging
 independent work.
+
+State shared constraints once in their authoritative context. Task entries contain
+outcome-specific scope, interfaces, acceptance and verification, not repeated specification
+prose or administrative reports. Keep the human document a concise presentation, not a prose
+copy of machine authorization metadata; preserve all required human/machine contract mappings
+below. Required schema fields and task-local check/gate details remain complete.
+
+Before declaring a technical blocker, verify the exact affected operation and its enforced
+limit at the consuming interface. A worker file-tool bound is not a task-contract loader bound;
+do not impose a universal artifact size limit. Distinguish owner-requested behavior, verified
+runtime restrictions and agent-selected design choices in existing task fields. An inference
+or agreement to a narrowly explained remedy must not become a broader owner requirement.
 
 Every task records an outcome, explicit prerequisites, likely files or interfaces,
 independently observable acceptance evidence, required capabilities and shared context. Cover all in-scope work, integration/acceptance checks, and

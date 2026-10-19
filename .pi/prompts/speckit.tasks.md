@@ -193,7 +193,7 @@ Every task MUST strictly follow this format:
    - Map each entity to the user story(ies) that need it
    - If entity serves multiple stories: Put in earliest story or Setup phase
    - Relationships → service layer tasks in appropriate story phase
-   - For each field with constraints in data-model.md (max length, nullable/required, enum values, validation rules), quote the constraint verbatim in the task description so it is not left to implementation-time discretion
+   - Preserve each applicable field constraint (max length, nullable/required, enum values, validation rules) in authoritative shared context and map it to the consuming task/check; do not repeat the same constraint prose in every task or leave it to implementation-time discretion
 
 4. **From Setup/Infrastructure**:
    - Shared infrastructure → Setup phase (Phase 1)
@@ -203,10 +203,16 @@ Every task MUST strictly follow this format:
 ### Outcome boundaries and structured handoff
 
 Read and apply `skills/task-generation/SKILL.md` from the authorized suite installation:
-the Standard adapter is create-only when managed by planner; do not self-review/fix then
+the Standard adapter is create-only when managed by planner. Producers may draft, revise,
+shorten and mechanically validate unsubmitted output within authorized scope without supervisor
+permission for ordinary editing. This is not independent review; submitted defects follow
+`overall_review` and its correction route. Never change approved upstream requirements or
 silently launch implementation. Resolve paths through that installation, not a presumed
 project layout. Missing shared contract/stage capability blocks; never simulate slash tools.
 Produce only independently necessary work units, not one task per phase/test/entity noun.
+State shared constraints once; keep human presentation concise without weakening complete
+REQUIRED mappings or schema-required authorization fields. Verify limits at the actual
+consuming interface, not by generalizing a worker tool limit to every artifact.
 Preserve contiguous stories and all explicit earlier dependencies.
 
 Before task decomposition require the intended coding class/effort captured before architecture,

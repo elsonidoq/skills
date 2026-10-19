@@ -143,17 +143,36 @@ def check_contracts(texts):
                 "then compare suitable family/effort options before readiness")
 
     p = texts["planner"]
-    job_first = section(p, "## Job first; bookkeeping is subordinate")
+    job_first = section(p, "## Job first; no coordinator bookkeeping")
     require("job-first", job_first,
-            "Bookkeeping must always remain a small fraction of total effort",
+            "no coordinator bookkeeping",
+            "Do not maintain administrative ledgers, progress records, evidence manifests",
+            "Runtime-owned operational state stays runtime-owned",
             "Once required prerequisites are satisfied, advance the next authorized stage",
             "Reuse applicable settled evidence and decisions",
-            "Keep required records terse",
-            "Do not substitute repeated record polishing, duplicate evidence",
+            "State each required fact once",
+            "No repeated record polishing, duplicate evidence",
             "concrete invalidating evidence",
             "Carry this rule into every stage brief",
-            "never waive required approvals, safety checks, permissions, reviews or commits",
+            "Never waive required approvals, safety checks, permissions, reviews or commits",
             "exact blocker and smallest required resolution")
+    discovery = section(p, "## Discovery and capability boundary")
+    require("constraint-scope", discovery,
+            "exact affected operation", "actual enforced limit at the consuming interface",
+            "Do not generalize a tool-operation limit",
+            "owner-requested behavior, verified runtime restrictions and agent-selected design choices",
+            "An agent inference is not an owner requirement",
+            "interpret owner agreement within the explanation and scope actually presented",
+            "Correct a mistaken premise")
+    require("task-concision", texts["tasks"],
+            "State shared constraints once", "concise presentation, not a prose",
+            "preserve all required human/machine contract mappings",
+            "Required schema fields and task-local check/gate details remain complete",
+            "verify the exact affected operation", "A worker file-tool bound is not a task-contract loader bound",
+            "An inference or agreement to a narrowly explained remedy")
+    require("draft-editing", section(texts["approval"], "## Bounded mechanical corrections"),
+            "Ordinary drafting is not submitted-artifact correction",
+            "without a supervisor decision", "Once submitted, defects follow")
     pre = section(p, "## Before selection:")
     require("choice", pre, "read-only until", "no source edits", "Session history",
             "BOTH options", "TinySpec → Tasks → Implement", "Specify → Plan → Tasks",
@@ -217,7 +236,9 @@ def check_contracts(texts):
             "renewed specification approval", "new executive brief", "do not reorder".capitalize())
     tasks = stage(std, "tasks_create")
     require("task-stage", tasks, "— shared routing selection",  "authorization to prepare tasks",
-            "create-only", "no producer self-review/correction", "`overall_review`")
+            "create-only", "producers may draft, revise, shorten and mechanically",
+            "without supervisor", "not independent review", "After submission",
+            "independent review and final approval remain required", "`overall_review`")
     review = stage(std, "overall_review")
     require("review", review, "independent owner-selected reviewer", "use shared routing selection", "observed analysis",
             "never apply unresolved material defaults", "renew affected approvals",

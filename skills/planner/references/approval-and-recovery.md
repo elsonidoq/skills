@@ -75,6 +75,12 @@ constraints. Do not regenerate answers or silently apply recommended defaults.
 
 ## Bounded mechanical corrections
 
+Ordinary drafting is not submitted-artifact correction: an assigned producer may revise,
+shorten and mechanically validate its own unsubmitted output within authorized scope without
+a supervisor decision. This does not permit upstream requirement changes, self-certification
+as independent review, or bypassing review/approval. Once submitted, defects follow the
+producing workflow's review/correction route below.
+
 A coordinating parent may directly repair typos, formatting or broken links only after
 comparing the actual before/after diff and proving unchanged requirements, decisions, scope,
 dependencies, acceptance and approval validity. Record the equivalence comparison in the

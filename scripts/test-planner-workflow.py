@@ -724,7 +724,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "Only when no adapter is invoked", "After the adapter returns", "plan:"),
             ("planner", "do not create the plan again", "create the plan again", "plan:"),
             ("planner", "renewed specification approval", "existing specification approval", "plan:"),
-            ("planner", "no producer self-review/correction", "self-review permitted", "task-stage:"),
+            ("planner", "independent review and final approval remain required", "producer approval suffices", "task-stage:"),
             ("planner", "independent owner-selected reviewer", "implementer reviewer", "review:"),
             ("approval", "before calling `ask_user`", "after calling `ask_user`", "approval:"),
             ("approval", "Every actual task ID separately", "unstructured paragraphs", "approval:"),
@@ -755,27 +755,52 @@ class InstructionTests(unittest.TestCase):
                 self.assertTrue(any(e.startswith(diagnostic) for e in errors), errors)
 
     def test_job_first_contract_and_targeted_mutations(self):
-        body = checker.section(self.texts["planner"], "## Job first; bookkeeping is subordinate")
+        body = checker.section(self.texts["planner"], "## Job first; no coordinator bookkeeping")
         self.assertTrue(body)
         self.assertLess(self.texts["planner"].index(body),
                         self.texts["planner"].index("## Discovery and capability boundary"))
         obligations = (
-            "Bookkeeping must always remain a small fraction of total effort",
+            "no coordinator bookkeeping",
+            "Do not maintain administrative ledgers, progress records, evidence manifests",
+            "Runtime-owned operational state stays runtime-owned",
             "Once required prerequisites are satisfied, advance the next authorized stage",
             "Reuse applicable settled evidence and decisions",
-            "Keep required records terse",
-            "Do not substitute repeated record polishing, duplicate evidence",
+            "State each required fact once",
+            "No repeated record polishing, duplicate evidence",
             "concrete invalidating evidence",
             "Carry this rule into every stage brief",
-            "never waive required approvals, safety checks, permissions, reviews or commits",
+            "Never waive required approvals, safety checks, permissions, reviews or commits",
             "exact blocker and smallest required resolution",
         )
         for removed in (*obligations, body):
             with self.subTest(removed=removed):
-                self.assertIn(removed, body)
+                self.assertIn(" ".join(removed.split()), " ".join(body.split()))
                 changed = dict(self.texts)
-                changed["planner"] = changed["planner"].replace(removed, "", 1)
+                changed["planner"] = re.sub(r"\s+".join(re.escape(w) for w in removed.split()), "", changed["planner"], count=1)
                 self.assertTrue(any(e.startswith("job-first:")
+                                    for e in checker.check_contracts(changed)))
+
+    def test_scoped_constraints_concision_and_unsubmitted_editing(self):
+        # Regression: a 37 KB task contract must not inherit a worker read-tool bound;
+        # shortening an unsubmitted draft is ordinary production, not independent review.
+        cases = (
+            ("planner", "actual enforced limit at the consuming interface", "constraint-scope:"),
+            ("planner", "An agent inference is not an owner requirement", "constraint-scope:"),
+            ("planner", "interpret owner agreement within the explanation and scope actually presented", "constraint-scope:"),
+            ("tasks", "A worker file-tool bound is not a task-contract loader bound", "task-concision:"),
+            ("tasks", "State shared constraints once", "task-concision:"),
+            ("tasks", "preserve all required human/machine contract mappings", "task-concision:"),
+            ("approval", "Ordinary drafting is not submitted-artifact correction", "draft-editing:"),
+            ("approval", "without a supervisor decision", "draft-editing:"),
+            ("planner", "producers may draft, revise, shorten and mechanically", "task-stage:"),
+            ("planner", "independent review and final approval remain required", "task-stage:"),
+        )
+        for key, phrase, diagnostic in cases:
+            with self.subTest(phrase=phrase):
+                self.assertIn(" ".join(phrase.split()), " ".join(self.texts[key].split()))
+                changed = dict(self.texts)
+                changed[key] = re.sub(r"\s+".join(re.escape(w) for w in phrase.split()), "REMOVED", changed[key], count=1)
+                self.assertTrue(any(e.startswith(diagnostic)
                                     for e in checker.check_contracts(changed)))
 
     def test_bulleted_brief_and_automatic_continuation_contract(self):

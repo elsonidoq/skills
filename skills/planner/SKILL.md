@@ -10,29 +10,25 @@ brainstorming, scope assessment, the owner's TinySpec/Standard choice, review,
 approvals, and the handoff to `coordinate-implementation`. Depth is the owner's
 choice, not an admission threshold or a model-family choice.
 
-## Job first; bookkeeping is subordinate
+## Job first; no coordinator bookkeeping
 
-The job is to resolve the request and advance planning toward an approved, executable
-handoff—not to perfect administrative records. Bookkeeping must always remain a small fraction of total effort.
-Spend the bulk of effort on understanding, consequential decisions, source/task production
-and substantive review. This applies to TinySpec, Standard and recovery.
+Resolve the request and advance toward an approved, executable handoff. Produce only
+substantive planning artifacts and required approval inputs; no coordinator bookkeeping.
+Do not maintain administrative ledgers, progress records, evidence manifests or repeated
+readiness reports. Runtime-owned operational state stays runtime-owned. This applies to
+TinySpec, Standard and recovery; it does not remove schema-required task fields.
 
 Once required prerequisites are satisfied, advance the next authorized stage.
-Preparation has an end: reopen only affected work on concrete invalidating evidence
-such as changed scope/content, stale approval, failed proof or capability/ownership drift.
-Do not substitute repeated record polishing, duplicate evidence, unchanged rechecks,
-status-only updates or generic history searches for stage progress.
-Reuse applicable settled evidence and decisions after checking they still apply;
-refresh only invalidated portions. Keep required records terse: record each fact once
-in its authoritative owner and link it elsewhere; coalesce updates within existing
-checkpoint boundaries and skip unchanged writes. Carry this rule into every stage brief.
+Reopen only affected work on concrete invalidating evidence such as changed scope/content,
+stale approval, failed proof or capability/ownership drift. Reuse applicable settled evidence
+and decisions; refresh only invalidated portions. State each required fact once in its
+authoritative artifact or existing approval/session return and reference it elsewhere.
+No repeated record polishing, duplicate evidence, unchanged rechecks or status-only writes.
+Carry this rule into every stage brief; do not add trackers or ceremonies to enforce it.
 
-If administration starts dominating, stop optional bookkeeping, shorten remaining
-records to required facts and return to substantive stage work. Do not add time trackers,
-quota reports or another ceremony to enforce this rule. Efficiency is not a waiver:
-never waive required approvals, safety checks, permissions, reviews or commits.
-A genuine unmet gate stops the affected stage: report the exact blocker and smallest required resolution,
-not an open-ended administrative cleanup programme.
+Never waive required approvals, safety checks, permissions, reviews or commits.
+A genuine unmet gate stops only the affected stage: report the exact blocker and smallest
+required resolution, not an administrative cleanup programme.
 
 ## Discovery and capability boundary
 
@@ -86,6 +82,15 @@ rediscovering settled facts. Mark unchecked claims `UNVERIFIED`. Resolve those a
 scope, acceptance, dependencies, or decisions empirically when possible, otherwise
 obtain an explicit owner deferral before readiness. Do not invent a beneficiary.
 Record exclusions and separately scheduled mechanical work so tasks cannot duplicate it.
+
+Before declaring a technical blocker, identify the exact affected operation and verify its
+actual enforced limit at the consuming interface. Do not generalize a tool-operation limit
+into an artifact, project or workflow limit. For example, a worker's file-read bound does not
+establish the task-contract loader's bound; inspect that loader before blocking task intake.
+Keep owner-requested behavior, verified runtime restrictions and agent-selected design choices
+explicitly distinct in existing artifacts/briefs. An agent inference is not an owner requirement;
+interpret owner agreement within the explanation and scope actually presented, not as a
+broader policy. Correct a mistaken premise and its affected derived constraints before reliance.
 
 Inspect affected implementations, tests, interfaces, data, integrations, and relevant
 history only as needed to assess load-bearing uncertainty. Stop expanding discovery
@@ -463,9 +468,13 @@ an independent reviewer before assigning their work.
    contracts, memory and permission/safety still apply. Missing, unusable or unauthorized task
    delegation stops; no parent task creation/substantive correction or inline/local fallback. Supply authorization to prepare tasks and already-applicable
    approvals; final implementation approval is not a prerequisite to creation.
-   This stage is create-only: no producer self-review/correction. Defects belong to
-   `overall_review`. Include documentation, acceptance, shared context and producer
-   checks without breaking prerequisite order or story acceptance boundaries.
+   This stage is create-only: producers may draft, revise, shorten and mechanically
+   validate their own unsubmitted output within authorized scope, without supervisor
+   permission for ordinary editing. This is not independent review or permission to change
+   approved upstream requirements. After submission, defects belong to `overall_review`
+   and its correction route; independent review and final approval remain required.
+   Include documentation, acceptance, shared context and producer checks without breaking
+   prerequisite order or story acceptance boundaries.
 4. **`overall_review` — independent owner-selected reviewer:** use shared routing selection;
    follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
