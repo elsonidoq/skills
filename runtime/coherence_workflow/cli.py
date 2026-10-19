@@ -42,7 +42,9 @@ def registered_checks(project, gateway=None):
     for file, selector in [('test_recovery.py','EffectRecoveryTests'),('test_recovery.py','PressureRecoveryTests'),
                            ('test_projections.py','ProjectionRecoveryTests'),('test_recovery.py','VersionRecoveryTests'),
                            ('test_interaction.py','QuestionParkTests'),('test_interaction.py','OriginalAnswerTests'),
-                           ('test_controls.py','ControlDeliveryTests'),('test_interaction.py','AutonomyAdmissionTests')]:
+                           ('test_controls.py','ControlDeliveryTests'),('test_interaction.py','AutonomyAdmissionTests'),
+                           ('test_parent_transport.py','ParentTransportTests'),('test_parent_transport.py','FacadeAuthorityTests'),
+                           ('test_interaction_live.py','ParentRoundtripTests')]:
         result['workflow.'+selector]={'version':'1','schema':{'type':'object','additionalProperties':False,
             'properties':{'test_file':{'const':'runtime/tests/'+file},'selector':{'const':selector}},
             'required':['test_file','selector']},'execute':unittest_oracle}
@@ -92,6 +94,7 @@ class Coordinate:
         ''')
         self.review_repair=ReviewRepair(self)
         self.interaction=Interaction(self.store,self.run)
+        self.parent_transport=None
 
     def publish_run_binding(self):
         value={'run_id':self.run,**{k:None for k in ('task_id','node_id','attempt_id','session_id','role','task_hash')},
@@ -724,6 +727,9 @@ class Coordinate:
                                           side_effects=effects[name],reconcile=self.reconcile_effect)
                              for name,kind,stage,outcomes,function in definitions}
         registry.success_terminals = {'complete'}
+        if self.parent_transport is not None:
+            from .notifications.paseo import TRANSPORT
+            registry.question_transports[TRANSPORT]=self.parent_transport
         return registry
 
 
@@ -791,6 +797,9 @@ def status(project, run):
             question['graph_parked']=bool(db.execute('SELECT 1 FROM wf_question_parks WHERE gate_id=?',(question['gate_id'],)).fetchone())
         controls=[dict(r) for r in db.execute('SELECT i.* FROM wf_owner_inputs i JOIN wf_controls c USING(input_id) WHERE i.run_id=? ORDER BY i.rowid',(run,))] if has_interaction else []
         return {'run': dict(row), 'state':projection['payload']['status'],'projection':projection,'questions':questions,'controls':controls,
+                'parent_transport':{'preflight':[dict(r) for r in db.execute('SELECT stage,blocker,ready_receipt FROM wf_parent_preflight WHERE run_id=?',(run,))],
+                    'outbox':[dict(r) for r in db.execute('SELECT o.event_id,o.stage,d.attempts,d.blocker,d.tool_receipt FROM wf_outbox o LEFT JOIN wf_parent_delivery d USING(event_id) WHERE o.run_id=?',(run,))]}
+                    if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_parent_delivery'").fetchone() else None,
                 'reviews':reviews,'findings':findings,'repair_budgets':budgets,'metrics':metrics,
                 'metrics_unknown_reason':None if any(r['payload']['role'] in ('implement','repair','review') for r in metrics) else 'no agent observations recorded', 'operations': [dict(r) for r in db.execute('SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=?', (run,))],
                 'alarms': [dict(r) for r in db.execute('SELECT * FROM wf_alarms')], 'accepted': projection['payload']['acceptance']=='accepted'}
@@ -806,6 +815,7 @@ def main(argv=None):
         for flag in ('project','workflow','tasks','owner-catalog','manifest','containment'):
             p.add_argument('--' + flag, required=True)
         p.add_argument('--run', required=True)
+        p.add_argument('--parent-binding')
         if name == 'resume': p.add_argument('--resume-authority',required=True)
     p = subs.add_parser('intake')
     for flag in ('project','tasks','owner-catalog','config-hash'):
@@ -815,8 +825,15 @@ def main(argv=None):
         p = subs.add_parser(name); p.add_argument('--project', required=True); p.add_argument('--run', required=True)
         if name != 'pending':
             p.add_argument('--input',required=True);p.add_argument('--input-authority',required=True)
+    for name in ('parent-ready','parent-received','parent-answer'):
+        p=subs.add_parser(name)
+        for flag in ('project','run','nonce'):p.add_argument('--'+flag,required=True)
+        if name!='parent-ready':p.add_argument('--event',required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command in ('parent-ready','parent-received','parent-answer'):
+            from .notifications.paseo import facade
+            print(canonical(facade(Path(args.project).absolute(),args.run,args.command,args.nonce,getattr(args,'event',None))));return 0
         if args.command == 'status':
             print(canonical(status(args.project, args.run))); return 0
         if args.command == 'pending':
@@ -897,6 +914,16 @@ def main(argv=None):
         with Authority(args.project) as authority:
             # Engine reserves the run before handler operations can be persisted.
             coordinate = Coordinate(authority,args.run,contract,catalog,config,args.containment,manifest,environment)
+            if config['interaction']['mode']=='interactive_parent':
+                if not args.parent_binding:raise Blocked('interactive launch requires registered actual-parent binding/readiness')
+                path=Path(args.parent_binding).resolve(strict=True)
+                if path.is_relative_to(authority.project):raise Blocked('parent binding must be outside worker worktree')
+                private_file(path)
+                from .notifications.paseo import Paseo
+                coordinate.parent_transport=Paseo(authority,args.run,json.loads(path.read_text()))
+                coordinate.parent_transport.preflight()
+            elif args.parent_binding:
+                raise Blocked('standalone mode cannot silently adopt a parent transport')
             registry = coordinate.registry()
             load_workflow(registry, workflow_bytes, ROOT)
             maximum=max([config['defaults']['max_repair_attempts'],*[n.get('max_repair_attempts',0) for n in config['nodes']]])
@@ -914,6 +941,11 @@ def main(argv=None):
                 outcome='interrupted'
                 try:
                     outcome=engine.invoke()['outcome']
+                    while outcome=='waiting_owner_input' and coordinate.parent_transport is not None:
+                        coordinate.parent_transport.deliver_pending()
+                        # Only bound accepted input resumes the existing LangGraph
+                        # interrupt. This facade never chooses a task/model/session.
+                        outcome=engine.invoke()['outcome']
                     if outcome=='accepted':
                         with authority.store.transaction() as db:
                             if db.execute("SELECT 1 FROM wf_owner_inputs i JOIN wf_controls c USING(input_id) WHERE i.run_id=? AND i.stage='received' AND c.action IN ('pause','cancel')",(args.run,)).fetchone():

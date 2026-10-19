@@ -56,7 +56,10 @@ def load_workflow(registry, source=None, resource_root=None):
     if config['containment_capability'] is not None and config['containment_capability'] not in registry.containments:
         raise Blocked('unavailable containment capability')
     if config['interaction']['mode'] != 'standalone':
-        raise Blocked('interactive capability unavailable until interaction delivery')
+        transport=registry.question_transports.get(config['interaction']['question_transport'])
+        if transport is None:
+            raise Blocked('registered actually preflighted interactive capability unavailable')
+        transport.validate_config(config['interaction'])
     if config['storage'] != {'checkpoint':'.coherence/workflow/workflow.sqlite','event_root':'.coherence/workflow/runs'}:
         raise Blocked('storage cannot override worktree authority')
     for profile_id, value in config['profiles'].items():

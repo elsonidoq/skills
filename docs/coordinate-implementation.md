@@ -542,5 +542,90 @@ The four closed v1 selectors are `workflow.QuestionParkTests`, `workflow.Origina
 `workflow.ControlDeliveryTests`, `workflow.AutonomyAdmissionTests`. Run their source-named classes
 in test_interaction/test_controls with the same approved live/auth/catalog/cgroup environment
 used above. Offline binding, crash/SQL and controlled headroom fixtures are distinct from actual
-CLI/SDK/LangGraph/original-entry/control/cgroup traces. Parent wake/actual ask_user, transport busy/
-outage/reconnect/authentication remain T007, not implied by standalone or historical PoC proof.
+CLI/SDK/LangGraph/original-entry/control/cgroup traces. The parent adapter below adds its separate
+actual launch/wake/tool proof; neither standalone nor historical PoC proof alone establishes it.
+
+## Registered same-parent interaction (T007, explicit mode)
+
+Core standalone start/status/pending/answer/control remains independent of Paseo. Select
+`interaction.mode: interactive_parent`, `question_transport: paseo-0.9.2`,
+`question_tool: ask_user` and an explicit `parent_binding_ref`. Start/resume additionally
+requires `--parent-binding FILE`, a private owned single-link operator descriptor OUTSIDE the
+worker worktree. Its closed fields are:
+
+- adapter=paseo-0.9.2, version=0.9.2, binding_id matching parent_binding_ref;
+- actual recipient_id, runtime_session_id, canonical official Pi session_file, parent_cwd;
+- observed parent_model/parent_effort, explicit generation (positive integer), fresh launch_nonce.
+
+These are pinned observations, not model/task selection or authentication by opaque ID. The
+runner verifies public Paseo inspect, exact recipient/provider/cwd/model/effort, current official
+session header/active registered bash+ask_user tools and genuine registered launch provenance.
+Launch through the actual parent's registered bash tool, asynchronously running the shipped
+`coordinate-implementation start ... --parent-binding ...`, then returning the literal marker
+`COHERENCE_LAUNCH_RECEIPT:<launch_nonce>`. The literal nonce, exact project/run and start command
+must appear in that real tool's arguments/result, not only hidden ambient variables. The existing
+single-writer lock still gates the actual runner. A shell background job/detached controller is
+not a required daemon; use only an authorized launching interface and approved log/process scope.
+
+Before any task dispatch, code sends a fresh run-bound readiness challenge through PUBLIC
+`paseo inspect` / `send --no-wait --prompt-file`. The SAME parent receives the structured
+COHERENCE_PARENT_FACADE_V1 event and executes its exact generated `command` (parent-ready).
+The runner requires the completed genuine parent bash tool call/result before registering the
+interactive capability with the graph. A descriptor, approved flag, registry name, queued send
+or bare nonce is insufficient. Missing/unknown/failed readiness blocks interactive start; it
+never silently substitutes manual polling or another transport/platform.
+
+The facade is prescribed, not an orchestrator. For a question event:
+
+1. Execute `received_command` verbatim through registered bash. This runner API durably claims
+   the event and returns ask_allowed. If false, do NOT ask again: reconcile existing actual tool
+   provenance/answer or leave a visible blocker.
+2. If true, invoke the ACTUAL registered ask_user using the event's exact question, context,
+   options and allowMultiple/allowFreeform/allowComment flags. No task/model/session/outcome choice.
+3. After its genuine result, execute `answer_command` verbatim. That API derives the answer
+   from the actual registered tool result, not parent prose or a supplied approval file.
+
+The parent must not manufacture tool receipts, choose an option itself in production, approve
+new scope or invoke private supervisor/file messaging. Original source/task/approval/config and
+same-parent generation remain bound. Material-change answers conservatively block for producing
+approval renewal; the genuine tool result remains available and the question is not reasked.
+The facade never owns workflow persistence or dispatch: all transitions go through the runner's
+narrow validated CLI APIs and SQL. Optional status delivery is not on the execution path and
+cannot release a gate or change graph state.
+
+Official Pi session JSONL is read-only provenance, NOT a transport or competing workflow store.
+Only bounded active-branch registry/tool metadata, exact nonce-bound argument hashes, call/result
+entry IDs and required safe answer facts are retained. No parent thoughts/unrelated text/raw
+session is exported. Canonical path/file identity, same UID, regular single-link file and no
+group/other writes are required; existing mode0644 parent files need not be modified. This does
+NOT promise confidentiality, cryptographic authenticity or protection from malicious same-UID
+actors. Missing/partial/rotated/ambiguous/stale evidence blocks or waits boundedly. Fresh challenge
+ACK plus public inspection ties the observed conversation/tool generation to the actual launching
+parent; process/OS-host continuity is not presumed.
+
+Only SQL pending + actual sync graph-park receipt makes the outbox eligible. Its distinct stages
+are recorded → transport_queued → parent_received → question_tool_invoked → answered. Code waits
+for idle using a bounded retry (40 attempts, 0.5-second intervals; each public command also has a
+10-second deadline), records busy/unavailable/queued facts, and revalidates the pinned recipient/
+runtime generation on reconnect. A send receipt is NOT delivery or a worker answer. Actual parent
+receipt can reconcile an uncertain send before its acknowledgement, preserving stage ordering.
+Durable claim/dedup prevents blind repeated UI invocation; crash after an external ask before a
+receipt requires actual tool reconciliation or stays blocked. No exactly-once UI guarantee.
+
+After a bound genuine answer is accepted, the deterministic runner resumes the SAME LangGraph
+interrupt and original worker conversation automatically; the facade does not choose a task.
+Accepted input survives later transport/resume failure without reasking. UI loss leaves SQL
+pending and parent_transport blocker/attempt data in status. CLI owner answers and reconciled
+pause/cancel remain usable independently. Host exit promises no background retry; authorized
+resume must retain the original inputs and parent binding, never silently rebind a new parent.
+
+The three closed v1 checks are workflow.ParentRoundtripTests (test_interaction_live.py),
+workflow.ParentTransportTests and workflow.FacadeAuthorityTests (test_parent_transport.py).
+Controlled adapter subprocess/SQL/official-format fixture records are NOT genuine UI evidence.
+The separately authorized live test uses actual parent launch/readiness/bash/ask_user provenance,
+automatic public Paseo wake, original worker answer-before-request and a public SDK-root UI driver
+that responds ONLY to the exact standing-authorized test question/request. That test-only driver
+reconnects and revalidates the exact permission before responding; it is not shipped workflow
+answer logic or a fabricated human click. It also injects a local command outage then uses the
+actual public CLI again; this is controlled fault proof, not a natural daemon outage or hostile
+same-UID security certification. Existing valid SDK/settings/custody/control proof is reused.

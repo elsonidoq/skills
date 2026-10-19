@@ -324,6 +324,68 @@ All-role configured question/continue_original edges are bounded graph loops, no
 scheduler. Original repair budgets remain consumed once for that repair; continuation segments
 have distinct SDK operation/attempt identities. Review permits exactly configured/admitted
 read_file, optionally request_owner_input, with original independent role/range lineage and
-completed host-admission provenance. Mutating/undeclared tools remain rejected. T007 must add
-actual parent readiness/outbox delivery provenance; a recorded row or authorization file alone
+completed host-admission provenance. Mutating/undeclared tools remain rejected. T007 below adds
+actual parent readiness/outbox provenance; a recorded row or authorization file alone still
 cannot establish an actual ask_user invocation or answer.
+
+## T007 registered parent transport/provenance extension
+
+Paseo is explicit and mode-specific. `Registry.question_transports` contains only trusted runtime
+capabilities; engine validation calls the selected capability's validate_config and includes its
+source hash, actual ready/launch receipts, descriptor hash and observed parent identity in registry/
+run identity. Config data cannot create executable capabilities or grant readiness. Default empty
+registries and unpreflighted/missing capabilities fail closed; standalone performs no Paseo import.
+
+`notifications/paseo.py` owns these additive v1 tables in the SAME private SQLite authority:
+
+| Table | Actual columns / role |
+| --- | --- |
+| `wf_parent_preflight` | run_id PK, closed canonical descriptor, observed official-session identity, UNIQUE challenge nonce, challenge_recorded/ready stage, genuine launch and ready tool receipts, nullable blocker. Deliberately no run FK: readiness is established before Engine reserves a graph run |
+| `wf_parent_delivery` | outbox event PK/FK, immutable generation hash, bounded send-attempt count, durable parent claim, actual question-tool receipt, nullable blocker |
+| `wf_parent_attempts` | monotonic seq PK, run ID, nullable event ID, action/outcome. Includes preflight busy/unavailable/queued observations; optional status observations do not drive graph state |
+
+A descriptor binds adapter/version, binding_id, recipient, Pi session/file/cwd, observed parent
+model/effort, explicit generation and launch nonce. An observed identity binds file device/inode/
+UID, header session/cwd and current active registered-tool digest. Reconnect compares those values
+plus actual public inspection; it cannot silently choose another parent/generation/environment.
+The original source file is owned and non-writable by group/others, but may be mode0644: no
+confidentiality, cryptographic identity or malicious-same-UID protection is claimed.
+
+Provenance reads are bounded to 32 MiB/session and 1 MiB/record, canonical non-symlink regular
+single-link files, version3 header, complete LF JSON records and an unambiguous active parentId
+branch. Missing/partial/rotated/stale/mismatched metadata blocks or remains pending. Only current
+registry metadata and exact nonce/argument-bound bash/ask_user call/result facts are extracted.
+Sanitized receipts retain tool name, call and result entry IDs, argument/result hashes and required
+answer hash; they never copy the parent transcript, private reasoning or unrelated user content.
+The official session file is read-only evidence, not a message channel or workflow decision store.
+
+Launch requires a genuine registered bash call/result carrying the literal launch marker and exact
+project/run/start context. A fresh public-Paseo readiness wake requires the same parent's completed
+parent-ready bash result before reliance. A facade executing that command can only return ack_received;
+code independently verifies completion before wf_parent_preflight becomes ready. Declared ask_user
+availability alone is not a question result: actual answer acceptance additionally requires the real
+registered ask_user call with exact question/context/options/flags, matching noncancelled successful
+structured selection and consistent tool result text. Wrong/cancelled/error/ambiguous outcomes block.
+
+A graph-parked question creates a stable outbox event. Stage transitions are recorded →
+transport_queued → parent_received → question_tool_invoked → answered. Public queued-send receipts
+and completed parent helper receipts remain distinct. If genuine parent receipt arrives before an
+uncertain send is acknowledged, the required earlier queue stage is explicitly reconciled from that
+receipt before later stages; an eventual send ACK cannot regress an answered row. A durable claim
+is inserted before the facade may call ask_user. Duplicate callbacks cannot grant another ask;
+unknown external invocation needs actual tool reconciliation or remains blocked, never exactly-once UI.
+
+`parent-answer` does not accept caller answer text or workflow choices. It derives a deterministic
+input ID from the outbox event, verifies original sources/approval records, binds the actual tool
+receipt to the original gate/session/nonce/config, and submits through Interaction.answer. This is
+runner-owned persistence behind a narrow facade API, not facade SQL/orchestration authority.
+Material-change responses require producing renewal; input or transport success never authorizes
+source/profile/task changes. Accepted inputs retain their original delivery obligations across
+transport/reentry failures. Optional notifications cannot accept input or resume a graph.
+
+Standalone status additionally exposes parent_transport preflight/outbox/blocker facts from SQL,
+without loading a UI client. Required transport failure leaves durable question/pin/input data and
+explicit blockers; it is not accepted completion or a manual-polling fallback. The shipped wake
+adapter uses public Paseo0.9.2 inspect/send only. Test-only public package-root SDK response driving
+is separate: it validates an exact current permission question/options/nonce, reconnects and responds
+only to that preapproved isolated UI request. No fabricated tool/user events or historical recipients.

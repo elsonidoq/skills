@@ -61,6 +61,7 @@ class Registry:
         self.tools = set()
         self.containments = set()
         self.success_terminals = set()
+        self.question_transports = {}
         # Declared future boundaries fail closed, not fake successful implementations.
         for id, kind, stage in (
             ('intake','code','intake'), ('authority','gate','authority'),
@@ -105,7 +106,8 @@ class Registry:
                        'profiles':self.profiles,'skills':self.skills,
                        'capabilities':sorted(self.capabilities), 'permissions':sorted(self.permissions),
                        'tools':sorted(self.tools),'containments':sorted(self.containments),
-                       'success_terminals':sorted(self.success_terminals)})
+                       'success_terminals':sorted(self.success_terminals),
+                       'question_transports':{name:capability.identity() for name,capability in self.question_transports.items()}})
 
 
 # Stable T001 selectors and closed argument contracts; no shell selector interpolation.
