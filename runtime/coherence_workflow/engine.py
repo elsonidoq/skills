@@ -154,6 +154,9 @@ class Engine:
         config = load_workflow(registry, yaml.safe_dump(config), resource_root)
         self.run_id, self.config, self.registry = run_id, config, registry
         self.registry_hash, self.config_hash = registry.identity(), digest(config)
+        self.resource_root = resource_root
+        self.schemas_hash = digest(schemas())
+        self.code_hash = self._runtime_code_hash()
         self.input_identity = input_identity
         self.input_hash = digest(input_identity)
         # Revalidate even programmatic configs; callers cannot bypass the YAML seam.
@@ -235,10 +238,18 @@ class Engine:
             return {'outcome':result['outcome'],'trace':trace}
         return execute
 
+    @staticmethod
+    def _runtime_code_hash():
+        return digest({p.name:hashlib.sha256(p.read_bytes()).hexdigest()
+                       for p in files('coherence_workflow').iterdir() if p.name.endswith('.py')})
+
     def _assert_pins(self):
+        if self._runtime_code_hash() != self.code_hash or digest(schemas()) != self.schemas_hash:
+            raise Blocked('active runtime/schema content drift')
         if (self.registry.identity() != self.registry_hash or digest(self.config) != self.config_hash or
                 digest(self.input_identity) != self.input_hash):
             raise Blocked('active registry/config drift; renewal required')
+        load_workflow(self.registry,yaml.safe_dump(self.config),self.resource_root)
 
     def invoke(self):
         self.authority.assert_held()

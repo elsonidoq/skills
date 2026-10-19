@@ -397,7 +397,14 @@ class Gateway:
 
     def recover(self):
         """Observe durable scopes; never release/replay tools or adopt unknown identities."""
-        results = []
-        for row in self.store.db.execute("SELECT p.* FROM wf_processes p JOIN wf_operations o USING(op_id) WHERE o.phase!='completed'").fetchall():
-            results.append(self.settle(row['op_id'], row['exit_code']))
+        results, errors = [], []
+        rows = self.store.db.execute("""SELECT p.* FROM wf_processes p JOIN wf_operations o USING(op_id)
+            WHERE o.phase!='completed' ORDER BY CASE p.scope_kind WHEN 'task_tools' THEN 0 ELSE 1 END,p.op_id""").fetchall()
+        for row in rows:
+            try:
+                results.append(self.settle(row['op_id'], row['exit_code']))
+            except Blocked as exc:
+                errors.append(row['op_id'] + ': ' + str(exc))
+        if errors:
+            raise Blocked('worktree scope reconciliation blocked: ' + '; '.join(errors))
         return results

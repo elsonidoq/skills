@@ -199,3 +199,24 @@ must match that original intent. Results contain actual SHA, parent/tree, owned 
 full reconciled files/index. Original process snapshots are not overwritten to admit Git.
 The commit gateway has a narrowly registered exact-checkpoint reconciler; ordinary process
 HEAD/index drift still blocks. Host and task-tool lifetimes remain separate.
+
+## Controller/recovery/projection extension
+
+`wf_controllers` binds one run to actual controller identity and active/stopped phase;
+`controller_started`/`controller_stopped` events are immutable facts. Stored run state alone
+is not liveness. Schema version remains the supported additive v1; unknown versions are
+rejected before opening a writable saver. No untrusted saver deserialization or downgrade.
+
+`wf_projections(run_id,seq)` is a publication convenience cursor, never a decision input.
+Published state/event/metric records validate against the packaged projection schema. SQL
+sequence/event IDs define logical order, including replay after append-before-cursor failure.
+Metric checkpoint revisions retain original counters but set `supersedes` to the original
+invocation metric ID and attach actual result SHA/check refs. Consumers select unsuperseded
+records rather than summing revisions. Unknown original event timestamps are labelled
+`unknown:event-timestamps-not-recorded`; SDK segment start/end nanoseconds remain actual
+recorded observations. Projection files have private owner-only permissions.
+
+Authorized post-commit recovery reconciles existing immutable intent/result/tree/index and
+records the original checkpoint node's schema-valid result before saver continuation. Other
+uncertain effects remain blocked. A recovery authorization digest is appended to SQL; no
+model-generated result can authorize it. Controller exit never implies background progress.

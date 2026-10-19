@@ -316,3 +316,50 @@ own receipt-validated task-tool scope; nonempty descendants block. Actual parent
 operation trailer, owned diff, residual files and index must all match before a receipt.
 A failed or uncertain checkpoint is not replayed. No-change creates no empty commit.
 `resume` never redispatches an uncertain partial task; unsupported recovery blocks precisely.
+
+## Explicit recovery and projections
+
+`resume` additionally requires `--resume-authority FILE`: a private, single-link owned
+operator file outside the agent worktree, bound to action `reconcile`, run ID, the actual
+recorded engine config hash, the sorted exact outstanding operation IDs, actor and truthful
+external provenance. This input is not worker-accessible. It authorizes reconciliation,
+not guessed completion, new scope or automatic implementation retry. Reentry scans every
+unsettled worktree scope, task-tools first, retaining errors while recording known orphan
+alarms. Live/unknown work blocks; a valid idle host remains distinct and still cannot be
+silently replaced. Empty groups alone do not certify a task.
+
+An exact already-created focused commit may be recovered using its immutable operation
+intent, direct baseline parent, full expected tree/path set, current HEAD, file identities
+and unrelated index. Only with still-current REQUIRED/gates does recovery record the
+checkpoint and original graph result. It never reruns `git commit`. Interrupted SDK turns
+or other unknown partial effects block for diagnosis/original-session recovery; no automatic
+fresh replacement or reset is implemented. Old complete saver/app results remain audited.
+
+Each CLI controller records real boot/PID/start/UID/parent identity and a stopped event.
+Separate `status` uses a read-only SQLite snapshot and reports an absent/dead controller as
+interrupted, not running in the background. It includes schema-validated state, config hash,
+current task/gate/checkpoint, alarms, operations and projection lag. It never repairs files
+or launches Node/models. Unsupported future DB versions produce a precise read-only blocker,
+not checkpoint deserialization or downgrade.
+
+The runner publishes `state.json`, `events.jsonl`, `metrics.jsonl` beneath the run's private
+runtime directory. SQL remains sole decision authority. Events keep stable SQL ordering and
+IDs; public event details are sanitized payload hashes (full restricted receipts stay in
+SQL). Historical event timestamps absent from original SQL are explicitly labelled unknown,
+not invented. SDK attempt readings preserve real profile/context/counter provenance and
+null reasons; non-agent records have no invented Pi session/tokens. Checkpoint metric
+revisions supersede, rather than add to, the original invocation's usage.
+
+Publication compares actual complete records with SQL before appending. A torn final suffix
+is archived and only that derived suffix truncated. Append-before-cursor crashes deduplicate
+from actual complete bytes. A non-tail mismatch blocks for explicit owner-controlled rebuild;
+there is no silent rewrite of valid history. State uses fsync plus atomic rename. Status
+reports lag without repair. This is process-crash/single-host behavior, not physical power-loss
+or hostile same-UID isolation certification.
+
+The settled `Store.backup` API requires explicit scoped backup authorization, no outstanding
+operations/alarms and a fresh canonical destination. It uses SQLite's backup API (including
+committed WAL state) and integrity check, never a main-file-only copy. No automatic schema
+migration or downgrade is provided. Changed runtime/config/registry/schema/resources/inputs/
+approvals/host hashes block affected continuation; source/profile changes require the original
+producing approval, not a resume flag.

@@ -36,6 +36,11 @@ def file_bytes(project, args):
 
 def registered_checks(project):
     result = {name: {**spec, 'execute': unittest_oracle} for name, spec in CHECKS.items()}
+    for file, selector in [('test_recovery.py','EffectRecoveryTests'),('test_recovery.py','PressureRecoveryTests'),
+                           ('test_projections.py','ProjectionRecoveryTests'),('test_recovery.py','VersionRecoveryTests')]:
+        result['workflow.'+selector]={'version':'1','schema':{'type':'object','additionalProperties':False,
+            'properties':{'test_file':{'const':'runtime/tests/'+file},'selector':{'const':selector}},
+            'required':['test_file','selector']},'execute':unittest_oracle}
     result['workflow.FileBytes'] = {'version': '1', 'schema': {'type': 'object', 'additionalProperties': False,
         'properties': {'path': {'type': 'string', 'minLength': 1}, 'expected': {'type': 'string'}},
         'required': ['path', 'expected']}, 'execute': lambda args: file_bytes(project, args)}
@@ -48,6 +53,7 @@ class Coordinate:
         self.authority, self.store, self.run = authority, authority.store, run
         self.contract, self.config, self.manifest = contract, config, manifest
         self.catalog, self.containment, self.environment = catalog, containment, environment
+        self.host_hash = content_hash(ROOT / 'runtime/pi-host/host.mjs')
         self.gateway = Gateway(authority, run, containment, {})
         self.git = GitEffects(authority, run, self.gateway)
         self.verification = Verification(authority, run, registered_checks(authority.project))
@@ -177,6 +183,8 @@ class Coordinate:
         return tools
 
     def implement(self, context):
+        if content_hash(ROOT / 'runtime/pi-host/host.mjs') != self.host_hash:
+            raise Blocked('active SDK host content drift')
         row = self.current()
         if not row or row['state'] != 'active':
             raise Blocked('missing selected task')
@@ -256,6 +264,44 @@ class Coordinate:
             raise Blocked('incomplete task stream cannot report implementation complete')
         return {'outcome': 'implementation_complete'}
 
+    def recover(self, authorization):
+        """Explicitly reconcile known receipts; unknown/partial SDK turns never replay."""
+        run=self.store.db.execute('SELECT * FROM wf_runs WHERE run_id=?',(self.run,)).fetchone()
+        pending=[dict(r) for r in self.store.db.execute("SELECT * FROM wf_operations WHERE run_id=? AND phase!='completed' ORDER BY op_id",(self.run,))]
+        if (authorization.get('action')!='reconcile' or authorization.get('run_id')!=self.run or
+                authorization.get('config_hash')!=run['config_hash'] or
+                authorization.get('operations')!=[r['op_id'] for r in pending] or
+                not authorization.get('actor') or not authorization.get('provenance')):
+            raise Blocked('current scoped external recovery authority required')
+        with self.store.transaction() as db:
+            self.store.event(db,self.run,None,'recovery_authorized',{'authority_hash':digest(authorization)})
+        # Scan ALL durable worktree scopes. A live task group durably alarms; a live
+        # idle host remains distinct but still prevents unapproved replacement.
+        self.gateway.recover()
+        self.store.assert_dispatchable(self.run)
+        uncertain=[r for r in pending if r['kind']=='sdk-turn']
+        if uncertain:
+            raise Blocked('partial SDK invocation requires diagnosed original-session recovery; no replacement')
+        checkpoints=[r for r in pending if r['kind']=='git-checkpoint']
+        for op in checkpoints:
+            from .git_effects import reconcile_checkpoint
+            receipt=reconcile_checkpoint(self.authority,op['op_id'])
+            self.store.transition(op['op_id'],'intent','completed',receipt)
+            task_id=json.loads(op['intent'])['task_id']
+            row=self.store.db.execute('SELECT * FROM wf_tasks WHERE run_id=? AND task_id=?',(self.run,task_id)).fetchone()
+            task=json.loads(row['contract'])
+            if not self.gates_satisfied(task) or any(d['status']!='satisfied' for d in self.verification.audit(task,json.loads(row['evidence']))):
+                raise Blocked('recovered commit still lacks current original evidence/gates')
+            with self.store.transaction() as db:
+                db.execute("UPDATE wf_tasks SET state='checkpointed',checkpoint=? WHERE run_id=? AND task_id=?",(canonical(receipt),self.run,task_id))
+                self.store.event(db,self.run,None,'task_checkpointed',{'task_id':task_id,**receipt})
+            graph=[r for r in pending if r['kind']=='graph' and r['node_id'].split(':')[0]=='checkpoint']
+            if len(graph)!=1:raise Blocked('ambiguous checkpoint graph recovery')
+            self.store.transition(graph[0]['op_id'],'intent','completed',{'outcome':'ok'})
+        remaining=self.store.db.execute("SELECT node_id,kind FROM wf_operations WHERE run_id=? AND phase!='completed'",(self.run,)).fetchall()
+        if remaining:raise Blocked('unknown partial effects; explicit diagnosis required')
+        self.reconcile_effect({}, {})
+
     def reconcile_effect(self, context, result):
         """Validate the committed prefix and any current owned residual, never replay it."""
         from .git_effects import entries
@@ -320,10 +366,14 @@ def status(project, run):
     db.row_factory = sqlite3.Row
     try:
         db.execute('BEGIN')
+        if [r[0] for r in db.execute('SELECT version FROM wf_meta')] != [1]:
+            raise Blocked('unsupported application schema; read-only status cannot interpret version')
+        from .projections import state_record
+        projection = state_record(db,run)
         row = db.execute('SELECT * FROM wf_runs WHERE run_id=?', (run,)).fetchone()
         if not row:
             raise Blocked('unknown run')
-        return {'run': dict(row), 'operations': [dict(r) for r in db.execute('SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=?', (run,))],
+        return {'run': dict(row), 'state':projection['payload']['status'],'projection':projection, 'operations': [dict(r) for r in db.execute('SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=?', (run,))],
                 'alarms': [dict(r) for r in db.execute('SELECT * FROM wf_alarms')], 'accepted': False}
     finally:
         db.close()
@@ -337,6 +387,7 @@ def main(argv=None):
         for flag in ('project','workflow','tasks','owner-catalog','manifest','containment'):
             p.add_argument('--' + flag, required=True)
         p.add_argument('--run', required=True)
+        if name == 'resume': p.add_argument('--resume-authority',required=True)
     p = subs.add_parser('intake')
     for flag in ('project','tasks','owner-catalog','config-hash'):
         p.add_argument('--' + flag, required=True)
@@ -367,9 +418,22 @@ def main(argv=None):
             registry = coordinate.registry()
             load_workflow(registry, Path(args.workflow).read_bytes(), ROOT)
             engine = Engine(authority,args.run,config,registry,ROOT,max_task_visits=len(contract['tasks']),
-                            input_identity={'contract':contract,'catalog_hash':digest(catalog),'manifest':manifest,'environment':environment})
+                            input_identity={'contract':contract,'catalog_hash':digest(catalog),'manifest':manifest,'environment':environment,
+                                            'host_hash':content_hash(ROOT/'runtime/pi-host/host.mjs')})
             try:
-                engine.invoke()
+                if args.command == 'resume':
+                    auth_path=Path(args.resume_authority).resolve(strict=True)
+                    if auth_path.is_relative_to(authority.project):raise Blocked('resume authority must be external to agent worktree')
+                    private_file(auth_path)
+                    coordinate.recover(json.loads(auth_path.read_text()))
+                authority.store.register_controller(args.run)
+                outcome='interrupted'
+                try:
+                    engine.invoke();outcome='implementation_complete'
+                finally:
+                    authority.store.settle_controller(args.run,outcome)
+                    from .projections import Publisher
+                    Publisher(authority,args.run).publish()
             finally:
                 engine.close()
             print(canonical(status(args.project,args.run)))

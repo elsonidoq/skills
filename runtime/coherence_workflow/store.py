@@ -163,6 +163,8 @@ class Store:
           op_id TEXT PRIMARY KEY REFERENCES wf_operations, scope_kind TEXT NOT NULL
             CHECK(scope_kind IN('host','task_tools')), name TEXT NOT NULL UNIQUE,
           containment TEXT, identity TEXT, exit_code INTEGER, empty_receipt TEXT, reconciliation TEXT);
+        CREATE TABLE IF NOT EXISTS wf_controllers(
+          run_id TEXT PRIMARY KEY REFERENCES wf_runs, identity TEXT NOT NULL, phase TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS wf_alarms(
           alarm_id TEXT PRIMARY KEY, op_id TEXT NOT NULL REFERENCES wf_processes,
           kind TEXT NOT NULL CHECK(kind='ORPHAN_PROCESS'), state TEXT NOT NULL,
@@ -277,6 +279,40 @@ class Store:
             found.add(operation['op_id'])
         if found != allowed:
             raise Blocked('unknown/completed host admission')
+
+    def register_controller(self, run):
+        from .containment import process_identity
+        identity = process_identity(os.getpid(), uuid.uuid4().hex)
+        with self.transaction() as db:
+            db.execute('INSERT INTO wf_controllers VALUES(?,?,?) ON CONFLICT(run_id) DO UPDATE SET identity=excluded.identity,phase=excluded.phase',
+                       (run, canonical(identity), 'active'))
+            self.event(db,run,None,'controller_started',{'identity':identity})
+        return identity
+
+    def settle_controller(self, run, state):
+        with self.transaction() as db:
+            db.execute("UPDATE wf_controllers SET phase='stopped' WHERE run_id=?",(run,))
+            self.event(db,run,None,'controller_stopped',{'state':state})
+
+    def backup(self, destination, *, authorization):
+        if authorization != {'action':'sqlite-backup','database':str(self.path)}:
+            raise Blocked('explicit settled backup authority required')
+        self.authority.assert_held()
+        if (self.db.execute("SELECT 1 FROM wf_operations WHERE phase!='completed'").fetchone() or
+                self.db.execute("SELECT 1 FROM wf_alarms WHERE state='active'").fetchone()):
+            raise Blocked('backup/migration requires settled operations')
+        destination = Path(destination)
+        if destination.exists() or destination.is_symlink() or destination.parent != destination.parent.resolve(strict=True):
+            raise Blocked('backup destination must be fresh and canonical')
+        fd = os.open(destination,os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_WRONLY,0o600); os.close(fd)
+        target = sqlite3.connect(destination)
+        try:
+            self.db.backup(target)
+            if target.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+                raise Blocked('SQLite backup integrity failed')
+        finally:
+            target.close()
+        return {'path':str(destination),'sha256':hashlib.sha256(destination.read_bytes()).hexdigest(),'integrity':'ok'}
 
     def close(self):
         self.db.close()
