@@ -1,0 +1,1471 @@
+{
+  "schema_version": 1,
+  "origin": "Standard",
+  "legacy_origin": null,
+  "sources": [
+    {
+      "path": "specs/003-coordinate-workflow/source-request.md",
+      "section": null,
+      "sha256": "8903a3cd31f4fb4da8aae9fb5cfb09fe07c1cbfd89d096d61b140aab7a9d4ea8",
+      "kind": "source"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/spec.md",
+      "section": null,
+      "sha256": "766f46a18e60066d1597f5465678ab509efb5c22b178ed5659b6a7eb8c2f1f51",
+      "kind": "spec"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/plan.md",
+      "section": null,
+      "sha256": "99422b55914e636e92e3ebb5bc9d4c78b540f044a89dc78cbf1c68576090823d",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/decisions.md",
+      "section": null,
+      "sha256": "a9b53cb163d617a3680b9c9d306f8883b4ff4da8c6c0e0a936551373d6580367",
+      "kind": "decision"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/spec-approval.md",
+      "section": null,
+      "sha256": "50083dd2295091c9f08d6cad14809c404e75bd6cb23cab56dabe09bb1d276267",
+      "kind": "decision"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/research.md",
+      "section": null,
+      "sha256": "c7115b999700d6f791dd8e0ac6bd9578340f511fcb6fcfdb9bbaac678e386398",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/data-model.md",
+      "section": null,
+      "sha256": "cb959bc0b156f259997715ea471309f666911642194a1fdd8a75fd83f95169cb",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/quickstart.md",
+      "section": null,
+      "sha256": "6d189a912f70560c2caaea1d994eec414cb3a9e505c51ff038b18b20a6eead0c",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/README.md",
+      "section": null,
+      "sha256": "67a20c3e07ca392682f714c8c935bec234ab40ddde47423d63aaa60b47fc92d2",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/agent-result.schema.json",
+      "section": null,
+      "sha256": "36833bc2792a70f67b8b1f5b200a752ff10e46134dd4c6d97f90ab2cbaea47d8",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/examples.json",
+      "section": null,
+      "sha256": "e38b81b3375af683b814813edc111c807081377a5b5b9b9bad72c6b43a79b46d",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/execution-result.schema.json",
+      "section": null,
+      "sha256": "1da30da34922a9aed7b6eb2c18d38e2c5f808129d9ef6ae4454fdf634e6f86dd",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/host.schema.json",
+      "section": null,
+      "sha256": "31315fa6f46ffceedd15afd86f5e716110979423fc54416679a9d0377b316d3f",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/interaction.schema.json",
+      "section": null,
+      "sha256": "784b7992208affcf2b4bc939cace504f3e3612d8a0624a0b2c0ba8f0a6758838",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/projection.schema.json",
+      "section": null,
+      "sha256": "f2bb3fe256af0076cbde53a1c1dbddb7c640f71c464b1f8cbfb21b8aa46cef4a",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/shared.schema.json",
+      "section": null,
+      "sha256": "dc38d97e468064810976e9b7213f862ba387cc0258560b48853c1025674717a9",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/task.schema.json",
+      "section": null,
+      "sha256": "ac746fe2a7383cdd8b19c987d762bbb0c249c4ca6280dccdad207a7817205ecb",
+      "kind": "plan"
+    },
+    {
+      "path": "specs/003-coordinate-workflow/contracts/workflow.schema.json",
+      "section": null,
+      "sha256": "9bc47a1227f225d5928b80d0ac778171f5557da617a046119c4da8db7b096a78",
+      "kind": "plan"
+    }
+  ],
+  "approval_refs": [
+    {
+      "gate_kind": "specification",
+      "record_ref": "specs/003-coordinate-workflow/spec-approval.md",
+      "record_sha256": "50083dd2295091c9f08d6cad14809c404e75bd6cb23cab56dabe09bb1d276267",
+      "scope_hash": "766f46a18e60066d1597f5465678ab509efb5c22b178ed5659b6a7eb8c2f1f51",
+      "actor": "owner via parent ask_user: Approve revised specification",
+      "authority_ref": "specs/003-coordinate-workflow/spec-approval.md",
+      "action": "approve"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T001",
+      "order": 0,
+      "outcome": "Deliver an opt-in durable, custody-safe LangGraph execution substrate",
+      "depends": [],
+      "context_group": "foundation",
+      "owned_paths": [
+        "runtime/pyproject.toml",
+        "runtime/requirements.lock",
+        "runtime/coherence_workflow/__init__.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/registry.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/tools.py",
+        "runtime/coherence_workflow/containment.py",
+        "runtime/coherence_workflow/tool_process.py",
+        "runtime/coherence_workflow/workflows/coordinate.yaml",
+        "runtime/coherence_workflow/schemas/agent-result.schema.json",
+        "runtime/coherence_workflow/schemas/execution-result.schema.json",
+        "runtime/coherence_workflow/schemas/host.schema.json",
+        "runtime/coherence_workflow/schemas/interaction.schema.json",
+        "runtime/coherence_workflow/schemas/projection.schema.json",
+        "runtime/coherence_workflow/schemas/shared.schema.json",
+        "runtime/coherence_workflow/schemas/task.schema.json",
+        "runtime/coherence_workflow/schemas/workflow.schema.json",
+        "runtime/tests/test_engine.py",
+        "runtime/tests/test_custody.py",
+        "runtime/tests/fixtures/",
+        ".gitignore",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "docs/index.md"
+      ],
+      "required": [
+        {
+          "id": "T001/V1",
+          "criterion": "The runner alone owns persistence. Schema/semantic YAML and registered handler/profile/skill/result validation fail closed, no eval or workflow-name controller.",
+          "check": {
+            "id": "workflow.ConfigGraphTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_engine.py",
+              "selector": "ConfigGraphTests"
+            }
+          },
+          "pass_condition": "Actual graph route changes with supported handler/profile/skill/order/edge configuration; unknown refs/version/outcomes, duplicate keys/unsafe tags/paths, unbounded loops/dead ends and safety-node bypass reject before effects.",
+          "expected_evidence": "Focused schema negatives, actual StateGraph route/hash trace and packaged resource inventory. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [],
+          "gates": [
+            "T001/G-implementation",
+            "T001/G-process"
+          ]
+        },
+        {
+          "id": "T001/V2",
+          "criterion": "Maintain one writer per worktree. One authority DB/lock and durable reservation span different run directories; own-child process identity persists before release.",
+          "check": {
+            "id": "workflow.CustodyTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_custody.py",
+              "selector": "CustodyTests"
+            }
+          },
+          "pass_condition": "Two processes/different run roots cannot obtain mutation authority; parked reservation survives lock exit. Invalid/replaced UID/device/inode/name+parent/boot/PID/start/nonce identity, missing controls, path/symlink/owned overlap and unrelated drift block. EOF before gated release executes no tool; outside sentinel and dirty index/untracked/STATE/custom hashes preserved.",
+          "expected_evidence": "Actual SQLite/Git/lock/child containment tests and phase receipts; denial fixtures have zero mutation. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [],
+          "gates": [
+            "T001/G-implementation",
+            "T001/G-process"
+          ]
+        },
+        {
+          "id": "T001/V3",
+          "criterion": "Durable launch intent→child creation/identity→spawn→registration→release→settlement governs actual tools; logical success with survivors is not completion.",
+          "check": {
+            "id": "workflow.LaunchCrashTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_custody.py",
+              "selector": "LaunchCrashTests"
+            }
+          },
+          "pass_condition": "Kill shipped helper/controller at each distinct pre/post identity/release boundary; restart cannot adopt/kill unknown group or release before registration. Exit0/exit1/hostkill with surviving task tools persists ORPHAN_PROCESS and replacement_allowed=false before check/commit/reuse/replacement. Only validated populated=0 AND partial file/Git reconciliation resolves alarm, history retained; idle host scope distinct.",
+          "expected_evidence": "Real process-crash traces/SQL alarms and kernel empty receipts with independent outside sentinel. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [],
+          "gates": [
+            "T001/G-implementation",
+            "T001/G-process"
+          ]
+        },
+        {
+          "id": "T001/V4",
+          "criterion": "Application intent precedes effects, result/events precede graph checkpoint; saver/app transactions separate. Never replay Git side effects blindly; no exactly-once external-effects claim.",
+          "check": {
+            "id": "workflow.LedgerCheckpointTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_engine.py",
+              "selector": "LedgerCheckpointTests"
+            }
+          },
+          "pass_condition": "Actual sync saver replay after app-result-before-checkpoint recovers applicable result once; graph-success without app proof blocks. UNIQUE/CAS/event order, WAL/FULL/foreign keys/integrity pass without holding app transaction across saver or external wait.",
+          "expected_evidence": "Actual engine/SQLite restart/integrity/cursor/result/event-count evidence and docs settings comparison. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [],
+          "gates": [
+            "T001/G-implementation",
+            "T001/G-process"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T001/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T001 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T001/G-process",
+          "kind": "permission",
+          "criterion": "Approve isolated process-kill/crash tests and verify existing delegated Linux cgroup-v2 own-child controls; no service/global provisioning, ancestor kills or PID-only fallback.",
+          "scope": "Known-owned temporary worktree and UUID child scopes with captured baseline/partial files and outside sentinel.",
+          "expected_evidence": "Scoped test authority, UID/device/inode/name+parent receipt and actual populated=0; unknown capability blocks.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T002",
+      "order": 1,
+      "outcome": "Execute configured Pi roles with measured role-safe session reuse",
+      "depends": [
+        "T001"
+      ],
+      "context_group": "US2",
+      "owned_paths": [
+        "runtime/pi-host/package.json",
+        "runtime/pi-host/package-lock.json",
+        "runtime/pi-host/host.mjs",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/sessions.py",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_sessions.py",
+        "runtime/tests/test_metrics.py",
+        "runtime/tests/test_host.mjs",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T002/V1",
+          "criterion": "No automatic model escalation or complexity-based routing. Exact configured model/effort/skill/tools/trust/settings reach actual SDK; requested/runtime/final outgoing/provider-ack observations separate.",
+          "check": {
+            "id": "workflow.BindingTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_pi_adapter.py",
+              "selector": "BindingTests"
+            }
+          },
+          "pass_condition": "Real allowed turn expands actual skill and exact tools. Fallback/clamp/settings override/unsupported observer/version block. Public streamFunction composes existing per-call/SDK hook FIRST then final provider payload guard outside swallowed extension errors; normal/summary mismatch gives zero instrumented sends. Unknown observations null, no raw payload/auth logs.",
+          "expected_evidence": "Shipped-host authorized bounded turn/hash/skill observations plus offline actual provider-builder guard tests. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001"
+          ],
+          "gates": [
+            "T002/G-implementation",
+            "T002/G-live",
+            "T002/G-process"
+          ]
+        },
+        {
+          "id": "T002/V2",
+          "criterion": "min_free_tokens_before_compaction: 150000 means headroom to effective auto-compaction threshold, not advertised max/cumulative usage. Every agent role shares deterministic selector.",
+          "check": {
+            "id": "workflow.SessionPolicyTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_sessions.py",
+              "selector": "SessionPolicyTests"
+            }
+          },
+          "pass_condition": "Reliable150000 eligible,149999/null/stale/disabled/unknown threshold ineligible. Actual SettingsManager/model-override/current-occupancy provenance; exact affinity/profile/skill/tool/permission/trust/settings/worktree/role and settled compatibility. Fresh-first independent reviewer never implement/repair; repair originaleligible preference, freshonly/profile change and latestsettled/stableID tie tested. Pinned original missing/low/unknown blocks, never fresh.",
+          "expected_evidence": "Policy boundary fixtures plus authorized actual same-session sequential turns/exact saved conversation open, identity/settings/resource telemetry. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001"
+          ],
+          "gates": [
+            "T002/G-implementation",
+            "T002/G-live",
+            "T002/G-process"
+          ]
+        },
+        {
+          "id": "T002/V3",
+          "criterion": "Subscribe before prompt; current prompt promise+agent_settled+idle/no queued work, not agent_end/acceptance, is settlement. Uncertainty poisons reuse.",
+          "check": {
+            "id": "workflow.LifecycleTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_pi_adapter.py",
+              "selector": "LifecycleTests"
+            }
+          },
+          "pass_condition": "Early/stale settlement, retry/compaction after agent_end, error/timeout/death cannot release telemetry/check/commit/reuse. Controlled pressure and actual SDK abort/drain establish task-tool quiescence. Actual shipped summary/compaction and provider-retry paths exercised with permission before reliance; unsupported capability blocks rather than fake proof.",
+          "expected_evidence": "Generation-correlated lifecycle trace, real SDK path/abort observations plus T001 drain oracle; synthetic cutoff not real pressure proof. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001"
+          ],
+          "gates": [
+            "T002/G-implementation",
+            "T002/G-live",
+            "T002/G-process"
+          ]
+        },
+        {
+          "id": "T002/V4",
+          "criterion": "Current occupancy is not cumulative usage. Input/output/cache-read/cache-write deltas require same session/branch/counter epoch and exclusive operation.",
+          "check": {
+            "id": "workflow.UsageSegmentsTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_metrics.py",
+              "selector": "UsageSegmentsTests"
+            }
+          },
+          "pass_condition": "Two actual sequential turns record per-attempt times/context/headroom/bindings/skills/reuse reasons and zero cache correctly. Reopen starts new baseline; reset/branch/missing/death/ambiguous summaries yield null reason, no negative/double count. Killed final cost unknown. Code/gate nodes no fictitious Pi identity/tokens.",
+          "expected_evidence": "Actual two-turn SDK readings plus reset/reopen/null/zero fixtures; field/schema/provenance comparison. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001"
+          ],
+          "gates": [
+            "T002/G-implementation",
+            "T002/G-live",
+            "T002/G-process"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T002/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T002 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T002/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        },
+        {
+          "id": "T002/G-process",
+          "kind": "permission",
+          "criterion": "Approve isolated process-kill/crash tests and verify existing delegated Linux cgroup-v2 own-child controls; no service/global provisioning, ancestor kills or PID-only fallback.",
+          "scope": "Known-owned temporary worktree and UUID child scopes with captured baseline/partial files and outside sentinel.",
+          "expected_evidence": "Scoped test authority, UID/device/inode/name+parent receipt and actual populated=0; unknown capability blocks.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T003",
+      "order": 2,
+      "outcome": "Run approved sequential tasks through real checks and focused checkpoints from standalone CLI",
+      "depends": [
+        "T001",
+        "T002"
+      ],
+      "context_group": "US1",
+      "owned_paths": [
+        "runtime/coherence_workflow/intake.py",
+        "runtime/coherence_workflow/authority.py",
+        "runtime/coherence_workflow/verification.py",
+        "runtime/coherence_workflow/git_effects.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/registry.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/workflows/coordinate.yaml",
+        "runtime/pi-host/host.mjs",
+        "scripts/coordinate-implementation",
+        "runtime/tests/test_intake.py",
+        "runtime/tests/test_authority.py",
+        "runtime/tests/test_verification.py",
+        "runtime/tests/test_git_effects.py",
+        "runtime/tests/test_cli.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T003/V1",
+          "criterion": "Both adapters/documented legacy preserve IDs/order/deps/context_group/ownership/whole REQUIRED/manual/permission semantics and real source/current approval provenance.",
+          "check": {
+            "id": "workflow.OriginIntakeTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_intake.py",
+              "selector": "OriginIntakeTests"
+            }
+          },
+          "pass_condition": "Complete valid fixture admits; stale/denied/cancelled/ambiguous/missing spec/final/combined/legacy approval, forward prerequisite, inadequate contract and unknown in-flight legacy writer block before dispatch. No forced Epic/invented historical depth or automatic prose conversion.",
+          "expected_evidence": "Both-adapter parity and actual CLI intake receipts/hash/field comparison. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001",
+            "T002"
+          ],
+          "gates": [
+            "T003/G-implementation",
+            "T003/G-live",
+            "T003/G-process"
+          ]
+        },
+        {
+          "id": "T003/V2",
+          "criterion": "Aggregate all known profile/spend/service/test/network/external/mutation capability gaps before ANY task; absent/denied/unknown paid authority blocks, inside-envelope mechanics/tests do not reask.",
+          "check": {
+            "id": "workflow.AuthorityAdmissionTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_authority.py",
+              "selector": "AuthorityAdmissionTests"
+            }
+          },
+          "pass_condition": "Zero sends/dispatch for denied/absent/unknown authority; real scoped approval/profile/action refs checked. Durable run-wide reservations cover all hosts/restart/retry/summary; unknown spent not refunded. Exhaust admission bound before send; unsupported hardcap config rejects. Codex generic maxTokens not hardcap; provider-verified limit proof distinct from advisory estimates.",
+          "expected_evidence": "Actual admission+final host guard zero-send composition; reserve/send/restart crash fixtures and aggregated manager-readable gap/options output. No invented budget. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001",
+            "T002"
+          ],
+          "gates": [
+            "T003/G-implementation",
+            "T003/G-live",
+            "T003/G-process"
+          ]
+        },
+        {
+          "id": "T003/V3",
+          "criterion": "Runner executes real registered REQUIRED checks on final bytes/environment and audits satisfied/failed/insufficient-evidence, preserving criterion/gates; optional green/worker confidence cannot release.",
+          "check": {
+            "id": "workflow.RequiredEvidenceTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_verification.py",
+              "selector": "RequiredEvidenceTests"
+            }
+          },
+          "pass_condition": "Real deliberate oracle failure is failed; missing/stale/irrelevant/conflicting/unrun proof insufficient unless demonstrated violation. Empty selector rejects; shared check once maps every item; only affected invalidation. Inspectable sample STOP needs actual scoped owner answer before full/dependent work; denial/cancel/hash drift blocks.",
+          "expected_evidence": "Actual registered oracle exits/revision/env/selector/item maps and genuine external scoped manual-answer integration, not model-written approval. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001",
+            "T002"
+          ],
+          "gates": [
+            "T003/G-implementation",
+            "T003/G-live",
+            "T003/G-process"
+          ]
+        },
+        {
+          "id": "T003/V4",
+          "criterion": "Maintain one writer per worktree. Runner alone checks owned diff/gates and creates focused checkpoint per retained task before next mutation; Never replay Git side effects blindly.",
+          "check": {
+            "id": "workflow.FocusedCheckpointTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_git_effects.py",
+              "selector": "FocusedCheckpointTests"
+            }
+          },
+          "pass_condition": "Two dependency-linked authorized isolated Pi tasks follow source order, each real checks and exactly one focused owned-path commit; zero early dependent release. Unrelated staged/unstaged/untracked/STATE/custom unchanged. Owned overlap/path/symlink/drift, failed identity/signing/hooks/checks stop without configuring/disabling/broadstage/reset workaround; read-only/nochange no empty commit.",
+          "expected_evidence": "Actual CLI/engine/SQLite/Git/Pi two-task trace plus Git safety fixtures; baseline/result parent/tree/owned diff/index and unrelated hashes. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001",
+            "T002"
+          ],
+          "gates": [
+            "T003/G-implementation",
+            "T003/G-live",
+            "T003/G-process"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T003/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T003 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T003/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        },
+        {
+          "id": "T003/G-process",
+          "kind": "permission",
+          "criterion": "Approve isolated process-kill/crash tests and verify existing delegated Linux cgroup-v2 own-child controls; no service/global provisioning, ancestor kills or PID-only fallback.",
+          "scope": "Known-owned temporary worktree and UUID child scopes with captured baseline/partial files and outside sentinel.",
+          "expected_evidence": "Scoped test authority, UID/device/inode/name+parent receipt and actual populated=0; unknown capability blocks.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T004",
+      "order": 3,
+      "outcome": "Resume interrupted actual work safely and publish authoritative status projections",
+      "depends": [
+        "T003"
+      ],
+      "context_group": "US3",
+      "owned_paths": [
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/git_effects.py",
+        "runtime/coherence_workflow/tools.py",
+        "runtime/coherence_workflow/projections.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/tests/test_recovery.py",
+        "runtime/tests/test_projections.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T004/V1",
+          "criterion": "Real post-write/pre-success and post-commit/pre-receipt/checkpoint restart reconciles actual process/files/Git identity, not guessed completion or blind replay.",
+          "check": {
+            "id": "workflow.EffectRecoveryTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_recovery.py",
+              "selector": "EffectRecoveryTests"
+            }
+          },
+          "pass_condition": "Kill shipped controller/host during tool/write, after commit and app-result-before-saver. Reentry scans ALL worktree scopes, blocks live/unknown partial work; matching existing commit recovered once by operation+baseline parent+tree/path/current HEAD/residual/index. Hook mutation/drift/ambiguous matches block. Zero duplicate active writers/commits or lost unrelated bytes.",
+          "expected_evidence": "Actual engine/SQLite/SDK/Git crash traces, receipts and before/after file/index hashes; actual role-safe saved-conversation reopen not just in-process reuse. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003"
+          ],
+          "gates": [
+            "T004/G-implementation",
+            "T004/G-live",
+            "T004/G-process"
+          ]
+        },
+        {
+          "id": "T004/V2",
+          "criterion": "Mid-task pressure/compaction/retry/timeout/death cannot falsely complete or replace an unsettled worker; inspect unknown failures before targeted repair, no fallback/reset.",
+          "check": {
+            "id": "workflow.PressureRecoveryTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_recovery.py",
+              "selector": "PressureRecoveryTests"
+            }
+          },
+          "pass_condition": "Actual SDK abort/drain and host/controller death with surviving tools durably alarms ORPHAN_PROCESS/blocked before check/commit/reuse/replacement. Guard/admission covers real shipped compaction/retry path, settles safely or blocks. Validated populated0+partial file/Git reconciliation required; idle host distinct.",
+          "expected_evidence": "Small controlled pressure fixture plus permission-gated actual SDK compaction/summary/retry/interruption path observations and request reservations/empty oracle; no cutoff token-burn experiment. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003"
+          ],
+          "gates": [
+            "T004/G-implementation",
+            "T004/G-live",
+            "T004/G-process"
+          ]
+        },
+        {
+          "id": "T004/V3",
+          "criterion": "The runner alone owns persistence. Projections are versioned SQL-derived facts with logical IDs/order/provenance/null reasons, never decision input.",
+          "check": {
+            "id": "workflow.ProjectionRecoveryTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_projections.py",
+              "selector": "ProjectionRecoveryTests"
+            }
+          },
+          "pass_condition": "Separate process reads consistent SQL without agent/file mutations, sees host-exit interrupted/config/gates/alarms/refs/lag. Torn-tail archive, append-before-cursor crash/replay dedup preserve complete immutable record order; nontail mismatch blocks explicit rebuild. Metrics supersedes not summed twice, nonagent fields/null/zero/reentry deltas correct.",
+          "expected_evidence": "Actual SQLite/file/process projection partial-tail/reentry checks, no-spawn/read-only status observation, schema validation and SQL counts. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003"
+          ],
+          "gates": [
+            "T004/G-implementation",
+            "T004/G-live",
+            "T004/G-process"
+          ]
+        },
+        {
+          "id": "T004/V4",
+          "criterion": "Active runs pin schema/config/registry/host/resources/input/approval identity; no silent changed graph/task/profile adoption or DB downgrade.",
+          "check": {
+            "id": "workflow.VersionRecoveryTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_recovery.py",
+              "selector": "VersionRecoveryTests"
+            }
+          },
+          "pass_condition": "Drift blocks affected continuation; future version read-only status or precise blocker. Reviewed migration/SQLite backup API at settled authorized boundary preserves evidence/WAL snapshot; never untrusted checkpoint deserialization.",
+          "expected_evidence": "Focused real SQLite backup/version/hash-drift fixtures, integrity output and docs behavior comparison. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003"
+          ],
+          "gates": [
+            "T004/G-implementation",
+            "T004/G-live",
+            "T004/G-process"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T004/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T004 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T004/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        },
+        {
+          "id": "T004/G-process",
+          "kind": "permission",
+          "criterion": "Approve isolated process-kill/crash tests and verify existing delegated Linux cgroup-v2 own-child controls; no service/global provisioning, ancestor kills or PID-only fallback.",
+          "scope": "Known-owned temporary worktree and UUID child scopes with captured baseline/partial files and outside sentinel.",
+          "expected_evidence": "Scoped test authority, UID/device/inode/name+parent receipt and actual populated=0; unknown capability blocks.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T005",
+      "order": 4,
+      "outcome": "Expose diagnosed bounded repairs and independent full-range review before acceptance",
+      "depends": [
+        "T003",
+        "T004"
+      ],
+      "context_group": "US4",
+      "owned_paths": [
+        "runtime/coherence_workflow/verification.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/registry.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/sessions.py",
+        "runtime/coherence_workflow/workflows/coordinate.yaml",
+        "runtime/tests/test_review_repair.py",
+        "runtime/tests/test_metrics.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T005/V1",
+          "criterion": "No automatic model escalation or complexity-based routing. Repair count belongs to original failure/gate, never reset by correction IDs/restart.",
+          "check": {
+            "id": "workflow.RepairBudgetTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_review_repair.py",
+              "selector": "RepairBudgetTests"
+            }
+          },
+          "pass_condition": "Zero dispatch at0; limit2 includes interrupted repairs/new IDs/restart, exhaustion explicit blocked/final_failure. Diagnosed in-scope repair retains original items, valid evidence and reruns affected checks. Unknown/environment/capability/permission/contract cause blocks blind retry.",
+          "expected_evidence": "Budget/diagnosis fixtures plus actual configured failure→authorized repair→real check→focused commit with original budget identity/count. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003",
+            "T004"
+          ],
+          "gates": [
+            "T005/G-implementation",
+            "T005/G-live"
+          ]
+        },
+        {
+          "id": "T005/V2",
+          "criterion": "Final reviewer first session fresh/independent/read-only receives complete committed base→head source/tasks/approvals/criterion evidence; judgment distinct from mechanical checks.",
+          "check": {
+            "id": "workflow.IndependentReviewTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_review_repair.py",
+              "selector": "IndependentReviewTests"
+            }
+          },
+          "pass_condition": "Actual review schema findings each visible disposition; accepted finding separate authorized focused correction contract/commit then affected checks and full-range rerereview. Eligible own reviewer may reuse, never implement/repair; scope-changing finding owner-gated. Missing/invalid/stale-head review cannot accept.",
+          "expected_evidence": "Permission-gated actual SDK review/correction loop, tool read-only observation, exact range/review lineage/findings/checkpoints. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003",
+            "T004"
+          ],
+          "gates": [
+            "T005/G-implementation",
+            "T005/G-live"
+          ]
+        },
+        {
+          "id": "T005/V3",
+          "criterion": "Original owner/manual/permission/current-content gates cannot be replaced by model success; completed versus accepted remains explicit.",
+          "check": {
+            "id": "workflow.AcceptanceGateTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_review_repair.py",
+              "selector": "AcceptanceGateTests"
+            }
+          },
+          "pass_condition": "Real failed/insufficient REQUIRED or unresolved findings/manual STOP blocks final acceptance despite optional green; all current items/gates plus independent full-range review needed. Separate status exposes blocker/remediation/metrics with unknown reasons.",
+          "expected_evidence": "Runner item/gate dispositions/status, genuine scoped manual-answer example plus denial/cancel/scope-change fixtures. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003",
+            "T004"
+          ],
+          "gates": [
+            "T005/G-implementation",
+            "T005/G-live"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T005/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T005 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T005/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T006",
+      "order": 5,
+      "outcome": "Park owner questions durably and continue only the original conversation through portable controls",
+      "depends": [
+        "T002",
+        "T003",
+        "T004",
+        "T005"
+      ],
+      "context_group": "US6",
+      "owned_paths": [
+        "runtime/coherence_workflow/interaction.py",
+        "runtime/coherence_workflow/authority.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/sessions.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/pi-host/host.mjs",
+        "runtime/coherence_workflow/workflows/coordinate.yaml",
+        "runtime/tests/test_interaction.py",
+        "runtime/tests/test_controls.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T006/V1",
+          "criterion": "request_owner_input completes normally terminate:true; safe exclusive/all-terminating batch and actual settled/idle/task-tool drain precede SQL pending/outbox and LangGraph park.",
+          "check": {
+            "id": "workflow.QuestionParkTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_interaction.py",
+              "selector": "QuestionParkTests"
+            }
+          },
+          "pass_condition": "Actual SDK result→tool_execution_end→current settlement/drain→SQL pending→sync graph park. Mixed nonterminating/unsettled/unknown batch blocks, not half-open human tool or early success. Crash around request/result/app/graph boundaries reconciles no duplicate prompt/gate; saved originating node/visit not reasked.",
+          "expected_evidence": "Actual shipped SDK/engine/SQLite park trace plus mixed-batch/crash tests and original pin/tool empty evidence. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T002",
+            "T003",
+            "T004",
+            "T005"
+          ],
+          "gates": [
+            "T006/G-implementation",
+            "T006/G-live",
+            "T006/G-process"
+          ]
+        },
+        {
+          "id": "T006/V2",
+          "criterion": "Bound genuine answer must reach SAME ORIGINAL persisted worker role/conversation before continuation, even new host; missing/unsafe/149999/unknown original blocks explicit recovery, never fresh substitute.",
+          "check": {
+            "id": "workflow.OriginalAnswerTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_interaction.py",
+              "selector": "OriginalAnswerTests"
+            }
+          },
+          "pass_condition": "Actual new host opens original leaf, unique answer user entry before next request. Wrong source/task/approval/config/role/session/nonce or unauthorized/stale/conflicting duplicate rejects; identical duplicate returns old receipt no redispatch. Acceptance/delivery crash and failed resume retain answer, no reask; uncertain entry reconciles or blocks blind resend. Scope-changing answer renews approval before continue.",
+          "expected_evidence": "Actual saved-conversation reopen/request-entry order plus concurrent SQL UNIQUE/CAS/input/delivery crash tests with zero duplicate dispatch. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T002",
+            "T003",
+            "T004",
+            "T005"
+          ],
+          "gates": [
+            "T006/G-implementation",
+            "T006/G-live",
+            "T006/G-process"
+          ]
+        },
+        {
+          "id": "T006/V3",
+          "criterion": "Inquiry/steer/follow_up/pause/cancel accepted anytime, but received/queued/SDK enqueue/actual worker ACK are distinct; no private thoughts/compliance/instant shellpreemption claim.",
+          "check": {
+            "id": "workflow.ControlDeliveryTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_controls.py",
+              "selector": "ControlDeliveryTests"
+            }
+          },
+          "pass_condition": "Actual active steer/followUp binds current target and ACK observed separately; idle run inquire/pause/cancel has null worker fields. Scope/out-of-envelope requires producing approval; stale/wrong/duplicate never retargets or bypasses pending original pin. Pause/cancel abort/drain+owned populated0+partial file/Git reconcile before check/commit/reuse/replacement; no invented stopped-worker ACK.",
+          "expected_evidence": "Actual CLI/SDK steering/observable response and active-tool pause trace; idle/preflight/binding/race fixtures with immutable stage evidence. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T002",
+            "T003",
+            "T004",
+            "T005"
+          ],
+          "gates": [
+            "T006/G-implementation",
+            "T006/G-live",
+            "T006/G-process"
+          ]
+        },
+        {
+          "id": "T006/V4",
+          "criterion": "Inside verified envelope implementation/debug/small approved tests autonomous with no routine cost/technical questions; known gaps upfront, only necessary manager-answerable deviations ask.",
+          "check": {
+            "id": "workflow.AutonomyAdmissionTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_interaction.py",
+              "selector": "AutonomyAdmissionTests"
+            }
+          },
+          "pass_condition": "Approved technical/test actions traverse actual gateway without question; missing spend blocks before send. Product/unexpected material question supplies why/options/recommendation/impact. Schema/rationale checks assist, not universal semantic proof. Source-changing input gated renewal.",
+          "expected_evidence": "Instrumented admission/question gateway fixtures, zero-send denials and manager-readable gap output; bounded human rationale inspection for exercised cases. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T002",
+            "T003",
+            "T004",
+            "T005"
+          ],
+          "gates": [
+            "T006/G-implementation",
+            "T006/G-live",
+            "T006/G-process"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T006/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T006 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T006/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        },
+        {
+          "id": "T006/G-process",
+          "kind": "permission",
+          "criterion": "Approve isolated process-kill/crash tests and verify existing delegated Linux cgroup-v2 own-child controls; no service/global provisioning, ancestor kills or PID-only fallback.",
+          "scope": "Known-owned temporary worktree and UUID child scopes with captured baseline/partial files and outside sentinel.",
+          "expected_evidence": "Scoped test authority, UID/device/inode/name+parent receipt and actual populated=0; unknown capability blocks.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T007",
+      "order": 6,
+      "outcome": "Ship registered actual-parent readiness and automatic same-parent ask_user delivery",
+      "depends": [
+        "T006"
+      ],
+      "context_group": "US6",
+      "owned_paths": [
+        "runtime/coherence_workflow/notifications/__init__.py",
+        "runtime/coherence_workflow/notifications/paseo.py",
+        "runtime/coherence_workflow/interaction.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/registry.py",
+        "runtime/tests/test_parent_transport.py",
+        "runtime/tests/test_interaction_live.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T007/V1",
+          "criterion": "No background LLM wakes up to decide what to do. Actual registered launch→parent readiness→worker question→safe durable park/outbox→AUTOMATIC SAME parent wake→ACTUAL ask_user→bound answer→SAME original answer-beforecontinue.",
+          "check": {
+            "id": "workflow.ParentRoundtripTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_interaction_live.py",
+              "selector": "ParentRoundtripTests"
+            }
+          },
+          "pass_condition": "Real shipped launch/readiness and question produce actual parent runtime/tool invocation/answer provenance, not just authorizationfile/opaque IDs/worker-approved receipts. New host opens original after park, receives answer before request; actual active steer ACK/output separate from queued. No manualpolling/logrelay causes wake, parent never selects task/model/session/outcome.",
+          "expected_evidence": "Separately authorized live full seam: parent/session/tool/event identities, sanitized genuine ask_user receipts, SQL+LangGraph ordering and original entry/ACK. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T006"
+          ],
+          "gates": [
+            "T007/G-implementation",
+            "T007/G-live"
+          ]
+        },
+        {
+          "id": "T007/V2",
+          "criterion": "Required interactive transport must preflight and safely handle busy/outage/reconnect/outbox dedup/invocation-crash/auth before reliance; standalone CLI independent.",
+          "check": {
+            "id": "workflow.ParentTransportTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_parent_transport.py",
+              "selector": "ParentTransportTests"
+            }
+          },
+          "pass_condition": "Forged/worker-written/wrong parent/generation/permission receipts block. Controlled actual adapter busy/outage/reconnect uses bounded retries and recorded→transport_queued→parent_received→question_tool_invoked→answered. Duplicates do not reask; accepted answer survives failure. Crash at external ask before receipt reconciles real tool provenance or blocks reask, no exactly-once UI claim. Missing UI pending/blocker not polling/success; CLI pending/answer/cancel works.",
+          "expected_evidence": "Actual adapter subprocess/SQL tests with controlled transport/parent plus scoped real busy/reconnect observations at load-bearing transport seam; outbox/input crash/dedup trace. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T006"
+          ],
+          "gates": [
+            "T007/G-implementation",
+            "T007/G-live"
+          ]
+        },
+        {
+          "id": "T007/V3",
+          "criterion": "Facade has no workflow persistence/orchestration authority; actual launch/tool receipts required, not authorizationfile alone. Optional notifications never drive graph or delay required state.",
+          "check": {
+            "id": "workflow.FacadeAuthorityTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_parent_transport.py",
+              "selector": "FacadeAuthorityTests"
+            }
+          },
+          "pass_condition": "Missing ask_user/launch provenance/authority blocks interactive start; queued send cannot release gate. Optional status send failure leaves graph unaffected; worker cannot choose recipient/store/approval/ask_user. Reconnect validates stored runtime/env/parent generation, no silent rebind. Core status usable without Paseo.",
+          "expected_evidence": "Registry/CLI permission and transport fixtures plus real tool-bound readiness/answer comparison; no-agent core CLI output. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T006"
+          ],
+          "gates": [
+            "T007/G-implementation",
+            "T007/G-live"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T007/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T007 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T007/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T008",
+      "order": 7,
+      "outcome": "Integrate approved structured task adapters and operative runtime policy without inventing approvals",
+      "depends": [
+        "T003",
+        "T005",
+        "T007"
+      ],
+      "context_group": "US5",
+      "owned_paths": [
+        "skills/task-generation/SKILL.md",
+        "skills/task-generation/scripts/check-task-order.py",
+        "skills/task-generation/scripts/test_check_task_order.py",
+        "skills/task-generation/scripts/test_contract.py",
+        "skills/planner/SKILL.md",
+        "skills/planner/references/approval-and-recovery.md",
+        "skills/planner/references/dependency-research.md",
+        "skills/planner/references/early-risk-reduction.md",
+        "skills/planner/references/profile-selection.md",
+        "skills/coordinate-implementation/references/batch-routing.md",
+        "skills/planning-brainstorming/SKILL.md",
+        "skills/planning-brainstorming/scripts/test_contract.py",
+        "skills/tiny-spec/SKILL.md",
+        "skills/delegating-architectural-planning/SKILL.md",
+        "skills/memory-handling/SKILL.md",
+        "skills/memory-handling/references/project-coordination.md",
+        "skills/memory-handling/references/task-commit-contract.md",
+        "skills/memory-handling/scripts/test_coordination_contract.py",
+        ".specify/memory/constitution.md",
+        ".pi/prompts/speckit.tasks.md",
+        ".specify/templates/tasks-template.md",
+        ".specify/integrations/pi.manifest.json",
+        ".specify/integrations/speckit.manifest.json",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "scripts/planner-trace.py",
+        "scripts/planner-rpc-smoke.py",
+        "scripts/fixtures/planner/",
+        "scripts/check-task-commit-contract.py",
+        "scripts/test-task-commit-contract.py",
+        "docs/plans/planner-regression.md",
+        "REQUIREMENTS.md",
+        "AGENTS.md",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "docs/index.md"
+      ],
+      "required": [
+        {
+          "id": "T008/V1",
+          "criterion": "Both task adapters preserve identical full contract and unresolved/denied/actual owner envelope semantics, human/machine parity and original source/approval origins; inadequate legacy returns producing renewal.",
+          "check": {
+            "id": "workflow.AdapterParityTests",
+            "version": "1",
+            "args": {
+              "test_file": "skills/task-generation/scripts/test_check_task_order.py",
+              "selector": "AdapterParityTests"
+            }
+          },
+          "pass_condition": "TinySpec separate source/tasks combined approval; Standard spec/plan/tasks+specification+overall review/final approval; documented legacy original gates unchanged. IDs contiguous, earlier deps and story continuity enforced, no inference from narrative. Known spend gap before dispatch and whole REQUIRED mappings maintained.",
+          "expected_evidence": "Updated existing adapter/order/contract fixtures plus actual runtime CLI intake for each origin, parity/schema/negative cases. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003",
+            "T005",
+            "T007"
+          ],
+          "gates": [
+            "T008/G-implementation",
+            "T008/G-policy"
+          ]
+        },
+        {
+          "id": "T008/V2",
+          "criterion": "Exact approved amendments move execution verification/commits to runner without weakening focused checkpoint/authority/independence; planning profile-selection/delegation/stage order remains skill-owned.",
+          "check": {
+            "id": "workflow.RuntimeHandoffTests",
+            "version": "1",
+            "args": {
+              "test_file": "scripts/test-planner-workflow.py",
+              "selector": "RuntimeHandoffTests"
+            }
+          },
+          "pass_condition": "Actual operative sections (not footer substitutes) and mutation tests enforce proposals, no scope authorization invented. Planning-only final approval never launches implementation. Sol/medium plan exception/owner selected other planning profiles, artifact producer separation and no unavailable delegation fallback retained. Execution no LLM batches/escalation/coordination-feedback/STATE.",
+          "expected_evidence": "Focused planner/trace/checkpoint/coordination/adapters tests and exact approved text→changed-carrier diff, proposal provenance/version. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003",
+            "T005",
+            "T007"
+          ],
+          "gates": [
+            "T008/G-implementation",
+            "T008/G-policy"
+          ]
+        },
+        {
+          "id": "T008/V3",
+          "criterion": "Preserve technical gotchas/custom STATE/history/legacy sources and unrelated content; reconcile active/unknown legacy workers before any execution origin reuse.",
+          "check": {
+            "id": "workflow.RuntimePolicyCompatibilityTests",
+            "version": "1",
+            "args": {
+              "test_file": "scripts/test-task-commit-contract.py",
+              "selector": "RuntimePolicyCompatibilityTests"
+            }
+          },
+          "pass_condition": "Compatible retained artifacts admit with original provenance; inadequate/active/unknown/stale block earliest producing gate; no massconversion, forced Epic, state/memory initialization or history edits. Hooks/scoped Git/unrelated/unknown ownership safeguards retained; updated fixtures do not rewrite historical baseline.",
+          "expected_evidence": "Actual isolated Git/origin fixtures and historical/custom hash comparisons; focused static guard negatives preserve prior safety intent. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T003",
+            "T005",
+            "T007"
+          ],
+          "gates": [
+            "T008/G-implementation",
+            "T008/G-policy"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T008/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T008 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T008/G-policy",
+          "kind": "manual",
+          "criterion": "Independent overall planning review and explicit owner Governance approval of EXACT three operative amendment proposals below before conflicting policy edits.",
+          "scope": "Only proposed constitution/task-commit responsibility changes and causal consumers; preserve planning selection and authority/verification/checkpoint/independence safeguards.",
+          "expected_evidence": "Owner decision bound to exact text, rationale/version and affected contracts/templates; denial stops operative migration.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T009",
+      "order": 8,
+      "outcome": "Cut over Coordinate Implementation entry and remove obsolete execution routing only after compatibility proof",
+      "depends": [
+        "T008"
+      ],
+      "context_group": "US5",
+      "owned_paths": [
+        "skills/coordinate-implementation/SKILL.md",
+        "skills/coordinate-implementation/references/batch-routing.md",
+        "skills/coordinate-implementation/scripts/test_batching_contract.py",
+        "skills/coordinate-implementation/scripts/test_intake_contract.py",
+        "skills/coordinate-implementation/scripts/test_state_contract.py",
+        "skills/requesting-code-review/SKILL.md",
+        "skills/requesting-code-review/code-reviewer.md",
+        "skills/receiving-code-review/SKILL.md",
+        "skills/scientific-method-debugging/SKILL.md",
+        "skills/handoff-prompt/SKILL.md",
+        "skills/finish-session/SKILL.md",
+        "skills/initialize-coherence/SKILL.md",
+        "skills/initialize-coherence/scripts/test_contract.py",
+        "skills/initialize-coherence/scripts/fixtures/workflow-ownership-outputs.json",
+        "skills/initialize-coherence/scripts/fixtures/source-contract.json",
+        "skills/initialize-coherence/scripts/fixtures/scenarios.json",
+        "skills/initialize-coherence/scripts/fixtures/unsafe-permissions.json",
+        "scripts/install.sh",
+        "scripts/install-links.py",
+        "scripts/install-workflow.sh",
+        "scripts/probe-pi-load.sh",
+        "scripts/check-skills-lint.sh",
+        "scripts/coordinate-implementation",
+        "README.md",
+        "REQUIREMENTS.md",
+        "AGENTS.md",
+        "docs/index.md",
+        "docs/pi-settings-sample.md",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "runtime/tests/test_migration.py",
+        "runtime/tests/test_installation.py",
+        ".pi/prompts/speckit.implement.md",
+        ".specify/integrations/pi.manifest.json"
+      ],
+      "required": [
+        {
+          "id": "T009/V1",
+          "criterion": "Default entry may cut over only after multiple-task+real review+manual owner+restart+dirtytree composition passes; legacy live/unknown writers must reconcile first.",
+          "check": {
+            "id": "workflow.EntryCutoverTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_migration.py",
+              "selector": "EntryCutoverTests"
+            }
+          },
+          "pass_condition": "Representative unrelated adopted project uses same portable CLI/interactive rules; actual dependency tasks/checks/commits and independent review/correction/manual answer/restart preserve unrelated index/STATE/custom/history, no duplicate writer/commit. No automatic massconversion or legacy restart; unsafe case remains opt-in/blocked.",
+          "expected_evidence": "Permission-gated composed shipped-run evidence reused if same bytes/environment from earlier items; actual entry invocation and legacy-active denial fixtures. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T008"
+          ],
+          "gates": [
+            "T009/G-implementation",
+            "T009/G-live",
+            "T009/G-process"
+          ]
+        },
+        {
+          "id": "T009/V2",
+          "criterion": "Remove only obsolete execution routing/batch/escalation/memory obligations after new paths pass; preserve planning-only model policy and all verification/safety semantics.",
+          "check": {
+            "id": "workflow.ActiveConsumersTests",
+            "version": "1",
+            "args": {
+              "test_file": "scripts/check-skills-lint.sh",
+              "selector": "ActiveConsumersTests"
+            }
+          },
+          "pass_condition": "No active execution link to retired batch-routing/local<=3/LLM routing or narrative memory; planning references resolve renamed owner with same selection gates. Review schema/read-only independence, empirical diagnosed debug, finish acceptance, handoff run/pin/env/envelope and adoption marked/custom boundaries validated. Historical evidence/baselines unmodified.",
+          "expected_evidence": "Bounded active-reference scan+updated carrier mutation tests and existing focused suite guards, file-by-file inventory disposition. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T008"
+          ],
+          "gates": [
+            "T009/G-implementation",
+            "T009/G-live",
+            "T009/G-process"
+          ]
+        },
+        {
+          "id": "T009/V3",
+          "criterion": "Optional installation/resources/CLI operate portably without global install or core Paseo dependency; no ordinary-use silent provisioning.",
+          "check": {
+            "id": "workflow.PortableInstallationTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_installation.py",
+              "selector": "PortableInstallationTests"
+            }
+          },
+          "pass_condition": "Offline packaging/discovery in unrelated project includes YAML/schemas/host lock and launcher --project paths; missing dependency/auth/containment/interactive transport yields exact capability blocker. Foreign-link/race/custom/dirty protections retained. Actual isolated setup only with separate owner install/network approval, no credential/global mutation.",
+          "expected_evidence": "Existing installer-link/adoption focused fixtures and wheel/resource/launcher checks; docs flags/schema match actual help. Explicit setup NOT RUN if permission absent. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T008"
+          ],
+          "gates": [
+            "T009/G-implementation",
+            "T009/G-live",
+            "T009/G-process"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T009/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T009 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T009/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        },
+        {
+          "id": "T009/G-process",
+          "kind": "permission",
+          "criterion": "Approve isolated process-kill/crash tests and verify existing delegated Linux cgroup-v2 own-child controls; no service/global provisioning, ancestor kills or PID-only fallback.",
+          "scope": "Known-owned temporary worktree and UUID child scopes with captured baseline/partial files and outside sentinel.",
+          "expected_evidence": "Scoped test authority, UID/device/inode/name+parent receipt and actual populated=0; unknown capability blocks.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    },
+    {
+      "id": "T010",
+      "order": 9,
+      "outcome": "Validate complete rollout and publish operating/schema docs with reversible acceptance criteria",
+      "depends": [
+        "T009"
+      ],
+      "context_group": "acceptance",
+      "owned_paths": [
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "docs/index.md",
+        "README.md",
+        "REQUIREMENTS.md",
+        "AGENTS.md",
+        "docs/plans/planner-regression.md",
+        "docs/pi-settings-sample.md",
+        "runtime/tests/test_acceptance.py",
+        "runtime/tests/test_migration.py",
+        "scripts/check-skills-lint.sh"
+      ],
+      "required": [
+        {
+          "id": "T010/V1",
+          "criterion": "Final operating/schema docs describe ACTUAL CLI, schema/version/transaction/state/metrics/null/reentry/security/interaction/envelope/custody limits and explicit safe cutover/rollback.",
+          "check": {
+            "id": "workflow.DocumentationAcceptanceTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_acceptance.py",
+              "selector": "DocumentationAcceptanceTests"
+            }
+          },
+          "pass_condition": "All actual CLI help/examples/resource paths and published fields match docs; installation explicit, host exit no background continuation, cgroup trustedlocal not sandbox/remote promise, SDK caps honest, optional notifications vs required questions distinct. Preserve sources/history/custom/gotchas. /reload notice for changed global skills.",
+          "expected_evidence": "Command-help/schema/docs comparison and link checks, bounded active file inventory with no dead execution references. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T009"
+          ],
+          "gates": [
+            "T010/G-implementation",
+            "T010/G-live",
+            "T010/G-process"
+          ]
+        },
+        {
+          "id": "T010/V2",
+          "criterion": "Rollback preserves authoritative state/evidence/commits and unrelated work after safe drain/reconciliation; no reset/downgrade/autorestartlegacy.",
+          "check": {
+            "id": "workflow.RollbackTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_migration.py",
+              "selector": "RollbackTests"
+            }
+          },
+          "pass_condition": "Isolated failed-acceptance/unsupported-capability rehearsal stops dispatch, drains actual owned tools and preserves partial work/DB/Pi/commit hashes. New entry disabled via scoped reviewed change; legacy remains off unless explicit compatible reconciled authority, unknown writers block.",
+          "expected_evidence": "Actual isolated entry/control/recovery rehearsal, before/after DB/commit/index/custom hashes and status, no history operations. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T009"
+          ],
+          "gates": [
+            "T010/G-implementation",
+            "T010/G-live",
+            "T010/G-process"
+          ]
+        },
+        {
+          "id": "T010/V3",
+          "criterion": "All FR001–039/SC001–009 and mapped design V checks require current item proof, gates and independent fresh full-range review; no fixture-only live certification.",
+          "check": {
+            "id": "workflow.FullRangeAcceptanceTests",
+            "version": "1",
+            "args": {
+              "test_file": "runtime/tests/test_acceptance.py",
+              "selector": "FullRangeAcceptanceTests"
+            }
+          },
+          "pass_condition": "Actual sequential tasks, exact roles/skills/reuse metrics, real checks/checkpoints, repair/exhaustion/manual gates, original question+sameparent actual ask_user+steer ACK, interruption/recovery/status and migration paths have applicable proof. Required NOT RUN/UNAVAILABLE blocks acceptance; every finding disposition/correction commit/current range resolved. Implementation complete reported separately.",
+          "expected_evidence": "Full range baseline/head and independent review receipt, item→actual command/output/current revision/environment/gate mapping; no new evidence-only commit or narrative STATE. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "producer_dependencies": [
+            "T009"
+          ],
+          "gates": [
+            "T010/G-implementation",
+            "T010/G-live",
+            "T010/G-process"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "T010/G-implementation",
+          "kind": "permission",
+          "criterion": "Independent overall review/current final artifact approval followed by a LATER explicit implementation request and scoped mutation/test authority; planning selection/specification approval alone never authorize execution.",
+          "scope": "T010 owned paths/checks only; current task checkpoint policy applies until approved operative amendment.",
+          "expected_evidence": "Verifiable owner approval records bound to current artifacts/action scope/config; no blanket or inferred authority.",
+          "approval_ref": null
+        },
+        {
+          "id": "T010/G-live",
+          "kind": "permission",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
+          "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
+          "approval_ref": null
+        },
+        {
+          "id": "T010/G-process",
+          "kind": "permission",
+          "criterion": "Approve isolated process-kill/crash tests and verify existing delegated Linux cgroup-v2 own-child controls; no service/global provisioning, ancestor kills or PID-only fallback.",
+          "scope": "Known-owned temporary worktree and UUID child scopes with captured baseline/partial files and outside sentinel.",
+          "expected_evidence": "Scoped test authority, UID/device/inode/name+parent receipt and actual populated=0; unknown capability blocks.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "migration-unresolved"
+    }
+  ],
+  "authorization_envelope": {
+    "id": "migration-unresolved",
+    "paid_authority": "unresolved",
+    "approval_refs": [],
+    "profiles": [],
+    "capabilities": [],
+    "limits": []
+  }
+}
