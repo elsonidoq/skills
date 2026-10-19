@@ -300,3 +300,15 @@ options/impacts; unknown safety/auth/permissions remain fail-closed. Control can
 any time, but queue, SDK delivery and worker acknowledgement are distinct; no instant shell
 preemption/private-reasoning/semantic-compliance guarantee. Scope-changing answers/steers
 retain original producing approval gates. Renew all revised specification bytes before tasks.
+
+## Latest owner source directions — token/service correction and bounded implementation
+
+The owner states exactly: token spending was a misunderstanding; no cap/approval regarding token spending; separately chargeable API/service actions require cost explanation/approval.
+
+Latest implementation direction: 'Okay, considering this, I approve the batching, I approve everything, just implement.'
+
+Current exact selection is `openai-codex/gpt-6.1-sol:medium`, without substitution or escalation. Requested and observed remain separate; unsupported effort/tools block. Ordinary model tokens have no numeric spending cap or spending approval requirement; remain token-effective and preserve required usage/cache telemetry and compaction headroom. Separately chargeable APIs or increased external service costs require purpose/likely-cost explanation and explicit owner approval; no mandatory amounts/limits or blanket third-party authority.
+
+Bounded authority: one writer in the supplied workspace, task-owned changes/focused commits, required unit/real SDK/same-parent UI integration, isolated crash/recovery and validated owned-child delegated cgroup creation/kill, pinned dependency fetches into workspace-local environments. No global/service provisioning, auth/config changes, deployment/push/reset/history rewriting, unrelated operations, memory/STATE or historical-evidence writes. Exact task sequence T001; T002; T003–T005; T006–T007; T008–T010; fresh final review. Preserve genuine manual acceptance and policy gates; no fabricated owner inputs. Current correction task changes design/source/contracts/examples/tasks only, not runtime.
+
+Historical approval/review records retain their original meaning. Latest implementation authority is not evidence of independent renewal review: targeted review of this correction and FR-040 remains pending. FR-040/T008/V1 and execution-profile-planning.md remain intact; no runtime routing or automatic escalation is introduced.

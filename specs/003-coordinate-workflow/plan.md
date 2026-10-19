@@ -1,5 +1,8 @@
 # Implementation Plan: Coordinate Implementation executable workflow
 
+> Historical stage/status/provenance statements below describe their original planning pass, not a permanent veto after the latest owner request. Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
+
+
 **Branch**: `follow-attached-workflow-migration-instructions` | **Date**: 2026-10-18 |
 **Spec**: [spec.md](spec.md)
 
@@ -102,7 +105,7 @@ runtime/
     engine.py                   # YAML→actual StateGraph, sync SqliteSaver
     registry.py                 # trusted handler/profile/skill capabilities
     intake.py                   # shared structured task/approval adapters
-    authority.py                # upfront capability/spend admission from verified approvals
+    authority.py                # upfront profile/capability and external-action authority from verified approvals
     interaction.py              # bound owner gate/input/control + durable outbox
     notifications/paseo.py      # explicit optional-mode public CLI UI adapter, no policy
     store.py                    # application transactions and migrations, same SQLite file
@@ -361,31 +364,30 @@ review of current full range; implementation completion remains a separate statu
 
 ### Upfront authority and known-gap aggregation
 
-Task intake/run config declare an authorization envelope with exact selected profiles and
-paid model/service/test/network/external/mutation capability/action scopes plus verifiable
-owner approval references. Production numeric budgets are **not selected** by this plan or
-its PoCs; unresolved/denied/absent authority blocks affected paid dispatch. Preflight computes
-all **known** missing permissions/capabilities/spend choices together before any task starts,
-using manager-readable impact/options. Persist usable runtime/package/catalog/credential
-references and environment manifest before launch; revalidate on separate-process answer/
-resume, not depend on transient parent environment (observed missing-env failure).
+Task intake/run config declare an authorization envelope with exact selected profiles,
+test/network/external/mutation capabilities/action scopes and verifiable owner approval
+references. Ordinary agent token spending was a misunderstanding: approved-profile model
+requests, retries and summaries require no financial approval, numeric cap or spend
+reservation. Preserve efficient use, usage/cache telemetry, effective-compaction headroom
+and exact permitted profiles; these are not financial gates. Preflight aggregates all known
+permission/capability gaps before tasks with manager-readable impact/options. Persist usable
+runtime/package/catalog/credential references and environment manifest; revalidate on reentry.
 
-Within approved scope, worker resolves technical implementation/debugging and small isolated
-preapproved tests without cost/tool-trivia questions. Only necessary manager-answerable
-product/priority or genuinely unexpected material scope/complexity/time/cost deviation asks,
-with why blocked, options/recommendation and impact. Unknown auth/safety/permissions still
-fail closed; autonomy is not permission to spend or expand scope. Category/schema checks,
-existing envelope constraints and recorded rationale assist, but cannot universally judge
-question relevance; the fixture's forced cosmetic title is not a policy to ask every default.
+Separately chargeable API/service actions require an explanation of purpose and likely cost/
+cost impact and explicit scoped owner approval before effects. Persist relevant external-action
+authority and any owner-selected limits, but require no mandatory amount or limit and build
+no generic billing platform. Absent/denied/unknown authority blocks those actions, not normal
+approved-profile model traffic. Reconcile uncertain external effects across restart rather
+than blindly retry. No model-outbound spend reservation or production token-hardcap mechanism
+is required. Generic maxTokens is not a hard token/dollar guarantee.
 
-Where owner sets limits, persist run-wide reservations before outbound admission, including
-all attempts/host restarts/allowed retries/summaries, and reconcile unknown spent reservations
-without refund-by-guess. Disable unsupported hidden/background retries/warming. Request
-admission limits are enforceable only at verified send boundaries; provider hard limits need
-registered version-matched proof. Generic maxTokens was ignored by the tested Codex builder;
-do not advertise token/dollar hard caps or invoice accuracy from it, per-host max5 or catalog
-estimates. An approved scoped-spend envelope may have no numeric cap only by explicit owner
-selection; never invent an amount or infer permission from the planning/fixture approval.
+Within verified scope, technical implementation/debugging and approved small isolated tests
+are autonomous without repeated cost/tool-trivia questions. Only necessary manager-answerable
+product/priority or unexpected material scope/complexity/time/cost deviations ask with why,
+options/recommendation and impact. Unknown auth/safety/permissions still fail closed; category
+checks and rationale assist, not universally decide semantic question eligibility. Disable
+unapproved hidden/background retries/warming; observe and verify exact profiles on supported
+normal/retry/summary paths without a financial model-request admission gate.
 
 ### Rare worker question: normal tool completion, durable park, original answer
 
@@ -589,7 +591,7 @@ carriers/classes rather than treated as runtime proof. Reinspect exact bytes bef
 | `skills/requesting-code-review/code-reviewer.md` | Add schema-bound findings interface while retaining evidence/location/severity/read-only/no invented base |
 | `skills/receiving-code-review/SKILL.md` | Route authorized correction task+commit and owner scope gate, never direct reviewer writes |
 | `skills/scientific-method-debugging/SKILL.md` | Empirical diagnosis consumes attempt/effect/input evidence, autonomously resolves approved mechanics/tests; prohibit unknown retry, preserve focused fail-then-pass fixes/permissions |
-| `skills/handoff-prompt/SKILL.md` | Runtime run/config/approval/parent/question-pin/input identities, spend envelope and blockers, no invented session portability or required narrative ledger |
+| `skills/handoff-prompt/SKILL.md` | Runtime run/config/approval/parent/question-pin/input identities, profile/capability and external-action authority envelope and blockers, no invented session portability or required narrative ledger |
 | `skills/finish-session/SKILL.md` | Read actual runtime acceptance/status and schema owner, no narrative persistence; preserve docs/feedback safety |
 | `skills/initialize-coherence/SKILL.md` | Optional runtime and mode-specific interactive transport/question-tool capability reporting, approved marked association refresh; authoritative runtime schema docs required; no silent install/mass task conversion |
 | `skills/initialize-coherence/scripts/test_contract.py` | Adjust association/runtime owners while preserving custom/dirty/approval/SpecKit capabilities |
@@ -620,7 +622,7 @@ carriers/classes rather than treated as runtime proof. Reinspect exact bytes bef
 | `scripts/test-task-commit-contract.py` | Retain hook-failure/scoped Git/unrelated/unknown ownership fixtures; add runtime commit/replay boundary |
 | `scripts/install.sh` | Optional explicit workflow setup mode/capability report, no automatic new Python/SDK install on ordinary use |
 | `scripts/install-links.py` | Keep foreign-link/race protections; retain coordinate skill name, discover launcher through installation without replacing foreign binaries |
-| `scripts/probe-pi-load.sh` | Keep opt-in paid discovery smoke; update expected thin entry only if actual advertisement changes |
+| `scripts/probe-pi-load.sh` | Keep opt-in exact-profile discovery smoke; update expected thin entry only if actual advertisement changes |
 | `.pi/prompts/speckit.implement.md` | Route approved structured handoff into runner, no competing implementation LLM; preserve applicable before/after hook and owner gates |
 | `.pi/prompts/speckit.tasks.md` | Shared structured task-generation adapter, preserve installed capability and create-only stage |
 | `.specify/templates/tasks-template.md` | Replace conflicting parallel-writer/sample optional-test expectations with shared versioned subset and REQUIRED semantics; retain project customization boundaries |
@@ -662,7 +664,7 @@ task producer maps them to task-local REQUIRED IDs without weakening criteria.
 | V-evidence | Actual REQUIRED oracle failure vs insufficient proof, affected invalidation/shared mappings, manual sample STOP, optional green cannot release | FR-022–023 |
 | V-review | Real/schema review findings, diagnosed bounded repair zero/two/exhaustion and separate focused correction commits, renewed full-range independent review | FR-027–030 |
 | V-status | Separate no-agent status, host-exit interrupted status, projection torn-tail/replay idempotency, authoritative ordering/schema | FR-018–021, 024 |
-| V-authority | Declared paid/service/test/network/external/mutation envelope, real approval refs and all-known-gap preflight; no paid dispatch absent/denied/unknown authority, no repeated inside-envelope technical questions | FR-035 |
+| V-authority | Declared profile/service/test/network/external/mutation envelope, real approval refs and all-known-gap preflight; no separately chargeable API/service action absent/denied/unknown external authority; ordinary approved-profile model traffic has no financial gate, no repeated inside-envelope technical questions | FR-035 |
 | V-interaction | Actual same-parent wake+ask_user, completed safe question park, original saved conversation answer-before-continuation, bound inputs/outbox/dedup; missing/unsafe/unknown-headroom original blocks, never fresh substituted | FR-036–038 |
 | V-control | Active inquiry/steer/followUp receipts vs enqueue vs observed ACK; scope renewal, pause/cancel drain/cgroup; UI busy/outage/reconnect failure visible with CLI answer, no manual-polling fallback in interactive mode | FR-037–039 |
 | V-migration | Stage-cutover/legacy return/rollback rehearsal, obsolete execution obligations gone, planning profile rules/gotchas/history intact, docs match CLI/schema | FR-031–034 |
@@ -678,7 +680,7 @@ power-loss/multi-host claim. Final independent review is required, not this self
 
 Task producer must read current renewed spec first, this derived sequence and canonical
 research; emit complete versioned task envelopes and human tasks with stable IDs, approved
-source provenance, deps/context_group/owned paths, actual upfront authorization/spend envelope, interface mode/
+source provenance, deps/context_group/owned paths, actual upfront profile/capability/external-action authority envelope, interface mode/
 required parent delivery capability and original-session pin/input contracts, REQUIRED criterion/check/pass/evidence and
 original manual/permission gates. Do not put execution family classes on tasks; profiles live
 in approved configuration. Identify only genuine proof producer dependencies, preserve proof
@@ -711,7 +713,7 @@ be independently read-only; Git subject matching alone is not recovery identity;
 tool survivors alarm durably without treating a reusable idle Pi host as orphan. The later
 owner-directed interaction/autonomy correction is described above and in R13;
 its proof is feasibility, not production auth/outbox/budget/pressure certification. Explicit
-production spend choices remain owner gates; no amount is silently selected.
+separately chargeable API/service choices remain owner gates; ordinary agent tokens have no spending gate or numeric cap.
 
 ## Complexity Tracking
 
@@ -760,7 +762,7 @@ assertions pass. These demonstrate design serialization/invariants, not producti
 authentication, temporal exactly-once, semantic question eligibility or dispatch enforcement.
 Reconciled original-pin vs ordinary rotor, required dialog vs optional notifications,
 run-scoped controls without fabricated idle worker, queued vs actual acknowledgement,
-accepted input vs failed transport, and paid authority vs advisory/provider limits. Source
+accepted input vs failed transport, and separately chargeable action authority vs ordinary model telemetry. Source
 prefix/historical approval and all original FR/SC IDs remain; only existing FR-019 changes,
 plus FR-035–039/US6/SC-008–009. Full correction diff/new schema/examples read and reviewed.
 Constitution 3.0.0 review retains explicit owner gates, portable standalone assets, one-writer/

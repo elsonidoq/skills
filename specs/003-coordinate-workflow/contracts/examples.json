@@ -50,7 +50,7 @@
         ],
         "authorization_envelope": {
           "id": "fixture-envelope",
-          "paid_authority": "unresolved",
+          "external_paid_authority": "unresolved",
           "approval_refs": [],
           "profiles": [],
           "capabilities": [],
@@ -506,7 +506,7 @@
         "kind": "preflight_authority",
         "run_id": "fixture-run",
         "envelope_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-        "paid_authority": "unresolved",
+        "external_paid_authority": "unresolved",
         "verified_approval_refs": [],
         "missing_capabilities": [
           "fixture-paid-authority"
@@ -515,7 +515,7 @@
           "fixture-startup-gate"
         ],
         "status": "blocked",
-        "paid_dispatch_allowed": false
+        "external_paid_dispatch_allowed": false
       }
     },
     {
@@ -596,14 +596,14 @@
         "kind": "preflight_authority",
         "run_id": "fixture-run",
         "envelope_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-        "paid_authority": "owner_scoped",
+        "external_paid_authority": "owner_scoped",
         "verified_approval_refs": [
           "fixture/verified-approval-shape-only"
         ],
         "missing_capabilities": [],
         "pending_gate_refs": [],
         "status": "ready",
-        "paid_dispatch_allowed": true
+        "external_paid_dispatch_allowed": true
       }
     }
   ]

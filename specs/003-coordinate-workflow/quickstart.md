@@ -1,5 +1,8 @@
 # Validation quickstart — future production runner
 
+> Historical stage/status/provenance statements below describe their original planning pass, not a permanent veto after the latest owner request. Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
+
+
 Status: design guide only. The runner/commands below are **NOT IMPLEMENTED**. No implementation,
 live provider test, install or service configuration is authorized by this planning pass.
 Canonical [stack proof](../../docs/evidence/workflow-stack-validation/README.md) and
@@ -29,10 +32,13 @@ the shipped helper/adapter, not duplicate disposable demo scaffolding.
 4. Explicit permitted exact profile/effort, resource/skill hashes, read-only ready credential
    and catalog, exact registered observer mapping and tool/permission policy. Expiry blocks
    rather than refresh shared auth. Planning Sol/medium selection is not production assignment.
-   Declare actual paid/service/test/network/external/mutation authority and selected profiles
-   with owner approval refs before dispatch. Aggregate known gaps once before tasks; unresolved/
-   denied/absent paid envelope blocks. No production amount or blanket spend is approved here;
-   routine approved tests/technical work must not reask inside-envelope questions.
+   Declare exact profiles and test/network/external/mutation authority with owner approval refs.
+   Ordinary approved-profile model traffic/retries/summaries require no financial approval,
+   numeric cap or spend reservations. Separately chargeable API/service actions require
+   purpose/likely-cost explanation and explicit approval; persist action authority and any
+   owner-selected limits, never mandatory amounts. Aggregate known gaps once; denied/absent/
+   unknown external paid authority blocks those actions only. Routine approved technical/tests
+   do not reask cost/mechanics questions; metrics/cache/headroom remain operational requirements.
 5. Preexisting approved containment capability for tools requiring full-subtree custody,
    and actual empty-group/quiescence checks. cgroup files/systemd-run presence is insufficient;
    owner-enabled Linux cgroup-v2 delegation and four real local lifecycle cases are now
@@ -40,8 +46,8 @@ the shipped helper/adapter, not duplicate disposable demo scaffolding.
    never assume that service path or configure services automatically. No PID-only fallback;
    malicious same-UID migration/remote/container tools are outside the tested boundary and
    need their own approved capability or BLOCKED.
-6. Required live/paid provider calls, actual SDK reopen/pressure/compaction/retry cases,
-   process-kill and external effects each need scoped permission and budget. NOT RUN/UNAVAILABLE
+6. Required live exact-profile provider calls, actual SDK reopen/pressure/compaction/retry cases,
+   process-kill and external effects each need scoped permission; separately chargeable API/service actions also need purpose/likely-cost explanation and approval. NOT RUN/UNAVAILABLE
    remains a blocker for its dependent reliance. Schema/static success is not live proof.
 
 ## Future command interface (illustrative, not runnable today)
@@ -81,7 +87,7 @@ No fake `runner.py` or simulated slash command is required to satisfy planning.
 | Independent status/projections — V-status | Separate process reads SQL without Node/LLM, sees stopped/interrupted host and exact blockers/config/checkpoints. Torn JSONL tail, append-before-cursor and stale state rebuilt by authorized publisher from committed SQL; record IDs/order deduplicate, status reports lag read-only | Offline actual SQLite/file/process integration; power loss/multi-host guarantees excluded |
 | Checks/owner gates — V-evidence | Real REQUIRED oracle deliberately fails, irrelevant/missing/stale/conflicting/unrun evidence is insufficient, shared output maps all IDs, optional green cannot release. Inspectable sample STOP awaits explicit scoped answer; denial/cancel/hash/config drift invalidates only affected gate/evidence | Local mechanical checks plus real external owner-answer integration; never model-generated approval or narrative parsing |
 | Repair/final review — V-review | Diagnosed in-scope failure dispatches configured repair without escalation, zero/two/exhaustion/unknown cases stop appropriately. Current independent read-only full-range review uses schema findings, each visible disposition. Authorized focused correction task+commit then affected checks and eligible reviewer loop. Scope changes gate owner | Offline budget/schema tests plus authorized real SDK review/repair integration. No mandatory per-task review; reviewer never produces fix |
-| Upfront autonomy — V-authority | Missing/denied/unresolved paid profile/service/test/network/external/mutation authority blocks before send; preflight aggregates known gaps and manager-readable options. Inside-envelope technical/test actions do not trigger routine cost questions; unexpected material/safety gaps remain gated | Offline intake+actual admission/reservation helper checks. No provider call to test denied spend. Do not invent numeric hard caps; verify supported enforcement separately |
+| Upfront autonomy — V-authority | Missing/denied/unresolved separately chargeable API/service authority blocks those actions before send; purpose/cost-impact and explicit scoped approval checked. Ordinary approved-profile model sends/retries/summaries proceed without financial approval/caps/reservations. Preflight aggregates profile/capability gaps; technical/test work has no routine cost questions | Offline intake and actual action-gateway zero-send/ordinary-model admission checks; no provider call to test financial denial. Persist action authority and any owner-selected limits across restart, no generic billing platform |
 | Owner roundtrip — V-interaction | Actual registered launch captures parent/transport/question capability; code wakes that same parent which actually calls ask_user. Completed question tool→settled/drained SQL+LangGraph park; original persisted conversation answer before continuing. Duplicate/stale/wrong-session/role/source/config inputs do not dispatch; accepted answer survives failed resume without reask | Accepted interactive fixture is feasibility, not repeated PoC. Permanent shipped helpers test mixed batches, input/checkpoint/delivery crash windows, unknown/low-headroom original blocks without fresh fallback; explicit live permissions only where needed |
 | Active controls/UI loss — V-control | Separate received/queued/SDK-delivered/worker-ACK and inquiry response; no private reasoning/compliance claim. Scope-changing input blocks renewal, pause abort/drains tool scopes before commit. Busy/outage/reconnect dedup and genuine ask_user receipt tested, CLI pending/answer remains independent; optional status notifications cannot replace required question transport | Controlled actual host/facade integration plus synthetic denial/binding fixtures; no arbitrary shell-preemption promise from cooperative wait. Durable gate/transport blocker instead of silent polling or success |
 | Migration/rollback/docs — V-migration | Representative adopted projects retain TinySpec/Standard/legacy semantics, planning profile policy and technical gotchas/history/custom STATE. Legacy live writers reconciled before cutover; failure stops new entry, durable evidence/commits retained. Re-enabling legacy requires explicit compatible reconciled authority. Compare CLI/schema/docs and run existing focused suite guards | Offline isolated adoption/install/cutover fixtures; no mass conversion/deletion/reset/service setup |

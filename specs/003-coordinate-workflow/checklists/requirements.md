@@ -1,5 +1,8 @@
 # Specification Quality Checklist: Coordinate Implementation executable workflow
 
+> Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
+
+
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-10-18
 **Feature**: [spec.md](../spec.md)

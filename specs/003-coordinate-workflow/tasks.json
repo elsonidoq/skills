@@ -12,55 +12,55 @@
     {
       "path": "specs/003-coordinate-workflow/source-request.md",
       "section": null,
-      "sha256": "8903a3cd31f4fb4da8aae9fb5cfb09fe07c1cbfd89d096d61b140aab7a9d4ea8",
+      "sha256": "bd79a59b0d6c2ec4b723295e95923142503a83398505e0e767e30869a641a34f",
       "kind": "source"
     },
     {
       "path": "specs/003-coordinate-workflow/spec.md",
       "section": null,
-      "sha256": "e95ef7593e938a923f9a36efe9e5cb66b01e349d55ca7e4d46d3d28b572d9009",
+      "sha256": "d36525ef0f626d0eeaea8f0dc055350329cdb1b836b5fba3ad66293f1cde620f",
       "kind": "spec"
     },
     {
       "path": "specs/003-coordinate-workflow/plan.md",
       "section": null,
-      "sha256": "fa0b53b0c18f3464b15dfd68c5a853e757a646bf997c293335d173e0301a310d",
+      "sha256": "917462da2e6f7076701ed339e43b5f5818611219eddf82d5a2105822a5310769",
       "kind": "plan"
     },
     {
       "path": "specs/003-coordinate-workflow/decisions.md",
       "section": null,
-      "sha256": "a9b53cb163d617a3680b9c9d306f8883b4ff4da8c6c0e0a936551373d6580367",
+      "sha256": "e16be7c602c7c14116494c3390a1b24dc2fe504d5729c088b8fb231ec115793e",
       "kind": "decision"
     },
     {
       "path": "specs/003-coordinate-workflow/spec-approval.md",
       "section": null,
-      "sha256": "50083dd2295091c9f08d6cad14809c404e75bd6cb23cab56dabe09bb1d276267",
+      "sha256": "536df25e83af62aa7d5d201eb3fe3c0aceccd2f95513e165e6057b38f36b45be",
       "kind": "decision"
     },
     {
       "path": "specs/003-coordinate-workflow/research.md",
       "section": null,
-      "sha256": "c7115b999700d6f791dd8e0ac6bd9578340f511fcb6fcfdb9bbaac678e386398",
+      "sha256": "7ae2452d1cd271fab9f6214f60a94a19a7ce198c6b09c7c77162e8dcf0f800e1",
       "kind": "plan"
     },
     {
       "path": "specs/003-coordinate-workflow/data-model.md",
       "section": null,
-      "sha256": "cb959bc0b156f259997715ea471309f666911642194a1fdd8a75fd83f95169cb",
+      "sha256": "9829b30edc88b8a8319458ed352f68355f27cd8ee43ef7dd2304870005239153",
       "kind": "plan"
     },
     {
       "path": "specs/003-coordinate-workflow/quickstart.md",
       "section": null,
-      "sha256": "6d189a912f70560c2caaea1d994eec414cb3a9e505c51ff038b18b20a6eead0c",
+      "sha256": "7af2d07762ed6b6dacc6ba7d2ffe9d6a5b3bcf18a42a8e38691b78bfe5832cc6",
       "kind": "plan"
     },
     {
       "path": "specs/003-coordinate-workflow/contracts/README.md",
       "section": null,
-      "sha256": "67a20c3e07ca392682f714c8c935bec234ab40ddde47423d63aaa60b47fc92d2",
+      "sha256": "e9843f2a7b8fe0cbb91503626f81565e529ddf652ce72455729b827ef6edc9eb",
       "kind": "plan"
     },
     {
@@ -72,7 +72,7 @@
     {
       "path": "specs/003-coordinate-workflow/contracts/examples.json",
       "section": null,
-      "sha256": "e38b81b3375af683b814813edc111c807081377a5b5b9b9bad72c6b43a79b46d",
+      "sha256": "3429d0bfbf17b1efe2e03da72a4fe0db503ae3afff75424f846ebdadf562bca1",
       "kind": "plan"
     },
     {
@@ -90,7 +90,7 @@
     {
       "path": "specs/003-coordinate-workflow/contracts/interaction.schema.json",
       "section": null,
-      "sha256": "784b7992208affcf2b4bc939cace504f3e3612d8a0624a0b2c0ba8f0a6758838",
+      "sha256": "12c77c57e20e5d9fab62b44a1abb23b95e5c74848f086841bf2f9f8fd08e8e0f",
       "kind": "plan"
     },
     {
@@ -102,7 +102,7 @@
     {
       "path": "specs/003-coordinate-workflow/contracts/shared.schema.json",
       "section": null,
-      "sha256": "dc38d97e468064810976e9b7213f862ba387cc0258560b48853c1025674717a9",
+      "sha256": "066a06cbc88dc674bdd558ce9ee5bd1069ab6a79e907dcd8606744b6cfcea593",
       "kind": "plan"
     },
     {
@@ -122,7 +122,7 @@
     {
       "gate_kind": "specification",
       "record_ref": "specs/003-coordinate-workflow/spec-approval.md",
-      "record_sha256": "50083dd2295091c9f08d6cad14809c404e75bd6cb23cab56dabe09bb1d276267",
+      "record_sha256": "536df25e83af62aa7d5d201eb3fe3c0aceccd2f95513e165e6057b38f36b45be",
       "scope_hash": "766f46a18e60066d1597f5465678ab509efb5c22b178ed5659b6a7eb8c2f1f51",
       "actor": "owner via parent ask_user: Approve revised specification",
       "authority_ref": "specs/003-coordinate-workflow/spec-approval.md",
@@ -386,7 +386,7 @@
         {
           "id": "T002/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -457,7 +457,7 @@
         },
         {
           "id": "T003/V2",
-          "criterion": "Aggregate all known profile/spend/service/test/network/external/mutation capability gaps before ANY task; absent/denied/unknown paid authority blocks, inside-envelope mechanics/tests do not reask.",
+          "criterion": "Aggregate all known profile/service/test/network/external/mutation capability gaps before ANY task; absent/denied/unknown separately chargeable API/service authority blocks those actions only. Ordinary approved-profile model traffic needs no financial approval/cap; inside-envelope mechanics/tests do not reask.",
           "check": {
             "id": "workflow.AuthorityAdmissionTests",
             "version": "1",
@@ -466,8 +466,8 @@
               "selector": "AuthorityAdmissionTests"
             }
           },
-          "pass_condition": "Zero sends/dispatch for denied/absent/unknown authority; real scoped approval/profile/action refs checked. Durable run-wide reservations cover all hosts/restart/retry/summary; unknown spent not refunded. Exhaust admission bound before send; unsupported hardcap config rejects. Codex generic maxTokens not hardcap; provider-verified limit proof distinct from advisory estimates.",
-          "expected_evidence": "Actual admission+final host guard zero-send composition; reserve/send/restart crash fixtures and aggregated manager-readable gap/options output. No invented budget. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "pass_condition": "Zero separately chargeable API/service sends for denied/absent/unknown external paid authority; real scoped approval/action refs, purpose/cost-impact explanation and any owner-selected limits checked across restart. Ordinary approved-profile model sends/retries/summaries remain admitted without financial approval, numeric caps or spend reservations, while exact-profile/tool/operation gates still apply. No mandatory amount, generic billing platform or model token-hardcap obligation; unknown usage stays unknown.",
+          "expected_evidence": "Actual separately chargeable action gateway zero-send composition and persisted action-authority/restart fixtures; ordinary-model admission positives and aggregated manager-readable gap/options output. No invented budget or token spend reservation. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
           "producer_dependencies": [
             "T001",
             "T002"
@@ -538,7 +538,7 @@
         {
           "id": "T003/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -610,7 +610,7 @@
             }
           },
           "pass_condition": "Actual SDK abort/drain and host/controller death with surviving tools durably alarms ORPHAN_PROCESS/blocked before check/commit/reuse/replacement. Guard/admission covers real shipped compaction/retry path, settles safely or blocks. Validated populated0+partial file/Git reconciliation required; idle host distinct.",
-          "expected_evidence": "Small controlled pressure fixture plus permission-gated actual SDK compaction/summary/retry/interruption path observations and request reservations/empty oracle; no cutoff token-burn experiment. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
+          "expected_evidence": "Small controlled pressure fixture plus permission-gated actual SDK compaction/summary/retry/interruption path observations and exact-profile request observations/empty oracle; no cutoff token-burn experiment. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
           "producer_dependencies": [
             "T003"
           ],
@@ -678,7 +678,7 @@
         {
           "id": "T004/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -796,7 +796,7 @@
         {
           "id": "T005/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -917,7 +917,7 @@
               "selector": "AutonomyAdmissionTests"
             }
           },
-          "pass_condition": "Approved technical/test actions traverse actual gateway without question; missing spend blocks before send. Product/unexpected material question supplies why/options/recommendation/impact. Schema/rationale checks assist, not universal semantic proof. Source-changing input gated renewal.",
+          "pass_condition": "Approved technical/test actions traverse actual gateway without question; missing separately chargeable API/service authority blocks that action before send, not ordinary approved-profile model traffic. Product/unexpected material question supplies why/options/recommendation/impact. Schema/rationale checks assist, not universal semantic proof. Source-changing input gated renewal.",
           "expected_evidence": "Instrumented admission/question gateway fixtures, zero-send denials and manager-readable gap output; bounded human rationale inspection for exercised cases. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
           "producer_dependencies": [
             "T002",
@@ -945,7 +945,7 @@
         {
           "id": "T006/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -1058,7 +1058,7 @@
         {
           "id": "T007/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -1128,7 +1128,7 @@
               "selector": "AdapterParityTests"
             }
           },
-          "pass_condition": "TinySpec separate source/tasks combined approval; Standard spec/plan/tasks+specification+overall review/final approval; documented legacy original gates unchanged. IDs contiguous, earlier deps and story continuity enforced, no inference from narrative. Known spend gap before dispatch and whole REQUIRED mappings maintained. Standard/TinySpec fixtures cover missing executor input, differing planner/executor profiles, Luna/Sol scaffolding with unchanged acceptance, human/machine intent parity, and changed-profile compatibility without silent substitution or automatic full regeneration.",
+          "pass_condition": "TinySpec separate source/tasks combined approval; Standard spec/plan/tasks+specification+overall review/final approval; documented legacy original gates unchanged. IDs contiguous, earlier deps and story continuity enforced, no inference from narrative. Known separately chargeable action authority gap before that action dispatch and whole REQUIRED mappings maintained. Standard/TinySpec fixtures cover missing executor input, differing planner/executor profiles, Luna/Sol scaffolding with unchanged acceptance, human/machine intent parity, and changed-profile compatibility without silent substitution or automatic full regeneration.",
           "expected_evidence": "Updated existing adapter/order/contract fixtures plus actual runtime CLI intake for each origin, parity/schema/negative cases. Return command/exit, nonzero collected cases, current revision/environment and mapped item IDs; unrun is NOT VERIFIED.",
           "producer_dependencies": [
             "T003",
@@ -1333,7 +1333,7 @@
         {
           "id": "T009/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -1451,7 +1451,7 @@
         {
           "id": "T010/G-live",
           "kind": "permission",
-          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, paid model/service/test/network/external scope and any limits, plus usable read-only credentials/catalog and runtime capability proof. No amount/profile selected here.",
+          "criterion": "Before live/provider/UI checks obtain actual owner-selected exact binding/effort, model binding, test/network/external scope, and purpose/cost-impact approval for separately chargeable API/service actions with any owner-selected limits, plus usable read-only credentials/catalog and runtime capability proof. No mandatory amount; current exact profile selection is recorded in the latest source direction.",
           "scope": "Bounded shipped-helper integration in isolated project; actual parent ask_user where required, never historical recipients/auth refresh/install/global settings.",
           "expected_evidence": "Current scoped owner envelope/action approval and observed readiness; NOT RUN/UNAVAILABLE blocks affected reliance.",
           "approval_ref": null
@@ -1470,7 +1470,7 @@
   ],
   "authorization_envelope": {
     "id": "migration-unresolved",
-    "paid_authority": "unresolved",
+    "external_paid_authority": "unresolved",
     "approval_refs": [],
     "profiles": [],
     "capabilities": [],

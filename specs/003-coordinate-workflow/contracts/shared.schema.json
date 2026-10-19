@@ -514,13 +514,6 @@
         "id": {
           "$ref": "shared.schema.json#/$defs/id"
         },
-        "paid_authority": {
-          "enum": [
-            "denied",
-            "unresolved",
-            "owner_scoped"
-          ]
-        },
         "approval_refs": {
           "type": "array",
           "items": {
@@ -552,7 +545,6 @@
                 "type": "array",
                 "items": {
                   "enum": [
-                    "paid_model",
                     "paid_service",
                     "test",
                     "network",
@@ -561,12 +553,42 @@
                   ]
                 },
                 "minItems": 1
+              },
+              "purpose": {
+                "type": "string",
+                "minLength": 1
+              },
+              "cost_impact": {
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
               "id",
               "action_scope",
               "effects"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "effects": {
+                      "contains": {
+                        "const": "paid_service"
+                      }
+                    }
+                  },
+                  "required": [
+                    "effects"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "purpose",
+                    "cost_impact"
+                  ]
+                }
+              }
             ]
           },
           "minItems": 0
@@ -577,84 +599,33 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "metric": {
-                "enum": [
-                  "requests",
-                  "cost_usd",
-                  "tokens",
-                  "elapsed_ms"
-                ]
+              "action_id": {
+                "$ref": "shared.schema.json#/$defs/id"
               },
-              "value": {
-                "type": "number",
-                "minimum": 0
-              },
-              "scope": {
-                "const": "run"
-              },
-              "enforcement": {
-                "enum": [
-                  "runner_admission",
-                  "provider_verified",
-                  "advisory"
-                ]
-              },
-              "proof_ref": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+              "description": {
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
-              "metric",
-              "value",
-              "scope",
-              "enforcement",
-              "proof_ref"
-            ],
-            "allOf": [
-              {
-                "if": {
-                  "properties": {
-                    "enforcement": {
-                      "const": "provider_verified"
-                    }
-                  }
-                },
-                "then": {
-                  "properties": {
-                    "proof_ref": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  }
-                }
-              },
-              {
-                "if": {
-                  "properties": {
-                    "enforcement": {
-                      "const": "runner_admission"
-                    }
-                  }
-                },
-                "then": {
-                  "properties": {
-                    "metric": {
-                      "const": "requests"
-                    }
-                  }
-                }
-              }
+              "action_id",
+              "description"
             ]
           },
-          "minItems": 0
+          "minItems": 0,
+          "description": "Any owner-selected limits for separately chargeable API/service actions only; empty is valid. Never ordinary model-token caps."
+        },
+        "external_paid_authority": {
+          "enum": [
+            "denied",
+            "unresolved",
+            "owner_scoped"
+          ]
         }
       },
       "required": [
         "id",
-        "paid_authority",
+        "external_paid_authority",
         "approval_refs",
         "profiles",
         "capabilities",
@@ -664,7 +635,7 @@
         {
           "if": {
             "properties": {
-              "paid_authority": {
+              "external_paid_authority": {
                 "const": "owner_scoped"
               }
             }
@@ -687,7 +658,8 @@
             }
           }
         }
-      ]
+      ],
+      "description": "Profiles/capabilities are independent of external_paid_authority, which applies only to separately chargeable API/service actions. Ordinary approved-profile model traffic needs no financial gate."
     }
   }
 }

@@ -236,8 +236,8 @@ No narrative coordinator memory, raw reasoning or transcript export.
 | `wf_gates` owner_question | gate/input ID, kind/category, manager-readable why/options/recommendation/impact; original run/task/node/attempt/role/session+branch/file-ref; source/task/approval/config/resource hashes; nonce; parking/pending/answered/blocked/cancelled | Pending only after normal completed question result+prompt/settled/idle+tool quiescence; a pin blocks ordinary selector substitution |
 | `wf_owner_inputs` | UNIQUE(run,input_id), gate or active-control target, kind, bound original/active session+role and hashes, owner/parent provenance+answer receipt, safe payload hash, accepted/delivery stage, supersedes/cancellation | Same input+hash returns old receipt without resend; conflicting duplicate rejects; stale/wrong/unauthorized binding never dispatches. Accepted answer is not transport success |
 | `wf_outbox` | UNIQUE(run,event_id,parent_generation), recipient capability/version/actual-parent binding, gate/input ref, recorded/transport_queued/parent_received/question_tool_invoked/answered/blocked, attempt/deadline/error/ACK refs | App transaction with pending gate; send only committed rows. Actual parent delivery/tool call receipts required, not opaque send flag; bounded retry, no authority in notifier |
-| `wf_spend_reservations` | UNIQUE(run,outbound_request_id), envelope+approval hash, requested profile/action, reserved admission units/owner-selected limits, sent/unknown/reconciled observations | Counts all attempts/hosts/allowed retries/summary requests; unknown send cannot be refunded by restart; no exactly-once external bill claim |
-| `wf_inputs` authorization/launch manifest | pinned envelope/profile/capability/test/network/external/mutation scope, real approval refs, explicit selected CLI-only or interactive adapter/parent/question-tool/runtime-env manifest | Known-gap preflight aggregates before tasks. Missing/denied/unknown paid authority blocks send. Scope drift renews approval, not boolean trust |
+| `wf_external_actions` | UNIQUE(run,action_id), envelope+approval hash, action scope, purpose/cost-impact explanation, any owner-selected limits, effect/reconciliation refs | Separately chargeable API/service actions only; verify scoped authority before effects across restart. Ordinary model traffic has no financial reservations; no exactly-once external bill claim |
+| `wf_inputs` authorization/launch manifest | pinned envelope/profile/capability/test/network/external/mutation scope, real approval refs, explicit selected CLI-only or interactive adapter/parent/question-tool/runtime-env manifest | Known-gap preflight aggregates before tasks. Missing/denied/unknown external paid authority blocks separately chargeable API/service actions only. Scope drift renews approval, not boolean trust |
 
 Run gains `parking`, `waiting_owner_input`, `paused`; task gains waiting-owner/control phases;
 attempt gains parked/continuing segments. Parked is not completed task and cannot release
@@ -307,20 +307,18 @@ commit/reuse/replacement; surviving tools still trigger ORPHAN_PROCESS. Idle reu
 lifetime remains distinct. Pause/cancel records reconciled quiescence evidence without
 pretending the stopped worker acknowledged it. Unknown delivery/quiescence retains exact blocker and inputs.
 
-### Upfront autonomy and budget enforcement boundary
+### Upfront autonomy and external-action authority boundary
 
-Authorization envelope is part of approved task/run identity, not permission inferred from
-fixture or planning model choice. Preflight enumerates all known missing capabilities/
-permissions/spend choices before any task dispatch; no repeated routine cost/technical/test
-questions inside verified scope. Unexpected necessary manager choice includes impact/options;
-unknown safety/auth remains blocked. Eligibility cannot be solved universally by category enum.
+Authorization envelope is part of approved task/run identity, not inferred from fixtures or
+planning profile choice. Preflight enumerates known capability/permission gaps before tasks;
+inside-scope technical/debug/test work is autonomous. Ordinary approved-profile model requests,
+retries and summaries require no financial approval, numeric spending cap or spend reservation.
+Keep token/cache metrics and compaction headroom as operational telemetry, not financial gates.
 
-If owner approves numeric limits, SQL reservations are run-wide before each supported final
-outbound send, not per-process counters. Host requests runner admission via registered guard
-before provider transport; versioned observer must cover retry/summary paths or disable those
-paths. Admission-count bounds are distinct from provider-confirmed token/dollar enforcement;
-unsupported hard cap claims block configuration. Unknown invoice/partial sent usage remains
-unknown/reserved, no automatic refund. No numeric production cap is selected here. An explicit
-owner-scoped allowance without numeric limit is a possible envelope decision, never default
-implicit spend; missing references fail closed. Permanent tests must verify send/reservation/
-input/outbox crash windows and all original manual/permission/current-content gates.
+Separately chargeable API/service actions require purpose and likely-cost/cost-impact explanation
+and explicit scoped owner approval. Persist relevant action authority and any owner-selected
+limits in wf_external_actions; no mandatory amount/limit or generic billing platform. Unknown/
+denied/absent authority blocks those actions only. Reconcile uncertain effects on restart,
+never infer an external approval from model permission. Permanent tests exercise financial
+denial zero-send for separately chargeable actions and ordinary-model admission without a
+financial gate, alongside original input/outbox and manual/permission/current-content gates.

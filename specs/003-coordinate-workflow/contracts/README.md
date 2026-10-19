@@ -1,5 +1,8 @@
 # Proposed executable contracts (v1)
 
+> Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
+
+
 Design artifacts, not installed runtime/config or approved production task assignments.
 [Spec](../spec.md) is truth; [data model](../data-model.md) owns proposed persistence and
 custody. Schemas use JSON Schema draft 2020-12, closed objects and explicit versions.
@@ -37,10 +40,15 @@ structured subset may be normalized losslessly, retaining original IDs/order/sou
 and original approval evidence. Arbitrary legacy Markdown is not automatically parsed or
 converted. Inadequate contracts return to producing review/renewal.
 
-Task root authorization_envelope and each authorization_envelope_id retain the explicit
-paid/profile/service/test/network/external/mutation scope and owner approval refs. Unresolved
-authority may exist during preparation, but cannot pass paid preflight. No numeric production
-budget is selected by an example.
+Task root authorization_envelope and each authorization_envelope_id retain exact profiles,
+capabilities/action scopes and actual owner refs. `external_paid_authority` concerns only
+separately chargeable API/service actions (`paid_service`), never ordinary model traffic.
+Those actions need purpose/cost_impact and explicit scoped approval; unresolved/denied/absent
+external paid authority blocks them only. Any `limits` are optional owner-selected external
+action descriptions bound to action_id, not a generic billing platform or mandatory amount.
+Normal approved-profile model requests/retries/summaries need no financial approval, numeric
+cap or spend reservation. Schema shape does not authorize effects; runtime checks actual
+approval/current scope and binds limit action_ids to declared paid_service capabilities.
 
 Task `required` retains every item ID, objective criterion, registered check+version/arguments,
 pass condition, evidence expectation, producer dependencies and gate IDs. `optional` uses
@@ -254,12 +262,15 @@ requires evidence and is not semantic compliance. Inquiry cannot expose private 
 SDK queue does not preempt shell; pause/cancel still needs abort/drain/cgroup/partial-files/Git.
 Pause/cancel may finish as reconciled with quiescence evidence, without inventing a worker ACK.
 
-Envelope has selected profiles, effect capabilities/action scopes, real owner approval refs,
-paid authority and any owner-selected run limits/enforcement proof. Known gaps are aggregated
-before tasks; unresolved/denied authority blocks paid dispatch. Scope-approved technical work,
-debugging and small isolated tests do not reask routine cost/mechanics. Only product/priority
-or unexpected material impact asks with rationale/options/recommendation. Enum categories
-cannot decide semantic eligibility universally. Unexpected safety/auth remains fail-closed.
-No universal cost/time threshold, model routing optimizer or production spend inferred from
-PoC. Run-wide reservation semantics and supported hard-limit provenance are required; generic
-maxTokens/per-host counts/catalog estimates are not hard token/dollar guarantees.
+Envelope has selected profiles, capabilities/action scopes and real approval refs. Known
+profile/capability gaps are aggregated before tasks; ordinary approved-profile model traffic
+has no financial gate, caps or spend reservations. `external_paid_authority` and
+`external_paid_dispatch_allowed` apply only to separately chargeable API/service actions;
+ready preflight may have external paid dispatch false while admitting ordinary model work.
+External actions require purpose/likely-cost explanation and explicit scoped approval; persist
+relevant authority and any owner-selected limits, no mandatory amounts or billing platform.
+Unknown external effects reconcile before retry. Inside-envelope technical/debug/small tests
+do not reask routine cost/mechanics. Product/priority or unexpected material impact asks with
+rationale/options/recommendation; categories are not a semantic oracle. Preserve efficient
+usage/cache telemetry/headroom and final exact-profile guard on retry/summary routes, not
+financial model admission. Generic maxTokens is not a hard token/dollar guarantee.

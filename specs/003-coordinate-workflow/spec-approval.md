@@ -1,5 +1,8 @@
 # Coordinate Implementation specification approval
 
+> Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
+
+
 Producer: planner; depth: Standard. Specification-to-planning approval only.
 
 - On 2026-10-18 the owner selected **Standard — Sol/medium (recommended)** through `ask_user`, explicitly selecting `openai-codex/gpt-6.1-sol:medium` for planning producers and a separate independent review session.

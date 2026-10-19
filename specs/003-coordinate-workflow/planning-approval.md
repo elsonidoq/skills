@@ -1,6 +1,6 @@
 # Final planning approval and bounded handoff
 
-> Current-content notice: the subsequent owner-requested [execution-profile-aware planning amendment](execution-profile-planning.md) changes spec.md, plan.md and T008 in both task representations. The snapshot and review below remain historical, not approval of the amended bytes. A later owner requested implementation, but current profile/spend/capability gates remain unresolved; affected review/approval renewal is required before amended-task dispatch.
+> Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
 
 **Producer:** planner. **Depth:** Standard. **Date:** 2026-10-19 UTC.
 **Status:** planning package approved; implementation NOT authorized and NOT started.

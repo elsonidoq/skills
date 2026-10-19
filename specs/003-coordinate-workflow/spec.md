@@ -1,5 +1,8 @@
 # Feature Specification: Coordinate Implementation executable workflow
 
+> Historical stage/status/provenance statements below describe their original planning pass, not a permanent veto after the latest owner request. Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
+
+
 **Feature Branch**: `follow-attached-workflow-migration-instructions`
 
 **Created**: 2026-10-18
@@ -94,7 +97,7 @@ As a suite adopter, I retain TinySpec, Standard and documented legacy artifacts 
 
 ### User Story 6 - Intervene through the launching interface without losing autonomy (Priority: P1)
 
-As the owner, I authorize known capabilities and spend before tasks start, then can inquire,
+As the owner, I authorize known capabilities and separately chargeable API/service actions before tasks start, then can inquire,
 steer or pause. Only genuinely necessary manager-answerable questions wake my launching
 interface and use its actual ask_user tool; the original worker conversation receives my
 answer before continuing. The interface never selects tasks/models or owns persistence.
@@ -102,11 +105,11 @@ answer before continuing. The interface never selects tasks/models or owns persi
 **Independent Test**: An actual structured question parks in LangGraph/SQLite, automatically
 wakes the same launching parent, invokes actual ask_user and reopens the exact persisted
 worker; submit live steering and observe receipt stages/worker acknowledgement. Separate
-negative checks reject stale/duplicate/unapproved input and missing upfront spend authority.
+negative checks reject stale/duplicate/unapproved input and missing separately chargeable API/service authority.
 
 **Acceptance Scenarios**:
 
-1. **Given** known missing permissions/spend, **When** start preflights, **Then** aggregate
+1. **Given** known missing permissions/external-action authority, **When** start preflights, **Then** aggregate
    manager-readable choices before any task dispatch; inside the approved envelope, ordinary
    implementation/debugging and approved small isolated tests proceed without repeated questions.
 2. **Given** a necessary product/priority or unexpected material-impact question, **When** the
@@ -191,7 +194,7 @@ negative checks reject stale/duplicate/unapproved input and missing upfront spen
 
 #### Interaction and maximum autonomy
 
-- **FR-035**: Plan/tasks and machine-readable intake MUST declare the run/task authorization envelope: permitted selected profiles, model/service spend, test/network/external/mutation capabilities and action scope with actual owner approval references. Production spend MUST NOT be inferred from planning or PoC approval. Preflight MUST aggregate all known missing capabilities/permissions/spend choices before task dispatch with manager-readable options. Missing/denied/unknown paid authority blocks paid dispatch. Work inside the verified envelope, including approved small isolated tests and technical debugging, MUST NOT repeatedly ask about already-approved costs/mechanics. Unexpected out-of-envelope auth/safety/material cost still blocks; no fabricated universal money/time threshold or unsupported hard cap.
+- **FR-035**: Plan/tasks and machine-readable intake MUST declare permitted exact profiles, test/network/external/mutation capabilities/action scope and actual owner approval references. Ordinary approved-profile model requests/retries/summaries MUST NOT require token spending approval, numeric caps or spend reservations; efficient use, metrics/cache telemetry and compaction headroom remain required, not financial gates. Separately chargeable API/service actions MUST have purpose and likely-cost/cost-impact explanation and explicit scoped owner approval before effects; persist relevant action authority and any owner-selected limits without mandatory amounts/limits or a generic billing platform. Preflight MUST aggregate all known capability/permission gaps before tasks with manager-readable options. Missing/denied/unknown external paid authority blocks those actions only, not ordinary approved-profile model traffic. Inside-envelope technical/debug/approved-test work MUST NOT reask routine costs/mechanics. Unexpected out-of-envelope auth/safety/material impact still blocks; no unsupported hard-cap claim.
 - **FR-036**: Workers MUST use schema-validated `request_owner_input`, never direct `ask_user`. Ask only manager-answerable product/priority decisions or genuinely unexpected material scope/complexity/time/cost impact, with why progress needs an owner, options, recommendation and impact. Ordinary technical implementation/debugging and inside-envelope tests remain autonomous. Category enums alone MUST NOT be represented as universal semantic eligibility proof. Question admission MUST freeze new conflicting work, complete the question tool normally and safely settle/drain the current batch before persisting a pending gate/checkpoint; do not leave an unfinished tool call awaiting human input or treat an arbitrary mixed batch as proven safe.
 - **FR-037**: Interactive-parent launch MUST pin the actual launching/status interface identity and permissions and preflight a supported required notification/question capability. The deterministic runner MUST automatically wake that same interface for an eligible pending question; the interface MUST actually invoke its registered `ask_user` and return truthful bound response provenance through the runner. It MUST NOT decide orchestration or fabricate approvals from worker-written files/opaque IDs. Required owner-question transport is separate from optional notifications; no silent manual-polling fallback in interactive mode. CLI-only mode remains portable and can list pending questions/answer independently. UI loss leaves durable pending state; busy/reconnect/outbox retries and acknowledgements MUST be bounded, idempotent and observable, never an always-on decision-making LLM requirement.
 - **FR-038**: A pending owner question MUST pin the ORIGINAL worker persisted conversation, role and source/task/approval/config identity, not its OS process. Accepted answer MUST be durably bound by unique input/gate IDs, nonce and verified owner/parent provenance and delivered to that conversation before continuation. No greedy-headroom/fresh-session substitution is allowed for this continuation. Missing/unsafe/insufficient-headroom or unknown-telemetry original session MUST block for explicit owner recovery; do not promise impossible continuation. Stale, duplicate, wrong-session/source/role/config or unauthorized inputs MUST not dispatch a duplicate worker or consume an answer twice. Durable accepted input is distinct from transport delivery and retry; recovery preserves it without reasking. Source/scope-changing answers require original producing approval renewal.
@@ -208,7 +211,7 @@ negative checks reject stale/duplicate/unapproved input and missing upfront spen
 - **Attempt/evidence record**: Requested/observed binding, skill/session, counters/context provenance, checks, result, baseline/result SHA and retries/repairs.
 - **Operation receipt**: Durable identity and observed result of an external effect used with actual Git/worktree/process evidence to reconcile uncertain completion.
 - **Review finding/approval gate**: Criterion-bound judgment and disposition, authorized repair scope or owner decision tied to current artifacts; neither is implied by a mechanical pass.
-- **Owner interaction/authority**: upfront approved capability/spend envelope, original-conversation question pin, bound answer/control IDs, actual launching-parent dialog provenance and durable delivery outbox; no workflow authority in the facade.
+- **Owner interaction/authority**: upfront approved profile/capability/external-action authority envelope, original-conversation question pin, bound answer/control IDs, actual launching-parent dialog provenance and durable delivery outbox; no workflow authority in the facade.
 - **Status/event/metric projections**: Versioned derived views of authoritative state with documented logical ordering/recovery, not competing persistence authorities.
 
 ## Success Criteria *(mandatory)*
@@ -224,7 +227,7 @@ negative checks reject stale/duplicate/unapproved input and missing upfront spen
 - **SC-007**: Representative TinySpec, Standard and documented legacy intake checks preserve their source and approval semantics or stop precisely for producing review/renewal. Migration documentation covers operation, coexistence, cutover and safe rollback, with no new narrative STATE or coordinator-memory execution paperwork and no production-readiness claims based only on the toy proof (US5; FR-031–034).
 
 - **SC-008**: An actual interactive launch demonstrates automatic same-parent wake, actual ask_user, safely checkpointed pending question, bound original-conversation reopen/answer-before-continuation and live steering with separately observed acknowledgement; wrong/duplicate/stale inputs produce zero duplicate dispatch. Unsafe original/session/transport conditions are visibly pending/blocked, not fresh substituted (US6; FR-036–039).
-- **SC-009**: Preflight fixtures identify known capability/permission/spend gaps before any dispatch; zero paid dispatch occurs with absent/denied/unknown authority and zero routine owner questions are required for exercised approved technical/test actions. Scope-changing input cannot bypass approval, and submitted pause/control remains honest about delivery/quiescence/acknowledgement limits (US6; FR-035–039).
+- **SC-009**: Preflight fixtures identify known capability/permission/external-action authority gaps before any dispatch; zero separately chargeable API/service dispatch occurs with absent/denied/unknown authority and zero routine owner questions are required for exercised approved technical/test actions. Scope-changing input cannot bypass approval, and submitted pause/control remains honest about delivery/quiescence/acknowledgement limits (US6; FR-035–039).
 
 ## Assumptions
 

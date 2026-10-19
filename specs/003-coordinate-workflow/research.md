@@ -1,5 +1,8 @@
 # Coordinate Implementation — canonical architecture research
 
+> Current-content status: latest owner implementation/batching direction supersedes the original planning-only boundary for the bounded migration. The token-vs-separately-chargeable-service correction and FR-040 await targeted current-content independent review/coordinator audit; no renewal review is claimed. Original manual/safety/permission gates remain. See source-request.md (latest owner directions).
+
+
 Date: 2026-10-18. Status: draft design; no production execution. Requirements truth:
 [revised specification](spec.md); integration authority: [D7](decisions.md#d7--owner-selected-sdk-integration-revision).
 Discoverability: [documentation index](../../docs/index.md). No memory/STATE writes.
@@ -237,14 +240,15 @@ separately; no raw run ledger duplication or automatic retry of unknown effects.
 **Measured cost limits:** five real requests, cumulative3445 input+196 output=3641 tokens,
 $0.00885 SDK catalog estimate including failure. Not root/coding/UI total or invoice. Generic
 maxTokens is ignored by installed Codex builder, and max5 was per host, not durable run-wide
-budget. No hard dollar/token cap or production spend approval is demonstrated. Production
-request-admission reservations and any provider-enforced limits require actual supported
-mapping/checks and explicit owner envelope, not fabricated amounts.
+budget. No hard dollar/token cap or production spend approval is demonstrated. The later owner correction removes ordinary-model financial admission/reservations entirely.
+Production separately chargeable API/service actions require purpose/cost-impact explanation
+and scoped approval; preserve any owner-selected limits, not mandatory amounts. Usage/cache
+metrics and headroom remain required independently of financial authority.
 
 **Tested bounds:** actual idle-parent Paseo wake and ask_user, orderly original-session reopen,
 cooperative active SDK steering/ACK, actual negative CLI binding rejection. Compaction disabled;
 150k/pressure pin policy not integrated here. Parent outage/reconnect/busy races, arbitrary
-pause, production registered launch/auth/transaction/outbox/budget are NOT proven. Fixture
+pause, production registered launch/auth/transaction/outbox/external-action authority are NOT proven. Fixture
 flags/nonce are binding, not OS identity authentication or exactly-once. Native Pi extension
 pi.sendMessage(triggerTurn:true, deliverAs:followUp) was researched/syntax-checked but never
 loaded; temporary file removed due owner unable to reload. Public injected child contact_supervisor

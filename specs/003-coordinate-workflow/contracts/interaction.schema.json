@@ -758,7 +758,7 @@
         "envelope_hash": {
           "$ref": "shared.schema.json#/$defs/digest"
         },
-        "paid_authority": {
+        "external_paid_authority": {
           "enum": [
             "denied",
             "unresolved",
@@ -795,7 +795,7 @@
             "blocked"
           ]
         },
-        "paid_dispatch_allowed": {
+        "external_paid_dispatch_allowed": {
           "type": "boolean"
         }
       },
@@ -804,18 +804,18 @@
         "kind",
         "run_id",
         "envelope_hash",
-        "paid_authority",
+        "external_paid_authority",
         "verified_approval_refs",
         "missing_capabilities",
         "pending_gate_refs",
         "status",
-        "paid_dispatch_allowed"
+        "external_paid_dispatch_allowed"
       ],
       "allOf": [
         {
           "if": {
             "properties": {
-              "paid_dispatch_allowed": {
+              "external_paid_dispatch_allowed": {
                 "const": true
               }
             }
@@ -825,7 +825,7 @@
               "status": {
                 "const": "ready"
               },
-              "paid_authority": {
+              "external_paid_authority": {
                 "const": "owner_scoped"
               },
               "verified_approval_refs": {
@@ -863,13 +863,14 @@
           },
           "then": {
             "properties": {
-              "paid_dispatch_allowed": {
+              "external_paid_dispatch_allowed": {
                 "const": false
               }
             }
           }
         }
-      ]
+      ],
+      "description": "External paid fields apply only to separately chargeable API/service actions; status ready does not require them true. Ordinary approved-profile model traffic has no financial gate."
     }
   ]
 }
