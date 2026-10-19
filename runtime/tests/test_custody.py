@@ -344,3 +344,30 @@ class LaunchCrashTests(IsolatedCustody):
 
 
 if __name__=='__main__': unittest.main()
+
+
+class HelperPackageBindingTests(IsolatedCustody):
+    def test_actual_contained_helper_ignores_local_package_and_caller_import_path(self):
+        from unittest.mock import patch
+        original=Path.cwd()
+        for label in ('unset','conflicting'):
+            self.project=make_project(self.root/label)
+            shadow=self.project/'coherence_workflow';shadow.mkdir()
+            marker=self.project/'SHADOW_HELPER'
+            (shadow/'__init__.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').write_text("uncontained shadow")\n')
+            (shadow/'tool_process.py').write_text('raise SystemExit(42)\n')
+            with Authority(self.project) as owner:
+                env=dict(os.environ)
+                if label=='unset':env.pop('PYTHONPATH',None)
+                else:env['PYTHONPATH']=str(self.project)
+                try:
+                    os.chdir(self.project)
+                    with patch.dict(os.environ,env,clear=True):
+                        gateway,op,process=self.launch(owner)
+                    result=gateway.settle(op,process.wait(timeout=10))
+                    self.assertTrue(result['replacement_allowed']);self.assertEqual(result['empty_receipt']['populated'],0)
+                    self.assertFalse(marker.exists(),'foreign package ran before helper membership/identity')
+                    self.assertEqual((self.project/'owned.txt').read_text(),'partial\n')
+                    registered=json.loads(owner.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='prepared'",(op,)).fetchone()[0])
+                    self.assertEqual(registered['pid'],process.pid)
+                finally:os.chdir(original)

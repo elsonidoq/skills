@@ -73,6 +73,17 @@ def clean_owned(project, owned):
             raise Blocked('preexisting dirty owned overlap: ' + name)
 
 
+def runtime_python(code, *args):
+    """Fixed registered INTERNAL code only; project test code keeps its own import semantics.
+
+    Like the parent facade, isolate cwd/PYTHONPATH and bind the actual package parent.
+    Canonical executable preserves ProcessTool's existing executable admission rule.
+    """
+    bootstrap='import sys;sys.path.insert(0,sys.argv.pop(1));'+code
+    return [str(Path(sys.executable).resolve()),'-I','-B','-c',bootstrap,
+            str(Path(__file__).resolve().parents[1]),*args]
+
+
 @dataclass(frozen=True)
 class ProcessTool:
     id: str
@@ -200,8 +211,9 @@ class Gateway:
         proc = None
         gate_released = False
         try:
-            proc = subprocess.Popen([sys.executable,'-m','coherence_workflow.tool_process',
-                                     str(read_gate), str(write_ready), canonical(manifest)],
+            proc = subprocess.Popen(runtime_python(
+                                     'import runpy;runpy.run_module("coherence_workflow.tool_process",run_name="__main__",alter_sys=True)',
+                                     str(read_gate), str(write_ready), canonical(manifest)),
                                     pass_fds=(read_gate,write_ready,*inherited_fds), stdin=subprocess.DEVNULL,
                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             os.close(read_gate); read_gate = -1

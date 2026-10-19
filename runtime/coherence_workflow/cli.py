@@ -22,7 +22,7 @@ from .registry import CHECKS, Handler, Registry, validate_schema
 from .sessions import select_session, retained_candidates, manifest_compatibility, open_manifest
 from .interaction import Interaction, OwnerChannel, QUESTION_SCHEMA
 from .store import Authority, Blocked, canonical, digest, git, private_file, safe_path
-from .tools import Gateway, ProcessTool, reconcile, snapshot
+from .tools import Gateway, ProcessTool, reconcile, snapshot, runtime_python
 from .verification import ReviewRepair, Verification, unittest_oracle
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -326,10 +326,10 @@ class Coordinate:
         tools = {'read_file': read}
         if not review and task['owned_paths']:
             write = ProcessTool('write_file', '1', schema(task['owned_paths'], True),
-                lambda args: [str(Path(sys.executable).resolve()), '-c',
-                              'import sys; from coherence_workflow.store import safe_path; '
+                lambda args: runtime_python(
+                              'from coherence_workflow.store import safe_path; '
                               'p=safe_path(sys.argv[1],sys.argv[2]); p.parent.mkdir(parents=True,exist_ok=True); '
-                              'p.write_text(sys.argv[3])', str(project), args['path'], args['text']],
+                              'p.write_text(sys.argv[3])', str(project), args['path'], args['text']),
                 tuple(task['owned_paths']), self.environment)
             tools['write_file'] = write
         return tools

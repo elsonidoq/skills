@@ -280,3 +280,51 @@ class CliPreflightTests(IsolatedCustody):
             self.assertEqual(before,snapshot(self.project,[]))
             self.assertEqual(list(suite.rglob('__pycache__')),[])
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
+
+
+class InternalPythonBindingTests(IsolatedCustody):
+    def test_actual_registered_write_read_helpers_bind_runtime_but_project_test_imports_remain_project_code(self):
+        from coherence_workflow.cli import Coordinate
+        from coherence_workflow.store import Authority
+        from test_review_repair import coordinate_fixture
+        from test_intake import declare_builtin_actions
+        from unittest.mock import patch
+        shadow=self.project/'coherence_workflow';shadow.mkdir();marker=self.project/'SHADOW_INTERNAL'
+        (shadow/'__init__.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').write_text("shadow")\nraise RuntimeError("SHADOW_INTERNAL")\n')
+        (self.project/'project_values.py').write_text('VALUE=1\n')
+        (self.project/'answer.py').write_text('from project_values import VALUE\ndef answer(): return VALUE\n')
+        config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
+        def setup(contract):
+            contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
+            task=contract['tasks'][0]
+            task['required'].append({**copy.deepcopy(task['required'][0]),'id':'A/Python',
+                'check':{'id':'workflow.PythonAnswer','version':'1','args':{'path':'answer.py','expected':1}}})
+        with Authority(self.project) as owner:
+            c=coordinate_fixture(self.project,owner,task_setup=setup)
+            self.assertEqual(c.authority_check({}),{'outcome':'ok'})
+            c.select({});task=c.contract['tasks'][0];c.agent_node=next(n for n in c.config['nodes'] if n['id']=='implement')
+            c.gateway.tools=c._tools(task)
+            original=Path.cwd()
+            try:
+                os.chdir(self.project)
+                for index,path in enumerate((None,str(self.project))):
+                    env=dict(os.environ);env.pop('PYTHONPATH',None)
+                    if path:env['PYTHONPATH']=path
+                    with patch.dict(os.environ,env,clear=True):
+                        # Root task-origin custody permits the second understood owned write.
+                        if index==0:c.gateway.bind_task_origin('internal:',task['owned_paths'],json.loads(c.current()['baseline']))
+                        op,process=c.gateway.launch('internal:'+str(index),'write_file','1',{'path':'owned.txt','text':'first\n'})
+                        receipt=c.gateway.settle(op,process.wait(timeout=10));self.assertTrue(receipt['replacement_allowed'])
+                        read,reader=c.gateway.launch('read:'+str(index),'read_file','1',{'path':'owned.txt'})
+                        observed=c.gateway.settle(read,reader.wait(timeout=10))
+                        self.assertEqual(c.gateway.tools['read_file'].result_reader({'path':'owned.txt'},observed),'first\n')
+                self.assertFalse(marker.exists())
+                # Distinct explicit oracle capability intentionally executes trusted project imports.
+                evidence=c.verification.run_checks(task)
+                self.assertTrue(all(row['status']=='satisfied' for row in evidence))
+                self.assertFalse(marker.exists(),'system module resolution fell through to project code')
+            finally:
+                os.chdir(original)
+                for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
+                    receipt=json.loads(row[0])
+                    if receipt not in self.receipts:self.receipts.append(receipt)

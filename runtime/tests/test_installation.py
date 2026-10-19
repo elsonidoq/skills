@@ -91,3 +91,22 @@ print(json.dumps({'module':cli.__file__,'host':str(host)}))
             self.assertEqual(result.returncode,2,result.stdout+result.stderr)
             self.assertEqual((prefix/'custom').read_text(),'owner bytes')
             self.assertEqual([p.name for p in prefix.iterdir()],['custom'])
+
+
+class SourceEntryBindingTests(unittest.TestCase):
+    def test_foreign_cwd_local_shadow_and_caller_pythonpath_never_replace_source_cli(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);foreign=root/'foreign';foreign.mkdir();conflict=root/'caller';conflict.mkdir()
+            marker=root/'shadow-executed'
+            for directory in (foreign,conflict):
+                package=directory/'coherence_workflow';package.mkdir()
+                (package/'__init__.py').write_text('')
+                (package/'cli.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').write_text("shadow")\nprint("PROJECT_LOCAL_CLI_EXECUTED")\nraise SystemExit(42)\n')
+            for path in (None,str(conflict)):
+                env=dict(os.environ,COHERENCE_PYTHON=sys.executable);env.pop('PYTHONPATH',None)
+                if path:env['PYTHONPATH']=path
+                result=subprocess.run([str(ROOT/'scripts/coordinate-implementation'),'status','--help'],
+                    cwd=foreign,env=env,capture_output=True,text=True,timeout=20)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+                self.assertIn('--project',result.stdout);self.assertNotIn('PROJECT_LOCAL_CLI_EXECUTED',result.stdout)
+                self.assertFalse(marker.exists())
