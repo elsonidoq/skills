@@ -117,5 +117,7 @@ CHECKS = {
     for file, selector in [('test_engine.py','ConfigGraphTests'),('test_custody.py','CustodyTests'),
                            ('test_custody.py','LaunchCrashTests'),('test_engine.py','LedgerCheckpointTests'),
                            ('test_intake.py','OriginIntakeTests'),('test_authority.py','AuthorityAdmissionTests'),
-                           ('test_verification.py','RequiredEvidenceTests'),('test_git_effects.py','FocusedCheckpointTests')]
+                           ('test_verification.py','RequiredEvidenceTests'),('test_git_effects.py','FocusedCheckpointTests'),
+                           ('test_review_repair.py','RepairBudgetTests'),('test_review_repair.py','IndependentReviewTests'),
+                           ('test_review_repair.py','AcceptanceGateTests')]
 }

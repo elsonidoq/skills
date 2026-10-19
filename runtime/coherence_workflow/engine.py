@@ -89,7 +89,9 @@ def load_workflow(registry, source=None, resource_root=None):
                 raise Blocked('node permission/tool escalation')
             if node['role']=='review' and (set(node['side_effects']) - {'read'} or node['session_policy']['reuse_preference'] not in ('own_reviewer','role_default')):
                 raise Blocked('review must be independent read-only')
-        # T001 has no task-progress or retry capability: every cycle is unsupported.
+        if handlers[id].stage == 'repair' and (node['type'] != 'agent' or node.get('role') != 'repair'):
+            raise Blocked('repair cycle requires configured repair role')
+        # Graph transport retries never authorize replay of an uncertain external effect.
         if node.get('max_retries',0):
             raise Blocked('retry capability unavailable; no blind external replay')
     selectors = [id for id, handler in handlers.items() if handler.stage == 'task_select']
@@ -102,8 +104,12 @@ def load_workflow(registry, source=None, resource_root=None):
 
     def walk(id, stack, stages):
         if id in stack:
-            if (id == progress and stages == required[:5] and
-                    handlers[stack[-1]].stage == 'checkpoint'):
+            previous = handlers[stack[-1]].stage
+            if (id == progress and ((stages == required[:5] and previous == 'checkpoint') or
+                                    (stages == required[:3] and previous == 'correction_authority'))):
+                return
+            if (stages == required[:4] and ((handlers[id].stage == 'verification' and previous == 'repair') or
+                                           (handlers[id].stage == 'repair' and previous == 'verification'))):
                 return
             raise Blocked('unbounded/unsupported graph cycle')
         key = (id,stages)
@@ -119,6 +125,10 @@ def load_workflow(registry, source=None, resource_root=None):
                 walk(target, stack+(id,), required[:5] if outcome == 'done' else stages)
             validated.add(key)
             return
+        if stage == 'correction_authority':
+            if stages != required:
+                raise Blocked('correction authority must follow full-range review')
+            stages = required[:3]
         if stage in required:
             index = required.index(stage)
             if index != len(stages):
@@ -166,7 +176,7 @@ class Engine:
                             'code':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                                     for p in files('coherence_workflow').iterdir() if p.name.endswith('.py')}})
         self.progress = any(registry.handler(n).stage == 'task_select' for n in config['nodes'])
-        if self.progress and (type(max_task_visits) is not int or not 0 <= max_task_visits <= 10000):
+        if self.progress and (type(max_task_visits) is not int or max_task_visits < 0):
             raise Blocked('bounded approved task count required')
         self.max_task_visits = max_task_visits
         self.hook = phase_hook or (lambda phase, op: None)

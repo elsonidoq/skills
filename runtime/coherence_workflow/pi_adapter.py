@@ -14,12 +14,40 @@ import time
 import uuid
 
 from jsonschema import Draft202012Validator
+from jsonschema.exceptions import ValidationError
 from .store import Blocked, canonical, digest, git, safe_path, private_file
 from .tools import ProcessTool
 from .registry import validate_schema
 
 MAX_RECORD = 262144
 TOKEN_FIELDS = ('input','output','cacheRead','cacheWrite')
+
+
+def failure_diagnostic(exc, *, phase, host_op, operation_id, pending):
+    """Allowlisted causal metadata only: never provider text, arguments or transcripts."""
+    classes={'Blocked','ValidationError','JSONDecodeError','TimeoutError','BrokenPipeError',
+             'FileNotFoundError','PermissionError','OSError','RuntimeError','ValueError'}
+    names=[];seen=set();cause=exc
+    while cause is not None and id(cause) not in seen and len(names)<4:
+        seen.add(id(cause));name=type(cause).__name__
+        names.append(name if name in classes else 'unclassified_exception')
+        cause=cause.__cause__ or cause.__context__
+    category='tool_or_record_schema' if isinstance(exc,ValidationError) else 'unclassified_failure'
+    known={'SDK host EOF; task tools require reconciliation':'host_eof',
+           'SDK prompt deadline':'prompt_deadline','SDK prompt failed':'sdk_prompt_failed',
+           'controlled pressure/pause':'controlled_interrupt',
+           'SDK context pressure/compaction; drain and owner recovery required':'context_pressure',
+           'unregistered tool binding':'tool_binding','tool outside current prompt':'tool_correlation',
+           'ORPHAN_PROCESS: tool result cannot release prompt':'orphan_process',
+           'unreconciled process operation; replacement_allowed=false':'unsettled_process_admission',
+           'task-tool queue byte limit; no request dropped or released':'tool_queue_limit',
+           'duplicate/invalid tool call identity':'tool_call_identity',
+           'review tool mutation denied':'review_tool_scope',
+           'settlement with pending/queued task tools':'unsettled_tool_batch'}
+    if isinstance(exc,Blocked):category=known.get(str(exc),'local_guard_or_protocol_blocker')
+    validator=exc.validator if isinstance(exc,ValidationError) and exc.validator in ('enum','type','required','additionalProperties','const','maxLength','oneOf') else None
+    return {'classification':category,'exception_types':names,'schema_validator':validator,
+            'phase':phase,'host_op':host_op,'operation_id':operation_id,'pending_tool_operations':sorted(pending)}
 
 
 class Decoder:
@@ -181,6 +209,9 @@ class PiAdapter:
         self.session_id=None
         self.current=None
         self.pending={}
+        self.tool_queue=[]
+        self.queued_tool_bytes=0
+        self.tool_calls_seen=set()
         self.decoder=Decoder()
         self.queue=[]
         self.closed=False
@@ -287,19 +318,59 @@ class PiAdapter:
         self.lifecycle.poisoned=True
         raise Blocked('SDK response deadline')
 
-    def _launch_tool(self,record):
+    @staticmethod
+    def _tool_record_size(record):
+        return len(json.dumps(record,ensure_ascii=False,separators=(',',':')).encode())
+
+    def _tool_disposition(self, record, state, **details):
         p=record['payload']
+        self._persist('sdk_tool_'+state+':'+digest(p['call']),
+            {'state':state,'call_hash':digest(p['call']),'args_hash':digest(p['args']),
+             'generation':p['generation'],'tool':p['tool'],'version':p['version'],**details},self.current['operation_id'])
+
+    def _launch_tool(self,record):
+        """Admit a same-prompt request; serialize effects, not workflow decisions."""
+        self.failure_phase='tool_admission'
+        p=record['payload'];call=p.get('call')
         if (not self.lifecycle.active or self.lifecycle.poisoned or record['command_id']!=self.current['command_id'] or
-            p.get('generation')!=self.lifecycle.generation or p.get('call') in self.pending):
+            any(record.get(k)!=v for k,v in self.binding.items()) or
+            record.get('operation_id')!=self.current['operation_id'] or record.get('attempt_id')!=self.current['attempt_id'] or
+            record.get('session_id')!=self.session_id or p.get('generation')!=self.lifecycle.generation):
             raise Blocked('tool outside current prompt')
+        if not isinstance(call,str) or not call or len(call)>1024 or call in self.tool_calls_seen:
+            raise Blocked('duplicate/invalid tool call identity')
         name=p.get('tool'); spec=next((t for t in self.manifest['tools'] if t['name']==name),None)
         tool=self.gateway.tools.get(name)
         if not spec or not tool or tool.version!=p.get('version') or spec['version']!=tool.version:
             raise Blocked('unregistered tool binding')
+        if self.compatibility['role']=='review' and tool.owned_paths:
+            raise Blocked('review tool mutation denied')
         Draft202012Validator(spec['parameters']).validate(p['args'])
-        op,proc=self.gateway.launch(self.current['attempt_id']+':'+p['call'],name,tool.version,p['args'],
-                                    admitted_host_ops=(self.host_op,))
+        size=self._tool_record_size(record)
+        if self.queued_tool_bytes+size>MAX_RECORD:
+            raise Blocked('task-tool queue byte limit; no request dropped or released')
+        self.tool_calls_seen.add(call)
+        self._tool_disposition(record,'queued')
+        self.tool_queue.append(record);self.queued_tool_bytes+=size
+        self._start_next_tool()
+
+    def _start_next_tool(self):
+        if self.pending or not self.tool_queue:return
+        record=self.tool_queue.pop(0);self.queued_tool_bytes-=self._tool_record_size(record)
+        p=record['payload'];tool=self.gateway.tools.get(p['tool'])
+        spec=next((t for t in self.manifest['tools'] if t['name']==p['tool']),None)
+        if (not tool or not spec or tool.version!=p['version'] or tool.arguments!=spec['parameters'] or
+                self.compatibility['role']=='review' and tool.owned_paths):
+            self._tool_disposition(record,'cancelled')
+            raise Blocked('queued registered tool drift; renewal required')
+        try:
+            op,proc=self.gateway.launch(self.current['attempt_id']+':'+p['call'],tool.id,tool.version,p['args'],
+                                        admitted_host_ops=(self.host_op,))
+        except BaseException:
+            self._tool_disposition(record,'launch_uncertain')
+            raise
         self.pending[p['call']]={'op':op,'proc':proc,'tool':tool,'args':p['args']}
+        self._tool_disposition(record,'launched',process_operation=op)
 
     def _poll_tools(self):
         for call,tool in list(self.pending.items()):
@@ -317,14 +388,22 @@ class PiAdapter:
                 'result':{'content':[{'type':'text','text':canonical(output)}],
                           'details':{'operation_id':tool['op'],'quiescent':True}}})
             del self.pending[call]
+        self._start_next_tool()
+
+    def _settle_prompt(self, payload):
+        if self.pending or self.tool_queue:
+            raise Blocked('settlement with pending/queued task tools')
+        self.lifecycle.finish(payload)
 
     def prompt(self,*,node,task_id,attempt_id,role,text,skill,contract_hash,selection,timeout=120,interrupt=None):
+        if self.pending or self.tool_queue:raise Blocked('pending/queued task tools prevent a new prompt')
         self.gateway.store.assert_dispatchable(self.gateway.run,admitted_host_ops=(self.host_op,))
         family=lambda r:'implement' if r in ('implement','repair') else r
         if family(role)!=family(self.compatibility['role']):raise Blocked('session role isolation')
         before=self.snapshot
         if not before:raise Blocked('missing initial telemetry')
         generation=self.lifecycle.begin()
+        self.tool_calls_seen.clear()
         details={'run_id':self.gateway.run,'task_id':task_id,'node_id':node,'role':role,
                  'host_op':self.host_op,'attempt_id':attempt_id,'contract_hash':contract_hash,
                  'generation':generation,'selection':selection,'compatibility':self.compatibility,'before':before,'started_ns':time.time_ns(),
@@ -336,13 +415,16 @@ class PiAdapter:
         self.current={'operation_id':operation['op_id'],'attempt_id':attempt_id}
         self.snapshot=None
         started=time.monotonic_ns()
+        self.failure_phase='prompt_send'
         try:
             command=self.send('prompt',{'generation':generation,'text':text,'skill':skill})
             self.current['command_id']=command
             deadline=time.monotonic()+timeout
             while time.monotonic()<deadline:
+                self.failure_phase='tool_poll'
                 self._poll_tools()
                 if interrupt and interrupt(self):raise Blocked('controlled pressure/pause')
+                self.failure_phase='record_receive'
                 record=self.receive(.05)
                 if not record:continue
                 if record['command_id']!=command:
@@ -361,8 +443,8 @@ class PiAdapter:
                     if p.get('type') in ('pressure','compaction_start'):
                         raise Blocked('SDK context pressure/compaction; drain and owner recovery required')
                 if record['type']=='settled':
-                    self.lifecycle.finish(p)
-                    if self.pending:raise Blocked('settlement with pending task tools')
+                    self.failure_phase='settlement'
+                    self._settle_prompt(p)
                     self.gateway.store.assert_dispatchable(self.gateway.run,admitted_host_ops=(self.host_op,))
                     self.snapshot=p['snapshot']
                     segment=usage_segment(before,self.snapshot)
@@ -374,6 +456,11 @@ class PiAdapter:
             raise Blocked('SDK prompt deadline')
         except BaseException as exc:
             self.lifecycle.poisoned=True
+            diagnostic=failure_diagnostic(exc,phase=self.failure_phase,host_op=self.host_op,
+                operation_id=operation['op_id'],pending=[tool['op'] for tool in self.pending.values()])
+            diagnostic_recorded=True
+            try:self._persist('sdk_failure_diagnostic',diagnostic,operation['op_id'])
+            except Exception:diagnostic_recorded=False
             try:
                 self.abort()
             except Exception:
@@ -383,10 +470,17 @@ class PiAdapter:
                 segment.update(details,ended_ns=None,end_unknown_reason='prompt_or_host_interrupted',
                     stopped_observed_ns=time.time_ns(),elapsed_ns=time.monotonic_ns()-started)
                 self._persist('sdk_interrupted',segment,operation['op_id'])
-            raise Blocked('SDK turn interrupted/uncertain; no replay or reuse') from exc
+            raise Blocked('SDK turn interrupted/uncertain; no replay or reuse; cause='+diagnostic['classification']+
+                          '; phase='+diagnostic['phase']+'; operation='+operation['op_id']+
+                          '; diagnostic_recorded='+str(diagnostic_recorded).lower()) from exc
 
     def abort(self):
         self.lifecycle.poisoned=True
+        cancellation_unrecorded=False
+        for record in self.tool_queue:
+            try:self._tool_disposition(record,'cancelled')
+            except Exception:cancellation_unrecorded=True
+        self.tool_queue.clear();self.queued_tool_bytes=0
         # Drain tools first: SDK abort alone does not quiesce child descendants.
         for call,tool in list(self.pending.items()):
             receipt=self.gateway.resolve(tool['op'])
@@ -401,11 +495,12 @@ class PiAdapter:
                 if not record['payload'].get('ok') or not record['payload'].get('idle'):raise Blocked('SDK drain unknown')
                 self.lifecycle.active=False
                 self._persist('sdk_drained',{'host_op':self.host_op,'idle':True,'tools_empty':True})
+                if cancellation_unrecorded:raise Blocked('queued cancellation receipt unavailable; no reuse')
                 return
         raise Blocked('SDK abort deadline; custody unresolved')
 
     def telemetry(self):
-        if self.lifecycle.active or self.lifecycle.poisoned:raise Blocked('telemetry not settled')
+        if self.lifecycle.active or self.lifecycle.poisoned or self.pending or self.tool_queue:raise Blocked('telemetry not settled')
         command=self.send('telemetry',{'generation':self.lifecycle.generation},operation_id=self.host_op,attempt_id='telemetry')
         self.snapshot=self.wait_response(command,10)['snapshot']
         return self.snapshot
@@ -413,7 +508,7 @@ class PiAdapter:
     def close(self,force=False):
         if self.closed:return
         try:
-            if (self.lifecycle.active or self.pending) and self.proc.poll() is None:self.abort()
+            if (self.lifecycle.active or self.pending or self.tool_queue) and self.proc.poll() is None:self.abort()
             if not force:
                 command=self.send('close',{'generation':self.lifecycle.generation},operation_id=self.host_op,attempt_id='close')
                 self.wait_response(command,10)

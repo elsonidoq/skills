@@ -1,4 +1,4 @@
-# Opt-in standalone task-progress graph; final acceptance remains review-gated.
+# Opt-in bounded task/repair/review graph. No runtime model escalation.
 schema_version: 1
 workflow_id: coordinate
 registry_version: '1'
@@ -45,8 +45,21 @@ nodes:
   - work
   - done
   transitions:
-    work: implement
+    work: dispatch
     done: review
+  side_effects:
+  - read
+  max_retries: 0
+- id: dispatch
+  handler: dispatch
+  handler_version: '1'
+  type: code
+  outcomes:
+  - implement
+  - repair
+  transitions:
+    implement: implement
+    repair: repair
   side_effects:
   - read
   max_retries: 0
@@ -77,14 +90,47 @@ nodes:
   permissions:
   - read_file
   - write_file
+- id: repair
+  handler: repair
+  handler_version: '1'
+  type: agent
+  outcomes:
+  - ok
+  - blocked
+  transitions:
+    ok: verify
+    blocked: failure
+  side_effects:
+  - files
+  - process
+  - conversation
+  max_retries: 0
+  role: repair
+  profile: sol-medium
+  skill: coordinate
+  session_policy:
+    mode: fresh_only
+    min_free_tokens_before_compaction: 150000
+    reuse_preference: original_implementer
+  max_repair_attempts: 2
+  tools:
+  - read_file
+  - write_file
+  permissions:
+  - read_file
+  - write_file
 - id: verify
   handler: verify
   handler_version: '1'
   type: code
   outcomes:
   - ok
+  - repair
+  - blocked
   transitions:
     ok: checkpoint
+    repair: repair
+    blocked: failure
   side_effects:
   - read
   - process
@@ -107,8 +153,12 @@ nodes:
   type: agent
   outcomes:
   - ok
+  - correction
+  - blocked
   transitions:
     ok: complete
+    correction: authorize-correction
+    blocked: failure
   side_effects:
   - read
   max_retries: 0
@@ -124,8 +174,29 @@ nodes:
   - read_file
   permissions:
   - read_file
+- id: authorize-correction
+  handler: authorize-correction
+  handler_version: '1'
+  type: code
+  outcomes:
+  - ok
+  - blocked
+  transitions:
+    ok: select
+    blocked: failure
+  side_effects:
+  - read
+  max_retries: 0
 - id: complete
   handler: complete
+  handler_version: '1'
+  type: terminal
+  outcomes: []
+  transitions: {}
+  side_effects:
+  - read
+- id: failure
+  handler: failure
   handler_version: '1'
   type: terminal
   outcomes: []
@@ -156,6 +227,7 @@ permissions:
 - read_file
 - write_file
 - workflow.FileBytes
+- workflow.PythonAnswer
 tool_capabilities:
 - read_file
 - write_file

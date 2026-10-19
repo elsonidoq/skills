@@ -6,8 +6,10 @@ The legacy skill remains the default; there is no global entry cutover. The stan
 `scripts/coordinate-implementation` composes the foundation and pinned SDK with structured
 intake, authority preflight, real registered checks and focused runner checkpoints.
 The packaged task-progress graph uses bounded logical visits in the same LangGraph,
-not a separate scheduler. Final acceptance remains blocked pending independent full-range
-review; `implementation_complete` is not acceptance. Interaction commands explicitly block
+not a separate scheduler. Bounded diagnosed repairs and fresh independent read-only
+full-range review now compose that graph. `implementation_complete` is not acceptance:
+only current REQUIRED/gates, focused checkpoints, resolved findings and an exact current
+full-range independent pass permit acceptance. Interaction commands explicitly block
 until their interaction capability is delivered. `load_workflow(Registry())` still blocks
 without concrete registered task-handler capabilities. Its selected
 profile is a declaration, not proof of a usable model or permission to send requests.
@@ -363,3 +365,86 @@ committed WAL state) and integrity check, never a main-file-only copy. No automa
 migration or downgrade is provided. Changed runtime/config/registry/schema/resources/inputs/
 approvals/host hashes block affected continuation; source/profile changes require the original
 producing approval, not a resume flag.
+
+## Bounded repair and independent acceptance
+
+The graph explicitly routes REQUIRED failure to the configured repair node only after an
+inspected registered implementation diagnosis. Missing/unrun/stale/unknown/environment/
+permission/contract evidence blocks instead of retrying. File-byte mismatch and the contained
+`workflow.PythonAnswer` integer-result mismatch are supported objective diagnoses; arbitrary
+exception/command failure is not. Repair receives the unchanged original items, partial files,
+source authority and original checkpoint baseline. Still-applicable evidence survives;
+affected checks rerun. No model/profile escalation or complexity routing exists.
+
+Repair budgets live in SQL under the original failing task or `review-final`, not under a
+new correction ID. Zero blocks before host/model dispatch. Each actual repair prompt consumes
+one count durably before dispatch, including an interrupted invocation. Capability checks may
+stop before consumption; uncertain dispatched effects still block safe replacement. The
+configured repair/review gate ceilings bind across restart; changing them changes run identity.
+
+First final review is a fresh independent `review` session, with only bounded `read_file`.
+It receives the complete committed original base→current head patch, source/tasks/approval
+content, item evidence, checkpoint refs and prior findings. No implementation history or write
+capability is supplied. The shipped graph explicitly uses fresh-only defaults; direct SDK
+saved-conversation/selector APIs retain their separately proven role-safe reuse boundaries.
+A complete bundle over the supported protocol bound blocks rather than truncating the range.
+Review judgment is distinct from mechanical green; malformed/stale-head review cannot accept.
+
+A finding is not executable scope. Unapproved/scope-changing/unknown findings block for owner
+contract renewal. A private operator catalog may explicitly supply `workflow_correction_rules`:
+a list of records with `criterion_ref`, exact `path`, `original_task_id`, a full structured
+correction task template in `task`, `scope_hash=digest(task)`, truthful external `actor` and
+`provenance`. The existing authenticated local operator boundary supplies this catalog outside
+the worktree; workers cannot author it. Templates must preserve original REQUIRED, optional,
+gates and exact owned paths. Rules are pinned as owner input; model action prose never becomes
+an executable command or invented approval. Dynamic correction IDs/order are runner-assigned;
+each accepted finding becomes a separately authorized focused task/commit. Gate-bound corrections
+that need renewed original authority remain blocked, not silently reapproved.
+
+After corrections, affected real checks and the full original base→new-head independent review
+run again. Every finding retains a visible unresolved/accepted-focused/resolved disposition;
+a current passing rereview can resolve only checkpointed corrections. Acceptance reaudits current
+required evidence, original permission/manual gates, full checkpoint chain and exact review head.
+Optional green, worker confidence, implementation completion and an old review cannot replace
+these conditions. An approved representative sample remains an unrun check until its real oracle
+runs. Standalone interaction/question delivery is still unavailable until its own shipped adapters.
+
+`status` exposes SQL-derived reviews/findings/budgets, unsuperseded metric records, exact blocker,
+current graph/attempt refs and null/unknown reasons without spawning agents or mutating projections.
+A successful accepted run releases its durable mutation reservation only after graph/application
+audit. A blocked/exhausted/uncertain run retains its evidence/reservation. Ordinary approved-profile
+model requests remain unrelated to financial admission; repair counters are not token/spend caps.
+
+### Serialized SDK tool batches and safe Git callbacks
+
+Pi can issue sibling tool calls in parallel. The Python transport validates their original
+session/operation/attempt/generation, role, registered version and arguments before placing
+requests in a bounded FIFO. Only one task-tool process is active; strict Gateway admission is
+not relaxed. Queued/launched/cancelled argument and call hashes are durable facts. Queued work
+is unsettled: it prevents prompt success, telemetry, checks/commits and reuse. Abort cancels
+never-launched requests and drains/reconciles actual active scopes. Missing cancellation
+receipts block reuse even after physical drain. Overflow, duplicates, stale/wrong targets and
+premature settlement block explicitly. This does **not** establish the exclusive/all-terminating
+owner-question batch contract; T006 must still deliver that separate safety boundary.
+
+Before task dispatch and again before Git hashing/staging/commit launch, admission inspects
+configuration, attributes and hook paths using builtins only. Applicable external clean/process
+filters and executable (or ambiguous symlink) post-index-change hooks require a registered
+contained adapter and currently block. They are never probed, disabled or configured around.
+An unused filter declaration does not block a path to which it does not apply; uncertain
+applicability fails closed. Built-in normalization remains supported, as do existing contained
+commit/signing/hooks. Review patches explicitly use raw builtin diff with external diff and
+textconv disabled as display mechanisms, not altered repository settings or waived checks.
+
+SDK failures record allowlisted exception/cause classes, phase and operation refs—not provider
+error bodies, tool arguments or credentials. Isolated integration failures retain a private
+SQL backup, conversation/worktree copy, input/code/environment hashes and validated empty-scope/
+partial-file receipts before fixture teardown. These copies are inspection evidence only;
+their copied Git authority bindings must never be adopted as resumable worktrees. Tests retain
+old failures as counterevidence rather than treating a later green as a diagnosis of lost data.
+
+Before final review, later approved task changes refresh only stale producer checks, using
+current correction proof when it already satisfies the unchanged original items. This creates
+new evidence, not an empty commit or a rewritten original checkpoint. Failed/insufficient final
+proof still blocks. The launcher disables Python bytecode writes process-locally so ordinary
+read-only status does not depend on the caller already setting that environment flag.

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from coherence_workflow.git_effects import GitEffects, reconcile_checkpoint
-from coherence_workflow.store import Authority, Blocked, git
+from coherence_workflow.store import Authority, Blocked, digest, git
 from coherence_workflow.tools import Gateway, snapshot
 from test_custody import IsolatedCustody
 
@@ -114,3 +114,87 @@ class FocusedCheckpointTests(IsolatedCustody):
             with self.assertRaisesRegex(Blocked,'Git commit/hooks/signing failed'):self.checkpoint(owner,self.task(),baseline)
             self.assertEqual(git(self.project,'rev-parse','HEAD').decode().strip(),baseline['head'])
             self.assertEqual((self.project/'owned.txt').read_text(),'changed')
+
+
+class GitCapabilityTests(IsolatedCustody):
+    def setUp(self):
+        super().setUp()
+        self.marker=self.root/'callback-marker'
+
+    def effects(self,owner):
+        owner.store.reserve('run',digest('git-capability-fixture'))
+        return GitEffects(owner,'run',Gateway(owner,'run',self.parent,{}))
+
+    def assert_rejected_without_effect(self,owner,effects):
+        index=(self.project/'.git/index').read_bytes()
+        head=git(self.project,'rev-parse','HEAD')
+        with self.assertRaisesRegex(Blocked,'filter|post-index-change') as error:effects.begin(self.task())
+        self.assertNotIn('DO_NOT_LOG_COMMAND_SECRET',str(error.exception))
+        self.assertFalse(self.marker.exists())
+        self.assertEqual((self.project/'.git/index').read_bytes(),index)
+        self.assertEqual(git(self.project,'rev-parse','HEAD'),head)
+        self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_operations').fetchone()[0],0)
+        self.assertEqual(self.outside.read_text(),'outside unchanged')
+
+    def task(self):return {'id':'A','owned_paths':['owned.txt'],'required':[{'id':'A/V1'}]}
+
+    def test_applicable_clean_and_process_filters_never_execute_or_stage(self):
+        import shlex
+        for kind in ('clean','process'):
+            project=self.project
+            if kind=='process':
+                from fixtures.support import make_project
+                self.project=make_project(self.root/'process-project')
+            (self.project/'.gitattributes').write_text('owned.txt filter=ScopedDriver\n')
+            command='printf DO_NOT_LOG_COMMAND_SECRET > '+shlex.quote(str(self.marker))+'; cat'
+            git(self.project,'config','filter.ScopedDriver.'+kind,command)
+            with Authority(self.project) as owner:self.assert_rejected_without_effect(owner,self.effects(owner))
+        self.project=project
+
+    def test_executable_index_hook_and_custom_hook_directory_never_execute(self):
+        hookdir=self.project/'configured-hooks';hookdir.mkdir()
+        git(self.project,'config','core.hooksPath','configured-hooks')
+        hook=hookdir/'post-index-change'
+        hook.write_text('#!/bin/sh\nprintf DO_NOT_LOG_COMMAND_SECRET > '+str(self.marker)+'\n');hook.chmod(0o700)
+        with Authority(self.project) as owner:self.assert_rejected_without_effect(owner,self.effects(owner))
+
+    def test_late_hook_and_attribute_change_block_before_checkpoint_effect(self):
+        import shlex
+        from coherence_workflow.git_effects import assert_safe_git_inputs
+        with Authority(self.project) as owner:
+            effects=self.effects(owner);baseline=effects.begin(self.task())
+            (self.project/'owned.txt').write_text('approved implementation')
+            index=(self.project/'.git/index').read_bytes()
+            git(self.project,'config','filter.late.clean','printf marker > '+shlex.quote(str(self.marker))+'; cat')
+            # An unused external filter does not deny ordinary built-in operations.
+            assert_safe_git_inputs(self.project,self.task()['owned_paths'])
+            (self.project/'.gitattributes').write_text('owned.txt filter=late\n')
+            with self.assertRaisesRegex(Blocked,'filter'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+            self.assertEqual((self.project/'.git/index').read_bytes(),index);self.assertFalse(self.marker.exists())
+            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_operations').fetchone()[0],0)
+        # Separate fixture: no reset/discard/configuration-around the rejected case.
+        from fixtures.support import make_project
+        self.project=make_project(self.root/'late-hook-project')
+        with Authority(self.project) as owner:
+            effects=self.effects(owner);baseline=effects.begin(self.task())
+            (self.project/'owned.txt').write_text('retained partial')
+            hook=self.project/'.git/hooks/post-index-change';hook.write_text('#!/bin/sh\nexit 0\n');hook.chmod(0o700)
+            index=(self.project/'.git/index').read_bytes()
+            with self.assertRaisesRegex(Blocked,'post-index-change'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+            self.assertEqual((self.project/'.git/index').read_bytes(),index)
+            self.assertEqual((self.project/'owned.txt').read_text(),'retained partial')
+
+    def test_normal_builtin_normalization_and_contained_commit_remain_supported(self):
+        (self.project/'.gitattributes').write_text('owned.txt text eol=lf\n')
+        with Authority(self.project) as owner:
+            effects=self.effects(owner);baseline=effects.begin(self.task())
+            (self.project/'owned.txt').write_bytes(b'normalized\r\n')
+            try:
+                result=effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+                self.assertEqual(git(self.project,'show',result['sha']+':owned.txt'),b'normalized\n')
+                self.assertEqual((self.project/'owned.txt').read_bytes(),b'normalized\r\n')
+                self.assertEqual(result['parent'],baseline['head'])
+            finally:
+                for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
+                    receipt=json.loads(row[0])
+                    if receipt not in self.receipts:self.receipts.append(receipt)

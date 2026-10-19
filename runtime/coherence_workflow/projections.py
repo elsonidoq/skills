@@ -32,7 +32,15 @@ def state_record(db, run):
         except Blocked:pass
     alarms=[alarm_record(db,r) for r in db.execute('SELECT a.* FROM wf_alarms a JOIN wf_operations o USING(op_id) WHERE o.run_id=?',(run,))]
     complete=db.execute("SELECT 1 FROM wf_events WHERE run_id=? AND kind='implementation_complete'",(run,)).fetchone()
-    status='blocked' if any(a['state']=='active' for a in alarms) else 'implementation_complete' if complete else row['state'] if active else 'interrupted'
+    accepted=db.execute("SELECT seq,payload FROM wf_events WHERE run_id=? AND kind='workflow_accepted' ORDER BY seq DESC LIMIT 1",(run,)).fetchone()
+    blocked=db.execute("SELECT seq,payload FROM wf_events WHERE run_id=? AND kind='workflow_blocked' ORDER BY seq DESC LIMIT 1",(run,)).fetchone()
+    accepted_current=bool(accepted and (not blocked or accepted['seq']>blocked['seq']))
+    status=('blocked' if any(a['state']=='active' for a in alarms) else 'accepted' if accepted_current else
+            ('final_failure' if json.loads(blocked['payload']).get('final_failure') else 'blocked') if blocked else
+            'implementation_complete' if complete and not active else row['state'] if active else 'interrupted')
+    active_op=db.execute("""SELECT o.* FROM wf_operations o JOIN wf_events e ON e.op_id=o.op_id AND e.kind='intent'
+        WHERE o.run_id=? AND o.phase!='completed' ORDER BY e.seq DESC LIMIT 1""",(run,)).fetchone()
+    active_details=json.loads(active_op['intent']) if active_op else {}
     task=None; checkpoint=None;gate=None
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_tasks'").fetchone():
         task=db.execute("SELECT * FROM wf_tasks WHERE run_id=? AND state NOT IN ('checkpointed','read_only_complete') ORDER BY approved_order LIMIT 1",(run,)).fetchone()
@@ -40,13 +48,22 @@ def state_record(db, run):
         checkpoint=json.loads(last[0])['sha'] if last else None
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_gates'").fetchone():
         pending=db.execute("SELECT gate_id FROM wf_gates WHERE run_id=? AND state!='approve' LIMIT 1",(run,)).fetchone();gate=pending[0] if pending else None
+    finding_blocked=False
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_findings'").fetchone():
+        finding_blocked=bool(db.execute("SELECT 1 FROM wf_findings f JOIN wf_reviews r USING(review_id) WHERE r.run_id=? AND f.disposition!='resolved' LIMIT 1",(run,)).fetchone())
+    if gate or finding_blocked:
+        accepted_current=False;status='blocked'
+    blocker=('ORPHAN_PROCESS' if any(a['state']=='active' for a in alarms) else 'unmet original manual gate' if gate else
+             'unresolved review findings' if finding_blocked else None if accepted_current else
+             json.loads(blocked['payload'])['reason'] if blocked else 'independent review required' if complete else
+             'controller not live; explicit authorized recovery required' if not active else None)
     cursor=0
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_projections'").fetchone():
         c=db.execute('SELECT seq FROM wf_projections WHERE run_id=?',(run,)).fetchone();cursor=c[0] if c else 0
-    payload={'status':status,'acceptance':'blocked','config_hash':row['config_hash'],'checkpoint_ref':checkpoint,
-        'task_id':task['task_id'] if task else None,'node_id':None,'attempt_id':None,'gate_ref':gate,
-        'blocker':'ORPHAN_PROCESS' if any(a['state']=='active' for a in alarms) else 'independent review required' if complete else
-                  'controller not live; explicit authorized recovery required' if not active else None,
+    payload={'status':status,'acceptance':'accepted' if accepted_current and status=='accepted' else 'blocked','config_hash':row['config_hash'],'checkpoint_ref':checkpoint,
+        'task_id':task['task_id'] if task else None,'node_id':active_op['node_id'] if active_op else None,
+        'attempt_id':active_details.get('attempt_id'),'gate_ref':gate,
+        'blocker':blocker,
         'projection_lag':max(0,seq-cursor),'alarms':alarms}
     record={'schema_version':1,'run_id':run,'seq':seq,'record_id':run+':state:'+str(seq),
             'timestamp':'unknown:event-timestamps-not-recorded','kind':'state','payload':payload}
@@ -80,7 +97,7 @@ def metric_record(event, operation, segment):
         'started_at':str(segment['started_ns']) if segment.get('started_ns') else None,
         'ended_at':str(segment['ended_ns']) if segment.get('ended_ns') else None,
         'elapsed_ms':segment['elapsed_ns']/1e6 if segment.get('elapsed_ns') is not None else None,
-        'outcome':segment.get('outcome','audited') if agent else 'audited', 'retry_count':segment.get('retry_count',0),'repair_count':0,
+        'outcome':segment.get('outcome','audited') if agent else 'audited', 'retry_count':segment.get('retry_count',0),'repair_count':segment.get('selection',{}).get('repair_count',0),
         'evidence_refs':[],'baseline_sha':segment.get('baseline_sha'),'result_sha':segment.get('result_sha'),
         'telemetry_provenance':'sdk-segment' if agent else 'non_agent_node',
         'unknown_reasons':{'provider_acknowledged':'not_available','requested_profile':'not_retained_in_segment',
@@ -121,15 +138,20 @@ def records(db,run):
                 validate_schema('projection.schema.json',metric);metrics.append(metric)
         if row['kind']=='task_checkpointed':
             checkpoint=json.loads(row['payload'])
-            for op in db.execute("SELECT * FROM wf_operations WHERE run_id=? AND kind='sdk-turn' AND phase='completed'",(run,)):
+            for op in db.execute("""SELECT o.* FROM wf_operations o JOIN wf_events e ON e.op_id=o.op_id AND e.kind='completed'
+                WHERE o.run_id=? AND o.kind='sdk-turn' AND o.phase='completed' ORDER BY e.seq""",(run,)):
                 segment=json.loads(op['result'])
                 if segment.get('task_id')!=checkpoint['task_id']:continue
                 source=db.execute("SELECT * FROM wf_events WHERE op_id=? AND kind='completed' AND seq<?",(op['op_id'],row['seq'])).fetchone()
                 if not source:continue
                 segment['result_sha']=checkpoint['sha']
                 metric=metric_record(row,op,segment)
+                metric['record_id']=row['event_id']+':'+op['op_id']+':metric'
                 metric['payload']['supersedes']=source['event_id']+':metric'
-                metric['payload']['evidence_refs']=[r[0] for r in db.execute('SELECT evidence_id FROM wf_checks WHERE run_id=? AND task_id=?',(run,checkpoint['task_id']))]
+                known={r[0] for r in db.execute('SELECT evidence_id FROM wf_checks WHERE run_id=? AND task_id=?',(run,checkpoint['task_id']))}
+                metric['payload']['evidence_refs']=[payload['evidence_id'] for event in db.execute(
+                    "SELECT payload FROM wf_events WHERE run_id=? AND kind='check_observed' AND seq<? ORDER BY seq",(run,row['seq']))
+                    if (payload:=json.loads(event[0])).get('evidence_id') in known]
                 validate_schema('projection.schema.json',metric);metrics.append(metric)
     return events,metrics
 

@@ -3,4 +3,5 @@
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 export PYTHONPATH="$ROOT/runtime${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONDONTWRITEBYTECODE=1
 exec "${COHERENCE_PYTHON:-python3}" -m coherence_workflow.cli "$@"

@@ -5,8 +5,52 @@ import os
 from pathlib import Path
 import shutil
 
-from .store import Blocked, canonical, digest, git
+from .store import Blocked, canonical, digest, git, safe_path
 from .tools import ProcessTool, clean_owned, reconcile, snapshot
+
+
+def assert_safe_git_inputs(project, owned):
+    """Builtin inspection only; never probe an external filter or index hook."""
+    for name in owned:
+        path=safe_path(project,name)
+        if name in ('.git','.coherence') or name.startswith(('.git/','.coherence/')):
+            raise Blocked('Git owned path overlaps authority storage')
+        if path.exists() and not path.is_file():raise Blocked('Git owned path must be a file')
+    try:
+        raw=git(project,'config','--null','--list')
+    except (Blocked,OSError):raise Blocked('Git config capability inspection unavailable') from None
+    config={}
+    for entry in raw.split(b'\0'):
+        if entry:
+            key,separator,value=entry.partition(b'\n');config[key]=value if separator else b''
+    fsmonitor=config.get(b'core.fsmonitor')
+    if fsmonitor is not None and fsmonitor.lower() not in (b'false',b'0',b'off'):
+        raise Blocked('fsmonitor process capability unavailable for uncontained inventory')
+    if not owned:return
+    try:
+        hook_text=git(project,'rev-parse','--path-format=absolute','--git-path','hooks').decode().removesuffix('\n')
+        if not Path(hook_text).is_absolute() or '\n' in hook_text or '\r' in hook_text:
+            raise Blocked('ambiguous hook path')
+        hook=Path(hook_text)/'post-index-change'
+        try:hook.lstat()
+        except FileNotFoundError:hook=None
+        if hook is not None and (hook.is_symlink() or os.access(hook,os.X_OK)):
+            raise Blocked('Git post-index-change hook requires a contained staging capability')
+    except (OSError,UnicodeError):raise Blocked('Git index hook applicability cannot be established safely') from None
+    drivers=set()
+    for key in config:
+        if key[:7].lower()==b'filter.' and key.rsplit(b'.',1)[-1].lower() in (b'clean',b'process'):
+            drivers.add(key[7:].rsplit(b'.',1)[0])
+    if drivers:
+        for options in ([],['--cached']):
+            try:attributes=git(project,'check-attr','-z',*options,'filter','--',*owned).split(b'\0')
+            except (Blocked,OSError):raise Blocked('Git filter applicability cannot be established safely') from None
+            if attributes[-1:]!=[b''] or (len(attributes)-1)%3:
+                raise Blocked('Git filter applicability record is ambiguous')
+            for index in range(0,len(attributes)-1,3):
+                if attributes[index+1]!=b'filter':raise Blocked('unexpected Git attribute inspection')
+                if attributes[index+2] in drivers:
+                    raise Blocked('Git external clean/process filter requires a contained adapter')
 
 
 def entries(project, *, tree=None):
@@ -24,6 +68,7 @@ def entries(project, *, tree=None):
 
 
 def expected_entries(project, baseline, owned):
+    assert_safe_git_inputs(project,owned)
     result = entries(project, tree=baseline['head'])
     for name in owned:
         path = project / name
@@ -41,12 +86,14 @@ class GitEffects:
         self.project = authority.project
 
     def begin(self, task):
+        assert_safe_git_inputs(self.project,task['owned_paths'])
         self.store.assert_dispatchable(self.run)
         clean_owned(self.project, task['owned_paths'])
         git(self.project, 'var', 'GIT_AUTHOR_IDENT'); git(self.project, 'var', 'GIT_COMMITTER_IDENT')
         return snapshot(self.project, task['owned_paths'])
 
     def checkpoint(self, task, baseline, dispositions, *, gates_satisfied, phase_hook=None):
+        assert_safe_git_inputs(self.project,task['owned_paths'])
         self.store.assert_dispatchable(self.run)
         if (not gates_satisfied or {d['item_id'] for d in dispositions} != {i['id'] for i in task['required']} or
                 any(d['status'] != 'satisfied' for d in dispositions)):
@@ -70,11 +117,13 @@ class GitEffects:
         executable = str(Path(shutil.which('git')).resolve(strict=True))
         message = 'workflow: ' + task['id'] + '\n\nCoherence-Operation: ' + operation['op_id']
         # add is explicit and owned-only; commit --only preserves unrelated staging.
+        assert_safe_git_inputs(self.project,owned)
         git(self.project, 'add', '-A', '--', *owned)
         tool = ProcessTool('runner-git-commit', '1', {'type': 'object', 'additionalProperties': False},
                            lambda args: [executable, '-C', str(self.project), 'commit', '--only', '-m', message, '--', *owned],
                            (), {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'GNUPGHOME', 'GPG_TTY', 'SSH_AUTH_SOCK')})
         self.gateway.tools[tool.id] = tool
+        assert_safe_git_inputs(self.project,owned)
         op, proc = self.gateway.launch('commit:' + operation['op_id'], tool.id, '1', {})
         if phase_hook:
             phase_hook('commit_released', operation['op_id'])
@@ -103,6 +152,7 @@ def reconcile_checkpoint(authority, op_id):
         raise Blocked('checkpoint intent/event mismatch')
     details = json.loads(operation['intent'])
     project, owned = authority.project, details['owned_paths']
+    assert_safe_git_inputs(project,owned)
     now = snapshot(project, owned)
     sha = now['head']
     if git(project, 'rev-list', '--parents', '-n', '1', sha).decode().strip().split() != [sha, details['baseline']['head']]:

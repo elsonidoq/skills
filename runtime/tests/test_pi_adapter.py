@@ -355,3 +355,136 @@ class LifecycleTests(IsolatedCustody):
                 gateway.containment.drain(self.receipts[0]);adapter.proc.wait(timeout=5)
                 with self.assertRaises(Blocked):authority.store.assert_dispatchable('run',admitted_host_ops=(adapter.host_op,))
             finally:adapter.close(force=True)
+
+
+class ToolBatchTests(IsolatedCustody):
+    """Offline real-host/gateway transport tests; no prompt/provider send occurs."""
+    def batch_adapter(self,authority):
+        gateway=self.gateway(authority)
+        arguments={'type':'object','additionalProperties':False,
+            'properties':{'path':{'enum':['owned.txt','other.txt']},'padding':{'type':'string','maxLength':65536}},'required':['path']}
+        tool=ProcessTool('read_fixture','1',arguments,lambda args:['/usr/bin/sleep','0.15'],(),environment(),
+                         lambda args,receipt:(self.project/args['path']).read_text())
+        gateway.tools={'read_fixture':tool}
+        config=manifest(self.project,tools=False)
+        config['tools']=[{'name':tool.id,'version':'1','description':'Offline bounded read fixture.','parameters':arguments,'permission':tool.id}]
+        config['permissions']=[tool.id]
+        config['resource_hash']=digest({k:config[k] for k in ('skills','tools','permissions','trust','system_prompt')})
+        adapter=captured_adapter(self,gateway,config,node='offline-batch-host',environment=environment(),
+            session_context={'role':'review','affinity':'offline-batch','review_lineage':'offline-batch'})
+        initial_generation=adapter.snapshot['generation']
+        op=authority.store.intent('run','offline-batch','sdk-turn',{'contract_hash':digest('offline')},{'fixture':'no provider prompt'})
+        adapter.current={'operation_id':op['op_id'],'attempt_id':'offline-batch:0','command_id':'offline-no-send'}
+        adapter.lifecycle.begin()
+        adapter.lifecycle.event({'generation':adapter.lifecycle.generation,'type':'agent_start'})
+        original=adapter.send;adapter.tool_results=[]
+        def send(kind,payload,**kwargs):
+            if kind=='tool':adapter.tool_results.append(payload);return 'offline-tool-result'
+            if kind=='abort':payload={**payload,'generation':initial_generation}
+            return original(kind,payload,**kwargs)
+        adapter.send=send
+        def cleanup():
+            try:
+                if not adapter.closed:adapter.close(force=True)
+            finally:
+                for row in authority.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
+                    receipt=json.loads(row[0])
+                    if receipt not in self.receipts:self.receipts.append(receipt)
+        return adapter,cleanup
+
+    def request(self,adapter,call,path='owned.txt',**args):
+        return {**adapter.binding,'command_id':adapter.current['command_id'],'operation_id':adapter.current['operation_id'],
+                'attempt_id':adapter.current['attempt_id'],'session_id':adapter.session_id,
+                'payload':{'call':call,'tool':'read_fixture','version':'1','generation':adapter.lifecycle.generation,
+                           'args':{'path':path,**args}}}
+
+    def test_parallel_reads_are_fifo_one_active_process_and_queue_blocks_settlement(self):
+        with Authority(self.project) as owner:
+            adapter,cleanup=self.batch_adapter(owner)
+            try:
+                adapter._launch_tool(self.request(adapter,'one','owned.txt'))
+                adapter._launch_tool(self.request(adapter,'two','other.txt'))
+                self.assertEqual(len(adapter.pending),1);self.assertEqual(len(adapter.tool_queue),1)
+                adapter.lifecycle.event({'generation':1,'type':'agent_settled'})
+                with self.assertRaisesRegex(Blocked,'pending/queued'):adapter._settle_prompt({'generation':1,'promise_done':True,'idle':True})
+                with self.assertRaises(Blocked):adapter.telemetry()
+                deadline=time.monotonic()+10
+                while adapter.pending or adapter.tool_queue:
+                    adapter._poll_tools()
+                    active=owner.store.db.execute("SELECT COUNT(*) FROM wf_operations o JOIN wf_processes p USING(op_id) WHERE p.scope_kind='task_tools' AND o.phase!='completed'").fetchone()[0]
+                    self.assertLessEqual(active,1)
+                    if time.monotonic()>deadline:self.fail('bounded FIFO did not drain')
+                    time.sleep(.01)
+                self.assertEqual([p['call'] for p in adapter.tool_results],['one','two'])
+                self.assertTrue(all(p['result']['details']['quiescent'] for p in adapter.tool_results))
+                states=[json.loads(row[0])['state'] for row in owner.store.db.execute("SELECT payload FROM wf_events WHERE kind LIKE 'sdk_tool_%' ORDER BY seq")]
+                self.assertEqual(states,['queued','launched','queued','launched'])
+                self.assertFalse(any(r['type']=='request_observation' for r in adapter.records))
+                self.assertEqual(owner.store.operation(adapter.current['operation_id'])['phase'],'intent')
+            finally:cleanup()
+
+    def test_duplicate_stale_wrong_target_version_schema_and_review_mutation_reject(self):
+        from dataclasses import replace
+        from jsonschema.exceptions import ValidationError
+        with Authority(self.project) as owner:
+            adapter,cleanup=self.batch_adapter(owner)
+            try:
+                adapter._launch_tool(self.request(adapter,'one'))
+                with self.assertRaisesRegex(Blocked,'duplicate'):adapter._launch_tool(self.request(adapter,'one'))
+                for field,value in [('session_id','wrong'),('operation_id','wrong'),('attempt_id','wrong'),('nonce','wrong')]:
+                    record=self.request(adapter,'wrong-'+field);record[field]=value
+                    with self.assertRaisesRegex(Blocked,'outside current'):adapter._launch_tool(record)
+                stale=self.request(adapter,'stale');stale['payload']['generation']=0
+                with self.assertRaisesRegex(Blocked,'outside current'):adapter._launch_tool(stale)
+                wrong=self.request(adapter,'version');wrong['payload']['version']='2'
+                with self.assertRaisesRegex(Blocked,'binding'):adapter._launch_tool(wrong)
+                with self.assertRaises(ValidationError):adapter._launch_tool(self.request(adapter,'schema','not-approved'))
+                original=adapter.gateway.tools['read_fixture']
+                adapter.gateway.tools['read_fixture']=replace(original,owned_paths=('owned.txt',))
+                with self.assertRaisesRegex(Blocked,'review tool mutation'):adapter._launch_tool(self.request(adapter,'mutation'))
+                adapter.gateway.tools['read_fixture']=original
+                self.assertEqual(len(adapter.pending),1);self.assertEqual(adapter.tool_queue,[])
+                adapter.abort();self.assertTrue(adapter.lifecycle.poisoned)
+                self.assertEqual(owner.store.operation(adapter.current['operation_id'])['phase'],'intent')
+            finally:cleanup()
+
+    def test_cancel_receipt_failure_still_drains_active_tools_and_blocks_reuse(self):
+        with Authority(self.project) as owner:
+            adapter,cleanup=self.batch_adapter(owner)
+            try:
+                adapter._launch_tool(self.request(adapter,'active'))
+                adapter._launch_tool(self.request(adapter,'never-launched'))
+                original=adapter._tool_disposition
+                def fail_cancel(record,state,**details):
+                    if state=='cancelled':raise RuntimeError('fixture-only receipt write failure')
+                    return original(record,state,**details)
+                adapter._tool_disposition=fail_cancel
+                with self.assertRaisesRegex(Blocked,'cancellation receipt unavailable'):adapter.abort()
+                self.assertEqual(adapter.pending,{})
+                self.assertEqual(adapter.tool_queue,[])
+                self.assertTrue(adapter.lifecycle.poisoned)
+                rows=owner.store.db.execute("SELECT * FROM wf_processes WHERE scope_kind='task_tools'").fetchall()
+                self.assertEqual(len(rows),1)
+                self.assertTrue(all(json.loads(row['empty_receipt'])['populated']==0 for row in rows))
+                self.assertEqual(owner.store.operation(adapter.current['operation_id'])['phase'],'intent')
+            finally:cleanup()
+
+    def test_overflow_blocks_then_abort_cancels_never_launched_requests(self):
+        with Authority(self.project) as owner:
+            adapter,cleanup=self.batch_adapter(owner)
+            try:
+                adapter._launch_tool(self.request(adapter,'active'))
+                padding='x'*65536
+                for index in range(3):adapter._launch_tool(self.request(adapter,'queued-'+str(index),padding=padding))
+                self.assertEqual(len(adapter.tool_queue),3)
+                with self.assertRaisesRegex(Blocked,'queue byte limit'):adapter._launch_tool(self.request(adapter,'overflow',padding=padding))
+                self.assertEqual(len(adapter.tool_queue),3)
+                adapter.abort()
+                self.assertEqual(adapter.tool_queue,[]);self.assertEqual(adapter.queued_tool_bytes,0);self.assertEqual(adapter.pending,{})
+                cancelled=[json.loads(r[0]) for r in owner.store.db.execute("SELECT payload FROM wf_events WHERE kind LIKE 'sdk_tool_cancelled:%'")]
+                self.assertEqual(len(cancelled),3)
+                self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_processes WHERE scope_kind='task_tools'").fetchone()[0],1)
+                self.assertEqual(adapter.tool_results,[],'cancelled requests were falsely reported as executed')
+                self.assertEqual(owner.store.operation(adapter.current['operation_id'])['phase'],'intent')
+                self.assertFalse(any(r['type']=='request_observation' for r in adapter.records))
+            finally:cleanup()

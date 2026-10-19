@@ -220,3 +220,49 @@ Authorized post-commit recovery reconciles existing immutable intent/result/tree
 records the original checkpoint node's schema-valid result before saver continuation. Other
 uncertain effects remain blocked. A recovery authorization digest is appended to SQL; no
 model-generated result can authorize it. Controller exit never implies background progress.
+
+## Review, original-failure budgets and acceptance
+
+T005 adds `wf_repair_budgets(run_id,failure_key,maximum,used)` with a composite primary key;
+`failure_key` remains the original task failure or `review-final` across correction IDs/restart.
+`repair_dispatched` commits before each prompt; interruption never resets it. Configured zero
+prevents dispatch. Transport/provider retry observations remain separate from workflow repairs.
+
+`wf_reviews` records review ID/run, complete base/head, completed host operation, schema-valid
+result and independent role proof. `wf_findings` keys every finding by review/finding ID and
+retains canonical severity/location/criterion/evidence plus disposition/correction ID.
+`wf_corrections` binds each separately generated task to its original task, stable failure key
+and current external rule/source-approval/finding/range authority hashes. No correction ID creates
+a new repair budget, changes REQUIRED criteria, or lets a reviewer produce a fix.
+
+The registered graph now admits only bounded verification↔repair and review→correction-authority
+→task-selector cycles in addition to the task-progress backedge. Each cycle still crosses actual
+verification/checkpoint nodes; success must cross independent review. Graph visit bounds derive
+from source task/repair limits; SQL original-failure ceilings remain the semantic dispatch gate.
+
+Runner-only `workflow_accepted` records exact head and review reference only after full audit.
+`workflow_blocked` retains reason and exhaustion/final-failure disposition. State projection derives
+accepted/blocked/implementation-complete separately, and pending gates/unresolved findings override
+an old accepted fact. SQL remains authority; projections never release work. Repair metrics carry
+the explicit runner-selected repair count through both settled/interrupted SDK segments. Current
+checkpoint metric revisions supersede original invocation records, preserving real zero and unknown
+counter values without summing usage twice. Provider acknowledgement remains unknown where absent.
+
+Checkpoint metric revision IDs include both the checkpoint event ID and the original SDK
+operation ID. Multiple attempts of one task therefore retain separate attributable usage;
+the same checkpoint cannot collapse their record identities. Ordering is explicit completion
+sequence, not SQLite query-plan order.
+
+SDK tool transport appends `sdk_tool_queued:<call-hash>`, `sdk_tool_launched:<call-hash>` and
+`sdk_tool_cancelled:<call-hash>` to the originating SDK operation. Payloads contain stable call/
+argument hashes, generation, registered tool/version and actual process-op ref on launch.
+A launch-uncertain disposition never claims execution or cancellation. FIFO memory loss does
+not authorize replay: unresolved SDK/graph operations and durable scope custody still block.
+`sdk_failure_diagnostic` contains only an allowlisted classification/type chain, phase,
+operation/host refs, validator keyword and pending process-op IDs. No raw provider payload or
+unnecessary transcript is projected. A cancelled queued request has no process operation and
+cannot be counted as executed work or a completed workflow attempt.
+
+`task_evidence_refreshed` appends final-head proof for stale producer inputs without changing
+their original contracts/checkpoints. Checkpoint metric evidence references are selected as of
+that checkpoint event sequence; later evidence cannot rewrite immutable published history.
