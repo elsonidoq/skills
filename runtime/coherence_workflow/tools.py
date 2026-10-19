@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 import os
+import stat
 from pathlib import Path
 import selectors
 import subprocess
@@ -100,10 +101,24 @@ class Gateway:
         self.containment = Cgroup(containment_parent)
         self.tools = dict(tools)
 
-    def launch(self, node, tool_id, version, args, phase_hook=None):
+    def launch(self, node, tool_id, version, args, phase_hook=None, *, scope_kind='task_tools',
+               inherited_fds=(), admitted_host_ops=()):
         """phase_hook is a trusted test fault seam, never supplied by workflow data."""
         hook = phase_hook or (lambda phase, op: None)
-        self.store.assert_dispatchable(self.run)
+        if scope_kind not in ('host','task_tools'):
+            raise Blocked('invalid process scope')
+        if len(set(inherited_fds)) != len(inherited_fds):
+            raise Blocked('duplicate inherited descriptor')
+        for fd in inherited_fds:
+            # Only explicit anonymous pipes, never authority/auth files, sockets or stdio.
+            try:
+                valid = (type(fd) is int and fd > 2 and stat.S_ISFIFO(os.fstat(fd).st_mode)
+                         and os.readlink('/proc/self/fd/'+str(fd)).startswith('pipe:['))
+            except OSError:
+                valid = False
+            if not valid:
+                raise Blocked('inherited descriptors must be controller-owned pipes')
+        self.store.assert_dispatchable(self.run, admitted_host_ops=admitted_host_ops)
         tool = self.tools.get(tool_id)
         if not tool or tool.version != version:
             raise Blocked('unknown registered tool/version')
@@ -116,7 +131,8 @@ class Gateway:
         nonce = uuid.uuid4().hex
         name = self.containment.reserve_name()
         details = {'tool': tool_id, 'version': version, 'argv': argv, 'environment': tool.environment,
-                   'owned_paths': owned, 'baseline': baseline, 'nonce': nonce, 'name': name}
+                   'owned_paths': owned, 'baseline': baseline, 'nonce': nonce, 'name': name,
+                   'scope_kind':scope_kind}
         # Node identity is unique; uncertain launch cannot be regenerated under the same key.
         existing = self.store.db.execute('SELECT 1 FROM wf_operations WHERE run_id=? AND node_id=? AND kind=?',
                                          (self.run,node,'process')).fetchone()
@@ -124,7 +140,7 @@ class Gateway:
             raise Blocked('process operation requires explicit reconciliation, not replay')
         op = self.store.intent(self.run,node,'process',args,details)['op_id']
         with self.store.transaction() as db:
-            db.execute("INSERT INTO wf_processes(op_id,scope_kind,name) VALUES(?,'task_tools',?)", (op,name))
+            db.execute("INSERT INTO wf_processes(op_id,scope_kind,name) VALUES(?,?,?)", (op,scope_kind,name))
         hook('intent',op)
         self.containment.create(name)
         hook('child_created',op)
@@ -143,7 +159,7 @@ class Gateway:
         try:
             proc = subprocess.Popen([sys.executable,'-m','coherence_workflow.tool_process',
                                      str(read_gate), str(write_ready), canonical(manifest)],
-                                    pass_fds=(read_gate,write_ready), stdin=subprocess.DEVNULL,
+                                    pass_fds=(read_gate,write_ready,*inherited_fds), stdin=subprocess.DEVNULL,
                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             os.close(read_gate); read_gate = -1
             os.close(write_ready); write_ready = -1
@@ -241,6 +257,64 @@ class Gateway:
             return {'outcome':'idle_host','replacement_allowed':False}
         return self.resolve(op, drain=False)
 
+    def _host_reconciliation(self, operation, details):
+        """Replay only durable, kernel-empty same-run tool audits since host launch.
+
+        Host lifetime spans task writes, but owns none of them. Original snapshots
+        remain immutable; unknown gaps, forged receipts or Git changes still block.
+        """
+        import copy
+        if self.store.db.execute("SELECT 1 FROM wf_alarms WHERE state='active'").fetchone():
+            raise Blocked('host reconciliation blocked by active orphan alarm')
+        original = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='intent'",(operation['op_id'],)).fetchone()
+        if not original or original[0] != operation['intent']:
+            raise Blocked('host original intent/event mismatch')
+        expected = copy.deepcopy(details['baseline'])
+        chain = []
+        start = self.store.db.execute("SELECT seq FROM wf_events WHERE op_id=? AND kind='intent'",(operation['op_id'],)).fetchone()[0]
+        rows = self.store.db.execute("""SELECT o.*, e.seq FROM wf_operations o
+            JOIN wf_processes p USING(op_id) JOIN wf_events e ON e.op_id=o.op_id AND e.kind='intent'
+            WHERE o.run_id=? AND p.scope_kind='task_tools' AND e.seq>? ORDER BY e.seq""",(self.run,start)).fetchall()
+        # Preserve registered host-owned paths supported by the foundation (its
+        # lifecycle fixture has these). SDK hosts own no worktree files. Mixing
+        # direct host writes with task-tool audit chains is not supported.
+        if details['owned_paths']:
+            if rows:
+                raise Blocked('mixed direct host writes/task-tool audit unavailable')
+            return reconcile(self.authority.project,details['owned_paths'],details['baseline']), []
+        for row in rows:
+            row = dict(row)
+            process, receipt = self._record(row['op_id'])
+            if row['phase'] != 'completed' or self.containment.populated(receipt) != 0:
+                raise Blocked('host has unresolved task-tool effects')
+            result = json.loads(row['result'])
+            event = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='completed'",(row['op_id'],)).fetchone()
+            if not event or event[0] != row['result'] or not result.get('replacement_allowed'):
+                raise Blocked('task-tool completed receipt/event mismatch')
+            intent = json.loads(row['intent'])
+            original = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='intent'",(row['op_id'],)).fetchone()
+            if not original or original[0] != row['intent']:
+                raise Blocked('task-tool original intent/event mismatch')
+            before, after = intent['baseline'], result['reconciliation']
+            if any(before[k] != expected[k] for k in ('head','index','files')):
+                raise Blocked('host task-tool audit chain gap')
+            if after['head'] != before['head'] or after['index'] != before['index']:
+                raise Blocked('host cannot reconcile runner Git changes yet')
+            owned = intent['owned_paths']
+            for name in set(before['files']) | set(after['files']):
+                if name not in owned and before['files'].get(name) != after['files'].get(name):
+                    raise Blocked('unrelated task-tool receipt drift')
+            if result['empty_receipt']['containment'] != receipt or result['empty_receipt']['populated'] != 0:
+                raise Blocked('task-tool empty receipt mismatch')
+            if json.loads(process['reconciliation']) != after or json.loads(process['empty_receipt']) != result['empty_receipt']:
+                raise Blocked('task-tool process/result mismatch')
+            expected['files'] = after['files']
+            chain.append(row['op_id'])
+        now = snapshot(self.authority.project, details['owned_paths'])
+        if any(now[k] != expected[k] for k in ('head','index','files')):
+            raise Blocked('unexplained host lifetime file/Git drift')
+        return now, chain
+
     def resolve(self, op, drain=True):
         """Empty AND actual partial-work/Git audit required. Does not grant task acceptance."""
         row, receipt = self._record(op)
@@ -248,17 +322,23 @@ class Gateway:
         details = json.loads(operation['intent'])
         if operation['phase'] == 'completed':
             recorded = json.loads(operation['result'])
-            if (self.containment.populated(receipt) != 0 or
-                reconcile(self.authority.project,details['owned_paths'],details['baseline']) != recorded['reconciliation']):
+            current = (snapshot(self.authority.project,details['owned_paths']) if row['scope_kind']=='host'
+                       else reconcile(self.authority.project,details['owned_paths'],details['baseline']))
+            if (self.containment.populated(receipt) != 0 or current != recorded['reconciliation']):
                 raise Blocked('completed tool receipt no longer applicable')
             return recorded
         empty = self.containment.drain(receipt) if drain else {
             'containment': receipt, 'populated': self.containment.populated(receipt), 'observed_ns':time.time_ns()}
         if empty['populated'] != 0:
             raise Blocked('task tools not quiescent')
-        observed = reconcile(self.authority.project, details['owned_paths'], details['baseline'])
+        if row['scope_kind'] == 'host':
+            observed, chain = self._host_reconciliation(operation, details)
+        else:
+            observed, chain = reconcile(self.authority.project, details['owned_paths'], details['baseline']), []
         result = {'logical_exit':row['exit_code'],'empty_receipt':empty,'reconciliation':observed,
                   'replacement_allowed':True, 'task_accepted':False}
+        if row['scope_kind'] == 'host':
+            result['task_tool_chain'] = chain
         with self.store.transaction() as db:
             db.execute('UPDATE wf_processes SET empty_receipt=?,reconciliation=? WHERE op_id=?',
                        (canonical(empty),canonical(observed),op))

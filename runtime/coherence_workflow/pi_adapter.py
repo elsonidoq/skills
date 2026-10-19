@@ -1,0 +1,433 @@
+"""Authenticated inherited-pipe SDK transport and runner-owned telemetry segments.
+
+No task scheduler/approval/Git authority. Trusted callers supply verified manifests and
+T001 Gateway; unknown host/tool state poisons reuse and remains durably unreconciled.
+"""
+import copy
+import json
+import math
+import os
+from pathlib import Path
+import selectors
+import shutil
+import time
+import uuid
+
+from jsonschema import Draft202012Validator
+from .store import Blocked, canonical, digest, git, safe_path, private_file
+from .tools import ProcessTool
+from .registry import validate_schema
+
+MAX_RECORD = 262144
+TOKEN_FIELDS = ('input','output','cacheRead','cacheWrite')
+
+
+class Decoder:
+    def __init__(self, limit=MAX_RECORD):
+        self.limit, self.buffer = limit, bytearray()
+
+    def feed(self, chunk):
+        records = []
+        for part in chunk.split(b'\n')[:-1]:
+            if len(self.buffer)+len(part)>self.limit:
+                raise Blocked('host record too large')
+            self.buffer.extend(part)
+            records.append(json.loads(self.buffer.decode('utf-8')))
+            self.buffer.clear()
+        tail = chunk.rsplit(b'\n',1)[-1]
+        if len(self.buffer)+len(tail)>self.limit:
+            raise Blocked('host record too large')
+        self.buffer.extend(tail)
+        return records
+
+    def end(self):
+        if self.buffer:
+            raise Blocked('incomplete host record')
+
+
+def usage_segment(before, after, *, exclusive=True, outcome='settled'):
+    """No subtraction across reopen, branch/reset, ambiguity, interruption or missing data."""
+    reason = None
+    if not before or not after:
+        reason = 'missing_or_killed_final_observation'
+    elif not exclusive:
+        reason = 'nonexclusive_operation'
+    elif outcome != 'settled':
+        reason = 'interrupted_or_ambiguous_summary'
+    elif any(before.get(k) is None or before.get(k)!=after.get(k) for k in ('session_id','branch','epoch')):
+        reason = 'session_branch_or_counter_epoch_changed'
+    deltas = {}
+    for key in TOKEN_FIELDS:
+        a,b=(before or {}).get('counters',{}).get(key),(after or {}).get('counters',{}).get(key)
+        field_reason = reason
+        if not field_reason and (type(a) is not int or type(b) is not int or min(a,b)<0 or max(a,b)>2**53-1):
+            field_reason = 'missing_invalid_counter'
+        if not field_reason and b<a:
+            field_reason = 'counter_reset'
+        deltas[key] = {'value':None if field_reason else b-a,'unknown_reason':field_reason}
+    cost = None
+    cost_reason = reason
+    a,b=(before or {}).get('cost'),(after or {}).get('cost')
+    if not cost_reason and all(type(v) in (int,float) and math.isfinite(v) for v in (a,b)) and b>=a>=0:
+        cost=b-a
+    else:
+        cost_reason=cost_reason or 'missing_or_reset_cost'
+    return {'tokens':deltas,'cost':{'value':cost,'unknown_reason':cost_reason},
+            'before':before,'after':after,'outcome':outcome}
+
+
+def non_agent_segment(kind):
+    if kind not in ('code','gate','terminal'):
+        raise Blocked('not a non-agent node')
+    return {'session_id':None,'context':None,'tokens':None,'cost':None,'unknown_reason':'non_agent_node'}
+
+
+class Lifecycle:
+    """Current-generation fence; agent_end or acceptance never grants completion."""
+    def __init__(self):
+        self.generation=0
+        self.poisoned=False
+        self.active=False
+        self.started=False
+        self.settled=False
+
+    def begin(self):
+        if self.active or self.poisoned:
+            raise Blocked('host unavailable pending reconciliation')
+        self.generation+=1
+        self.active=True
+        self.started=self.settled=False
+        return self.generation
+
+    def event(self, payload):
+        if payload.get('generation') != self.generation or not self.active:
+            raise Blocked('stale/early lifecycle generation')
+        kind=payload.get('type')
+        if kind=='agent_start':
+            self.started=True;self.settled=False
+        if kind in ('auto_retry_start','compaction_start'):
+            self.settled=False
+        if kind=='agent_settled' and self.started:
+            self.settled=True
+        if kind in ('poisoned','assistant_failure'):
+            # A transient failed assistant can be followed by an SDK retry. Do not
+            # settle on it; final failure is represented by host poisoned.
+            self.settled=False
+            if kind=='poisoned': self.poisoned=True
+
+    def finish(self,payload):
+        if (self.poisoned or not self.active or payload.get('generation')!=self.generation or
+            not self.started or not self.settled or payload.get('promise_done') is not True or payload.get('idle') is not True):
+            self.poisoned=True
+            raise Blocked('uncertain SDK settlement')
+        self.active=False
+
+
+class PiAdapter:
+    """One host, one active prompt. Caller owns authorization and manifest provenance."""
+    def __init__(self,gateway,manifest,*,node,environment,session_context,reopen_from=None,host_path=None):
+        gateway.authority.assert_held()
+        self.gateway=gateway
+        self.manifest=copy.deepcopy(manifest)
+        if manifest.get('cwd') != str(gateway.authority.project):
+            raise Blocked('SDK worktree mismatch')
+        private_root=safe_path(gateway.authority.project,'.coherence/workflow')
+        for key in ('agent_dir','session_dir'):
+            p=Path(manifest[key])
+            if not p.is_relative_to(private_root) or p != p.resolve(strict=True):
+                raise Blocked('SDK conversation directories must be private worktree runtime storage')
+            s=p.stat()
+            if s.st_uid!=os.getuid() or s.st_mode & 0o077:
+                raise Blocked('SDK directory not private/owned')
+        if 'open' in manifest:
+            private_file(Path(manifest['open']['file']))
+        if (set(session_context) != {'role','affinity','review_lineage'} or
+            any(not isinstance(session_context[k],str) or not session_context[k] for k in ('role','affinity')) or
+            session_context['review_lineage'] is not None and not isinstance(session_context['review_lineage'],str)):
+            raise Blocked('closed session role/affinity/lineage context required')
+        for spec in manifest['tools']:
+            tool=gateway.tools.get(spec['name'])
+            if (not tool or tool.version!=spec['version'] or tool.arguments!=spec['parameters'] or
+                session_context['role']=='review' and tool.owned_paths):
+                raise Blocked('SDK tool manifest differs from registered role-safe gateway')
+        self.compatibility={**copy.deepcopy(session_context),'worktree':str(gateway.authority.project),
+            **{k:digest(manifest[k]) for k in ('profile','skills','tools','permissions','trust')},
+            'settings':digest({'settings':manifest['settings'],'pressure_policy':manifest['pressure_policy']})}
+        if 'open' in manifest:
+            if not reopen_from:raise Blocked('exact prior host custody reference required')
+            prior=gateway.store.operation(reopen_from)
+            if prior['run_id']!=gateway.run or prior['phase']!='completed':raise Blocked('prior host not reconciled')
+            gateway.resolve(reopen_from,drain=False)
+            ready=gateway.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_ready'",(reopen_from,)).fetchone()
+            if not ready:raise Blocked('prior host role/resource provenance missing')
+            old=json.loads(ready[0])['compatibility']
+            family=lambda r:'implement' if r in ('implement','repair') else r
+            if family(old['role'])!=family(self.compatibility['role']) or any(old[k]!=v for k,v in self.compatibility.items() if k!='role'):
+                raise Blocked('reopen role/resource/worktree drift')
+            matches=[]
+            for row in gateway.store.db.execute("SELECT result FROM wf_operations WHERE run_id=? AND kind='sdk-turn' AND phase='completed'",(gateway.run,)):
+                result=json.loads(row[0])
+                if result.get('host_op')==reopen_from:matches.append(result)
+            if not matches:raise Blocked('prior settled conversation telemetry missing')
+            last=max(matches,key=lambda x:x['generation'])['after']
+            expected=manifest['open']
+            if any(expected[k]!=last[v] for k,v in (('file','session_file'),('session_id','session_id'),('leaf','leaf'),('sha256','session_file_hash'))):
+                raise Blocked('saved conversation differs from durable settled telemetry')
+        elif reopen_from is not None:
+            raise Blocked('prior reference only applies to exact open')
+        self.binding={'host_id':uuid.uuid4().hex,'run_id':gateway.run,'nonce':uuid.uuid4().hex}
+        self.lifecycle=Lifecycle()
+        self.sequence=self.in_sequence=0
+        self.session_id=None
+        self.current=None
+        self.pending={}
+        self.decoder=Decoder()
+        self.queue=[]
+        self.closed=False
+        self.records=[]
+        self.snapshot=None
+        self.host_path=Path(host_path or Path(__file__).resolve().parents[1]/'pi-host'/'host.mjs').resolve(strict=True)
+        node_binary=Path(shutil.which('node') or '').resolve(strict=True)
+        boot_r,boot_w=os.pipe();command_r,self.command_w=os.pipe();self.event_r,event_w=os.pipe()
+        fds=(boot_r,command_r,event_w)
+        tool_id='sdk-host-'+self.binding['host_id']
+        gateway.tools[tool_id]=ProcessTool(tool_id,'1',{'type':'object','additionalProperties':False},
+            lambda args:[str(node_binary),str(self.host_path),*[str(fd) for fd in fds]],(),dict(environment))
+        try:
+            os.write(boot_w,(canonical(self.binding)+'\n').encode());os.close(boot_w);boot_w=-1
+            self.host_op,self.proc=gateway.launch(node,tool_id,'1',{},scope_kind='host',inherited_fds=fds)
+        except BaseException:
+            os.close(self.command_w);os.close(self.event_r)
+            raise
+        finally:
+            for fd in (*fds,boot_w):
+                if fd>=0:os.close(fd)
+            gateway.tools.pop(tool_id,None)
+        self.selector=selectors.DefaultSelector();self.selector.register(self.event_r,selectors.EVENT_READ)
+        self.request_bindings={}
+        try:
+            self._persist('host_admission',{'compatibility':self.compatibility,'manifest_hash':digest(self.manifest)},self.host_op)
+            command=self.send('open' if 'open' in manifest else 'create',self.manifest,operation_id=self.host_op,attempt_id=node)
+            response=self.wait_response(command,30)
+            self.snapshot=response['snapshot']
+            if 'open' in manifest and (self.snapshot.get('reliable') is not True or
+                    self.snapshot.get('headroom') is None or self.snapshot['headroom']<manifest['pressure_policy']['min_free_tokens_before_compaction']):
+                raise Blocked('original conversation telemetry unknown/low; owner recovery required')
+            self.session_id=self.snapshot['session_id']
+            self._persist('host_ready',{'host_op':self.host_op,'snapshot':self.snapshot,'compatibility':self.compatibility},self.host_op)
+        except BaseException:
+            self.lifecycle.poisoned=True
+            self.close(force=True)
+            raise
+
+    def _persist(self,kind,payload,op=None):
+        with self.gateway.store.transaction() as db:
+            self.gateway.store.event(db,self.gateway.run,op,kind,payload)
+
+    def send(self,op,payload,*,operation_id=None,attempt_id=None):
+        if self.closed:raise Blocked('closed host')
+        self.sequence+=1
+        id=uuid.uuid4().hex
+        record={'protocol_version':1,**self.binding,'sequence':self.sequence,'command_id':id,
+            'operation_id':operation_id or self.current['operation_id'],'attempt_id':attempt_id or self.current['attempt_id'],
+            'session_id':self.session_id,'type':'command','op':op,'payload_schema':'sdk-v1','payload':payload}
+        data=(canonical(record)+'\n').encode()
+        if len(data)>MAX_RECORD:raise Blocked('command too large')
+        self.request_bindings[id]=record
+        view=memoryview(data)
+        while view:
+            count=os.write(self.command_w,view);view=view[count:]
+        return id
+
+    def receive(self,timeout):
+        if not self.queue:
+            if not self.selector.select(timeout): return None
+            chunk=os.read(self.event_r,4096)
+            if not chunk:
+                self.lifecycle.poisoned=True
+                self.decoder.end()
+                raise Blocked('SDK host EOF; task tools require reconciliation')
+            try:self.queue.extend(self.decoder.feed(chunk))
+            except Exception as exc:
+                self.lifecycle.poisoned=True
+                raise Blocked('malformed SDK record') from exc
+        if not self.queue:return None
+        record=self.queue.pop(0)
+        try:validate_schema('host.schema.json',record)
+        except Exception as exc:
+            self.lifecycle.poisoned=True
+            raise Blocked('invalid SDK envelope schema') from exc
+        required={'protocol_version','host_id','run_id','nonce','sequence','command_id','operation_id','attempt_id','session_id','type','op','payload_schema','payload'}
+        if (set(record)!=required or record['protocol_version']!=1 or record['payload_schema']!='sdk-v1' or
+            any(record[k]!=v for k,v in self.binding.items()) or record['sequence']!=self.in_sequence+1):
+            self.lifecycle.poisoned=True;raise Blocked('host envelope/sequence mismatch')
+        self.in_sequence+=1
+        command=self.request_bindings.get(record['command_id'])
+        if not command or any(record[k]!=command[k] for k in ('operation_id','attempt_id','op')):
+            self.lifecycle.poisoned=True;raise Blocked('host request correlation mismatch')
+        if self.session_id is not None and record['session_id']!=self.session_id:
+            self.lifecycle.poisoned=True;raise Blocked('host session mismatch')
+        self.records.append(record)
+        return record
+
+    def wait_response(self,command,timeout):
+        deadline=time.monotonic()+timeout
+        while time.monotonic()<deadline:
+            record=self.receive(min(.1,max(0,deadline-time.monotonic())))
+            if record and record['command_id']==command and record['type']=='response':
+                if record['payload'].get('ok') is not True:
+                    self.lifecycle.poisoned=True
+                    raise Blocked('SDK command failed; no replay: '+record['payload'].get('error','unknown'))
+                return record['payload']
+            if record and record['type']!='response':
+                if record['type']=='lifecycle' and record['payload'].get('type')=='drained':
+                    continue
+                self.lifecycle.poisoned=True
+                raise Blocked('unexpected lifecycle outside prompt')
+        self.lifecycle.poisoned=True
+        raise Blocked('SDK response deadline')
+
+    def _launch_tool(self,record):
+        p=record['payload']
+        if (not self.lifecycle.active or self.lifecycle.poisoned or record['command_id']!=self.current['command_id'] or
+            p.get('generation')!=self.lifecycle.generation or p.get('call') in self.pending):
+            raise Blocked('tool outside current prompt')
+        name=p.get('tool'); spec=next((t for t in self.manifest['tools'] if t['name']==name),None)
+        tool=self.gateway.tools.get(name)
+        if not spec or not tool or tool.version!=p.get('version') or spec['version']!=tool.version:
+            raise Blocked('unregistered tool binding')
+        Draft202012Validator(spec['parameters']).validate(p['args'])
+        op,proc=self.gateway.launch(self.current['attempt_id']+':'+p['call'],name,tool.version,p['args'],
+                                    admitted_host_ops=(self.host_op,))
+        self.pending[p['call']]={'op':op,'proc':proc}
+
+    def _poll_tools(self):
+        for call,tool in list(self.pending.items()):
+            code=tool['proc'].poll()
+            if code is None:continue
+            receipt=self.gateway.settle(tool['op'],code)
+            if not receipt.get('replacement_allowed'):
+                raise Blocked('ORPHAN_PROCESS: tool result cannot release prompt')
+            self.send('tool',{'generation':self.lifecycle.generation,'call':call,
+                'result':{'content':[{'type':'text','text':canonical({'exit_code':code,'operation_id':tool['op']})}],
+                          'details':{'operation_id':tool['op'],'quiescent':True}}})
+            del self.pending[call]
+
+    def prompt(self,*,node,task_id,attempt_id,role,text,skill,contract_hash,selection,timeout=120,interrupt=None):
+        self.gateway.store.assert_dispatchable(self.gateway.run,admitted_host_ops=(self.host_op,))
+        family=lambda r:'implement' if r in ('implement','repair') else r
+        if family(role)!=family(self.compatibility['role']):raise Blocked('session role isolation')
+        before=self.snapshot
+        if not before:raise Blocked('missing initial telemetry')
+        generation=self.lifecycle.begin()
+        details={'run_id':self.gateway.run,'task_id':task_id,'node_id':node,'role':role,
+                 'host_op':self.host_op,'attempt_id':attempt_id,'contract_hash':contract_hash,
+                 'generation':generation,'selection':selection,'compatibility':self.compatibility,'before':before,'started_ns':time.time_ns(),
+                 'baseline_sha':git(self.gateway.authority.project,'rev-parse','HEAD').decode().strip(),
+                 'result_sha':None,'result_sha_unknown_reason':'runner_checkpoint_not_yet_performed',
+                 'check_evidence':[]}
+        operation=self.gateway.store.intent(self.gateway.run,node,'sdk-turn',{'contract_hash':contract_hash},details)
+        if operation['phase']!='intent':raise Blocked('uncertain prompt operation; no replay')
+        self.current={'operation_id':operation['op_id'],'attempt_id':attempt_id}
+        self.snapshot=None
+        started=time.monotonic_ns()
+        try:
+            command=self.send('prompt',{'generation':generation,'text':text,'skill':skill})
+            self.current['command_id']=command
+            deadline=time.monotonic()+timeout
+            while time.monotonic()<deadline:
+                self._poll_tools()
+                if interrupt and interrupt(self):raise Blocked('controlled pressure/pause')
+                record=self.receive(.05)
+                if not record:continue
+                if record['command_id']!=command:
+                    if record['type']=='response' and record['payload'].get('ok') is True:continue
+                    raise Blocked('interleaved operation mismatch')
+                p=record['payload']
+                if record['type']=='response':
+                    if not p.get('ok'):raise Blocked('SDK prompt failed')
+                    continue
+                if record['type']=='tool_request':self._launch_tool(record);continue
+                # Persist only allowlisted facts, never tool arguments, raw text/auth.
+                safe={k:v for k,v in p.items() if k in ('type','generation','provider','model','wire_effort','mapping','request_sequence','reason','stop_reason','idle','promise_done','outgoing_tools','skill_expanded','expanded_prompt_hash')}
+                self._persist('sdk:'+str(record['sequence']),safe,operation['op_id'])
+                if record['type']=='lifecycle':
+                    self.lifecycle.event(p)
+                    if p.get('type') in ('pressure','compaction_start'):
+                        raise Blocked('SDK context pressure/compaction; drain and owner recovery required')
+                if record['type']=='settled':
+                    self.lifecycle.finish(p)
+                    if self.pending:raise Blocked('settlement with pending task tools')
+                    self.gateway.store.assert_dispatchable(self.gateway.run,admitted_host_ops=(self.host_op,))
+                    self.snapshot=p['snapshot']
+                    segment=usage_segment(before,self.snapshot)
+                    retries=sum(1 for r in self.records if r['command_id']==command and r['payload'].get('type')=='auto_retry_start')
+                    segment.update(details,ended_ns=time.time_ns(),elapsed_ns=time.monotonic_ns()-started,retry_count=retries,
+                        request_observed=[r['payload'] for r in self.records if r['command_id']==command and r['type']=='request_observation'])
+                    self.gateway.store.transition(operation['op_id'],'intent','completed',segment)
+                    return {'snapshot':self.snapshot,'segment':segment,'output':p.get('output','')}
+            raise Blocked('SDK prompt deadline')
+        except BaseException as exc:
+            self.lifecycle.poisoned=True
+            try:
+                self.abort()
+            except Exception:
+                self._persist('sdk_drain_unknown',{'host_op':self.host_op,'reason':'host_or_sdk_drain_unavailable'},operation['op_id'])
+            finally:
+                segment=usage_segment(before,None,outcome='interrupted')
+                segment.update(details,ended_ns=None,end_unknown_reason='prompt_or_host_interrupted',
+                    stopped_observed_ns=time.time_ns(),elapsed_ns=time.monotonic_ns()-started)
+                self._persist('sdk_interrupted',segment,operation['op_id'])
+            raise Blocked('SDK turn interrupted/uncertain; no replay or reuse') from exc
+
+    def abort(self):
+        self.lifecycle.poisoned=True
+        # Drain tools first: SDK abort alone does not quiesce child descendants.
+        for call,tool in list(self.pending.items()):
+            receipt=self.gateway.resolve(tool['op'])
+            tool['proc'].wait(timeout=5)
+            if not receipt.get('replacement_allowed'):raise Blocked('task drain unknown')
+            del self.pending[call]
+        command=self.send('abort',{'generation':self.lifecycle.generation})
+        deadline=time.monotonic()+15
+        while time.monotonic()<deadline:
+            record=self.receive(.1)
+            if record and record['command_id']==command and record['type']=='response':
+                if not record['payload'].get('ok') or not record['payload'].get('idle'):raise Blocked('SDK drain unknown')
+                self.lifecycle.active=False
+                self._persist('sdk_drained',{'host_op':self.host_op,'idle':True,'tools_empty':True})
+                return
+        raise Blocked('SDK abort deadline; custody unresolved')
+
+    def telemetry(self):
+        if self.lifecycle.active or self.lifecycle.poisoned:raise Blocked('telemetry not settled')
+        command=self.send('telemetry',{'generation':self.lifecycle.generation},operation_id=self.host_op,attempt_id='telemetry')
+        self.snapshot=self.wait_response(command,10)['snapshot']
+        return self.snapshot
+
+    def close(self,force=False):
+        if self.closed:return
+        try:
+            if (self.lifecycle.active or self.pending) and self.proc.poll() is None:self.abort()
+            if not force:
+                command=self.send('close',{'generation':self.lifecycle.generation},operation_id=self.host_op,attempt_id='close')
+                self.wait_response(command,10)
+                # Node's pipe read may occupy an fs thread; EOF is required even
+                # after close ACK so SDK/native shutdown cannot wait on our writer.
+                os.close(self.command_w);self.command_w=-1
+                self.proc.wait(timeout=10)
+                self.gateway.settle(self.host_op,self.proc.returncode)
+            else:
+                # Only T001 validated own-child drain, never PID-only kill.
+                self.gateway.resolve(self.host_op)
+                self.proc.wait(timeout=10)
+        except BaseException:
+            self.lifecycle.poisoned=True
+            self.gateway.resolve(self.host_op)
+            self.proc.wait(timeout=10)
+            raise
+        finally:
+            self.closed=True
+            if self.command_w>=0:os.close(self.command_w)
+            os.close(self.event_r)
+            if hasattr(self,'selector'):self.selector.close()

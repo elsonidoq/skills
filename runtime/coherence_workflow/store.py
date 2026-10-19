@@ -244,15 +244,39 @@ class Store:
                 raise Blocked("operation phase compare-and-set failed")
             self.event(db,row['run_id'],op,after,result or {})
 
-    def assert_dispatchable(self, run):
+    def assert_dispatchable(self, run, *, admitted_host_ops=()):
         self.authority.assert_held()
         row = self.db.execute("SELECT * FROM wf_runs WHERE run_id=? AND reservation=1", (run,)).fetchone()
         if self.db.execute("SELECT 1 FROM wf_alarms WHERE state='active'").fetchone():
             raise Blocked("ORPHAN_PROCESS: replacement_allowed=false")
         if not row or row['state'] != 'running':
             raise Blocked("run does not hold running reservation")
-        if self.db.execute("SELECT 1 FROM wf_operations WHERE kind='process' AND phase!='completed'").fetchone():
-            raise Blocked("unreconciled process operation; replacement_allowed=false")
+        # Trusted adapter may admit its exact live host for a current tool request or
+        # proven idle boundary. This is not a blanket exemption for host rows.
+        from .tools import Gateway
+        allowed = set(admitted_host_ops)
+        if len(allowed) != len(admitted_host_ops):
+            raise Blocked('duplicate host admission')
+        active = self.db.execute("SELECT * FROM wf_operations WHERE kind='process' AND phase!='completed'").fetchall()
+        found = set()
+        for operation in active:
+            if operation['op_id'] not in allowed:
+                raise Blocked("unreconciled process operation; replacement_allowed=false")
+            if operation['run_id'] != run or operation['phase'] != 'released':
+                raise Blocked('host admission run/phase mismatch')
+            details = json.loads(operation['intent'])
+            process = self.db.execute('SELECT containment FROM wf_processes WHERE op_id=?',(operation['op_id'],)).fetchone()
+            if not process or not process['containment']:
+                raise Blocked('host containment unavailable')
+            gateway = Gateway(self.authority, run, json.loads(process['containment'])['parent'], {})
+            record, receipt = gateway._record(operation['op_id'])
+            if record['scope_kind'] != 'host' or details.get('scope_kind') != 'host':
+                raise Blocked('only host scopes may be explicitly admitted')
+            identity = json.loads(record['identity'])
+            gateway.containment.member(receipt, identity, details['nonce'])
+            found.add(operation['op_id'])
+        if found != allowed:
+            raise Blocked('unknown/completed host admission')
 
     def close(self):
         self.db.close()
