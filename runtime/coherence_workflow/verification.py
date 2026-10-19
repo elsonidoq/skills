@@ -11,6 +11,7 @@ from jsonschema import Draft202012Validator
 
 from .store import Blocked, canonical, digest, git, safe_path
 from .intake import content_hash
+from .review_documents import references, require_coverage
 
 
 def environment_identity():
@@ -254,9 +255,12 @@ class ReviewRepair:
                for r in self.store.db.execute('SELECT * FROM wf_tasks WHERE run_id=? ORDER BY approved_order',(self.run,))]
         findings=[dict(r) for r in self.store.db.execute('SELECT f.* FROM wf_findings f JOIN wf_reviews r USING(review_id) WHERE r.run_id=?',(self.run,))]
         patch=git(self.coordinate.authority.project,'diff','--no-ext-diff','--no-textconv','--binary',base+'..'+head).decode()
-        names={s['path'] for s in self.coordinate.contract['sources']} | {r['record_ref'] for r in self.coordinate.contract['approval_refs']}
-        source_content={name:safe_path(self.coordinate.authority.project,name).read_text() for name in names}
-        result={'range_base':base,'range_head':head,'source_tasks_approvals':self.coordinate.contract,'source_content':source_content,'task_receipts':tasks,
+        originals={task['id']:task for task in self.coordinate.contract['tasks']}
+        for receipt in tasks:
+            if canonical(receipt['contract']) == canonical(originals.get(receipt['task_id'])):
+                receipt['contract_ref']={'task_id':receipt['task_id'],'sha256':digest(receipt.pop('contract'))}
+        result={'range_base':base,'range_head':head,'source_tasks_approvals':self.coordinate.contract,
+                'document_refs':references(self.coordinate.contract,self.coordinate.authority.project,head),'task_receipts':tasks,
                 'finding_history':findings,'full_committed_diff':patch}
         if len(canonical(result).encode())>120000:raise Blocked('complete review bundle exceeds supported bound; no truncation')
         return result
@@ -280,6 +284,7 @@ class ReviewRepair:
                 sorted(tools) not in (['read_file'],['read_file','request_owner_input']) or not configured or
                 not admission or json.loads(admission[0])['compatibility']!=provenance['compatibility']):
             raise Blocked('review was not independent read-only with exact configured/admitted tools')
+        require_coverage(self.coordinate,result,host_op)
         if len({f['id'] for f in result['findings']})!=len(result['findings']):raise Blocked('duplicate review finding IDs')
         review_id=uuid.uuid4().hex
         with self.store.transaction() as db:
@@ -356,6 +361,7 @@ class ReviewRepair:
             binding=json.loads(gate['binding']);request={'gate_id':gate['gate_id'],**binding}
             if gate['state']!='approve' or content_hash(safe_path(self.coordinate.authority.project,binding['sample_path']))!=binding['sample_hash']:
                 raise Blocked('unmet/stale original manual STOP')
+        require_coverage(self.coordinate,json.loads(review['result']),review['host_op'])
         self.coordinate.reconcile_effect({}, {})
         with self.store.transaction() as db:self.store.event(db,self.run,None,'workflow_accepted',{'head':head,'review_id':review['review_id']})
         return {'outcome':'accepted'}

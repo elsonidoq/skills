@@ -317,6 +317,9 @@ class Coordinate:
             'properties': {'path': {'enum': sorted(paths)}, **({'text': {'type': 'string', 'maxLength': 32768}} if write else {})},
             'required': ['path', 'text'] if write else ['path']}
         def read_result(args, receipt):
+            if review:
+                from .review_documents import read_document
+                return read_document(self, self.review_repair.bundle(), args, receipt)
             path = safe_path(project, args['path'])
             if not path.is_file() or path.stat().st_size > 32768:
                 raise Blocked('authorized read unavailable/too large')
@@ -640,12 +643,16 @@ class Coordinate:
                 self.interaction.delivered(continuation['gate_id'],adapter.deliver_answer(value))
                 with self.store.transaction() as db:db.execute("UPDATE wf_questions SET stage='continued' WHERE gate_id=?",(continuation['gate_id'],))
             turn=adapter.prompt(node=('continue:'+continuation['gate_id']) if continuation else 'review:'+str(round),task_id='final-review',attempt_id=expected['attempt_id'],role='review',
-                text='Review independently, do not fix. Receive complete original base-to-current-head bundle below; read actual authorized files as needed. '
+                text='Review independently, do not fix. Receive complete original base-to-current-head bundle below. '
+                'You MUST read EVERY document_refs path with read_file in THIS turn before returning a review, including after owner-answer continuation. '
+                'Pinned document bytes are supplied only through those reads; also inspect actual authorized changed files as needed. '
                 'Check source requirements beyond mechanical green (including extraneous/dead code). Return ONLY JSON in the exact shape '+canonical(expected)+
                 '. If actual findings exist set outcome correction and findings to objects in this exact shape '+canonical(finding)+
                 '. Scope-changing findings must use scope owner_decision, not in_scope. Never invent an issue. Full bundle: '+canonical(bundle),
                 skill=manifest['skills'][0]['name'],contract_hash=digest(bundle),selection=selection,
                 interrupt=lambda current:self.controls_boundary(current))
+            from .review_documents import settle_delivery
+            settle_delivery(self,turn)
             result=None if turn['question_gate'] else json.loads(turn['output'])
             if result is not None:
                 validate_schema('agent-result.schema.json',result)

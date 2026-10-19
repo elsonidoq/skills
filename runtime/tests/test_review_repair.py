@@ -185,6 +185,29 @@ sys.exit(main(['start',*sys.argv[2:]]))
         for review in reviews:
             ready=json.loads(db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_ready'",(review['host_op'],)).fetchone()[0])
             case.assertEqual(ready['compatibility']['role'],'review');case.assertEqual(sorted(ready['snapshot']['tools']),sorted(next(n for n in config['nodes'] if n['id']=='review')['tools']))
+            deliveries=[(r['op_id'],json.loads(r['payload'])) for r in db.execute("SELECT op_id,payload FROM wf_events WHERE kind='review_document_delivery'")
+                        if json.loads(r['payload'])['host_op']==review['host_op']]
+            case.assertEqual(len(deliveries),1)
+            turn_op,delivery=deliveries[0]
+            case.assertEqual({(r['path'],r['sha256']) for r in delivery['reads']},
+                             {(s['path'],s['sha256']) for s in contract['sources']} |
+                             {(r['record_ref'],r['record_sha256']) for r in contract['approval_refs']})
+            case.assertEqual(delivery['bundle_hash'],json.loads(review['result'])['contract_hash'])
+            for read in delivery['reads']:
+                case.assertEqual((read['range_base'],read['range_head']),(review['base_sha'],review['head_sha']))
+                case.assertTrue(read['entry_id']);case.assertTrue(read['call_hash'])
+                process=db.execute('SELECT phase,result FROM wf_operations WHERE op_id=?',(read['process_operation'],)).fetchone()
+                case.assertEqual(process['phase'],'completed');case.assertTrue(json.loads(process['result'])['replacement_allowed'])
+                case.assertEqual(json.loads(process['result'])['empty_receipt']['populated'],0)
+            sdk_turn=json.loads(db.execute('SELECT result FROM wf_operations WHERE op_id=?',(turn_op,)).fetchone()[0])
+            observed_requests=sdk_turn['request_observed'];case.assertTrue(observed_requests)
+            case.assertTrue(all(o['provider']=='openai-codex' and o['model']=='gpt-6.1-sol' and o['wire_effort']=='medium' for o in observed_requests))
+            host_empty=json.loads(db.execute('SELECT empty_receipt FROM wf_processes WHERE op_id=?',(review['host_op'],)).fetchone()[0])
+            case.assertEqual(host_empty['populated'],0)
+            print(canonical({'proof':'actual-SDK-reference-delivery','host_op':review['host_op'],'turn_op':turn_op,
+                             'generation':delivery['generation'],'bundle_hash':delivery['bundle_hash'],'reads':delivery['reads'],
+                             'kernel_empty_read_processes':len(delivery['reads']),'host_empty':host_empty['populated'],
+                             'observed_requests':len(observed_requests),'observed_profile':'openai-codex/gpt-6.1-sol:medium'}))
         budgets=[dict(r) for r in db.execute('SELECT * FROM wf_repair_budgets')]
         case.assertEqual(len(budgets),1);case.assertEqual(budgets[0]['used'],1)
         case.assertEqual(budgets[0]['failure_key'],'review-final' if review_correction else 'task:A')
@@ -238,6 +261,24 @@ def acceptance_negatives(case,project,contract,catalog,config,sdk):
         coordinate=Coordinate(owner,'review-loop',contract,catalog,config,case.parent,sdk,environment())
         db=owner.store.db
         review=db.execute('SELECT * FROM wf_reviews ORDER BY rowid DESC LIMIT 1').fetchone()
+        delivery=next(r for r in db.execute("SELECT * FROM wf_events WHERE kind='review_document_delivery'")
+                      if json.loads(r['payload'])['host_op']==review['host_op'])
+        original_delivery=json.loads(delivery['payload'])
+        before_reviews=db.execute('SELECT COUNT(*) FROM wf_reviews').fetchone()[0]
+        before_findings=[tuple(r) for r in db.execute('SELECT * FROM wf_findings ORDER BY review_id,finding_id')]
+        for label,broken in [('missing coverage',{**original_delivery,'reads':original_delivery['reads'][1:]}),
+                             ('wrong independent host',{**original_delivery,'host_op':'wrong-review-host'})]:
+            db.execute('UPDATE wf_events SET payload=? WHERE seq=?',(canonical(broken),delivery['seq']))
+            with case.assertRaisesRegex(Blocked,'review document delivery'):
+                coordinate.review_repair.record_review(json.loads(review['result']),review['host_op'])
+            with case.assertRaisesRegex(Blocked,'review document delivery'):coordinate.complete({})
+            case.assertEqual(db.execute('SELECT COUNT(*) FROM wf_reviews').fetchone()[0],before_reviews)
+            case.assertEqual([tuple(r) for r in db.execute('SELECT * FROM wf_findings ORDER BY review_id,finding_id')],before_findings)
+            case.assertFalse(status(project,'review-loop')['accepted'])
+            observed.append('real settled '+label+' blocks recording/resolution/acceptance')
+        db.execute('UPDATE wf_events SET payload=? WHERE seq=?',(delivery['payload'],delivery['seq']))
+        from coherence_workflow.review_documents import require_coverage
+        case.assertTrue(require_coverage(coordinate,json.loads(review['result']),review['host_op']))
         db.execute('UPDATE wf_reviews SET head_sha=? WHERE review_id=?',('stale-fixture-head',review['review_id']))
         with case.assertRaisesRegex(Blocked,'current full-range'):coordinate.complete({})
         case.assertFalse(status(project,'review-loop')['accepted']);observed.append('stale-head review blocked')

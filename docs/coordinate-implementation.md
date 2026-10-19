@@ -389,13 +389,30 @@ configured repair/review gate ceilings bind across restart; changing them change
 
 First final review is a fresh independent `review` session, with bounded `read_file` and,
 only when explicitly configured and permission-admitted, nonmutating `request_owner_input`.
-It receives the complete committed original base→current head patch, source/tasks/approval
-content, item evidence, checkpoint refs and prior findings. No implementation history or write
-capability is supplied. The shipped graph now uses role-default selection with SQL-derived
+It receives the complete committed original base→current head patch, whole authoritative task
+contract, complete pinned source/approval `document_refs` (path/raw SHA/kind/section or role,
+Git revision only when those exact committed bytes exist), item evidence, checkpoint refs and
+prior findings. Source/approval bodies are obtained through existing authorized `read_file`,
+not copied into the bundle. Equal canonical original task contracts in receipts use an exact
+task-ID/hash reference; unequal and dynamic correction contracts remain complete. No
+implementation history or write capability is supplied. The shipped graph now uses role-default selection with SQL-derived
 settled candidates; explicit fresh-only remains available for ordinary assignments. Exact
 saved reopening bridges verified task-tool/checkpoint chains without altering old receipts.
 A complete bundle over the supported protocol bound blocks rather than truncating the range.
 Review judgment is distinct from mechanical green; malformed/stale-head review cannot accept.
+
+Every referenced document must be delivered in the originating independent review turn,
+including an original-question continuation. Reads recheck current admitted authority and
+validate safe identity, raw SHA and UTF-8 on the same bytes returned, within the unchanged
+32768-byte read bound. A read callback alone is not delivery: `review_documents` verifies the
+existing settled SDK snapshot's private session-file hash and active branch, and joins successful
+persisted `read_file` tool-result bytes/call IDs to that turn's actual Gateway process launches.
+Only minimal path/hash/identity/process/entry/host/turn/bundle/range proof is retained in SQL;
+no document bodies or transcript copy is added. Missing, undelivered or wrong-review coverage
+blocks review recording (and finding resolution), and is reaudited with current authority before
+acceptance. A prior host/turn's reads cannot substitute for the current review. This uses existing
+SDK persistence/receipts, not new host protocol, tools, schema fields or read permissions.
+The complete serialized bundle still blocks above120000 bytes; the SDK wire bound stays262144.
 
 A finding is not executable scope. Unapproved/scope-changing/unknown findings block for owner
 contract renewal. A private operator catalog may explicitly supply `workflow_correction_rules`:

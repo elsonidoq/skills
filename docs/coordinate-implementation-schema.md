@@ -239,6 +239,25 @@ retains canonical severity/location/criterion/evidence plus disposition/correcti
 and current external rule/source-approval/finding/range authority hashes. No correction ID creates
 a new repair budget, changes REQUIRED criteria, or lets a reviewer produce a fix.
 
+Review bundles retain the whole authoritative contract/full binary original-range patch and
+complete evidence/findings, replacing source/approval bodies with `document_refs`: authorized
+path, raw SHA256, source kind/section or approval role, and Git revision when exact committed
+bytes exist. A receipt's `contract_ref` (original task ID/canonical SHA256) replaces its contract
+only on exact canonical equality; unequal/dynamic contracts remain embedded. The120000-byte
+bundle and262144-byte SDK guards are unchanged; true remaining oversize blocks.
+
+No DDL/schema migration is added. `review_document_read` events belong to real completed read
+process operations and contain path/raw hash/byte count/file identity/bundle/range, not bodies.
+`review_document_delivery` belongs to the completed originating `sdk-turn` and binds host,
+generation, bundle, settled snapshot hash and minimal read/process/call/SDK entry identities.
+The runner derives delivery from the existing hash-verified settled private SDK branch's
+successful toolResult content, matching the same returned bytes and `sdk_tool_launched` process
+links. Callbacks, read intent and prose are insufficient. Review recording/finding resolution
+and final acceptance require full current pinned-document coverage for that exact independent
+host/turn/bundle/range; original-question continuations read the refs again in their own turn.
+Private SDK conversation storage remains private; no raw document/transcript ledger is added,
+no worker read allowlist expands, and original authority/custody/checkpoint gates still apply.
+
 The registered graph now admits only bounded verification↔repair and review→correction-authority
 →task-selector cycles in addition to the task-progress backedge. Each cycle still crosses actual
 verification/checkpoint nodes; success must cross independent review. Graph visit bounds derive
