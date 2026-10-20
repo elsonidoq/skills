@@ -105,6 +105,25 @@ class SequentialExecutionTests(ProjectTest):
         db.close()
         self.assertNotIn('worker', phases)
 
+    def test_review_base_must_be_ancestor_and_actual_prompt_uses_it(self):
+        project = self.project
+        prompts = []
+        class Offline:
+            def __init__(self, *a, **k): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    prompts.append(prompt)
+                    return '{"approved":true,"findings":[]}'
+                return 'offline worker'
+        contract = admit({'review_base': self.base, 'tasks': [{'id': 'fix', 'description': 'Fix'}]})
+        with Authority(project) as owner:
+            Engine(owner, 'range', contract, EXECUTOR, adapter=Offline).invoke()
+        self.assertIn('Range: ' + self.base + '..', prompts[0])
+        bad = admit({'review_base': 'not-a-commit', 'tasks': [{'id': 'again', 'description': 'Again'}]})
+        with Authority(project) as owner:
+            with self.assertRaisesRegex(Blocked, 'ancestor'):
+                Engine(owner, 'bad-range', bad, EXECUTOR, adapter=Offline).invoke()
+
     def test_sdk_error_retains_partial_work_and_releases_writer_lock(self):
         project = self.project
         class OfflineSDKError:

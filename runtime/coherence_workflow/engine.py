@@ -94,15 +94,23 @@ class Engine:
                     store.task(self.run, task['id'], state, focused.base, details={'error': str(exc)})
                     raise
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
-            diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', base + '..' + head).decode(errors='replace')
+            review_base = self.contract.get('review_base', base)
+            if not isinstance(review_base, str) or not review_base:
+                raise Blocked('review_base must be a Git commit')
+            try:
+                review_base = git(project, 'rev-parse', '--verify', review_base + '^{commit}').decode().strip()
+                git(project, 'merge-base', '--is-ancestor', review_base, base)
+            except Blocked:
+                raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
+            diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
             reviewer_occurrence = recorder.occurrence()
-            recorder.emit(reviewer_occurrence, 'review', 'started', facts={'role': 'reviewer', 'review_base': base, 'review_head': head})
+            recorder.emit(reviewer_occurrence, 'review', 'started', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head})
             review_question_occurrence = recorder.occurrence()
             def review_question(state):
                 recorder.emit(review_question_occurrence, 'review', state, facts={'parent_occurrence_id': reviewer_occurrence})
             reviewer = self.adapter(project, self.executor, question=self.question, observe_question=review_question)
             reviewer.lock_fd = self.authority.lock.fileno()
-            review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Inspect relevant source with read/search tools; continue long reads with offsets. Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + base + '..' + head + '\nDiff:\n' + diff, read_only=True)
+            review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Inspect relevant source with read/search tools; continue long reads with offsets. Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
             try:
                 value = json.loads(review)
             except ValueError:
