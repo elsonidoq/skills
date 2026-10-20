@@ -43,6 +43,9 @@ per-command check start/outcome and checkpoint start/outcome; command text and o
 A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.
 Question observations retain only requested, terminal-returned, host-sent, or delivery-failed state and a
 parent occurrence ID. They never retain question or answer text; a send is not a consumption claim.
+Read-only status/history exposes recording version, stable occurrence IDs and review base/head ranges when
+present; absent or corrupt monitoring is reported unknown. Explicit abandon preserves prior progress/error
+history and appends an `abandoned` observation when the run was registered.
 
 ## Historical records
 

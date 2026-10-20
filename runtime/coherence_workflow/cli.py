@@ -24,8 +24,24 @@ def status(project, run):
         if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_runs'").fetchone():
             row = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if row:
-                return {'run': dict(row), 'tasks': [dict(r) for r in db.execute(
+                result = {'run': dict(row), 'tasks': [dict(r) for r in db.execute(
                     'SELECT * FROM execution_tasks WHERE run_id=? ORDER BY rowid', (run,))]}
+                try:
+                    monitored = db.execute('SELECT recording_version FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
+                    if monitored:
+                        observations = []
+                        for item in db.execute('SELECT occurrence_id,phase,kind,facts FROM execution_observations WHERE run_id=? ORDER BY seq', (run,)):
+                            facts = json.loads(item['facts'])
+                            value = {'occurrence_id': item['occurrence_id'], 'phase': item['phase'], 'kind': item['kind']}
+                            if item['phase'] == 'review':
+                                value['review_range'] = {'base': facts.get('review_base'), 'head': facts.get('review_head')}
+                            observations.append(value)
+                        result['monitoring'] = {'recording_version': monitored['recording_version'], 'observations': observations}
+                    else:
+                        result['monitoring'] = {'state': 'unknown'}
+                except (sqlite3.Error, ValueError, TypeError):
+                    result['monitoring'] = {'state': 'unknown'}
+                return result
         return read_history(db, run)
     finally:
         db.close()

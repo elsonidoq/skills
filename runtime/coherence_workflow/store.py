@@ -154,6 +154,13 @@ class Store:
             current = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if current:
                 db.execute("UPDATE execution_runs SET state='abandoned' WHERE run_id=?", (run,))
+                # Monitoring is optional: an append failure must not veto explicit abandon.
+                try:
+                    if db.execute('SELECT 1 FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone():
+                        db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
+                                   (run, 1, uuid.uuid4().hex, 'terminal', None, 'abandoned', time.time(), canonical({})))
+                except sqlite3.Error:
+                    pass
                 return dict(db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone())
             if not db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_runs'").fetchone():
                 raise Blocked('unknown run; select the historical run to abandon')

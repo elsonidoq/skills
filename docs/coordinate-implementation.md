@@ -24,6 +24,7 @@ scripts/coordinate-implementation intake --tasks /tmp/tasks.json
 scripts/coordinate-implementation start --project /absolute/project \
   --tasks /tmp/tasks.json --executor /tmp/executor.json --run fix-title
 scripts/coordinate-implementation status --project /absolute/project --run fix-title
+# status/history include monitoring recording version, stable occurrence IDs, and safe review ranges when available
 ```
 
 Set `COHERENCE_PYTHON` only if the dependencies are in a selected environment. Source execution
