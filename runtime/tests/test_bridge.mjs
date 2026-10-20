@@ -69,6 +69,9 @@ for (const mode of ['idle', 'busy']) test(`bridge wakes ${mode} parent and retur
     await assert.rejects(() => tools.get('coordinate_implementation_reply').execute('duplicate', {request_id: requestId, run: `run-${mode}`, answer: 'yes'}, undefined, undefined, ctx), /no matching pending/);
     await assert.rejects(() => tools.get('coordinate_implementation_reply').execute('wrong-session', {request_id: requestId, run: `run-${mode}`, answer: 'yes'}, undefined, undefined, {...ctx, sessionManager: {getSessionId: () => 'other'}}), /no matching pending/);
     while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete')) await new Promise(resolve => setTimeout(resolve, 10));
+    const database = await fs.readFile(path.join(value.project, '.coherence/workflow/workflow.sqlite'));
+    assert.equal(database.includes(Buffer.from('Fixture owner question?')), false);
+    assert.equal(database.includes(Buffer.from('yes')), false);
   } finally {
     if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
     await pi.shutdown?.();
