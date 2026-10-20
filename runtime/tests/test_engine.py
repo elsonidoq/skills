@@ -48,6 +48,13 @@ class SequentialExecutionTests(ProjectTest):
         self.assertEqual(len({id(s) for s in sessions}), 3)
         self.assertEqual(len(result['checkpoints']), 2)
         self.assertEqual(git(project, 'rev-list', '--count', self.base+'..HEAD'), b'2\n')
+        import sqlite3
+        db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
+        kinds = [row[0] for row in db.execute('SELECT kind FROM execution_observations ORDER BY seq')]
+        db.close()
+        self.assertIn('started', kinds)
+        self.assertIn('returned', kinds)
+        self.assertIn('passed', kinds)
 
     def test_failed_check_not_passed_no_commit_or_automatic_retry(self):
         project = self.project
@@ -92,6 +99,11 @@ class SequentialExecutionTests(ProjectTest):
         with self.assertRaisesRegex(Blocked, 'manual gate not approved'):
             self.execute([{'id': 'fix', 'description': 'Fix', 'gates': [{'question': 'Proceed?'}]}], Never, question=deny)
         self.assertEqual(len(answers), 1)
+        import sqlite3
+        db = sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite')
+        phases = [row[0] for row in db.execute('SELECT phase FROM execution_observations')]
+        db.close()
+        self.assertNotIn('worker', phases)
 
     def test_sdk_error_retains_partial_work_and_releases_writer_lock(self):
         project = self.project
