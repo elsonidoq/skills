@@ -11,6 +11,8 @@ Insert the optional triage below after the base workflow derives candidate findi
 
 ## Jev Triage
 
+An explicitly approved consequential decision that warrants durable rationale routes manually to `save-adr` under the base workflow; it is outside Jev triage. Jev cannot establish that approval or provenance.
+
 Load the `jev` skill before using Jev and follow its authentication and data-safety rules. If the skill or CLI is unavailable or authentication is unavailable, route every candidate manually and continue the base workflow.
 
 Use Jev only when each candidate's routing is a narrow, self-contained typed semantic judgment with explicit alternatives, and the candidate is already grounded in the attributable diff and primary artifacts. Do not use it merely because there are multiple candidates. Exclude and manually route any candidate involving security, deployment, credentials, personal data, sensitive payloads, or uncertain evidence. Submit every eligible candidate together; do not select a subset based on count. Make at most one bulk Jev call.

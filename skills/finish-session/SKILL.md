@@ -113,6 +113,8 @@ with its evidence and resumption condition in the report. Do not substitute anot
 documentation-only facts, deployment prerequisites, memories, unverified non-actionable claims, or when no
 issue candidate exists. Include the result in the closeout report.
 
+Route an explicitly approved consequential decision that warrants durable rationale to the canonical `save-adr` skill. This is not a per-session requirement: do not create an ADR for ordinary sessions, agent-inferred implementation lessons, retrospective backfill, or acceptance/provenance that cannot be attributed. `save-adr` owns decision discovery and history; it complements rather than replaces the current-state documentation, schema, runbook, issue, memory, explicit-feedback, and validation routes in this workflow.
+
 ## Step 4: Deployment Steps, Only When Relevant
 
 Enter this step only when attributable changes have plausible deployment implications or verified evidence of a deploy may change an existing entry's status. Otherwise do not investigate deployment state or inspect its owner; report `not examined: no deployment-relevant evidence in attributable work`.
