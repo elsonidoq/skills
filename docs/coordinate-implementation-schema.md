@@ -74,6 +74,10 @@ abandoned without rewriting their error/task history. No legacy execution stack 
 
 `pi_adapter.py` and `pi-host/host.mjs` exchange newline-delimited JSON for a prompt, local
 edit/write path checks, current owner questions, optional event observations and final text/error.
+When explicitly launched by the project parent-session bridge, the adapter uses one private
+Unix-socket request/reply connection with a token, parent session, run and request identity; EOF,
+unavailable endpoints and uncorrelated replies stop with the actual bridge error. The bridge keeps
+its pending request only in memory and never stores question or answer text in monitoring SQLite.
 Invalid framing/types are communication errors, not permanent launch poison. No record size
 cap, pressure protocol, watchdog, telemetry prerequisite or closed host manifest.
 SDK tools handle normal read/edit/write/search/command errors and output continuation.

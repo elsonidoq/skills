@@ -1,6 +1,7 @@
 """Existing workflow CLI: six task checks, ordinary SDK execution and history."""
 import argparse
 import json
+import os
 from pathlib import Path
 import sqlite3
 import signal
@@ -9,7 +10,7 @@ import uuid
 
 from .engine import Engine
 from .intake import load_contract
-from .pi_adapter import PiAdapter
+from .pi_adapter import PiAdapter, parent_question
 from .store import Authority, Blocked, canonical, read_history
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -91,8 +92,10 @@ def main(argv=None):
                                                  for k in ('provider', 'model', 'effort')):
             raise Blocked('executor needs provider, model and effort strings')
         run_id = args.run or uuid.uuid4().hex
+        question = parent_question if os.environ.get('COHERENCE_PARENT_BRIDGE_SOCKET') else None
         with Authority(args.project) as authority:
-            result = Engine(authority, run_id, contract, executor, adapter=PiAdapter).invoke()
+            result = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
+                            **({'question': question} if question else {})).invoke()
             print(canonical(result))
         return 0
     except (Blocked, OSError, ValueError, sqlite3.Error) as exc:

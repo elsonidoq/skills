@@ -81,8 +81,13 @@ behavior; compaction/optional telemetry never creates a workflow fatal condition
 truncate long output with their normal continuation instructions; the transport has no size cap.
 
 Material questions use actual current terminal input. Without an interactive terminal the run
-stops with the question, preserves partial work and does not fabricate an answer. There is no
-Paseo version/transcript/binding/receipt gate. No automatic resume/control mailbox or daemon.
+stops with the question, preserves partial work and does not fabricate an answer. A loaded project
+parent-session bridge may instead launch this same command with its private socket environment;
+it wakes that parent with the exact pending question and returns only its correlated reply to the
+waiting worker. It retains neither questions nor answers in SQLite. The bridge is optional: direct
+terminal invocation remains unchanged. In Paseo, use a fresh session that has loaded the extension;
+do not reload or restart the current session automatically. There is no Paseo
+version/transcript/binding/receipt gate. No automatic resume/control mailbox or daemon.
 Cancellation aborts the owned SDK session and waits for its host; it never signals parent/sibling
 processes or provisions/signals cgroups.
 

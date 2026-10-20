@@ -1,10 +1,13 @@
 """Transport framing, local edit errors, current questions, and owned cancellation."""
 import json
+import os
 from pathlib import Path
+import socket
 import sys
+import threading
 from unittest.mock import patch
 
-from coherence_workflow.pi_adapter import PiAdapter, terminal_question
+from coherence_workflow.pi_adapter import PiAdapter, parent_question, terminal_question
 from coherence_workflow.store import Blocked
 from fixtures.support import ProjectTest
 
@@ -39,6 +42,43 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
             self.assertEqual(PiAdapter(self.project, {}, question=lambda q: 'yes', observe_question=events.append).prompt('fixture'), 'answered')
         self.assertEqual(events, ['requested', 'returned', 'sent'])
         self.assertNotIn('PRIVATE-SENTINEL', str(events))
+
+    def test_repeated_framed_questions_use_the_same_callback(self):
+        body = "for question in ('First?', 'Second?'):\n print(json.dumps({'type':'question','question':question}),flush=True); assert json.loads(input()) == {'answer': question + ' answer'}\nprint(json.dumps({'type':'result','text':'sent'}),flush=True)\n"
+        a, b = self.fixture(body)
+        with a, b:
+            self.assertEqual(PiAdapter(self.project, {}, question=lambda question: question + ' answer').prompt('fixture'), 'sent')
+
+    def test_parent_question_requires_correlated_bridge_response(self):
+        endpoint = str(self.root/'bridge.sock')
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server.bind(endpoint)
+        server.listen(1)
+        received = []
+        def serve():
+            client, _ = server.accept()
+            with client:
+                request = json.loads(client.makefile('r', encoding='utf-8').readline())
+                received.append(request)
+                client.sendall((json.dumps({'request_id': request['request_id'], 'answer': 'yes'}) + '\n').encode())
+            server.close()
+        thread = threading.Thread(target=serve)
+        thread.start()
+        values = {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint, 'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
+                  'COHERENCE_PARENT_BRIDGE_SESSION': 'session', 'COHERENCE_PARENT_BRIDGE_RUN': 'run'}
+        with patch.dict(os.environ, values, clear=False):
+            self.assertEqual(parent_question('PRIVATE-SENTINEL'), 'yes')
+        thread.join()
+        self.assertEqual(received[0]['run_id'], 'run')
+        self.assertNotIn('PRIVATE-SENTINEL', str(received[0] | {'question': '<redacted>'}))
+
+    def test_parent_question_reports_unavailable_bridge(self):
+        with patch.dict(os.environ, {'COHERENCE_PARENT_BRIDGE_SOCKET': str(self.root/'missing.sock'),
+                                     'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
+                                     'COHERENCE_PARENT_BRIDGE_SESSION': 'session',
+                                     'COHERENCE_PARENT_BRIDGE_RUN': 'run'}, clear=False):
+            with self.assertRaisesRegex(Blocked, 'parent owner bridge unavailable'):
+                parent_question('Scope?')
 
     def test_question_recorder_failure_does_not_block_framed_answer_send(self):
         body = "print(json.dumps({'type':'question','question':'PRIVATE-SENTINEL'}),flush=True)\nassert json.loads(input()) == {'answer':'yes'}\nprint(json.dumps({'type':'result','text':'sent'}),flush=True)\n"

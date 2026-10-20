@@ -2,9 +2,11 @@
 import json
 import os
 from pathlib import Path
+import socket
 import subprocess
 import sys
 import tempfile
+import uuid
 
 from .store import Blocked, canonical
 
@@ -12,6 +14,42 @@ from .store import Blocked, canonical
 def host_path():
     source = Path(__file__).resolve().parents[1] / 'pi-host/host.mjs'
     return source if source.exists() else Path(sys.prefix) / 'share/coherence-workflow/pi-host/host.mjs'
+
+
+def parent_question(question):
+    """Ask the explicitly selected parent-session bridge, or report it unavailable."""
+    endpoint = os.environ.get('COHERENCE_PARENT_BRIDGE_SOCKET')
+    token = os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN')
+    session = os.environ.get('COHERENCE_PARENT_BRIDGE_SESSION')
+    run = os.environ.get('COHERENCE_PARENT_BRIDGE_RUN')
+    if not all((endpoint, token, session, run)):
+        raise Blocked('parent owner bridge unavailable; launch through the parent-session bridge')
+    request_id = uuid.uuid4().hex
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.connect(endpoint)
+            client.sendall((canonical({'type': 'question', 'request_id': request_id, 'run_id': run,
+                                      'session_id': session, 'token': token, 'question': question}) + '\n').encode())
+            stream = client.makefile('r', encoding='utf-8')
+            try:
+                line = stream.readline()
+            finally:
+                stream.close()
+    except OSError as exc:
+        raise Blocked('parent owner bridge unavailable: ' + str(exc)) from None
+    if not line:
+        raise Blocked('parent owner bridge unavailable: connection closed before an owner reply')
+    try:
+        response = json.loads(line)
+    except ValueError as exc:
+        raise Blocked('parent owner bridge returned invalid response: ' + str(exc)) from None
+    if not isinstance(response, dict) or response.get('request_id') != request_id:
+        raise Blocked('parent owner bridge returned an uncorrelated response')
+    if isinstance(response.get('error'), str):
+        raise Blocked('parent owner bridge unavailable: ' + response['error'])
+    if not isinstance(response.get('answer'), str):
+        raise Blocked('parent owner bridge returned an invalid answer')
+    return response['answer']
 
 
 class PiAdapter:
