@@ -69,10 +69,6 @@ class ConfigGraphTests(unittest.TestCase):
         with Authority(self.project) as authority:
             engine=Engine(authority,'run',self.config,self.registry,self.project)
             try:
-                original=self.registry.handlers['choose']
-                self.registry.handlers['choose']=replace(original,function=right)
-                with self.assertRaisesRegex(Blocked,'drift'): engine.invoke()
-                self.registry.handlers['choose']=original
                 self.registry.version='changed'
                 with self.assertRaisesRegex(Blocked,'drift'): engine.invoke()
                 self.registry.version='1'
@@ -284,6 +280,174 @@ with Authority(p) as a:
                 engine.invoke()
                 with authority.store.transaction(),self.assertRaises(Blocked): engine.invoke()
             finally: engine.close()
+
+
+
+class LeanAttemptTests(unittest.TestCase):
+    setUp = ConfigGraphTests.setUp
+
+    def test_settled_revision_change_and_unsettled_effect_refusal(self):
+        from unittest.mock import patch
+        with Authority(self.project) as owner:
+            with patch.object(Engine, 'runtime_revision', return_value='revision-one'):
+                engine=Engine(owner,'run',self.config,self.registry,self.project,input_identity={'approval':'current'})
+                result=engine.invoke();engine.close()
+            old=[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_operations')]
+            # Only revision observation is controlled; actual saver/reconciliation run.
+            self.registry.handlers['choose']=replace(self.registry.handlers['choose'],function=right)
+            with patch.object(Engine, 'runtime_revision', return_value='revision-two'):
+                engine=Engine(owner,'run',self.config,self.registry,self.project,input_identity={'approval':'current'})
+                self.assertEqual(engine.invoke(),result);engine.close()
+            self.assertEqual(old,[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_operations')])
+            self.assertEqual([r[0] for r in owner.store.db.execute('SELECT runtime_revision FROM wf_attempts ORDER BY attempt')],['revision-one','revision-two'])
+            for kind in ('sdk-turn','tool','git-checkpoint'):
+                op=owner.store.intent('run','incomplete-'+kind,kind,{}, {})
+                with patch.object(Engine, 'runtime_revision', return_value='revision-three'):
+                    with self.assertRaisesRegex(Blocked,'incomplete effects'):
+                        Engine(owner,'run',self.config,self.registry,self.project,input_identity={'approval':'current'})
+                with patch.object(Engine, 'runtime_revision', return_value='revision-two'):
+                    same=Engine(owner,'run',self.config,self.registry,self.project,input_identity={'approval':'current'})
+                    try:
+                        with self.assertRaisesRegex(Blocked,'incomplete SDK/tool/Git'):same.invoke()
+                    finally:same.close()
+                owner.store.transition(op['op_id'],'intent','completed',{'fixture':'settled without dispatch'})
+            with self.assertRaisesRegex(Blocked,'incompatible'):
+                Engine(owner,'run',self.config,self.registry,self.project,input_identity={'approval':'changed'})
+            changed=copy.deepcopy(self.config);changed['workflow_id']='changed'
+            with self.assertRaisesRegex(Blocked,'incompatible'):
+                Engine(owner,'run',changed,self.registry,self.project,input_identity={'approval':'current'})
+            self.registry.version='unsupported'
+            with self.assertRaisesRegex(Blocked,'registry version'):
+                Engine(owner,'run',self.config,self.registry,self.project)
+            print('T002/V1 revisions one -> two; unchanged operations; incomplete SDK/tool/Git refused; configuration/authority refused')
+        partial=make_project(Path(self.tmp.name)/'partial')
+        registry,config=configuration(partial)
+        def settled_boundary(phase,op):
+            raise RuntimeError('fixture stop after durable application result')
+        with Authority(partial) as owner:
+            with patch.object(Engine,'runtime_revision',return_value='before-bugfix'):
+                engine=Engine(owner,'partial',config,registry,partial,phase_hook=settled_boundary)
+                try:
+                    with self.assertRaisesRegex(RuntimeError,'fixture stop'):engine.invoke()
+                    self.assertTrue(engine.graph.get_state(engine.thread).next)
+                finally:engine.close()
+            original=tuple(owner.store.db.execute('SELECT * FROM wf_operations').fetchone())
+            registry.handlers['choose']=replace(registry.handlers['choose'],function=right)
+            with patch.object(Engine,'runtime_revision',return_value='after-bugfix'):
+                engine=Engine(owner,'partial',config,registry,partial)
+                try:
+                    result=engine.invoke()
+                    self.assertIn('work-b',[entry['node'] for entry in result['trace']])
+                    self.assertFalse(engine.graph.get_state(engine.thread).next)
+                finally:engine.close()
+            self.assertEqual(original,tuple(owner.store.db.execute('SELECT * FROM wf_operations WHERE op_id=?',(original[0],)).fetchone()))
+            print('T002/V1 settled application/saver boundary resumes under compatible changed handler; original prefix unchanged')
+
+
+from test_custody import IsolatedCustody
+
+
+class LeanHistoryTests(IsolatedCustody):
+    def test_persisted_task_check_commit_order_and_readonly_reopen(self):
+        from coherence_workflow.cli import Coordinate
+        from coherence_workflow.intake import approval_scope
+        from coherence_workflow.store import canonical, git, read_history
+        from test_intake import approved_fixture, declare_builtin_actions
+        from test_pi_adapter import manifest, environment
+        registry,config=configuration(self.project)
+        config['permissions']=['workflow.FileBytes','runner-git-commit']
+        registry.permissions=set(config['permissions'])
+        for name,effects in (('verify',('read',)),('checkpoint',('git','process'))):
+            next(n for n in config['nodes'] if n['id']==name)['side_effects']=list(effects)
+        contract,catalog=approved_fixture(self.project,digest(config));declare_builtin_actions(contract)
+        for ref in contract['approval_refs']:
+            if ref['gate_kind']=='implementation':
+                ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
+        raw='# retained actual workflow\n'+yaml.safe_dump(config)
+        with Authority(self.project) as owner:
+            coordinate=Coordinate(owner,'run',contract,catalog,config,self.parent,manifest(self.project,tools=False),environment())
+            def choose(context):
+                coordinate.select(context)
+                task=coordinate.contract['tasks'][0]
+                request=coordinate.verification.request_sample(task,{'id':'fixture-manual'},'owned.txt',digest(config))
+                coordinate.verification.answer_sample(request,{'binding_hash':digest(request),'action':'approve'},verify_owner=lambda answer:None)
+                coordinate.verification.require_sample(request,task,digest(config))
+                return {'outcome':'left'}
+            def work(context):
+                (self.project/'owned.txt').write_text('first\n')
+                return {'outcome':'ok'}
+            for name,fn in {'intake':coordinate.intake,'choose':choose,'work-a':work,
+                            'verify':coordinate.verify,'checkpoint':coordinate.checkpoint}.items():
+                registry.handlers[name]=replace(registry.handlers[name],function=fn)
+            for name,effects in (('verify',('read',)),('checkpoint',('git','process'))):
+                registry.handlers[name]=replace(registry.handlers[name],side_effects=effects,reconcile=coordinate.reconcile_effect)
+            engine=Engine(owner,'run',config,registry,self.project,workflow_source=raw)
+            try:
+                result=engine.invoke()
+                self.assertFalse(engine.graph.get_state(engine.thread).next)
+                self.assertTrue(result['trace'])
+                history=read_history(owner.store.db,'run')
+                self.assertEqual(history['attempts'][0]['workflow_yaml'],raw)
+                self.assertEqual(json.loads(history['attempts'][0]['graph']),config)
+                self.assertEqual(history['tasks'][0]['result_sha'],git(self.project,'rev-parse','HEAD').decode().strip())
+                self.assertNotEqual(history['tasks'][0]['baseline_sha'],history['tasks'][0]['result_sha'])
+                kinds=[event['kind'] for event in history['events']]
+                self.assertLess(kinds.index('task_selected'),kinds.index('check_observed'))
+                self.assertLess(kinds.index('check_observed'),kinds.index('task_checkpointed'))
+                check=next(e for e in history['events'] if e['kind']=='check_observed')
+                self.assertEqual(check['details']['status'],'satisfied')
+                self.assertTrue(check['details']['evidence_id'])
+                decision=next(e for e in history['events'] if e['kind']=='manual_stop_answered')
+                self.assertEqual(decision['details']['action'],'approve')
+                self.assertTrue(decision['details']['binding_hash'])
+                print('T002/V1 persisted task/check/commit',canonical(history['tasks']), 'ordered events',len(history['events']))
+            finally:
+                engine.close()
+                for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
+                    receipt=json.loads(row[0])
+                    if receipt not in self.receipts:self.receipts.append(receipt)
+            database=owner.database
+        before=database.read_bytes()
+        db=sqlite3.connect(database.as_uri()+'?mode=ro',uri=True);db.row_factory=sqlite3.Row
+        try:
+            db.execute('BEGIN');self.assertEqual(read_history(db,'run'),history)
+            with self.assertRaises(sqlite3.OperationalError):db.execute("UPDATE wf_runs SET state='bad'")
+        finally:db.close()
+        self.assertEqual(before,database.read_bytes())
+
+    def test_old_records_unchanged_and_versioned_reader(self):
+        from coherence_workflow.store import canonical, read_history
+        with Authority(self.project) as owner:
+            owner.store.reserve('old','historical-full-code-pin')
+            op=owner.store.intent('old','sdk','sdk-turn',{'old_pin':'original'},{'private':'DO_NOT_PUBLISH'})
+            owner.store.transition(op['op_id'],'intent','completed',{'outcome':'settled','secret':'DO_NOT_PUBLISH'})
+            owner.store.db.execute('CREATE TABLE old_pinned_inputs(pin TEXT)')
+            owner.store.db.execute("INSERT INTO old_pinned_inputs VALUES('historical-source-and-runtime-pin')")
+            database=owner.database
+        before=database.read_bytes()
+        db=sqlite3.connect(database.as_uri()+'?mode=ro',uri=True);db.row_factory=sqlite3.Row
+        try:
+            snapshot='\n'.join(db.iterdump())
+            history=read_history(db,'old')
+            self.assertEqual(history['execution_support'],'historical-read-only')
+            self.assertEqual(history['run']['config_hash'],'historical-full-code-pin')
+            self.assertNotIn('DO_NOT_PUBLISH',canonical(history))
+            self.assertEqual(history['observed_liveness'],None)
+            with self.assertRaisesRegex(Blocked,'reader version'):read_history(db,'old',version=999)
+            self.assertEqual(snapshot,'\n'.join(db.iterdump()))
+        finally:db.close()
+        self.assertEqual(before,database.read_bytes())
+        with Authority(self.project) as owner:
+            registry,config=configuration(self.project)
+            with self.assertRaisesRegex(Blocked,'historical run is read-only'):
+                Engine(owner,'old',config,registry,self.project)
+            self.assertEqual(owner.store.db.execute('SELECT pin FROM old_pinned_inputs').fetchone()[0],'historical-source-and-runtime-pin')
+            self.assertEqual(snapshot,'\n'.join(owner.store.db.iterdump()))
+        unknown=sqlite3.connect(':memory:');unknown.execute('CREATE TABLE wf_meta(version INTEGER)');unknown.execute('INSERT INTO wf_meta VALUES(99)')
+        try:
+            with self.assertRaisesRegex(Blocked,'unsupported application schema'):read_history(unknown,'old')
+        finally:unknown.close()
+        print('T002/V2 legacy fixture byte/content unchanged; unknown reader refused; executable adoption refused')
 
 
 if __name__=='__main__': unittest.main()

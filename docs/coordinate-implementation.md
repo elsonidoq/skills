@@ -12,7 +12,8 @@ read error is returned with a correction so the same attempt can continue. Optio
 is recorded but never vetoes a settled exact-compatible session. Required/manual gates, scoped
 external authority, own-child custody and check-before-focused-runner-commit remain blocking.
 This refactor is delivered by approved instruction-managed writer checkpoints; it does not
-bootstrap itself through this CLI. T002/T003 retain history/review simplification work.
+bootstrap itself through this CLI. T002 delivers revision-aware history below; T003 retains
+review/input simplification work.
 
 The suite skill is a thin executable interface; runtime installation remains optional/explicit.
 No global installation or automatic reload is performed. The standalone
@@ -87,8 +88,9 @@ block early. Only registered bounded task-progress/repair/review/question cycles
 cycles or blind effect retries are rejected. Definition order is not scheduling; configured
 handlers/outcome edges/profile/skill bindings determine actual LangGraph routes. Reviewer
 nodes are read-only and role isolated; actual fresh-first SDK session selection and current
-full-range review are required, not a green synthetic handler. Runtime configuration/registry/source
-and schema identities are pinned; changed inputs cannot silently apply to an existing run.
+full-range review are required, not a green synthetic handler. Configuration, declared registry
+protocols, schemas and approved inputs remain compatibility boundaries; runtime source bytes
+are not permanent run eligibility. See revision-aware attempts below.
 
 ## Read-only inventory before launch approval
 
@@ -130,14 +132,11 @@ solely as owned-file ancestors are allowed, but unrelated children and replaceme
 existing ancestor still block. This is local cooperative custody, not a hostile-filesystem
 atomic snapshot or a sandbox.
 
-Runtime code changes invalidate Engine's immutable identity for an existing run. `resume`
-cannot silently renew that identity. The supported `control cancel` path reconciles and
-records cancellation but currently **retains the reservation**; it is not a release/reset
-API. Only successful acceptance releases a reservation. Consequently a blocked reserved
-run whose runtime identity has changed cannot currently be resumed or replaced through
-supported interfaces. Stop and report this blocker; never clear SQL/reservations, rewrite
-history, manufacture approval, or claim cancellation enables a fresh run. A separate
-owner-approved implemented settlement/migration capability is required in that case.
+A compatible runtime bugfix can open a new revision-aware attempt at a settled boundary.
+It does not rewrite old run identity or authorize replay of incomplete effects. The supported
+`control cancel` path still retains the reservation; only acceptance releases it. Historical
+runs without the new attempt protocol are read-only/unsupported for execution, not silently
+adopted. Never clear reservations, manufacture approval or reinterpret old pins.
 
 ## Storage, launch and failure rules
 
@@ -441,8 +440,8 @@ or hostile same-UID isolation certification.
 The settled `Store.backup` API requires explicit scoped backup authorization, no outstanding
 operations/alarms and a fresh canonical destination. It uses SQLite's backup API (including
 committed WAL state) and integrity check, never a main-file-only copy. No automatic schema
-migration or downgrade is provided. Changed runtime/config/registry/schema/resources/inputs/
-approvals/host hashes block affected continuation; source/profile changes require the original
+migration or downgrade is provided. Changed config/declared registry protocol/schema/resources/inputs/
+approvals block affected continuation; compatible runtime revisions do not; source/profile changes require the original
 producing approval, not a resume flag.
 
 ## Bounded repair and independent acceptance
@@ -857,8 +856,51 @@ Exact checkpoint-bound non-content Git argv is the sole retained argv exception,
 against original operation/task/path/message identity for focused receipt recovery.
 
 Old private/test SQL/event rows remain historical and are NOT scrubbed or relabeled as redacted.
-Changed code/input/protocol identities do not silently apply to pinned old runs. Lost private
+Historical pinned runs remain read-only; new attempts use declared protocol/input compatibility, not whole-code identity. Lost private
 payload after interruption cannot be reconstructed/replayed from SQL; unknown effects still
 block for explicit reconciliation, preserving partial work and prior receipts. Check evidence
 is separately bounded registered-oracle output and must be non-sensitive/sanitized; this is
 process-payload minimization, not a general secret classifier or blanket transcript redaction.
+
+
+## T002 revision-aware attempts and semantic history
+
+This approved amendment retires immutable whole-runtime/module/callable hash eligibility
+and per-node code/schema rehash and workflow reload. Admission still validates the actual
+workflow/resources, declared handler versions/schemas, configured authority and task bounds.
+`Engine.invoke` checks current configuration/authority compatibility once, not before each
+node. Runtime changes that alter a handler protocol must change its declared version; this
+is not a promise that arbitrary unversioned incompatible code is safe.
+
+`wf_attempts` records ordered runtime-revision attempts, compatibility, exact supplied workflow
+YAML and effective graph. Programmatic callers without source bytes retain the serialized
+effective configuration. Revision is checkout Git HEAD (null without Git), an observation,
+not an attestation of clean/identical source bytes. Unchanged revisions reuse the same attempt;
+a changed revision appends one only if original operations are completed, alarms resolved and
+original questions settled. The same LangGraph thread/sync SQLite saver and ordered application
+receipts are reused: completed effects are reconciled, not dispatched again. Pending SDK/tool/
+Git effects stop even same-revision reliance; no automatic migration or new recovery apparatus.
+Config/schema/authority incompatibility stops affected execution and requires explicit renewal.
+
+Use `store.read_history(db, run, version=1)` on a private `mode=ro` SQLite connection in a
+`BEGIN` snapshot; see the schema owner for the semantic fields. It never opens a writer,
+deserializes saver checkpoints or publishes files. Actual checks/decisions/task states, baseline/
+result SHAs, dependency order and effect refs stay ordered in SQLite. History is distinct from
+optional metrics and files: absent counters stay null; publication errors report an exception
+class only and cannot replace success or mask the original execution error in CLI `finally`.
+State projections now distinguish `recorded_state` from observed `controller_live`; recorded
+running is not evidence of a live controller. Raw private history/configuration is not a public
+HTTP DTO; public projection details remain an explicit allowlist/hashes, never raw receipts.
+
+Old application-v1 records/pins are not rewritten. The reader labels records with no attempts
+`historical-read-only`; missing retained definitions stay missing rather than borrowing current
+YAML. Engine refuses executable adoption. Unknown application/reader versions are unsupported,
+with no downgrade or auto-migration. Internal obsolete proof tables are not a frozen reader API.
+
+The monitor's [v1 contract](../specs/004-workflow-monitor/contracts/monitor-v1.md), especially
+Eligible runs and pin proof, SQL read/noninterference, and Public DTO field allowlist, needs
+separate reader/data-model/source/task approval renewal before consuming this runtime. Its
+full Engine-pin/unchanged-runtime assumptions no longer hold; parent/proof-table consumers
+also need renewal when T003 retires those protocols. Retain read-only/privacy/honest-unknown
+goals, not an unchanged-app compatibility promise. This task does not implement the app,
+renew its approvals, or touch/recover the existing incomplete monitor attempt.

@@ -215,17 +215,16 @@ class VersionRecoveryTests(unittest.TestCase):
             self.assertEqual(target.execute('SELECT COUNT(*) FROM wf_events').fetchone()[0],3);target.close()
             print('SQLite backup',canonical(backup))
 
-    def test_active_resource_config_and_input_drift_block(self):
+    def test_changed_resource_and_authority_refused_at_attempt_admission(self):
         registry,config=configuration(self.project)
         with Authority(self.project) as owner:
             engine=Engine(owner,'run',config,registry,self.project,input_identity={'contract':'original'})
-            try:
-                engine.input_identity['contract']='changed'
-                with self.assertRaisesRegex(Blocked,'drift'):engine.invoke()
-                engine.input_identity['contract']='original'
-                (self.project/'skill-a.md').write_text('changed resource')
-                with self.assertRaisesRegex(Blocked,'drift'):engine.invoke()
-            finally:engine.close()
+            engine.invoke();engine.close()
+            with self.assertRaisesRegex(Blocked,'incompatible'):
+                Engine(owner,'run',config,registry,self.project,input_identity={'contract':'changed'})
+            (self.project/'skill-a.md').write_text('changed resource')
+            with self.assertRaisesRegex(Blocked,'drift'):
+                Engine(owner,'run',config,registry,self.project,input_identity={'contract':'original'})
 
     def test_future_schema_rejected_without_downgrade_or_deserialization(self):
         root=self.project/'.coherence/workflow';root.mkdir(parents=True,mode=0o700)

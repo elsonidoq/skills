@@ -78,6 +78,16 @@ telemetry is observed, not an execution veto; scoped external action and own-chi
 remain required. This approved refactor is delivered through bounded instruction-managed
 owner-selected writer checkpoints, not by launching the runtime under refactor.
 
+Durability uses existing LangGraph/SQLite and ordered task/check/decision/review/effect history.
+Compatible runtime revisions may append new attempts only at settled boundaries; whole-code
+identity is not permanent eligibility. Current configuration/schema/authority incompatibility
+and incomplete SDK/tool/Git effects still block affected replay. Retained actual YAML/graph and
+private semantic SQLite reader v1 are documented in the operating/schema owners. Old pins and
+records remain historical/read-only or explicitly unsupported, never auto-migrated. Optional
+metrics/publication cannot veto authoritative results; recorded state is not observed liveness.
+Monitor-v1 needs separate reader/data-model/source/task approval renewal for retired Engine-pin
+and parent/proof assumptions; no unchanged-app compatibility or monitor remediation is implied.
+
 Standalone CLI needs no Paseo. Interactive-parent requires selected public transport (Paseo0.9.2
 tested), verified actual launching-parent and registered ask_user readiness/real tool provenance.
 Missing UI stays pending; never silent polling or fabricated answers. Original-conversation

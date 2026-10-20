@@ -157,7 +157,7 @@ class Coordinate:
         self.contract, receipt = admit(self.authority.project, self.contract,
             Approvals(self.authority.project, self.catalog), digest(self.config), legacy_settled=False)
         pin = digest({'contract': self.contract, 'config': self.config, 'manifest': self.manifest,
-                      'environment': self.environment, 'host_hash': content_hash(host_resource())})
+                      'environment': self.environment})
         with self.store.transaction() as db:
             old = db.execute('SELECT * FROM wf_run_inputs WHERE run_id=?', (self.run,)).fetchone()
             if old:
@@ -981,7 +981,12 @@ def status(project, run):
         if not row:
             raise Blocked('unknown run')
         from .projections import records, latest_metrics
-        metrics=latest_metrics(records(db,run)[1])
+        metrics_reason=None
+        try:
+            metrics=latest_metrics(records(db,run)[1])
+        except Exception as exc:
+            metrics=[]  # Optional observations never replace SQL state.
+            metrics_reason='metric observation unavailable: '+type(exc).__name__
         has_reviews=db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_reviews'").fetchone()
         reviews=[dict(r) for r in db.execute('SELECT review_id,base_sha,head_sha,host_op,result,independent FROM wf_reviews WHERE run_id=? ORDER BY rowid',(run,))] if has_reviews else []
         findings=[dict(r) for r in db.execute('SELECT f.* FROM wf_findings f JOIN wf_reviews r USING(review_id) WHERE r.run_id=?',(run,))] if has_reviews else []
@@ -997,7 +1002,7 @@ def status(project, run):
                     'outbox':[dict(r) for r in db.execute('SELECT o.event_id,o.stage,d.attempts,d.blocker,d.tool_receipt FROM wf_outbox o LEFT JOIN wf_parent_delivery d USING(event_id) WHERE o.run_id=?',(run,))]}
                     if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_parent_delivery'").fetchone() else None,
                 'reviews':reviews,'findings':findings,'repair_budgets':budgets,'metrics':metrics,
-                'metrics_unknown_reason':None if any(r['payload']['role'] in ('implement','repair','review') for r in metrics) else 'no agent observations recorded', 'operations': [dict(r) for r in db.execute('SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=?', (run,))],
+                'metrics_unknown_reason':metrics_reason or (None if any(r['payload']['role'] in ('implement','repair','review') for r in metrics) else 'no agent observations recorded'), 'operations': [dict(r) for r in db.execute('SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=?', (run,))],
                 'alarms': [dict(r) for r in db.execute('SELECT * FROM wf_alarms')], 'accepted': projection['payload']['acceptance']=='accepted'}
     finally:
         db.close()
@@ -1148,8 +1153,7 @@ def main(argv=None):
             load_workflow(registry, workflow_bytes, suite_root)
             maximum=max([config['defaults']['max_repair_attempts'],*[n.get('max_repair_attempts',0) for n in config['nodes']]])
             engine = Engine(authority,args.run,config,registry,suite_root,boundary_hook=coordinate.controls_boundary,max_task_visits=len(contract['tasks'])*(maximum+1)+maximum+1,
-                            input_identity={'contract':contract,'catalog_hash':digest(catalog),'manifest':manifest,'environment':environment,
-                                            'host_hash':content_hash(host_resource())})
+                            workflow_source=workflow_bytes, input_identity={'contract':contract,'catalog_hash':digest(catalog),'manifest':manifest,'environment':environment})
             coordinate.publish_run_binding()
             try:
                 if args.command == 'resume':
@@ -1180,8 +1184,8 @@ def main(argv=None):
                     raise
                 finally:
                     authority.store.settle_controller(args.run,outcome)
-                    from .projections import Publisher
-                    Publisher(authority,args.run).publish()
+                    from .projections import publish_observation
+                    publish_observation(authority,args.run)
             finally:
                 engine.close()
             print(canonical(status(args.project,args.run)))

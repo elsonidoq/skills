@@ -131,6 +131,12 @@
                 "cancelled",
                 "reconciled"
               ]
+            },
+            "recorded_state": {
+              "type": "string"
+            },
+            "controller_live": {
+              "type": ["boolean", "null"]
             }
           },
           "required": [

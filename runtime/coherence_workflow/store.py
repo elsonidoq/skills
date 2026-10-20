@@ -207,10 +207,48 @@ class Store:
                 raise Blocked("durable worktree reservation; reconcile original run")
             old = db.execute("SELECT * FROM wf_runs WHERE run_id=?", (run,)).fetchone()
             if old and (old['config_hash'] != config_hash or not old['reservation']):
-                raise Blocked("run identity is immutable")
+                raise Blocked("run configuration/reservation mismatch; reconcile original run")
             if not old:
                 db.execute("INSERT INTO wf_runs VALUES(?,?,'running',1)", (run, config_hash))
                 self.event(db, run, None, 'reserved', {})
+
+    def reserve_attempt(self, run, compatibility, revision, config, workflow_yaml):
+        """Only settled compatible boundaries can adopt a different runtime revision."""
+        with self.transaction() as db:
+            old = db.execute('SELECT * FROM wf_runs WHERE run_id=?', (run,)).fetchone()
+            exists = db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_attempts'").fetchone()
+            previous = db.execute('SELECT * FROM wf_attempts WHERE run_id=? ORDER BY attempt DESC LIMIT 1',
+                                  (run,)).fetchone() if exists else None
+            if old and not previous:
+                raise Blocked('historical run is read-only; runtime attempt protocol unsupported')
+            if old and old['config_hash'] != compatibility:
+                raise Blocked('attempt configuration/schema/authority incompatible; renew affected inputs explicitly')
+            if previous and previous['runtime_revision'] != revision:
+                if (db.execute("SELECT 1 FROM wf_operations WHERE run_id=? AND phase!='completed'", (run,)).fetchone() or
+                        db.execute("SELECT 1 FROM wf_alarms WHERE state='active'").fetchone()):
+                    raise Blocked('incomplete effects block new runtime attempt; reconcile original SDK/tool/Git operations')
+                if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_questions'").fetchone() and db.execute(
+                        "SELECT 1 FROM wf_questions WHERE run_id=? AND stage NOT IN ('continued','cancelled')", (run,)).fetchone():
+                    raise Blocked('pending original question blocks runtime attempt; settle original continuation')
+            reserved = db.execute('SELECT * FROM wf_runs WHERE reservation=1').fetchone()
+            if reserved and reserved['run_id'] != run:
+                raise Blocked('durable worktree reservation; reconcile original run')
+            if old and not old['reservation']:
+                raise Blocked('completed run is read-only; start separately approved work')
+            if not old:
+                db.execute("INSERT INTO wf_runs VALUES(?,?,'running',1)", (run, compatibility))
+                self.event(db, run, None, 'reserved', {})
+            db.execute("""CREATE TABLE IF NOT EXISTS wf_attempts(
+                run_id TEXT NOT NULL REFERENCES wf_runs, attempt INTEGER NOT NULL,
+                runtime_revision TEXT, compatibility TEXT NOT NULL,
+                workflow_yaml TEXT NOT NULL, graph TEXT NOT NULL,
+                PRIMARY KEY(run_id,attempt))""")
+            if not previous or previous['runtime_revision'] != revision:
+                attempt = previous['attempt'] + 1 if previous else 0
+                db.execute('INSERT INTO wf_attempts VALUES(?,?,?,?,?,?)',
+                           (run, attempt, revision, compatibility, workflow_yaml, canonical(config)))
+                self.event(db, run, None, 'attempt_started', {'attempt':attempt,
+                           'runtime_revision':revision,'compatibility':compatibility})
 
     def park(self, run):
         with self.transaction() as db:
@@ -316,3 +354,51 @@ class Store:
 
     def close(self):
         self.db.close()
+
+
+# Semantic reader v1. Internal proof tables are intentionally not a consumer API.
+HISTORY_FIELDS = frozenset(('task_id', 'attempt_id', 'attempt', 'runtime_revision',
+    'compatibility', 'state', 'sha', 'head', 'base', 'review_id', 'gate_id', 'action',
+    'evidence_id', 'item_id', 'status', 'exit_code', 'collected', 'revision',
+    'outcome', 'handler', 'version', 'count', 'maximum', 'failure_key',
+    'binding_hash', 'contract_hash', 'scope_hash', 'approval_hash', 'source_hash', 'baseline'))
+
+
+def read_history(db, run, *, version=1):
+    """Read an existing SQLite snapshot; never DDL, saver deserialization or writes.
+
+    Caller opens mode=ro and BEGIN for a consistent WAL snapshot. Legacy v1 runs
+    have no attempts/config archive: they remain historical, never executable.
+    Event detail fields are explicitly allowlisted; private receipts stay SQL.
+    Retained YAML/graph is private backend data, not a public projection.
+    """
+    if version != 1:
+        raise Blocked('unsupported history reader version; use semantic reader v1')
+    if [r[0] for r in db.execute('SELECT version FROM wf_meta')] != [1]:
+        raise Blocked('unsupported application schema; history cannot interpret version')
+    def table(name):
+        return bool(db.execute('SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=?', (name,)).fetchone())
+    row = db.execute('SELECT run_id,config_hash,state,reservation FROM wf_runs WHERE run_id=?', (run,)).fetchone()
+    if not row:
+        raise Blocked('unknown history run')
+    attempts = [dict(r) for r in db.execute('SELECT run_id,attempt,runtime_revision,compatibility,workflow_yaml,graph FROM wf_attempts WHERE run_id=? ORDER BY attempt', (run,))] if table('wf_attempts') else []
+    events = []
+    for event in db.execute('SELECT * FROM wf_events WHERE run_id=? ORDER BY seq', (run,)):
+        payload = json.loads(event['payload'])
+        details = {k:v for k,v in payload.items() if k in HISTORY_FIELDS and (v is None or type(v) in (str,int,bool))}
+        events.append({'seq':event['seq'], 'event_id':event['event_id'],
+                       'operation_id':event['op_id'], 'kind':event['kind'], 'details':details})
+    tasks = []
+    if table('wf_tasks'):
+        for task in db.execute('SELECT * FROM wf_tasks WHERE run_id=? ORDER BY approved_order', (run,)):
+            contract = json.loads(task['contract'])
+            baseline = json.loads(task['baseline']) if task['baseline'] else {}
+            checkpoint = json.loads(task['checkpoint']) if task['checkpoint'] else {}
+            tasks.append({'task_id':task['task_id'], 'order':task['approved_order'],
+                          'depends':contract['depends'], 'state':task['state'],
+                          'baseline_sha':baseline.get('head'), 'result_sha':checkpoint.get('sha')})
+    operations = [dict(r) for r in db.execute('SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=? ORDER BY rowid', (run,))]
+    return {'reader_version':1, 'application_schema':1, 'run':dict(row),
+            'execution_support':'attempt-v2' if attempts else 'historical-read-only',
+            'observed_liveness':None, 'attempts':attempts, 'tasks':tasks,
+            'events':events, 'operations':operations}

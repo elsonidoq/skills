@@ -72,3 +72,39 @@ class ProjectionRecoveryTests(unittest.TestCase):
         code=next(r for r in current if r['payload']['role']=='code')
         self.assertIsNone(code['payload']['session_id']);self.assertIsNone(code['payload']['input_tokens']['value'])
         self.assertIsNotNone(code['payload']['input_tokens']['unknown_reason'])
+
+
+class LeanProjectionTests(unittest.TestCase):
+    def test_unknown_metrics_and_publication_failure_preserve_result(self):
+        from coherence_workflow.engine import Engine
+        from coherence_workflow.projections import publish_observation
+        from fixtures.support import configuration
+        with tempfile.TemporaryDirectory() as temporary:
+            project=make_project(Path(temporary)/'project');registry,config=configuration(project)
+            with Authority(project) as owner:
+                engine=Engine(owner,'run',config,registry,project)
+                try:
+                    result=engine.invoke()
+                    publisher=Publisher(owner,'run');publisher.publish()
+                    state=state_record(owner.store.db,'run')['payload']
+                    self.assertEqual(state['recorded_state'],'running')
+                    self.assertIsNone(state['controller_live'])
+                    metrics=records(owner.store.db,'run')[1]
+                    self.assertTrue(metrics)
+                    for metric in metrics:
+                        self.assertIsNone(metric['payload']['input_tokens']['value'])
+                        self.assertIsNone(metric['payload']['session_id'])
+                    # Real non-tail filesystem corruption, not a mocked publisher.
+                    (publisher.root/'events.jsonl').write_text('invalid complete projection\n')
+                    observation=publish_observation(owner,'run')
+                    self.assertFalse(observation['published'])
+                    self.assertIn('Blocked',observation['unknown_reason'])
+                    with self.assertRaisesRegex(RuntimeError,'original execution error'):
+                        try:
+                            raise RuntimeError('original execution error')
+                        finally:
+                            publish_observation(owner,'run')
+                    self.assertEqual(engine.invoke(),result)
+                    self.assertTrue(all(row[0]=='completed' for row in owner.store.db.execute('SELECT phase FROM wf_operations')))
+                    print('T002/V2 null metrics; publication failure observed; saver/application success preserved')
+                finally:engine.close()

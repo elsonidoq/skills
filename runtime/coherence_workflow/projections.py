@@ -68,7 +68,7 @@ def state_record(db, run):
     cursor=0
     if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_projections'").fetchone():
         c=db.execute('SELECT seq FROM wf_projections WHERE run_id=?',(run,)).fetchone();cursor=c[0] if c else 0
-    payload={'status':status,'acceptance':'accepted' if accepted_current and status=='accepted' else 'blocked','config_hash':row['config_hash'],'checkpoint_ref':checkpoint,
+    payload={'recorded_state':row['state'],'controller_live':active if controller else None,'status':status,'acceptance':'accepted' if accepted_current and status=='accepted' else 'blocked','config_hash':row['config_hash'],'checkpoint_ref':checkpoint,
         'task_id':task['task_id'] if task else None,'node_id':active_op['node_id'] if active_op else None,
         'attempt_id':active_details.get('attempt_id'),'gate_ref':gate,
         'blocker':blocker,
@@ -215,3 +215,16 @@ class Publisher:
         with self.store.transaction() as db:
             db.execute('INSERT INTO wf_projections VALUES(?,?) ON CONFLICT(run_id) DO UPDATE SET seq=excluded.seq',(self.run,state['seq']))
         return state
+
+
+def publish_observation(authority, run):
+    """Optional publication cannot mask the authoritative result or original error."""
+    import sys
+    try:
+        Publisher(authority, run).publish()
+        return {'published':True, 'unknown_reason':None}
+    except Exception as exc:
+        # Avoid copying paths/receipts/private exception payloads into public output.
+        reason = 'projection publication unavailable: ' + type(exc).__name__
+        print(reason, file=sys.stderr)
+        return {'published':False, 'unknown_reason':reason}

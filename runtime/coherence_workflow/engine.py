@@ -13,7 +13,7 @@ from langgraph.types import Command
 import yaml
 
 from .registry import schemas, validate_schema
-from .store import Blocked, canonical, digest, safe_path
+from .store import Blocked, canonical, digest, safe_path, git
 
 
 class StrictLoader(yaml.SafeLoader):
@@ -167,29 +167,26 @@ class GraphState(TypedDict):
 
 
 class Engine:
-    def __init__(self, authority, run_id, config, registry, resource_root, phase_hook=None, *, max_task_visits=None, input_identity=None, boundary_hook=None):
+    def __init__(self, authority, run_id, config, registry, resource_root, phase_hook=None, *, max_task_visits=None, input_identity=None, boundary_hook=None, workflow_source=None):
         self.authority, self.store = authority, authority.store
-        config = load_workflow(registry, yaml.safe_dump(config), resource_root)
+        admitted = load_workflow(registry, workflow_source if workflow_source is not None else yaml.safe_dump(config), resource_root)
+        if admitted != config:
+            raise Blocked('retained workflow differs from configured graph')
+        config = admitted
         self.run_id, self.config, self.registry = run_id, config, registry
-        self.registry_hash, self.config_hash = registry.identity(), digest(config)
         self.resource_root = resource_root
-        self.schemas_hash = digest(schemas())
-        self.code_hash = self._runtime_code_hash()
+        # Compatibility is declared protocol/configuration/authority, not source bytes.
         self.input_identity = input_identity
-        self.input_hash = digest(input_identity)
-        # Revalidate even programmatic configs; callers cannot bypass the YAML seam.
-        self.hash = digest({'config':config,'registry':registry.identity(),'schemas':schemas(),
-                            'engine':'0.1.0','langgraph':'1.2.16','saver':'3.1.2',
-                            'inputs':input_identity, 'task_visit_bound':max_task_visits,
-                            'code':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()
-                                    for p in files('coherence_workflow').iterdir() if p.name.endswith('.py')}})
+        self.max_task_visits = max_task_visits
+        self.hash = self.compatibility_hash(config, registry, input_identity, max_task_visits)
+        self.revision = self.runtime_revision()
         self.progress = any(registry.handler(n).stage == 'task_select' for n in config['nodes'])
         if self.progress and (type(max_task_visits) is not int or max_task_visits < 0):
             raise Blocked('bounded approved task count required')
-        self.max_task_visits = max_task_visits
         self.hook = phase_hook or (lambda phase, op: None)
         self.boundary_hook = boundary_hook or (lambda: None)
-        self.store.reserve(run_id,self.hash)
+        self.store.reserve_attempt(run_id, self.hash, self.revision, config,
+                                   workflow_source.decode() if isinstance(workflow_source, bytes) else workflow_source or yaml.safe_dump(config))
         self.saver_db = sqlite3.connect(authority.database,check_same_thread=False,timeout=5)
         self.saver_db.execute('PRAGMA journal_mode=WAL')
         self.saver_db.execute('PRAGMA synchronous=FULL')
@@ -208,12 +205,17 @@ class Engine:
         self.graph = graph.compile(checkpointer=self.saver)
         self.thread = {'configurable':{'thread_id':run_id},'recursion_limit':256 if not self.progress else 16+8*max_task_visits}
 
+    @staticmethod
+    def compatibility_hash(config, registry, input_identity, max_task_visits):
+        return digest({'config':config,'registry':registry.identity(),
+                            'engine_protocol':2,'application_schema':1,'schemas':schemas(),
+                            'inputs':input_identity,'task_visit_bound':max_task_visits})
+
     def _node(self, node):
         handler = self.registry.handler(node)
         def execute(state):
             self.authority.assert_held()
             self.boundary_hook()
-            self._assert_pins()
             trace_before = state.get('trace',[])
             visit = sum(item['node'] == node['id'] for item in trace_before)
             if self.progress and visit > self.max_task_visits:
@@ -271,22 +273,20 @@ class Engine:
         return execute
 
     @staticmethod
-    def _runtime_code_hash():
-        return digest({p.name:hashlib.sha256(p.read_bytes()).hexdigest()
-                       for p in files('coherence_workflow').iterdir() if p.name.endswith('.py')})
-
-    def _assert_pins(self):
-        if self._runtime_code_hash() != self.code_hash or digest(schemas()) != self.schemas_hash:
-            raise Blocked('active runtime/schema content drift')
-        if (self.registry.identity() != self.registry_hash or digest(self.config) != self.config_hash or
-                digest(self.input_identity) != self.input_hash):
-            raise Blocked('active registry/config drift; renewal required')
-        load_workflow(self.registry,yaml.safe_dump(self.config),self.resource_root)
+    def runtime_revision():
+        """Observation only: installed packages without Git honestly lack a revision."""
+        try:
+            return git(Path(__file__).resolve().parent, 'rev-parse', 'HEAD').decode().strip()
+        except Blocked:
+            return None
 
     def invoke(self):
         self.authority.assert_held()
+        if self.compatibility_hash(self.config, self.registry, self.input_identity, self.max_task_visits) != self.hash:
+            raise Blocked('configuration/registry/authority drift; construct a compatible attempt before invocation')
         self.boundary_hook()
-        self._assert_pins()
+        if self.store.db.execute("SELECT 1 FROM wf_operations WHERE run_id=? AND kind!='graph' AND phase!='completed'", (self.run_id,)).fetchone():
+            raise Blocked('incomplete SDK/tool/Git effect; reconcile original operation before replay')
         if self.store.db.in_transaction:
             raise Blocked('application transaction held across saver')
         state = self.graph.get_state(self.thread)

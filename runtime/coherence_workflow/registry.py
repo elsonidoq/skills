@@ -2,9 +2,6 @@
 from dataclasses import dataclass, field
 from importlib.resources import files
 import json
-import hashlib
-import inspect
-from pathlib import Path
 
 from jsonschema import Draft202012Validator
 from referencing import Registry as SchemaRegistry, Resource
@@ -87,21 +84,11 @@ class Registry:
         return handler
 
     def identity(self):
-        def code_hash(function):
-            if function is None:
-                return None
-            try:
-                return {'module_hash':hashlib.sha256(Path(inspect.getfile(function)).read_bytes()).hexdigest(),
-                        'callable':function.__qualname__,
-                        'source_hash':hashlib.sha256(inspect.getsource(function).encode()).hexdigest()}
-            except (TypeError,OSError) as exc:
-                raise Blocked('handler source identity unavailable') from exc
         return digest({'version':self.version,
                        'handlers':{k:{'version':h.version,'kind':h.kind,'stage':h.stage,
                                       'outcomes':h.outcomes,'side_effects':h.side_effects,
                                       'input':h.input_schema,'result':h.result_schema,
-                                      'capabilities':h.required_capabilities,'code_hash':code_hash(h.function),
-                                      'reconcile_hash':code_hash(h.reconcile)}
+                                      'capabilities':h.required_capabilities}
                                    for k,h in self.handlers.items()},
                        'profiles':self.profiles,'skills':self.skills,
                        'capabilities':sorted(self.capabilities), 'permissions':sorted(self.permissions),

@@ -12,8 +12,8 @@ T001's host binding is resolved from the selected workflow profile and records r
 versus observed provider/model/effort. Its context and pressure measurements are optional
 observations, not admission or continuation vetoes. The `read_file` gateway contract accepts
 an authorized `offset`/`limit` and returns continuation metadata; an unavailable settled read
-returns a bounded correctable error to the same turn. This does not change retained database
-history semantics (T002) or full-range review/input contracts (T003).
+returns a bounded correctable error to the same turn. T002 adds revision-aware history below;
+full-range review/input contracts remain T003 work.
 
 ## Packaged contracts
 
@@ -90,7 +90,7 @@ schema versions block before DDL; there is no automatic migration/downgrade.
 | Application table | Actual foundation columns / constraints |
 | --- | --- |
 | `wf_meta` | `version` PK constrained to 1 |
-| `wf_runs` | `run_id` PK, immutable `config_hash`, `state`, boolean `reservation`; partial UNIQUE index allows one reserved run for the worktree |
+| `wf_runs` | `run_id` PK, compatibility `config_hash` (historical hashes retain their original semantics), `state`, boolean `reservation`; partial UNIQUE index allows one reserved run for the worktree |
 | `wf_operations` | `op_id` PK, run FK, `node_id`, `kind`, `args_hash`, `phase`, canonical `intent`, nullable canonical `result`; UNIQUE(run,node,kind) for acyclic node visits |
 | `wf_events` | global monotonically allocated `seq` PK, unique `event_id`, run/op FK, `kind`, canonical bounded/sanitized `payload`; UNIQUE(op,kind) prevents duplicate operation phase history |
 | `wf_processes` | operation PK/FK, `scope_kind=host|task_tools`, unique child `name`, containment and process identity JSON, nullable exit code, empty receipt and reconciliation JSON |
@@ -472,7 +472,7 @@ Schema version 1 and global SQL seq/event IDs provide stable identity/order, not
 external side effects. State is atomically replaced; append projections reconcile complete
 records/torn tails from SQL under the publisher lock. Status is read-only and reports lag.
 
-- **state payload**: `status`, `acceptance`, `config_hash`, `checkpoint_ref`, `task_id`, `node_id`, `attempt_id`, `gate_ref`, `blocker`, `projection_lag`, `alarms`, `pending_question_ref`, `outbox_ref`, `control_stage`.
+- **state payload**: `recorded_state`, `controller_live`, `status`, `acceptance`, `config_hash`, `checkpoint_ref`, `task_id`, `node_id`, `attempt_id`, `gate_ref`, `blocker`, `projection_lag`, `alarms`, `pending_question_ref`, `outbox_ref`, `control_stage`.
 - **event payload**: `kind`, `operation_ref`, `attempt_ref`, `details_schema`, `details`.
 - **metric payload**: `task_id`, `attempt_id`, `node_id`, `role`, `requested_profile`, `observed_runtime`, `observed_request`, `provider_acknowledged`, `skill_requested`, `skill_observed`, `session_id`, `context_group`, `reused`, `selection_reason`, `started_at`, `ended_at`, `elapsed_ms`, `outcome`, `retry_count`, `repair_count`, `evidence_refs`, `baseline_sha`, `result_sha`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, `context_start`, `context_end`, `threshold_start`, `threshold_end`, `headroom_start`, `headroom_end`, `telemetry_provenance`, `unknown_reasons`, `supersedes`.
 
@@ -520,3 +520,51 @@ is not durably cached; restart inspects custody/files/Git and blocks unknown eff
 reconstructs/replays a lost executable payload from hashes. Registered check outputs remain
 bounded allowlisted evidence with non-sensitive-data obligations, not generic raw tool stdout
 or a universal secret-classification system.
+
+
+## T002 semantic SQLite reader v1 / attempt protocol 2
+
+Application schema remains additive v1 (`wf_meta=1`); unknown versions are refused before
+DDL or saver deserialization. New `wf_attempts(run_id, attempt, runtime_revision,
+compatibility, workflow_yaml, graph)` has PK(run_id,attempt) and a run FK. Revision is nullable
+checkout HEAD, not code attestation; attempt is zero-based and ordered. `attempt_started`
+events associate each runtime revision with the subsequent ordered operational history.
+Task/SDK attempt IDs remain distinct (for example `A:0` in SDK intent/result); they can be
+associated by event sequence, not confused with the runtime attempt number. The actual supplied
+YAML is retained verbatim; `graph` is canonical effective configuration. Programmatic callers
+without YAML retain its serialization. No old record or pinned input is updated into new meaning.
+
+Compatibility covers configuration, declared registry handler/version/input/result/effect
+protocols, current schemas, approved inputs and task bounds. Module/function source hashes
+are deleted. A compatible changed revision appends an attempt only at a completed-effect,
+resolved-alarm, settled-question boundary. Incomplete SDK/tool/Git operations also prevent
+same-revision replay/reliance. Application receipts and the same sync SqliteSaver reconcile the
+existing prefix; no separate checkpoint/migration/compatibility platform is introduced.
+
+Private backend API: `store.read_history(db, run, version=1)`. Caller supplies a `sqlite3.Row`
+connection opened `mode=ro` and one deferred `BEGIN` WAL snapshot. This API performs SELECTs
+only and never touches saver tables. Returned semantic fields:
+
+- `reader_version=1`, `application_schema=1`, run ID/config hash/recorded state/reservation;
+  `execution_support=attempt-v2|historical-read-only`, `observed_liveness=null` (not observed).
+- Ordered `attempts`: the six columns above, including retained YAML/graph for private readers.
+- Ordered `tasks`: task ID/order/dependencies/state, nullable baseline/result SHAs.
+- Ordered `events`: sequence/event/operation refs, recorded kind and explicit scalar detail
+  allowlist (`HISTORY_FIELDS` in store.py): task/attempt/revision/check/evidence refs, actual
+  recorded statuses/check counts/exit codes, commit/review range and scoped decision hashes.
+  Arbitrary nested payloads, outputs, prompts, answers, argv and secrets are withheld.
+- `operations`: op/node/kind/phase refs; unresolved phases explain affected replay refusal.
+
+This is a private semantic surface, not a public web serialization. Definitions may contain
+private resource references. Public projections still publish only sanitized event digests
+and allowlisted metric/alarm fields; state adds `recorded_state` and `controller_live` (null
+without a controller record), distinct from the derived display status. Unknown metrics remain null, publication failure is observed
+without changing authoritative results, and metric observation failure in status is explicit.
+Check outputs/approvals/review findings remain restricted SQL evidence, not copied transcripts.
+
+Historical-v1 runs without attempts are readable with their original hashes and no invented
+revision/definition. Engine explicitly refuses adoption. Unknown reader or schema versions
+are unsupported, not migrated. The supported consumer interface is this semantic API, not a
+guarantee to retain every obsolete internal proof table. Monitor-v1's Engine-pin/parent/proof
+allowlist and unchanged-runtime assumptions require separate reader/data-model/source/task
+approval renewal (see the operating owner); no monitor implementation or approval is changed.
