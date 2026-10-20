@@ -39,6 +39,8 @@ class MonitoringStorageTests(ProjectTest):
             self.assertTrue(rec.register(descriptor(contract, {})))
             self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'PRIVATE-SENTINEL'}))
             self.assertIsNone(rec.emit(rec.occurrence(), 'checkpoint', 'passed', facts={'baseline': self.base, 'head': self.base, 'no_change': 'false'}))
+            rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'worker'})
+            self.assertNotIn('gap', [row[0] for row in owner.store.db.execute('SELECT kind FROM execution_observations')])
             with patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('private sentinel')):
                 self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'worker'}))
             rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'worker'})

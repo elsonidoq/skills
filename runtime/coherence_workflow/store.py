@@ -89,10 +89,6 @@ class Store:
             run_id TEXT PRIMARY KEY, recording_version INTEGER NOT NULL,
             description TEXT NOT NULL, started_at REAL NOT NULL, runner_identity TEXT);
         """)
-        try:
-            self.db.execute('ALTER TABLE execution_monitor_runs ADD COLUMN runner_identity TEXT')
-        except sqlite3.OperationalError:
-            pass
         self.db.executescript("""
         CREATE TABLE IF NOT EXISTS execution_observations(
             seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,

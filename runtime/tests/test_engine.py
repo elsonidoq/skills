@@ -51,10 +51,14 @@ class SequentialExecutionTests(ProjectTest):
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
         kinds = [row[0] for row in db.execute('SELECT kind FROM execution_observations ORDER BY seq')]
+        descriptor = json.loads(db.execute("SELECT description FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0])
+        identity = db.execute("SELECT runner_identity FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0]
         db.close()
         self.assertIn('started', kinds)
         self.assertIn('returned', kinds)
         self.assertIn('passed', kinds)
+        self.assertIn('prepare', next(phase for phase in descriptor['phases'] if phase['id'] == 'checkpoint')['possible_branches'])
+        self.assertIsNotNone(identity)
 
     def test_failed_check_not_passed_no_commit_or_automatic_retry(self):
         project = self.project

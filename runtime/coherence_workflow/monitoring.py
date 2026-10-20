@@ -22,7 +22,7 @@ PHASE_DESCRIPTORS = (
     {"id": "gate", "label": "Manual gate", "possible_branches": ["worker", "terminal"], "pre_recording": False},
     {"id": "worker", "label": "Task worker", "possible_branches": ["check", "terminal"], "pre_recording": False},
     {"id": "check", "label": "Project checks", "possible_branches": ["checkpoint", "terminal"], "pre_recording": False},
-    {"id": "checkpoint", "label": "Focused checkpoint", "possible_branches": ["review", "terminal"], "pre_recording": False},
+    {"id": "checkpoint", "label": "Focused checkpoint", "possible_branches": ["prepare", "review", "terminal"], "pre_recording": False},
     {"id": "review", "label": "Independent review", "possible_branches": ["terminal"], "pre_recording": False},
     {"id": "terminal", "label": "Run terminal", "possible_branches": [], "pre_recording": False},
 )
@@ -132,10 +132,13 @@ class Recorder:
     def emit(self, occurrence_id, phase, kind, *, task_id=None, facts=None):
         if not self.registered:
             return None
+        facts = facts or {}
+        if (not isinstance(occurrence_id, str) or not occurrence_id or phase not in PHASES or
+                kind not in KINDS or (task_id is not None and not isinstance(task_id, str)) or
+                not _closed_facts(phase, kind, facts)):
+            _warn("closed monitoring fact rejected")
+            return None
         try:
-            facts = facts or {}
-            if not isinstance(occurrence_id, str) or not occurrence_id or phase not in PHASES or kind not in KINDS or (task_id is not None and not isinstance(task_id, str)) or not _closed_facts(phase, kind, facts):
-                raise ValueError("closed monitoring fact rejected")
             if self.gap_pending:
                 self.store.append_monitor_observation(self.run, uuid.uuid4().hex, "terminal", None, "gap", {"recording_gap": True})
                 self.gap_pending = False
