@@ -6,6 +6,15 @@ and [reviewed contracts](../specs/003-coordinate-workflow/contracts/README.md) d
 approved design. The sections below describe current delivered tables, projections and limits,
 not hypothetical future installation.
 
+## T001 lean execution boundary
+
+T001's host binding is resolved from the selected workflow profile and records requested
+versus observed provider/model/effort. Its context and pressure measurements are optional
+observations, not admission or continuation vetoes. The `read_file` gateway contract accepts
+an authorized `offset`/`limit` and returns continuation metadata; an unavailable settled read
+returns a bounded correctable error to the same turn. This does not change retained database
+history semantics (T002) or full-range review/input contracts (T003).
+
 ## Packaged contracts
 
 `runtime/coherence_workflow/schemas/` contains the eight reviewed draft-2020-12 JSON schemas,

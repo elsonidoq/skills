@@ -93,7 +93,18 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 4.0.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-19
+**Version**: 4.1.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-20
+
+Amendment 4.1.0 records the owner's approved lean-runtime decision for the reviewed
+`workflow-runtime-lean` TinySpec/tasks: deletion-first usable coding retains five readiness
+facts (valid work, usable configuration, scoped approval, safe ownership and runnable
+verification), scoped authority, real REQUIRED/manual gates, focused commits and independent
+final review. It permits the bounded instruction-managed Terra writer checkpoints for this
+refactor without bootstrapping through the runtime under change. Optional telemetry is
+observed rather than an execution veto; current settlement, custody and external-action
+safeguards remain mandatory. MINOR reflects this material operational simplification.
+Rationale: remove duplicate proof protocols without creating another workflow mode.
+
 
 Amendment 4.0.0 records the current owner's actual ask_user decision **“Approve policy amendments”**
 for the three exact operative proposals in `specs/003-coordinate-workflow/tasks.md`,

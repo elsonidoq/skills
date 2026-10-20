@@ -72,6 +72,12 @@ intent assesses affected detail/boundaries and renews affected producing approva
 substitution or whole-plan regeneration. Ordinary model tokens have no financial approval/cap/
 reservation. Separately chargeable service actions need purpose/cost-impact and scoped authority.
 
+Lean T001 execution uses five boundary facts—valid work, usable selected configuration,
+scoped current authority, one-writer safe ownership and runnable REQUIRED checks. Optional
+telemetry is observed, not an execution veto; scoped external action and own-child custody
+remain required. This approved refactor is delivered through bounded instruction-managed
+Terra writer checkpoints, not by launching the runtime under refactor.
+
 Standalone CLI needs no Paseo. Interactive-parent requires selected public transport (Paseo0.9.2
 tested), verified actual launching-parent and registered ask_user readiness/real tool provenance.
 Missing UI stays pending; never silent polling or fabricated answers. Original-conversation

@@ -167,6 +167,30 @@ class BindingTests(IsolatedCustody):
         self.assertIn('live-sdk-summary-retry',proc.stdout)
 
 
+class LeanToolTests(unittest.TestCase):
+    def test_scoped_tools_continue_after_safe_error(self):
+        from coherence_workflow.pi_adapter import PiAdapter
+        tool=ProcessTool('read','1',{},lambda args:['/usr/bin/true'],(),{},
+                         lambda args, receipt: (_ for _ in ()).throw(Blocked('authorized read unavailable')))
+        output=PiAdapter.tool_output(tool,{}, {'replacement_allowed':True}, 0, 'op')
+        self.assertEqual(output['error']['operation'],'tool result read')
+        self.assertIn('continue',output['error']['correction'])
+
+    def test_unsettled_effect_blocks_replacement(self):
+        # Exercise the actual poll boundary: no tool result is returned and the
+        # pending effect remains when the Gateway refuses replacement.
+        from types import SimpleNamespace
+        adapter=object.__new__(PiAdapter)
+        adapter.pending={'call':{'proc':SimpleNamespace(poll=lambda:0),'op':'unsettled',
+                                 'tool':SimpleNamespace(result_reader=None),'args':{}}}
+        adapter.tool_queue=[];adapter.lifecycle=SimpleNamespace(generation=1)
+        adapter.gateway=SimpleNamespace(settle=lambda op, code:{'replacement_allowed':False})
+        adapter.send=lambda *args,**kwargs: self.fail('unsettled effect was released to the prompt')
+        with self.assertRaisesRegex(Blocked,'ORPHAN_PROCESS'):
+            adapter._poll_tools()
+        self.assertIn('call',adapter.pending)
+
+
 class LifecycleTests(IsolatedCustody):
     def test_decoder_bounded_utf8_and_partial_eof(self):
         d=Decoder(8)

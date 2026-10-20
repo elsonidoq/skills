@@ -28,6 +28,10 @@ class SessionPolicyTests(unittest.TestCase):
         return select_session(r or request(), candidates if candidates is not None else [candidate()],
                               now_ns=1000, max_age_ns=100, min_free_tokens_before_compaction=150000)
 
+    def test_unknown_metrics_do_not_veto_settled_original(self):
+        c=candidate(telemetry={})
+        self.assertEqual(self.choose(candidates=[c])['session_id'], 'a')
+
     def test_boundary_and_unknowns(self):
         self.assertEqual(self.choose()['session_id'], 'a')
         for field, value in [('occupancy',333617), ('occupancy',None), ('threshold',None),
@@ -35,7 +39,7 @@ class SessionPolicyTests(unittest.TestCase):
                              ('observed_ns',1001), ('provenance',None)]:
             c = candidate(); c['telemetry'][field] = value
             with self.subTest(field=field,value=value):
-                self.assertIsNone(self.choose(candidates=[c])['session_id'])
+                self.assertEqual(self.choose(candidates=[c])['session_id'], 'a')
 
     def test_exact_compatibility_every_role(self):
         for role in ['implement','repair','review','analysis']:

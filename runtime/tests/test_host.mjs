@@ -8,17 +8,17 @@ import { createHost, guardedStream, observer, Decoder, hash } from '../pi-host/h
 import { createAgentSession, DefaultResourceLoader, ModelRuntime, SettingsManager, SessionManager,
   shouldCompact } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
 import { stream } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist/api/openai-codex-responses.js';
-const profile={provider:'openai-codex',model:'gpt-6.1-sol',effort:'medium',observer_id:'codex-final-payload',observer_version:'1'};
-const model={provider:'openai-codex',id:'gpt-6.1-sol',api:'openai-codex-responses',baseUrl:'https://invalid.invalid',
+const profile={provider:'openai-codex',model:'gpt-5.6-terra',effort:'medium',observer_id:'codex-final-payload',observer_version:'1'};
+const model={provider:'openai-codex',id:'gpt-5.6-terra',api:'openai-codex-responses',baseUrl:'https://invalid.invalid',
   reasoning:true,contextWindow:500000,maxTokens:32000,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0}};
 const token=['e30',Buffer.from(JSON.stringify({'https://api.openai.com/auth':{chatgpt_account_id:'offline-fixture'}})).toString('base64url'),'signature'].join('.');
 
-test('bounded UTF8 decoder and exact observer reject unsupported mappings',()=>{
+test('lean configured binding and optional telemetry',()=>{
   const records=[];const decoder=new Decoder(v=>records.push(v),10);
   decoder.feed(Buffer.from('{"a":'));decoder.feed(Buffer.from('1}\n'));decoder.end();assert.deepEqual(records,[{a:1}]);
   assert.throws(()=>decoder.feed(Buffer.alloc(11,65)),/too large/);
   const invalid=new Decoder(()=>{});assert.throws(()=>invalid.feed(Buffer.from([255,10])));
-  assert.throws(()=>observer({...profile,effort:'high'}),/unsupported/);
+  assert.doesNotThrow(()=>observer({...profile,model:'gpt-5.6-terra',effort:'high'}));
   assert.throws(()=>observer({...profile,observer_id:'unknown'}),/unsupported/);
   assert.throws(()=>observer({...profile,observer_version:'2'}),/unsupported/);
 });
@@ -27,7 +27,7 @@ test('version, settings, trust and unsupported exact profile fail before provide
   const config=JSON.parse(fs.readFileSync(process.env.COHERENCE_HOST_MANIFEST,'utf8'));
   let sends=0;const before=globalThis.fetch;globalThis.fetch=async()=>{sends++;throw Error('zero-send sentinel');};
   try {
-    for(const patch of [{sdk_version:'0.88.0'},{profile:{...profile,effort:'high'}},
+    for(const patch of [{sdk_version:'0.88.0'},{profile:{...profile,model:''}},
       {profile:{...profile,observer_id:'unknown'}},{settings_hash:'wrong'},{trust:'global-override'}]) {
       await assert.rejects(createHost({...config,...patch},()=>{},async()=>{}));
     }
@@ -39,7 +39,7 @@ test('version, settings, trust and unsupported exact profile fail before provide
 
 test('actual SettingsManager merge, model override and effective threshold, no writes',()=>{
   let writes=0;
-  const global={compaction:{enabled:true,reserveTokens:16000,modelOverrides:{'openai-codex/gpt-6.1-sol':{reserveTokens:20000}}}};
+  const global={compaction:{enabled:true,reserveTokens:16000,modelOverrides:{'openai-codex/gpt-5.6-terra':{reserveTokens:20000}}}};
   const project={compaction:{reserveTokens:10000,keepRecentTokens:3000}};
   const settings=SettingsManager.fromStorage({withLock(scope,fn){if(fn(JSON.stringify(scope==='global'?global:project))!==undefined)writes++;}},{projectTrusted:true});
   const effective=settings.getCompactionSettings(model);

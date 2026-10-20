@@ -9,6 +9,8 @@ A thin interface to the installed `coordinate-implementation` CLI. Python LangGr
 owns orchestration and durable execution authority; Pi persistence is conversation data.
 The interface may launch, read status/pending, relay authorized inputs and explain recorded
 blockers. It cannot select tasks, models, sessions, retries, repairs, commits or acceptance.
+For the owner-approved lean-runtime refactor only, bounded instruction-managed Terra writers
+use the shared checkpoint contract rather than launching this CLI; this is not a new mode.
 No background LLM decides workflow transitions. No subjective execution batches, task-count
 routing, model escalation or coordination-feedback/STATE paperwork.
 
@@ -69,9 +71,9 @@ For an eligible interactive question, the runner wakes the SAME launching interf
 current committed request, perform prescribed parent-received, actually invoke registered
 ask_user with exact options/context and submit parent-answer. The facade never chooses graph
 outcomes. Unknown UI invocation blocks reasking; UI loss leaves durable pending, not success.
-Accepted answers pin the ORIGINAL saved worker conversation and role; low/unknown headroom,
-missing/unsafe original or changed scope blocks for explicit recovery/producing renewal,
-never fresh-session substitution. No direct ask_user in workers.
+Accepted answers pin the ORIGINAL saved worker conversation and role; missing/unsafe original
+or changed scope blocks for explicit recovery/producing renewal, never fresh-session substitution.
+Optional headroom telemetry is recorded, not a veto. No direct ask_user in workers.
 
 ## Recover Context
 

@@ -2,6 +2,18 @@
 
 ## Current delivery: executable implementation entry
 
+### Lean runtime amendment (T001)
+
+The operative admission is five facts: valid dependency-ready work with REQUIRED checks,
+usable selected configuration/resources, current scoped approval, one-writer safe ownership,
+and runnable verification. Recheck a fact only when its input changes. Agents receive scoped
+range reads (with continuation), bounded searches and owned edits/checks; a settled local tool
+read error is returned with a correction so the same attempt can continue. Optional telemetry
+is recorded but never vetoes a settled exact-compatible session. Required/manual gates, scoped
+external authority, own-child custody and check-before-focused-runner-commit remain blocking.
+This refactor is delivered by approved instruction-managed writer checkpoints; it does not
+bootstrap itself through this CLI. T002/T003 retain history/review simplification work.
+
 The suite skill is a thin executable interface; runtime installation remains optional/explicit.
 No global installation or automatic reload is performed. The standalone
 `scripts/coordinate-implementation` composes the foundation and pinned SDK with structured

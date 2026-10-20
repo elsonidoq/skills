@@ -36,9 +36,12 @@ export class Decoder {
   end() { check(this.used===0,'incomplete record'); }
 }
 export function observer(profile) {
+  // The selected workflow owns the exact binding.  This host verifies that
+  // selected binding at the provider boundary; it does not select Sol itself.
   closed(profile,['provider','model','effort','observer_id','observer_version']);
-  check(profile.observer_id==='codex-final-payload' && profile.observer_version==='1' && profile.provider==='openai-codex' &&
-    profile.model==='gpt-6.1-sol' && profile.effort==='medium','unsupported exact binding/observer');
+  check(profile.observer_id==='codex-final-payload' && profile.observer_version==='1' &&
+    ['openai-codex'].includes(profile.provider) && typeof profile.model==='string' && profile.model &&
+    typeof profile.effort==='string' && profile.effort,'unsupported binding observer');
   return body => {
     const observation={provider:profile.provider,model:body?.model??null,
       wire_effort:body?.reasoning?.effort??null,mapping:profile.observer_id+':'+profile.observer_version};
@@ -202,13 +205,8 @@ export async function createHost(config, emit, proxy) {
     if (!effective.enabled || usage?.tokens==null || !Number.isSafeInteger(usage.contextWindow)) return 'unknown_pressure_telemetry';
     return usage.contextWindow-effective.reserveTokens-usage.tokens<config.pressure_policy.min_free_tokens_before_compaction ? 'low_headroom' : null;
   }
-  const monitor=setInterval(()=>{
-    if(active && mode==='prompt' && !poisoned) {
-      let reason;try{reason=pressureReason();}catch(_){reason='unknown_pressure_telemetry';}
-      if(reason){poisoned=true;notify('pressure',{reason});void session.abort().catch(()=>{});}
-    }
-  },config.pressure_policy.monitor_interval_ms);
-  monitor.unref();
+  // Context measurements are reported in telemetry. They never cancel a
+  // settled configured operation; SDK lifecycle settlement remains authoritative.
   session.agent.streamFunction=guardedStream(session,config.profile,(observation,body)=>{
     acknowledgeControls();
     const outgoingTools=(body.tools??[]).map(t=>t.name).sort();
@@ -225,7 +223,7 @@ export async function createHost(config, emit, proxy) {
     check(mode==='summary' || skillExpanded,'skill not expanded into current prompt');
     notify('request_observation',{...observation,outgoing_tools:outgoingTools,skill_expanded:skillExpanded,
       expanded_prompt_hash:mode==='prompt'?hash(verifiedSkillPrompt??''):null,request_sequence:++requestSequence});
-  },()=>active && !poisoned && !questionRequested && (mode==='summary' || pressureReason()===null));
+  },()=>active && !poisoned && !questionRequested);
   function telemetry() {
     check(!active && !poisoned,'telemetry requires known settled idle boundary');
     const effective=settings.getCompactionSettings(session.model), usage=session.getContextUsage();
@@ -303,7 +301,7 @@ export async function createHost(config, emit, proxy) {
     return {input_id:value.input_id,sdk_enqueued:true,generation};
   }
   return {session,telemetry,run,abort,compact,ownerAnswer,control,get active(){return active;},get generation(){return generation;},
-    get poisoned(){return poisoned;},get mode(){return mode;},close:async()=>{clearInterval(monitor);await abort();session.dispose();}};
+    get poisoned(){return poisoned;},get mode(){return mode;},close:async()=>{await abort();session.dispose();}};
 }
 
 async function main() {

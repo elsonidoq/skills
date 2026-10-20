@@ -274,9 +274,8 @@ class PiAdapter:
             command=self.send('open' if 'open' in manifest else 'create',self.manifest,operation_id=self.host_op,attempt_id=node)
             response=self.wait_response(command,30)
             self.snapshot=response['snapshot']
-            if 'open' in manifest and (self.snapshot.get('reliable') is not True or
-                    self.snapshot.get('headroom') is None or self.snapshot['headroom']<manifest['pressure_policy']['min_free_tokens_before_compaction']):
-                raise Blocked('original conversation telemetry unknown/low; owner recovery required')
+            # A settled, exact-compatible original may be reused even when optional
+            # context telemetry is absent or low.  The snapshot remains recorded.
             self.session_id=self.snapshot['session_id']
             self._persist('host_ready',{'host_op':self.host_op,'snapshot':self.snapshot,'compatibility':self.compatibility},self.host_op)
         except BaseException:
@@ -425,6 +424,22 @@ class PiAdapter:
         self.pending[p['call']]={'op':op,'proc':proc,'tool':tool,'args':p['args']}
         self._tool_disposition(record,'launched',process_operation=op)
 
+    @staticmethod
+    def tool_output(tool, args, receipt, code, operation_id):
+        """Return a correctable local tool error without poisoning a settled turn."""
+        output = {'exit_code':code,'operation_id':operation_id}
+        if tool.result_reader is not None:
+            try:
+                output['output'] = tool.result_reader(args, receipt)
+            except (Blocked, OSError, UnicodeError, ValueError) as exc:
+                output['error'] = {'operation':'tool result read','message':str(exc),
+                                   'correction':'adjust the authorized path or arguments and continue'}
+        if len(canonical(output).encode()) > 65536:
+            return {'exit_code':code,'operation_id':operation_id,
+                    'error':{'operation':'tool result read','message':'tool result exceeds consumer limit',
+                             'correction':'request a smaller range and continue'}}
+        return output
+
     def _poll_tools(self):
         for call,tool in list(self.pending.items()):
             code=tool['proc'].poll()
@@ -432,11 +447,7 @@ class PiAdapter:
             receipt=self.gateway.settle(tool['op'],code)
             if not receipt.get('replacement_allowed'):
                 raise Blocked('ORPHAN_PROCESS: tool result cannot release prompt')
-            output = {'exit_code':code,'operation_id':tool['op']}
-            if tool['tool'].result_reader is not None:
-                output['output'] = tool['tool'].result_reader(tool['args'], receipt)
-                if len(canonical(output).encode()) > 65536:
-                    raise Blocked('registered tool result byte limit')
+            output = self.tool_output(tool['tool'], tool['args'], receipt, code, tool['op'])
             self.send('tool',{'generation':self.lifecycle.generation,'call':call,
                 'result':{'content':[{'type':'text','text':canonical(output)}],
                           'details':{'operation_id':tool['op'],'quiescent':True}}})

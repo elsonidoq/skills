@@ -6,14 +6,17 @@ from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+import unittest
+import tempfile
 
 import yaml
 
-from coherence_workflow.intake import approval_scope
-from coherence_workflow.store import canonical, digest, git
+from coherence_workflow.intake import approval_scope, content_hash
+from coherence_workflow.cli import Coordinate
+from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import snapshot
 from test_intake import approved_fixture, declare_builtin_actions
-from test_pi_adapter import manifest
+from test_pi_adapter import environment, manifest
 from test_custody import IsolatedCustody
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -80,7 +83,10 @@ def live_sequence(case, *, expected_check_count=2):
                     'sha256':config['skills']['coordinate']['sha256'],'name':'coordinate-implementation'}]
     sdk['resource_hash']=digest({k:sdk[k] for k in ('skills','tools','permissions','trust','system_prompt')})
     contract,catalog=approved_fixture(project,digest(config))
-    contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
+    selected=config['profiles']['sol-medium']
+    contract['execution_intent']['compatible_bindings']=[{**{k:selected[k] for k in ('provider','model','effort')},
+        'assessment':'isolated selected configuration','provenance':'current authorized live exercise'}]
+    contract['authorization_envelope']['profiles']=[selected]
     declare_builtin_actions(contract)
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':
@@ -138,6 +144,71 @@ def live_sequence(case, *, expected_check_count=2):
                          'source_revision':git(ROOT,'rev-parse','HEAD').decode().strip()}))
     finally:
         db.close()
+
+
+class A2LiveDeliveryTests(IsolatedCustody):
+    def test_single_task_terra_read_continuation_safe_error_check_and_commit(self):
+        self.assertEqual(os.environ.get('COHERENCE_LIVE'),'1','REQUIRED A2 live execution unavailable; NOT VERIFIED')
+        config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
+        terra={**config['profiles']['sol-medium'],'model':'gpt-5.6-terra'}
+        config['profiles']['terra-medium']=terra
+        for node in config['nodes']:
+            if node['type']=='agent': node['profile']='terra-medium'
+        large=self.project/'large.txt';large.write_text('A2 continuation source\n'+'x'*35400)
+        unavailable=self.project/'read-error.txt';unavailable.write_text('remove after admission')
+        sdk=manifest(self.project,tools=False)
+        sdk['profile']=terra
+        sdk['skills']=[{'path':str(ROOT/'skills/coordinate-implementation/SKILL.md'),
+                        'sha256':config['skills']['coordinate']['sha256'],'name':'coordinate-implementation'}]
+        sdk['resource_hash']=digest({k:sdk[k] for k in ('skills','tools','permissions','trust','system_prompt')})
+        for private in (self.project/'.coherence', self.project/'.coherence/workflow', self.project/'.coherence/workflow/sdk'):
+            private.chmod(0o700)
+        contract,catalog=approved_fixture(self.project,digest(config))
+        task=contract['tasks'][0];contract['tasks']=[task]
+        task['outcome']=('First read read-error.txt; its safe unavailable result must be corrected in this same attempt. '
+                         'Then read large.txt at offset 0 and use its continuation offset to read the rest (>32768 bytes). '
+                         'Finally read owned.txt and replace it exactly with '+repr('a2 complete\n')+'.')
+        task['required'][0]['check']['args']['expected']='a2 complete\n'
+        task['required'][0]['pass_condition']='real project file check after the owned edit'
+        contract['sources'] += [{'path':'large.txt','section':None,'sha256':content_hash(large),'kind':'source'},
+                                {'path':'read-error.txt','section':None,'sha256':content_hash(unavailable),'kind':'source'}]
+        contract['execution_intent']['compatible_bindings']=[{**{k:terra[k] for k in ('provider','model','effort')},
+            'assessment':'single isolated A2 configured binding','provenance':'current owner-authorized A2 exercise'}]
+        contract['authorization_envelope']['profiles']=[terra]
+        declare_builtin_actions(contract)
+        for ref in contract['approval_refs']:
+            ref['scope_hash']=(approval_scope(contract,digest(config)) if ref['gate_kind']=='implementation' else digest(contract['sources']))
+            catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
+        with Authority(self.project) as authority:
+            authority.store.reserve('a2',digest(config))
+            coordinate=Coordinate(authority,'a2',contract,catalog,config,self.parent,sdk,environment())
+            coordinate.intake({})
+            unavailable.unlink()  # Authorized path remains readable but safely unavailable at tool use.
+            self.assertEqual(coordinate.authority_check({}),{'outcome':'ok'})
+            self.assertEqual(coordinate.select({}),{'outcome':'work'})
+            observed_reads=[];launch=coordinate.gateway.launch
+            def capture_launch(node, tool_id, version, args, *rest, **kwargs):
+                if tool_id=='read_file': observed_reads.append(dict(args))
+                return launch(node,tool_id,version,args,*rest,**kwargs)
+            coordinate.gateway.launch=capture_launch
+            node=next(n for n in config['nodes'] if n['id']=='implement')
+            self.assertEqual(coordinate.implement({'node':node,'operation_id':'a2-implement'}),{'outcome':'ok'})
+            verification=coordinate.verify({})
+            self.assertEqual(verification,{'outcome':'ok'}, canonical({'verification':verification,
+                'owned':(self.project/'owned.txt').read_text(), 'reads':observed_reads,
+                'evidence':[json.loads(row[0]) for row in authority.store.db.execute("SELECT receipt FROM wf_checks WHERE run_id='a2'")]}))
+            self.assertEqual(coordinate.checkpoint({}),{'outcome':'ok'})
+            row=authority.store.db.execute("SELECT checkpoint FROM wf_tasks WHERE run_id='a2' AND task_id='A'").fetchone()
+            checkpoint=json.loads(row[0]);self.assertFalse(checkpoint['read_only'])
+            self.assertEqual((self.project/'owned.txt').read_text(),'a2 complete\n')
+            self.assertTrue(any(value.get('path')=='read-error.txt' for value in observed_reads))
+            self.assertTrue(any(value.get('path')=='large.txt' and value.get('offset',0)==0 for value in observed_reads))
+            self.assertTrue(any(value.get('path')=='large.txt' and value.get('offset',0)>=32768 for value in observed_reads))
+            observed=[json.loads(row[0]) for row in authority.store.db.execute("SELECT payload FROM wf_events WHERE kind LIKE 'sdk:%'")]
+            self.assertTrue(any(value.get('model')=='gpt-5.6-terra' and value.get('wire_effort')=='medium' for value in observed))
+            print(canonical({'proof':'a2-single-task','binding':terra,'baseline':checkpoint['parent'],
+                'result':checkpoint['sha'],'check':json.loads(authority.store.db.execute("SELECT receipt FROM wf_checks WHERE run_id='a2'").fetchone()[0]),
+                'read_operations':observed_reads,'custody':'all recorded process scopes settled before checkpoint'}))
 
 
 class SequentialCliTests(IsolatedCustody):
@@ -282,6 +353,45 @@ class CliPreflightTests(IsolatedCustody):
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
 
+class LeanReadinessTests(unittest.TestCase):
+    def test_five_facts_and_invalidation_boundaries(self):
+        # Intake is complete admission; a later tool boundary rejects only
+        # active-contract drift rather than replaying intake for each read.
+        from coherence_workflow.store import Authority
+        from test_review_repair import coordinate_fixture
+        with tempfile.TemporaryDirectory() as temporary:
+            from fixtures.support import make_project
+            project=make_project(Path(temporary)/'project')
+            with Authority(project) as authority:
+                coordinate=coordinate_fixture(project,authority)
+                coordinate.intake({})
+                coordinate.verify_action_origin()
+                coordinate.contract['tasks'][0]['outcome']='changed after intake'
+                with self.assertRaisesRegex(Blocked,'contract drift'):
+                    coordinate.verify_action_origin()
+
+
+class LeanCheckpointTests(unittest.TestCase):
+    def test_required_check_and_gate_precede_commit(self):
+        from coherence_workflow.git_effects import GitEffects
+        from coherence_workflow.store import Authority
+        from fixtures.support import make_project
+        with tempfile.TemporaryDirectory() as temporary:
+            project=make_project(Path(temporary)/'project')
+            class NoLaunch:
+                tools={}
+                def launch(self,*args,**kwargs):
+                    raise AssertionError('commit launched before required evidence/gate')
+            with Authority(project) as authority:
+                authority.store.reserve('lean','fixture')
+                effects=GitEffects(authority,'lean',NoLaunch())
+                task={'id':'T','owned_paths':['owned.txt'],'required':[{'id':'T/V'}]}
+                baseline=effects.begin(task)
+                (project/'owned.txt').write_text('changed')
+                with self.assertRaisesRegex(Blocked,'REQUIRED evidence/original gates'):
+                    effects.checkpoint(task,baseline,[],gates_satisfied=False)
+
+
 class InternalPythonBindingTests(IsolatedCustody):
     def test_actual_registered_write_read_helpers_bind_runtime_but_project_test_imports_remain_project_code(self):
         from coherence_workflow.cli import Coordinate
@@ -317,7 +427,7 @@ class InternalPythonBindingTests(IsolatedCustody):
                         receipt=c.gateway.settle(op,process.wait(timeout=10));self.assertTrue(receipt['replacement_allowed'])
                         read,reader=c.gateway.launch('read:'+str(index),'read_file','1',{'path':'owned.txt'})
                         observed=c.gateway.settle(read,reader.wait(timeout=10))
-                        self.assertEqual(c.gateway.tools['read_file'].result_reader({'path':'owned.txt'},observed),'first\n')
+                        self.assertEqual(c.gateway.tools['read_file'].result_reader({'path':'owned.txt'},observed)['text'],'first\n')
                 self.assertFalse(marker.exists())
                 # Distinct explicit oracle capability intentionally executes trusted project imports.
                 evidence=c.verification.run_checks(task)

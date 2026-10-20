@@ -137,10 +137,11 @@ class Coordinate:
             self.config['permissions'],Approvals(self.authority.project,self.catalog).verify)
 
     def verify_action_origin(self):
+        # Intake validates the complete contract once. Tool boundaries need only
+        # reject a changed/unadmitted active contract, not repeat full admission.
         pinned=self.store.db.execute('SELECT contract FROM wf_run_inputs WHERE run_id=?',(self.run,)).fetchone()
         if not pinned or pinned[0]!=canonical(self.contract):
             raise Blocked('active action contract drift/unadmitted; producing renewal required')
-        admit(self.authority.project,self.contract,Approvals(self.authority.project,self.catalog),digest(self.config))
 
     def authorize_action(self, name):
         self.verify_action_origin()
@@ -293,7 +294,8 @@ class Coordinate:
         return {'outcome': 'work'}
 
     def gates_satisfied(self, task):
-        admit(self.authority.project,self.contract,Approvals(self.authority.project,self.catalog),digest(self.config))
+        # Gate authority is checked at selection/checkpoint boundaries; complete
+        # task/config/schema admission belongs to intake and is not replayed here.
         approvals = Approvals(self.authority.project, self.catalog)
         for gate in task['gates']:
             refs = [ref for ref in self.contract['approval_refs'] if ref['record_ref'] == gate['approval_ref']]
@@ -313,19 +315,41 @@ class Coordinate:
     def _tools(self, task, *, review=False):
         project = self.authority.project
         readable = set(task['owned_paths']) | {s['path'] for s in self.contract['sources']} | {r['record_ref'] for r in self.contract['approval_refs']}
-        schema = lambda paths, write: {'type': 'object', 'additionalProperties': False,
-            'properties': {'path': {'enum': sorted(paths)}, **({'text': {'type': 'string', 'maxLength': 32768}} if write else {})},
-            'required': ['path', 'text'] if write else ['path']}
+        def schema(paths, write):
+            properties = {'path': {'enum': sorted(paths)}}
+            if write:
+                properties['text'] = {'type': 'string', 'maxLength': 32768}
+            else:
+                properties.update({'offset': {'type': 'integer', 'minimum': 0},
+                                   'limit': {'type': 'integer', 'minimum': 1, 'maximum': 32768},
+                                   'query': {'type': 'string', 'minLength': 1, 'maxLength': 1024}})
+            return {'type': 'object', 'additionalProperties': False, 'properties': properties,
+                    'required': ['path', 'text'] if write else ['path']}
         def read_result(args, receipt):
             if review:
                 from .review_documents import read_document
                 return read_document(self, self.review_repair.bundle(), args, receipt)
             path = safe_path(project, args['path'])
-            if not path.is_file() or path.stat().st_size > 32768:
-                raise Blocked('authorized read unavailable/too large')
-            return path.read_text()
+            if not path.is_file():
+                raise Blocked('authorized read unavailable: select an authorized regular file')
+            offset=args.get('offset',0);limit=args.get('limit',32768)
+            with path.open('r', encoding='utf-8') as source:
+                source.seek(offset)
+                text=source.read(limit)
+                if args.get('query'):
+                    matches=[line for line in text.splitlines() if args['query'] in line]
+                    text='\\n'.join(matches)
+                next_offset=source.tell()
+                eof=not source.read(1)
+            return {'text':text,'offset':offset,'next_offset':next_offset,'eof':eof,
+                    'continuation':None if eof else {'path':args['path'],'offset':next_offset,'limit':limit}}
+        # The contained helper performs the authorized file read; the result
+        # reader then returns only the requested bounded consumer chunk.
         read = ProcessTool('read_file', '1', schema(readable, False),
-            lambda args: [str(Path('/usr/bin/true').resolve())], (), self.environment, read_result)
+            lambda args: runtime_python('from coherence_workflow.store import safe_path; '
+                                       'p=safe_path(sys.argv[1],sys.argv[2]); '
+                                       'open(p, "r", encoding="utf-8").read(1)',
+                                       str(project), args['path']), (), self.environment, read_result)
         tools = {'read_file': read}
         if not review and task['owned_paths']:
             write = ProcessTool('write_file', '1', schema(task['owned_paths'], True),

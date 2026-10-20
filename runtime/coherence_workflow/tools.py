@@ -159,6 +159,19 @@ def reconcile(project, owned, baseline):
     return now
 
 
+def read_baseline(project):
+    """Read tools have no mutation scope: audit Git identity, not every file."""
+    return {'head':git(project,'rev-parse','HEAD').decode().strip(),
+            'index':hashlib.sha256(git(project,'ls-files','--stage','-z')).hexdigest()}
+
+
+def reconcile_read(project, baseline):
+    now=read_baseline(project)
+    if now != baseline:
+        raise Blocked('HEAD/index drift during scoped read; inspect before continuing')
+    return now
+
+
 def clean_owned(project, owned):
     config = git(project,'config','--null','--list')
     for entry in config.split(b'\0'):
@@ -232,6 +245,10 @@ class Gateway:
             details = json.loads(row['intent'])
             if details['scope_kind'] != 'task_tools':
                 continue
+            # Reads are settled/custodied separately but carry no mutation
+            # baseline into a later owned-write audit chain.
+            if not details['owned_paths']:
+                continue
             if row['phase'] != 'completed':
                 raise Blocked('unsettled task-origin operation')
             process, receipt = self._record(row['op_id'])
@@ -293,8 +310,12 @@ class Gateway:
         owned = list(tool.owned_paths)
         if len(set(owned)) != len(owned):
             raise Blocked('duplicate owned paths')
-        self._owned_admission(owned)
-        baseline = snapshot(self.authority.project, owned)
+        if owned or scope_kind=='host':
+            self._owned_admission(owned)
+            baseline = snapshot(self.authority.project, owned)
+        else:
+            # Read-only task tools do not recursively fingerprint the worktree.
+            baseline = read_baseline(self.authority.project)
         nonce = uuid.uuid4().hex
         name = self.containment.reserve_name()
         details = {'tool': tool_id, 'version': version, **self.command_identity(node,tool_id,argv,tool.environment),
@@ -370,7 +391,9 @@ class Gateway:
             if durable_receipt != receipt or json.loads(registered['identity']) != identity:
                 raise Blocked('durable registration differs before release')
             self.containment.member(receipt, identity, nonce)
-            if reconcile(self.authority.project,owned,baseline) != baseline:
+            current=(reconcile(self.authority.project,owned,baseline) if owned or scope_kind=='host' else
+                     reconcile_read(self.authority.project,baseline))
+            if current != baseline:
                 raise Blocked('owned path drift before release')
             self.store.transition(op,'prepared','released',{'nonce':nonce})
             hook('release_persisted',op)
@@ -474,6 +497,12 @@ class Gateway:
             if not original or original[0] != row['intent']:
                 raise Blocked('task-tool original intent/event mismatch')
             before, after = intent['baseline'], result['reconciliation']
+            if not intent['owned_paths']:
+                # A read is contained and settled, but carries no worktree
+                # mutation proof to splice into the host's task boundary audit.
+                if before != after:
+                    raise Blocked('scoped read Git drift')
+                continue
             if any(before[k] != expected[k] for k in ('head','index','files')):
                 raise Blocked('host task-tool audit chain gap')
             if after['head'] != before['head'] or after['index'] != before['index']:
@@ -503,9 +532,12 @@ class Gateway:
             if details['tool'] == 'runner-git-commit':
                 from .git_effects import reconcile_commit_process
                 current = reconcile_commit_process(self.authority, op)
+            elif row['scope_kind']=='host':
+                current=snapshot(self.authority.project,details['owned_paths'])
+            elif not details['owned_paths']:
+                current=reconcile_read(self.authority.project,details['baseline'])
             else:
-                current = (snapshot(self.authority.project,details['owned_paths']) if row['scope_kind']=='host'
-                           else reconcile(self.authority.project,details['owned_paths'],details['baseline']))
+                current=reconcile(self.authority.project,details['owned_paths'],details['baseline'])
             if (self.containment.populated(receipt) != 0 or current != recorded['reconciliation']):
                 raise Blocked('completed tool receipt no longer applicable')
             return recorded
@@ -518,6 +550,8 @@ class Gateway:
             observed, chain = reconcile_commit_process(self.authority, op), []
         elif row['scope_kind'] == 'host':
             observed, chain = self._host_reconciliation(operation, details)
+        elif not details['owned_paths']:
+            observed, chain = reconcile_read(self.authority.project, details['baseline']), []
         else:
             observed, chain = reconcile(self.authority.project, details['owned_paths'], details['baseline']), []
         result = {'logical_exit':row['exit_code'],'empty_receipt':empty,'reconciliation':observed,

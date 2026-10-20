@@ -249,6 +249,18 @@ class InventoryTests(unittest.TestCase):
         self.assertIn('retained/toy/.coherence/workflow/data', files)
 
 
+class LeanScopeTests(InventoryTests):
+    def test_owned_edit_preserves_ignored_material_and_rejects_escape(self):
+        from coherence_workflow.tools import owned_file
+        ignored=self.nested/'data'
+        before=snapshot(self.root,['owned.txt'])
+        (self.root/'owned.txt').write_text('owned edit')
+        after=snapshot(self.root,['owned.txt'])
+        self.assertEqual(before['files']['retained/toy/data'],after['files']['retained/toy/data'])
+        with self.assertRaisesRegex(Blocked,'unsafe relative path'):
+            owned_file(self.root,'../escape')
+
+
 class ResumeInventoryTests(unittest.TestCase):
     """Actual CLI/Engine/Coordinate recovery, without an SDK host or worker."""
     def setUp(self):

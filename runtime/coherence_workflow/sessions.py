@@ -76,10 +76,9 @@ def select_session(request, candidates, *, now_ns, max_age_ns,
             reason = 'role_isolation'
         elif role == 'review' and (not request.get('review_lineage') or c.get('review_lineage') != request['review_lineage']):
             reason = 'review_lineage'
-        else:
-            free = headroom(c.get('telemetry'),now_ns=now_ns,max_age_ns=max_age_ns)
-            if free is None or free < min_free_tokens_before_compaction:
-                reason = 'unknown_or_low_headroom'
+        # Telemetry is an observation, not an admission veto.  Settlement,
+        # role and exact configured resources above remain the reuse boundary.
+        # Missing/low context measurements are retained for reporting only.
         if reason:
             rejected[c['id']] = reason
         else:
