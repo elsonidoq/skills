@@ -12,12 +12,12 @@ import unittest
 
 import yaml
 from coherence_workflow.containment import Cgroup, process_identity
-from coherence_workflow.intake import approval_scope
+from test_intake import approval_scope
 from coherence_workflow.store import canonical, digest, git
 from coherence_workflow.tools import snapshot
 from fixtures.support import make_project
 from test_custody import IsolatedCustody
-from test_intake import approved_fixture, declare_builtin_actions
+from test_intake import approved_fixture
 from test_interaction import question
 from test_pi_adapter import manifest
 
@@ -76,14 +76,14 @@ class EntryCutoverTests(IsolatedCustody):
         catalog['workflow_correction_rules']=[{'criterion_ref':'A/V1','path':'answer.py','original_task_id':'A','task':correction,
             'scope_hash':digest(correction),'actor':'current owner standing mandatory isolated-test preapproval',
             'provenance':'Actual owner preapproved mandatory isolated tests and exact test-only answer/correction scenarios; not production approval.'}]
-        declare_builtin_actions(contract)
+
         for ref in contract['approval_refs']:
             if ref['gate_kind']=='implementation':ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
         for name,value in {'workflow.yaml':yaml.safe_dump(config),'tasks.json':canonical(contract),'catalog.json':canonical(catalog),'manifest.json':canonical(sdk)}.items():
             p=self.root/name;p.write_text(value);p.chmod(0o600)
         run='composed-cutover'
         args=['--project',str(project),'--run',run,'--workflow',str(self.root/'workflow.yaml'),'--tasks',str(self.root/'tasks.json'),
-            '--owner-catalog',str(self.root/'catalog.json'),'--manifest',str(self.root/'manifest.json'),'--containment',self.parent]
+            '--manifest',str(self.root/'manifest.json'),'--containment',self.parent]
         launcher=str(ROOT/'scripts/coordinate-implementation')
         env=dict(os.environ,COHERENCE_PYTHON=sys.executable)
         driver_env={**env,'PYTHONPATH':str(ROOT/'runtime')+':'+env['PYTHONPATH']}
@@ -181,19 +181,26 @@ sys.exit(main(['resume',*sys.argv[2:]]))
             'before':before,'after':after,'exit_codes':[crashed.returncode,parked.returncode,accepted.returncode,result.returncode]}
         (self.root/'proof.json').write_text(canonical(proof));print(canonical(proof))
 
-    def test_legacy_active_unknown_origin_is_denied_before_dispatch(self):
+class OptionalLegacyIntakeTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.project = make_project(self.root/'project')
+
+    def test_optional_legacy_origin_does_not_gate_intake(self):
         contract,catalog=approved_fixture(self.project,'config','legacy')
         for name,value in [('tasks.json',contract),('catalog.json',catalog)]:
             p=self.root/name;p.write_text(canonical(value));p.chmod(0o600)
         before=snapshot(self.project,[])
         result=subprocess.run([str(ROOT/'scripts/coordinate-implementation'),'intake','--project',str(self.project),
-            '--tasks',str(self.root/'tasks.json'),'--owner-catalog',str(self.root/'catalog.json'),'--config-hash','config'],
+            '--tasks',str(self.root/'tasks.json')],
             env=dict(os.environ,COHERENCE_PYTHON=sys.executable),capture_output=True,text=True,timeout=20)
-        self.assertEqual(result.returncode,2,result.stdout+result.stderr)
-        self.assertIn('legacy origin/writer reconciliation required',result.stdout)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertEqual(json.loads(result.stdout)['task_ids'], ['A', 'B'])
         self.assertEqual(before,snapshot(self.project,[]))
         self.assertFalse((self.project/'.coherence/workflow/workflow.sqlite').exists())
-        print('actual legacy-active/unknown CLI denial exit2, no database/dispatch/files/index mutation')
+        print('actual optional legacy-context CLI intake exit0, no database/dispatch/files/index mutation')
 
 
 class ActiveConsumersTests(unittest.TestCase):
@@ -259,7 +266,7 @@ class RollbackTests(IsolatedCustody):
             config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
             contract,catalog=approved_fixture(project,digest(config))
             owner.store.reserve(run,digest(config))
-            c=Coordinate(owner,run,contract,catalog,config,self.parent,manifest(project,tools=False),environment())
+            c=Coordinate(owner,run,contract,config,self.parent,manifest(project,tools=False),environment())
             c.intake({});binding=c.publish_run_binding();c.select({})
             from coherence_workflow.tools import Gateway
             # Explicit trusted rollback custody probe, not a configured agent-tool grant.
@@ -300,7 +307,7 @@ class RollbackTests(IsolatedCustody):
             p=self.root/name;p.write_text(payload);p.chmod(0o600)
         capability_denial=subprocess.run([str(selected_entry),'start','--project',str(project),'--run','unsupported-'+run,
             '--workflow',str(self.root/'workflow.yaml'),'--tasks',str(self.root/'tasks.json'),
-            '--owner-catalog',str(self.root/'catalog.json'),'--manifest',str(self.root/'manifest.json'),
+            '--manifest',str(self.root/'manifest.json'),
             '--containment',str(self.root)],env=dict(os.environ,COHERENCE_PYTHON=sys.executable),
             capture_output=True,text=True,timeout=20)
         self.assertEqual(capability_denial.returncode,2,capability_denial.stdout+capability_denial.stderr)

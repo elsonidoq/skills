@@ -633,8 +633,8 @@ class ProportionateValidationTests(unittest.TestCase):
     def test_optional_checks_cannot_silently_block(self):
         for key, clause, diagnostic in (
             ("planner", "Optional checks are not acceptance blockers", "validation-authority"),
-            ("tasks", "Optional checks do not become blockers", "validation-tasks"),
-            ("coordinator", "optional checks cannot compensate", "validation-execution"),
+            ("tasks", "optional task context", "validation-tasks"),
+            ("coordinator", "Project check commands are optional", "validation-execution"),
         ):
             with self.subTest(key=key):
                 self.assert_clause_required(key, clause, diagnostic)
@@ -643,8 +643,8 @@ class ProportionateValidationTests(unittest.TestCase):
         self.assert_clause_required("planner",
             "Never drop an owner-required check or approved\nsafety criterion without explicit authority",
             "validation-authority")
-        self.assert_clause_required("coordinator", "manual/permission gates block reliance", "validation-execution")
-        self.assert_clause_required("tasks", "owner-required criteria", "validation-tasks")
+        self.assert_clause_required("coordinator", "Never adopt existing dirty files", "validation-execution")
+        self.assert_clause_required("tasks", "real outcome", "validation-tasks")
 
     def test_timeout_narrows_remaining_work_without_blind_retry(self):
         for clause in ("Inspect a failed\nrun and its invocation", "unknown cause stops blind retries",
@@ -734,14 +734,14 @@ class InstructionTests(unittest.TestCase):
             ("planner", "Do not end the turn merely to report approval", "End the turn after approval", "continuation:"),
             ("planner", "automatically invoke `coordinate-implementation`", "wait for a separate execution request", "final-continuation:"),
             ("approval", "inside tasks", "separate new source", "legacy:"),
-            ("tasks", "stable task-local references", "unstable references", "task-contract:"),
+            ("tasks", "nonempty string `id`", "missing ID", "task-contract:"),
             ("brainstorm", "no more than three items", "unbounded agenda", "brainstorm:"),
             ("brainstorm", "Only in selected-production", "In any mode", "brainstorm:"),
             ("coordinator", "checkpoint per implementation/repair task", "checkpoint per batch", "execution-checkpoints:"),
-            ("coordinator", "Only satisfied REQUIRED items and fulfilled original gates release", "Any report releases", "execution-sequential:"),
-            ("coordinator", "TinySpec needs separate source/tasks", "source checklist only", "intake:"),
-            ("coordinator", "approved exact implementation/repair bindings", "agent default bindings", "execution-selection:"),
-            ("coordinator", "separately from planning/reviewer profiles", "inferred from planning profiles", "execution-selection:"),
+            ("coordinator", "real focused checkpoint", "Any report releases", "execution-sequential:"),
+            ("coordinator", "exactly six linter checks", "required source checklist", "intake:"),
+            ("coordinator", "owner-selected executor/effort", "agent default bindings", "execution-selection:"),
+            ("coordinator", "without silent substitutions", "substitute defaults", "execution-selection:"),
             ("coordinator", "never fresh-session substitution", "use a fresh session", "execution-strategy:"),
             ("adoption", "every unrelated byte", "custom content", "adoption:"),
             ("docs", "not substantive implementation authorization", "implementation authorization", "docs:"),
@@ -789,7 +789,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "interpret owner agreement within the explanation and scope actually presented", "constraint-scope:"),
             ("tasks", "A worker file-tool bound is not a task-contract loader bound", "task-concision:"),
             ("tasks", "State shared constraints once", "task-concision:"),
-            ("tasks", "preserve all required human/machine contract mappings", "task-concision:"),
+            ("tasks", "Keep task-specific work and useful checks clear", "task-concision:"),
             ("approval", "Ordinary drafting is not submitted-artifact correction", "draft-editing:"),
             ("approval", "without a supervisor decision", "draft-editing:"),
             ("planner", "producers may draft, revise, shorten and mechanically", "task-stage:"),
@@ -2040,24 +2040,20 @@ class RuntimeHandoffTests(unittest.TestCase):
             text=(ROOT/path).read_text()
             self.assertNotIn('parallelizable',text)
             self.assertNotIn('Tests are OPTIONAL',text)
-            self.assertIn('execution_intent',text)
+            self.assertIn('task', text)
             metadata=json.loads((ROOT/manifest).read_text())
             actual=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
             self.assertEqual(metadata['files'][path],actual)
             self.assertEqual(metadata['local_overrides'][path]['current_sha256'],actual)
             self.assertNotEqual(metadata['local_overrides'][path]['upstream_sha256'],actual)
 
-    def test_intent_operational_carriers_not_a_footer(self):
-        for path in ('skills/planner/SKILL.md','skills/tiny-spec/SKILL.md',
-                     'skills/task-generation/SKILL.md','skills/delegating-architectural-planning/SKILL.md'):
+    def test_task_producers_do_not_recreate_executor_eligibility_metadata(self):
+        for path in ('skills/planner/SKILL.md', 'skills/tiny-spec/SKILL.md',
+                     'skills/task-generation/SKILL.md', 'skills/delegating-architectural-planning/SKILL.md'):
             text=(ROOT/path).read_text()
-            carrier=checker.section(text,'## Intended executor before decomposition')
-            for phrase in ('unknown input blocks planning intake','planner/producer/reviewer profile',
-                           'decomposition_rationale','REQUIRED acceptance, dependencies, safety and approval gates never shrink',
-                           'no silent substitution, auto-escalation or unconditional'):
-                self.assertIn(phrase,carrier,path)
-                self.assertNotIn(phrase,carrier.replace(phrase,'REMOVED',1))
-        self.assertEqual(checker.check_contracts(checker.load_texts()),[])
+            self.assertNotIn('Root `execution_intent`', text, path)
+            self.assertNotIn('unresolved/incompatible intent blocks execution', text, path)
+        self.assertEqual(checker.check_contracts(checker.load_texts()), [])
 
 
 if __name__ == "__main__":

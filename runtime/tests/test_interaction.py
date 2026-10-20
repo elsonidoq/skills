@@ -218,8 +218,8 @@ class OriginalAnswerTests(IsolatedCustody):
         import sqlite3
         import yaml
         from coherence_workflow.cli import ROOT
-        from coherence_workflow.intake import approval_scope
-        from test_intake import approved_fixture, declare_builtin_actions
+        from test_intake import approval_scope
+        from test_intake import approved_fixture
         self.assertEqual(os.environ.get('COHERENCE_LIVE'),'1','NOT VERIFIED: live CLI/SDK test not enabled')
         config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
         contract,catalog=approved_fixture(self.project,digest(config))
@@ -231,7 +231,7 @@ class OriginalAnswerTests(IsolatedCustody):
             '(the six bytes f i r s t newline). Never reask the same question after seeing bound_owner_answer. '
             'The selected test answer is Preserve compatibility; if owner instead chooses Prefer new behavior, stop blocked.')
         contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
-        declare_builtin_actions(contract)
+
         for ref in contract['approval_refs']:
             if ref['gate_kind']=='implementation':
                 ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
@@ -245,7 +245,7 @@ class OriginalAnswerTests(IsolatedCustody):
         paths['manifest.json'].write_text(canonical(sdk))
         argv=[str(ROOT/'scripts/coordinate-implementation'),'start','--project',str(self.project),'--run','roundtrip',
               '--workflow',str(paths['workflow.yaml']),'--tasks',str(paths['tasks.json']),
-              '--owner-catalog',str(paths['catalog.json']),'--manifest',str(paths['manifest.json']),'--containment',self.parent]
+              '--manifest',str(paths['manifest.json']),'--containment',self.parent]
         env=dict(os.environ,COHERENCE_PYTHON=sys.executable)
         def receipts():
             db=sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite');db.row_factory=sqlite3.Row
@@ -498,29 +498,6 @@ class OriginalAnswerTests(IsolatedCustody):
 
 
 class AutonomyAdmissionTests(IsolatedCustody):
-    def test_approved_technical_tool_is_autonomous_while_paid_action_denies_zero_send(self):
-        from coherence_workflow.authority import AuthorityAdmission
-        with Authority(self.project) as owner:
-            gateway,operation,process=self.launch(owner)
-            ledger=Interaction(owner.store,'run')
-            result=gateway.settle(operation,process.wait(timeout=10))
-            self.assertTrue(result['replacement_allowed'])
-            self.assertFalse(ledger.pending())
-            profile=manifest(self.project,tools=False)['profile']
-            envelope={'profiles':[profile],'capabilities':[{'id':'separate_paid_service','effects':['paid_service'],
-                'purpose':'isolated negative admission fixture only','cost_impact':'No service call is made'}],
-                'external_paid_authority':'unresolved','approval_refs':[],'limits':[]}
-            admission=AuthorityAdmission(envelope,{'exact':profile},['separate_paid_service'],['separate_paid_service'],lambda *unused:None,store=owner.store,run='run')
-            self.assertEqual(admission.model(profile),profile,'ordinary approved model traffic received a financial gate')
-            sends=[]
-            with self.assertRaisesRegex(Blocked,'scoped authority'):
-                admission.external('separate_paid_service',lambda:sends.append('PROHIBITED'))
-            self.assertEqual(sends,[])
-            gaps=admission.gaps()
-            self.assertTrue(gaps and all(g['impact'] and g['options'] for g in gaps))
-            self.assertFalse(ledger.pending(),'ordinary action or denied service created a routine owner question')
-            print(canonical({'item':'T006/V4','technical_gateway_operation':operation,'paid_service_sends':0,
-                             'ordinary_model_financial_gate':False,'known_gaps':gaps,'semantic_limit':'bounded rationale inspection, not universal classification'}))
 
     def test_question_tool_requires_both_declared_tool_and_permission(self):
         from coherence_workflow.cli import Coordinate

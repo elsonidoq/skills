@@ -13,12 +13,12 @@ import unittest
 import yaml
 
 from coherence_workflow.engine import Engine
-from coherence_workflow.intake import approval_scope
+from test_intake import approval_scope
 from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import Gateway, snapshot
 from fixtures.support import configuration, make_project
 from test_custody import IsolatedCustody
-from test_intake import approved_fixture, declare_builtin_actions
+from test_intake import approved_fixture
 from test_pi_adapter import manifest, environment
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -37,14 +37,14 @@ def cli_inputs(case):
     sdk['resource_hash']=digest({k:sdk[k] for k in ('skills','tools','permissions','trust','system_prompt')})
     contract,catalog=approved_fixture(project,digest(config))
     contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
-    declare_builtin_actions(contract)
+
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     values={'workflow.yaml':yaml.safe_dump(config),'tasks.json':canonical(contract),'catalog.json':canonical(catalog),'manifest.json':canonical(sdk)}
     for name,value in values.items():
         path=case.root/name;path.write_text(value);path.chmod(0o600)
     return ['--project',str(project),'--run','sequence','--workflow',str(case.root/'workflow.yaml'),
-            '--tasks',str(case.root/'tasks.json'),'--owner-catalog',str(case.root/'catalog.json'),
+            '--tasks',str(case.root/'tasks.json'),
             '--manifest',str(case.root/'manifest.json'),'--containment',case.parent]
 
 
@@ -164,7 +164,7 @@ sys.exit(main(['start',*sys.argv[1:]]))
             (self.project/'owned.txt').write_text('approved bytes')
             task={'id':'A','owned_paths':['owned.txt'],'required':[{'id':'A/V1'}]}
             try:
-                with self.assertRaises(Blocked):GitEffects(owner,'run',gateway).checkpoint(task,baseline,[{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+                with self.assertRaises(Blocked):GitEffects(owner,'run',gateway).checkpoint(task,baseline,[{'item_id':'A/V1','status':'satisfied'}])
                 op=owner.store.db.execute("SELECT op_id FROM wf_operations WHERE kind='git-checkpoint'").fetchone()[0]
                 with self.assertRaises(Blocked):reconcile_checkpoint(owner,op)
                 self.assertEqual((self.project/'owned.txt').read_text(),'hook-mutation')

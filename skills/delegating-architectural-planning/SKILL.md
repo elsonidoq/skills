@@ -99,15 +99,10 @@ below supplement the generated artifacts and do not replace the SpecKit stage.
 
 ## Intended executor before decomposition
 
-Before Standard architecture or TinySpec task decomposition, capture the intended coding
-model class and effort; unknown input blocks planning intake, never infer it from the
-planner/producer/reviewer profile. Pass it unchanged to each architecture/task producer.
-Root `execution_intent` in the authoritative task JSON and matching human summary carry
-`model_class`, `effort`, `resolution` (unresolved/resolved), `assumptions`, `provenance`,
-`decomposition_rationale` and `compatible_bindings`. Each compatible binding records exact
-`provider`, `model`, `effort`, an `assessment` and its `provenance`; execution preflight
-checks the actual implementation/repair bindings only, not planning/reviewer profiles.
-This is planning intent, not execution permission or separately chargeable service authority.
+Use the owner's selected coding model and effort to tailor useful implementation guidance;
+never infer a substitute from the planner/producer/reviewer profile. Executor settings belong
+to actual runtime configuration. Task handoffs follow the shared `task-generation` six-check
+contract, not mandatory execution-intent, compatibility-assessment or provenance metadata.
 
 Use owner-guided qualitative scaffolding, not universal rankings or fixed thresholds:
 Luna: narrow coherent outcomes, named interfaces/invariants, context/edge-case pointers and
@@ -118,13 +113,9 @@ instructions without unnecessary micro-tasks. A more capable planner must not le
 implicit for a smaller executor. Record what is explicit/bounded, what choices remain open and
 uncertainty. REQUIRED acceptance, dependencies, safety and approval gates never shrink.
 
-Changed class/effort or exact binding requires a documented compatibility/revision assessment
-of affected boundaries/detail/assumptions, with producing review/current-content renewal where
-needed. Preserve unaffected tasks; no silent substitution, auto-escalation or unconditional
-whole-plan regeneration. Resolve approved exact compatible bindings before dispatch using
-explicit trusted owner/registry provenance; unresolved/incompatible intent blocks execution.
-Historical handoffs lacking intent return to the earliest affected producing renewal gate,
-preserving original source and approval evidence, never fabricated historical metadata.
+Preserve the selected executor and effort without silent substitution. Revise guidance when
+a real change affects the work, but do not require model assessments, approval/source receipts
+or regeneration of historical tasks to execute ordinary requested coding.
 
 ## Planner Standard adapter contract
 

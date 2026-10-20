@@ -52,12 +52,12 @@ def configuration(root):
         path = 'skill-'+id+'.md'
         hash = hashlib.sha256((root/path).read_bytes()).hexdigest()
         registry.skills['skill-'+id] = {'path':path,'sha256':hash,'resource_hash':hash}
-    stages = [('intake','code','intake'),('authority','gate','authority'),('custody','code','custody'),
+    stages = [('intake','code','intake'),('custody','code','custody'),
               ('choose','code','work'),('work-a','agent','work'),('work-b','agent','work'),
               ('verify','code','verification'),('checkpoint','code','checkpoint'),
               ('review','agent','review'),('accepted','terminal','success')]
     nodes = []
-    targets = {'intake':{'ok':'authority'},'authority':{'ok':'custody'},'custody':{'ok':'choose'},
+    targets = {'intake':{'ok':'custody'},'custody':{'ok':'choose'},
                'choose':{'left':'work-a','right':'work-b'},'work-a':{'ok':'verify'},'work-b':{'ok':'verify'},
                'verify':{'ok':'checkpoint'},'checkpoint':{'ok':'review'},'review':{'ok':'accepted'},'accepted':{}}
     for id,kind,stage in stages:

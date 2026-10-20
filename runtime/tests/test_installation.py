@@ -77,10 +77,10 @@ print(json.dumps({'module':cli.__file__,'host':str(host)}))
             tasks=self.root/'tasks.json';tasks.write_text(json.dumps(contract))
             authority=self.root/'catalog.json';authority.write_text(json.dumps(catalog));authority.chmod(0o600)
             result=subprocess.run([str(self.installed/'bin/coordinate-implementation'),'intake',
-                '--project',str(project),'--tasks',str(tasks),'--owner-catalog',str(authority),'--config-hash','config'],
+                '--project',str(project),'--tasks',str(tasks)],
                 env=self.env,cwd=project,capture_output=True,text=True,timeout=20)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-            self.assertEqual(json.loads(result.stdout)['contract_hash'],digest(contract))
+            self.assertEqual(json.loads(result.stdout)['task_ids'], [task['id'] for task in contract['tasks']])
             print('installed foreign CLI intake',origin,result.returncode)
 
     def test_explicit_setup_refuses_missing_permission_and_preserves_foreign_prefix(self):

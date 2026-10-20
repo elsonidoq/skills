@@ -86,7 +86,6 @@ MECHANICAL_CARRIERS = (
     ("planner", "item:3. **Review"),
     ("planner", "stage:overall_review"),
     ("helper", "## Planner Standard adapter contract"),
-    ("coordinator", "## Load and Verify"),
 )
 MECHANICAL_GUARDS = (
     "typos, formatting or broken links only",
@@ -166,8 +165,7 @@ def check_contracts(texts):
             "Correct a mistaken premise")
     require("task-concision", texts["tasks"],
             "State shared constraints once", "concise presentation, not a prose",
-            "preserve all required human/machine contract mappings",
-            "Required schema fields and task-local check/gate details remain complete",
+            "Keep task-specific work and useful checks clear",
             "verify the exact affected operation", "A worker file-tool bound is not a task-contract loader bound",
             "An inference or agreement to a narrowly explained remedy")
     require("draft-editing", section(texts["approval"], "## Bounded mechanical corrections"),
@@ -323,16 +321,13 @@ def check_contracts(texts):
     require("batch-brainstorm", texts["brainstorm"], "not implementation-task assignments")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
-            "authorization to\n**prepare** tasks", "stable task-local references", "Number in execution order from T001",
-            "explicit `Depends`", "earlier task", "implicit dependencies", "manually inspect",
-            "coherent sequential work", "do not reorder dependencies or pad", "lockstep documentation")
+            "nonempty string `id`", "Optional `depends`", "IDs must be unique",
+            "references must exist", "not cycle", "File order", "Do not regenerate old tasks")
     require("adapter", texts["helper"], "Planner Standard adapter", "`planner`", "same-session pass",
             "do not direct it to create the plan again", "standalone local\nfallback")
     c = texts["coordinator"]
-    require("intake", section(c, "## Load and Verify"), "TinySpec needs separate source/tasks",
-            "Standard needs", "both current approvals", "required SpecKit stage evidence",
-            "legacy source shape", "Resolve ambiguous", "conflicting planning depth",
-            "Missing, stale or unverifiable approval", "approval/recovery mapping")
+    require("intake", section(c, "## Load and Verify"), "exactly six linter checks",
+            "Empty lists", "No required sources/hashes", "without regeneration")
     validation = section(p, "## Proportionate validation")
     require("validation-focused", validation,
             "actual changed seam", "concrete failure", "lowest validation layer",
@@ -350,14 +345,10 @@ def check_contracts(texts):
     require("validation-reuse", validation,
             "Reuse valid unchanged evidence", "scope, revisions and environment",
             "Avoid repeated historical intake", "small causal\nsteps", "actually blocks")
-    require("validation-tasks", section(t, "## Task contract"),
-            "smallest sufficient check", "changed seam's concrete failure",
-            "REQUIRED checks", "optional hardening/broader regression", "separately gated",
-            "Optional checks do not become blockers", "owner-required criteria",
-            "expected verification\neffort", "valid unchanged evidence")
-    require("validation-execution", section(c, "## Execute and Integrate"),
-            "REQUIRED checks", "optional checks cannot compensate", "manual/permission gates block reliance",
-            "smallest sufficient layer", "same original contracts")
+    require("validation-tasks", section(t, "## Task contract"), "smallest relevant project check",
+            "optional task context", "not mandatory universal acceptance items", "real outcome")
+    require("validation-execution", section(c, "## Execute and Integrate"), "Project check commands are optional",
+            "no universal collection-count/receipt", "Never adopt existing dirty files")
     require("validation-timeout", section(c, "## Recover Context"),
             "Inspect a failed run and its invocation", "unknown cause stops blind retries",
             "Preserve partial and unrelated work")
@@ -365,14 +356,12 @@ def check_contracts(texts):
             "runner establishes baseline HEAD", "one focused verified owned-path",
             "checkpoint per implementation/repair task", "before subsequent mutation or handoff",
             "No extra evidence-only checkpoint", "Runner alone reconciles matching checkpoint receipts")
-    require("execution-sequential", section(c, "## Execute and Integrate"),
-            "Only satisfied REQUIRED items and fulfilled original gates release", "dependents")
-    require("execution-selection", section(c, "## Prepare Approved Execution"),
-            "approved exact implementation/repair bindings", "separately from planning/reviewer profiles",
-            "unobservable actual binding/effort is unknown", "Do not install, refresh auth",
-            "substitute bindings")
+    require("execution-sequential", section(c, "## Execute and Integrate"), "Dependencies release after",
+            "real focused checkpoint", "not an approval envelope")
+    require("execution-selection", section(c, "## Prepare Approved Execution"), "owner-selected executor/effort",
+            "without silent substitutions", "no owner catalog", "Do not claim full six-check startup yet")
     require("execution-strategy", section(c, "## Interface Actions"),
-            "explicit implementation scope", "all original gates", "Received, queued, SDK-delivered",
+            "task metadata is not an approval prerequisite", "Received, queued, SDK-delivered",
             "ORIGINAL saved worker conversation", "never fresh-session substitution")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
@@ -579,8 +568,7 @@ COMPOSED_CARRIERS = (
         'accessible proof/pass conditions',
     )),
     ('composed-adapters', 'tasks', '## Review and handoff', (
-        'applicable earlier producer dependencies', 'original permission/manual gates into the inline REQUIRED brief',
-        'accessible proof/pass conditions',
+        'Carry work-specific checks', 'permission boundaries', 'worker brief',
     )),
 )
 
@@ -732,8 +720,8 @@ AUTHORITY_CARRIERS = (
 VERIFICATION_CARRIERS = (
     ("verification-practical", "tasks", "## Task contract",
      ("Use practical observables", "Both adapters", "item mappings", "no special manual gate")),
-    ("verification-legacy", "tasks", "## Review and handoff",
-     ("inadequate approved/legacy contracts", "producing review/renewal", "weaken acceptance post hoc")),
+    ("verification-legacy", "tasks", "## Structured executable handoff (both adapters)",
+     ("No required order", "Do not regenerate old tasks", "Useful existing `required` check mappings")),
     ("verification-planner", "planner", "## Proportionate validation",
      ("practical observables", "generic green suite", "STOP and explicit user approval")),
     ("verification-handoff", "planner", "## Selected production and stage handoffs",
@@ -743,9 +731,8 @@ VERIFICATION_CARRIERS = (
     ("verification-graph", "coordinator", "## Execute and Integrate",
      ("runner establishes baseline HEAD", "before subsequent mutation or handoff")),
     ("verification-audit", "coordinator", "## Execute and Integrate",
-     ("actual diff", "focused commit/SHA", "REQUIRED outputs", "residual owned changes",
-      "current revision/environment", "Only satisfied REQUIRED items",
-      "Representative-sample manual STOP", "inspectable sample and explicit owner approval")),
+     ("actual diff", "focused commit/SHA", "check outputs", "residual owned changes",
+      "Never adopt existing dirty files", "explicit-path", "Dependencies release after")),
     ("verification-repair", "coordinator", "## Execute and Integrate",
      ("Targeted repair retains", "same original contracts", "Unknown cause blocks blind restart",
       "Clean retry is exceptional", "safe ownership and applicable owner gates")),

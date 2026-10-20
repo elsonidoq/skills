@@ -11,11 +11,12 @@ import tempfile
 
 import yaml
 
-from coherence_workflow.intake import approval_scope, content_hash
+from coherence_workflow.intake import content_hash
+from test_intake import approval_scope
 from coherence_workflow.cli import Coordinate
 from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import snapshot
-from test_intake import approved_fixture, declare_builtin_actions
+from test_intake import approved_fixture
 from test_pi_adapter import environment, manifest
 from test_custody import IsolatedCustody
 
@@ -87,7 +88,7 @@ def live_sequence(case, *, expected_check_count=2):
     contract['execution_intent']['compatible_bindings']=[{**{k:selected[k] for k in ('provider','model','effort')},
         'assessment':'isolated selected configuration','provenance':'current authorized live exercise'}]
     contract['authorization_envelope']['profiles']=[selected]
-    declare_builtin_actions(contract)
+
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':
             ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
@@ -98,7 +99,7 @@ def live_sequence(case, *, expected_check_count=2):
     before=snapshot(project,['owned.txt','second.txt'])
     argv=[str(ROOT/'scripts/coordinate-implementation'),'start','--project',str(project),'--run','sequence',
           '--workflow',str(paths['workflow.yaml']),'--tasks',str(paths['tasks.json']),
-          '--owner-catalog',str(paths['catalog.json']),'--manifest',str(paths['manifest.json']),'--containment',case.parent]
+          '--manifest',str(paths['manifest.json']),'--containment',case.parent]
     env=dict(os.environ,COHERENCE_PYTHON=sys.executable)
     proc=subprocess.run(argv,env=env,capture_output=True,text=True,timeout=240)
     print('CLI invocation result',proc.returncode,proc.stdout,proc.stderr)
@@ -193,16 +194,15 @@ class A2LiveDeliveryTests(IsolatedCustody):
         contract['execution_intent']['compatible_bindings']=[{**{k:terra[k] for k in ('provider','model','effort')},
             'assessment':'single isolated A2 configured binding','provenance':'current owner-authorized A2 exercise'}]
         contract['authorization_envelope']['profiles']=[terra]
-        declare_builtin_actions(contract)
+
         for ref in contract['approval_refs']:
             ref['scope_hash']=(approval_scope(contract,digest(config)) if ref['gate_kind']=='implementation' else digest(contract['sources']))
             catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
         with Authority(self.project) as authority:
             authority.store.reserve('a2',digest(config))
-            coordinate=Coordinate(authority,'a2',contract,catalog,config,self.parent,sdk,environment())
+            coordinate=Coordinate(authority,'a2',contract,config,self.parent,sdk,environment())
             coordinate.intake({})
             unavailable.unlink()  # Authorized path remains readable but safely unavailable at tool use.
-            self.assertEqual(coordinate.authority_check({}),{'outcome':'ok'})
             self.assertEqual(coordinate.select({}),{'outcome':'work'})
             observed_tools=[];factory=coordinate._tools
             from dataclasses import replace
@@ -323,11 +323,19 @@ class CliPreflightTests(IsolatedCustody):
                 coordinate.review_repair.refresh_evidence=lambda:None
                 coordinate.review_repair.bundle=lambda:{'range_base':'base','range_head':'head'}
                 review=next(n for n in coordinate.config['nodes'] if n['id']=='review')
-                for tools,permissions in (([],[]),(['read_file'],[]),(['read_file','write_file'],['read_file','write_file'])):
+                for tools,permissions in (([],[]),(['read_file'],[])):
                     with self.subTest(role='review',tools=tools,permissions=permissions):
                         with self.assertRaisesRegex(Blocked,'node tool/permission'):
                             coordinate.review_boundary({'node':{**review,'tools':tools,'permissions':permissions}})
                 launch.assert_not_called()
+            def observe_read_only(gateway, manifest, **unused):
+                self.assertEqual([tool['name'] for tool in manifest['tools']], ['read_file'])
+                self.assertEqual(manifest['permissions'], ['read_file'])
+                raise Blocked('offline read-only boundary')
+            with patch('coherence_workflow.cli.PiAdapter', side_effect=observe_read_only):
+                with self.assertRaisesRegex(Blocked, 'offline read-only boundary'):
+                    coordinate.review_boundary({'node': {**review, 'tools': ['read_file', 'write_file'],
+                                                        'permissions': ['read_file', 'write_file']}})
             task=json.loads(coordinate.store.db.execute('SELECT contract FROM wf_tasks WHERE task_id=?',('A',)).fetchone()[0])
             actual=coordinate._tools(task)
             Coordinate.admit_node_tools({'tools':list(actual),'permissions':list(actual)},actual)
@@ -340,7 +348,7 @@ class CliPreflightTests(IsolatedCustody):
         paths['tasks.json'].write_text(canonical(contract));paths['catalog.json'].write_text(canonical(catalog));paths['catalog.json'].chmod(0o600)
         paths['manifest.json'].write_text('{}')
         argv=[str(ROOT/'scripts/coordinate-implementation'),'start','--project',str(self.project),'--run','invalid',
-            '--workflow',str(paths['workflow.yaml']),'--tasks',str(paths['tasks.json']),'--owner-catalog',str(paths['catalog.json']),
+            '--workflow',str(paths['workflow.yaml']),'--tasks',str(paths['tasks.json']),
             '--manifest',str(paths['manifest.json']),'--containment',self.parent]
         for text in ('start: a\nstart: b\n','x: &alias []\ny: *alias\n','x: !!python/object:forbidden {}\n','#'*262145):
             paths['workflow.yaml'].write_text(text)
@@ -349,18 +357,6 @@ class CliPreflightTests(IsolatedCustody):
             self.assertEqual(json.loads(result.stdout)['status'],'blocked')
             self.assertFalse((self.project/'.coherence/workflow/workflow.sqlite').exists())
 
-    def test_upfront_gap_output_aggregates_profile_check_and_git_without_dispatch(self):
-        from coherence_workflow.store import Authority, Blocked
-        from test_review_repair import coordinate_fixture
-        with Authority(self.project) as owner:
-            coordinate=coordinate_fixture(self.project,owner)
-            hook=self.project/'.git/hooks/post-index-change';hook.write_text('#!/bin/sh\nexit 99\n');hook.chmod(0o700)
-            coordinate.contract['tasks'][0]['required'][0]['check']['id']='workflow.NotRegistered'
-            with self.assertRaisesRegex(Blocked,'known admission gaps') as error:coordinate.authority_check({})
-            gaps=json.loads(str(error.exception).split(': ',1)[1])
-            self.assertTrue({'profile','check','git_capability'} <= {gap['kind'] for gap in gaps})
-            self.assertTrue(all(gap['impact'] and gap['options'] for gap in gaps))
-            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
     def test_copied_suite_status_unset_caller_flag_has_no_cache_or_worktree_writes(self):
         import shutil
@@ -384,91 +380,12 @@ class CliPreflightTests(IsolatedCustody):
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
 
-class LeanReadinessTests(unittest.TestCase):
-    def test_five_facts_and_invalidation_boundaries(self):
-        from coherence_workflow.store import Authority
-        from coherence_workflow.engine import load_workflow
-        from test_review_repair import coordinate_fixture
-        from unittest.mock import patch
-        from fixtures.support import make_project
-        with tempfile.TemporaryDirectory() as temporary:
-            project=make_project(Path(temporary)/'project')
-            def setup(contract):
-                config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
-                contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
-            with Authority(project) as authority:
-                c=coordinate_fixture(project,authority,task_setup=setup)
-                self.assertEqual(load_workflow(c.registry(),resource_root=ROOT),c.config)
-                self.assertEqual(c.authority_check({}),{'outcome':'ok'})
-                original=copy.deepcopy(c.contract)
-                c.contract['tasks'][0]['depends']=['B']
-                with self.assertRaises(Blocked):c.intake({})
-                c.contract=copy.deepcopy(original)
-                approval=project/c.contract['approval_refs'][0]['record_ref']
-                saved=approval.read_bytes();approval.write_text('not the approved record')
-                with self.assertRaisesRegex(Blocked,'approval record content drift'):c.intake({})
-                approval.write_bytes(saved)
-                profile=c.manifest['profile'];c.manifest['profile']={**profile,'model':'unavailable'}
-                with self.assertRaisesRegex(Blocked,'known admission gaps'):c.authority_check({})
-                c.manifest['profile']=profile
-                check=c.contract['tasks'][0]['required'][0]['check']
-                c.contract['tasks'][0]['required'][0]['check']={**check,'id':'workflow.Unavailable'}
-                with self.assertRaisesRegex(Blocked,'REQUIRED oracle unavailable|known admission gaps'):c.authority_check({})
-                c.contract=copy.deepcopy(original)
-                # A second actual authority and dirty owned overlap both stop selection.
-                with self.assertRaises(Blocked):Authority(project)
-                owned=project/'owned.txt';saved=owned.read_bytes();owned.write_text('unrelated preexisting edit')
-                with self.assertRaisesRegex(Blocked,'dirty owned overlap'):c.select({})
-                owned.write_bytes(saved)
-                self.assertEqual(c.select({}),{'outcome':'work'})
-                c.agent_node=next(n for n in c.config['nodes'] if n['id']=='implement')
-                c.gateway.tools=c._tools(c.contract['tasks'][0])
-                # Tool calls do not recursively re-admit the whole contract.
-                with patch('coherence_workflow.cli.admit',side_effect=AssertionError('repeated intake')):
-                    self.assertEqual(c.gateway.direct('read_file',{'path':'owned.txt'})['text'],'base')
-                c.contract['tasks'][0]['outcome']='changed after intake'
-                with self.assertRaisesRegex(Blocked,'contract drift'):
-                    c.gateway.direct('read_file',{'path':'owned.txt'})
-                self.assertEqual(authority.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
-
-
-class LeanCheckpointTests(unittest.TestCase):
-    def test_required_check_and_gate_precede_commit(self):
-        from coherence_workflow.store import Authority
-        from fixtures.support import make_project
-        from test_review_repair import coordinate_fixture
-        from unittest.mock import patch
-        with tempfile.TemporaryDirectory() as temporary:
-            project=make_project(Path(temporary)/'project')
-            with Authority(project) as authority:
-                c=coordinate_fixture(project,authority)
-                c.select({});task=c.contract['tasks'][0]
-                c.agent_node=next(n for n in c.config['nodes'] if n['id']=='implement')
-                c.gateway.tools=c._tools(task)
-                with patch.object(c.gateway,'launch',side_effect=AssertionError('commit before REQUIRED/gates')):
-                    # Actual failed REQUIRED receipt; original (empty) gates are true.
-                    self.assertTrue(c.gates_satisfied(task))
-                    self.assertNotEqual(c.verify({}),{'outcome':'ok'})
-                    evidence=json.loads(c.current()['evidence'])
-                    self.assertEqual(c.verification.audit(task,evidence)[0]['status'],'failed')
-                    with self.assertRaisesRegex(Blocked,'REQUIRED evidence/original gates'):c.checkpoint({})
-                    # Correct the source and collect a genuine satisfied receipt.
-                    c.gateway.direct('write_file',{'path':'owned.txt','text':'first\n'})
-                    self.assertEqual(c.verify({}),{'outcome':'ok'})
-                    evidence=json.loads(c.current()['evidence'])
-                    self.assertEqual(c.verification.audit(task,evidence)[0]['status'],'satisfied')
-                    with patch.object(c,'gates_satisfied',return_value=False):
-                        with self.assertRaisesRegex(Blocked,'REQUIRED evidence/original gates'):c.checkpoint({})
-                self.assertEqual(authority.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE kind='git-checkpoint'").fetchone()[0],0)
-                self.assertEqual(authority.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
-
-
 class InternalPythonBindingTests(IsolatedCustody):
     def test_actual_registered_write_read_helpers_bind_runtime_but_project_test_imports_remain_project_code(self):
         from coherence_workflow.cli import Coordinate
         from coherence_workflow.store import Authority
         from test_review_repair import coordinate_fixture
-        from test_intake import declare_builtin_actions
+
         from unittest.mock import patch
         shadow=self.project/'coherence_workflow';shadow.mkdir();marker=self.project/'SHADOW_INTERNAL'
         (shadow/'__init__.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').write_text("shadow")\nraise RuntimeError("SHADOW_INTERNAL")\n')
@@ -482,7 +399,6 @@ class InternalPythonBindingTests(IsolatedCustody):
                 'check':{'id':'workflow.PythonAnswer','version':'1','args':{'path':'answer.py','expected':1}}})
         with Authority(self.project) as owner:
             c=coordinate_fixture(self.project,owner,task_setup=setup)
-            self.assertEqual(c.authority_check({}),{'outcome':'ok'})
             c.select({});task=c.contract['tasks'][0];c.agent_node=next(n for n in c.config['nodes'] if n['id']=='implement')
             c.gateway.tools=c._tools(task)
             original=Path.cwd()

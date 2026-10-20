@@ -1,22 +1,13 @@
-"""T003/V1 structured-origin provenance and exact retained contracts."""
-import copy
+"""Historical optional task context fixtures; no executable admission authority."""
 import json
-from pathlib import Path
-import tempfile
-import unittest
 
-from coherence_workflow.intake import Approvals, admit, approval_scope, content_hash
-from coherence_workflow.store import Blocked, digest
-from fixtures.support import make_project
+from coherence_workflow.intake import content_hash
+from coherence_workflow.store import digest
 
 
-def declare_builtin_actions(contract):
-    """Explicit current mandatory-test authority only; never historical conversion."""
-    from coherence_workflow.authority import action_requirement
-    names={'read_file','search_file','run_check','request_owner_input'}
-    if any(t['owned_paths'] for t in contract['tasks']):names.update(('write_file','edit_file','runner-git-commit'))
-    names.update(i['check']['id'] for t in contract['tasks'] for i in t['required'])
-    contract['authorization_envelope']['capabilities']=[{'id':name,**action_requirement(contract,name)} for name in sorted(names)]
+def approval_scope(contract, config_hash):
+    # Historical optional metadata fixture; no runtime admission consumer.
+    return digest({'contract': contract, 'config_hash': config_hash})
 
 
 def approved_fixture(project, config_hash, origin='TinySpec'):
@@ -54,108 +45,9 @@ def approved_fixture(project, config_hash, origin='TinySpec'):
                'actor':'fixture catalog: current owner isolated-test preapproval','authority_ref':'external-owner/'+kind,'action':'approve'}
         contract['approval_refs'].append(ref)
         catalog[ref['authority_ref']] = {k:ref[k] for k in ('actor','record_ref','record_sha256','scope_hash','gate_kind','action')}
-    declare_builtin_actions(contract)
+
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':
             ref['scope_hash']=approval_scope(contract,config_hash)
             catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     return contract, catalog
-
-
-class OriginIntakeTests(unittest.TestCase):
-    def setUp(self):
-        self.temp=tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.project=make_project(Path(self.temp.name)/'project')
-
-    def test_both_adapters_losslessly_preserve_whole_task_fields(self):
-        outputs=[]
-        for origin in ('TinySpec','Standard'):
-            contract,catalog=approved_fixture(self.project,'config',origin)
-            normalized,receipt=admit(self.project,contract,Approvals(self.project,catalog),'config')
-            self.assertEqual(normalized,contract)
-            self.assertEqual(receipt['task_ids'],['A','B'])
-            self.assertEqual(receipt['contract_hash'],digest(contract))
-            outputs.append(normalized['tasks'])
-        self.assertEqual(outputs[0],outputs[1])
-
-    def test_actual_cli_both_origin_receipts(self):
-        import os
-        import subprocess
-        import sys
-        root=Path(__file__).resolve().parents[2]
-        for origin in ('TinySpec','Standard'):
-            contract,catalog=approved_fixture(self.project,'config',origin)
-            tasks=Path(self.temp.name)/'tasks.json';tasks.write_text(json.dumps(contract))
-            catalog_path=Path(self.temp.name)/'catalog.json';catalog_path.write_text(json.dumps(catalog));catalog_path.chmod(0o600)
-            result=subprocess.run([str(root/'scripts/coordinate-implementation'),'intake','--project',str(self.project),
-                '--tasks',str(tasks),'--owner-catalog',str(catalog_path),'--config-hash','config'],
-                env=dict(os.environ,COHERENCE_PYTHON=sys.executable),capture_output=True,text=True,timeout=20)
-            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-            receipt=json.loads(result.stdout)
-            self.assertEqual(receipt['contract_hash'],digest(contract));self.assertEqual(receipt['task_ids'],['A','B'])
-            print(origin,'actual CLI intake',result.returncode,result.stdout)
-
-    def test_missing_denied_cancelled_stale_ambiguous_origin_approvals_block(self):
-        for origin in ('TinySpec','Standard','legacy'):
-            contract,catalog=approved_fixture(self.project,'config',origin)
-            for kind in [r['gate_kind'] for r in contract['approval_refs']]:
-                bad=copy.deepcopy(contract); bad['approval_refs']=[r for r in bad['approval_refs'] if r['gate_kind']!=kind]
-                with self.assertRaises(Blocked): admit(self.project,bad,Approvals(self.project,catalog),'config',legacy_settled=True)
-            for action in ('deny','cancel'):
-                bad=copy.deepcopy(contract);bad['approval_refs'][0]['action']=action
-                with self.assertRaises(Blocked):admit(self.project,bad,Approvals(self.project,catalog),'config',legacy_settled=True)
-            with self.assertRaises(Blocked):admit(self.project,contract,Approvals(self.project,catalog),'changed',legacy_settled=True)
-            bad=copy.deepcopy(contract);bad['approval_refs'].append(bad['approval_refs'][0])
-            with self.assertRaises(Blocked):admit(self.project,bad,Approvals(self.project,catalog),'config',legacy_settled=True)
-
-    def test_legacy_requires_settled_known_writer_and_retains_origin(self):
-        contract,catalog=approved_fixture(self.project,'config','legacy')
-        with self.assertRaises(Blocked):admit(self.project,contract,Approvals(self.project,catalog),'config')
-        normalized,_=admit(self.project,contract,Approvals(self.project,catalog),'config',legacy_settled=True)
-        self.assertEqual(normalized['legacy_origin'],'documented-structured-v1')
-
-    def test_forward_dependency_stale_source_and_inadequate_contract_block(self):
-        contract,catalog=approved_fixture(self.project,'config')
-        bad=copy.deepcopy(contract);bad['tasks'][0]['depends']=['B']
-        with self.assertRaises(Blocked):admit(self.project,bad,Approvals(self.project,catalog),'config')
-        (self.project/contract['sources'][0]['path']).write_text('stale')
-        with self.assertRaises(Blocked):admit(self.project,contract,Approvals(self.project,catalog),'config')
-        bad=copy.deepcopy(contract);del bad['tasks'][0]['required'][0]['pass_condition']
-        with self.assertRaises(Exception):admit(self.project,bad,Approvals(self.project,catalog),'config')
-
-
-class ExecutionIntentTests(unittest.TestCase):
-    setUp = OriginIntakeTests.setUp
-    def test_missing_intent_returns_precise_producing_renewal(self):
-        contract,catalog=approved_fixture(self.project,'config')
-        contract.pop('execution_intent',None)
-        with self.assertRaisesRegex(Blocked,'execution intent.*producing'):
-            admit(self.project,contract,Approvals(self.project,catalog),'config')
-
-    def test_binding_is_explicit_not_inferred_from_planner_or_reviewer(self):
-        from coherence_workflow.intake import verify_execution_intent
-        contract,_=approved_fixture(self.project,'config')
-        profile={'provider':'openai-codex','model':'gpt-6.1-sol','effort':'medium'}
-        verify_execution_intent(contract,[profile])
-        for update in ({'model':'different'},{'effort':'low'}):
-            with self.assertRaisesRegex(Blocked,'compatibility.*producing'):
-                verify_execution_intent(contract,[{**profile,**update}])
-        contract['execution_intent']['resolution']='unresolved'
-        with self.assertRaisesRegex(Blocked,'unresolved.*producing'):
-            verify_execution_intent(contract,[profile])
-
-    def test_authority_consumer_checks_only_execution_roles_before_other_effects(self):
-        from coherence_workflow.cli import Coordinate
-        from types import SimpleNamespace
-        contract,_=approved_fixture(self.project,'config')
-        exact={'provider':'openai-codex','model':'gpt-6.1-sol','effort':'medium'}
-        fake=SimpleNamespace(contract=contract,config={'profiles':{'coding':exact,
-            'reviewer':dict(exact,model='different-reviewer')},'nodes':[
-                {'type':'agent','role':'implement','profile':'coding'},
-                {'type':'agent','role':'repair','profile':'coding'},
-                {'type':'agent','role':'review','profile':'reviewer'}]})
-        # Past intent validation the next ordinary authority dependency is deliberately absent.
-        with self.assertRaises(AttributeError):Coordinate.authority_check(fake,{})
-        fake.config['profiles']['coding']=dict(exact,effort='low')
-        with self.assertRaisesRegex(Blocked,'compatibility.*producing'):
-            Coordinate.authority_check(fake,{})

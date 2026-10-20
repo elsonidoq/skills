@@ -10,11 +10,11 @@ import unittest
 import yaml
 
 from coherence_workflow.cli import Coordinate, ROOT, registered_checks, status
-from coherence_workflow.intake import approval_scope
+from test_intake import approval_scope
 from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import Gateway, ProcessTool, snapshot
 from fixtures.support import make_project
-from test_intake import approved_fixture, declare_builtin_actions
+from test_intake import approved_fixture
 from test_pi_adapter import manifest, environment
 
 
@@ -26,12 +26,12 @@ def coordinate_fixture(project, owner, *, limit=2, task_setup=None):
     sdk=manifest(project,tools=False)
     contract,catalog=approved_fixture(project,digest(config))
     if task_setup:task_setup(contract)
-    declare_builtin_actions(contract)
+
     for ref in contract['approval_refs']:
         if ref['gate_kind']=='implementation':
             ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
     owner.store.reserve('run',digest(config))
-    coordinate=Coordinate(owner,'run',contract,catalog,config,os.environ['COHERENCE_TEST_CGROUP_PARENT'],sdk,environment())
+    coordinate=Coordinate(owner,'run',contract,config,os.environ['COHERENCE_TEST_CGROUP_PARENT'],sdk,environment())
     coordinate.intake({})
     return coordinate
 
@@ -205,7 +205,7 @@ class LeanReviewTests(unittest.TestCase):
                 contract['tasks']=[task]
                 config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
                 coordinate=SimpleNamespace(authority=owner,store=owner.store,run='run',contract=contract,config=config,
-                    catalog=catalog,gates_satisfied=lambda task:True,reconcile_effect=lambda *args:None)
+                    reconcile_effect=lambda *args:None)
                 coordinate.verification=Verification(owner,'run',registered_checks(project),authorize=lambda *args:None)
                 review=ReviewRepair(coordinate)
                 owner.store.db.executescript('''CREATE TABLE wf_tasks(run_id TEXT,task_id TEXT,approved_order INTEGER,
@@ -251,7 +251,7 @@ class LeanReviewTests(unittest.TestCase):
                 catalog['workflow_correction_rules']=[{'criterion_ref':finding['criterion_ref'],'path':'owned.txt','original_task_id':task['id'],
                     'task':correction,'scope_hash':digest(correction),'actor':'isolated-test owner','provenance':'explicit local wiring fixture'}]
                 _,old_result=record('correction',[finding])
-                plans=review.authorize_corrections();self.assertEqual(len(plans),1)
+                plans=review.schedule_corrections();self.assertEqual(len(plans),1)
                 repair=plans[0][0]
                 self.assertEqual(coordinate.verification.run_checks(repair)[0]['status'],'failed')
                 (project/'owned.txt').write_text('fixed')

@@ -452,7 +452,7 @@ class PayloadPrivacyTests(IsolatedCustody):
                 self.assertEqual(operation['args_hash'],digest(args));self.assertEqual(intent['argv_hash'],digest(gateway.tools['write_file'].argv(args)))
                 self.assertNotIn('argv',intent)
                 task={'id':'privacy-checkpoint','owned_paths':['owned.txt'],'required':[{'id':'privacy/V1'}]}
-                checkpoint=GitEffects(owner,'run',gateway).checkpoint(task,baseline,[{'item_id':'privacy/V1','status':'satisfied'}],gates_satisfied=True)
+                checkpoint=GitEffects(owner,'run',gateway).checkpoint(task,baseline,[{'item_id':'privacy/V1','status':'satisfied'}])
                 self.assertEqual(checkpoint['parent'],baseline['head'])
                 git_process=owner.store.db.execute("SELECT op_id,intent FROM wf_operations WHERE kind='process' AND node_id LIKE 'commit:%'").fetchone()
                 self.assertIn('argv',json.loads(git_process['intent']),'safe exact commit command identity must survive minimization')

@@ -41,7 +41,7 @@ class ConfigGraphTests(unittest.TestCase):
         for name,schema in inventory.items():
             Draft202012Validator.check_schema(schema)
             source = Path('specs/003-coordinate-workflow/contracts')/name
-            if source.exists(): self.assertEqual(schema,json.loads(source.read_text()))
+            if source.exists() and name != "task.schema.json": self.assertEqual(schema,json.loads(source.read_text()))
         self.assertTrue(files('coherence_workflow').joinpath('workflows/coordinate.yaml').is_file())
         self.assertTrue({'workflow.ConfigGraphTests','workflow.CustodyTests',
                          'workflow.LaunchCrashTests','workflow.LedgerCheckpointTests'} <= CHECKS.keys())
@@ -58,6 +58,9 @@ class ConfigGraphTests(unittest.TestCase):
         self.assertGreater(len(cases),0)
         for case in cases:
             validate_schema(case['schema'],case['value'])
+            if case['schema'] == 'task.schema.json':
+                validate_schema(case['schema'],dict(case['value'],unregistered_field=True))
+                continue
             if 'schema_version' in case['value']:
                 with self.subTest(schema=case['schema']),self.assertRaises(ValidationError):
                     validate_schema(case['schema'],dict(case['value'],schema_version=999))
@@ -282,7 +285,6 @@ with Authority(p) as a:
             finally: engine.close()
 
 
-
 class LeanAttemptTests(unittest.TestCase):
     setUp = ConfigGraphTests.setUp
 
@@ -350,22 +352,22 @@ from test_custody import IsolatedCustody
 class LeanHistoryTests(IsolatedCustody):
     def test_persisted_task_check_commit_order_and_readonly_reopen(self):
         from coherence_workflow.cli import Coordinate
-        from coherence_workflow.intake import approval_scope
+        from test_intake import approval_scope
         from coherence_workflow.store import canonical, git, read_history
-        from test_intake import approved_fixture, declare_builtin_actions
+        from test_intake import approved_fixture
         from test_pi_adapter import manifest, environment
         registry,config=configuration(self.project)
         config['permissions']=['workflow.FileBytes','runner-git-commit']
         registry.permissions=set(config['permissions'])
         for name,effects in (('verify',('read',)),('checkpoint',('git','process'))):
             next(n for n in config['nodes'] if n['id']==name)['side_effects']=list(effects)
-        contract,catalog=approved_fixture(self.project,digest(config));declare_builtin_actions(contract)
+        contract,catalog=approved_fixture(self.project,digest(config))
         for ref in contract['approval_refs']:
             if ref['gate_kind']=='implementation':
                 ref['scope_hash']=approval_scope(contract,digest(config));catalog[ref['authority_ref']]['scope_hash']=ref['scope_hash']
         raw='# retained actual workflow\n'+yaml.safe_dump(config)
         with Authority(self.project) as owner:
-            coordinate=Coordinate(owner,'run',contract,catalog,config,self.parent,manifest(self.project,tools=False),environment())
+            coordinate=Coordinate(owner,'run',contract,config,self.parent,manifest(self.project,tools=False),environment())
             def choose(context):
                 coordinate.select(context)
                 task=coordinate.contract['tasks'][0]

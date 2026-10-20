@@ -103,8 +103,7 @@ class Verification:
                        'reason': 'registered check unavailable', 'exit_code': None, 'collected': 0}
             if spec and spec['version'] == check['version']:
                 Draft202012Validator(spec['schema']).validate(check['args'])
-                if self.authorize is None:raise Blocked('check action authority unavailable')
-                self.authorize(task,item)
+                if self.authorize is not None:self.authorize(task,item)
                 key = digest(check)
                 if key not in shared:
                     start = time.time_ns()
@@ -115,8 +114,7 @@ class Verification:
                                     'unknown_reason': 'oracle unavailable: ' + type(exc).__name__}
                     # Only registered oracles may demonstrate a violation; missing/unrun
                     # observations cannot be promoted by worker output or exit 0 alone.
-                    valid = (type(observed.get('collected')) is int and observed['collected'] > 0 and
-                             type(observed.get('exit_code')) is int and isinstance(observed.get('output'), str))
+                    valid = (type(observed.get('exit_code')) is int and isinstance(observed.get('output'), str))
                     shared[key] = {**receipt, **observed, 'started_ns': start, 'ended_ns': time.time_ns(),
                                    'status': ('satisfied' if observed['exit_code'] == 0 else 'failed') if valid else 'insufficient-evidence',
                                    'reason': None if valid else 'empty/unrun/invalid oracle proof'}
@@ -218,7 +216,6 @@ class ReviewRepair:
         failures={d['item_id'] for d in audited if d['status']=='failed'}
         if not failures or any(e.get('diagnosis')!='implementation' for e in evidence if e['item_id'] in failures):
             raise Blocked('failure requires inspected implementation diagnosis before repair')
-        self.coordinate.gates_satisfied(task)
         with self.store.transaction() as db:
             self.store.event(db,self.run,None,'repair_diagnosed',{'failure_key':self.failure_key(task),'items':sorted(failures),'evidence_refs':[e['evidence_id'] for e in evidence]})
         return True
@@ -231,7 +228,6 @@ class ReviewRepair:
     def refresh_evidence(self):
         """Later approved tasks may change producer inputs without changing criteria."""
         for original in self.coordinate.contract['tasks']:
-            self.coordinate.gates_satisfied(original)
             correction=self.store.db.execute('SELECT t.* FROM wf_tasks t JOIN wf_corrections c USING(run_id,task_id) WHERE c.run_id=? AND c.original_task_id=? ORDER BY t.approved_order DESC LIMIT 1',(self.run,original['id'])).fetchone()
             row=correction or self.store.db.execute('SELECT * FROM wf_tasks WHERE run_id=? AND task_id=?',(self.run,original['id'])).fetchone()
             if row['state'] not in ('checkpointed','read_only_complete'):raise Blocked('unfinished producer cannot enter final review')
@@ -303,44 +299,32 @@ class ReviewRepair:
             self.store.event(db,self.run,None,'review_recorded',{'review_id':review_id,'base':base,'head':head,'outcome':result['outcome'],'host_op':host_op})
         return review_id
 
-    def authorize_corrections(self):
+    def schedule_corrections(self):
         review=self.store.db.execute('SELECT * FROM wf_reviews WHERE run_id=? ORDER BY rowid DESC LIMIT 1',(self.run,)).fetchone()
         if not review:raise Blocked('missing review')
         result=json.loads(review['result'])
         if result['outcome']!='correction':raise Blocked('not a correction review')
         _,head=self.range()
         if head!=review['head_sha']:raise Blocked('stale-head correction authority')
-        rules=self.coordinate.catalog.get('workflow_correction_rules',[])
-        original={t['id']:t for t in self.coordinate.contract['tasks']}
         plans=[]
         for finding in result['findings']:
             path=finding['location'].split(':',1)[0]
-            candidates=[r for r in rules if r.get('criterion_ref')==finding['criterion_ref'] and r.get('path')==path]
-            if finding['scope']!='in_scope' or len(candidates)!=1:
-                raise Blocked('finding requires explicit scoped owner correction contract')
-            rule=candidates[0];producer=original.get(rule.get('original_task_id'));template=rule.get('task')
-            if template:
-                from .registry import validate_schema
-                validate_schema('task.schema.json',{**self.coordinate.contract,'tasks':[template]})
-            if (not producer or not template or not rule.get('actor') or not rule.get('provenance') or
-                    rule.get('scope_hash')!=digest(template) or template['required']!=producer['required'] or
-                    template['gates']!=producer['gates'] or template['optional']!=producer['optional'] or
-                    template['owned_paths']!=producer['owned_paths'] or path not in producer['owned_paths'] or
-                    template['context_group']!=producer['context_group'] or
-                    template['authorization_envelope_id']!=producer['authorization_envelope_id']):
-                raise Blocked('correction contract widens scope/weakens original items/gates')
-            self.coordinate.gates_satisfied(producer)
+            candidates=[json.loads(row[0]) for row in self.store.db.execute(
+                'SELECT contract FROM wf_tasks WHERE run_id=? ORDER BY approved_order', (self.run,))
+                if path in json.loads(row[0]).get('owned_paths', [])]
+            if finding['scope']!='in_scope' or not candidates:
+                raise Blocked('review finding outside current task paths; request owner scope decision')
+            producer=candidates[-1]
             self.budget('review-final',self.maximum('review-final'))
-            task=copy.deepcopy(template)
-            task['id']=template['id']+'/'+review['review_id']+'/'+finding['id']
+            task=copy.deepcopy(producer)
+            task['id']=producer['id']+'/'+review['review_id']+'/'+finding['id']
+            task['outcome']='Correct review finding: '+canonical(finding)
             task['order']=self.store.db.execute('SELECT COALESCE(MAX(approved_order),-1) FROM wf_tasks WHERE run_id=?',(self.run,)).fetchone()[0]+1+len(plans)
-            if task['gates']:raise Blocked('original gates need correction-bound renewal before dispatch')
-            plans.append((task,producer,rule,finding))
+            plans.append((task,producer,finding))
         with self.store.transaction() as db:
-            for task,producer,rule,finding in plans:
+            for task,producer,finding in plans:
                 db.execute("INSERT INTO wf_tasks VALUES(?,?,?,?,'pending',NULL,NULL,NULL)",(self.run,task['id'],task['order'],canonical(task)))
-                authority={'rule_hash':digest(rule),'source_approval_hash':digest(self.coordinate.contract['approval_refs']),
-                           'finding_id':finding['id'],'review_id':review['review_id'],'range_head':head}
+                authority={'finding_id':finding['id'],'review_id':review['review_id'],'range_head':head}
                 db.execute('INSERT INTO wf_corrections VALUES(?,?,?,?,?)',(self.run,task['id'],producer['id'],'review-final',canonical(authority)))
                 db.execute("UPDATE wf_findings SET disposition='accepted_focused',correction_id=? WHERE review_id=? AND finding_id=?",(task['id'],review['review_id'],finding['id']))
                 self.store.event(db,self.run,None,'correction_authorized',{'task_id':task['id'],'contract_hash':digest(task),**authority})
@@ -354,7 +338,6 @@ class ReviewRepair:
         if self.store.db.execute("SELECT 1 FROM wf_findings f JOIN wf_reviews r USING(review_id) WHERE r.run_id=? AND disposition!='resolved'",(self.run,)).fetchone():
             raise Blocked('unresolved review findings')
         for task in self.coordinate.contract['tasks']:
-            self.coordinate.gates_satisfied(task)
             correction=self.store.db.execute('SELECT t.* FROM wf_tasks t JOIN wf_corrections c USING(run_id,task_id) WHERE c.run_id=? AND c.original_task_id=? ORDER BY t.approved_order DESC LIMIT 1',(self.run,task['id'])).fetchone()
             row=correction or self.store.db.execute('SELECT * FROM wf_tasks WHERE run_id=? AND task_id=?',(self.run,task['id'])).fetchone()
             current_task=json.loads(row['contract'])

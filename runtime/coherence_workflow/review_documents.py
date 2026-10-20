@@ -3,16 +3,16 @@ from .store import Blocked, git, safe_path
 
 
 def references(contract):
-    return [dict(source) for source in contract['sources']] + [
+    return [dict(source) for source in contract.get('sources', [])] + [
         {'path': ref['record_ref'], 'sha256': ref['record_sha256'], 'kind': 'approval'}
-        for ref in contract['approval_refs']]
+        for ref in contract.get('approval_refs', [])]
 
 
 def read_review(project, bundle, args):
     """No delivery attestation: judgment belongs to the independent reviewer."""
     name=args['path']
     allowed={ref['path'] for ref in bundle['document_refs']} | {
-        path for task in bundle['source_tasks_approvals']['tasks'] for path in task['owned_paths']}
+        path for task in bundle['source_tasks_approvals']['tasks'] for path in task.get('owned_paths', [])} | set(bundle.get('changed_paths', []))
     if name not in allowed:
         raise Blocked('review read outside approved source/task paths; request scoped authority')
     path=safe_path(project,name)

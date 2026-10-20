@@ -210,25 +210,14 @@ permission for ordinary editing. This is not independent review; submitted defec
 silently launch implementation. Resolve paths through that installation, not a presumed
 project layout. Missing shared contract/stage capability blocks; never simulate slash tools.
 Produce only independently necessary work units, not one task per phase/test/entity noun.
-State shared constraints once; keep human presentation concise without weakening complete
-REQUIRED mappings or schema-required authorization fields. Verify limits at the actual
-consuming interface, not by generalizing a worker tool limit to every artifact.
-Preserve contiguous stories and all explicit earlier dependencies.
-
-Before task decomposition require the intended coding class/effort captured before architecture,
-separate from producer/reviewer profiles. Carry assumptions/provenance/resolution and executor-
-specific decomposition rationale to matching human summary and root `execution_intent`.
-Unknown intent returns to planning intake; changed intent requires affected compatibility
-assessment/renewal, no automatic full regeneration or weakened acceptance.
-
-Emit one authoritative adjacent or fenced JSON matching delivered task.schema.json; retain
-sources/approval origins, IDs/order/deps/context_group/owned_paths and whole REQUIRED criterion,
-registered check/version/args/pass condition/evidence/producer dependencies/gates, optional
-items and authorization_envelope. Preparation may have unresolved/denied refs; never fabricate
-owner authority. Ordinary model tokens have no financial gate; separately chargeable actions
-need purpose/cost-impact and explicit scoped approval. Standard retains spec/plan/tasks,
-specification approval, independent overall review and final approval. Inadequate legacy
-returns to producing renewal with original provenance, not automatic conversion.
+State shared constraints once and keep the human presentation concise. Follow the shared
+six-check task intake: readable JSON/YAML task list, ID/work description, unique IDs,
+existing dependency references and no cycles. Derive execution order from dependencies,
+not contiguous IDs, file order or story groups. Optional context and project checks remain
+useful; no required approval/source/envelope/execution-intent metadata or model assessments.
+Do not silently substitute the selected executor/effort in runtime configuration. Existing
+optional metadata may remain without regeneration. Preserve actual permission boundaries
+and required project checks; task preparation does not launch implementation.
 
 ## Done When
 

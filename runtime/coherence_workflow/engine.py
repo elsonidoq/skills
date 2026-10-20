@@ -102,7 +102,7 @@ def load_workflow(registry, source=None, resource_root=None):
     if len(selectors) > 1:
         raise Blocked('one bounded task-progress selector required')
     progress = selectors[0] if selectors else None
-    required = ('intake','authority','custody','verification','checkpoint','review')
+    required = ('intake','custody','verification','checkpoint','review')
     reached = set()
     validated = set()
 
@@ -113,10 +113,10 @@ def load_workflow(registry, source=None, resource_root=None):
                 if not progress or nodes[stack[-1]].get('role') not in ('implement','repair','review'):
                     raise Blocked('unbounded question continuation')
                 return
-            if (id == progress and ((stages == required[:5] and previous == 'checkpoint') or
-                                    (stages == required[:3] and previous == 'correction_authority'))):
+            if (id == progress and ((stages == required[:4] and previous == 'checkpoint') or
+                                    (stages == required[:2] and previous == 'correction'))):
                 return
-            if (stages == required[:4] and ((handlers[id].stage == 'verification' and (previous == 'repair' or previous == 'continue_original' and nodes[stack[-1]].get('role') == 'repair')) or
+            if (stages == required[:3] and ((handlers[id].stage == 'verification' and (previous == 'repair' or previous == 'continue_original' and nodes[stack[-1]].get('role') == 'repair')) or
                                            (handlers[id].stage == 'repair' and previous == 'verification'))):
                 return
             raise Blocked('unbounded/unsupported graph cycle')
@@ -126,17 +126,17 @@ def load_workflow(registry, source=None, resource_root=None):
         reached.add(id)
         handler = handlers[id]
         stage = handler.stage
-        if progress and id == progress and stages == required[:3]:
+        if progress and id == progress and stages == required[:2]:
             # The done edge can reach final review without manufacturing an empty
             # task/checkpoint; the work edge is checked separately below.
             for outcome, target in nodes[id]['transitions'].items():
-                walk(target, stack+(id,), required[:5] if outcome == 'done' else stages)
+                walk(target, stack+(id,), required[:4] if outcome == 'done' else stages)
             validated.add(key)
             return
-        if stage == 'correction_authority':
+        if stage == 'correction':
             if stages != required:
-                raise Blocked('correction authority must follow full-range review')
-            stages = required[:3]
+                raise Blocked('correction scheduling must follow full-range review')
+            stages = required[:2]
         if stage in required:
             index = required.index(stage)
             if index != len(stages):

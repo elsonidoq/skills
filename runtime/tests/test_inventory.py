@@ -15,8 +15,6 @@ from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import snapshot, reconcile
 from coherence_workflow.cli import Coordinate, main
 from coherence_workflow.engine import Engine
-from coherence_workflow.intake import content_hash
-from coherence_workflow.pi_adapter import host_resource
 from fixtures.support import make_project
 from coherence_workflow.git_effects import inventory_preflight
 from test_intake import approved_fixture
@@ -230,7 +228,7 @@ class InventoryTests(unittest.TestCase):
             suite = Path(__file__).resolve().parents[2]
             with contextlib.redirect_stdout(output):
                 result = main(['start', '--project', str(self.root), '--tasks', str(tasks),
-                    '--owner-catalog', catalog.name, '--manifest', str(manifest),
+                    '--manifest', str(manifest),
                     '--workflow', str(suite / 'runtime/coherence_workflow/workflows/coordinate.yaml'),
                     '--suite-root', str(suite), '--containment', '/unused', '--run', 'no-dispatch'])
         self.assertEqual(result, 2, output.getvalue())
@@ -337,7 +335,6 @@ class ResumeInventoryTests(unittest.TestCase):
             '--suite-root',str(self.suite),'--containment',self.parent]
         for flag, name, value in [('workflow','workflow.yaml',yaml.safe_dump(self.config)),
                 ('tasks','tasks.json',canonical(self.contract)),
-                ('owner-catalog','catalog.json',canonical(self.catalog)),
                 ('manifest','manifest.json','{}')]:
             path = self.root / name
             path.write_text(value); path.chmod(0o600)
@@ -352,8 +349,7 @@ class ResumeInventoryTests(unittest.TestCase):
             engine = Engine(owner,'partial',self.config,coordinate.registry(),self.suite,
                 boundary_hook=coordinate.controls_boundary,
                 max_task_visits=len(self.contract['tasks'])*(maximum+1)+maximum+1,
-                input_identity={'contract':self.contract,'catalog_hash':digest(self.catalog),
-                    'manifest':{},'environment':self.environment,'host_hash':content_hash(host_resource())})
+                input_identity={'contract':self.contract, 'manifest':{}, 'environment':self.environment})
             try:
                 coordinate.publish_run_binding()
                 coordinate.intake({})
@@ -369,7 +365,7 @@ class ResumeInventoryTests(unittest.TestCase):
         self.auth_path.write_text(canonical(self.authorization)); self.auth_path.chmod(0o600)
 
     def coordinate(self, owner):
-        return Coordinate(owner,'partial',self.contract,self.catalog,self.config,self.parent,{},self.environment)
+        return Coordinate(owner,'partial',self.contract,self.config,self.parent,{},self.environment)
 
     def resume(self):
         output = io.StringIO()

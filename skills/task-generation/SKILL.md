@@ -34,7 +34,7 @@ on no match. Required gotcha-memory gates remain separate.
 
 Optional residual-reasoning notes describe remaining inference, not an execution assignment or runtime routing.
 Planning selection belongs to the [qualified seed rubric](../planner/references/profile-selection.md).
-Execution uses approved exact configured bindings and deterministic role-safe selection.
+Execution uses the owner-selected configured binding without silent substitutions.
 
 Use the adapter matching the producing workflow:
 
@@ -62,37 +62,15 @@ work. The same task semantics apply to both adapters; no depth-specific executio
 
 For either adapter, verify Python 3 before relying on the bundled validator. If unavailable
 or the task format is incompatible, manually inspect explicit dependencies, ordering,
-story continuity, implicit producers, and stage feasibility, and report scripted validation
+dependency references, cycles, implicit producers, and stage feasibility, and report scripted validation
 as unavailable.
 
-## Intended executor before decomposition
+## Executor guidance
 
-Before Standard architecture or TinySpec task decomposition, capture the intended coding
-model class and effort; unknown input blocks planning intake, never infer it from the
-planner/producer/reviewer profile. Pass it unchanged to each architecture/task producer.
-Root `execution_intent` in the authoritative task JSON and matching human summary carry
-`model_class`, `effort`, `resolution` (unresolved/resolved), `assumptions`, `provenance`,
-`decomposition_rationale` and `compatible_bindings`. Each compatible binding records exact
-`provider`, `model`, `effort`, an `assessment` and its `provenance`; execution preflight
-checks the actual implementation/repair bindings only, not planning/reviewer profiles.
-This is planning intent, not execution permission or separately chargeable service authority.
-
-Use owner-guided qualitative scaffolding, not universal rankings or fixed thresholds:
-Luna: narrow coherent outcomes, named interfaces/invariants, context/edge-case pointers and
-ordered guidance where useful. Terra: clear boundaries, non-obvious decisions and moderate
-scaffolding. Sol: outcome-oriented instructions may leave routine choices open when justified.
-Effort and verified guidance refine assumptions; unknown/unlisted classes default to explicit
-instructions without unnecessary micro-tasks. A more capable planner must not leave architecture
-implicit for a smaller executor. Record what is explicit/bounded, what choices remain open and
-uncertainty. REQUIRED acceptance, dependencies, safety and approval gates never shrink.
-
-Changed class/effort or exact binding requires a documented compatibility/revision assessment
-of affected boundaries/detail/assumptions, with producing review/current-content renewal where
-needed. Preserve unaffected tasks; no silent substitution, auto-escalation or unconditional
-whole-plan regeneration. Resolve approved exact compatible bindings before dispatch using
-explicit trusted owner/registry provenance; unresolved/incompatible intent blocks execution.
-Historical handoffs lacking intent return to the earliest affected producing renewal gate,
-preserving original source and approval evidence, never fabricated historical metadata.
+Use the owner's selected executor and effort when tailoring useful implementation guidance.
+Do not silently substitute a different model. Executor settings belong to the actual runtime
+configuration, not task eligibility metadata: no execution-intent resolution, compatible-binding
+assessment or provenance receipt is required in tasks. Historical optional context may remain.
 
 ## Task contract
 
@@ -123,8 +101,7 @@ independent work.
 State shared constraints once in their authoritative context. Task entries contain
 outcome-specific scope, interfaces, acceptance and verification, not repeated specification
 prose or administrative reports. Keep the human document a concise presentation, not a prose
-copy of machine authorization metadata; preserve all required human/machine contract mappings
-below. Required schema fields and task-local check/gate details remain complete.
+copy of machine authorization metadata. Keep task-specific work and useful checks clear.
 
 Before declaring a technical blocker, verify the exact affected operation and its enforced
 limit at the consuming interface. A worker file-tool bound is not a task-contract loader bound;
@@ -132,8 +109,8 @@ do not impose a universal artifact size limit. Distinguish owner-requested behav
 runtime restrictions and agent-selected design choices in existing task fields. An inference
 or agreement to a narrowly explained remedy must not become a broader owner requirement.
 
-Every task records an outcome, explicit prerequisites, likely files or interfaces,
-independently observable acceptance evidence, required capabilities and shared context. Cover all in-scope work, integration/acceptance checks, and
+Each task needs an ID and work description. Include dependencies when work needs a producer.
+Likely files, interfaces, acceptance checks and shared context are useful optional details. Cover all in-scope work, integration/acceptance checks, and
 lockstep documentation whose evidence compares documentation with implemented behavior.
 Record exclusions so tasking cannot reintroduce them.
 
@@ -153,84 +130,49 @@ producer only when an independently necessary prerequisite is evidenced, otherwi
 before reliance inside the same delivery. Block reliance on insufficient or invalidated proof,
 not unrelated seams or a duplicate prototype.
 
-Acceptance evidence uses the smallest sufficient check at the lowest layer that can
-observe the changed seam's concrete failure. Use stable task-local references such as
-`T001/V1` in existing acceptance/observable/invariant/test fields, in the shared structured contract. Each
-REQUIRED item states its objective pass criterion, smallest sufficient check, expected evidence
-(command/output or bounded artifact reference), and any manual/permission gates. Identify
-optional checks separately. Missing required capability, permission or evidence means explicitly
-NOT VERIFIED, not passed. Preserve item references through handoff so a shared check can cover
-multiple items without losing any task mapping. In existing task fields, distinguish
-REQUIRED checks from optional hardening/broader regression and separately gated
-live/provider/engine/browser checks; record required permissions and unavailable
-capabilities without treating them as passes. State briefly the expected verification
-effort and why any broader check is necessary, not a universal deadline or new schema.
-Do not attach exhaustive matrices, fault injection, new test infrastructure or broad
-suites to simple query/wiring changes by default. Preserve necessary schema/security/
-durability checks and owner-required criteria. Optional checks do not become blockers;
-changing approved acceptance requires the producing workflow's review/approval gate.
-Reference valid unchanged evidence rather than duplicating checks. Keep unrelated
-compatibility repairs in small causal steps, with evidenced prerequisites only.
-
-Tasks inherit root execution intent; do not assign per-task model classes or routing quotas.
-Describe required capabilities; the executable runner verifies approved configuration.
-
-Follow the observed project format. When no established complete format exists, use numbered
-Markdown tasks with explicit `Depends` fields. Number in execution order from T001 with no
-gaps; each prerequisite must be an earlier task. Keep shared setup before stories and each
-story or stage in one contiguous segment. Check implicit dependencies and whether each stage
-can obtain its producers before its consumers; revise the producer placement rather than
-papering over a forward dependency.
-
-Organize consecutive related tasks into coherent sequential work where their retained
-context is useful. Preserve prerequisite order, individual evidence, and story acceptance
-boundaries; do not reorder dependencies or pad a segment with distant work merely to fill a
-batch. Internal producer/consumer dependencies, shared files, and phase/story headings may
-remain together when producer verification precedes consumer work. Record likely shared
-context and integration checkpoints for deterministic runtime intake and verification.
+Use the smallest relevant project check that observes the changed behavior. Check commands
+are optional task context, not mandatory universal acceptance items or collection-count receipts.
+When a check is specified, run it after the relevant work and report its real outcome. Missing
+or failed checks are not passes. Keep owner-required checks and actual permission boundaries;
+do not impose generic acceptance boilerplate or manual gates on ordinary coding.
 
 ## Structured executable handoff (both adapters)
 
-Emit exactly one authoritative adjacent JSON or fenced JSON representation matching the
-suite's delivered `task.schema.json`; the human task document identifies it and agrees
-field-for-field on execution intent and task IDs/order/deps/context_group/owned_paths,
-REQUIRED criterion/check/version/args/pass_condition/expected_evidence/producer_dependencies/
-gates, optional distinction and original manual/permission gates. Never infer these from
-narrative or replace a whole REQUIRED mapping with a source pointer. IDs start at T001,
-are contiguous, prerequisites earlier and story/context groups contiguous.
+For executable intake, emit JSON or YAML as a task list or an object containing `tasks`.
+Each task has a nonempty string `id` and `outcome` (or `description`). Optional `depends`
+is a list of task IDs. IDs must be unique, references must exist, and dependencies must
+not cycle. File order and ID numbering do not determine execution order.
 
-Preserve original `origin`, `legacy_origin`, source paths/sections/content hashes and
-approval_refs. TinySpec retains separate source/tasks and combined approval; Standard
-retains spec/plan/tasks, specification approval, independent overall review and final
-approval plus actual installed stage evidence. Legacy retains documented original gates.
-Draft refs may be empty/unresolved; denial/cancellation/staleness blocks affected execution,
-not task preparation. Inadequate legacy returns to producing review/renewal, no forced Epic,
-mass conversion, STATE initialization or historical rewrite. Reconcile active/unknown legacy
-writers before reusing an origin.
+Example:
 
-Builtin runtime actions require explicit capability declarations for the actually exposed
-read_file/write_file/request_owner_input tools, every REQUIRED oracle and potentially mutating
-runner-git-commit stream (not unused registry checks). Their action_scope is canonical JSON:
-version 1, action ID, tasks with original IDs/owned_paths; read_file additionally includes
-sorted readable_paths from sources/approval record refs/owned paths. Check actions include
-checks with task_id/version/args_hash; PythonAnswer also declares execution=trusted-project-python.
-Use the delivered authority.action_requirement helper to obtain exact canonical bytes rather
-than narrative matching. Effects are external for local read/question actions, mutation for
-write/Git, test for oracles. External here is a local action, not network or financial authority.
-PythonAnswer executes explicitly trusted project code, not a harmless byte comparison or
-sandbox; a test declaration never infers arbitrary network/extra mutation authority. Keep
-workflow and applicable node permissions/effect restrictions consistent. Duplicate, missing,
-wrong-path/check/effect scopes block for producing renewal. Other scoped/paid-service actions
-retain their original semantics; never silently convert historical prose approvals.
+```json
+[
+  {"id": "test-title", "outcome": "Test the corrected title", "depends": ["fix-title"]},
+  {"id": "fix-title", "outcome": "Correct the settings page title"}
+]
+```
 
-Root authorization_envelope and each task's authorization_envelope_id preserve selected exact
-profiles, capabilities/action scope, actual owner references and unresolved/denied/approved
-semantics. Ordinary approved-profile model traffic has no financial approval/cap/reservation.
-Separately chargeable API/service actions need purpose/cost-impact explanation and explicit
-scoped authority before action dispatch; known gaps are aggregated before tasks. Inside-envelope
-technical work and approved isolated tests proceed without repetitive owner questions.
+These are the entire six startup linter checks: readable input, JSON/YAML task list,
+ID/work description, unique IDs, existing dependencies, and no cycles. Empty lists mean
+no work and reserve/launch nothing. No required order, context group, source hashes,
+approvals, execution intent, envelopes, gates, oracle mappings or model assessments.
+Do not regenerate old tasks solely to remove metadata: useful optional context remains valid.
+
+Optional `owned_paths` restricts file mutation when provided. Without it, the runner claims
+only clean, unchanged paths immediately before actual tool edits; it does not adopt dirty
+files or stage arbitrary post-run changes. Useful existing `required` check mappings are
+still consumed if supplied; they are not universally required. Sources may be context, not
+content-pinned execution authority. Keep actual external action permission at that action.
+
+Markdown may remain a human presentation. `check-task-order.py` also checks its IDs,
+descriptions and dependency graph; no contiguous numbering or story-group constraints.
 
 ## Review and handoff
+
+For a [PROTOTYPE] task, preserve the marker and bounded informational
+scope in the handoff and worker brief. Reuse unchanged applicable proof once with all mappings;
+keep routine teardown inside its task. A separate cleanup task needs an
+actual independently consequential resource or outcome.
 
 Review selection/omission, real-runtime evidence, applicable dependencies, proof lifetime,
 production acceptance, disproof/renewal and feasibility through both adapters/direct entry.
@@ -239,26 +181,13 @@ without weakening acceptance or original gates. Return only necessary producer/c
 dependencies, applicable evidence/limits and blocked reliance to the existing producing review
 and coordinator handoff; syntax/order validation alone cannot prove consumption.
 
-For both adapters, carry each criterion/item ID, smallest check, accessible proof/pass
-conditions, applicable earlier producer dependencies and original permission/manual gates into
-the inline REQUIRED brief. For a [PROTOTYPE] task, preserve the marker and bounded informational
-scope in the handoff and worker brief; missing marker/scope or code-only/unrun success claims
-are not proof. Missing, weakened or unrun REQUIRED evidence blocks reliance; source pointers
-cannot substitute for the contract. Reuse unchanged applicable proof once with all mappings,
-rerun only affected invalidated evidence, and keep routine teardown inside its task. A separate
-cleanup task needs an actual independently consequential resource or outcome.
-
-Before approval, validate explicit dependencies and story continuity with
-`python3 scripts/check-task-order.py /path/to/tasks.md` from this skill directory when the
-format supports it. Then manually inspect traceability, exclusions, documentation,
-integration, item completeness/evidence/gates, implicit dependencies, and stage feasibility.
-For inadequate approved/legacy contracts, stop at producing review/renewal; an executor cannot
-define replacement criteria or weaken acceptance post hoc. Missing or ambiguous REQUIRED contracts block dispatch and return to the producing review/approval gate,
-including existing approved tasks with inadequate contracts. Do not fabricate historical contracts,
-retrofit new requirements into legacy approvals, or waive checks; obtain affected review and renewed
-approval before dispatch. Preserve original source provenance and legacy task-embedded requirements.
-Return other defects to the producing workflow's review gate. Record the validation outcome and
-current content evidence with the task artifact so a later handoff can detect stale approval.
+Carry work-specific checks, exclusions and genuinely material permission boundaries into
+the worker brief. Verify the dependency graph with
+`python3 scripts/check-task-order.py /path/to/tasks.json` from this skill directory (YAML
+and Markdown are also supported). Manually inspect relevant scope and feasibility; do not
+turn that review into additional executable intake metadata. A direct owner coding request
+does not require a new planning or approval cycle. Historical source/task documents remain
+unchanged unless the owner requests their revision.
 
 ## Mandatory task checkpoint
 

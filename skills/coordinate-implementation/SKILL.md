@@ -17,15 +17,13 @@ routing, model escalation or coordination-feedback/STATE paperwork.
 
 ## Load and Verify
 
-Read the approved source/tasks and project instructions once. Establish current-content
-review/scope authorization. Missing, stale or unverifiable approval blocks the affected action.
-TinySpec needs separate source/tasks and combined approval. Standard needs specification/plan/tasks,
-both current approvals, independent overall review and required SpecKit stage evidence.
-Preserve legacy source shape; Resolve ambiguous origin/conflicting planning depth before
-execution using the [approval/recovery mapping](../planner/references/approval-and-recovery.md).
-The [bounded mechanical correction contract](../planner/references/approval-and-recovery.md#bounded-mechanical-corrections)
-never permits substantive unreviewed source repair or approval relabeling. Planning-only final
-approval never launches implementation; preserve any explicit separate-session boundary.
+Read the requested task input and project instructions. Ordinary owner-authorized coding
+requires no new planning or approval cycle. Intake has exactly six linter checks: input
+exists/readable; JSON/YAML parses into a task list; each task has an ID and work description;
+IDs are unique; dependency references exist; and dependencies have no cycles. Derive order
+from dependencies, not file order. Empty lists report no tasks without reservation/launch.
+No required sources/hashes, approvals, order/context groups, gates, envelopes, execution intent
+or model assessments. Useful existing optional fields remain valid without regeneration.
 
 Load technical gotchas through `memory-handling`; approved constraints already belong in the
 task contract, not an LLM feedback loop. The [project coordination contract](../memory-handling/references/project-coordination.md)
@@ -42,15 +40,13 @@ No silent provisioning: missing Python dependencies, pinned SDK/Node, credential
 Git authority, approved containment or mode-specific question capability is an exact blocker.
 Do not install, refresh auth, change global settings/services or substitute bindings.
 
-Supply explicit project, workflow, tasks, external trusted owner catalog, SDK manifest,
-containment capability and run identity; installed wheels additionally need `--suite-root`
-for approved skill/settings resources. CLI validates root executor intent and resolves actual
-approved exact implementation/repair bindings separately from planning/reviewer profiles.
-Selected versus observed remains separate; unobservable actual binding/effort is unknown.
-Ordinary approved-profile model tokens require no financial approval/cap/reservation.
-Separately chargeable API/service actions need purpose/cost-impact and explicit scoped authority.
-Known gaps are aggregated before dispatch; approved technical/isolated-test mechanics do not
-need repetitive questions. Authorization is not capability proof.
+Supply actual project/task/run settings and preserve the owner-selected executor/effort
+without silent substitutions. `intake` needs no owner catalog, binding assessment or approval
+input. Full nonempty `start` still needs `--workflow`, `--manifest`, `--containment` and the
+remaining graph/host/session machinery; its deletion is a separate checkpoint. Installed
+wheels still use `--suite-root` for actual resources. Do not claim full six-check startup yet.
+Ordinary selected-model usage needs no financial approval receipt. Require actual narrow
+permission for separately chargeable/irreversible external actions at that action boundary.
 
 Standalone mode uses portable pending/answer/control commands without Paseo. Interactive-parent
 mode requires the registered transport, actual launching-parent identity/permissions and
@@ -59,7 +55,7 @@ question and parent-answer callback, never historical recipient IDs or invented 
 
 ## Interface Actions
 
-- `start`: launch only with current explicit implementation scope and all original gates.
+- `start`: launch the requested work; task metadata is not an approval prerequisite.
 - `status` / `pending`: read authoritative SQLite from another process, without agent launch,
   projection repair or background-continuation claims. Host exit stops execution.
 - `answer`: relay genuine bound owner input through the CLI's external trusted authority path;
@@ -91,20 +87,21 @@ Preserve partial and unrelated work. No required new narrative ledger or snapsho
 
 The runner establishes baseline HEAD, allowed paths, index/worktree ownership and durable
 effect identity; a worker never adopts or commits unknown work. It alone executes/audits real
-REQUIRED checks, original gates and actual diff, then creates one focused verified owned-path
+specified project checks and actual diff, then creates one focused verified owned-path
 checkpoint per implementation/repair task before subsequent mutation or handoff. No skip/defer
 question, No-Git fallback, broad staging, hook/signing bypass, configure-around or history rewrite.
 Read-only/no-change creates no empty commit. See the canonical [task-commit contract](../memory-handling/references/task-commit-contract.md).
 Planning/standalone writers and an ongoing instruction-managed bootstrap retain their existing
 checkpoint duties; do not recursively hand an ongoing migration to this entry.
 
-REQUIRED checks use the smallest sufficient layer; optional checks cannot compensate and
-unmet manual/permission gates block reliance. Preserve same original contracts, each item ID,
-pass condition, producer dependency, actual command/nonempty output/current revision/environment
-and permission/manual gates. Only satisfied REQUIRED items and fulfilled original gates release
-dependents. Representative-sample manual STOP requires an inspectable sample and explicit owner
-approval. Audit actual diff, focused commit/SHA, REQUIRED outputs and residual owned changes;
-a report/clean tree/commit alone is not proof. No extra evidence-only checkpoint.
+Project check commands are optional. Run relevant specified checks after work and report
+actual outcomes; no universal collection-count/receipt contract. `owned_paths` optionally
+limits edits; absent it, claim only clean unchanged paths immediately before actual tool edits.
+Never adopt existing dirty files or stage arbitrary post-run changes. Use explicit-path
+commits, preserve unrelated staged/unstaged/untracked work, normal hooks and signing.
+Audit actual diff, focused commit/SHA, check outputs and residual owned changes; a report or
+clean tree alone is not proof. No extra evidence-only checkpoint. Dependencies release after
+the producer's real focused checkpoint, not an approval envelope.
 
 Before repair inspect run/invocation, partial commits and check evidence. Targeted repair retains
 the same original contracts and reruns invalidated proof only. Unknown cause blocks blind restart;

@@ -16,15 +16,6 @@ def oracle(args):
             'output': 'expected exact file bytes: ' + repr(value)}
 
 
-def scoped_fixture_check_authority(task):
-    from coherence_workflow.authority import AuthorityAdmission,action_requirement
-    contract={'tasks':[copy.deepcopy(task)],'sources':[],'approval_refs':[]}
-    names={i['check']['id'] for i in task['required']}
-    envelope={'profiles':[],'capabilities':[{'id':n,**action_requirement(contract,n)} for n in names]}
-    policy=AuthorityAdmission(envelope,{},names,names,lambda *unused:None)
-    return lambda actual,item:policy.require(item['check']['id'],action_requirement({'tasks':[actual],'sources':[],'approval_refs':[]},item['check']['id']))
-
-
 class RequiredEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -37,7 +28,7 @@ class RequiredEvidenceTests(unittest.TestCase):
                 'args': {'path': str(self.project / 'owned.txt')}}, 'gates': [], 'producer_dependencies': [],
                 'pass_condition': 'bytes equal expected', 'expected_evidence': 'actual file oracle'}
         self.task = {'id': 'T', 'owned_paths': ['owned.txt'], 'required': [item]}
-        self.verify = Verification(self.owner, 'run', {'exact': self.spec}, {'fixture': 'v1'}, authorize=scoped_fixture_check_authority(self.task))
+        self.verify = Verification(self.owner, 'run', {'exact': self.spec}, {'fixture': 'v1'})
 
     def tearDown(self):
         self.owner.close(); self.temp.cleanup()
@@ -62,6 +53,14 @@ class RequiredEvidenceTests(unittest.TestCase):
         self.verify.checks = {}
         self.assertEqual(self.verify.run_checks(self.task)[0]['status'], 'insufficient-evidence')
 
+    def test_command_exit_is_meaningful_without_collection_count(self):
+        self.spec['execute'] = lambda args: {'exit_code': 0, 'output': ''}
+        evidence = self.verify.run_checks(self.task)
+        self.assertEqual(self.verify.audit(self.task, evidence)[0]['status'], 'satisfied')
+        self.spec['execute'] = lambda args: {'exit_code': 1, 'output': 'actual command failure'}
+        evidence = self.verify.run_checks(self.task)
+        self.assertEqual(self.verify.audit(self.task, evidence)[0]['status'], 'failed')
+
     def test_shared_check_executes_once_and_maps_every_item(self):
         calls = []
         def execute(args):
@@ -69,7 +68,6 @@ class RequiredEvidenceTests(unittest.TestCase):
             return oracle(args)
         self.spec['execute'] = execute
         self.task['required'].append({**self.task['required'][0], 'id': 'T/V2'})
-        self.verify.authorize=scoped_fixture_check_authority(self.task)
         evidence = self.verify.run_checks(self.task)
         self.assertEqual(len(calls), 1)
         self.assertTrue(all(e['item_ids'] == ['T/V1', 'T/V2'] for e in evidence))

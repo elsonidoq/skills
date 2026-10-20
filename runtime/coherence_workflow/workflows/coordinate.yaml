@@ -11,17 +11,6 @@ nodes:
   outcomes:
   - ok
   transitions:
-    ok: authority
-  side_effects:
-  - read
-  max_retries: 0
-- id: authority
-  handler: authority
-  handler_version: '1'
-  type: gate
-  outcomes:
-  - ok
-  transitions:
     ok: custody
   side_effects:
   - read
@@ -237,7 +226,7 @@ nodes:
   - owner_input_required
   transitions:
     ok: complete
-    correction: authorize-correction
+    correction: schedule-correction
     blocked: failure
     owner_input_required: owner-input-review
   side_effects:
@@ -273,7 +262,7 @@ nodes:
   outcomes: [ok, correction, blocked, owner_input_required]
   transitions:
     ok: complete
-    correction: authorize-correction
+    correction: schedule-correction
     blocked: failure
     owner_input_required: owner-input-review
   side_effects: [read]
@@ -288,8 +277,8 @@ nodes:
   max_repair_attempts: 2
   tools: [read_file, request_owner_input]
   permissions: [read_file, request_owner_input]
-- id: authorize-correction
-  handler: authorize-correction
+- id: schedule-correction
+  handler: schedule-correction
   handler_version: '1'
   type: code
   outcomes:
@@ -327,8 +316,8 @@ profiles:
 skills:
   coordinate:
     path: skills/coordinate-implementation/SKILL.md
-    sha256: b6c4c1c9c84a2aeeb8ae55238a0011e22254b83c386c5319922450ecb7b9640a
-    resource_hash: b6c4c1c9c84a2aeeb8ae55238a0011e22254b83c386c5319922450ecb7b9640a
+    sha256: f1008185f59dcd944d7f80c504333586e34dd4b77895cd4e96b5495bcde284bc
+    resource_hash: f1008185f59dcd944d7f80c504333586e34dd4b77895cd4e96b5495bcde284bc
 defaults:
   max_repair_attempts: 2
   min_free_tokens_before_compaction: 150000

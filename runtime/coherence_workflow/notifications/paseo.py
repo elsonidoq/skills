@@ -249,14 +249,6 @@ def facade(project,run,operation,nonce,event=None,*,command=None):
         if not receipt or answer is None:raise Blocked('genuine original ask_user answer unavailable; leave pending, never reask')
         if json.loads(gate['request'])['category']=='unexpected_material_change':
             raise Blocked('material answer requires producing approval renewal before continuation')
-        inputs=channel.db.execute('SELECT contract FROM wf_run_inputs WHERE run_id=?',(run,)).fetchone()
-        if not inputs:raise Blocked('original admitted authority unavailable; renew before answering')
-        import hashlib
-        contract=json.loads(inputs[0])
-        for path,sha in ([(s['path'],s['sha256']) for s in contract['sources']] +
-                         [(r['record_ref'],r['record_sha256']) for r in contract['approval_refs']]):
-            if hashlib.sha256(safe_path(project,path).read_bytes()).hexdigest()!=sha:
-                raise Blocked('source/approval changed; producing renewal required')
         value={'schema_version':1,'kind':'owner_answer','binding':json.loads(gate['binding']),'input_id':'parent-answer:'+event,
             'gate_id':gate['gate_id'],'nonce':nonce,'pin_policy':'original_only','answer':answer,
             'receipt':{'source':'parent_ask_user','actor':'parent:'+capability.descriptor['runtime_session_id'],

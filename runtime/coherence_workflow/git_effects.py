@@ -54,7 +54,7 @@ def inventory_inputs(project, tasks):
     """Shared safe Git/path prerequisites, without adopting any existing bytes."""
     owned = set()
     for task in tasks:
-        paths = task['owned_paths']
+        paths = task.get('owned_paths', [])
         if len(paths) != len(set(paths)) or any(a != b and b.startswith(a + '/') for a in paths for b in paths):
             raise Blocked('overlapping owned inventory paths')
         assert_safe_git_inputs(project, paths)
@@ -70,7 +70,7 @@ def inventory_preflight(project, tasks):
     """Fresh baseline admission; pending task selection still requires clean ownership."""
     owned = inventory_inputs(project, tasks)
     for task in tasks:
-        clean_owned(project, task['owned_paths'])
+        clean_owned(project, task.get('owned_paths', []))
     return snapshot(project, owned)
 
 
@@ -122,12 +122,12 @@ class GitEffects:
         self.store.assert_dispatchable(self.run)
         return inventory_preflight(self.project, [task])
 
-    def checkpoint(self, task, baseline, dispositions, *, gates_satisfied, phase_hook=None):
+    def checkpoint(self, task, baseline, dispositions, *, phase_hook=None):
         assert_safe_git_inputs(self.project,task['owned_paths'])
         self.store.assert_dispatchable(self.run)
-        if (not gates_satisfied or {d['item_id'] for d in dispositions} != {i['id'] for i in task['required']} or
+        if ({d['item_id'] for d in dispositions} != {i['id'] for i in task['required']} or
                 any(d['status'] != 'satisfied' for d in dispositions)):
-            raise Blocked('REQUIRED evidence/original gates block checkpoint')
+            raise Blocked('task checks block checkpoint')
         owned = task['owned_paths']
         now = reconcile(self.project, owned, baseline)
         if now!=baseline:

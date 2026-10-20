@@ -39,7 +39,7 @@ class FocusedCheckpointTests(IsolatedCustody):
             (self.project/'custom.md').write_text('unrelated external drift')
             with self.assertRaisesRegex(Blocked,'unrelated file drift'):
                 GitEffects(owner,'run',gateway).checkpoint(self.task(),baseline,
-                    [{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+                    [{'item_id':'A/V1','status':'satisfied'}])
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],2)
 
     def test_actual_signing_failure_blocks_without_disabling_or_retry(self):
@@ -62,7 +62,7 @@ class FocusedCheckpointTests(IsolatedCustody):
         gateway=Gateway(owner,'run',self.parent,{})
         try:
             return GitEffects(owner,'run',gateway).checkpoint(task,baseline,
-                [{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True,**kwargs)
+                [{'item_id':'A/V1','status':'satisfied'}],**kwargs)
         finally:
             for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
                 receipt=json.loads(row[0])
@@ -91,7 +91,7 @@ class FocusedCheckpointTests(IsolatedCustody):
             owner.store.reserve('run','fixture')
             task=self.task(); baseline=snapshot(self.project,task['owned_paths'])
             effects=GitEffects(owner,'run',Gateway(owner,'run',self.parent,{}))
-            with self.assertRaises(Blocked):effects.checkpoint(task,baseline,[],gates_satisfied=True)
+            with self.assertRaises(Blocked):effects.checkpoint(task,baseline,[])
             result=self.checkpoint(owner,task,baseline)
             self.assertTrue(result['read_only']);self.assertEqual(result['sha'],baseline['head'])
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
@@ -170,7 +170,7 @@ class GitCapabilityTests(IsolatedCustody):
             # An unused external filter does not deny ordinary built-in operations.
             assert_safe_git_inputs(self.project,self.task()['owned_paths'])
             (self.project/'.gitattributes').write_text('owned.txt filter=late\n')
-            with self.assertRaisesRegex(Blocked,'filter'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+            with self.assertRaisesRegex(Blocked,'filter'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}])
             self.assertEqual((self.project/'.git/index').read_bytes(),index);self.assertFalse(self.marker.exists())
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_operations').fetchone()[0],0)
         # Separate fixture: no reset/discard/configuration-around the rejected case.
@@ -181,7 +181,7 @@ class GitCapabilityTests(IsolatedCustody):
             (self.project/'owned.txt').write_text('retained partial')
             hook=self.project/'.git/hooks/post-index-change';hook.write_text('#!/bin/sh\nexit 0\n');hook.chmod(0o700)
             index=(self.project/'.git/index').read_bytes()
-            with self.assertRaisesRegex(Blocked,'post-index-change'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+            with self.assertRaisesRegex(Blocked,'post-index-change'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}])
             self.assertEqual((self.project/'.git/index').read_bytes(),index)
             self.assertEqual((self.project/'owned.txt').read_text(),'retained partial')
 
@@ -191,7 +191,7 @@ class GitCapabilityTests(IsolatedCustody):
             effects=self.effects(owner);baseline=effects.begin(self.task())
             (self.project/'owned.txt').write_bytes(b'normalized\r\n')
             try:
-                result=effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
+                result=effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}])
                 self.assertEqual(git(self.project,'show',result['sha']+':owned.txt'),b'normalized\n')
                 self.assertEqual((self.project/'owned.txt').read_bytes(),b'normalized\r\n')
                 self.assertEqual(result['parent'],baseline['head'])

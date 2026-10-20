@@ -1,29 +1,44 @@
 # Coordinate Implementation runtime
 
+## Current task intake (supersedes administrative admission)
+
+`intake --project PROJECT --tasks tasks.json` reads JSON/YAML as a list or `{ "tasks": [...] }`.
+The only task-linter checks are: input readable, parses into a list, each task has a string ID
+and work description (`outcome` or `description`), unique IDs, dependency references exist,
+and no dependency cycles. Dependencies (`depends`) determine execution order, not file order.
+Empty input reports no tasks and creates no reservation or worker.
+
+No owner catalog, source hashes, approvals, execution intent, model assessments, order,
+context groups, gates or authorization envelopes are required. Old optional fields may remain;
+there is no regeneration requirement. `owned_paths` is an optional edit limit. Without it,
+only clean unchanged paths selected by actual tool edits become owned and get explicit-path
+commits; unrelated staged/unstaged/untracked work stays untouched. Project check mappings
+are optional, run after work, and need no universal collection-count receipt.
+
+This checkpoint does **not** simplify full startup: nonempty `start` still needs the existing
+`--workflow`, `--manifest`, and `--containment` graph/host inputs, skill/settings bindings,
+session/custody and graph/evidence machinery. Those are the next deletion seam, not six-check
+execution acceptance. The owner-selected configured Sol/medium binding is unchanged.
+The older admission descriptions below do not reinstate removed task/authority requirements.
+
 ## Current delivery: executable implementation entry
 
 ### Lean runtime amendment (T001)
 
-The operative admission is five facts: valid dependency-ready work with REQUIRED checks,
-usable selected configuration/resources, current scoped approval, one-writer safe ownership,
-and runnable verification. Recheck a fact only when its input changes. Agents receive scoped
-range reads (with continuation), bounded searches and owned edits/checks; a settled local tool
-read error is returned with a correction so the same attempt can continue. Optional telemetry
-is recorded but never vetoes a settled exact-compatible session. Required/manual gates, scoped
-external authority, own-child custody and check-before-focused-runner-commit remain blocking.
-This refactor is delivered by approved instruction-managed writer checkpoints; it does not
-bootstrap itself through this CLI. T002 delivers revision-aware history below; T003 delivers
-reference-based full-range review and genuine scoped original-associated answers. Historical
-migration proof programmes below are not current launch or writer-checkpoint gates.
+Task admission is the six-check linter above. Scoped action-envelope/catalog/source approval
+preflight has been removed, not cached or renamed. Optional telemetry remains observation.
+The remaining host/graph/custody machinery still applies until its separate deletion seam.
+This refactor uses instruction-managed writer checkpoints; it never bootstraps itself through
+this CLI. Historical migration proof programmes are not current launch or writer gates.
 
 The suite skill is a thin executable interface; runtime installation remains optional/explicit.
 No global installation or automatic reload is performed. The standalone
 `scripts/coordinate-implementation` composes the foundation and pinned SDK with structured
-intake, authority preflight, real registered checks and focused runner checkpoints.
+task intake, optional project checks and focused runner checkpoints.
 The packaged task-progress graph uses bounded logical visits in the same LangGraph,
 not a separate scheduler. Bounded diagnosed repairs and fresh independent read-only
 full-range review now compose that graph. `implementation_complete` is not acceptance:
-only current REQUIRED/gates, focused checkpoints, resolved findings and an exact current
+only current specified checks, focused checkpoints, resolved findings and an exact current
 full-range independent pass permit acceptance. Interaction commands require their delivered mode-specific authority/capability. `load_workflow(Registry())` still blocks
 without concrete registered task-handler capabilities. Its selected
 profile is a declaration, not proof of a usable model or permission to send requests.
@@ -79,11 +94,11 @@ settings resources; --project always names the separate execution worktree.
   `recover()` observes durable operations; it never releases or replays a tool.
   `resolve(op)` drains only proven-owned containment and reconciles partial files/Git.
 
-These are trusted runner interfaces, **not agent-exposed authority APIs**. Delivered intake,
-authority and registered task/review handlers validate external requests and scope before effects.
+These are trusted runner interfaces, **not agent-exposed authority APIs**. Delivered intake
+and registered task/review handlers consume task input before effects.
 Unregistered/unavailable capabilities still block before reliance. Fixture handlers used in engine tests are deliberately not Pi/approval certification.
 
-Every successful graph route must traverse intake → authority → custody → verification →
+Every successful graph route must traverse intake → custody → verification →
 checkpoint → independent review before a registered success terminal. Other terminals may
 block early. Only registered bounded task-progress/repair/review/question cycles are admitted; arbitrary
 cycles or blind effect retries are rejected. Definition order is not scheduling; configured
@@ -355,29 +370,15 @@ Use the approved Python environment explicitly; the launcher never installs depe
 ```sh
 COHERENCE_PYTHON=/approved/venv/bin/python scripts/coordinate-implementation start \
   --project /canonical/project --run RUN_ID --workflow /approved/workflow.yaml \
-  --tasks /approved/tasks.json --owner-catalog /private/owner-catalog.json \
+  --tasks /approved/tasks.json \
   --manifest /approved/sdk-manifest.json --containment /approved/delegated-parent
 scripts/coordinate-implementation status --project /canonical/project --run RUN_ID
 ```
 
-`intake --project PATH --tasks FILE --owner-catalog FILE --config-hash HASH` performs
-non-dispatching structured intake and returns source/contract/scope hashes and task IDs.
-The catalog is explicit trusted operator input: a private, owned, single-link regular
-file **outside** the agent worktree. Keys are authority refs; values contain exact actor,
-record_ref, record_sha256, scope_hash, gate_kind and action. It must represent genuine
-external owner evidence, never a worker-created approved file. This is a trusted local
-operator interface, not authentication against malicious same-UID processes. The runner
-also verifies referenced record bytes and current sources. Specification scope is its
-spec source hash; overall/combined/documented legacy scope is the source-list digest;
-implementation scope is `approval_scope(contract, config_hash)`. Gate-specific records
-bind the exact gate without approval_ref, task ID and config hash. Deny/cancel/drift blocks.
-Planning approval alone cannot provide the separate implementation approval.
-
-TinySpec retains separate source/tasks and combined authority; Standard needs spec/plan/
-tasks/review plus specification/overall/implementation authority. Structured documented
-legacy admits only through a caller-verified settled origin; CLI legacy start currently
-blocks rather than inventing a settlement receipt. There is no prose conversion or Epic.
-Each dependency must occur earlier; whole REQUIRED/manual/permission contracts survive.
+`intake --project PATH --tasks FILE` performs only the six task-linter checks and returns
+task IDs and ready/no-tasks status. No external owner catalog, source/approval hashes,
+planning-origin settlement, executor intent or gate receipt is required. Useful optional
+metadata stays readable; dependencies may occur later in the input and determine order.
 
 The SDK manifest uses the already delivered explicit settings/resources/auth/catalog
 contract. Exact graph profile and skill hashes must agree with delivered SDK resources.
@@ -393,21 +394,19 @@ No SDK built-in shell, Git or ask_user is exposed. One writer plus task/checkpoi
 preserve unrelated ignored/nested material; no per-tool recursive proof chain remains.
 This is cooperative scoped authority, not an OS filesystem sandbox.
 
-Preflight aggregates known registered capability, permission, profile, REQUIRED-check and
-gate gaps before any task. Ordinary approved-profile model traffic/retries/summaries have
-no financial cap or approval/reservation. Separately chargeable service actions require
-purpose/cost-impact/scoped authority and durable intent before sending; uncertain/attempted
-external effects cannot blindly resend. They are not exposed as generic model tools.
+There is no action-envelope preflight. Actual SDK/backend/command errors remain ordinary
+operation errors. Separately chargeable/irreversible external actions still need actual narrow
+permission at that action; never blindly resend an uncertain prior external effect.
 
 `workflow.FileBytes` is a real exact-file oracle. Registered versioned unittest selectors
 are closed code capabilities. `workflow.Command` accepts an explicitly approved REQUIRED
 argv array (canonical absolute executable, project cwd, optional positive timeout); it runs
-through existing Gateway custody, collecting actual exit/output and a command count. This
+through existing Gateway custody, collecting actual exit/output. This
 is trusted approved project code, not a shell/sandbox or an external-action permission.
 `run_check` exposes only approved task item IDs, never worker-supplied argv; its persisted
 Verification receipts are audited/reused by verify before checkpoint. Command stdout/stderr
 are retained up to 32768 bytes; the worker sees an 8192-character receipt summary with
-truncation indicated, not a duplicate full contract. Timeout drains the proven child and remains insufficient. Missing/unrun/empty/stale/
+truncation indicated, not a duplicate full contract. Timeout drains the proven child and remains insufficient. Missing/unrun/stale/
 conflicting proof remains insufficient; optional output cannot release it. Evidence is
 persisted by item, environment and final owned bytes; shared checks run once with all item
 mappings. Scoped sample STOP APIs persist inspectable bytes/nonce and require an external
@@ -779,32 +778,15 @@ Fresh independent full-range migration review and all current REQUIRED/gates dis
 acceptance from implementation completion. Changed skills/prompts need /reload when adopted,
 not an automatic global activation or reload of this bootstrap session.
 
-### Concrete builtin action authority and private process payloads
+### Scoped file edits and private process payloads
 
-Executable preflight derives the actually exposed node tools and whole REQUIRED check stream,
-not merely declared/available registry names. Each applicable action needs a unique explicit
-owner envelope declaration, compatible concrete scope/effects, workflow permission and applicable
-node restriction. Required oracles are not authorized by registry existence. Potentially mutating
-streams additionally declare runner-git-commit as a scoped mutation and workflow permission;
-Git remains runner-only, never an agent tool. No-change/read-only effects create no empty commit.
-
-Builtin action_scope is the version=1/action declaration produced by authority.action_requirement.
-The approved task contract owns path/check scope; capabilities no longer duplicate task/path/
-argument encodings. Exact node permissions/effects and actual task/check membership still
-restrict effects. Local read/question is external; write/edit/Git is mutation; checks/run_check
-are test. Local external grants no network/paid authority. Command/PythonAnswer execute trusted
-project code, not a shell or filesystem/network sandbox; mutation/service authority is not
-inferred from a broad test label. Approved models remain exact-profile-bound without financial
-ceremony. Exceptional paid/external actions retain their existing scoped original semantics.
-
-At actual checks, registered tools, question admission and Git dispatch the runner rechecks
-current admitted original contract/approvals, concrete scope and exact node/workflow policy.
-Missing production authorizer fails closed; preflight is not a cached grant. Unknown/omitted/
-duplicate/wrong task/path/check/effect declarations return producing renewal, not silent legacy
-conversion. Standalone trusted ledger/process protocol fixtures are not executable-workflow
-permission substitutes. Source launcher and internal Python helper/write imports bind isolated
-actual package roots with -I/-B; cwd/caller PYTHONPATH cannot shadow privileged runtime code.
-A separately authorized project-code test retains its own intended project import semantics.
+No builtin action declarations, owner catalogs, authorization envelopes, approval pins or
+model compatibility assessments are ordinary coding prerequisites. Optional `owned_paths`
+limits remain actual file-tool boundaries; absent them, paths are claimed at the edit boundary
+against the existing baseline without adopting dirty work. Git commits only those paths.
+Normal project command checks execute trusted project code, not a shell or filesystem sandbox.
+Source launcher and internal Python imports still use actual package roots with -I/-B to
+avoid cwd/PYTHONPATH shadowing. Project tests retain their own intended import semantics.
 
 Non-Git process intents/events retain executable, argv_hash, environment_hash and required
 custody/Git reconciliation metadata, never the incoming write body or arbitrary argv/env

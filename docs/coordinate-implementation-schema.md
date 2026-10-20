@@ -18,15 +18,15 @@ T003 delivers reference-based review and scoped original-associated answers belo
 ## Packaged contracts
 
 `runtime/coherence_workflow/schemas/` contains the eight reviewed draft-2020-12 JSON schemas,
-with version-1 identifiers preserved. T001 delivered byte-equivalent design copies; T008
-intentionally extends both task schema carriers for executor-aware planning. Original source/
-approval snapshots are preserved, not relabeled as approval of arbitrary new schema bytes:
+with version-1 identifiers preserved. Earlier delivery used byte-equivalent design copies;
+task intake now uses the six-check task list described below. Historical design copies and
+approval snapshots are not executable eligibility contracts:
 
 | File | Boundary |
 | --- | --- |
 | `shared.schema.json` | IDs/digests/paths, profiles, session policy, evidence and provenance definitions |
 | `workflow.schema.json` | Closed version-1 declarative node/transition/profile/skill/settings/storage configuration |
-| `task.schema.json` | Full normalized origin/order/ownership/REQUIRED/gates/authorization contract and executor intent; delivered intake |
+| `task.schema.json` | Task list or tasks object; ID and outcome/description, with optional dependencies/context |
 | `agent-result.schema.json` | Untrusted proposed implementation/review result; delivered result admission |
 | `execution-result.schema.json` | Runner-audited outcome, REQUIRED dispositions and mandatory survivor blocking; runner authority remains distinct |
 | `host.schema.json` | Delivered SDK envelope; closed op payload/phase validation in host.mjs and pi_adapter.py |
@@ -54,7 +54,7 @@ constants/version `1`; file-byte/PythonAnswer oracles have their own closed argu
 ## Read-only inventory preflight (no storage schema change)
 
 `preflight --project CANONICAL_ROOT --tasks TASK_CONTRACT.json` validates the existing
-closed task schema and performs the actual task-selection Git/ownership/full-inventory
+six-check task input and performs the actual task-selection Git/ownership/full-inventory
 admission without Authority, SQLite, reservation, controller or model dispatch. It does not
 verify approvals or grant execution authority. Success is JSON with `status: ready`,
 `scope`, `head`, `index_hash`, `inventory_hash`, `entries`, `directories`, and `owned_paths`.
@@ -408,24 +408,20 @@ Optional notifications never release gates. Local official-format tests prove wi
 actual UI integration or exactly-once UI. Historical monitor parent/proof-table consumers require
 separate reader/data-model/source/task approval renewal before using these semantics.
 
-## Executor-aware task handoff (v1 additive metadata)
+## Six-check executable task intake
 
-Root `execution_intent` is separate from producer/reviewer profiles and from runtime action
-authority. It carries `model_class`, `effort`, `resolution` (`unresolved|resolved`), nonempty
-`assumptions`, `provenance`, `decomposition_rationale` and `compatible_bindings`. Each binding
-has exact `provider/model/effort`, `assessment` and `provenance`. New planning paths capture
-class/effort before Standard architecture or TinySpec decomposition. Human summary must agree
-with machine metadata. Runtime authority preflight checks actual implementation/repair profiles
-against explicit approved compatible bindings and effort; reviewers do not supply executor
-intent. Existing binding/observer/tool/permission validation is still mandatory.
+Task intake accepts a JSON/YAML list or `tasks` object. Its six checks are readability,
+parsing into a list, ID/work description, unique IDs, existing dependency references and no
+cycles. Dependency order is derived; file order, `order`, context groups, approvals, source
+hashes, execution intent and envelopes are not eligibility requirements. Optional context is
+preserved. Empty input exits before storage/reservation/worker creation. `owned_paths`, when
+present, limits edits; absent it, clean paths are claimed immediately before actual tool edits
+and only those paths are checkpointed. Existing optional check mappings still run later;
+command success does not require a universal collected-test count.
 
-The v1 schema accepts absent historical metadata so historical documents remain representable;
-`admit` explicitly blocks such execution with the earliest affected producing review/renewal
-path, rather than fabricating old intent or treating an opaque schema failure as migration.
-Unresolved/incompatible execution intent blocks dispatch. Changed intent assesses affected
-boundaries/detail/assumptions and renews affected current-content approvals; no automatic full
-regeneration/escalation. The approved original migration task/source snapshot remains unchanged;
-new schema bytes and renewed fixture approval hashes are not historical owner approval.
+The old `wf_run_inputs.owner_catalog_hash` column is retained for historical SQLite layout
+compatibility only; new intake does not read or compare catalogs. Remaining graph, host,
+manifest, session and cgroup prerequisites are not removed by this intake checkpoint.
 
 ## Published version-1 field inventory
 
