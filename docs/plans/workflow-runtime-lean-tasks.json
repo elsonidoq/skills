@@ -1,0 +1,548 @@
+{
+  "schema_version": 1,
+  "origin": "TinySpec",
+  "legacy_origin": null,
+  "sources": [
+    {
+      "path": "docs/plans/workflow-runtime-lean-tinyspec.md",
+      "section": null,
+      "sha256": "a6fee2bfee8d9906ee5be4f69deee0bee85717da01fe62ad318a0e42d16266c3",
+      "kind": "source"
+    }
+  ],
+  "approval_refs": [],
+  "execution_intent": {
+    "model_class": "Terra",
+    "effort": "medium",
+    "resolution": "resolved",
+    "assumptions": [
+      "Instruction-managed delivery, not execution through the runtime under refactor; bounded sequential writers with moderate scaffolding and writer-owned verified commits.",
+      "Owner-selected exact implementation binding is separate from Sol/medium planning and the unchanged Sol/medium monitor configuration; callable readiness is verified before later dispatch."
+    ],
+    "provenance": "This conversation: actual owner ask_user answer “Yes — gpt-5.6-terra / medium”; retained in TinySpec Acceptance and remaining gates. Planning producer selected and observed openai-codex/gpt-6.1-sol, medium.",
+    "decomposition_rationale": "Three coherent production outcomes: first usable configured read/edit/check/commit path and permanent safety tests; compatible durable attempts/history; then actual full-range review and genuine owner-input delivery. Interfaces and consequential choices are explicit for Terra; routine helper organization remains open. No inventory/prototype/report/cleanup chain.",
+    "compatible_bindings": [
+      {
+        "provider": "openai-codex",
+        "model": "gpt-5.6-terra",
+        "effort": "medium",
+        "assessment": "Owner-selected compatible target for these bounded interfaces and moderate scaffolding; not a claim of current callable SDK readiness or implementation authority.",
+        "provenance": "Actual owner answer in this conversation and retained TinySpec delivery direction."
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T001",
+      "order": 0,
+      "outcome": "Deliver the usable configured scoped read/search/edit/check to focused runner-commit path, deleting tool/proof/telemetry obstacles and retaining real custody; permanent tests and operative policy/docs ship together.",
+      "depends": [],
+      "context_group": "lean-execution",
+      "owned_paths": [
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/intake.py",
+        "runtime/coherence_workflow/authority.py",
+        "runtime/coherence_workflow/tools.py",
+        "runtime/coherence_workflow/tool_process.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/sessions.py",
+        "runtime/coherence_workflow/verification.py",
+        "runtime/coherence_workflow/registry.py",
+        "runtime/coherence_workflow/git_effects.py",
+        "runtime/pi-host/host.mjs",
+        "runtime/coherence_workflow/schemas/host.schema.json",
+        "runtime/coherence_workflow/schemas/shared.schema.json",
+        "runtime/coherence_workflow/schemas/workflow.schema.json",
+        "runtime/coherence_workflow/workflows/coordinate.yaml",
+        "runtime/tests/test_cli.py",
+        "runtime/tests/test_intake.py",
+        "runtime/tests/test_authority.py",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_sessions.py",
+        "runtime/tests/test_host.mjs",
+        "runtime/tests/test_verification.py",
+        "runtime/tests/test_git_effects.py",
+        "runtime/tests/test_custody.py",
+        "runtime/tests/test_inventory.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "skills/coordinate-implementation/SKILL.md",
+        "skills/coordinate-implementation/scripts/test_intake_contract.py",
+        "skills/coordinate-implementation/scripts/test_batching_contract.py",
+        "skills/coordinate-implementation/scripts/test_state_contract.py",
+        "REQUIREMENTS.md",
+        "AGENTS.md",
+        ".specify/memory/constitution.md"
+      ],
+      "required": [
+        {
+          "id": "T001/V1",
+          "criterion": "A1/A3: five-fact readiness, usable tools, configuration-first binding and correctable safe errors.",
+          "check": {
+            "id": "manual.execution-seams",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_cli.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_intake.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_authority.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_pi_adapter.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_sessions.py'",
+                "node --test runtime/tests/test_host.mjs"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Named permanent actual-helper tests show scoped read/search/ranged continuation/edit/real command-check wiring, exact selected binding (including a non-Sol configuration without provider-equivalence guessing), actionable ordinary tool/validation/nonzero-check errors returned to the same healthy turn; optional absent/low pressure observations do not veto continuation. No no-op process reads, full-tree-per-tool snapshot/reconcile, duplicate task/path/check authority encodings or mandatory full-contract readmission remain on this tool path. Unknown effects/custody still stop affected work.",
+          "expected_evidence": "Commands, named cases and actual deletion/call-site diff; requested and observed binding distinguished. Static tests do not establish generic live SDK compatibility.",
+          "producer_dependencies": [],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        },
+        {
+          "id": "T001/V2",
+          "criterion": "A2: earliest useful real composed PRODUCT acceptance before downstream reliance.",
+          "check": {
+            "id": "manual.real-delivery",
+            "version": "1",
+            "args": {
+              "procedure": "In separately approved isolated target, use actual configuration-selected executor/SDK and production runner: read normal source with continuation above the former 32768-byte read limit; safely fail a tool call then correct it in the same attempt; make an owned edit; execute applicable real project check; inspect focused runner-created commit. Capture exact command/config and observed result in existing session/test return, not a new ledger.",
+              "mode": "separately gated real execution; NOT RUN during task production"
+            }
+          },
+          "pass_condition": "Real executor performs read -> owned write -> successful real check -> focused runner commit; corrected safe tool error does not poison turn or trigger replacement; continuation exposes content beyond old limit without claiming universal size support. Actual binding, settled custody, check result and owned commit/tree are inspectable, not mocked metadata. Failure/unrun blocks reliance; diagnose before targeted retry.",
+          "expected_evidence": "Owner authority, exact live command/config/environment, requested/observed binding, baseline/result SHA and diff, tool error/correction/continuation, actual check exit/output and settled process evidence; record limits.",
+          "producer_dependencies": [],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability",
+            "G-live"
+          ]
+        },
+        {
+          "id": "T001/V3",
+          "criterion": "A3: scoped mutation, required/manual gates and verified commit ordering survive deletions.",
+          "check": {
+            "id": "manual.execution-safety",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_verification.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_git_effects.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_custody.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_inventory.py'"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Focused permanent production-seam tests prove owned paths and unrelated staged/unstaged/ignored/nested material preserved; denied/unmet manual gates or nonzero required checks cannot commit/release dependents; hooks/signing failures stop without configure-around; worker cannot commit. Smallest existing composed fixture observes actual successful check before runner commit and refusal of unresolved tool/host/Git replay, not only helper flags. Custody-sensitive test branches run only with their explicit isolated-process authority; missing authority is NOT RUN.",
+          "expected_evidence": "Named case output and actual fixture Git/check order, unrelated-byte/index comparison, refusal diagnostics and permission limits.",
+          "producer_dependencies": [],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        },
+        {
+          "id": "T001/V4",
+          "criterion": "A1/A4: lockstep operative contracts and bounded delivery amendment.",
+          "check": {
+            "id": "manual.execution-docs",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 <approved-python> -B skills/coordinate-implementation/scripts/test_intake_contract.py",
+                "PYTHONDONTWRITEBYTECODE=1 <approved-python> -B skills/coordinate-implementation/scripts/test_batching_contract.py",
+                "PYTHONDONTWRITEBYTECODE=1 <approved-python> -B skills/coordinate-implementation/scripts/test_state_contract.py",
+                "git diff --check",
+                "Manual compare T001 production diff, relevant operative owners and exact approved amendment/exception"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Entry, operating/schema docs, REQUIREMENTS/adoption/constitution describe T001 behavior and explicitly approved migration exception without claiming later T002/T003 pruning complete. Amend obsolete executable-only static guards with changed contract, retaining required gates/checkpoints/review. Preserve historical amendment provenance and portability; tell user /reload after global skill changes. No launch manifest/catalog/source-pin ceremony is imposed on manual refactor delivery.",
+          "expected_evidence": "Named contract-check results and changed code-to-doc/policy comparison, owner amendment decision/rationale and known intermediate limitations.",
+          "producer_dependencies": [],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "G-approval",
+          "kind": "permission",
+          "criterion": "Combined current-content TinySpec/tasks/scope approval, explicit bounded instruction-managed delivery exception and exact policy amendment decision/rationale; no implementation authorized by drafting.",
+          "scope": "All three tasks; policy proposal in human document.",
+          "expected_evidence": "Actual owner decision associated with reviewed current source/tasks, exception and amendment rationale; no fabricated receipt.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-custody",
+          "kind": "manual",
+          "criterion": "Before retained implementation, establish actual sole-writer safety and reconcile real competing effects, or obtain authorized clean isolated workspace; clean Git/controller-stopped is insufficient.",
+          "scope": "Each writer baseline and resume; preserve monitor-app-20261020-0ec48f3fe91b and all historical/ignored evidence.",
+          "expected_evidence": "Coordinator inspection of real children/process custody and Git/index ownership; unknown effects block affected work without controlling/recovering monitor.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-capability",
+          "kind": "capability",
+          "criterion": "Verify exact approved Terra/medium worker, existing local tools/Git/check dependencies and applicable permissions without installation or silent fallback.",
+          "scope": "Instruction-managed delivery; product tests separately scoped.",
+          "expected_evidence": "Actual dispatch/check capability evidence, baseline and owned paths; missing capability is NOT VERIFIED.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-live",
+          "kind": "permission",
+          "criterion": "Separate explicit live/provider/test/process-custody authority for the real A2 exercise, approved isolated target and usable selected executor/SDK/tools/check command.",
+          "scope": "T001/V2; later rerun only when changed seams invalidate that proof. No current-run control, process adoption, install, auth changes or worktree creation authorized now.",
+          "expected_evidence": "Owner live-test scope plus actual available own-child custody and test target; absent authority means NOT RUN and blocks reliance on A2.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "lean-delivery-draft"
+    },
+    {
+      "id": "T002",
+      "order": 1,
+      "outcome": "Deliver minimal durable history and compatible settled-boundary attempts, deleting immutable full-code eligibility and optional-publication vetoes while preserving old records read-only.",
+      "depends": [
+        "T001"
+      ],
+      "context_group": "lean-history",
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/registry.py",
+        "runtime/coherence_workflow/intake.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/projections.py",
+        "runtime/coherence_workflow/schemas/projection.schema.json",
+        "runtime/coherence_workflow/schemas/execution-result.schema.json",
+        "runtime/tests/test_engine.py",
+        "runtime/tests/test_recovery.py",
+        "runtime/tests/test_projections.py",
+        "runtime/tests/test_metrics.py",
+        "runtime/tests/test_migration.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "REQUIREMENTS.md"
+      ],
+      "required": [
+        {
+          "id": "T002/V1",
+          "criterion": "A1/A3: revision-aware attempts and useful ordered history, not immutable runtime eligibility.",
+          "check": {
+            "id": "manual.history-attempts",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_engine.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_recovery.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_migration.py'"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Production tests show a settled compatible bugfix can start a new attempt with recorded runtime/config revision, without rewriting old attempt identity or full-code rehash before nodes/reserve. Ordered task/dependency/state/baseline/result/check/decision/review/effect facts remain sufficient for interruption reconciliation. Real incompatible schema/config/authority is explicit; incomplete process/SDK/Git intent still blocks replay/replacement. Reuse SQLite transactions, saver and uniqueness/reconciliation; no second runner or recovery subsystem.",
+          "expected_evidence": "Named actual engine/store/settled-attempt and unresolved-effect tests; ordered stored facts and old/new identity comparison; A2 evidence applicability assessment before relying on T001.",
+          "producer_dependencies": [
+            "T001/V2",
+            "T001/V3"
+          ],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        },
+        {
+          "id": "T002/V2",
+          "criterion": "A3/A4: honest history reader surface and non-authoritative optional observations.",
+          "check": {
+            "id": "manual.history-readers",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_projections.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_metrics.py'",
+                "Manual read-only old-record/reader compatibility comparison in isolated existing test fixtures; never open/mutate current monitor storage"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Permanent tests demonstrate retained historical records/pinned inputs unchanged and historically interpreted or explicitly unsupported (including unknown versions); new versioned documented SQLite semantic surface explains T001 A2 attempt. Retain actual selected workflow/graph definition and optional projection cursor, not every retired proof table. Null/unknown telemetry and failed projection publication preserve authoritative success/state. Recorded running and observed liveness remain separate; public output stays private-data allowlisted.",
+          "expected_evidence": "Named historical reader/unknown-version/publication/null tests; fixture record comparison; item-mapped read of actual A2 facts (or NOT VERIFIED if A2 not run), with no auto-migration.",
+          "producer_dependencies": [
+            "T001/V2"
+          ],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        },
+        {
+          "id": "T002/V3",
+          "criterion": "A4: operating/schema/requirements match durable behavior and delimit monitor renewal.",
+          "check": {
+            "id": "manual.history-docs",
+            "version": "1",
+            "args": {
+              "commands": [
+                "git diff --check",
+                "Manual compare storage DDL/read semantics, engine revisions, projections and docs against T002/V1-V2"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Docs state supported old/new semantic versions and unsupported behavior, minimal durable fields, schema/config revision rules and actual YAML retention. Explicitly identify monitor-v1 parent/proof/pin/table and exact-source/unchanged-runtime assumptions needing later reader/data-model/source/tasks approval renewal; no claim unchanged monitor is compatible and no app implementation, table-freeze framework or historical proof rewrite.",
+          "expected_evidence": "Concrete changed-code/doc comparison, compatibility limits and affected monitor contract references; optional broad regression remains nonblocking.",
+          "producer_dependencies": [
+            "T002/V1",
+            "T002/V2"
+          ],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "G-approval",
+          "kind": "permission",
+          "criterion": "Combined current-content TinySpec/tasks/scope approval, explicit bounded instruction-managed delivery exception and exact policy amendment decision/rationale; no implementation authorized by drafting.",
+          "scope": "All three tasks; policy proposal in human document.",
+          "expected_evidence": "Actual owner decision associated with reviewed current source/tasks, exception and amendment rationale; no fabricated receipt.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-custody",
+          "kind": "manual",
+          "criterion": "Before retained implementation, establish actual sole-writer safety and reconcile real competing effects, or obtain authorized clean isolated workspace; clean Git/controller-stopped is insufficient.",
+          "scope": "Each writer baseline and resume; preserve monitor-app-20261020-0ec48f3fe91b and all historical/ignored evidence.",
+          "expected_evidence": "Coordinator inspection of real children/process custody and Git/index ownership; unknown effects block affected work without controlling/recovering monitor.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-capability",
+          "kind": "capability",
+          "criterion": "Verify exact approved Terra/medium worker, existing local tools/Git/check dependencies and applicable permissions without installation or silent fallback.",
+          "scope": "Instruction-managed delivery; product tests separately scoped.",
+          "expected_evidence": "Actual dispatch/check capability evidence, baseline and owned paths; missing capability is NOT VERIFIED.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "lean-delivery-draft"
+    },
+    {
+      "id": "T003",
+      "order": 2,
+      "outcome": "Deliver real full-range independent review and genuine owner answers without full-diff/document/parent proof protocols; remove obsolete routes and align final acceptance/docs.",
+      "depends": [
+        "T002"
+      ],
+      "context_group": "lean-review",
+      "owned_paths": [
+        "runtime/coherence_workflow/verification.py",
+        "runtime/coherence_workflow/review_documents.py",
+        "runtime/coherence_workflow/interaction.py",
+        "runtime/coherence_workflow/notifications/paseo.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/pi-host/host.mjs",
+        "runtime/coherence_workflow/schemas/agent-result.schema.json",
+        "runtime/coherence_workflow/schemas/interaction.schema.json",
+        "runtime/coherence_workflow/schemas/host.schema.json",
+        "runtime/coherence_workflow/workflows/coordinate.yaml",
+        "runtime/tests/test_review_documents.py",
+        "runtime/tests/test_review_repair.py",
+        "runtime/tests/test_interaction.py",
+        "runtime/tests/test_parent_transport.py",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_host.mjs",
+        "runtime/tests/test_acceptance.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "skills/coordinate-implementation/SKILL.md",
+        "REQUIREMENTS.md",
+        "README.md"
+      ],
+      "required": [
+        {
+          "id": "T003/V1",
+          "criterion": "A1/A4: independent reviewer reads actual range and files without oversized proof delivery.",
+          "check": {
+            "id": "manual.review-seams",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_review_documents.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_review_repair.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_pi_adapter.py'",
+                "node --test runtime/tests/test_host.mjs"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Delete full binary diff bundle and mandatory SDK-byte/hash/turn/range document-delivery attestation/coverage machinery and obsolete schema/tests, not a second lean mode. Production permanent tests observe reviewer read-only access to actual base..head/source/evidence with useful continuation, fresh role isolation, stale/wrong-head rejection, verified focused repair and current-range re-review. Retain actual full-range judgment and genuine SDK/process settlement, not document-read receipts as acceptance.",
+          "expected_evidence": "Named actual review/repair/helper results, range/file access and stale-head tests, obsolete-call-site deletion diff; classify mocked/static limits.",
+          "producer_dependencies": [
+            "T002/V1",
+            "T002/V2"
+          ],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        },
+        {
+          "id": "T003/V2",
+          "criterion": "A1/A3: genuine scoped owner answers with simpler delivery and no telemetry/provenance veto.",
+          "check": {
+            "id": "manual.owner-input",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_interaction.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_parent_transport.py'",
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_pi_adapter.py'",
+                "node --test runtime/tests/test_host.mjs"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Production tests preserve genuine answer authority, original question/conversation association, deduplication, scope and pending/missing-answer behavior; remove mandatory parent delivery/attempt/provenance proof chains and low/unknown optional-headroom vetoes. No fabricated ask_user answer, silent fresh worker substitution, worker direct owner tool, uncertain turn replay or blind expensive retry. Actual transport/SDK settlement remains meaningful. Real interactive calls, if needed beyond focused tests, retain original separate authority and are NOT RUN without it.",
+          "expected_evidence": "Named real-helper positive/denial/dedup/original-association and uncertain-effect cases; deletion diff and explicit live limits.",
+          "producer_dependencies": [
+            "T002/V1"
+          ],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability"
+          ]
+        },
+        {
+          "id": "T003/V3",
+          "criterion": "A1-A4: deletion-first operative path, honest compatibility and final independent acceptance.",
+          "check": {
+            "id": "manual.final-acceptance",
+            "version": "1",
+            "args": {
+              "commands": [
+                "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime <approved-python> -B -m unittest discover -s runtime/tests -p 'test_acceptance.py'",
+                "git diff --check",
+                "Manual inspect entire baseline..final refactor range, source A1-A4 proof and operative docs; independent fresh read-only final review after writer checkpoints"
+              ],
+              "mode": "instruction-managed; manual commands, not registered runtime oracles"
+            }
+          },
+          "pass_condition": "Final operative path has five obvious readiness facts plus five small execution rules, with no repeated whole-contract validation, canonical action-scope duplication, whole-tree-per-tool hashes, immutable full-code eligibility, document-delivery proof, telemetry/publication veto or oversized full-diff bundle remaining as hidden blockers. Remove stale routes/config/schema/test/doc mandates with mechanisms. A2 is actually verified at applicable final revisions (rerun only invalidated seams under G-live), A3 safety and A4 historical compatibility/doc agreement hold; independent full-range review findings are resolved with focused verified repairs and current-range rereview. No implementation-complete-as-accepted claim. Writer runs the production/doc checks before its focused checkpoint; G-review is the post-checkpoint acceptance gate, not a precommit review or a waiver of writer verification.",
+          "expected_evidence": "Actual deletion summary and focused command results, docs/code/policy comparison, applicability of T001 A2 and required rerun output if changed, final source/range/criterion review and finding dispositions; all absent live/review proof explicitly NOT VERIFIED.",
+          "producer_dependencies": [
+            "T001/V1",
+            "T001/V2",
+            "T001/V3",
+            "T001/V4",
+            "T002/V1",
+            "T002/V2",
+            "T002/V3",
+            "T003/V1",
+            "T003/V2"
+          ],
+          "gates": [
+            "G-approval",
+            "G-custody",
+            "G-capability",
+            "G-review"
+          ]
+        }
+      ],
+      "optional": [],
+      "gates": [
+        {
+          "id": "G-approval",
+          "kind": "permission",
+          "criterion": "Combined current-content TinySpec/tasks/scope approval, explicit bounded instruction-managed delivery exception and exact policy amendment decision/rationale; no implementation authorized by drafting.",
+          "scope": "All three tasks; policy proposal in human document.",
+          "expected_evidence": "Actual owner decision associated with reviewed current source/tasks, exception and amendment rationale; no fabricated receipt.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-custody",
+          "kind": "manual",
+          "criterion": "Before retained implementation, establish actual sole-writer safety and reconcile real competing effects, or obtain authorized clean isolated workspace; clean Git/controller-stopped is insufficient.",
+          "scope": "Each writer baseline and resume; preserve monitor-app-20261020-0ec48f3fe91b and all historical/ignored evidence.",
+          "expected_evidence": "Coordinator inspection of real children/process custody and Git/index ownership; unknown effects block affected work without controlling/recovering monitor.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-capability",
+          "kind": "capability",
+          "criterion": "Verify exact approved Terra/medium worker, existing local tools/Git/check dependencies and applicable permissions without installation or silent fallback.",
+          "scope": "Instruction-managed delivery; product tests separately scoped.",
+          "expected_evidence": "Actual dispatch/check capability evidence, baseline and owned paths; missing capability is NOT VERIFIED.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-live",
+          "kind": "permission",
+          "criterion": "Separate explicit live/provider/test/process-custody authority for the real A2 exercise, approved isolated target and usable selected executor/SDK/tools/check command.",
+          "scope": "T001/V2; later rerun only when changed seams invalidate that proof. No current-run control, process adoption, install, auth changes or worktree creation authorized now.",
+          "expected_evidence": "Owner live-test scope plus actual available own-child custody and test target; absent authority means NOT RUN and blocks reliance on A2.",
+          "approval_ref": null
+        },
+        {
+          "id": "G-review",
+          "kind": "manual",
+          "criterion": "Fresh independent read-only review of actual entire committed refactor range; verified focused finding repairs and current-range rereview before acceptance.",
+          "scope": "Final acceptance after T003; not a requirement to use the product runner to deliver this refactor.",
+          "expected_evidence": "Actual independent review base/head, source/criterion proof, finding dispositions and repaired-range review; missing review is NOT VERIFIED.",
+          "approval_ref": null
+        }
+      ],
+      "authorization_envelope_id": "lean-delivery-draft"
+    }
+  ],
+  "authorization_envelope": {
+    "id": "lean-delivery-draft",
+    "approval_refs": [],
+    "profiles": [
+      {
+        "provider": "openai-codex",
+        "model": "gpt-5.6-terra",
+        "effort": "medium",
+        "observer_id": "instruction-managed-owner-selection",
+        "observer_version": "1"
+      }
+    ],
+    "capabilities": [
+      {
+        "id": "instruction-managed-delivery",
+        "action_scope": "Draft bounded manual read/search/edit/local-check/writer-focused-commit delivery of T001-T003 owned paths only, after G-approval/G-custody/G-capability; not a builtin runtime action scope, dispatch registry or grant of live/process authority.",
+        "effects": [
+          "external",
+          "mutation",
+          "test"
+        ]
+      }
+    ],
+    "limits": [],
+    "external_paid_authority": "unresolved"
+  }
+}

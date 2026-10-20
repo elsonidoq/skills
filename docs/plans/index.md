@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Lean workflow runtime — tasks](workflow-runtime-lean-tasks.md): three deletion-first configured execution, durable-history compatibility and independent-review/owner-input outcomes; adjacent authoritative [JSON](workflow-runtime-lean-tasks.json), Terra/medium instruction-managed delivery, real early A2 and explicit policy/custody/live gates; draft only, combined approval pending.
 - [Lean workflow runtime — TinySpec](workflow-runtime-lean-tinyspec.md): full runtime pruning around five readiness facts and five execution rules, real configured-executor acceptance and explicit history/policy compatibility; source preparation only; Terra/medium instruction-managed delivery selected, separate tasks and combined approval pending.
 - [SpecKit assets in Coherence initialization — tasks](coherence-speckit-initialization-tasks.md): one coupled operational-guidance/regression/setup-runtime-doc delivery with A1–A6 REQUIRED evidence, immutable provenance and static-only limits; preparation only, combined approval pending.
 - [SpecKit assets in Coherence initialization — TinySpec](coherence-speckit-initialization-tinyspec.md): every-initialization asset checks and proposal-first official repair with custom-file preservation; preparation only, separate tasks and combined approval pending.
