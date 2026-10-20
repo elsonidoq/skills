@@ -7,11 +7,14 @@ and has no execution or control routes.
 Install the exact dependencies from `requirements.lock` in a prepared isolated Python
 environment; starting the viewer never installs or builds anything. From the repository
 root, use the prepared interpreter explicitly so neither launch nor checks accidentally
-use the system Python. With a fixed production asset directory containing `index.html`:
+use the system Python. Build the local web assets first; this is an explicit preparation step, never viewer startup behavior:
 
 ```sh
-workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/worktree --assets /path/to/production-assets --port 8765
+npm --prefix workflow_monitor/web run build
+workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/worktree --assets "$PWD/workflow_monitor/web/dist" --port 8765
 ```
+
+Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It polls the closed snapshot API about every two seconds. The initial API snapshot loads all currently returned history; the visible inventory reports loaded and hidden counts (incremental history browsing is not yet implemented).
 
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
 asset-building overrides. It serves only the fixed startup asset inventory (not
@@ -27,11 +30,15 @@ API requests require the exact loopback `Host`, same-origin Fetch Metadata, and 
 `X-Workflow-Monitor: 1` request header. All responses use no-store, CSP, nosniff,
 no-referrer, and frame-denial protections; errors use fixed closed codes/messages.
 
-Run the focused checks with the prepared environment:
+Run the focused HTTP/launcher and production-web checks with prepared local dependencies:
 
 ```sh
 workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_http workflow_monitor.tests.test_launch
+npm --prefix workflow_monitor/web run build
+npm --prefix workflow_monitor/web test
 ```
+
+The browser test uses the already-installed local Chrome executable and does not download a browser. It serves the built assets and a closed local fixture API; it is not a same-run observer acceptance. SC-006 same-run retrospective/live observation remains **NOT VERIFIED** until separately authorized operator observation of genuine later application work.
 
 When these checks are run by `scripts/coordinate-implementation`, use this same explicit
 interpreter in task check commands. Setting `COHERENCE_PYTHON` selects the runner's own
