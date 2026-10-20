@@ -43,7 +43,7 @@ class DocumentationAcceptanceTests(unittest.TestCase):
 
     def test_actual_help_flags_and_portable_resource_docs(self):
         text=(ROOT/'docs/coordinate-implementation.md').read_text()
-        for command in ('start','resume','intake','status','pending','answer','control','parent-ready','parent-received','parent-answer'):
+        for command in ('start','resume','intake','status','pending','answer','control','parent-answer'):
             result=subprocess.run([sys.executable,'-m','coherence_workflow.cli',command,'--help'],
                 env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1'),capture_output=True,text=True,timeout=20)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)

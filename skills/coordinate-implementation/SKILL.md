@@ -54,8 +54,8 @@ need repetitive questions. Authorization is not capability proof.
 
 Standalone mode uses portable pending/answer/control commands without Paseo. Interactive-parent
 mode requires the registered transport, actual launching-parent identity/permissions and
-registered ask_user readiness; no silent manual-polling fallback. Follow the runner's exact
-readiness/question facade commands, never historical recipient IDs or invented receipts.
+registered ask_user capability; no silent manual-polling fallback. Use the scoped original
+question and parent-answer callback, never historical recipient IDs or invented receipts.
 
 ## Interface Actions
 
@@ -69,7 +69,7 @@ readiness/question facade commands, never historical recipient IDs or invented r
 - `resume`: only after diagnosed remediation and explicit current scoped recovery authority.
 
 For an eligible interactive question, the runner wakes the SAME launching interface. Read the
-current committed request, perform prescribed parent-received, actually invoke registered
+current scoped request, actually invoke registered
 ask_user with exact options/context and submit parent-answer. The facade never chooses graph
 outcomes. Unknown UI invocation blocks reasking; UI loss leaves durable pending, not success.
 Accepted answers pin the ORIGINAL saved worker conversation and role; missing/unsafe original
@@ -118,7 +118,9 @@ custody, not a filesystem sandbox or remote/adversarial/power-loss guarantee.
 ## Review and Acceptance
 
 No per-task reviews are imposed. Obtain one fresh independent final review, not an implementation
-session, of the full committed revision range with source/tasks/approval and criterion proof.
+session, of the actual full committed base/head range with source/tasks/approval and criterion
+evidence references. Reviewers read committed base/head/diff and source files with continuation;
+no embedded binary bundle or document-byte/SDK-delivery attestation is required.
 Missing reviewer blocks final acceptance. Schema findings remain read-only; authorized correction
 tasks receive separate focused verified commits, affected checks and renewed current-range review.
 Every finding has a disposition; changed scope returns to owner/producing gates. Distinguish
@@ -137,7 +139,7 @@ The runner owns all checks, Git, repair bounds and independent acceptance.
 
 ## Maintaining this contract
 
-Run the focused intake/batching/state contract tests from this skill's scripts directory and
-the runtime migration/installation checks with the explicit isolated environment. Static guards
+Run affected focused contract and runtime tests in the approved isolated environment. Historical
+migration/installation/UI proof programmes are not ordinary readiness gates. Static guards
 prove contract sensitivity, not universal model obedience. Changed global skills/prompts require
 `/reload` in pi when adopted; never automatically activate a global installation.

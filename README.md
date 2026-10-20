@@ -149,16 +149,20 @@ also supply `--suite-root` for approved skill/settings resources. See
 
 Standalone mode has no Paseo dependency. Interactive mode requires verified actual same-parent
 transport/ask_user; no polling fallback or fabricated receipts. Accepted questions reopen the
-original conversation only, never a fresh substitute; missing/unsafe/unknown headroom blocks.
+original conversation only, never a fresh substitute; missing/unsafe/unsettled original blocks.
+Optional headroom is not a veto. Reviewers read the actual committed range/files with continuation,
+not embedded binary patches or SDK document-delivery proofs. Scoped original-session ask_user
+results authenticate interactive answers; launch/ACK chains do not. Uncertain sends remain pending
+for reconciliation, never blind resend/reask.
 Host exit stops work; status is a separate no-agent reader, not background continuation.
 Core supports trusted single-host/same-UID Linux cgroup-v2 custody, not an adversarial filesystem
 sandbox, remote effects or physical-power-loss promise. Missing capability blocks before reliance.
 
-Default cutover is guarded by actual composed multiple-task/independent-review/correction/
-owner-answer/restart/dirty-work proof, portable distribution and legacy-active denial. There
-is no automatic global activation or legacy restart. Fresh independent full-range migration
-review remains required for final acceptance. Use `/reload` inside pi when adopting changed
-skills/prompts.
+Readiness is five facts: valid work, usable selected configuration, scoped current approval,
+safe sole ownership and runnable checks. Historical migration/UI proof programmes are not launch
+gates. There is no automatic global activation or legacy restart. Fresh independent full-range
+review remains required for final acceptance, after verified writer checkpoints for this refactor.
+Use `/reload` inside pi when adopting changed skills/prompts.
 
 ## Context-first recovery and coordination feedback
 

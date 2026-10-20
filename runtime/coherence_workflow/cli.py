@@ -54,8 +54,7 @@ def registered_checks(project, gateway=None, *, admitted_host_ops=()):
                            ('test_projections.py','ProjectionRecoveryTests'),('test_recovery.py','VersionRecoveryTests'),
                            ('test_interaction.py','QuestionParkTests'),('test_interaction.py','OriginalAnswerTests'),
                            ('test_controls.py','ControlDeliveryTests'),('test_interaction.py','AutonomyAdmissionTests'),
-                           ('test_parent_transport.py','ParentTransportTests'),('test_parent_transport.py','FacadeAuthorityTests'),
-                           ('test_interaction_live.py','ParentRoundtripTests')]:
+                           ('test_parent_transport.py','LeanAnswerTests')]:
         result['workflow.'+selector]={'version':'1','schema':{'type':'object','additionalProperties':False,
             'properties':{'test_file':{'const':'runtime/tests/'+file},'selector':{'const':selector}},
             'required':['test_file','selector']},'execute':unittest_oracle}
@@ -356,6 +355,7 @@ class Coordinate:
 
     def _tools(self, task, *, review=False):
         project = self.authority.project
+        review_bundle=self.review_repair.bundle() if review else None
         readable = set(task['owned_paths']) | {s['path'] for s in self.contract['sources']} | {r['record_ref'] for r in self.contract['approval_refs']}
         def schema(paths, write):
             properties = {'path': {'enum': sorted(paths)}}
@@ -369,8 +369,8 @@ class Coordinate:
                     'required': ['path', 'text'] if write else ['path']}
         def read_result(args, receipt):
             if review:
-                from .review_documents import read_document
-                return read_document(self, self.review_repair.bundle(), args, receipt)
+                from .review_documents import read_review
+                return read_review(self.authority.project, review_bundle, args)
             path = safe_path(project, args['path'])
             if not path.is_file():
                 raise Blocked('authorized read unavailable: select an authorized regular file')
@@ -397,12 +397,10 @@ class Coordinate:
         search_schema=schema(readable, False);search_schema['required']=['path','query']
         search = ProcessTool('search_file','1',search_schema,None,(),self.environment,read_result)
         if review:
-            # Legacy review receipts still require their actual contained document
-            # read until the separately owned review protocol is retired.
-            return {'read_file':ProcessTool('read_file','1',schema(readable,False),
-                lambda args:runtime_python('from coherence_workflow.review_documents import read_bytes; '
-                    'read_bytes(__import__("pathlib").Path(sys.argv[1]),sys.argv[2],None)',str(project),args['path']),
-                (),self.environment,read_result)}
+            review_schema=schema(readable,False)
+            review_schema['properties'].pop('query')
+            review_schema['properties']['revision']={'enum':['working','base','head','diff']}
+            return {'read_file':ProcessTool('read_file','1',review_schema,None,(),self.environment,read_result)}
         tools = {'read_file': read, 'search_file': search}
         if not review and task['owned_paths']:
             def write_result(args, receipt):
@@ -751,16 +749,14 @@ class Coordinate:
                 self.interaction.delivered(continuation['gate_id'],adapter.deliver_answer(value))
                 with self.store.transaction() as db:db.execute("UPDATE wf_questions SET stage='continued' WHERE gate_id=?",(continuation['gate_id'],))
             turn=adapter.prompt(node=('continue:'+continuation['gate_id']) if continuation else 'review:'+str(round),task_id='final-review',attempt_id=expected['attempt_id'],role='review',
-                text='Review independently, do not fix. Receive complete original base-to-current-head bundle below. '
-                'You MUST read EVERY document_refs path with read_file in THIS turn before returning a review, including after owner-answer continuation. '
-                'Pinned document bytes are supplied only through those reads; also inspect actual authorized changed files as needed. '
+                text='Review independently, do not fix. Inspect the actual full committed range and source/evidence references below. '
+                'Use read_file with revision base, head or diff for committed files, or working for source documents; '
+                'follow continuation offsets for large files and patches. '
                 'Check source requirements beyond mechanical green (including extraneous/dead code). Return ONLY JSON in the exact shape '+canonical(expected)+
                 '. If actual findings exist set outcome correction and findings to objects in this exact shape '+canonical(finding)+
                 '. Scope-changing findings must use scope owner_decision, not in_scope. Never invent an issue. Full bundle: '+canonical(bundle),
                 skill=manifest['skills'][0]['name'],contract_hash=digest(bundle),selection=selection,
                 interrupt=lambda current:self.controls_boundary(current))
-            from .review_documents import settle_delivery
-            settle_delivery(self,turn)
             result=None if turn['question_gate'] else json.loads(turn['output'])
             if result is not None:
                 validate_schema('agent-result.schema.json',result)
@@ -998,9 +994,9 @@ def status(project, run):
             question['graph_parked']=bool(db.execute('SELECT 1 FROM wf_question_parks WHERE gate_id=?',(question['gate_id'],)).fetchone())
         controls=[dict(r) for r in db.execute('SELECT i.* FROM wf_owner_inputs i JOIN wf_controls c USING(input_id) WHERE i.run_id=? ORDER BY i.rowid',(run,))] if has_interaction else []
         return {'run': dict(row), 'state':projection['payload']['status'],'projection':projection,'questions':questions,'controls':controls,
-                'parent_transport':{'preflight':[dict(r) for r in db.execute('SELECT stage,blocker,ready_receipt FROM wf_parent_preflight WHERE run_id=?',(run,))],
+                'parent_transport':{'binding':[dict(r) for r in db.execute('SELECT descriptor FROM wf_parent_bindings WHERE run_id=?',(run,))],
                     'outbox':[dict(r) for r in db.execute('SELECT o.event_id,o.stage,d.attempts,d.blocker,d.tool_receipt FROM wf_outbox o LEFT JOIN wf_parent_delivery d USING(event_id) WHERE o.run_id=?',(run,))]}
-                    if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_parent_delivery'").fetchone() else None,
+                    if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_parent_bindings'").fetchone() else None,
                 'reviews':reviews,'findings':findings,'repair_budgets':budgets,'metrics':metrics,
                 'metrics_unknown_reason':metrics_reason or (None if any(r['payload']['role'] in ('implement','repair','review') for r in metrics) else 'no agent observations recorded'), 'operations': [dict(r) for r in db.execute('SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=?', (run,))],
                 'alarms': [dict(r) for r in db.execute('SELECT * FROM wf_alarms')], 'accepted': projection['payload']['acceptance']=='accepted'}
@@ -1030,10 +1026,10 @@ def main(argv=None):
         p = subs.add_parser(name); p.add_argument('--project', required=True); p.add_argument('--run', required=True)
         if name != 'pending':
             p.add_argument('--input',required=True);p.add_argument('--input-authority',required=True)
-    for name in ('parent-ready','parent-received','parent-answer'):
+    for name in ('parent-answer',):
         p=subs.add_parser(name)
         for flag in ('project','run','nonce'):p.add_argument('--'+flag,required=True)
-        if name!='parent-ready':p.add_argument('--event',required=True)
+        p.add_argument('--event',required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == 'preflight':
@@ -1045,7 +1041,7 @@ def main(argv=None):
                 'inventory_hash':digest(observed['files']), 'entries':len(observed['files']),
                 'directories':sum(v is not None and v.get('kind')=='directory' for v in observed['files'].values()),
                 'owned_paths':sorted(observed['owned'])})); return 0
-        if args.command in ('parent-ready','parent-received','parent-answer'):
+        if args.command == 'parent-answer':
             from .notifications.paseo import facade
             print(canonical(facade(Path(args.project).absolute(),args.run,args.command,args.nonce,getattr(args,'event',None))));return 0
         if args.command == 'status':

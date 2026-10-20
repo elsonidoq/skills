@@ -72,7 +72,7 @@ intent assesses affected detail/boundaries and renews affected producing approva
 substitution or whole-plan regeneration. Ordinary model tokens have no financial approval/cap/
 reservation. Separately chargeable service actions need purpose/cost-impact and scoped authority.
 
-Lean T001 execution uses five boundary facts—valid work, usable selected configuration,
+Lean execution uses five boundary facts—valid work, usable selected configuration,
 scoped current authority, one-writer safe ownership and runnable REQUIRED checks. Optional
 telemetry is observed, not an execution veto; scoped external action and own-child custody
 remain required. This approved refactor is delivered through bounded instruction-managed
@@ -89,7 +89,10 @@ Monitor-v1 needs separate reader/data-model/source/task approval renewal for ret
 and parent/proof assumptions; no unchanged-app compatibility or monitor remediation is implied.
 
 Standalone CLI needs no Paseo. Interactive-parent requires selected public transport (Paseo0.9.2
-tested), verified actual launching-parent and registered ask_user readiness/real tool provenance.
+tested), verified original parent/session and registered ask_user capability. Answers derive from
+actual scoped original-session tool results, not launch/ACK/provenance chains. Uncertain sends
+are not blindly retried/reasked. Full-range review uses actual base/head/source/evidence references
+and read-only file continuation, not binary bundles or document-byte/SDK-delivery attestation.
 Missing UI stays pending; never silent polling or fabricated answers. Original-conversation
 answer pin overrides greedy session selection. Missing/incompatible/unsettled original blocks,
 never fresh substitution. Received/queued/SDK-delivered/worker-acknowledged are separate.

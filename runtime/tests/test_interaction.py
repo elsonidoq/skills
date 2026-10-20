@@ -395,8 +395,9 @@ class OriginalAnswerTests(IsolatedCustody):
         from test_sessions import request,candidate
         now=time.time_ns()
         for telemetry in ({'reliable':True,'enabled':True,'threshold':200000,'occupancy':50001,'observed_ns':now,'provenance':'controlled-policy-test'},None):
-            with self.subTest(telemetry=telemetry),self.assertRaisesRegex(Blocked,'original conversation pin'):
-                select_session(request(pin='original'),[candidate(id='original',telemetry=telemetry)],now_ns=now,max_age_ns=1000000)
+            with self.subTest(telemetry=telemetry):
+                selected=select_session(request(pin='original'),[candidate(id='original',telemetry=telemetry)],now_ns=now,max_age_ns=1000000)
+                self.assertEqual(selected['session_id'],'original')
         with self.assertRaisesRegex(Blocked,'original conversation pin'):
             select_session(request(pin='original'),[],now_ns=now,max_age_ns=1000000)
         with Authority(self.project) as owner:
@@ -612,3 +613,28 @@ class CompletedToolQuestionTests(IsolatedCustody):
                 self.assertFalse(adapter.question_gate)
                 self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_questions').fetchone()[0],0)
             finally:cleanup()
+
+
+class LeanAnswerTests(unittest.TestCase):
+    def test_scoped_original_answer_dedup_and_uncertain_delivery(self):
+        import tempfile
+        from fixtures.support import make_project
+        with tempfile.TemporaryDirectory() as temporary:
+            project=make_project(Path(temporary)/'project')
+            with Authority(project) as owner:
+                ledger,value=seeded_pending(owner)
+                bad=copy.deepcopy(value);bad['original_session_ref']='replacement.jsonl'
+                with self.assertRaisesRegex(Blocked,'original pin'):ledger.answer(bad,verify_owner=standing_authority,current_binding=binding())
+                bad=copy.deepcopy(value);bad['binding']['task_id']='other'
+                with self.assertRaisesRegex(Blocked,'binding'):ledger.answer(bad,verify_owner=standing_authority,current_binding=binding())
+                with self.assertRaisesRegex(Blocked,'unverified'):ledger.answer(value,verify_owner=lambda v:None,current_binding=binding())
+                self.assertEqual(ledger.question(value['gate_id'])['stage'],'pending')
+                first=ledger.answer(value,verify_owner=standing_authority,current_binding=binding())
+                self.assertEqual(ledger.answer(value,verify_owner=standing_authority,current_binding=binding()),first)
+                self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_owner_inputs').fetchone()[0],1)
+                delivered=ledger.delivery_intent(value['gate_id']);self.assertEqual(delivered,value)
+                with self.assertRaisesRegex(Blocked,'uncertain'):ledger.delivery_intent(value['gate_id'])
+                with self.assertRaisesRegex(Blocked,'receipt mismatch'):ledger.delivered(value['gate_id'],{'input_id':value['input_id'],'session_id':'fresh','entry_id':'wrong'})
+                ledger.delivered(value['gate_id'],{'input_id':value['input_id'],'session_id':'original','entry_id':'local-fixture-entry'})
+                self.assertEqual(owner.store.db.execute('SELECT stage FROM wf_owner_inputs').fetchone()[0],'sdk_delivered')
+                print('V2 ledger: wrong scope/original/untrusted denied; one accepted answer; uncertain delivery not replayed; original receipt required')

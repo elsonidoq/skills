@@ -327,8 +327,8 @@ profiles:
 skills:
   coordinate:
     path: skills/coordinate-implementation/SKILL.md
-    sha256: 78a364629c84f21e7e32668042e29f4561a8dc0abd0bf993447cc0f8e3f1bd95
-    resource_hash: 78a364629c84f21e7e32668042e29f4561a8dc0abd0bf993447cc0f8e3f1bd95
+    sha256: b6c4c1c9c84a2aeeb8ae55238a0011e22254b83c386c5319922450ecb7b9640a
+    resource_hash: b6c4c1c9c84a2aeeb8ae55238a0011e22254b83c386c5319922450ecb7b9640a
 defaults:
   max_repair_attempts: 2
   min_free_tokens_before_compaction: 150000

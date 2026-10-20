@@ -11,7 +11,7 @@ from jsonschema import Draft202012Validator
 
 from .store import Blocked, canonical, digest, git, safe_path
 from .intake import content_hash
-from .review_documents import references, require_coverage
+from .review_documents import references
 
 
 def environment_identity():
@@ -254,15 +254,15 @@ class ReviewRepair:
                 'checkpoint_sha':json.loads(r['checkpoint'])['sha'] if r['checkpoint'] else None}
                for r in self.store.db.execute('SELECT * FROM wf_tasks WHERE run_id=? ORDER BY approved_order',(self.run,))]
         findings=[dict(r) for r in self.store.db.execute('SELECT f.* FROM wf_findings f JOIN wf_reviews r USING(review_id) WHERE r.run_id=?',(self.run,))]
-        patch=git(self.coordinate.authority.project,'diff','--no-ext-diff','--no-textconv','--binary',base+'..'+head).decode()
         originals={task['id']:task for task in self.coordinate.contract['tasks']}
         for receipt in tasks:
             if canonical(receipt['contract']) == canonical(originals.get(receipt['task_id'])):
                 receipt['contract_ref']={'task_id':receipt['task_id'],'sha256':digest(receipt.pop('contract'))}
         result={'range_base':base,'range_head':head,'source_tasks_approvals':self.coordinate.contract,
-                'document_refs':references(self.coordinate.contract,self.coordinate.authority.project,head),'task_receipts':tasks,
-                'finding_history':findings,'full_committed_diff':patch}
-        if len(canonical(result).encode())>120000:raise Blocked('complete review bundle exceeds supported bound; no truncation')
+                'document_refs':references(self.coordinate.contract),'task_receipts':tasks,
+                'finding_history':findings,'changed_paths':git(self.coordinate.authority.project,
+                    'diff','--name-only','-z',base+'..'+head).decode().rstrip('\0').split('\0') if base!=head else []}
+        result['changed_paths']=[path for path in result['changed_paths'] if path]
         return result
 
     def record_review(self, result, host_op):
@@ -271,9 +271,13 @@ class ReviewRepair:
         base,head=self.range()
         if result['kind']!='review' or result['range_base']!=base or result['range_head']!=head:
             raise Blocked('missing/stale full-range independent review')
+        if result['contract_hash']!=digest(self.bundle()):
+            raise Blocked('stale review source/evidence references; review the current range and inputs')
         host=self.store.operation(host_op)
         ready=self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='host_ready'",(host_op,)).fetchone()
-        if host['phase']!='completed' or not ready:raise Blocked('review host custody not settled')
+        if (host['run_id']!=self.run or host['phase']!='completed' or not host['result'] or
+                not json.loads(host['result']).get('replacement_allowed') or not ready):
+            raise Blocked('review host custody not settled; reconcile original review host before recording')
         provenance=json.loads(ready[0])
         tools=provenance['snapshot']['tools']
         configured=[node for node in self.coordinate.config['nodes'] if node.get('role')=='review' and
@@ -284,7 +288,6 @@ class ReviewRepair:
                 sorted(tools) not in (['read_file'],['read_file','request_owner_input']) or not configured or
                 not admission or json.loads(admission[0])['compatibility']!=provenance['compatibility']):
             raise Blocked('review was not independent read-only with exact configured/admitted tools')
-        require_coverage(self.coordinate,result,host_op)
         if len({f['id'] for f in result['findings']})!=len(result['findings']):raise Blocked('duplicate review finding IDs')
         review_id=uuid.uuid4().hex
         with self.store.transaction() as db:
@@ -361,7 +364,6 @@ class ReviewRepair:
             binding=json.loads(gate['binding']);request={'gate_id':gate['gate_id'],**binding}
             if gate['state']!='approve' or content_hash(safe_path(self.coordinate.authority.project,binding['sample_path']))!=binding['sample_hash']:
                 raise Blocked('unmet/stale original manual STOP')
-        require_coverage(self.coordinate,json.loads(review['result']),review['host_op'])
         self.coordinate.reconcile_effect({}, {})
         with self.store.transaction() as db:self.store.event(db,self.run,None,'workflow_accepted',{'head':head,'review_id':review['review_id']})
         return {'outcome':'accepted'}

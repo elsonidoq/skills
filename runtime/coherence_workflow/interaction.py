@@ -22,8 +22,6 @@ QUESTION_SCHEMA = schemas()['interaction.schema.json']['$defs']['request']
 def validate_question(request):
     """Structural/rationale assistance, NOT a universal semantic necessity oracle."""
     Draft202012Validator(QUESTION_SCHEMA).validate(request)
-    if len(canonical(request).encode()) > 16384:
-        raise Blocked('question byte limit')
     if request['recommendation'] not in request['options']:
         raise Blocked('question recommendation must identify an offered option')
     return copy.deepcopy(request)
@@ -160,8 +158,6 @@ class Interaction:
         validate_schema('interaction.schema.json', value)
         if value['kind'] != 'owner_answer' or value['delivery'] != 'accepted' or value['delivery_ref'] is not None:
             raise Blocked('answer must enter at accepted stage')
-        if len(value['answer'].encode()) > 16384:
-            raise Blocked('answer byte limit')
         authority = verify_owner(value)
         identity = digest(value)
         if authority != {'input_hash':identity,'scope':'within_envelope'}:

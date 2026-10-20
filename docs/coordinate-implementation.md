@@ -12,8 +12,9 @@ read error is returned with a correction so the same attempt can continue. Optio
 is recorded but never vetoes a settled exact-compatible session. Required/manual gates, scoped
 external authority, own-child custody and check-before-focused-runner-commit remain blocking.
 This refactor is delivered by approved instruction-managed writer checkpoints; it does not
-bootstrap itself through this CLI. T002 delivers revision-aware history below; T003 retains
-review/input simplification work.
+bootstrap itself through this CLI. T002 delivers revision-aware history below; T003 delivers
+reference-based full-range review and genuine scoped original-associated answers. Historical
+migration proof programmes below are not current launch or writer-checkpoint gates.
 
 The suite skill is a thin executable interface; runtime installation remains optional/explicit.
 No global installation or automatic reload is performed. The standalone
@@ -460,32 +461,18 @@ one count durably before dispatch, including an interrupted invocation. Capabili
 stop before consumption; uncertain dispatched effects still block safe replacement. The
 configured repair/review gate ceilings bind across restart; changing them changes run identity.
 
-First final review is a fresh independent `review` session, with bounded `read_file` and,
-only when explicitly configured and permission-admitted, nonmutating `request_owner_input`.
-It receives the complete committed original base→current head patch, whole authoritative task
-contract, complete pinned source/approval `document_refs` (path/raw SHA/kind/section or role,
-Git revision only when those exact committed bytes exist), item evidence, checkpoint refs and
-prior findings. Source/approval bodies are obtained through existing authorized `read_file`,
-not copied into the bundle. Equal canonical original task contracts in receipts use an exact
-task-ID/hash reference; unequal and dynamic correction contracts remain complete. No
-implementation history or write capability is supplied. The shipped graph now uses role-default selection with SQL-derived
-settled candidates; explicit fresh-only remains available for ordinary assignments. Exact
-saved reopening verifies the completed original host and empty custody without rewriting receipts.
-A complete bundle over the supported protocol bound blocks rather than truncating the range.
-Review judgment is distinct from mechanical green; malformed/stale-head review cannot accept.
-
-Every referenced document must be delivered in the originating independent review turn,
-including an original-question continuation. Reads recheck current admitted authority and
-validate safe identity, raw SHA and UTF-8 on the same bytes returned, within the unchanged
-32768-byte read bound. A read callback alone is not delivery: `review_documents` verifies the
-existing settled SDK snapshot's private session-file hash and active branch, and joins successful
-persisted `read_file` tool-result bytes/call IDs to that turn's actual Gateway process launches.
-Only minimal path/hash/identity/process/entry/host/turn/bundle/range proof is retained in SQL;
-no document bodies or transcript copy is added. Missing, undelivered or wrong-review coverage
-blocks review recording (and finding resolution), and is reaudited with current authority before
-acceptance. A prior host/turn's reads cannot substitute for the current review. This uses existing
-SDK persistence/receipts, not new host protocol, tools, schema fields or read permissions.
-The complete serialized bundle still blocks above120000 bytes; the SDK wire bound stays262144.
+First final review is a fresh independent `review` session with read-only `read_file`
+and optional explicitly configured `request_owner_input`. It receives the actual committed
+base/head, changed paths, approved source/task/approval references, criterion evidence and
+checkpoint/finding history. There is no embedded full binary patch or document-delivery
+attestation. `read_file` accepts `revision: working|base|head|diff` and `offset`/`limit`
+(up to32768 characters per response) with continuation. Base/head/diff use real Git objects
+with external diff/textconv disabled. Access remains limited to approved source/approval/task
+paths. Source documents may be uncommitted; their approval hashes remain authority, not an
+invented Git revision. Review judgment is separate from mechanical green. Missing or stale
+base/head review cannot accept; current HEAD is checked on reads and review recording.
+No process, document-byte, SDK-entry coverage or reread-every-document receipt is required.
+Actual reviewer role isolation, settled host custody, original gates and verified repairs remain.
 
 A finding is not executable scope. Unapproved/scope-changing/unknown findings block for owner
 contract renewal. A private operator catalog may explicitly supply `workflow_correction_rules`:
@@ -637,93 +624,45 @@ The four closed v1 selectors are `workflow.QuestionParkTests`, `workflow.Origina
 `workflow.ControlDeliveryTests`, `workflow.AutonomyAdmissionTests`. Run their source-named classes
 in test_interaction/test_controls with the same approved live/auth/catalog/cgroup environment
 used above. Offline binding, crash/SQL and controlled headroom fixtures are distinct from actual
-CLI/SDK/LangGraph/original-entry/control/cgroup traces. The parent adapter below adds its separate
-actual launch/wake/tool proof; neither standalone nor historical PoC proof alone establishes it.
+CLI/SDK/LangGraph/original-entry/control/cgroup traces. The parent adapter below verifies scoped
+original-session ask_user answers. Local official-format fixtures test wiring, not actual UI/provider behavior.
 
-## Registered same-parent interaction (T007, explicit mode)
+## Scoped same-parent interaction
 
-Core standalone start/status/pending/answer/control remains independent of Paseo. Select
-`interaction.mode: interactive_parent`, `question_transport: paseo-0.9.2`,
-`question_tool: ask_user` and an explicit `parent_binding_ref`. Start/resume additionally
-requires `--parent-binding FILE`, a private owned single-link operator descriptor OUTSIDE the
-worker worktree. Its closed fields are:
+Standalone start/status/pending/answer/control needs no Paseo. Interactive mode selects
+`interactive_parent`, `question_transport: paseo-0.9.2`, `question_tool: ask_user` and
+`parent_binding_ref`. Supply `--parent-binding FILE`: a private operator-owned single-link
+file outside the worker worktree, with exactly adapter/version/binding_id/recipient_id/
+runtime_session_id/session_file/parent_cwd/parent_model/parent_effort. Public Paseo inspect
+and the original official-session header/registered ask_user capability must match. Missing
+capability blocks interactive reliance, without switching conversation or silently polling.
+No launch marker, generation challenge, parent-ready or parent-received callback is used.
 
-- adapter=paseo-0.9.2, version=0.9.2, binding_id matching parent_binding_ref;
-- actual recipient_id, runtime_session_id, canonical official Pi session_file, parent_cwd;
-- observed parent_model/parent_effort, explicit generation (positive integer), fresh launch_nonce.
+A graph-parked question gets one durable delivery intent **before** public
+`send --no-wait --prompt-file`. The same parent invokes actual registered ask_user once with
+exact nonce-bound question/options/context/flags, then executes generated `parent-answer`.
+That callback derives the answer from the original session's successful, noncancelled tool
+result and matching structured selection/text. It accepts no caller answer text. Prose,
+missing/untrusted/cancelled/ambiguous results remain pending. Source/approval drift or material
+scope changes require producing renewal, never an answer flag or fresh worker substitute.
 
-These are pinned observations, not model/task selection or authentication by opaque ID. The
-runner verifies public Paseo inspect, exact recipient/provider/cwd/model/effort, current official
-session header/active registered bash+ask_user tools and genuine registered launch provenance.
-Launch through the actual parent's registered bash tool, asynchronously running the shipped
-`coordinate-implementation start ... --parent-binding ...`, then returning the literal marker
-`COHERENCE_LAUNCH_RECEIPT:<launch_nonce>`. The literal nonce, exact project/run and start command
-must appear in that real tool's arguments/result, not only hidden ambient variables. The existing
-single-writer lock still gates the actual runner. A shell background job/detached controller is
-not a required daemon; use only an authorized launching interface and approved log/process scope.
+Read-only official-session inspection retains only scoped tool-result references/hashes, not
+transcript copies or private reasoning. Canonical non-symlink regular single-link same-UID
+files without group/other writes and an unambiguous active branch remain required. This is a
+trusted local operator boundary, not authentication against a malicious same-UID actor.
+An unavailable original session is not assumed genuine and cannot be replaced automatically.
 
-Before any task dispatch, code sends a fresh run-bound readiness challenge through PUBLIC
-`paseo inspect` / `send --no-wait --prompt-file`. The SAME parent receives the structured
-COHERENCE_PARENT_FACADE_V1 event and executes its exact generated `command` (parent-ready).
-The runner requires the completed genuine parent bash tool call/result before registering the
-interactive capability with the graph. A descriptor, approved flag, registry name, queued send
-or bare nonce is insufficient. Missing/unknown/failed readiness blocks interactive start; it
-never silently substitutes manual polling or another transport/platform.
+SQLite deduplicates answers and delivery obligations. A queued receipt is not a genuine answer
+or worker consumption. Unknown send/UI invocation is never blindly retried or reasked: reconcile
+the original tool result or leave durable pending. Accepted input resumes only the existing
+LangGraph interrupt and saved original worker conversation; uncertain worker delivery also
+requires original-entry reconciliation before resend. Host exit promises no background retry.
+Optional status delivery cannot change gates or authoritative outcomes.
 
-The facade is prescribed, not an orchestrator. For a question event:
-
-1. Execute `received_command` verbatim through registered bash. This runner API durably claims
-   the event and returns ask_allowed. If false, do NOT ask again: reconcile existing actual tool
-   provenance/answer or leave a visible blocker.
-2. If true, invoke the ACTUAL registered ask_user using the event's exact question, context,
-   options and allowMultiple/allowFreeform/allowComment flags. No task/model/session/outcome choice.
-3. After its genuine result, execute `answer_command` verbatim. That API derives the answer
-   from the actual registered tool result, not parent prose or a supplied approval file.
-
-The parent must not manufacture tool receipts, choose an option itself in production, approve
-new scope or invoke private supervisor/file messaging. Original source/task/approval/config and
-same-parent generation remain bound. Material-change answers conservatively block for producing
-approval renewal; the genuine tool result remains available and the question is not reasked.
-The facade never owns workflow persistence or dispatch: all transitions go through the runner's
-narrow validated CLI APIs and SQL. Optional status delivery is not on the execution path and
-cannot release a gate or change graph state.
-
-Official Pi session JSONL is read-only provenance, NOT a transport or competing workflow store.
-Only bounded active-branch registry/tool metadata, exact nonce-bound argument hashes, call/result
-entry IDs and required safe answer facts are retained. No parent thoughts/unrelated text/raw
-session is exported. Canonical path/file identity, same UID, regular single-link file and no
-group/other writes are required; existing mode0644 parent files need not be modified. This does
-NOT promise confidentiality, cryptographic authenticity or protection from malicious same-UID
-actors. Missing/partial/rotated/ambiguous/stale evidence blocks or waits boundedly. Fresh challenge
-ACK plus public inspection ties the observed conversation/tool generation to the actual launching
-parent; process/OS-host continuity is not presumed.
-
-Only SQL pending + actual sync graph-park receipt makes the outbox eligible. Its distinct stages
-are recorded → transport_queued → parent_received → question_tool_invoked → answered. Code waits
-for idle using a bounded retry (40 attempts, 0.5-second intervals; each public command also has a
-10-second deadline), records busy/unavailable/queued facts, and revalidates the pinned recipient/
-runtime generation on reconnect. A send receipt is NOT delivery or a worker answer. Actual parent
-receipt can reconcile an uncertain send before its acknowledgement, preserving stage ordering.
-Durable claim/dedup prevents blind repeated UI invocation; crash after an external ask before a
-receipt requires actual tool reconciliation or stays blocked. No exactly-once UI guarantee.
-
-After a bound genuine answer is accepted, the deterministic runner resumes the SAME LangGraph
-interrupt and original worker conversation automatically; the facade does not choose a task.
-Accepted input survives later transport/resume failure without reasking. UI loss leaves SQL
-pending and parent_transport blocker/attempt data in status. CLI owner answers and reconciled
-pause/cancel remain usable independently. Host exit promises no background retry; authorized
-resume must retain the original inputs and parent binding, never silently rebind a new parent.
-
-The three closed v1 checks are workflow.ParentRoundtripTests (test_interaction_live.py),
-workflow.ParentTransportTests and workflow.FacadeAuthorityTests (test_parent_transport.py).
-Controlled adapter subprocess/SQL/official-format fixture records are NOT genuine UI evidence.
-The separately authorized live test uses actual parent launch/readiness/bash/ask_user provenance,
-automatic public Paseo wake, original worker answer-before-request and a public SDK-root UI driver
-that responds ONLY to the exact standing-authorized test question/request. That test-only driver
-reconnects and revalidates the exact permission before responding; it is not shipped workflow
-answer logic or a fabricated human click. It also injects a local command outage then uses the
-actual public CLI again; this is controlled fault proof, not a natural daemon outage or hostile
-same-UID security certification. Existing valid SDK/settings/custody/control proof is reused.
+`test_parent_transport.LeanAnswerTests` and `test_interaction.LeanAnswerTests` exercise local
+production transport/SQLite association, dedup, missing/untrusted answers and uncertain delivery.
+They are wiring/safety proof, not actual UI integration. The retired launch/ACK/provenance live
+programme is not a readiness prerequisite; historical evidence remains unchanged.
 
 ## Planning intent compatibility
 
@@ -747,12 +686,12 @@ entry; ordinary entry/adoption never invokes it. No global settings/auth/service
 Source launcher uses suite-relative imports; wheel console/resources work from unrelated projects.
 Core CLI has no Paseo dependency. Mode-specific capability blockers remain precise at use.
 
-Default entry cutover requires actual composed multiple-task + fresh independent review +
-scoped correction + owner answer + restart + unrelated dirty-index/custom/STATE preservation,
-portable installation/resource proof and legacy-active denial. Separate earlier green seams
-alone cannot establish composition. Reconcile existing active/unknown legacy workers before
-origin reuse; never run both controllers or auto-convert old contracts. The CLI deliberately
-blocks unresolved legacy writer state; approval booleans cannot bypass that boundary.
+Current readiness is the five facts above, not the historical migration's multi-task/UI/
+restart/installation proof programme. Reconcile actual active/unknown writers before origin
+reuse; never run two controllers or auto-convert old contracts. Runtime success still requires
+configured checks, focused checkpoints and independent full-range review. For this approved
+instruction-managed refactor, writer verification/checkpoint precedes the separate independent
+full-range delivery review; that review is not a writer precommit gate.
 
 On failed acceptance/unsupported capability, stop dispatch, use bound pause/cancel and validated
 own-child drain, reconcile partial files/Git and preserve authoritative DB/Pi evidence/commits/
@@ -783,12 +722,12 @@ The independent full-range migration reviewer must inspect this residual and its
 ## Final operating/rollback acceptance boundary
 
 Current public commands are start/resume/intake/status/pending/answer/control and generated
-parent-ready/parent-received/parent-answer callbacks. Status/pending print structured JSON
+parent-answer callback. Status/pending print structured JSON
 without a --json flag. Intake uses --config-hash; start/resume use the flags above and resume
-requires --resume-authority. Generated parent callbacks bind --project/--run/--nonce and,
-for received/answer, --event. Do not handcraft an ACK: actual registered launch/tool evidence
-is still required. The callback binds its actual interpreter with Python -I and a fixed runpy
-bootstrap inserting the actual imported package parent, so caller cwd/PYTHONPATH cannot
+requires --resume-authority. The parent-answer callback binds --project/--run/--nonce/--event.
+It derives genuine original-associated ask_user input, never a fabricated ACK or answer. The
+callback binds its actual interpreter with Python -I and a fixed runpy bootstrap inserting the
+actual imported package parent, so caller cwd/PYTHONPATH cannot
 substitute another runtime. Source and wheel installations use the same CLI semantics.
 Packaged host/manifest/lock live under share/coherence-workflow/pi-host; actual Python/YAML/
 schema resources remain in coherence_workflow. No callback installs/provisions anything.

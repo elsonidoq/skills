@@ -13,7 +13,7 @@ versus observed provider/model/effort. Its context and pressure measurements are
 observations, not admission or continuation vetoes. The `read_file` gateway contract accepts
 an authorized `offset`/`limit` and returns continuation metadata; an unavailable settled read
 returns a bounded correctable error to the same turn. T002 adds revision-aware history below;
-full-range review/input contracts remain T003 work.
+T003 delivers reference-based review and scoped original-associated answers below.
 
 ## Packaged contracts
 
@@ -272,24 +272,16 @@ retains canonical severity/location/criterion/evidence plus disposition/correcti
 and current external rule/source-approval/finding/range authority hashes. No correction ID creates
 a new repair budget, changes REQUIRED criteria, or lets a reviewer produce a fix.
 
-Review bundles retain the whole authoritative contract/full binary original-range patch and
-complete evidence/findings, replacing source/approval bodies with `document_refs`: authorized
-path, raw SHA256, source kind/section or approval role, and Git revision when exact committed
-bytes exist. A receipt's `contract_ref` (original task ID/canonical SHA256) replaces its contract
-only on exact canonical equality; unequal/dynamic contracts remain embedded. The120000-byte
-bundle and262144-byte SDK guards are unchanged; true remaining oversize blocks.
-
-No DDL/schema migration is added. `review_document_read` events belong to real completed read
-process operations and contain path/raw hash/byte count/file identity/bundle/range, not bodies.
-`review_document_delivery` belongs to the completed originating `sdk-turn` and binds host,
-generation, bundle, settled snapshot hash and minimal read/process/call/SDK entry identities.
-The runner derives delivery from the existing hash-verified settled private SDK branch's
-successful toolResult content, matching the same returned bytes and `sdk_tool_launched` process
-links. Callbacks, read intent and prose are insufficient. Review recording/finding resolution
-and final acceptance require full current pinned-document coverage for that exact independent
-host/turn/bundle/range; original-question continuations read the refs again in their own turn.
-Private SDK conversation storage remains private; no raw document/transcript ledger is added,
-no worker read allowlist expands, and original authority/custody/checkpoint gates still apply.
+Review input contains actual `range_base`/`range_head`, `changed_paths`, authoritative
+source/tasks/approvals, source/approval `document_refs`, task evidence/checkpoint references and
+finding history. It contains no full binary patch. `read_file` accepts working/base/head/diff
+revision and offset/limit continuation over authorized paths. Git ranges use raw builtin diff,
+never external diff/textconv. No `review_document_read`/`review_document_delivery` tables/events,
+SDK document-coverage proof, complete-bundle120000-byte guard or mandatory document reread
+protocol remains. SDK transport framing limits still apply; they are not universal file limits.
+Current base/head, fresh role-isolated read-only reviewer, settled custody, finding dispositions,
+authorized verified focused corrections and current-range rereview remain authoritative.
+Historical document-delivery records are not rewritten or treated as current requirements.
 
 The registered graph now admits only bounded verification↔repair and review→correction-authority
 →task-selector cycles in addition to the task-progress backedge. Each cycle still crosses actual
@@ -381,70 +373,40 @@ scheduler. Original repair budgets remain consumed once for that repair; continu
 have distinct SDK operation/attempt identities. Review permits exactly configured/admitted
 read_file, optionally request_owner_input, with original independent role/range lineage and
 completed host-admission provenance. Mutating/undeclared tools remain rejected. T007 below adds
-actual parent readiness/outbox provenance; a recorded row or authorization file alone still
+actual scoped original-session answers; a recorded row or authorization file alone still
 cannot establish an actual ask_user invocation or answer.
 
-## T007 registered parent transport/provenance extension
+## Scoped original-parent input
 
-Paseo is explicit and mode-specific. `Registry.question_transports` contains only trusted runtime
-capabilities; engine validation calls the selected capability's validate_config and includes its
-source hash, actual ready/launch receipts, descriptor hash and observed parent identity in registry/
-run identity. Config data cannot create executable capabilities or grant readiness. Default empty
-registries and unpreflighted/missing capabilities fail closed; standalone performs no Paseo import.
-
-`notifications/paseo.py` owns these additive v1 tables in the SAME private SQLite authority:
+Explicit registered Paseo0.9.2 capability verifies public recipient/provider/cwd/model/effort,
+the original official Pi session header and registered ask_user. Registry identity records the
+selected descriptor, not source-code/launch/ACK proof chains. Standalone has no Paseo dependency.
+The closed operator descriptor has adapter/version/binding_id/recipient_id/runtime_session_id/
+session_file/parent_cwd/parent_model/parent_effort; generation/launch_nonce are retired.
 
 | Table | Actual columns / role |
 | --- | --- |
-| `wf_parent_preflight` | run_id PK, closed canonical descriptor, observed official-session identity, UNIQUE challenge nonce, challenge_recorded/ready stage, genuine launch and ready tool receipts, nullable blocker. Deliberately no run FK: readiness is established before Engine reserves a graph run |
-| `wf_parent_delivery` | outbox event PK/FK, immutable generation hash, bounded send-attempt count, durable parent claim, actual question-tool receipt, nullable blocker |
-| `wf_parent_attempts` | monotonic seq PK, run ID, nullable event ID, action/outcome. Includes preflight busy/unavailable/queued observations; optional status observations do not drive graph state |
+| `wf_parent_bindings` | run_id PK, canonical descriptor. Established before run reservation; no run FK |
+| `wf_parent_delivery` | event_id PK/FK to outbox, attempts (one durable intent), tool_receipt, blocker |
 
-A descriptor binds adapter/version, binding_id, recipient, Pi session/file/cwd, observed parent
-model/effort, explicit generation and launch nonce. An observed identity binds file device/inode/
-UID, header session/cwd and current active registered-tool digest. Reconnect compares those values
-plus actual public inspection; it cannot silently choose another parent/generation/environment.
-The original source file is owned and non-writable by group/others, but may be mode0644: no
-confidentiality, cryptographic identity or malicious-same-UID protection is claimed.
+New runs do not create wf_parent_preflight or wf_parent_attempts; old proof records are preserved
+historically, not migrated. Old parent-delivery table shapes are explicitly unsupported for new
+delivery; use read-only history and obtain scoped renewal, never automatic migration.
+Outbox is recorded → transport_queued → answered, with durable
+intent preceding send. An uncertain send is not retried. A genuine answer may settle an uncertain
+queue outcome without pretending a transport ACK exists. Original ask_user results match exact
+nonce/question/context/options/flags and successful noncancelled structured selection/text.
+Read-only canonical same-UID regular single-link official session files, no group/other writes,
+complete JSON records and unambiguous active branch protect the local input boundary. No arbitrary
+session/record size ceremony or parent shell-launch/ready/received proof is required.
 
-Provenance reads are bounded to 32 MiB/session and 1 MiB/record, canonical non-symlink regular
-single-link files, version3 header, complete LF JSON records and an unambiguous active parentId
-branch. Missing/partial/rotated/stale/mismatched metadata blocks or remains pending. Only current
-registry metadata and exact nonce/argument-bound bash/ask_user call/result facts are extracted.
-Sanitized receipts retain tool name, call and result entry IDs, argument/result hashes and required
-answer hash; they never copy the parent transcript, private reasoning or unrelated user content.
-The official session file is read-only evidence, not a message channel or workflow decision store.
-
-Launch requires a genuine registered bash call/result carrying the literal launch marker and exact
-project/run/start context. A fresh public-Paseo readiness wake requires the same parent's completed
-parent-ready bash result before reliance. A facade executing that command can only return ack_received;
-code independently verifies completion before wf_parent_preflight becomes ready. Declared ask_user
-availability alone is not a question result: actual answer acceptance additionally requires the real
-registered ask_user call with exact question/context/options/flags, matching noncancelled successful
-structured selection and consistent tool result text. Wrong/cancelled/error/ambiguous outcomes block.
-
-A graph-parked question creates a stable outbox event. Stage transitions are recorded →
-transport_queued → parent_received → question_tool_invoked → answered. Public queued-send receipts
-and completed parent helper receipts remain distinct. If genuine parent receipt arrives before an
-uncertain send is acknowledged, the required earlier queue stage is explicitly reconciled from that
-receipt before later stages; an eventual send ACK cannot regress an answered row. A durable claim
-is inserted before the facade may call ask_user. Duplicate callbacks cannot grant another ask;
-unknown external invocation needs actual tool reconciliation or remains blocked, never exactly-once UI.
-
-`parent-answer` does not accept caller answer text or workflow choices. It derives a deterministic
-input ID from the outbox event, verifies original sources/approval records, binds the actual tool
-receipt to the original gate/session/nonce/config, and submits through Interaction.answer. This is
-runner-owned persistence behind a narrow facade API, not facade SQL/orchestration authority.
-Material-change responses require producing renewal; input or transport success never authorizes
-source/profile/task changes. Accepted inputs retain their original delivery obligations across
-transport/reentry failures. Optional notifications cannot accept input or resume a graph.
-
-Standalone status additionally exposes parent_transport preflight/outbox/blocker facts from SQL,
-without loading a UI client. Required transport failure leaves durable question/pin/input data and
-explicit blockers; it is not accepted completion or a manual-polling fallback. The shipped wake
-adapter uses public Paseo0.9.2 inspect/send only. Test-only public package-root SDK response driving
-is separate: it validates an exact current permission question/options/nonce, reconnects and responds
-only to that preapproved isolated UI request. No fabricated tool/user events or historical recipients.
+The sole callback `parent-answer` accepts no answer text; it verifies original scoped actual
+ask_user input and unchanged source/approval authority, then delegates to Interaction.answer.
+SQLite UNIQUE/CAS dedup, graph park, original worker-session binding and uncertain-delivery refusal
+remain. Missing/untrusted answers stay pending; no fresh conversation or fabricated provenance.
+Optional notifications never release gates. Local official-format tests prove wiring only, not
+actual UI integration or exactly-once UI. Historical monitor parent/proof-table consumers require
+separate reader/data-model/source/task approval renewal before using these semantics.
 
 ## Executor-aware task handoff (v1 additive metadata)
 

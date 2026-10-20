@@ -57,7 +57,7 @@ class SessionPolicyTests(unittest.TestCase):
         self.assertEqual(self.choose(candidates=cs)['session_id'],'b')
         self.assertEqual(self.choose(request(role='repair',original='a'),cs)['session_id'],'a')
         cs[-1]['telemetry']['occupancy']=333617
-        self.assertEqual(self.choose(request(role='repair',original='a'),cs)['session_id'],'b')
+        self.assertEqual(self.choose(request(role='repair',original='a'),cs)['session_id'],'a')
 
     def test_fresh_review_lineage_and_no_cross_role(self):
         self.assertEqual(self.choose(request(role='review'),[candidate()])['reason'],'independent_first_review')
@@ -68,7 +68,8 @@ class SessionPolicyTests(unittest.TestCase):
 
     def test_pin_never_substitutes_fresh(self):
         self.assertEqual(self.choose(request(pin='a'))['session_id'],'a')
-        for cs in [[],[candidate('b')],[candidate(telemetry={})],[candidate(profile='new')]]:
+        self.assertEqual(self.choose(request(pin='a'),[candidate(telemetry={})])['session_id'],'a')
+        for cs in [[],[candidate('b')],[candidate(profile='new')],[candidate(settled=False)]]:
             with self.assertRaises(Blocked): self.choose(request(pin='a'),cs)
         with self.assertRaises(Blocked): self.choose(request(pin='a',fresh_only=True))
 
