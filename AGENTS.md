@@ -28,6 +28,31 @@ agent only after verifying it is available and stating an unavailable fallback.
 - After changing global configuration, commands, or skills, tell the user to run
   `/reload` inside pi.
 
+## Parsimony and Actionable Checks
+
+Prefer the smallest working solution using existing mechanisms. Demonstrate a real end-to-end workflow
+before generalizing; supporting machinery must not become the main deliverable.
+
+- Keep workflow readiness linter-like: a handful of obvious, independent rules about the actual workflow
+  (valid tasks/configuration, available skills/scripts/executor, clear ownership). Aim for five primary
+  checks and normally no more than five to ten operational rules a human can remember. More requires a
+  concrete justification; do not hide a large protocol behind a few umbrella labels. This is a design
+  budget, not a numerical cap on ordinary test assertions or real external interface constraints.
+- Checks must earn their cost: prevent a specific serious risk, enforce an explicit requirement, or
+  address a demonstrated failure. Hypothetical future problems do not justify new blocking machinery.
+- Check at the relevant boundary; repeat only when changed state can invalidate the result. Prefer
+  existing SDK/tool/compiler/test behavior over duplicate validation and custom enforcement layers.
+- Every blocking diagnostic must name the problem, affected operation and concrete corrective action.
+  Let the running agent autonomously correct ordinary errors within its authority; do not turn normal
+  tool failures into unusable runs or new subsystems. Ask only for material scope/permission decisions.
+- Observe/report by default; block when continuing creates a concrete risk or cannot yield a valid
+  result. Optional telemetry/audit data must not block execution. Derive limits from actual consumers;
+  do not invent caps, thresholds or universal file-size rules.
+- Preserve cheap protections against data loss, credential exposure and unauthorized external actions.
+  Do not weaken a necessary check to claim success. Keep application acceptance tests distinct from
+  workflow-startup ceremony, and resolve conflicting existing mandates explicitly rather than silently
+  bypassing them or adding another layer of policy.
+
 ## Expensive Subagent Failures
 
 Never relaunch an expensive subagent, including `opus`, after a failure unless the failure cause
