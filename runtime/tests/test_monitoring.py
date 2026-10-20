@@ -33,7 +33,8 @@ class MonitoringStorageTests(ProjectTest):
             owner.store.start('run', self.base)
             rec = Recorder(owner.store, 'run')
             self.assertTrue(rec.register(descriptor(contract, {})))
-            self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started', facts={'private': 'SENTINEL'}))
+            self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'PRIVATE-SENTINEL'}))
+            self.assertIsNone(rec.emit(rec.occurrence(), 'checkpoint', 'passed', facts={'baseline': self.base, 'head': self.base, 'no_change': 'false'}))
             with patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('private sentinel')):
                 self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started'))
             owner.store.task('run', 'one', 'complete', self.base)
