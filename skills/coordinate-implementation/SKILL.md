@@ -19,6 +19,13 @@ existing dependency references; acyclic dependencies. File order need not be sor
 list reports no tasks, creates no storage and reserves nothing. Optional context stays intact.
 
 Load technical gotchas through `memory-handling`: whole index first, then matching entries.
+For direct execution in fresh or resumed contexts, before preparing worker or review briefs, consult
+[save-adr](../save-adr/SKILL.md)'s **Consult and propagate** contract when a discovered decision
+owner or supplied accepted constraints apply. Read the whole discovered decision index, relevant
+accepted records and needed supersession links; carry each applicable accepted outcome, explicit
+mechanism constraint and source link into both briefs. Known supplied constraints survive unavailable
+contract packaging; absent decision storage alone does not block unrelated work. Contradictory
+accepted authority or uncertain current supersession stops only the affected continuation.
 Missing memory or STATE is nonblocking. Preserve existing STATE/custom content and history;
 no automatic summaries/indexes, reflection or inferred feedback. The separate
 [project coordination contract](../memory-handling/references/project-coordination.md) retains
@@ -51,7 +58,10 @@ work; never invent an answer. No automatic resume, replay, control-mailbox or ba
 ## Recover Context
 
 Start from available summary/recent context, then selectively inspect Git, partial work,
-commands and progress. Inspect a failed run and its invocation; unknown cause stops blind retries.
+commands and progress. In a resumed direct run, re-establish applicable accepted-decision authority
+from supplied constraints or the discovered current records; retain their outcomes, explicit mechanism
+constraints and source links in the resumed worker and review briefs rather than relying on a prior
+read claim. Inspect a failed run and its invocation; unknown cause stops blind retries.
 Preserve partial and unrelated work. A failed API/tool operation is not permanent launch poison.
 Before a new task, inspect conflicting writers and actual files; do not adopt unknown work,
 replay uncertain external effects, kill unrelated processes or infer liveness from old SQL rows.
@@ -61,7 +71,9 @@ Historical graph/SDK/Git intents remain untouched, not converted to successful c
 
 The runner establishes baseline HEAD and index/worktree ownership. It never adopts or commits unknown work.
 One writer runs dependency-ready tasks in sequence using ordinary SDK read/search/edit/write/command tools.
-Harmless read/argument/edit errors can be corrected in the same conversation. SDK automatic compaction
+Its task brief carries applicable accepted outcomes, explicit mechanism constraints and source links;
+those complement rather than replace task requirements or existing execution authority. Harmless
+read/argument/edit errors can be corrected in the same conversation. SDK automatic compaction
 and output continuation remain normal behavior, not fatal workflow conditions. No arbitrary workflow
 size caps, deadlines, lifetime quotas or repair budgets. Do not autonomously loop expensive failed runs.
 
@@ -83,8 +95,10 @@ Planning/standalone/bootstrap writers retain their existing checkpoint duties.
 ## Review and Acceptance
 
 After task checkpoints, use one fresh independent reviewer context with only read/search tools,
-not the worker's conversation. Review the actual full committed range and relevant files with
-continuation; no provenance/evidence hash or SQL disposition is required. Concrete findings stop
+not the worker's conversation. Its review scope carries applicable accepted outcomes, explicit mechanism
+constraints and source links, and compares the actual change (including simplification or deletion)
+with them. Review the actual full committed range and relevant files with continuation; no
+provenance/evidence hash or SQL disposition is required. Concrete findings stop
 acceptance and are honestly reported with retained commits. Address findings in requested scope,
 rerun affected checks and obtain independent review; material scope changes need owner input.
 Do not relabel findings as resolved, substitute the writer as reviewer or claim unperformed checks.

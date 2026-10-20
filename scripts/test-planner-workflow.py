@@ -2415,5 +2415,65 @@ class RuntimeHandoffTests(unittest.TestCase):
         self.assertEqual(checker.check_contracts(checker.load_texts()), [])
 
 
+class CoordinateAcceptedDecisionBriefTests(unittest.TestCase):
+    """Skill-local brief walkthroughs, not emitted engine-prompt proof."""
+
+    def test_direct_fresh_and_resumed_worker_review_briefs_preserve_constraints(self):
+        accepted = (
+            ("preserve the export capability", "outcome", "decisions/export.md#accepted"),
+            ("retain the stable wire format", "explicit mechanism", "decisions/wire.md#accepted"),
+        )
+
+        def brief(entry, context, role, packaging=True, storage=True):
+            # Known caller-supplied constraints remain available when discovery packaging is not.
+            return {
+                "entry": entry,
+                "context": context,
+                "role": role,
+                "constraints": accepted,
+                "packaging": packaging,
+                "storage": storage,
+            }
+
+        walkthroughs = [brief("direct", context, role, packaging, storage)
+                        for context in ("fresh", "resumed")
+                        for role in ("worker", "review")
+                        for packaging, storage in ((True, True), (False, False))]
+        self.assertEqual(len(walkthroughs), 8)
+        for item in walkthroughs:
+            with self.subTest(item=item):
+                self.assertEqual(item["entry"], "direct")
+                self.assertIn(item["context"], ("fresh", "resumed"))
+                self.assertIn(item["role"], ("worker", "review"))
+                self.assertEqual(item["constraints"], accepted)
+        self.assertFalse(walkthroughs[-1]["packaging"])
+        self.assertFalse(walkthroughs[-1]["storage"])
+
+    def test_skill_requires_consultation_and_worker_review_propagation(self):
+        source = (ROOT / "skills/coordinate-implementation/SKILL.md").read_text()
+        carriers = (
+            ("## Load and Verify", "consult\n[save-adr](../save-adr/SKILL.md)'s **Consult and propagate** contract",
+             "Known supplied constraints survive unavailable\ncontract packaging; absent decision storage alone does not block unrelated work."),
+            ("## Recover Context", "re-establish applicable accepted-decision authority",
+             "outcomes, explicit mechanism\nconstraints and source links in the resumed worker and review briefs"),
+            ("## Execute and Integrate", "task brief carries applicable accepted outcomes, explicit mechanism constraints and source links",),
+            ("## Review and Acceptance", "review scope carries applicable accepted outcomes, explicit mechanism\nconstraints and source links",),
+        )
+
+        def assert_carriers(text):
+            for heading, *clauses in carriers:
+                body = checker.section(text, heading)
+                for clause in clauses:
+                    self.assertIn(" ".join(clause.split()), " ".join(body.split()))
+
+        assert_carriers(source)
+        for heading, *clauses in carriers:
+            for clause in clauses:
+                with self.subTest(heading=heading, clause=clause):
+                    changed = source.replace(clause, "OMITTED", 1)
+                    with self.assertRaises(AssertionError):
+                        assert_carriers(changed)
+
+
 if __name__ == "__main__":
     unittest.main()
