@@ -28,7 +28,11 @@ is the owner's choice for cross-skill reasoning, not an empirically established 
 over lower effort. Terra/Astra are not needed to resolve missing requirements; a more
 capable profile cannot supply missing permission. No benchmark-ranking evidence is
 claimed. Environment reports `PI_MODEL=gpt-6.1-sol`; actual effort is not independently
-observable here. This source assigns no implementation executor or runtime settings.
+observable here. Subsequent owner direction after task production requires tasks granular
+enough for a **Terra / medium** implementation agent. Sol/medium remains the planning
+profile. Terra/medium is the intended implementation family/effort, not a concrete
+provider/model binding or permission to launch; exact binding and usable runtime settings
+remain subject to later explicit selection/preflight, without guessing a version.
 
 ## Verified local evidence and resulting constraints
 
@@ -173,7 +177,15 @@ checklist**. Each needs concrete pass evidence; a green generic suite alone is i
 | A6 — Bounded integration | Validate only introduced links/sections, actual owned diffs and affected existing contract tests. Relevant current docs/routing/discovery agree with implemented behavior; no unrelated migration, settings/memory/STATE write or runner redesign. Final independent full-range implementation review remains required; report actual commands/results and unavailable checks. |
 
 Task generation must map A1–A6 to owned outcomes with check, pass condition, evidence and
-actual permission/manual gates. Compose the propagation check only when the canonical
+actual permission/manual gates. Under the owner's subsequent Terra/medium direction,
+each task must deliver one bounded, independently verifiable outcome with explicit owned
+paths, consumed interfaces, dependencies and a smallest sufficient check. Split independently
+testable concerns that would otherwise leave multiple unfinished interfaces in one task;
+do not bundle a milestone merely because its Sol/medium planning producer can reason
+about it. Keep ordinary tests, relevant docs and checkpoint with their outcome, without
+inventing task-count limits or shrinking A1–A6. Apply the existing task-generation
+executor-sized outcome contract; the task producer separately reconciles tasks after
+planner verifies this source checkpoint. Compose the propagation check only when the canonical
 contract and consumers exist; ordinary tests/docs/checkpoint stay with their delivery.
 No independently necessary prototype producer, disposable cleanup task or benchmark is
 justified. Use existing planner workflow checks and initialization/prompt fixtures for
@@ -211,5 +223,5 @@ restart; the fresh agent verifies the checkout and loaded capabilities.
 checkpoint. Next possible work is separately authorized task production, planner review
 and combined source/task approval; the owner's explicit planning-only boundary survives
 that approval until they separately authorize implementation. Current blockers to feature
-execution are missing tasks, review, combined approval and explicit implementation go-ahead,
-not a request for a new planning stage or a claim of feature acceptance.
+execution are task reconciliation with this source, review, combined approval and explicit
+implementation go-ahead, not a request for a new planning stage or a claim of feature acceptance.
