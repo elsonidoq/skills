@@ -46,6 +46,18 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
         with a, b:
             self.assertEqual(PiAdapter(self.project, {}, question=lambda q: 'yes', observe_question=lambda state: (_ for _ in ()).throw(RuntimeError('recorder'))).prompt('fixture'), 'sent')
 
+    def test_callback_failure_does_not_replace_broken_answer_send(self):
+        import time
+        closed = self.root/'closed'
+        body = "from pathlib import Path\nimport os,time\nprint(json.dumps({'type':'question','question':'PRIVATE-SENTINEL'}),flush=True)\nos.close(0)\nPath(" + repr(str(closed)) + ").write_text('closed')\ntime.sleep(1)\n"
+        a, b = self.fixture(body)
+        def answer(question):
+            deadline = time.monotonic() + 5
+            while not closed.exists() and time.monotonic() < deadline: time.sleep(.01)
+            return 'yes'
+        with a, b, self.assertRaises(BrokenPipeError):
+            PiAdapter(self.project, {}, question=answer, observe_question=lambda state: (_ for _ in ()).throw(RuntimeError('recorder'))).prompt('fixture')
+
     def test_noninteractive_question_stops_without_fabricating_answer(self):
         with patch('sys.stdin.isatty', return_value=False):
             with self.assertRaisesRegex(Blocked, 'owner input needed'):

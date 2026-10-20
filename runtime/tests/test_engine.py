@@ -129,6 +129,42 @@ class SequentialExecutionTests(ProjectTest):
         self.assertEqual(len({row[0] for row in rows}), 1)
         self.assertTrue(json.loads(rows[0][2])['parent_occurrence_id'])
 
+    def test_real_framed_question_send_failure_records_delivery_failed(self):
+        import os, sys
+        from pathlib import Path
+        host, closed = self.root/'broken_answer_host.py', self.root/'stdin-closed'
+        host.write_text("""import json, sys, time
+from pathlib import Path
+request = json.loads(input())
+if request['readOnly']:
+    print(json.dumps({'type':'result','text':'{\\\"approved\\\":true,\\\"findings\\\":[]}'}), flush=True)
+else:
+    print(json.dumps({'type':'question','question':'PRIVATE-SENTINEL'}), flush=True)
+    import os
+    os.close(0)
+    Path(""" + repr(str(closed)) + """).write_text('closed')
+    time.sleep(1)
+""")
+        contract = admit([{'id': 'fix', 'description': 'Fix'}])
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, {'COHERENCE_NODE': sys.executable}):
+            with Authority(self.project) as owner:
+                with self.assertRaises((BrokenPipeError, OSError)):
+                    def answer(text):
+                        import time
+                        deadline = time.monotonic() + 5
+                        while not closed.exists() and time.monotonic() < deadline: time.sleep(.01)
+                        self.assertTrue(closed.exists())
+                        return 'yes'
+                    Engine(owner, 'broken-send', contract, EXECUTOR, adapter=__import__('coherence_workflow.pi_adapter', fromlist=['PiAdapter']).PiAdapter, question=answer).invoke()
+        import sqlite3
+        db = sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite')
+        rows = list(db.execute("SELECT occurrence_id,kind,facts FROM execution_observations WHERE run_id='broken-send' AND phase='worker'"))
+        db.close()
+        sent = [(row[0], row[1], json.loads(row[2])) for row in rows if row[1] == 'delivery_failed']
+        self.assertEqual(len(sent), 1)
+        self.assertTrue(sent[0][2]['parent_occurrence_id'])
+        self.assertNotIn('PRIVATE-SENTINEL', str(rows))
+
     def test_review_base_must_be_ancestor_and_actual_prompt_uses_it(self):
         project = self.project
         prompts = []
