@@ -60,6 +60,14 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(self.client.get("/").status_code, 200)
 
+    def test_snapshot_scopes_graph_entities_to_selected_root(self):
+        runs = self.client.get("/api/monitor/v1/runs", headers=self.api_headers).json()["runs"]
+        selected, unrelated = (item["ref"] for item in runs)
+        view = self.client.get(f"/api/monitor/v1/runs/{selected}/snapshot", headers=self.api_headers).json()
+        self.assertEqual({item["run_ref"] for key in ("phases", "tasks", "occurrences", "records", "unknown_records", "edges") for item in view[key]}, {selected})
+        self.assertNotEqual(selected, unrelated)
+        self.assertEqual({item["ref"] for item in view["runs"]}, {selected, unrelated})
+
     def test_actual_loopback_server_serves_a_closed_api_response(self):
         with socket.socket() as probe:
             probe.bind(("127.0.0.1", 0))

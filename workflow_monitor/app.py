@@ -134,12 +134,19 @@ def _page(data: dict[str, Any], reference: str, after: int, size: int) -> dict[s
     next_cursor = None
     if len([item for item in retained if item.get("source_seq", -1) > after]) > len(visible):
         next_cursor = "cursor_" + str(visible[-1]["source_seq"])
+    # Keep the run selector, but never return another run's graph as part of this
+    # selected-root snapshot. Explicit correction expansion uses its own endpoint.
     result = dict(data)
+    for key in ("phases", "tasks", "occurrences", "edges"):
+        result[key] = [item for item in data[key] if item["run_ref"] == reference]
+    result["followups"] = [item for item in data.get("followups", [])
+                           if item["run_ref"] == reference or item["source_run_ref"] == reference]
     result["records"] = visible_records
     result["unknown_records"] = visible_unknown
     inventory = dict(data["inventory"])
-    inventory.update({"total_count": len(retained), "loaded_count": len(visible), "hidden_count": len(retained) - len(visible),
-                      "unsupported_count": len(unknown)})
+    inventory.update({"phase_count": len(result["phases"]), "occurrence_count": len(result["occurrences"]),
+                      "observation_count": len(records), "total_count": len(retained), "loaded_count": len(visible),
+                      "hidden_count": len(retained) - len(visible), "unsupported_count": len(unknown)})
     result["inventory"] = inventory
     result["snapshot_ref"] = _token(reference, records, unknown)
     result["next_cursor"] = next_cursor

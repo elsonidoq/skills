@@ -9,6 +9,7 @@ const runs = [
   { ref: 'original', label: 'Original rejected run', completeness: 'recorded', started_at: 1, review_acceptance: { state: 'accepted_full_range', base: fullBase, head: fullHead } },
   { ref: 'fixing', label: 'Declared fixing run', completeness: 'recorded', started_at: 2, review_acceptance: { state: 'accepted_full_range', base: fullBase, head: fullHead } },
   { ref: 'correction_only', label: 'Correction-only run', completeness: 'recorded', started_at: 3, review_acceptance: { state: 'correction_only', base: fullBase, head: 'c'.repeat(40) } },
+  { ref: 'unrelated', label: 'Unrelated run', completeness: 'recorded', started_at: 4, review_acceptance: { state: 'unknown', base: null, head: null } },
 ]
 function occurrence(ref: string, run_ref: string, role: string, outcome: string, phase_ref = `phase_${ref}`) { return { ref, run_ref, phase_ref, task_ref: null, role, outcome, completeness: 'complete', record_refs: [`record_${ref}`] } }
 function record(ref: string, run_ref: string, occurrence_ref: string, kind: string, seq: number, base: string | null = null, head: string | null = null) { return { ref, run_ref, occurrence_ref, kind, source_seq: seq, recorded_at: seq, exit_code: null, finding_count: kind === 'failed' ? 1 : 0, review_base: base, review_head: head } }
@@ -32,6 +33,7 @@ test('navigates an explicit reviewer-to-fixing-to-rereview lineage without repla
   await page.goto('/')
   await expect(page.getByText(`reviewer: failed · source original`)).toBeVisible()
   await expect(page.getByText(`fixing_worker: passed · source fixing`)).toBeVisible()
+  await expect(page.getByText('source unrelated')).toHaveCount(0)
   await expect(page.getByText(`reviewer: passed · source fixing`)).toBeVisible()
   await page.getByText('passed #5 · source fixing').click()
   await expect(page.getByText(`range ${fullBase} → ${fullHead}`)).toBeVisible()
