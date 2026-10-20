@@ -89,9 +89,15 @@ launch tool's cancellation signal terminates only its owned runner through that 
 SIGTERM path and waits for it before bridge cleanup. The bridge is optional: direct terminal
 invocation remains unchanged. The project entry is
 `.pi/extensions/coordinate-implementation-bridge.js`; Pi auto-discovers `.js`/`.ts`, not `.mjs`.
-In Paseo, use a fresh session and verify both `coordinate_implementation_start` and
-`coordinate_implementation_reply` are available before launch; do not reload or restart the
-current session automatically. There is no Paseo
+Noninteractive Pi (including RPC) skips project extensions without project trust. Use explicit
+one-run `pi --approve` or an owner-approved saved decision for the exact checkout; never change
+global trust defaults or trust parent directories just to load this bridge. A prompt cannot load
+tools that startup skipped. In Paseo, use a fresh session and verify both
+`coordinate_implementation_start` and `coordinate_implementation_reply` are available before launch;
+do not reload or restart the current session automatically. After merging, start in the main
+checkout and verify its own trust decision and tool availability: trust is path-specific, not
+branch-specific. The bridge resolves the script from that session's checkout, not an old worktree.
+Runner diagnostics go to stderr so they cannot corrupt the parent's RPC stdout. There is no Paseo
 version/transcript/binding/receipt gate. No automatic resume/control mailbox or daemon.
 Cancellation aborts the owned SDK session and waits for its host; it never signals parent/sibling
 processes or provisions/signals cgroups.
