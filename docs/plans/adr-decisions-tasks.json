@@ -1,0 +1,115 @@
+{
+  "tasks": [
+    {
+      "id": "T001",
+      "outcome": "Deliver the portable canonical save-adr save/consult/propagate contract, preserving decision authority and history. Apply the linked TinySpec's shared constraints; this task does not select or create a repository ADR store.",
+      "source": "docs/plans/adr-decisions-tinyspec.md — One shared contract; Consultation and change authority; A1, A2, A6",
+      "depends": [],
+      "owned_paths": ["skills/save-adr/SKILL.md"],
+      "scope": "Create a concise trigger-only skill following writing-skills. Discover and reuse project instructions, routing, actual decision owner/index and equivalent format; propose/confirm material absent or ambiguous ownership at the actual save boundary. Keep decision, context/rationale, consequences/trade-offs, proposed/accepted/superseded status, honest approval/source provenance and supersession links; distinguish implementation state. Read the whole decision index then relevant accepted records in full and resolve supersession authority. Reuse repeated saves and retain history with permitted index/link updates. State outcome-versus-explicit-mechanism protection and role-neutral propagation once. Preserve path/symlink, secrets, dirty/concurrent ownership and focused checkpoint protections. No supporting machinery or template is required by default.",
+      "acceptance": [
+        {
+          "id": "A1/T001",
+          "check": "Focused frontmatter, portability and introduced-link review plus before/after pressure walkthroughs: custom store/format, authorized absent-store proposal, repeat save, and unavailable/ambiguous owner.",
+          "pass": "Matching skill name and trigger; existing owner/format reused without competing specs or defaults; absent-store location requires actual authority; ambiguity identifies the affected operation and remedy, not an unrelated legacy veto.",
+          "evidence": "Actual skill diff, resolving references and concise scenario observations showing the pre-change omission and new response; report instruction evidence only."
+        },
+        {
+          "id": "A2/T001",
+          "check": "Walk through accepted-but-unimplemented, proposed-but-experimented, unknown approval, repeat save, approved linked supersession and unapproved/conflicting supersession.",
+          "pass": "All record semantics remain expressible in equivalent formats; old rationale/status/index navigation survives supersession; saving grants no implementation authority. Conflicting continuation waits for explicit owner supersession; compatible helper deletion adds no gate, but an explicitly mandated mechanism remains binding.",
+          "evidence": "Attributable scenario records/observations and reviewed contract clauses, including the specific affected STOP/remedy."
+        }
+      ],
+      "permissions": "Future implementation authorization first. Skill publication is not authority to save a project decision or initialize a store; material meaning/authority/conflict/location choices remain at their real boundary. Verify and focus-commit this owned outcome before dependent work."
+    },
+    {
+      "id": "T002",
+      "outcome": "Route approved consequential decisions from closeout to save-adr without changing existing closeout responsibilities.",
+      "source": "docs/plans/adr-decisions-tinyspec.md — Thin integrations and local adoption bounds; A3, A6; shared constraints apply",
+      "depends": ["T001"],
+      "owned_paths": ["skills/finish-session/SKILL.md", "skills/finish-session-jev/SKILL.md"],
+      "scope": "Add a thin save-adr trigger/timing link to finish-session for an explicitly approved consequential decision. Change the Jev adapter only if its existing routing needs the corresponding pointer; preserve optional Jev/manual fallback. Keep primary-artifact verification, current-doc/schema/runbook, issue, gotcha-memory, explicit-feedback and validation duties; distinguish rationale from current-state ownership without copied narratives.",
+      "acceptance": [
+        {
+          "id": "A3/T002",
+          "check": "Focused closeout read-through and scenarios for an attributable approved decision, an ordinary session, and an agent-inferred implementation lesson; check introduced references.",
+          "pass": "Only the approved consequential decision routes to the canonical saver; ordinary sessions/lessons create no ADR, backfill or invented acceptance. All existing duties and manual-authority fallback remain intact.",
+          "evidence": "Owned diff and scenario routing observations with the approval provenance or its absence; no external classifier/live evaluation."
+        }
+      ],
+      "permissions": "No decision acceptance, memory writes, external Jev operation or project-store creation is authorized by this integration. Verify and focus-commit the outcome."
+    },
+    {
+      "id": "T003",
+      "outcome": "Make decision-owner discovery and managed ADR consultation available through new adoption and explicitly approved bounded refresh, while preserving legacy/custom projects.",
+      "source": "docs/plans/adr-decisions-tinyspec.md — Thin integrations and local adoption bounds; A4, A6; shared constraints apply",
+      "depends": ["T001"],
+      "owned_paths": ["skills/initialize-coherence/SKILL.md", "skills/initialize-coherence/scripts/test_contract.py", "skills/initialize-coherence/scripts/fixtures/scenarios.json"],
+      "scope": "Extend existing routing discovery and approval proposals to preserve or propose the actual project decision owner/index. Through existing adoption/refresh approval, managed instructions consult the whole index and relevant accepted records before affected planning/change, including capability removal, and discover the installed canonical skill without a fixed developer path. Reuse existing initialization tests and bounded scenarios; preserve custom owners, local overrides, exact overlap/dirty-target approval and drift stops. Do not refresh any actual project here or choose this repository's general ADR store.",
+      "checks": [["python3", "skills/initialize-coherence/scripts/test_contract.py"]],
+      "acceptance": [
+        {
+          "id": "A4/T003",
+          "check": "Extend and run the existing initialization fixtures; inspect managed proposal/diff expectations for new adoption, approved refresh/custom owner, unchanged repeat, denial, dirty overlap and concurrent drift.",
+          "pass": "Whole-index/relevant-accepted consultation and canonical discovery reach managed instructions only through authorized adoption/refresh. Customization survives; denial/drift cannot write; repeat is unchanged. No incidental refresh, global path, unapproved store creation or absent-store-only legacy startup veto.",
+          "evidence": "Actual fixture results and managed-diff expectations sensitive to the new instructions; explicitly identify static limits."
+        }
+      ],
+      "permissions": "Implementation may edit the reusable contract/fixtures, not adopt unrelated projects. Future project writes retain existing exact-content, overlap and material location approvals. Verify and focus-commit the outcome."
+    },
+    {
+      "id": "T004",
+      "outcome": "Preserve relevant accepted decision constraints across direct and delegated TinySpec/Standard planning entry, source/task acceptance and fresh/resumed producer briefs.",
+      "source": "docs/plans/adr-decisions-tinyspec.md — Consultation and change authority; Thin integrations; A5, A6; shared constraints apply",
+      "depends": ["T001"],
+      "owned_paths": ["skills/planner/SKILL.md", "skills/planning-brainstorming/SKILL.md", "skills/tiny-spec/SKILL.md", "skills/task-generation/SKILL.md", "skills/delegating-architectural-planning/SKILL.md", "scripts/check-planner-workflow.py", "scripts/test-planner-workflow.py", "scripts/fixtures/planner/adr-continuity.json"],
+      "scope": "Add only thin canonical consultation links and role-specific timing at the source-identified planning seams, including standalone/helper entry, both task adapters and handoff. Keep preselection read-only and existing depth/current-content gates. Relevant outcome constraints and source links must affect source acceptance, task checks/dependencies and fresh/resumed delegated briefs, not merely parent context. Extend existing planner checks/fixtures only enough to detect propagation omissions; do not introduce a framework or required intake metadata.",
+      "checks": [["python3", "scripts/check-planner-workflow.py"], ["python3", "scripts/test-planner-workflow.py"]],
+      "acceptance": [
+        {
+          "id": "A5/T004",
+          "check": "Focused source-to-task/brief walkthroughs and existing planner fixtures cover direct TinySpec/Standard, brainstorming/architecture helper and task entry, with fresh/resumed contexts. Exercise accepted capability removal versus compatible helper deletion, explicitly mandated mechanism, proposed/superseded nonbinding records and conflicting accepted authority.",
+          "pass": "Index/relevant accepted authority is re-established where applicable; exact outcome constraints plus links reach acceptance, dependencies/checks and producer briefs. Conflicting capability/mechanism change requires explicit approved supersession through existing gates; compatible cleanup does not. No extra artifact/stage, retrospective approval or indiscriminate history intake.",
+          "evidence": "Focused fixture output and one traced representative accepted constraint from source observable to task check and delegated brief, with concrete expected stops/non-stops. These are instruction/fixture results, not model obedience."
+        }
+      ],
+      "permissions": "No SpecKit/provider invocation, new approval stage, executor assignment or historical artifact rewrite. Planning-depth and source/current-content approvals retain their owners. Verify and focus-commit the outcome."
+    },
+    {
+      "id": "T005",
+      "outcome": "Carry accepted-decision constraints into direct/resumed implementation and independent review, including the existing engine worker and skills-disabled final-review prompt seams.",
+      "source": "docs/plans/adr-decisions-tinyspec.md — Consultation and change authority; only proposed runtime seam; A5, A6; shared constraints apply",
+      "depends": ["T001", "T004"],
+      "owned_paths": ["skills/coordinate-implementation/SKILL.md", "skills/requesting-code-review/SKILL.md", "skills/requesting-code-review/code-reviewer.md", "runtime/coherence_workflow/engine.py", "runtime/tests/test_engine.py"],
+      "scope": "Add thin consult/propagate links and applicable accepted outcome constraints to direct/fresh/resumed worker and reviewer instructions. Minimally extend only the existing engine worker and final-review prompt text to discover the configured/installed canonical save-adr contract and project routing or consume supplied relevant accepted constraints. A skills-disabled reviewer can read the contract as a file. Use existing task context, captured prompts and review range; preserve fresh/read-only independent review, six intake checks, ordinary errors, ownership and checkpoints. Do not edit host.mjs, recovery behavior, SQL/state, model/config bindings or add read receipts.",
+      "checks": [["env", "PYTHONPATH=runtime:runtime/tests", "python3", "-B", "-m", "unittest", "discover", "-s", "runtime/tests", "-p", "test_engine.py"]],
+      "acceptance": [
+        {
+          "id": "A5/T005",
+          "check": "Run existing engine tests with runtime and runtime/tests on PYTHONPATH using the existing test setup; extend prompt-capture assertions for actual worker and read-only final reviewer. Read through direct/resumed worker/reviewer continuity and apply the authority/deletion cases from T004 to actual change review.",
+          "pass": "Both emitted prompts contain usable shared-contract discovery/accepted-constraint instructions despite disabled reviewer skills; known accepted constraints cannot be ignored for unavailable packaging. Review compares actual change against accepted outcomes and explicit mechanisms, distinguishes compatible deletion from conflicting capability removal, and reports affected authority gaps without absent-store-only legacy blocking. No host/intake/runtime redesign.",
+          "evidence": "Actual captured worker/reviewer prompts, focused offline engine test output and direct/resumed review observations; record the runtime test invocation/environment and preserve fresh read-only review assertions. No provider or model-obedience claim."
+        }
+      ],
+      "permissions": "Do not mutate a running workflow through itself. Wait until current running work is finished, then recheck fresh path/sole-writer ownership before these implementation edits; coordinate through the existing implementation path, not recursively through the runtime being changed. Verify and focus-commit the outcome."
+    },
+    {
+      "id": "T006",
+      "outcome": "Publish bounded repository discovery/adoption documentation and verify the composed ADR continuity contract across the delivered consumers.",
+      "source": "docs/plans/adr-decisions-tinyspec.md — this repository adoption bounds; A1–A6; A6 bounded integration; shared constraints apply",
+      "depends": ["T002", "T003", "T004", "T005"],
+      "owned_paths": ["AGENTS.md", "docs/index.md", "docs/plans/index.md", "docs/plans/reviews/index.md", "README.md"],
+      "scope": "Within explicitly approved implementation scope only, add the marked local AGENTS consultation association, canonical skill/routing discovery and necessary README workflow text. Link this source/tasks in the plans index and actual authorized review artifacts in the reviews index when they exist, without placeholders or index cleanup. Keep requirements/reference owners and custom sections intact. No general ADR-store path is selected; state its future save/adoption authority boundary rather than create/backfill a store. Compose the already-delivered canonical contract, closeout, adoption and planning/execution/review links once; reuse unchanged applicable task proof and rerun only invalidated checks.",
+      "acceptance": [
+        {
+          "id": "A6/T006",
+          "check": "Validate introduced links/sections and actual owned/full-range diffs against implemented consumers; compare README/routing/managed instructions with behavior. Trace a representative accepted constraint through planning source/task/brief to emitted worker prompt and independent review scope, reusing T004/T005 captures. Check A1–A5 evidence dispositions without a new enforcement subsystem.",
+          "pass": "Discoverability agrees with the single operational owner and delivered behavior; no competing spec, accidental store selection, unrelated migration, memory/settings/STATE write or runner redesign. Required evidence is present or honestly blocked/unavailable, never generic-green substitution. Independent fresh read-only full-range implementation review remains required before feature completion.",
+          "evidence": "Introduced-link results, focused/full-range diff inspection, composed trace with prior evidence references, actual command outcomes and independent review findings/disposition in the existing review/handoff convention."
+        }
+      ],
+      "permissions": "The combined source/task approval must explicitly include these bounded existing-file updates, followed by the owner's separate implementation go-ahead. No constitution amendment absent an actual conflict returned through Governance. Paseo activation is a fresh-session handoff verifying checkout/capabilities, not /reload or automatic restart. Verify and focus-commit the owned docs outcome; retain independent final review before completion."
+    }
+  ]
+}
