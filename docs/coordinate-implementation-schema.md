@@ -41,7 +41,8 @@ retain closed phase/kind/fact fields, never prompts, answers, commands, output, 
 Existing progress and historical rows are neither converted nor inferred. The retained closed descriptor has a
 distinct description version, phase labels with possible branches and pre-recording markers, task IDs and
 safe optional presentation, requested executor, revision-or-unknown, declared correction, and private
-runner identity in its dedicated column. Descriptor/identity collection and warning output are best effort.
+runner identity in its dedicated column. Descriptor/identity collection and warning output are best effort. If a later append recovers after a
+recording failure, the recorder appends a closed `gap` marker; it never reconstructs missing events.
 Engine emissions include
 per-command check start/outcome and checkpoint start/outcome; command text and output remain private.
 A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.

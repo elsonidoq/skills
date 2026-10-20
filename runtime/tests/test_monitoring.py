@@ -40,6 +40,8 @@ class MonitoringStorageTests(ProjectTest):
             self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'PRIVATE-SENTINEL'}))
             self.assertIsNone(rec.emit(rec.occurrence(), 'checkpoint', 'passed', facts={'baseline': self.base, 'head': self.base, 'no_change': 'false'}))
             with patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('private sentinel')):
-                self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started'))
+                self.assertIsNone(rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'worker'}))
+            rec.emit(rec.occurrence(), 'worker', 'started', facts={'role': 'worker'})
+            self.assertIn('gap', [row[0] for row in owner.store.db.execute('SELECT kind FROM execution_observations')])
             owner.store.task('run', 'one', 'complete', self.base)
             self.assertEqual(owner.store.db.execute('SELECT state FROM execution_tasks').fetchone()[0], 'complete')

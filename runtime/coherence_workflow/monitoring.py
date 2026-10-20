@@ -12,7 +12,7 @@ import uuid
 
 RECORDING_VERSION = 1
 PHASES = frozenset({"prepare", "gate", "worker", "check", "checkpoint", "review", "terminal"})
-KINDS = frozenset({"started", "returned", "passed", "failed", "interrupted", "question_requested", "answer_returned", "answer_sent", "delivery_failed", "abandoned"})
+KINDS = frozenset({"started", "returned", "passed", "failed", "interrupted", "question_requested", "answer_returned", "answer_sent", "delivery_failed", "abandoned", "gap"})
 _HASH = re.compile(r"^[0-9a-f]{40,64}$")
 _ROLES = frozenset({"worker", "fixing_worker", "reviewer"})
 _ERRORS = frozenset({"blocked", "check", "git", "malformed", "transport", "interrupted", "unknown"})
@@ -47,6 +47,8 @@ def _closed_facts(phase, kind, facts):
     """Validate the small phase/kind vocabulary before it reaches SQLite."""
     if not isinstance(facts, dict):
         return False
+    if kind == "gap":
+        return facts == {"recording_gap": True}
     allowed = {
         "prepare": {"error_category"},
         "gate": {"ordinal", "parent_occurrence_id", "error_category"},
@@ -109,7 +111,7 @@ def _descriptor(contract, executor, revision=None):
 
 class Recorder:
     """Optional append-only recorder. Every public method is safe to call on errors."""
-    def __init__(self, store, run): self.store, self.run, self.registered = store, run, False
+    def __init__(self, store, run): self.store, self.run, self.registered, self.gap_pending = store, run, False, False
 
     def register(self, description, runner_identity=None):
         try:
@@ -134,8 +136,12 @@ class Recorder:
             facts = facts or {}
             if not isinstance(occurrence_id, str) or not occurrence_id or phase not in PHASES or kind not in KINDS or (task_id is not None and not isinstance(task_id, str)) or not _closed_facts(phase, kind, facts):
                 raise ValueError("closed monitoring fact rejected")
+            if self.gap_pending:
+                self.store.append_monitor_observation(self.run, uuid.uuid4().hex, "terminal", None, "gap", {"recording_gap": True})
+                self.gap_pending = False
             return self.store.append_monitor_observation(self.run, occurrence_id, phase, task_id, kind, facts)
         except Exception:
+            self.gap_pending = True
             _warn("recording append unavailable")
             return None
 
