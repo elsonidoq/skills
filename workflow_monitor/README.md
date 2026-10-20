@@ -16,6 +16,8 @@ workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/workt
 
 Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It uses local ELK layout and polls the closed snapshot API about every two seconds. Status-only polls preserve node IDs, selection, positions, and viewport; topology changes are laid out locally. Stale fetch and layout completions from an old selected run are discarded. The initial API snapshot is a bounded first history page. Use **Load more history** to reveal the next page at the same snapshot watermark; an expired or changed watermark refreshes instead of mixing pages. The inventory reports total, loaded, hidden, and unsupported records, while collapsed failure and waiting badges remain discoverable.
 
+The selected-root graph expands only explicitly declared local followups. A resolved relation links the original reviewer to the distinct fixing-worker execution and its checks, checkpoint, and rereviewer; every expanded node carries its opaque source-run ref. Review detail shows its recorded base→head range. The original rejected run remains failed even when a later full-original-range review succeeds. Correction-only, unresolved, conflicting, or cyclic relations are shown as such and never display a current accepted head. Collapsed history still reports failures and inventory retains hidden/unsupported records for reveal.
+
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
 asset-building overrides. It serves only the fixed startup asset inventory (not
 sourcemaps, symlinks, directories, or arbitrary files) and exposes closed GET routes:
@@ -37,7 +39,7 @@ Run the focused HTTP/launcher and production-web checks with prepared local depe
 ```sh
 workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_http workflow_monitor.tests.test_launch workflow_monitor.tests.test_lineage
 npm --prefix workflow_monitor/web run build
-npm --prefix workflow_monitor/web test
+npm --prefix workflow_monitor/web test  # includes reviewer→fixing-agent→rereviewer browser coverage
 ```
 
 The browser test uses the already-installed local Chrome executable and does not download a browser. It serves the built assets and a closed local fixture API; it is not a same-run observer acceptance. SC-006 same-run retrospective/live observation remains **NOT VERIFIED** until separately authorized operator observation of genuine later application work.
