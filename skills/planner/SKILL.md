@@ -57,7 +57,8 @@ compact guidelines; missing store or STATE is nonblocking. Do not auto-initializ
 routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
 future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
 explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Before affected planning, read the
+sensitive-data and dirty/concurrent ownership safeguards. Apply [save-adr](../save-adr/SKILL.md)'s
+consult/propagate contract before affected planning; read the
 whole discovered decision index, then relevant accepted records in full and needed
 supersession links; fresh/resumed contexts re-establish applicability rather than claiming a
 prior read. Carry each applicable accepted outcome constraint and source link through source

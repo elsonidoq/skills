@@ -45,12 +45,14 @@ ROUTING_SEQUENCE = (
 # A5 adapter carriers: source acceptance must become a task-local gate/check/brief.
 ACCEPTED_ADAPTER_CARRIERS = (
     ("accepted-tiny-source", "tiny", "## Inputs and preflight", (
+        "[save-adr](../save-adr/SKILL.md)",
         "direct entry and fresh/resumed", "re-establish relevant accepted authority",
         "current supersession", "source observable must yield its task dependency or gate",
         "task-local REQUIRED check and worker brief", "not merely a link",
         "source/task conflict or uncertain current\nsupersession stops only the affected acceptance mapping",
     )),
     ("accepted-task-preflight", "tasks", "## Preconditions and adapters", (
+        "[save-adr](../save-adr/SKILL.md)",
         "direct entry and fresh/resumed", "re-establish relevant accepted authority",
         "current supersession", "task's\ndependency or gate, task-local REQUIRED check and worker brief",
         "not merely a link", "source/task conflict\nor uncertain current supersession stops only the affected task mapping",
@@ -199,6 +201,7 @@ def check_contracts(texts):
             "interpret owner agreement within the explanation and scope actually presented",
             "Correct a mistaken premise")
     require("accepted-decision-consultation", discovery,
+            "[save-adr](../save-adr/SKILL.md)",
             "whole discovered decision index", "relevant accepted records in full",
             "needed supersession links", "fresh/resumed contexts re-establish applicability",
             "rather than claiming a prior read", "proposed/superseded records are not\ncurrent policy",

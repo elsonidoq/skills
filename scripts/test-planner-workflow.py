@@ -1403,6 +1403,8 @@ class AcceptedDecisionBriefContinuityTests(unittest.TestCase):
     def test_read_through_carriers_reject_omission(self):
         texts = checker.load_texts()
         cases = (
+            ("## Discovery and capability boundary", "[save-adr](../save-adr/SKILL.md)",
+             "accepted-decision-consultation:"),
             ("## Discovery and capability boundary", "whole discovered decision index",
              "accepted-decision-consultation:"),
             ("## Selected production and stage handoffs", "each applicable accepted outcome constraint\nand source link",

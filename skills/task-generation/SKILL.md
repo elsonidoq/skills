@@ -27,7 +27,8 @@ compact guidelines; missing store or STATE is nonblocking. Do not auto-initializ
 routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
 future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
 explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. On direct entry and fresh/resumed
+sensitive-data and dirty/concurrent ownership safeguards. Apply [save-adr](../save-adr/SKILL.md)'s
+consult/propagate contract. On direct entry and fresh/resumed
 production, re-establish relevant accepted authority and current supersession. Both adapters
 carry exact applicable constraints and source links from source observables into the task's
 dependency or gate, task-local REQUIRED check and worker brief; verify the relevant decision
