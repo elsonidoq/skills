@@ -130,6 +130,54 @@ class SequentialExecutionTests(ProjectTest):
             with self.assertRaisesRegex(Blocked, 'ancestor'):
                 Engine(owner, 'bad-range', bad, EXECUTOR, adapter=Offline).invoke()
 
+    def test_rejected_original_and_declared_fix_use_full_original_review_range(self):
+        project, prompts = self.project, []
+        class OfflineReviewCycle:
+            def __init__(self, *a, **k): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    prompts.append(prompt)
+                    return '{"approved":false,"findings":["fix.txt:1 - original defect"]}' if len(prompts) == 1 else '{"approved":true,"findings":[]}'
+                if 'fix' in prompt:
+                    kwargs['claim']('fix.txt')
+                    (project/'fix.txt').write_text('corrected\\n')
+                return 'offline worker'
+        original = admit({'tasks': [{'id': 'original', 'description': 'Original'}]})
+        with Authority(project) as owner:
+            with self.assertRaisesRegex(Blocked, 'original defect'):
+                Engine(owner, 'original', original, EXECUTOR, adapter=OfflineReviewCycle).invoke()
+        fixing = admit({'monitor': {'correction_of': {'run_id': 'original', 'review_execution_id': 'review-id'}}, 'review_base': self.base, 'tasks': [{'id': 'fix', 'description': 'Fix'}]})
+        with Authority(project) as owner:
+            Engine(owner, 'fixing', fixing, EXECUTOR, adapter=OfflineReviewCycle).invoke()
+        self.assertIn('Range: ' + self.base + '..', prompts[1])
+        self.assertIn('fix.txt', prompts[1])
+        import sqlite3
+        db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
+        terminal = [row[0] for row in db.execute("SELECT kind FROM execution_observations WHERE run_id='original' AND phase='terminal'")]
+        roles = [json.loads(row[0]).get('role') for row in db.execute("SELECT facts FROM execution_observations WHERE run_id='fixing' AND phase='worker'")]
+        review_ranges = [json.loads(row[0]) for row in db.execute("SELECT facts FROM execution_observations WHERE run_id='fixing' AND phase='review'")]
+        db.close()
+        self.assertIn('failed', terminal)
+        self.assertIn('fixing_worker', roles)
+        self.assertTrue(all(row['review_base'] == self.base for row in review_ranges if 'review_base' in row))
+
+    def test_review_transport_failure_records_selected_range(self):
+        project = self.project
+        class Offline:
+            def __init__(self, *a, **k): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): raise Blocked('transport failed')
+                return 'worker'
+        contract = admit({'review_base': self.base, 'tasks': [{'id': 'fix', 'description': 'Fix'}]})
+        with Authority(project) as owner:
+            with self.assertRaisesRegex(Blocked, 'transport failed'):
+                Engine(owner, 'review-failure', contract, EXECUTOR, adapter=Offline).invoke()
+        import sqlite3
+        db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
+        facts = json.loads(db.execute("SELECT facts FROM execution_observations WHERE run_id='review-failure' AND phase='review' AND kind='failed'").fetchone()[0])
+        db.close()
+        self.assertEqual(facts['review_base'], self.base)
+
     def test_sdk_error_retains_partial_work_and_releases_writer_lock(self):
         project = self.project
         class OfflineSDKError:

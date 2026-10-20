@@ -10,6 +10,11 @@ from .store import Blocked, canonical, git
 from .verification import manual_gates, run_checks
 
 
+def _failure(exc):
+    if isinstance(exc, (KeyboardInterrupt, SystemExit)): return 'interrupted'
+    return 'transport' if isinstance(exc, Blocked) else 'unknown'
+
+
 class Engine:
     def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question):
         self.authority, self.run, self.contract = authority, run, contract
@@ -78,7 +83,7 @@ class Engine:
                             'Pre-existing dirty paths (do not edit): ' + canonical(sorted(focused.dirty)) + '\n'
                             'Task: ' + canonical(task), claim=focused.claim, command=focused.command)
                     except BaseException as exc:
-                        recorder.emit(worker_occurrence, 'worker', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'role': role, 'error_category': type(exc).__name__})
+                        recorder.emit(worker_occurrence, 'worker', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
                         raise
                     recorder.emit(worker_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
                     focused.command('start', 'runner-checks')
@@ -95,14 +100,14 @@ class Engine:
                     try:
                         checkpoint = focused.checkpoint()
                     except BaseException as exc:
-                        recorder.emit(checkpoint_occurrence, 'checkpoint', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'baseline': focused.base, 'error_category': type(exc).__name__})
+                        recorder.emit(checkpoint_occurrence, 'checkpoint', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'baseline': focused.base, 'error_category': _failure(exc)})
                         raise
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts={'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']})
                     checkpoints.append(checkpoint)
                     store.task(self.run, task['id'], 'complete', focused.base, checkpoint['sha'],
                                {'summary': text, 'checks': checks, 'paths': checkpoint['paths']})
                 except BaseException as exc:
-                    recorder.emit(preparation, 'prepare', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'error_category': type(exc).__name__})
+                    recorder.emit(preparation, 'prepare', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'error_category': _failure(exc)})
                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': str(exc)})
                     raise
@@ -118,21 +123,28 @@ class Engine:
             diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
             reviewer_occurrence = recorder.occurrence()
             recorder.emit(reviewer_occurrence, 'review', 'started', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head})
-            review_question_occurrence = recorder.occurrence()
+            review_question_occurrence = [None]
             def review_question(state):
-                recorder.emit(review_question_occurrence, 'review', state, facts={'parent_occurrence_id': reviewer_occurrence})
+                mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
+                if state == 'requested' or review_question_occurrence[0] is None:
+                    review_question_occurrence[0] = recorder.occurrence()
+                recorder.emit(review_question_occurrence[0], 'review', mapping[state], facts={'parent_occurrence_id': reviewer_occurrence})
             reviewer = self.adapter(project, self.executor, question=self.question, observe_question=review_question)
             reviewer.lock_fd = self.authority.lock.fileno()
-            review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Inspect relevant source with read/search tools; continue long reads with offsets. Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
+            try:
+                review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Inspect relevant source with read/search tools; continue long reads with offsets. Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
+            except BaseException as exc:
+                recorder.emit(reviewer_occurrence, 'review', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': _failure(exc)})
+                raise
             try:
                 value = json.loads(review)
             except ValueError:
-                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': base, 'review_head': head, 'error_category': 'malformed'})
+                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': 'malformed'})
                 raise Blocked('reviewer returned invalid JSON; review remains incomplete: ' + review) from None
             if (not isinstance(value, dict) or type(value.get('approved')) is not bool or not isinstance(value.get('findings'), list) or any(not isinstance(f, str) for f in value['findings'])):
-                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': base, 'review_head': head, 'error_category': 'malformed'})
+                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': 'malformed'})
                 raise Blocked('reviewer result needs boolean approved and a list of findings')
-            recorder.emit(reviewer_occurrence, 'review', 'passed' if value['approved'] and not value['findings'] else 'failed', facts={'role': 'reviewer', 'review_base': base, 'review_head': head, 'approved': value['approved'], 'finding_count': len(value['findings'])})
+            recorder.emit(reviewer_occurrence, 'review', 'passed' if value['approved'] and not value['findings'] else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'approved': value['approved'], 'finding_count': len(value['findings'])})
             if not value['approved'] or value['findings']:
                 raise Blocked('independent review findings (commits retained): ' + canonical(value))
             store.finish(self.run, 'complete', head)
@@ -141,5 +153,5 @@ class Engine:
         except BaseException as exc:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, str(exc))
-            recorder.emit(terminal, 'terminal', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'head': head, 'error_category': type(exc).__name__})
+            recorder.emit(terminal, 'terminal', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'head': head, 'error_category': _failure(exc)})
             raise

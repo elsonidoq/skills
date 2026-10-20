@@ -126,6 +126,8 @@ node --test runtime/tests/test_host.mjs
 These exercise real disposable Git/project/tool operations and clearly labelled offline SDK
 transport/compaction fixtures; they do not manufacture live-provider success. Independent final
 review remains separate from writer validation. An optional task input `review_base` must resolve to a
-Git commit that is an ancestor of the run baseline; it changes that review's actual diff/prompt to
-base→current-head. Invalid or unrelated bases fail only the affected review. Without it, the default
+Git commit that is an ancestor of the run baseline; it changes that review's actual diff/prompt and every
+recorded review outcome to base→current-head. Invalid or unrelated bases fail only the affected review.
+A malformed, failed, or interrupted reviewer records that actual selected range before its original error
+propagates. Without it, the default
 run-baseline→head range is unchanged. After adopting changed global skills, run `/reload`.
