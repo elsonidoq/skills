@@ -106,9 +106,10 @@ export default function coordinateImplementationBridge(pi) {
         await new Promise((resolve, reject) => server.once('error', reject).listen(endpoint, resolve));
         await chmod(endpoint, 0o600);
         active = bridge;
+        // Parent stdout belongs to Pi's RPC protocol; preserve runner diagnostics on stderr.
         const child = spawn(path.join(ctx.cwd, 'scripts/coordinate-implementation'), [
           'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,
-        ], {cwd: ctx.cwd, stdio: 'inherit', env: {...process.env,
+        ], {cwd: ctx.cwd, stdio: ['ignore', 2, 2], env: {...process.env,
           COHERENCE_PARENT_BRIDGE_SOCKET: endpoint, COHERENCE_PARENT_BRIDGE_TOKEN: token,
           COHERENCE_PARENT_BRIDGE_SESSION: session, COHERENCE_PARENT_BRIDGE_RUN: params.run}});
         bridge.child = child;

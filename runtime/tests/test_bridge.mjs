@@ -1,6 +1,7 @@
 // Offline parent-extension fixture: real runner/adapter framing, no provider call.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -33,6 +34,29 @@ test('Pi discovers the project bridge and registers both tools without explicit 
   } finally {
     await fs.rm(root, {recursive: true, force: true});
   }
+});
+
+test('runner output stays off the parent RPC stdout channel', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-rpc-output-'));
+  try {
+    await fs.mkdir(path.join(root, 'scripts'));
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
+      '#!/bin/sh\nprintf "RUNNER-STDOUT\\n"\nprintf "RUNNER-STDERR\\n" >&2\n', {mode: 0o700});
+    const code = `
+      import bridge from ${JSON.stringify(bridgeModule)};
+      const tools = new Map();
+      bridge({registerTool: tool => tools.set(tool.name, tool), on() {},
+        sendMessage(message) { process.stdout.write(JSON.stringify({type: message.customType}) + '\\n'); }});
+      await tools.get('coordinate_implementation_start').execute('start',
+        {tasks: 'unused', executor: 'unused', run: 'output-probe'}, undefined, undefined,
+        {cwd: ${JSON.stringify(root)}, sessionManager: {getSessionId: () => 'output-parent'}});
+    `;
+    const {stdout, stderr} = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', code]);
+    assert.deepEqual(stdout.trim().split('\n').map(line => JSON.parse(line)),
+      [{type: 'coordinate_implementation_complete'}]);
+    assert.match(stderr, /RUNNER-STDOUT/);
+    assert.match(stderr, /RUNNER-STDERR/);
+  } finally { await fs.rm(root, {recursive: true, force: true}); }
 });
 
 function mockPi(messages, tools) {
