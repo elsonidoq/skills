@@ -1420,6 +1420,63 @@ class AcceptedDecisionBriefContinuityTests(unittest.TestCase):
                                     for error in checker.check_contracts(changed)))
 
 
+class BrainstormAcceptedDecisionContinuityTests(unittest.TestCase):
+    """Supplied-constraint walkthrough for standalone brainstorming; no ADR/model call."""
+
+    def test_direct_preselection_selected_production_and_resumed_dialogue(self):
+        accepted = (("preserve the export capability", "decisions/export.md#accepted"),)
+
+        def brainstorm(mode, resumed=False):
+            preselection = mode == "preselection"
+            consulted = ("supplied/session history", accepted) if preselection else (
+                "established decision index", accepted)
+            return {
+                "mode": mode,
+                "resumed": resumed,
+                "consulted": consulted,
+                "gate_constraints": accepted,
+                "dialogue_constraints": accepted,
+                "handoff_constraints": accepted,
+                "writes_artifact": False if preselection else None,
+                "reestablished": resumed,
+            }
+
+        runs = (brainstorm("preselection"), brainstorm("selected-production"),
+                brainstorm("selected-production", resumed=True))
+        self.assertEqual([run["consulted"][0] for run in runs], [
+            "supplied/session history", "established decision index", "established decision index"])
+        for run in runs:
+            self.assertEqual(run["consulted"][1], accepted)
+            self.assertEqual(run["gate_constraints"], accepted)
+            self.assertEqual(run["dialogue_constraints"], accepted)
+            self.assertEqual(run["handoff_constraints"], accepted)
+        self.assertFalse(runs[0]["writes_artifact"])
+        self.assertTrue(runs[-1]["reestablished"])
+
+        missing_handoff = dict(runs[-1])
+        missing_handoff["handoff_constraints"] = ()
+        with self.assertRaises(AssertionError):
+            self.assertEqual(missing_handoff["handoff_constraints"], accepted)
+
+    def test_read_through_requires_consult_timing_and_existing_boundaries(self):
+        text = (ROOT / "skills/planning-brainstorming/SKILL.md").read_text()
+        preflight = checker.section(text, "## Capability preflight")
+        gate = checker.section(text, "## 1. Gate assessment")
+        handoff = checker.section(text, "## Durable handoff and resume")
+        for body, clause in (
+            (preflight, "Before gate assessment, consult [save-adr](../save-adr/SKILL.md)'s **Consult and\npropagate** contract."),
+            (preflight, "In preselection, use applicable accepted constraints supplied by\nthe caller and available session history only; do not discover or write a decision\nartifact."),
+            (preflight, "In selected-production or legacy-repair, consult the established decision index\nand relevant accepted records under that contract."),
+            (gate, "Applicable accepted outcome constraints and source links inform readiness and whether an owner question is material; they do not replace current bounded-source content or existing material-question authority."),
+            (handoff, "Handoff context includes settled decisions, applicable accepted outcome\nconstraints and source links, trade-offs, intentional deferrals, uncertainties, and the\nnext-stage readiness target."),
+            (handoff, "On resume, re-establish applicability from the supplied\nconstraints/session history in preselection or the current decision record after selection,"),
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(" ".join(clause.split()), " ".join(body.split()))
+                self.assertNotIn(" ".join(clause.split()),
+                                 " ".join(body.replace(clause, "OMITTED", 1).split()))
+
+
 class AcceptedDecisionTaskAdapterTests(unittest.TestCase):
     """Bounded accepted-authority fixtures for source-to-task adapters, not live tasking."""
 

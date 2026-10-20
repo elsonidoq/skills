@@ -34,9 +34,13 @@ Do not substitute an unavailable interactive dialogue with guessed decisions.
 
 The caller supplies the request or bounded source, mode, and next-stage readiness target.
 Read applicable repository instructions, principles, source evidence and applicable memory.
-Preselection target is informed scope assessment, not immediate task production. Do not
-select TinySpec/Standard here. Generic brainstorming's design-depth labels do not replace
-the planner's mandatory user choice.
+Before gate assessment, consult [save-adr](../save-adr/SKILL.md)'s **Consult and
+propagate** contract. In preselection, use applicable accepted constraints supplied by
+the caller and available session history only; do not discover or write a decision
+artifact. In selected-production or legacy-repair, consult the established decision index
+and relevant accepted records under that contract. Preselection target is informed scope
+assessment, not immediate task production. Do not select TinySpec/Standard here. Generic
+brainstorming's design-depth labels do not replace the planner's mandatory user choice.
 
 ## Modes
 
@@ -49,7 +53,7 @@ the planner's mandatory user choice.
 
 ## 1. Gate assessment
 
-Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply before raising material owner questions.
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply before raising material owner questions. Applicable accepted outcome constraints and source links inform readiness and whether an owner question is material; they do not replace current bounded-source content or existing material-question authority.
 
 Have bounded work using the preflight's shared routing selection return a first line
 that is exactly one of:
@@ -100,14 +104,17 @@ runtime bindings are approved separately, not selected by the brainstorming prod
 
 ## Durable handoff and resume
 
-Retain the gate result, agenda when present, owner decisions/rationale, deferrals and
-concise handoff in session history before depth selection. Do not write a source or state
-file to make a preselection resume possible. After selection, persist them and the changed
-source using existing project conventions. Handoff context includes
-settled decisions, trade-offs, intentional deferrals, uncertainties, and the next-stage
-readiness target. On resume, validate the bounded source and decision record; if owner
-answers are missing, re-present the saved agenda instead of regenerating decisions. If the
-source or decisions changed materially, re-run the gate before downstream production.
+Retain the gate result, agenda when present, applicable accepted outcome constraints and
+source links, owner decisions/rationale, deferrals and concise handoff in session history
+before depth selection. Do not write a source or state file to make a preselection resume
+possible. After selection, persist them and the changed source using existing project
+conventions. Handoff context includes settled decisions, applicable accepted outcome
+constraints and source links, trade-offs, intentional deferrals, uncertainties, and the
+next-stage readiness target. On resume, re-establish applicability from the supplied
+constraints/session history in preselection or the current decision record after selection,
+then validate the bounded source and decision record; if owner answers are missing,
+re-present the saved agenda instead of regenerating decisions. If the source or decisions
+changed materially, re-run the gate before downstream production.
 
 ## Mandatory task checkpoint
 
