@@ -14,7 +14,7 @@ npm --prefix workflow_monitor/web run build
 workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/worktree --assets "$PWD/workflow_monitor/web/dist" --port 8765
 ```
 
-Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It polls the closed snapshot API about every two seconds. The initial API snapshot loads all currently returned history; the visible inventory reports loaded and hidden counts (incremental history browsing is not yet implemented).
+Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It uses local ELK layout and polls the closed snapshot API about every two seconds. Status-only polls preserve node IDs, selection, positions, and viewport; topology changes are laid out locally. Stale fetch and layout completions from an old selected run are discarded. The initial API snapshot loads all currently returned history; the visible inventory reports loaded and hidden counts (incremental history browsing is not yet implemented).
 
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
 asset-building overrides. It serves only the fixed startup asset inventory (not
