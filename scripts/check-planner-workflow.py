@@ -177,6 +177,12 @@ def check_contracts(texts):
             "An agent inference is not an owner requirement",
             "interpret owner agreement within the explanation and scope actually presented",
             "Correct a mistaken premise")
+    require("accepted-decision-consultation", discovery,
+            "whole discovered decision index", "relevant accepted records in full",
+            "needed supersession links", "fresh/resumed contexts re-establish applicability",
+            "rather than claiming a prior read", "proposed/superseded records are not\ncurrent policy",
+            "contradictory accepted authority or uncertain applicability stops only the\naffected continuation",
+            "owner decision")
     require("task-concision", texts["tasks"],
             "State shared constraints once", "concise presentation, not a prose",
             "Keep task-specific work and useful checks clear",
@@ -202,6 +208,8 @@ def check_contracts(texts):
             "Do not end the turn merely to report approval", "dispatch it",
             "explicitly requested planning-only", "older preparation-only approval")
     handoff = section(p, "## Handoff, not execution")
+    require("accepted-decision-handoff", handoff,
+            "applicable accepted outcome constraints and source links")
     require("final-continuation", handoff,
             "automatically invoke `coordinate-implementation`",
             "in the same session", "explicitly requested planning-only",
@@ -214,6 +222,11 @@ def check_contracts(texts):
     production = section(p, "## Selected production and stage handoffs")
     require("shared-application", production,
             "Apply recorded decisions through the shared mechanism inside selected bounds only.")
+    require("accepted-decision-stage-brief", production,
+            "Before every direct or delegated TinySpec/Standard stage",
+            "each applicable accepted outcome constraint\nand source link",
+            "updated handoff carrying those\napplicable accepted constraints and links",
+            "fresh delegate's brief")
     require("discovery", p, "positive and negative claims", "already satisfied", "no task needed",
             "UNVERIFIED", "explicit owner deferral", "Do not invent a beneficiary",
             "separately scheduled mechanical work", "missing required memory stops".capitalize(),

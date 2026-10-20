@@ -57,11 +57,16 @@ compact guidelines; missing store or STATE is nonblocking. Do not auto-initializ
 routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
 future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
 explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
-and evidence references through source observables → dependencies/REQUIRED checks → brief;
-verify their effect on a relevant decision, never override source/owner authority. No default
-history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
-on no match. Required gotcha-memory gates remain separate.
+sensitive-data and dirty/concurrent ownership safeguards. Before affected planning, read the
+whole discovered decision index, then relevant accepted records in full and needed
+supersession links; fresh/resumed contexts re-establish applicability rather than claiming a
+prior read. Carry each applicable accepted outcome constraint and source link through source
+observables → dependencies/REQUIRED checks → brief; proposed/superseded records are not
+current policy, and contradictory accepted authority or uncertain applicability stops only the
+affected continuation for an owner decision. Verify its effect on a relevant decision, never
+override source/owner authority. No default history intake; explicit relevant retrieval is
+index-first where useful and retains uncertainty on no match. Required gotcha-memory gates
+remain separate.
 
 Verify callable question capability before owner gates, and permitted usable
 owner-selected exact profiles before assigning work. Apply the shared routing selection
@@ -305,12 +310,13 @@ stage sequence alone is insufficient. State a terse reason in the existing brief
 workflows preserve parent inspection, stage authority, approvals and reviewer independence;
 they do not authorize parallel implementation batches.
 
-Before every delegated stage supply the bounded source, settled and non-obvious
-constraints **verbatim**, cited authorities, governing instructions/principles,
-applicable memory, prior-stage handoff, stage authorization, allowed writes, pending
-owner flags/answers/deferrals, and required evidence. Each stage reads the brief and
-returns updated handoff. Source references reduce artifact duplication; they do not
-replace necessary constraints in a fresh delegate's brief. Do not delegate owner dialogue.
+Before every direct or delegated TinySpec/Standard stage, supply the bounded source,
+settled and non-obvious constraints **verbatim**, each applicable accepted outcome constraint
+and source link, cited authorities, governing instructions/principles, applicable memory,
+prior-stage handoff, stage authorization, allowed writes, pending owner flags/answers/deferrals,
+and required evidence. Each stage reads the brief and returns an updated handoff carrying those
+applicable accepted constraints and links. Source references reduce artifact duplication; they
+do not replace necessary constraints in a fresh delegate's brief. Do not delegate owner dialogue.
 Resume originating correction context when supported and suitable; otherwise use a
 fresh bounded correction delegate with a durable correction handoff. Delegate uncertain or substantive artifact
 corrections, including task-level and upstream changes; never edit those in the parent.
@@ -521,7 +527,8 @@ and applicable approved content/revisions for:
 - Producer `planner`, selected depth `TinySpec` or `Standard` (or original legacy origin
   plus mapped planner recovery checkpoint).
 - Authoritative source, tasks, and supporting artifacts; Standard spec and plan.
-- Review and validation evidence, decisions/deferrals and pending blockers.
+- Review and validation evidence, applicable accepted outcome constraints and source links,
+  decisions/deferrals and pending blockers.
 - TinySpec combined approval or Standard specification and overall approvals.
 - Explicit approved implementation scope/authorization and source provenance.
 

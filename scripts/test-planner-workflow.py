@@ -1349,6 +1349,77 @@ class StageDispatchTests(unittest.TestCase):
             self.assertTrue(any(e.startswith("stage-dispatch:") for e in checker.check_contracts(changed)))
 
 
+class AcceptedDecisionBriefContinuityTests(unittest.TestCase):
+    """Supplied authority fixture: planner brief/handoff wiring, not consumer obedience."""
+    def test_accepted_constraints_reach_all_stage_briefs_and_handoffs(self):
+        records = (
+            {"status": "accepted", "constraint": "preserve the export capability",
+             "source": "decisions/export.md#accepted", "operation": "capability removal",
+             "gate": "existing approved supersession"},
+            {"status": "accepted", "constraint": "retain the stable wire format",
+             "source": "decisions/wire.md#accepted", "operation": "compatible helper deletion",
+             "gate": None},
+            {"status": "proposed", "constraint": "use a replacement exporter",
+             "source": "decisions/replacement.md#proposed"},
+            {"status": "superseded", "constraint": "use the retired wire format",
+             "source": "decisions/old-wire.md#superseded"},
+        )
+        accepted = tuple(record for record in records if record["status"] == "accepted")
+        self.assertEqual(accepted[0]["gate"], "existing approved supersession")
+        self.assertIsNone(accepted[1]["gate"])
+
+        stages = {
+            "TinySpec": ("source", "tasks", "review"),
+            "Standard": ("spec", "plan", "tasks", "review"),
+        }
+        emitted = {}
+        for context in ("fresh", "resumed"):
+            for dispatch in ("direct", "delegated"):
+                for depth, names in stages.items():
+                    for name in names:
+                        key = (context, dispatch, depth, name)
+                        emitted[key] = {
+                            "accepted_constraints": tuple((record["constraint"], record["source"])
+                                                          for record in accepted),
+                            "handoff": tuple((record["constraint"], record["source"])
+                                             for record in accepted),
+                        }
+
+        expected = tuple((record["constraint"], record["source"]) for record in accepted)
+
+        def assert_continuity(output):
+            self.assertEqual(len(output), 28)
+            for brief in output.values():
+                self.assertIn("accepted_constraints", brief)
+                self.assertEqual(brief["accepted_constraints"], expected)
+                self.assertEqual(brief["handoff"], expected)
+
+        assert_continuity(emitted)
+        missing_carrier = copy.deepcopy(emitted)
+        del missing_carrier[("resumed", "delegated", "Standard", "review")]["accepted_constraints"]
+        with self.assertRaises(AssertionError):
+            assert_continuity(missing_carrier)
+
+    def test_read_through_carriers_reject_omission(self):
+        texts = checker.load_texts()
+        cases = (
+            ("## Discovery and capability boundary", "whole discovered decision index",
+             "accepted-decision-consultation:"),
+            ("## Selected production and stage handoffs", "each applicable accepted outcome constraint\nand source link",
+             "accepted-decision-stage-brief:"),
+            ("## Handoff, not execution", "applicable accepted outcome constraints and source links",
+             "accepted-decision-handoff:"),
+        )
+        for heading, clause, diagnostic in cases:
+            with self.subTest(carrier=heading):
+                changed = dict(texts)
+                body = checker.section(changed["planner"], heading)
+                changed["planner"] = changed["planner"].replace(
+                    body, body.replace(clause, "OMITTED", 1), 1)
+                self.assertTrue(any(error.startswith(diagnostic)
+                                    for error in checker.check_contracts(changed)))
+
+
 BRIEF = "\n".join((
     "- Outcome: fix search ranking.",
     "- Scope: ranking only; exclude API migration.",
