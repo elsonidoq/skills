@@ -110,8 +110,10 @@ rules above for reusable skills and commands.
   under the executable interface's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
   Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
 - Execution delivery uses a single instruction-managed writer and one verified focused checkpoint,
-  not recursive execution through the runtime being changed. Owner-selected implementation is
-  `openai-codex/gpt-6.1-sol`, effort `medium`; product bindings remain selected-config driven.
+  not recursive execution through the runtime being changed. Planning must produce granular,
+  independently verifiable tasks sized for Terra workers, regardless of the planning model.
+  Split independently testable concerns rather than bundling milestones into implementation tasks.
+  Product bindings remain selected-config driven; the planning model is not an implementation assignment.
   Historical approvals stay historical. The latest owner direction supersedes older graph/SQL/
   custody/evidence eligibility mandates: task startup linter has only readable file, parsed list,
   ID/work description, unique IDs, existing dependency references and acyclic dependencies.
