@@ -12,7 +12,8 @@ owner direction; it does not create a specification, plan, task list, or impleme
 
 Before using this skill, verify that the runtime can ask the owner questions and that the
 planner can retain the selected source bounds, decisions, deferrals and handoff. In
-preselection mode use available session history only; in selected-production or legacy
+preselection mode retain interim answers in available session history, while allowing
+read-only inspection of existing project evidence; in selected-production or legacy
 repair mode use established project artifacts. Use the
 [qualified seed rubric](../planner/references/profile-selection.md) for gate
 assessment and decision application: assess all six applicable factors, including the
@@ -35,10 +36,13 @@ Do not substitute an unavailable interactive dialogue with guessed decisions.
 The caller supplies the request or bounded source, mode, and next-stage readiness target.
 Read applicable repository instructions, principles, source evidence and applicable memory.
 Before gate assessment, consult [save-adr](../save-adr/SKILL.md)'s **Consult and
-propagate** contract. In preselection, use applicable accepted constraints supplied by
-the caller and available session history only; do not discover or write a decision
-artifact. In selected-production or legacy-repair, consult the established decision index
-and relevant accepted records under that contract. Preselection target is informed scope
+propagate** contract. In all modes, including standalone fresh preselection, allow
+read-only discovery of existing project decision ownership, the whole decision index and
+relevant accepted records in full before affected gate assessment, even when not supplied
+by the caller. Use supplied constraints and session history as additional context, not a
+discovery limit. Preselection forbids writes or artifact production, not reading existing
+decision artifacts. An absent decision store alone is nonblocking; material authority or
+conflicts follow the canonical contract. Preselection target is informed scope
 assessment, not immediate task production. Do not select TinySpec/Standard here. Generic
 brainstorming's design-depth labels do not replace the planner's mandatory user choice.
 
@@ -110,9 +114,11 @@ before depth selection. Do not write a source or state file to make a preselecti
 possible. After selection, persist them and the changed source using existing project
 conventions. Handoff context includes settled decisions, applicable accepted outcome
 constraints and source links, trade-offs, intentional deferrals, uncertainties, and the
-next-stage readiness target. On resume, re-establish applicability from the supplied
-constraints/session history in preselection or the current decision record after selection,
-then validate the bounded source and decision record; if owner answers are missing,
+next-stage readiness target. On resume in every mode, including preselection, re-establish
+applicability through read-only discovery and consultation of current project decision
+ownership, the whole index and relevant accepted records under save-adr, not solely supplied
+constraints/session history or an earlier-read claim. Keep preselection read-only and absent
+store alone nonblocking. Then validate the bounded source and decision record; if owner answers are missing,
 re-present the saved agenda instead of regenerating decisions. If the source or decisions
 changed materially, re-run the gate before downstream production.
 

@@ -1477,55 +1477,92 @@ class ArchitecturalAcceptedDecisionContinuityTests(unittest.TestCase):
 
 
 class BrainstormAcceptedDecisionContinuityTests(unittest.TestCase):
-    """Supplied-constraint walkthrough for standalone brainstorming; no ADR/model call."""
+    """Static contract plus synthetic read-only walkthrough; not model-obedience proof."""
 
-    def test_direct_preselection_selected_production_and_resumed_dialogue(self):
-        accepted = (("preserve the export capability", "decisions/export.md#accepted"),)
+    def test_discovered_preselection_selected_and_resumed_constraints_without_writes(self):
+        # Only dummy project data. This models the intended read/gate order, not a
+        # production planner implementation or an actual agent following the skill.
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            (project / "choices").mkdir()
+            (project / "AGENTS.md").write_text("Decision index: choices/index.json\n")
+            (project / "choices/index.json").write_text(json.dumps([
+                "export.json", "replacement.json", "retired.json"]))
+            for name, status in (("export", "accepted"), ("replacement", "proposed"),
+                                 ("retired", "superseded")):
+                (project / f"choices/{name}.json").write_text(json.dumps({
+                    "status": status, "outcome": "preserve the export capability",
+                    "mechanism": "incidental helper", "source": f"choices/{name}.json"}))
 
-        def brainstorm(mode, resumed=False):
-            preselection = mode == "preselection"
-            consulted = ("supplied/session history", accepted) if preselection else (
-                "established decision index", accepted)
-            return {
-                "mode": mode,
-                "resumed": resumed,
-                "consulted": consulted,
-                "gate_constraints": accepted,
-                "dialogue_constraints": accepted,
-                "handoff_constraints": accepted,
-                "writes_artifact": False if preselection else None,
-                "reestablished": resumed,
-            }
+            def snapshot():
+                return {str(path.relative_to(project)): path.read_bytes()
+                        for path in project.rglob("*") if path.is_file()}
 
-        runs = (brainstorm("preselection"), brainstorm("selected-production"),
-                brainstorm("selected-production", resumed=True))
-        self.assertEqual([run["consulted"][0] for run in runs], [
-            "supplied/session history", "established decision index", "established decision index"])
-        for run in runs:
-            self.assertEqual(run["consulted"][1], accepted)
-            self.assertEqual(run["gate_constraints"], accepted)
-            self.assertEqual(run["dialogue_constraints"], accepted)
-            self.assertEqual(run["handoff_constraints"], accepted)
-        self.assertFalse(runs[0]["writes_artifact"])
-        self.assertTrue(runs[-1]["reestablished"])
+            def assess(mode, change, supplied=()):
+                reads = ["AGENTS.md"]
+                routing = (project / reads[0]).read_text().strip()
+                index = project / routing.split(": ", 1)[1]
+                accepted = list(supplied)
+                if index.is_file():
+                    reads.append(str(index.relative_to(project)))
+                    for name in json.loads(index.read_text()):  # whole index, not first match
+                        record_path = index.parent / name
+                        reads.append(str(record_path.relative_to(project)))
+                        record = json.loads(record_path.read_text())
+                        if record["status"] == "accepted":
+                            accepted.append((record["outcome"], record["source"]))
+                reads.append("affected gate assessment")
+                return {"mode": mode, "reads": reads, "gate_constraints": tuple(accepted),
+                        "handoff_constraints": tuple(accepted),
+                        "stop": "existing owner supersession gate" if accepted and
+                        change == "remove export" else None}
 
-        missing_handoff = dict(runs[-1])
-        missing_handoff["handoff_constraints"] = ()
-        with self.assertRaises(AssertionError):
-            self.assertEqual(missing_handoff["handoff_constraints"], accepted)
+            before = snapshot()
+            expected = (("preserve the export capability", "choices/export.json"),)
+            for mode in ("standalone fresh preselection", "resumed preselection",
+                         "selected-production", "resumed selected-production"):
+                with self.subTest(mode=mode):
+                    run = assess(mode, "remove export")  # no caller-supplied ADR
+                    self.assertEqual(run["gate_constraints"], expected)
+                    self.assertEqual(run["handoff_constraints"], expected)
+                    self.assertLess(run["reads"].index("choices/export.json"),
+                                    run["reads"].index("affected gate assessment"))
+                    self.assertIn("choices/retired.json", run["reads"])
+                    self.assertEqual(run["stop"], "existing owner supersession gate")
+                    self.assertIsNone(assess(mode, "delete compatible helper")["stop"])
+                    self.assertEqual(snapshot(), before)
+            # Fixture setup removes storage; assessment itself must not recreate it.
+            for path in (project / "choices").iterdir():
+                path.unlink()
+            (project / "choices").rmdir()
+            before = snapshot()
+            for mode in ("standalone fresh preselection", "resumed preselection"):
+                run = assess(mode, "unrelated legacy work")
+                self.assertEqual(run["gate_constraints"], ())
+                self.assertIsNone(run["stop"])
+                self.assertEqual(snapshot(), before)
 
     def test_read_through_requires_consult_timing_and_existing_boundaries(self):
         text = (ROOT / "skills/planning-brainstorming/SKILL.md").read_text()
         preflight = checker.section(text, "## Capability preflight")
         gate = checker.section(text, "## 1. Gate assessment")
         handoff = checker.section(text, "## Durable handoff and resume")
+        for forbidden in ("do not discover", "session history only",
+                          "from the supplied constraints/session history in preselection"):
+            self.assertNotIn(forbidden, " ".join(text.split()))
+        self.assertIn("no source edits or", checker.section(text, "## Modes"))
+        self.assertIn("Only in selected-production or legacy-repair mode",
+                      checker.section(text, "## 3. Apply decisions"))
         for body, clause in (
             (preflight, "Before gate assessment, consult [save-adr](../save-adr/SKILL.md)'s **Consult and\npropagate** contract."),
-            (preflight, "In preselection, use applicable accepted constraints supplied by\nthe caller and available session history only; do not discover or write a decision\nartifact."),
-            (preflight, "In selected-production or legacy-repair, consult the established decision index\nand relevant accepted records under that contract."),
+            (preflight, "In all modes, including standalone fresh preselection, allow\nread-only discovery of existing project decision ownership, the whole decision index and\nrelevant accepted records in full before affected gate assessment, even when not supplied\nby the caller."),
+            (preflight, "Use supplied constraints and session history as additional context, not a\ndiscovery limit."),
+            (preflight, "Preselection forbids writes or artifact production, not reading existing\ndecision artifacts."),
+            (preflight, "An absent decision store alone is nonblocking; material authority or\nconflicts follow the canonical contract."),
             (gate, "Applicable accepted outcome constraints and source links inform readiness and whether an owner question is material; they do not replace current bounded-source content or existing material-question authority."),
             (handoff, "Handoff context includes settled decisions, applicable accepted outcome\nconstraints and source links, trade-offs, intentional deferrals, uncertainties, and the\nnext-stage readiness target."),
-            (handoff, "On resume, re-establish applicability from the supplied\nconstraints/session history in preselection or the current decision record after selection,"),
+            (handoff, "On resume in every mode, including preselection, re-establish\napplicability through read-only discovery and consultation of current project decision\nownership, the whole index and relevant accepted records under save-adr, not solely supplied\nconstraints/session history or an earlier-read claim."),
+            (handoff, "Keep preselection read-only and absent\nstore alone nonblocking."),
         ):
             with self.subTest(clause=clause):
                 self.assertIn(" ".join(clause.split()), " ".join(body.split()))
