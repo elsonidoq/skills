@@ -171,6 +171,60 @@ def _page(data: dict[str, Any], reference: str, after: int | str, size: int) -> 
     return result
 
 
+def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
+    """Add closed execution presentation facts from recorded ownership, never payloads.
+
+    Sequence means recorded order, not proven causality. A preparation failure can
+    wrap a more specific check/worker failure; show only that specific stopping step.
+    """
+    pairs = list(zip(graph.get("occurrences", []), public["occurrences"]))
+    by_identity = {(row["run_id"], row["occurrence_id"]): item for row, item in pairs}
+    for row, item in pairs:
+        observations = row["observations"]
+        item["phase"] = row["phase"]
+        item["first_seq"] = observations[0]["seq"]
+        item["last_seq"] = observations[-1]["seq"]
+        parents = {by_identity[(row["run_id"], obs["facts"]["parent_occurrence_id"])]["ref"]
+                   for obs in observations if isinstance(obs["facts"].get("parent_occurrence_id"), str)
+                   and (row["run_id"], obs["facts"]["parent_occurrence_id"]) in by_identity}
+        item["parent_ref"] = next(iter(parents)) if len(parents) == 1 else None
+        item["stopping"] = False
+        item["support_ref"] = None
+    for run in public["runs"]:
+        scoped = [item for _, item in pairs if item["run_ref"] == run["ref"]]
+        agents = [item for item in scoped if item["role"] != "non_model"]
+        for item in scoped:
+            if item["role"] != "non_model":
+                continue
+            parent = next((agent for agent in agents if agent["ref"] == item["parent_ref"]), None)
+            if parent is None:
+                contained = [agent for agent in agents if item["phase"] == "prepare"
+                             and agent["task_ref"] == item["task_ref"]
+                             and item["first_seq"] < agent["first_seq"] <= item["last_seq"]]
+                boundary = item["last_seq"] if item["phase"] == "terminal" else item["first_seq"]
+                preceding = [agent for agent in agents if agent["first_seq"] < boundary
+                             and (item["task_ref"] is None or agent["task_ref"] == item["task_ref"])]
+                parent = min(contained, key=lambda agent: agent["first_seq"], default=None)
+                if parent is None:
+                    parent = max(preceding, key=lambda agent: agent["first_seq"], default=None)
+            item["support_ref"] = parent["ref"] if parent else None
+        terminals = [item for item in scoped if item["phase"] == "terminal" and item["outcome"] in {"failed", "interrupted", "abandoned"}]
+        for terminal in terminals:
+            failures = [item for item in scoped if item is not terminal and item["outcome"] in {"failed", "interrupted", "abandoned"}
+                        and terminal["first_seq"] <= item["last_seq"] <= terminal["last_seq"]]
+            failure = max(failures, key=lambda item: item["last_seq"], default=terminal)
+            if failure["phase"] == "prepare":
+                nested = [item for item in failures if item is not failure and item["task_ref"] == failure["task_ref"]
+                          and failure["first_seq"] <= item["last_seq"] <= failure["last_seq"]]
+                failure = max(nested, key=lambda item: item["last_seq"], default=failure)
+            later_progress = [item for item in scoped if item["phase"] not in {"prepare", "terminal"}
+                              and item["outcome"] == "passed" and failure["last_seq"] < item["last_seq"] < terminal["last_seq"]]
+            if later_progress or any(failure["last_seq"] < agent["first_seq"] < terminal["last_seq"] for agent in agents):
+                failure = terminal
+            if failure["role"] == "non_model":
+                failure["stopping"] = True
+
+
 def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlette:
     """Create an application bound to one reader, fixed asset inventory, and port."""
     if type(port) is not int or not 1 <= port <= 65535:
@@ -200,7 +254,10 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         nonlocal last_safe, last_success_at
         try:
             raw = reader.open_snapshot()
-            result = minimize(normalize(raw))
+            graph = normalize(raw)
+            result = minimize(graph)
+            if result.get("state") == "ok":
+                _execution_details(graph, result)
             if result.get("state") != "ok":
                 if last_safe is None:
                     return None, _state_response(result)

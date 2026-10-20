@@ -22,9 +22,41 @@ that isolated environment. A missing build root, missing `index.html`, symlinked
 or non-directory asset root stops before binding with a fixed actionable diagnostic;
 rebuild to a regular local `dist/` directory and retry.
 
-Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It uses local ELK layout and polls the closed snapshot API every 60 seconds. Status-only polls preserve node IDs, selection, positions, and viewport; topology changes are laid out locally. Stale fetch and layout completions from an old selected run are discarded. The view displays the current read time, last successful read, and last recorded activity separately. A failed read retains the last sanitized graph with a recoverable unavailable warning; the next successful read replaces it. The selected run also reports a read-only recorded-process qualification (`live`, `stopped`, or `unknown`): process presence is not progress, and missing ends remain incomplete. The initial API snapshot is a bounded first history page. Use **Load more history** to reveal the next page at the same snapshot watermark; an expired or changed watermark refreshes instead of mixing pages. The inventory reports total, loaded, hidden, and unsupported records, while collapsed failure and waiting badges remain discoverable.
+Then open `http://127.0.0.1:8765/` in a local browser. The left selector chooses one
+recorded run. The compact graph shows actual implementation, review, fixing and rereview
+executions, not phase/task definitions or separate start/return/checkpoint events. Each
+call remains distinct. Short labels use recorded roles and public task presentation;
+a global review is simply **Review**. Missing public task labels remain generic, never
+guessed from private task IDs.
 
-The selected-root graph expands only explicitly declared local followups. A resolved relation links the original reviewer to the distinct fixing-worker execution and its checks, checkpoint, and rereviewer; every expanded node carries its opaque source-run ref. Review detail shows its recorded base→head range. The original rejected run remains failed even when a later full-original-range review succeeds. Correction-only, unresolved, conflicting, or cyclic relations are shown as such and never display a current accepted head. Collapsed history still reports failures and inventory retains hidden/unsupported records for reveal.
+A confirmed internal step that stops a recorded failed run appears as a red node after
+its recorded parent or preceding agent in that run/task scope. A failure before any
+agent starts remains visible without an invented agent. Recovered check observations
+remain in Details/history, not extra stopping nodes. Sequence edges mean recorded order,
+not proven causality. The status legend distinguishes green success, red failure, amber
+waiting and neutral recorded/incomplete/unknown. Worker return is **not acceptance**.
+
+Click a node or edge to highlight it and update the visible Details panel next to the
+graph (below it on narrow screens). Agent Details include loaded lifecycle/check/
+checkpoint evidence, source references and recorded review ranges. **Loaded history and
+technical references** exposes supporting definitions, every loaded minimized observation
+and unsupported record without raw payloads. **Load more history** and **Load correction
+history** retrieve further pages at their snapshot watermarks. Inventory counts disclose
+unloaded records. Changed watermarks require refresh rather than mixing snapshots.
+
+The graph fits locally with ELK layout and has pan/zoom controls. The closed snapshot API
+is polled every **60 seconds**; this is not a claim that polling alone caused previous
+slowness. Status-only refreshes preserve selection, positions and viewport; stale old-run
+fetch/layout results are discarded. Read freshness, last successful read and last recorded
+activity remain separate. Failed reads retain sanitized evidence with a warning. Recorded
+runner `live`/`stopped`/`unknown` qualification is not proof of progress.
+
+Only explicitly declared local correction relations expand the selected-root graph.
+The original rejected reviewer, distinct fixing calls and subsequent reviewer remain
+visible; source-run refs and actual ranges are in Details rather than repeated in labels.
+The original rejection stays red after a later full-range success. Correction-only,
+unresolved and cyclic relations do not establish current full-range acceptance. Supporting
+checks/checkpoints remain available in agent Details and paginated history.
 
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
 asset-building overrides. Stopping it is the rollback: it closes observation only and leaves
