@@ -38,7 +38,9 @@ New runs may additionally retain a closed `execution_monitor_runs` descriptor an
 append failures warn safely and never alter normal progress, checks, Git, or errors. Descriptors
 retain only declared task IDs/dependencies and explicitly supplied public presentation; observations
 retain closed phase/kind/fact fields, never prompts, answers, commands, output, findings, or errors.
-Existing progress and historical rows are neither converted nor inferred.
+Existing progress and historical rows are neither converted nor inferred. Engine emissions include
+per-command check start/outcome and checkpoint start/outcome; command text and output remain private.
+A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.
 
 ## Historical records
 

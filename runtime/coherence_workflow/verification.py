@@ -53,16 +53,22 @@ def _run_check(project, command, lock_fd):
     return proc.returncode
 
 
-def run_checks(project, task, *, lock_fd=None):
+def run_checks(project, task, *, lock_fd=None, observe=None):
     results = []
-    for value in commands(task):
+    for ordinal, value in enumerate(commands(task), 1):
         command = value.get('command', value.get('argv')) if isinstance(value, dict) else value
         if not isinstance(command, (str, list)) or not command or (isinstance(command, list) and
                 any(not isinstance(arg, str) for arg in command)):
             raise Blocked('task ' + task['id'] + ' check needs a command string or argv list; registered check IDs are no longer executable')
         # No workflow deadline or output cap. Preserve normal shell/project behavior.
-        code = _run_check(project, command, lock_fd)
+        if observe: observe('started', ordinal, None)
+        try:
+            code = _run_check(project, command, lock_fd)
+        except BaseException:
+            if observe: observe('interrupted', ordinal, None)
+            raise
         results.append({'command': command, 'exit_code': code})
+        if observe: observe('passed' if code == 0 else 'failed', ordinal, code)
         if code:
             raise Blocked('task ' + task['id'] + ' check failed (exit ' + str(code) + '): ' + str(command))
     return results

@@ -15,8 +15,10 @@ class ProjectCheckTests(ProjectTest):
         self.assertEqual(results[0]['exit_code'], 0)
 
     def test_failed_command_is_not_success(self):
+        events = []
         with self.assertRaisesRegex(Blocked, 'exit 19'):
-            run_checks(self.project, {'id': 'fix', 'checks': ['exit 19']})
+            run_checks(self.project, {'id': 'fix', 'checks': ['exit 19']}, observe=lambda *event: events.append(event))
+        self.assertEqual(events, [('started', 1, None), ('failed', 1, 19)])
 
     def test_signalled_command_preserves_actual_exit_status(self):
         import sys

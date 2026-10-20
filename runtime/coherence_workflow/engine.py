@@ -65,9 +65,22 @@ class Engine:
                         raise
                     recorder.emit(worker_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
                     focused.command('start', 'runner-checks')
-                    checks = run_checks(project, task, lock_fd=self.authority.lock.fileno())
+                    check_occurrences = {}
+                    def check_observe(kind, ordinal, code):
+                        occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
+                        facts = {'ordinal': ordinal}
+                        if code is not None: facts['exit_code'] = code
+                        recorder.emit(occurrence, 'check', kind, task_id=task['id'], facts=facts)
+                    checks = run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe)
                     focused.command('end', 'runner-checks')
-                    checkpoint = focused.checkpoint()
+                    checkpoint_occurrence = recorder.occurrence()
+                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
+                    try:
+                        checkpoint = focused.checkpoint()
+                    except BaseException as exc:
+                        recorder.emit(checkpoint_occurrence, 'checkpoint', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'baseline': focused.base, 'error_category': type(exc).__name__})
+                        raise
+                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts={'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']})
                     checkpoints.append(checkpoint)
                     store.task(self.run, task['id'], 'complete', focused.base, checkpoint['sha'],
                                {'summary': text, 'checks': checks, 'paths': checkpoint['paths']})
