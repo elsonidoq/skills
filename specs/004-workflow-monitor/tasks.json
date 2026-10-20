@@ -203,20 +203,20 @@
     {
       "gate_kind": "overall",
       "record_ref": "specs/004-workflow-monitor/app-scope.md",
-      "record_sha256": "1a11461452865b962f54a9adb1aeb44f908aa2d703943a3a38fc7a4236da0409",
+      "record_sha256": "71b31a21b4ac6fc5b5060431384d07b11d7a88588088f3d0035cb58e05e6ec75",
       "scope_hash": "e9e167c731ad0a0da4746fa4b0d19d917f4101bb0e3d797b54ab1810ec294430",
-      "actor": "pending owner decision",
+      "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
       "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/overall",
-      "action": "deny"
+      "action": "approve"
     },
     {
       "gate_kind": "implementation",
       "record_ref": "specs/004-workflow-monitor/app-scope.md",
-      "record_sha256": "1a11461452865b962f54a9adb1aeb44f908aa2d703943a3a38fc7a4236da0409",
+      "record_sha256": "71b31a21b4ac6fc5b5060431384d07b11d7a88588088f3d0035cb58e05e6ec75",
       "scope_hash": "811a77cad450a2a87b1fc0b367ce15c76d3e0286e7af45c0ec865d0c49b65c83",
-      "actor": "pending owner decision",
+      "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
       "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/implementation",
-      "action": "deny"
+      "action": "approve"
     }
   ],
   "execution_intent": {

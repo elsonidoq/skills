@@ -1,6 +1,6 @@
-# App execution scope REQUEST — pending owner decision
+# App execution scope — owner approved, runtime admission required
 
-This is an approval input, NOT approval, a task catalog or a launch receipt. Current positive specification renewal remains limited to its unchanged spec content. Historical overall-review.md is a verbatim F1 report for db6a8f0..f16a636, not review of this launch binding. A fresh focused rereview and genuine final parent ask_user decision are still required; proposed overall/implementation refs deliberately DENY. Proposed authority keys are opaque labels, not authenticated external catalog authority. No catalog is created here.
+This scope was submitted at c0fa694ba1aaac504889860b064aebdf1f5a02c0. The actual parent ask_user subsequently returned **Approve and launch Sol build**, following the executive brief for all four tasks. The positive specification renewal retains its unchanged spec scope. Historical overall-review.md is the verbatim F1 report; current focused launch-binding rereview b2419b23-68dd-41ad-82b8-a324e3d5497b independently found no blockers and READY FOR FINAL OWNER APPROVAL. This record does not itself authenticate its author or claim a launch receipt; the trusted external catalog must bind the genuine owner decision to these exact scopes before admission.
 
 ## Exact prospective delivery
 
@@ -37,7 +37,7 @@ quickstart owns actual descriptor SHA/run ID/schema/tools/roots/fixture bindings
 
 Custody is operational read-only (write bits removed, independent expected hashes/canonical identities, full tree/tool/lock checks before use), NOT malicious-same-UID/root isolation or a bind mount. Any drift/missing/unsafe identity stops. Exact versions/engines fit Python3.12/Node22.23.3; no new research/install requested.
 
-monitor-workflow.yaml is actual19-node config with ONLY interaction fields changed to interactive_parent/paseo-0.9.2/fresh parent-binding/ask_user, all roles Sol/medium/local coordinate resource unchanged. Public parent inspection and metadata/tool probe passed; runtime launch receipt and fresh run-bound readiness challenge/ACK still MUST succeed before dispatch, no default/manual polling fallback. Private operator control paths are not fixture approvals or browser data. Genuine final overall/implementation decision and external trusted catalog are pending. SDK OI-3/SQLite residuals remain; no SDK-wide clearance. Application tests/live interval/final independent acceptance remain NOT RUN/NOT VERIFIED.
+monitor-workflow.yaml is actual19-node config with ONLY interaction fields changed to interactive_parent/paseo-0.9.2/fresh parent-binding/ask_user, all roles Sol/medium/local coordinate resource unchanged. Public parent inspection and metadata/tool probe passed; runtime launch receipt and fresh run-bound readiness challenge/ACK still MUST succeed before dispatch, no default/manual polling fallback. Private operator control paths are not fixture approvals or browser data. The genuine final overall/implementation decision is captured below; exact external-catalog binding and runtime launch/readiness admission still precede dispatch. SDK OI-3/SQLite residuals remain; no SDK-wide clearance. Application tests/live interval/final independent acceptance remain NOT RUN/NOT VERIFIED.
 
 ## Prospective scope identity
 
@@ -48,4 +48,17 @@ Filled mechanically only after human/source/action scopes are final. No own-file
 - Canonical workflow config hash: 772adad23810b44c0cf85325d092e78cbc220c72d251da735341daa7ebe7cfab
 - Workflow raw SHA256: 4c3d403c2244a9525c0cbc80e0c5cca50fb4d1a905bafa45afcfa83c105f9ada
 
-Selected planning/implementation intent: openai-codex/gpt-6.1-sol:medium. Actual provider acknowledgement and this producer's observed binding/effort are unknown; no benchmark superiority or fallback claimed. Empty local gotcha index/coordination guidelines impose no invented guidance; no memory writes.
+Selected planning/implementation intent: openai-codex/gpt-6.1-sol:medium. Actual provider acknowledgement and the original producer's observed binding/effort are unknown; no benchmark superiority or fallback claimed. Empty local gotcha index/coordination guidelines impose no invented guidance; no memory writes.
+
+## Genuine current app approval
+
+Parent Pi session `01a155ad-f798-745f-b6ce-032eca08f263`, recipient `82269029-2130-467f-a9f9-091c7f180104`, actually invoked registered `ask_user` with question **Launch the current reviewed four-task build with Sol/medium now?**. Its noncancelled selection was **Approve and launch Sol build**. Parent verified the complete actual call/result on the active official session branch before preparing authority:
+
+- Call entry: `9e187239`; result entry: `164ad666`.
+- Call ID: `call_2b264ebbac254b889b92136918250260|fc_01305286d04759d8016ad6ae061f40819cab189e21922c63ac`.
+- Arguments hash: `838d527fc628ffd1ef14ccc311117eebf0e81e530f8cf3a0e8251d37cbe49a96`.
+- Result hash: `ad8b16962f03252a546cc779c03cc12aa64d1caa66d6173dab109d7e520ed44e`.
+
+Approval authorizes this exact four-task scope and current Sol/medium configuration, including required tests, bounded in-scope repairs/corrections and fresh independent final review, focused runner commits and operator-owned read-only inspection of this SAME build. It does not authorize global/auth/service changes, paid actions or public deployment. No controller/task dispatch is claimed by this record.
+
+The owner separately directed that AFTER this build finishes and is quiescent, future executor configuration should become Terra and planning must derive executor capabilities/intent from that configuration independently of planner/reviewer/session model choices, with validation/regression coverage. That follow-up is NOT an app-run task or permission to change this run's pinned runtime/configuration/resources. Preserve this run's Sol provenance; no mid-run model substitution.
