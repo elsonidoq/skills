@@ -127,6 +127,11 @@ rules above for reusable skills and commands.
   `README.md` owns setup/workflow, `REQUIREMENTS.md` runtime requirements,
   `.specify/memory/constitution.md` project principles, and each skill's `SKILL.md`
   its operational contract. Follow the routing guide for all other owners.
+- **Paseo activation:** In Paseo-hosted sessions the owner cannot execute Pi slash
+  commands such as `/reload`. Do not instruct the owner to run `/reload`. When changed
+  extensions or tools must be loaded, prepare a fresh-session handoff; the fresh agent
+  verifies the checkout and loaded capabilities before launching approved workflow. Do
+  not automatically reload or restart the current session.
 
 <!-- coherence-parsimony:start -->
 ### Parsimony and Actionable Checks
