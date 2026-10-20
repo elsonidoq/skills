@@ -90,10 +90,10 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
               "type": row["type"], "from_ref": _endpoint(row["run_id"], row["from"]), "to_ref": _endpoint(row["run_id"], row["to"]),
               "resolution": "recorded" if row["type"] not in {"possible_flow", "task_prerequisite"} else "declared"}
              for row in graph.get("edges", [])]
-    unknown = [{"ref": _ref("unknown", item["run_id"], item.get("seq", "run")), "run_ref": _ref("run", item["run_id"]),
-                "source_seq": item.get("seq") if type(item.get("seq")) is int else None,
+    unknown = [{"ref": _ref("unknown", item["run_id"], item["seq"] if type(item.get("seq")) is int else f"unknown_{index}"),
+                "run_ref": _ref("run", item["run_id"]), "source_seq": item.get("seq") if type(item.get("seq")) is int else None,
                 "code": item.get("code") if item.get("code") in {"description_invalid", "phase_invalid", "task_invalid", "unsupported_observation"} else "unsupported"}
-               for item in graph.get("unknown_records", [])]
+               for index, item in enumerate(graph.get("unknown_records", []))]
     followups = [{"run_ref": _ref("run", row["run_id"]), "source_run_ref": _ref("run", row["source_run_id"]),
                   "review_occurrence_ref": _ref("occ", row["source_run_id"], row["review_occurrence_id"]),
                   "resolution": row["resolution"]}

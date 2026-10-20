@@ -1,4 +1,5 @@
 """Local HTTP boundary tests; fixtures are offline and no writer is started."""
+import copy
 from pathlib import Path
 import socket
 import tempfile
@@ -59,6 +60,27 @@ class HttpTests(unittest.TestCase):
         detail = self.client.get(f"/api/monitor/v1/runs/{run_ref}/records/{record}?snapshot={snapshot_ref}", headers=self.api_headers)
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(self.client.get("/").status_code, 200)
+
+    def test_unknown_null_sequences_are_paginated_without_a_server_error(self):
+        malformed = copy.deepcopy(snapshot())
+        malformed["runs"] = [row for row in malformed["runs"] if row["run_id"] == "run-a"]
+        malformed["runs"][0]["description"] = "not-json"
+        malformed["observations"] = [{"seq": number, "run_id": "run-a", "occurrence_id": f"bad-{number}",
+                                       "phase": "worker", "task_id": None, "kind": "future", "recorded_at": number,
+                                       "facts": "{}"} for number in range(1, 55)]
+        self.reader.value = malformed
+        run = self.client.get("/api/monitor/v1/runs", headers=self.api_headers).json()["runs"][0]["ref"]
+        first = self.client.get(f"/api/monitor/v1/runs/{run}/snapshot", headers=self.api_headers)
+        self.assertEqual(first.status_code, 200)
+        pages = [first.json()]
+        while pages[-1]["next_cursor"]:
+            response = self.client.get(f"/api/monitor/v1/runs/{run}/history?snapshot={pages[-1]['snapshot_ref']}&cursor={pages[-1]['next_cursor']}&limit=50", headers=self.api_headers)
+            self.assertEqual(response.status_code, 200)
+            pages.append(response.json())
+        retained = [item for page in pages for item in page["records"] + page["unknown_records"]]
+        self.assertEqual(len(retained), 55)
+        self.assertEqual(len({item["ref"] for item in retained}), 55)
+        self.assertTrue(any(item["source_seq"] is None for item in retained))
 
     def test_snapshot_scopes_graph_entities_to_selected_root(self):
         runs = self.client.get("/api/monitor/v1/runs", headers=self.api_headers).json()["runs"]

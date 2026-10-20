@@ -104,16 +104,22 @@ def _read_asset(root_fd: int, parts: tuple[str, ...]) -> bytes:
 
 
 def _token(run_ref: str, records: list[dict[str, Any]], unknown: list[dict[str, Any]]) -> str:
-    watermark = max((item.get("source_seq", -1) for item in records + unknown if type(item.get("source_seq")) is int), default=-1)
-    return "snapshot_" + hashlib.sha256(f"{run_ref}:{watermark}".encode()).hexdigest()[:24]
+    retained = records + unknown
+    watermark = max((item.get("source_seq", -1) for item in retained if type(item.get("source_seq")) is int), default=-1)
+    # Null source sequences are retained unknown records too, so include their opaque
+    # identities rather than letting a stable numeric watermark conceal their arrival.
+    null_refs = sorted(item["ref"] for item in retained if type(item.get("source_seq")) is not int)
+    return "snapshot_" + hashlib.sha256(f"{run_ref}:{watermark}:{','.join(null_refs)}".encode()).hexdigest()[:24]
 
 
-def _cursor(value: str | None) -> int | None:
+def _cursor(value: str | None) -> int | str | None:
     if value is None:
         return -1
-    if not value.startswith("cursor_") or not value[7:].isdigit():
-        return None
-    return int(value[7:])
+    if value.startswith("cursor_") and value[7:].isdigit():
+        return int(value[7:])
+    if value.startswith("cursor_unknown_") and value[15:].startswith("unknown_"):
+        return value[15:]
+    return None
 
 
 def _page_size(value: str | None) -> int | None:
@@ -122,18 +128,30 @@ def _page_size(value: str | None) -> int | None:
     return int(value) if value.isdigit() and int(value) > 0 else None
 
 
-def _page(data: dict[str, Any], reference: str, after: int, size: int) -> dict[str, Any]:
+def _page(data: dict[str, Any], reference: str, after: int | str, size: int) -> dict[str, Any]:
     records = [item for item in data["records"] if item["run_ref"] == reference]
     unknown = [item for item in data["unknown_records"] if item["run_ref"] == reference]
-    retained = sorted(records + unknown, key=lambda item: item.get("source_seq", -1))
-    if after >= 0 and not any(item.get("source_seq") == after for item in retained):
-        raise ValueError("cursor")
-    visible = [item for item in retained if item.get("source_seq", -1) > after][:size]
+    retained = sorted(records + unknown, key=lambda item: (type(item.get("source_seq")) is not int,
+                                                            item.get("source_seq") if type(item.get("source_seq")) is int else item["ref"]))
+    if after == -1:
+        start = 0
+    elif isinstance(after, int):
+        matches = [index for index, item in enumerate(retained) if item.get("source_seq") == after]
+        if not matches:
+            raise ValueError("cursor")
+        start = matches[-1] + 1
+    else:
+        matches = [index for index, item in enumerate(retained) if item.get("source_seq") is None and item["ref"] == after]
+        if not matches:
+            raise ValueError("cursor")
+        start = matches[0] + 1
+    visible = retained[start:start + size]
     visible_records = [item for item in visible if item in records]
     visible_unknown = [item for item in visible if item in unknown]
     next_cursor = None
-    if len([item for item in retained if item.get("source_seq", -1) > after]) > len(visible):
-        next_cursor = "cursor_" + str(visible[-1]["source_seq"])
+    if start + len(visible) < len(retained):
+        last = visible[-1]
+        next_cursor = "cursor_" + str(last["source_seq"]) if type(last.get("source_seq")) is int else "cursor_" + last["ref"]
     # Keep the run selector, but never return another run's graph as part of this
     # selected-root snapshot. Explicit correction expansion uses its own endpoint.
     result = dict(data)
@@ -257,7 +275,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         cursor, size = _cursor(request.query_params.get("cursor")), _page_size(request.query_params.get("limit"))
         records = [item for item in data["records"] if item["run_ref"] == reference]
         unknown = [item for item in data["unknown_records"] if item["run_ref"] == reference]
-        if cursor is None or size is None or request.query_params.get("snapshot") != _token(reference, records, unknown):
+        if not isinstance(cursor, int) or size is None or request.query_params.get("snapshot") != _token(reference, records, unknown):
             return _error("bad_request", 400) if request.query_params.get("snapshot") is None else _error("snapshot_conflict", 409, retryable=True)
         all_relations = data.get("followups", [])
         # Expand the finite explicitly declared component only; do not infer links or
