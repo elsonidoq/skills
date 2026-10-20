@@ -397,7 +397,18 @@ class PiAdapter:
             raise Blocked('unregistered tool binding')
         if self.compatibility['role']=='review' and tool.owned_paths:
             raise Blocked('review tool mutation denied')
-        Draft202012Validator(spec['parameters']).validate(p['args'])
+        try:
+            Draft202012Validator(spec['parameters']).validate(p['args'])
+        except ValidationError as exc:
+            # Invalid arguments have no effect and are correctable in this turn.
+            self.tool_calls_seen.add(call)
+            output={'error':{'operation':name,'message':'invalid arguments ('+exc.validator+')',
+                'correction':'use the declared tool schema and authorized paths, then continue'}}
+            self.send('tool',{'generation':self.lifecycle.generation,'call':call,
+                'result':{'content':[{'type':'text','text':canonical(output)}],
+                          'details':{'operation_id':None,'quiescent':True}}})
+            self._tool_disposition(record,'invalid_arguments')
+            return
         size=self._tool_record_size(record)
         if self.queued_tool_bytes+size>MAX_RECORD:
             raise Blocked('task-tool queue byte limit; no request dropped or released')
@@ -415,6 +426,17 @@ class PiAdapter:
                 self.compatibility['role']=='review' and tool.owned_paths):
             self._tool_disposition(record,'cancelled')
             raise Blocked('queued registered tool drift; renewal required')
+        if tool.build_argv is None:
+            # Scoped reads/searches have no child effect. Validate and return
+            # their actual bounded result directly instead of spawning a no-op.
+            self.gateway.admit_direct(tool.id,p['args'],admitted_host_ops=(self.host_op,))
+            output=self.tool_output(tool,p['args'],{'admitted_host_ops':(self.host_op,)},0,None)
+            self.send('tool',{'generation':self.lifecycle.generation,'call':p['call'],
+                'result':{'content':[{'type':'text','text':canonical(output)}],
+                          'details':{'operation_id':None,'quiescent':True}}})
+            self._tool_disposition(record,'direct_settled')
+            self._start_next_tool()
+            return
         try:
             op,proc=self.gateway.launch(self.current['attempt_id']+':'+p['call'],tool.id,tool.version,p['args'],
                                         admitted_host_ops=(self.host_op,))

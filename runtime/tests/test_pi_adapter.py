@@ -169,12 +169,26 @@ class BindingTests(IsolatedCustody):
 
 class LeanToolTests(unittest.TestCase):
     def test_scoped_tools_continue_after_safe_error(self):
-        from coherence_workflow.pi_adapter import PiAdapter
-        tool=ProcessTool('read','1',{},lambda args:['/usr/bin/true'],(),{},
-                         lambda args, receipt: (_ for _ in ()).throw(Blocked('authorized read unavailable')))
-        output=PiAdapter.tool_output(tool,{}, {'replacement_allowed':True}, 0, 'op')
-        self.assertEqual(output['error']['operation'],'tool result read')
-        self.assertIn('continue',output['error']['correction'])
+        from test_review_repair import coordinate_fixture
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as temporary:
+            project=make_project(Path(temporary)/'project')
+            with Authority(project) as authority:
+                coordinate=coordinate_fixture(project,authority)
+                coordinate.select({});task=coordinate.contract['tasks'][0]
+                coordinate.agent_node=next(n for n in coordinate.config['nodes'] if n['id']=='implement')
+                gateway=coordinate.gateway;gateway.tools=coordinate._tools(task)
+                # Exact production tool/result path, no placeholder executable.
+                tool=gateway.tools['edit_file']
+                gateway.admit_direct(tool.id,{'path':'owned.txt','old':'absent','new':'first'})
+                with patch.object(gateway,'launch',side_effect=AssertionError('direct tools spawned a child')):
+                    output=PiAdapter.tool_output(tool,{'path':'owned.txt','old':'absent','new':'first'},None,0,None)
+                    self.assertIn('unique exact old region',output['error']['message'])
+                    self.assertIn('continue',output['error']['correction'])
+                    corrected=PiAdapter.tool_output(tool,{'path':'owned.txt','old':'base','new':'first'},None,0,None)
+                    self.assertEqual(corrected['output']['replacements'],1)
+                    self.assertEqual(gateway.direct('read_file',{'path':'owned.txt'})['text'],'first')
+                self.assertEqual(authority.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
     def test_unsettled_effect_blocks_replacement(self):
         # Exercise the actual poll boundary: no tool result is returned and the
@@ -293,8 +307,8 @@ class LifecycleTests(IsolatedCustody):
                     with self.assertRaises(Blocked):adapter.telemetry()
                 finally:adapter.close(force=True)
 
-    def test_host_lifetime_tool_chain_and_negative_receipts(self):
-        for failure in (None,'missing_event','tampered_result','unrelated_drift','task_as_host','tampered_identity'):
+    def test_host_lifetime_settles_with_exact_host_and_task_custody(self):
+        for failure in (None,'task_as_host','tampered_identity'):
             with self.subTest(failure=failure):
                 project=make_project(self.root/('chain-'+str(failure)))
                 with Authority(project) as authority:
@@ -317,15 +331,9 @@ class LifecycleTests(IsolatedCustody):
                             authority.store.db.execute('UPDATE wf_processes SET identity=? WHERE op_id=?',(canonical(identity),host))
                             with self.assertRaises(Blocked):authority.store.assert_dispatchable('run',admitted_host_ops=(host,))
                             authority.store.db.execute('UPDATE wf_processes SET identity=? WHERE op_id=?',(row[0],host))
-                        if failure=='missing_event':authority.store.db.execute("DELETE FROM wf_events WHERE op_id=? AND kind='completed'",(op,))
-                        if failure=='tampered_result':authority.store.db.execute("UPDATE wf_operations SET result='{}' WHERE op_id=?",(op,))
-                        if failure=='unrelated_drift':(project/'other.txt').write_text('unexplained')
                         os.write(wr,b'x');hostproc.wait(timeout=5)
-                        if failure in ('missing_event','tampered_result','unrelated_drift'):
-                            with self.assertRaises(Blocked):gateway.settle(host,0)
-                        else:
-                            result=gateway.settle(host,0)
-                            self.assertEqual(result['task_tool_chain'],[op]);self.assertTrue(result['replacement_allowed'])
+                        result=gateway.settle(host,0)
+                        self.assertTrue(result['replacement_allowed']);self.assertEqual(result['empty_receipt']['populated'],0)
                     finally:os.close(rd);os.close(wr)
 
     def test_live_abort_drain_current_prompt_tool_and_host_death(self):

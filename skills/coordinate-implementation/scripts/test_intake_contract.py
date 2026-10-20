@@ -60,7 +60,7 @@ class IntakeContractTests(unittest.TestCase):
         self.assertEqual(contract_errors(TEXT),[])
 
     def test_lean_entry_and_bounded_delivery_exception(self):
-        self.assertIn('bounded instruction-managed Terra writers', TEXT)
+        self.assertIn('explicitly owner-approved instruction-managed delivery exception', TEXT)
         self.assertIn('Optional headroom telemetry is recorded, not a veto', TEXT)
         self.assertIn('Do NOT launch this CLI', TEXT)
 

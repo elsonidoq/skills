@@ -130,13 +130,13 @@ replay reconciliation are **not exactly-once external effects** or an atomic app
 Process operations use phases `intent → contained → prepared → released → completed`:
 
 1. Intent holds unique operation/tool/version, executable/argv_hash/environment_hash, nonce/name,
-   explicit owned paths and baseline HEAD/index/file fingerprints. Incoming process write bodies
+   explicit owned paths and baseline HEAD/index identity (no per-process file map). Incoming process write bodies
    and arbitrary argv/env values are not persisted; bounded registered check evidence is separate.
 2. `contained` records fresh child UID/device/inode/name+parent/boot before helper spawn.
 3. `prepared` records helper PID/start/UID/parent/boot/nonce after validated membership.
 4. `released` commits release intent before sending the matching nonce on the inherited gate.
    A crash in between is uncertain; neither the tool nor a Git effect is blindly replayed.
-5. `completed` records actual kernel-empty receipt plus partial file/Git audit, logical exit
+5. `completed` records actual kernel-empty receipt plus HEAD/index audit, logical exit
    (possibly unknown) and `task_accepted=false`. Exit without settlement leaves custody unresolved.
 
 Before helper registration, restart never adopts an unknown process/group or sends release.
@@ -159,10 +159,9 @@ metric, gate, outbox or projection tables. The application schema stays version 
 Existing task-tool intent gains `scope_kind`; default semantics and release ordering remain
 unchanged. SDK host process intents use `scope_kind=host`, no owned worktree paths, and
 explicit inherited pipes. Host admission/ready events pin compatibility/manifest identity and
-actual initial telemetry. Host completion includes its verified `task_tool_chain`, preserving
-the original baseline and each completed task-tool audit. Foundation registered hosts with
-their own declared paths retain original reconciliation, but cannot mix those direct writes
-with task-tool audit chains. SDK hosts never use direct worktree-write ownership.
+actual initial telemetry. Host completion retains actual empty custody and Git identity;
+there is no per-tool file proof chain. SDK hosts never own worktree writes. Recursive file
+maps remain task/checkpoint-boundary records only; old stored process receipts are historical.
 
 An `sdk-turn` operation is keyed by existing UNIQUE(run,node,kind). Intent contains run/task/
 node/attempt/host identity, role and compatibility, contract hash, prompt generation,
@@ -371,11 +370,11 @@ These fields are facts, not optional transport notifications or projection decis
 
 `retained_candidates` derives saved sessions from completed SDK/event receipts, latest settled
 sequence and their completed host custody. Normal compatibility also hashes the system prompt
-with settings/pressure policy. `Gateway.verify_closed_host` composes only exact same-run completed
-tool and focused checkpoint chains to current HEAD/index/files. Original host/empty/tool receipts
-are never rewritten. Unknown effects, mismatched parent/tree/operation identity or current drift
-block. Reopening always checks saved file/session/leaf/hash, role/resources and actual headroom;
-original-only pins cannot fall through to fresh selection.
+with settings/pressure policy. `Gateway.verify_closed_host` requires the exact completed
+original host and actual empty custody. It no longer reconstructs tool/checkpoint file chains.
+Task-boundary audits own current file/HEAD/index preservation. Reopening checks saved
+file/session/leaf/hash and role/resources; headroom is optional telemetry, never a veto.
+Original-only pins cannot fall through to fresh selection.
 
 All-role configured question/continue_original edges are bounded graph loops, not a second
 scheduler. Original repair budgets remain consumed once for that repair; continuation segments
@@ -488,19 +487,22 @@ references, not raw tool transcripts, credentials or private reasoning.
 
 ## Concrete action scopes and private process-intent compatibility
 
-Builtin action_scope is a canonical JSON string, not narrative matching: version=1, action,
-tasks=[{id,owned_paths}]; read_file additionally readable_paths (sorted union of source paths,
-approval record refs and owned paths); registered check actions additionally checks entries
-{task_id,version,args_hash}. PythonAnswer includes execution=trusted-project-python to disclose
-trusted project-code execution rather than byte-only checking/sandboxing. task-generation
-uses authority.action_requirement to preserve exact bytes. Effects are external for local
-read/question, mutation for write/runner-git-commit, test for checks; no inferred network/
-financial authority. Missing/duplicate/unknown/mismatched declarations require producing renewal.
-The actual full REQUIRED stream and exposed tools must be declared, but unused registry actions
-are not demanded. Workflow and exact node permissions/effects restrict, never replace owner
-scope. Runtime callbacks check at actual check/tool/question/Git effects; absent production
-callbacks deny. Immutable admitted contract/current approval and original/correction task/check
-identity are rechecked. Model profiles and separately chargeable service authority stay separate.
+Builtin action_scope is a canonical version=1/action declaration. Current approved contract
+and one scope owner already bind tasks, readable/owned paths and REQUIRED check arguments;
+capabilities do not duplicate those lists or argument hashes. Effects remain external for
+read/question, mutation for write/edit/runner Git, and test for checks/run_check. This grants
+no inferred network/financial authority. Missing/duplicate/unknown/mismatched declarations
+require producing renewal. Actual node tools/permissions/effects and exact task/check identity
+are checked at effects; absent callbacks deny. Separately chargeable actions retain their
+scoped exceptional authority and zero untrusted sends.
+
+Scoped direct tools have no process row: `read_file`/`search_file` return bounded text,
+offset/next_offset/eof/continuation; `edit_file` accepts owned path plus unique nonempty
+old/new regions; `run_check` accepts only a REQUIRED item_id. `workflow.Command` is a
+version-1 check with argv (nonempty strings, no NUL, canonical absolute executable), optional
+positive timeout and project cwd. Existing Verification records collected=1 for a completed
+command, its real exit/output/operation_id, and current applicability. Nonzero is failed;
+unrun/timeout/unknown custody cannot satisfy REQUIRED. No shell argv is exposed to workers.
 
 New process intent metadata has executable, argv_hash and environment_hash instead of arbitrary
 argv/environment data. Baseline/path/nonce/child/identity/reconciliation fields remain. Only exact

@@ -13,8 +13,8 @@ from fixtures.support import make_project
 def declare_builtin_actions(contract):
     """Explicit current mandatory-test authority only; never historical conversion."""
     from coherence_workflow.authority import action_requirement
-    names={'read_file','request_owner_input'}
-    if any(t['owned_paths'] for t in contract['tasks']):names.update(('write_file','runner-git-commit'))
+    names={'read_file','search_file','run_check','request_owner_input'}
+    if any(t['owned_paths'] for t in contract['tasks']):names.update(('write_file','edit_file','runner-git-commit'))
     names.update(i['check']['id'] for t in contract['tasks'] for i in t['required'])
     contract['authorization_envelope']['capabilities']=[{'id':name,**action_requirement(contract,name)} for name in sorted(names)]
 

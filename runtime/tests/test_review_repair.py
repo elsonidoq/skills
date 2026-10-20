@@ -89,7 +89,7 @@ def inject_registered_fault(authority, run, parent, text, *, owned_path='answer.
     """Deliberate fixture fault with real successor custody, never hidden drift."""
     gateway=Gateway(authority,run,parent,{})
     baseline=snapshot(authority.project,[owned_path])
-    gateway.bind_task_origin('fixture-fault:',[owned_path],baseline)
+    gateway.audit_task_boundary([owned_path],baseline)
     read=ProcessTool('fixture-fault-read','1',{'type':'object','additionalProperties':False},
                      lambda unused:[str(Path('/usr/bin/true').resolve())],(),environment())
     write=ProcessTool('fixture-fault-write','1',{'type':'object','additionalProperties':False},

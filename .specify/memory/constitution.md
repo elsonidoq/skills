@@ -104,6 +104,10 @@ refactor without bootstrapping through the runtime under change. Optional teleme
 observed rather than an execution veto; current settlement, custody and external-action
 safeguards remain mandatory. MINOR reflects this material operational simplification.
 Rationale: remove duplicate proof protocols without creating another workflow mode.
+The subsequent explicit owner direction “Launch a fresh sol subagent to finish t001. Then
+continue with the rest also using sol” renews this delivery binding to Sol/medium after
+inspection of incomplete Terra runs; it does not change the amendment, historical planning
+inputs or generic product profile resolution. T002/T003 outcomes remain pending.
 
 
 Amendment 4.0.0 records the current owner's actual ask_user decision **“Approve policy amendments”**

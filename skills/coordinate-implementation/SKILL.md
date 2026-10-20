@@ -9,8 +9,9 @@ A thin interface to the installed `coordinate-implementation` CLI. Python LangGr
 owns orchestration and durable execution authority; Pi persistence is conversation data.
 The interface may launch, read status/pending, relay authorized inputs and explain recorded
 blockers. It cannot select tasks, models, sessions, retries, repairs, commits or acceptance.
-For the owner-approved lean-runtime refactor only, bounded instruction-managed Terra writers
-use the shared checkpoint contract rather than launching this CLI; this is not a new mode.
+An explicitly owner-approved instruction-managed delivery exception uses bounded writers and
+the shared checkpoint contract rather than this CLI; it is not another runtime mode.
+Do not bootstrap a refactor through the runtime being changed when that route is excluded.
 No background LLM decides workflow transitions. No subjective execution batches, task-count
 routing, model escalation or coordination-feedback/STATE paperwork.
 

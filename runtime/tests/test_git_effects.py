@@ -25,20 +25,21 @@ class FocusedCheckpointTests(IsolatedCustody):
                 with self.assertRaises(Blocked):effects.begin(self.task())
             self.assertEqual(self.outside.read_text(),'outside unchanged')
 
-    def test_repeated_owned_writes_require_exact_kernel_empty_origin_chain(self):
+    def test_repeated_owned_writes_use_task_boundary_unrelated_audit(self):
         from fixtures.custody_support import process_tool
         with Authority(self.project) as owner:
             owner.store.reserve('run','fixture')
             gateway=Gateway(owner,'run',self.parent,{'fixture':process_tool(self.project)})
             baseline=snapshot(self.project,['owned.txt'])
-            gateway.bind_task_origin('attempt:', ['owned.txt'], baseline)
+            gateway.audit_task_boundary(['owned.txt'], baseline)
             for visit in range(2):
                 op,proc=gateway.launch('attempt:'+str(visit),'fixture','1',{'mode':'quick','exit':0})
                 self.capture('released',op,owner)
                 self.assertTrue(gateway.settle(op,proc.wait(timeout=10))['replacement_allowed'])
-            (self.project/'owned.txt').write_text('unexplained drift')
-            with self.assertRaisesRegex(Blocked,'unexplained task-origin drift'):
-                gateway.launch('attempt:third','fixture','1',{'mode':'quick','exit':0})
+            (self.project/'custom.md').write_text('unrelated external drift')
+            with self.assertRaisesRegex(Blocked,'unrelated file drift'):
+                GitEffects(owner,'run',gateway).checkpoint(self.task(),baseline,
+                    [{'item_id':'A/V1','status':'satisfied'}],gates_satisfied=True)
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],2)
 
     def test_actual_signing_failure_blocks_without_disabling_or_retry(self):

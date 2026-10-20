@@ -249,16 +249,75 @@ class InventoryTests(unittest.TestCase):
         self.assertIn('retained/toy/.coherence/workflow/data', files)
 
 
-class LeanScopeTests(InventoryTests):
+class LeanScopeTests(unittest.TestCase):
     def test_owned_edit_preserves_ignored_material_and_rejects_escape(self):
-        from coherence_workflow.tools import owned_file
-        ignored=self.nested/'data'
-        before=snapshot(self.root,['owned.txt'])
-        (self.root/'owned.txt').write_text('owned edit')
-        after=snapshot(self.root,['owned.txt'])
-        self.assertEqual(before['files']['retained/toy/data'],after['files']['retained/toy/data'])
-        with self.assertRaisesRegex(Blocked,'unsafe relative path'):
-            owned_file(self.root,'../escape')
+        import sys
+        from test_review_repair import coordinate_fixture
+        from jsonschema.exceptions import ValidationError
+        with tempfile.TemporaryDirectory() as temporary:
+            project=make_project(Path(temporary)/'project')
+            nested=project/'retained/nested';nested.mkdir(parents=True)
+            git(nested,'init','-q');(nested/'data').write_text('retained user data')
+            (project/'.gitignore').write_text((project/'.gitignore').read_text()+'retained/\n')
+            source='# ordinary large source\n'+'x'*40000+'\nANSWER = 0\n'
+            (project/'owned.txt').write_text(source)
+            git(project,'add','--','.gitignore','owned.txt');git(project,'commit','-qm','large source baseline')
+            script=project/'check_project.py'
+            script.write_text('from pathlib import Path\nassert Path("owned.txt").read_text().endswith("ANSWER = 1\\n")\nprint("project command: large source validated")\n')
+            def setup(contract):
+                contract['tasks'][0]['required'][0]['check']={'id':'workflow.Command','version':'1',
+                    'args':{'argv':[str(Path(sys.executable).resolve()),str(script)]}}
+            before=snapshot(project,[])
+            with Authority(project) as owner:
+                coordinate=coordinate_fixture(project,owner,task_setup=setup)
+                coordinate.select({});task=coordinate.contract['tasks'][0]
+                coordinate.agent_node=next(n for n in coordinate.config['nodes'] if n['id']=='implement')
+                gateway=coordinate.gateway;gateway.tools=coordinate._tools(task)
+                with patch('coherence_workflow.tools.snapshot',side_effect=AssertionError('per-check tree proof')):
+                    failed=gateway.direct('run_check',{'item_id':task['required'][0]['id']})
+                self.assertEqual(failed[0]['status'],'failed')
+                self.assertEqual(failed[0]['exit_code'],1)
+                self.assertIn('AssertionError',failed[0]['output'])
+                # Correct a known command failure in the same selected task.
+                # No scoped source operation may launch a process or inventory retained trees.
+                with patch('coherence_workflow.tools.snapshot',side_effect=AssertionError('per-tool tree proof')), \
+                     patch.object(gateway,'launch',side_effect=AssertionError('fake read/edit process')):
+                    first=gateway.direct('read_file',{'path':'owned.txt','limit':32768})
+                    tail=gateway.direct('read_file',first['continuation'])
+                    self.assertEqual(first['text']+tail['text'],source)
+                    boundary=gateway.direct('search_file',{'path':'owned.txt','limit':14,'query':'large'})
+                    continued=gateway.direct('search_file',boundary['continuation'])
+                    self.assertIn('large',continued['text'])
+                    found=gateway.direct('search_file',{'path':'owned.txt','offset':32768,'query':'ANSWER'})
+                    self.assertIn('ANSWER = 0',found['text'])
+                    with self.assertRaisesRegex(Blocked,'missing or ambiguous'):
+                        gateway.direct('edit_file',{'path':'owned.txt','old':'not present','new':'1'})
+                    os.link(project/'owned.txt',nested/'alias')
+                    with self.assertRaisesRegex(Blocked,'hard-linked'):
+                        gateway.direct('edit_file',{'path':'owned.txt','old':'ANSWER = 0','new':'ANSWER = 1'})
+                    self.assertEqual((nested/'alias').read_text(),source)
+                    (nested/'alias').unlink()
+                    gateway.direct('edit_file',{'path':'owned.txt','old':'ANSWER = 0','new':'ANSWER = 1'})
+                    with self.assertRaises(ValidationError):
+                        gateway.direct('edit_file',{'path':'../escape','old':'a','new':'b'})
+                with self.assertRaises(ValidationError):gateway.direct('run_check',{'item_id':'unapproved'})
+                # Actual approved command uses the production Verification/Gateway/custody path.
+                with patch('coherence_workflow.tools.snapshot',side_effect=AssertionError('per-check tree proof')):
+                    result=gateway.direct('run_check',{'item_id':task['required'][0]['id']})
+                self.assertEqual(result[0]['status'],'satisfied',result)
+                self.assertIn('project command: large source validated',result[0]['output'])
+                for row in owner.store.db.execute('SELECT containment FROM wf_processes'):
+                    receipt=json.loads(row[0]);self.assertEqual(gateway.containment.populated(receipt),0)
+                    gateway.containment.remove(receipt)
+                (project/'escape-link').symlink_to(project.parent/'outside')
+                from coherence_workflow.tools import owned_file
+                with self.assertRaises(Blocked):owned_file(project,'escape-link')
+            after=snapshot(project,[])
+            for name in before['files']:
+                if name.startswith('retained/'):
+                    self.assertEqual(before['files'][name],after['files'][name],name)
+            self.assertEqual(before['index'],after['index'])
+            self.assertEqual((project/'owned.txt').read_text(),source.replace('ANSWER = 0','ANSWER = 1'))
 
 
 class ResumeInventoryTests(unittest.TestCase):

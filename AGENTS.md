@@ -109,6 +109,14 @@ rules above for reusable skills and commands.
   recent context, selective artifact/Git/check reconstruction and active-child reconciliation
   under the executable interface's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
   Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
+- Approved local lean-runtime delivery exception: T001–T003 use sequential instruction-managed
+  writers and verified focused writer checkpoints, not the runtime under change. The owner
+  explicitly renewed implementation to `openai-codex/gpt-6.1-sol`, effort `medium`, after
+  inspected incomplete Terra runs. Historical source/tasks/binding approvals stay unchanged;
+  product bindings remain selected-config driven. Five readiness facts (valid work, usable
+  configuration, current scoped approval, safe sole ownership, runnable checks) apply at
+  relevant invalidation boundaries. Keep actual custody, REQUIRED/manual gates and independent
+  full-range final review. No launch manifest/catalog/pin ceremony bootstraps manual delivery.
 - Execution: `coordinate-implementation` is the thin CLI facade; LangGraph/SQLite owns task/session
   selection, checks, focused commits and durable operational state. Keep bootstrap writer checkpoints
   distinct from future runner-owned Git. Standalone is portable; interactive mode needs verified

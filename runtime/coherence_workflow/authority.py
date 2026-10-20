@@ -7,24 +7,17 @@ import copy
 from .store import Blocked, digest, canonical
 
 
-BUILTIN_EFFECTS={'read_file':['external'],'write_file':['mutation'],
+BUILTIN_EFFECTS={'read_file':['external'],'search_file':['external'],'write_file':['mutation'],'edit_file':['mutation'],'run_check':['test'],
                  'request_owner_input':['external'],'runner-git-commit':['mutation']}
 
 
 def action_requirement(contract, name):
     """Builtin v1 scope: concrete approved stream, never prose or a self-referential hash."""
-    tasks=contract['tasks']
-    scope={'version':1,'action':name,'tasks':[{'id':t['id'],'owned_paths':t['owned_paths']} for t in tasks]}
-    if name=='read_file':
-        scope['readable_paths']=sorted({s['path'] for s in contract.get('sources',[])} |
-            {r['record_ref'] for r in contract.get('approval_refs',[])} |
-            {p for t in tasks for p in t['owned_paths']})
-    if name not in BUILTIN_EFFECTS:
-        checks=[{'task_id':t['id'],'version':i['check']['version'],'args_hash':digest(i['check']['args'])}
-                for t in tasks for i in t['required'] if i['check']['id']==name]
-        if not checks:raise Blocked('unknown action scope; producing renewal required')
-        scope['checks']=checks
-        if name=='workflow.PythonAnswer':scope['execution']='trusted-project-python'
+    # Current contract approval owns task/path/check scope. Capabilities declare
+    # the operation, not a second canonical encoding of the same approved inputs.
+    if name not in BUILTIN_EFFECTS and not any(i['check']['id']==name for t in contract['tasks'] for i in t['required']):
+        raise Blocked('unknown action scope; producing renewal required')
+    scope={'version':1,'action':name}
     return {'action_scope':canonical(scope),'effects':BUILTIN_EFFECTS.get(name,['test'])}
 
 
@@ -32,8 +25,7 @@ def required_actions(contract, config):
     actions=set()
     for node in config['nodes']:
         if node['type']!='agent':continue
-        actions.add('read_file')
-        if node['role']!='review' and any(t['owned_paths'] for t in contract['tasks']):actions.add('write_file')
+        actions.update(name for name in node['tools'] if name in ('read_file','search_file','write_file','edit_file','run_check'))
         if 'request_owner_input' in node['tools']:actions.add('request_owner_input')
     actions.update(i['check']['id'] for t in contract['tasks'] for i in t['required'])
     if any(t['owned_paths'] for t in contract['tasks']):actions.add('runner-git-commit')

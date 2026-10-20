@@ -112,7 +112,8 @@ Resume performs the same safe Git/path/type and actual inventory checks there, b
 owned partial bytes for the existing externally authorized recovery and original-baseline
 reconciliation; structural inventory alone never approves those bytes or continuation.
 The read-only `preflight` command and pending-task selection still require clean ownership;
-task selection and the gateway recheck before dispatch/release. No worker cleanliness-bypass
+task selection audits ownership; scoped tools validate their paths/permissions and process
+release checks HEAD/index identity, not another whole-worktree inventory. No worker cleanliness-bypass
 flag is exposed. A failing entry reports its
 relative path and kind (for example `retained/toy/pipe (fifo)`), never its contents.
 
@@ -255,8 +256,8 @@ idle/no queued work + completed kernel-empty task-tool audits are all required.
 current SDK projected occupancy determine threshold = window − reserve and headroom =
 threshold − occupancy. Cumulative usage is separate. The pressure policy supplies a bounded
 10–10000 ms monitor interval and minimum headroom; safe request boundaries check again.
-Low/unknown pressure or compaction stops ordinary continuation and aborts/drains, then
-blocks for recovery. No token-burn pressure guarantee or universal interrupt deadline is
+Pressure/headroom, including low/unknown values, are optional observations and do not
+abort or veto settled continuation. Actual SDK compaction/lifecycle settlement still applies. No token-burn pressure guarantee or universal interrupt deadline is
 claimed. The explicit `interrupt` callback is a trusted controlled-test/control seam, not
 worker input. It is not evidence of naturally occurring high pressure.
 
@@ -267,10 +268,10 @@ survivor still records `ORPHAN_PROCESS` before release; resolving it does not re
 retains durable receipts; cleanup of fixture groups is separately validated test cleanup.
 Concurrent tool effects are not supported: same-prompt requests use the bounded FIFO below;
 an unregistered overlapping gateway operation blocks and
-drains rather than opening a second writer. T002 host lifetime audit accepts only a complete,
-applicable same-run task-tool baseline→result chain; unexplained files, active alarms,
-incomplete/forged receipts and HEAD/index changes block. Runner Git effects across an idle
-host lifetime still need T003's explicit integration.
+drains rather than opening a second writer. Process launch/release/settlement checks Git
+HEAD/index identity and actual own-child custody. File ownership/unrelated retained material
+are audited at task selection, attempt and checkpoint boundaries, not by per-tool or host
+snapshot chains. SDK hosts own no worktree files and close before runner Git effects.
 
 `Gateway.launch` now accepts trusted `scope_kind`, anonymous `inherited_fds` and explicit
 `admitted_host_ops`; defaults remain task-tools/DEVNULL/no exemption. Store admission checks
@@ -285,19 +286,20 @@ admission stays strict until the task-runner integration.
 `sessions.select_session(request, candidates, now_ns, max_age_ns,
 min_free_tokens_before_compaction=150000)` is the shared mechanical policy. Inputs are trusted
 runner facts: readiness/authorization/reconciliation, role, context affinity, exact profile,
-skill/tool/permission/trust/settings/worktree identities, settled sequence and fresh telemetry.
+skill/tool/permission/trust/settings/worktree identities and actual settled sequence. Telemetry
+is recorded separately, not session eligibility.
 No code/gate Pi sessions are invented. Unsettled/poisoned custody blocks fresh replacement.
-At reliable headroom 150000 reuse is eligible; 149999/null/stale/disabled/unknown is not.
+Low/null/stale/disabled/unknown optional headroom does not veto otherwise compatible settled reuse.
 Role isolation is mandatory; implement/repair share a family, never reviewer history.
 Fresh-only wins ordinary reuse. First independent review is fresh, later review requires its
 own exact lineage. Repair prefers the eligible original implementer; remaining candidates
 sort latest-settled then stable ID ascending. Reasons and rejected candidates are returned.
 An original-question pin outranks greedy selection and **blocks**, never substitutes fresh,
-if the original is missing/incompatible/low/unknown. The delivered standalone protocol is below.
+if the original is missing/incompatible/unsettled. The delivered standalone protocol is below.
 
 Exact reopen requires the original completed host operation, its private saved file/leaf/hash,
-matching role/resource/worktree identity and durable last-settled telemetry, followed by new
-actual telemetry and normal headroom validation. It never uses continueRecent. Reopen creates
+matching role/resource/worktree identity and durable last-settled lifecycle, followed by
+new observational telemetry without a headroom gate. It never uses continueRecent. Reopen creates
 a new counter epoch/baseline even for the same saved counters. T002 supports orderly exact
 reopen, not automatic crash recovery or workflow continuation after an unknown operation.
 
@@ -358,10 +360,15 @@ The SDK manifest uses the already delivered explicit settings/resources/auth/cat
 contract. Exact graph profile and skill hashes must agree with delivered SDK resources.
 Current node policy may choose fresh-only; this standalone composition closes its settled
 host before runner Git effects. Registered `read_file` returns bounded actual authorized
-bytes through the gateway; `write_file` has explicit task paths and bounded text. No SDK
-built-in shell, Git or ask_user is exposed. Repeated owned writes require the immutable
-task-origin baseline plus the complete kernel-empty registered tool audit chain; unexplained
-dirty ownership never becomes implicitly admitted. This is not an OS filesystem sandbox.
+content directly without a fake child; `search_file` searches the selected chunk with the same
+continuation (including query overlap so a boundary-spanning match is not lost). Offsets are UTF-8 stream seek cookies (use the returned offset); limits bound
+characters/output, not total file size. `write_file` creates/replaces bounded text;
+`edit_file` replaces one unique nonempty old region in an arbitrarily large owned file.
+Both reject hard-linked aliases and validate safe regular-file paths and exact task/node permission. Missing/ambiguous edits,
+unavailable reads and invalid arguments return correctable errors in the same attempt.
+No SDK built-in shell, Git or ask_user is exposed. One writer plus task/checkpoint audits
+preserve unrelated ignored/nested material; no per-tool recursive proof chain remains.
+This is cooperative scoped authority, not an OS filesystem sandbox.
 
 Preflight aggregates known registered capability, permission, profile, REQUIRED-check and
 gate gaps before any task. Ordinary approved-profile model traffic/retries/summaries have
@@ -370,7 +377,14 @@ purpose/cost-impact/scoped authority and durable intent before sending; uncertai
 external effects cannot blindly resend. They are not exposed as generic model tools.
 
 `workflow.FileBytes` is a real exact-file oracle. Registered versioned unittest selectors
-are closed code capabilities, not task-supplied shell commands. Missing/unrun/empty/stale/
+are closed code capabilities. `workflow.Command` accepts an explicitly approved REQUIRED
+argv array (canonical absolute executable, project cwd, optional positive timeout); it runs
+through existing Gateway custody, collecting actual exit/output and a command count. This
+is trusted approved project code, not a shell/sandbox or an external-action permission.
+`run_check` exposes only approved task item IDs, never worker-supplied argv; its persisted
+Verification receipts are audited/reused by verify before checkpoint. Command stdout/stderr
+are retained up to 32768 bytes; the worker sees an 8192-character receipt summary with
+truncation indicated, not a duplicate full contract. Timeout drains the proven child and remains insufficient. Missing/unrun/empty/stale/
 conflicting proof remains insufficient; optional output cannot release it. Evidence is
 persisted by item, environment and final owned bytes; shared checks run once with all item
 mappings. Scoped sample STOP APIs persist inspectable bytes/nonce and require an external
@@ -457,7 +471,7 @@ not copied into the bundle. Equal canonical original task contracts in receipts 
 task-ID/hash reference; unequal and dynamic correction contracts remain complete. No
 implementation history or write capability is supplied. The shipped graph now uses role-default selection with SQL-derived
 settled candidates; explicit fresh-only remains available for ordinary assignments. Exact
-saved reopening bridges verified task-tool/checkpoint chains without altering old receipts.
+saved reopening verifies the completed original host and empty custody without rewriting receipts.
 A complete bundle over the supported protocol bound blocks rather than truncating the range.
 Review judgment is distinct from mechanical green; malformed/stale-head review cannot accept.
 
@@ -585,8 +599,8 @@ old receipt without redispatch; conflicting/stale/wrong binding or unverified/sc
 inputs reject. Scope changes require producing approval renewal, not a prose interpretation or
 an answer flag. Acceptance preserves an original-only delivery obligation across process exit.
 Resume revalidates exact source/task/approval/config and original role/resources, closed custody,
-saved file/leaf/hash and ACTUAL new-host telemetry. Missing/unsafe/unknown or insufficient original
-headroom blocks explicit recovery: no greedy/fresh substitute. Only after that admission does
+saved file/leaf/hash and actual new-host lifecycle settlement. Missing/unsafe/incompatible original
+custody blocks explicit recovery: no greedy/fresh substitute. Only after that admission does
 the host persist a unique bound USER answer entry, reconstruct its context from SessionManager,
 and acknowledge its entry ID before the next model request. Unknown delivery blocks blind resend;
 accepted content is retained and never reasked. Post-request/result crash gaps without sufficient
@@ -594,8 +608,8 @@ settlement evidence remain explicit blockers. Completed app-result-before-saver 
 saved original visit and never redispatches the ask node.
 
 Ordinary assignments use eligible SQL-retained candidates, exact manifest/role/affinity and
-configured fresh telemetry (default maximum age 2000 ms, minimum headroom 150000). Stale/low/
-unknown ordinary candidates yield fresh only after custody reconciliation. Repair prefers the
+actual settlement. Optional telemetry age/headroom does not force fresh substitution;
+unsettled effects block replacement. Repair prefers the
 eligible original implementer; first final review is independent/fresh and later review stays
 in its own range lineage. Original-question continuation takes priority, opens only that saved
 conversation and measures current telemetry rather than renewing an old timestamp.
@@ -813,15 +827,14 @@ node restriction. Required oracles are not authorized by registry existence. Pot
 streams additionally declare runner-git-commit as a scoped mutation and workflow permission;
 Git remains runner-only, never an agent tool. No-change/read-only effects create no empty commit.
 
-Builtin action_scope is the canonical JSON produced by authority.action_requirement: version1,
-action, original tasks with id/owned_paths; read_file adds sorted readable_paths from owned/
-source/approval paths; a check adds task_id/version/args_hash stream entries. PythonAnswer marks
-execution=trusted-project-python. Effects: local read/question external, write/Git mutation,
-oracles test. Local external does not grant network or paid authority. PythonAnswer executes
-explicitly trusted project code, not a harmless byte oracle or filesystem/network sandbox;
-extra mutation/network/service authority is never inferred from a broad test label. Ordinary
-approved model traffic stays separately exact-profile-bound, without a financial capability.
-Other paid/external action scopes retain their existing original semantics.
+Builtin action_scope is the version=1/action declaration produced by authority.action_requirement.
+The approved task contract owns path/check scope; capabilities no longer duplicate task/path/
+argument encodings. Exact node permissions/effects and actual task/check membership still
+restrict effects. Local read/question is external; write/edit/Git is mutation; checks/run_check
+are test. Local external grants no network/paid authority. Command/PythonAnswer execute trusted
+project code, not a shell or filesystem/network sandbox; mutation/service authority is not
+inferred from a broad test label. Approved models remain exact-profile-bound without financial
+ceremony. Exceptional paid/external actions retain their existing scoped original semantics.
 
 At actual checks, registered tools, question admission and Git dispatch the runner rechecks
 current admitted original contract/approvals, concrete scope and exact node/workflow policy.
@@ -833,7 +846,7 @@ actual package roots with -I/-B; cwd/caller PYTHONPATH cannot shadow privileged 
 A separately authorized project-code test retains its own intended project import semantics.
 
 Non-Git process intents/events retain executable, argv_hash, environment_hash and required
-custody/file/Git reconciliation metadata, never the incoming write body or arbitrary argv/env
+custody/Git reconciliation metadata, never the incoming write body or arbitrary argv/env
 values. Complete executable data travels only through process memory and the existing private
 inherited controller pipe: bounded1MiB initial JSON frame, membership/identity registration,
 then a separate matching release nonce before any task effect. The spawned test-hook boundary

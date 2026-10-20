@@ -6,8 +6,10 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import subprocess
 import sys
 import time
+import tempfile
 import uuid
 
 import yaml
@@ -22,7 +24,7 @@ from .registry import CHECKS, Handler, Registry, validate_schema
 from .sessions import select_session, retained_candidates, manifest_compatibility, open_manifest
 from .interaction import Interaction, OwnerChannel, QUESTION_SCHEMA
 from .store import Authority, Blocked, canonical, digest, git, private_file, safe_path
-from .tools import Gateway, ProcessTool, reconcile, snapshot, runtime_python
+from .tools import Gateway, ProcessTool, reconcile, snapshot, runtime_python, owned_file
 from .verification import ReviewRepair, Verification, unittest_oracle
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,7 +39,16 @@ def file_bytes(project, args):
                                  'observed_hash': digest(observed)})}
 
 
-def registered_checks(project, gateway=None):
+def project_command_argv(args):
+    """Inspect the approved executable without running project code at preflight."""
+    argv=args['argv']
+    executable=Path(argv[0])
+    if not executable.is_absolute() or executable!=executable.resolve(strict=True) or not os.access(executable,os.X_OK):
+        raise Blocked('project command executable unavailable/noncanonical; correct approved check argv')
+    return argv
+
+
+def registered_checks(project, gateway=None, *, admitted_host_ops=()):
     result = {name: {**spec, 'execute': unittest_oracle} for name, spec in CHECKS.items()}
     for file, selector in [('test_recovery.py','EffectRecoveryTests'),('test_recovery.py','PressureRecoveryTests'),
                            ('test_projections.py','ProjectionRecoveryTests'),('test_recovery.py','VersionRecoveryTests'),
@@ -58,7 +69,7 @@ def registered_checks(project, gateway=None):
                 str(safe_path(project,args['path'])),str(args['expected'])],(),
             {k:v for k,v in os.environ.items() if k in ('PATH','HOME','PYTHONPATH','PYTHONDONTWRITEBYTECODE','TMPDIR')})
         gateway.tools[tool.id]=tool
-        op,process=gateway.launch('oracle:'+uuid.uuid4().hex,tool.id,'1',{})
+        op,process=gateway.launch('oracle:'+uuid.uuid4().hex,tool.id,'1',{},admitted_host_ops=admitted_host_ops)
         code=process.wait(timeout=15);receipt=gateway.settle(op,code)
         if not receipt.get('replacement_allowed'):raise Blocked('oracle descendants unsettled')
         valid=code in (0,20)
@@ -67,6 +78,35 @@ def registered_checks(project, gateway=None):
                 'output':canonical({'operation_id':op,'raw_exit':code,'criterion':'answer() exact integer result'})}
     result['workflow.PythonAnswer']={'version':'1','schema':{'type':'object','additionalProperties':False,
         'properties':{'path':{'type':'string','minLength':1},'expected':{'type':'integer'}},'required':['path','expected']},'execute':python_answer}
+    def command(args):
+        if gateway is None:raise Blocked('contained project command gateway unavailable')
+        argv=project_command_argv(args)
+        # Only approved task REQUIRED commands reach this runner, never worker shell input.
+        # The wrapper and all command descendants share Gateway's own-child custody.
+        with tempfile.TemporaryDirectory(prefix='coherence-check-') as temporary:
+            output=Path(temporary)/'output'
+            tool=ProcessTool('check-project-command','1',{'type':'object','additionalProperties':False},
+                lambda unused:runtime_python(
+                    'import subprocess; '
+                    'f=open(sys.argv[1],"wb"); '
+                    'p=subprocess.run(sys.argv[2:],stdout=f,stderr=subprocess.STDOUT); '
+                    'f.close(); sys.exit(p.returncode)',str(output),*argv),(),
+                {k:v for k,v in os.environ.items() if k in ('PATH','HOME','PYTHONPATH','PYTHONDONTWRITEBYTECODE','TMPDIR')})
+            gateway.tools[tool.id]=tool
+            op,process=gateway.launch('oracle:'+uuid.uuid4().hex,tool.id,'1',{},admitted_host_ops=admitted_host_ops)
+            try:code=process.wait(timeout=args.get('timeout',60))
+            except subprocess.TimeoutExpired:
+                gateway.resolve(op)
+                process.wait(timeout=5)
+                return {'collected':0,'exit_code':None,'output':'project command timed out; inspect before rerun'}
+            receipt=gateway.settle(op,code)
+            if not receipt.get('replacement_allowed'):raise Blocked('project check descendants unsettled')
+            with output.open('rb') as stream:text=stream.read(32768).decode('utf-8',errors='replace')
+            return {'collected':1,'exit_code':code,'output':text,'operation_id':op,
+                    'diagnosis':'implementation' if code else None}
+    result['workflow.Command']={'version':'1','schema':{'type':'object','additionalProperties':False,
+        'properties':{'argv':{'type':'array','minItems':1,'items':{'type':'string','pattern':'^[^\\u0000]*$'}},
+                      'timeout':{'type':'integer','minimum':1}},'required':['argv']},'execute':command}
     result['workflow.FileBytes'] = {'version': '1', 'schema': {'type': 'object', 'additionalProperties': False,
         'properties': {'path': {'type': 'string', 'minLength': 1}, 'expected': {'type': 'string'}},
         'required': ['path', 'expected']}, 'execute': lambda args: file_bytes(project, args)}
@@ -133,7 +173,7 @@ class Coordinate:
 
     def action_admission(self):
         return AuthorityAdmission(self.contract['authorization_envelope'],self.config['profiles'],
-            ['read_file','write_file','request_owner_input','runner-git-commit',*registered_checks(self.authority.project)],
+            ['read_file','search_file','write_file','edit_file','run_check','request_owner_input','runner-git-commit',*registered_checks(self.authority.project)],
             self.config['permissions'],Approvals(self.authority.project,self.catalog).verify)
 
     def verify_action_origin(self):
@@ -171,9 +211,10 @@ class Coordinate:
         if (len(configured)!=1 or node!=configured[0] or name not in node['tools'] or name not in node['permissions']):
             raise Blocked('actual tool node permission restriction')
         effects=set(node['side_effects'])
-        permitted=(bool(effects&{'read','files'}) if name=='read_file' else
-                   'files' in effects and node['role']!='review' if name=='write_file' else
+        permitted=(bool(effects&{'read','files'}) if name in ('read_file','search_file') else
+                   'files' in effects and node['role']!='review' if name in ('write_file','edit_file') else
                    bool(effects&{'read','conversation'}))
+        if name=='run_check':permitted=node['role']!='review' and 'process' in effects
         if not permitted:raise Blocked('actual tool node effect restriction')
 
     def authorize_question(self, binding):
@@ -195,8 +236,9 @@ class Coordinate:
             self.action_admission().model(self.config['profiles'][node['profile']])
             return
         if name=='check-python-answer':return self.authorize_action('workflow.PythonAnswer')
+        if name=='check-project-command':return self.authorize_action('workflow.Command')
         self.authorize_action(name)
-        if name in ('read_file','write_file'):
+        if name in ('read_file','search_file','write_file','edit_file','run_check'):
             if self.agent_node is None:raise Blocked('actual tool lacks current node')
             self.node_action(self.agent_node,name)
 
@@ -204,7 +246,7 @@ class Coordinate:
         verify_execution_intent(self.contract, [self.config['profiles'][node['profile']]
             for node in self.config['nodes'] if node['type']=='agent' and node['role'] in ('implement','repair')])
         envelope = self.contract['authorization_envelope']
-        capabilities = ['read_file', 'write_file', 'request_owner_input', 'runner-git-commit', *registered_checks(self.authority.project)]
+        capabilities = ['read_file', 'search_file', 'write_file', 'edit_file', 'run_check', 'request_owner_input', 'runner-git-commit', *registered_checks(self.authority.project)]
         admission = AuthorityAdmission(envelope, self.config['profiles'], capabilities, self.config['permissions'],
                                        Approvals(self.authority.project, self.catalog).verify)
         gaps = admission.gaps(required_actions(self.contract,self.config))
@@ -216,8 +258,7 @@ class Coordinate:
                     if self.manifest['profile']!=profile:raise Blocked('exact node profile unavailable in supplied SDK manifest')
                 except Blocked as exc:
                     gaps.append({'kind':'profile','id':node['id'],'impact':str(exc),'options':['provide approved exact manifest','stop']})
-                expected={'read_file'}
-                if node['role']!='review' and any(task['owned_paths'] for task in self.contract['tasks']):expected.add('write_file')
+                expected=set(self._tools({'owned_paths':sorted({p for t in self.contract['tasks'] for p in t['owned_paths']}), 'required':[i for t in self.contract['tasks'] for i in t['required']]},review=node['role']=='review'))
                 if 'request_owner_input' in node['tools']:expected.add('request_owner_input')
                 try:
                     self.admit_node_tools(node,expected)
@@ -237,6 +278,7 @@ class Coordinate:
                     from jsonschema import Draft202012Validator
                     try:
                         Draft202012Validator(spec['schema']).validate(check['args'])
+                        if check['id']=='workflow.Command':project_command_argv(check['args'])
                         if check['id'] in ('workflow.FileBytes','workflow.PythonAnswer'):
                             safe_path(self.authority.project,check['args']['path'])
                     except Exception:
@@ -332,33 +374,76 @@ class Coordinate:
             path = safe_path(project, args['path'])
             if not path.is_file():
                 raise Blocked('authorized read unavailable: select an authorized regular file')
-            offset=args.get('offset',0);limit=args.get('limit',32768)
+            offset=args.get('offset',0);limit=args.get('limit',8192)
             with path.open('r', encoding='utf-8') as source:
                 source.seek(offset)
-                text=source.read(limit)
-                if args.get('query'):
-                    matches=[line for line in text.splitlines() if args['query'] in line]
-                    text='\\n'.join(matches)
+                query=args.get('query')
+                overlap=len(query)-1 if query else 0
+                if overlap>=limit:
+                    raise Blocked('search limit must exceed query length; increase limit and continue')
+                text=source.read(limit-overlap)
                 next_offset=source.tell()
+                text+=source.read(overlap) if overlap else ''
+                end_offset=source.tell()
                 eof=not source.read(1)
-            return {'text':text,'offset':offset,'next_offset':next_offset,'eof':eof,
-                    'continuation':None if eof else {'path':args['path'],'offset':next_offset,'limit':limit}}
-        # The contained helper performs the authorized file read; the result
-        # reader then returns only the requested bounded consumer chunk.
-        read = ProcessTool('read_file', '1', schema(readable, False),
-            lambda args: runtime_python('from coherence_workflow.store import safe_path; '
-                                       'p=safe_path(sys.argv[1],sys.argv[2]); '
-                                       'open(p, "r", encoding="utf-8").read(1)',
-                                       str(project), args['path']), (), self.environment, read_result)
-        tools = {'read_file': read}
+                if eof:next_offset=end_offset
+                if query:
+                    text='\n'.join(line for line in text.splitlines() if query in line)
+            continuation=None if eof else {'path':args['path'],'offset':next_offset,'limit':limit}
+            if continuation is not None and 'query' in args:continuation['query']=args['query']
+            return {'text':text,'offset':offset,'next_offset':next_offset,'eof':eof,'continuation':continuation}
+        # Reads are direct scoped observations, not fake contained processes.
+        read = ProcessTool('read_file', '1', schema(readable, False), None, (), self.environment, read_result)
+        search_schema=schema(readable, False);search_schema['required']=['path','query']
+        search = ProcessTool('search_file','1',search_schema,None,(),self.environment,read_result)
+        if review:
+            # Legacy review receipts still require their actual contained document
+            # read until the separately owned review protocol is retired.
+            return {'read_file':ProcessTool('read_file','1',schema(readable,False),
+                lambda args:runtime_python('from coherence_workflow.review_documents import read_bytes; '
+                    'read_bytes(__import__("pathlib").Path(sys.argv[1]),sys.argv[2],None)',str(project),args['path']),
+                (),self.environment,read_result)}
+        tools = {'read_file': read, 'search_file': search}
         if not review and task['owned_paths']:
-            write = ProcessTool('write_file', '1', schema(task['owned_paths'], True),
-                lambda args: runtime_python(
-                              'from coherence_workflow.store import safe_path; '
-                              'p=safe_path(sys.argv[1],sys.argv[2]); p.parent.mkdir(parents=True,exist_ok=True); '
-                              'p.write_text(sys.argv[3])', str(project), args['path'], args['text']),
-                tuple(task['owned_paths']), self.environment)
-            tools['write_file'] = write
+            def write_result(args, receipt):
+                path=owned_file(project,args['path'])
+                path.parent.mkdir(parents=True,exist_ok=True)
+                path.write_text(args['text'],encoding='utf-8')
+                return {'path':args['path'],'written':len(args['text'])}
+            tools['write_file']=ProcessTool('write_file','1',schema(task['owned_paths'],True),None,
+                tuple(task['owned_paths']),self.environment,write_result)
+            edit_schema={'type':'object','additionalProperties':False,'properties':{
+                'path':{'enum':sorted(task['owned_paths'])},'old':{'type':'string','minLength':1,'maxLength':32768},
+                'new':{'type':'string','maxLength':32768}},'required':['path','old','new']}
+            def edit_result(args, receipt):
+                path=owned_file(project,args['path'])
+                text=path.read_text(encoding='utf-8')
+                if text.count(args['old'])!=1:
+                    raise Blocked('edit target missing or ambiguous; read/search and supply a unique exact old region')
+                path.write_text(text.replace(args['old'],args['new'],1),encoding='utf-8')
+                return {'path':args['path'],'replacements':1}
+            tools['edit_file']=ProcessTool('edit_file','1',edit_schema,None,
+                tuple(task['owned_paths']),self.environment,edit_result)
+        if not review:
+            def check_result(args, receipt):
+                item=next(i for i in task['required'] if i['id']==args['item_id'])
+                hosts=receipt.get('admitted_host_ops',()) if receipt else ()
+                verifier=Verification(self.authority,self.run,
+                    registered_checks(project,self.gateway,admitted_host_ops=hosts),
+                    environment=self.verification.environment,authorize=self.authorize_check)
+                observed=verifier.run_checks({**task,'required':[item]},admitted_host_ops=hosts)
+                row=self.current()
+                evidence=json.loads(row['evidence']) if row['evidence'] else []
+                evidence=[e for e in evidence if e['item_id']!=item['id']]+observed
+                with self.store.transaction() as db:
+                    db.execute('UPDATE wf_tasks SET evidence=? WHERE run_id=? AND task_id=?',
+                        (canonical(evidence),self.run,task['id']))
+                return [{**{k:r.get(k) for k in ('item_id','evidence_id','status','reason','collected','exit_code')},
+                         'output':r.get('output','')[:8192],
+                         'output_truncated':len(r.get('output',''))>8192} for r in observed]
+            tools['run_check']=ProcessTool('run_check','1',{'type':'object','additionalProperties':False,
+                'properties':{'item_id':{'enum':[i['id'] for i in task['required']]}},'required':['item_id']},
+                None,(),self.environment,check_result)
         return tools
 
     def dispatch(self, context):
@@ -523,9 +608,8 @@ class Coordinate:
         admitted=set(self.gateway.tools)
         if 'request_owner_input' in node['tools']:admitted.add('request_owner_input')
         self.admit_node_tools(node,admitted)
-        origin = snapshot(self.authority.project,task['owned_paths']) if continuation or role=='repair' else json.loads(row['baseline'])
         attempt_id=task['id']+':'+str(attempt)+(':continue:'+continuation['gate_id'] if continuation else '')
-        self.gateway.bind_task_origin(attempt_id+':', task['owned_paths'], origin)
+        self.gateway.audit_task_boundary(task['owned_paths'], json.loads(row['baseline']))
         manifest = copy.deepcopy(self.manifest)
         if (manifest['profile'] != self.config['profiles'][node['profile']] or
                 len(manifest['skills']) != 1 or manifest['skills'][0]['sha256'] != self.config['skills'][node['skill']]['sha256']):

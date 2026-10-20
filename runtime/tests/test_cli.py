@@ -27,7 +27,7 @@ def retain_failure(case, result, inputs):
     import hashlib
     import shutil
     import uuid
-    root=ROOT/'.pi/workflow-validation/implementation/t005/diagnostics'
+    root=Path(tempfile.gettempdir())/'coherence-lean-T001-diagnostics'
     root.mkdir(parents=True,exist_ok=True)
     target=root/uuid.uuid4().hex;target.mkdir(mode=0o700)
     empty=[];errors=[]
@@ -154,7 +154,19 @@ class A2LiveDeliveryTests(IsolatedCustody):
         config['profiles']['terra-medium']=terra
         for node in config['nodes']:
             if node['type']=='agent': node['profile']='terra-medium'
-        large=self.project/'large.txt';large.write_text('A2 continuation source\n'+'x'*35400)
+        import uuid
+        token=uuid.uuid4().hex
+        large=self.project/'large.py'
+        large.write_text('# Project source: scoped continuation and exact region editing.\n'*700+
+                         '# continuation token: '+token+'\n')
+        owned_source='# Application source: preserve this existing implementation commentary.\n'*700+"RESULT = 'pending'\n"
+        (self.project/'owned.txt').write_text(owned_source)
+        git(self.project,'add','--','owned.txt');git(self.project,'commit','-qm','large project source baseline')
+        check_script=self.project/'check_project.py'
+        check_script.write_text('import runpy\nfrom pathlib import Path\n'
+            'expected=Path("large.py").read_text().split("# continuation token: ")[1].strip()\n'
+            'assert runpy.run_path("owned.txt")["RESULT"] == expected\n'
+            'print("project command: continuation-derived RESULT validated")\n')
         unavailable=self.project/'read-error.txt';unavailable.write_text('remove after admission')
         sdk=manifest(self.project,tools=False)
         sdk['profile']=terra
@@ -165,13 +177,19 @@ class A2LiveDeliveryTests(IsolatedCustody):
             private.chmod(0o700)
         contract,catalog=approved_fixture(self.project,digest(config))
         task=contract['tasks'][0];contract['tasks']=[task]
-        task['outcome']=('First read read-error.txt; its safe unavailable result must be corrected in this same attempt. '
-                         'Then read large.txt at offset 0 and use its continuation offset to read the rest (>32768 bytes). '
-                         'Finally read owned.txt and replace it exactly with '+repr('a2 complete\n')+'.')
-        task['required'][0]['check']['args']['expected']='a2 complete\n'
-        task['required'][0]['pass_condition']='real project file check after the owned edit'
-        contract['sources'] += [{'path':'large.txt','section':None,'sha256':content_hash(large),'kind':'source'},
-                                {'path':'read-error.txt','section':None,'sha256':content_hash(unavailable),'kind':'source'}]
+        task['outcome']=(
+            'First read read-error.txt; correct its safe unavailable error in this SAME attempt by reading large.py. '
+            'Read large.py from offset 0 using limit 32768, then use returned continuation to read the tail. '
+            'Extract the continuation token from the actual returned tail text. '
+            'Read/search owned.txt (a large Python source), then use edit_file to replace the unique exact '
+            'region RESULT = '+repr('pending')+' with RESULT = followed by the quoted extracted token. '
+            'Preserve every other byte; do NOT replace the whole large file. '
+            'Use run_check for the approved REQUIRED item '+task['required'][0]['id']+'.')
+        task['required'][0]['check']={'id':'workflow.Command','version':'1',
+            'args':{'argv':[str(Path(sys.executable).resolve()),str(check_script)]}}
+        task['required'][0]['pass_condition']='real project command validates the continuation-derived source result'
+        contract['sources'] += [{'path':p.name,'section':None,'sha256':content_hash(p),'kind':'source'}
+                                for p in (large,unavailable,check_script)]
         contract['execution_intent']['compatible_bindings']=[{**{k:terra[k] for k in ('provider','model','effort')},
             'assessment':'single isolated A2 configured binding','provenance':'current owner-authorized A2 exercise'}]
         contract['authorization_envelope']['profiles']=[terra]
@@ -186,29 +204,62 @@ class A2LiveDeliveryTests(IsolatedCustody):
             unavailable.unlink()  # Authorized path remains readable but safely unavailable at tool use.
             self.assertEqual(coordinate.authority_check({}),{'outcome':'ok'})
             self.assertEqual(coordinate.select({}),{'outcome':'work'})
-            observed_reads=[];launch=coordinate.gateway.launch
-            def capture_launch(node, tool_id, version, args, *rest, **kwargs):
-                if tool_id=='read_file': observed_reads.append(dict(args))
-                return launch(node,tool_id,version,args,*rest,**kwargs)
-            coordinate.gateway.launch=capture_launch
+            observed_tools=[];factory=coordinate._tools
+            from dataclasses import replace
+            def capture_tools(*args,**kwargs):
+                tools=factory(*args,**kwargs)
+                def capture(tool):
+                    reader=tool.result_reader
+                    def observed(args,receipt):
+                        event={'tool':tool.id,'args':dict(args)};observed_tools.append(event)
+                        try:
+                            result=reader(args,receipt)
+                            if tool.id in ('read_file','search_file'):
+                                event['result']=result
+                            elif tool.id=='run_check':event['statuses']=[r['status'] for r in result]
+                            else:event['result']=result
+                            return result
+                        except Exception as exc:
+                            event['error']=str(exc);raise
+                    return replace(tool,result_reader=observed)
+                return {key:capture(tool) for key,tool in tools.items()}
+            coordinate._tools=capture_tools
             node=next(n for n in config['nodes'] if n['id']=='implement')
             self.assertEqual(coordinate.implement({'node':node,'operation_id':'a2-implement'}),{'outcome':'ok'})
             verification=coordinate.verify({})
             self.assertEqual(verification,{'outcome':'ok'}, canonical({'verification':verification,
-                'owned':(self.project/'owned.txt').read_text(), 'reads':observed_reads,
+                'owned':(self.project/'owned.txt').read_text(), 'tools':observed_tools,
                 'evidence':[json.loads(row[0]) for row in authority.store.db.execute("SELECT receipt FROM wf_checks WHERE run_id='a2'")]}))
             self.assertEqual(coordinate.checkpoint({}),{'outcome':'ok'})
             row=authority.store.db.execute("SELECT checkpoint FROM wf_tasks WHERE run_id='a2' AND task_id='A'").fetchone()
             checkpoint=json.loads(row[0]);self.assertFalse(checkpoint['read_only'])
-            self.assertEqual((self.project/'owned.txt').read_text(),'a2 complete\n')
-            self.assertTrue(any(value.get('path')=='read-error.txt' for value in observed_reads))
-            self.assertTrue(any(value.get('path')=='large.txt' and value.get('offset',0)==0 for value in observed_reads))
-            self.assertTrue(any(value.get('path')=='large.txt' and value.get('offset',0)>=32768 for value in observed_reads))
+            self.assertEqual((self.project/'owned.txt').read_text(),owned_source.replace("RESULT = 'pending'","RESULT = "+repr(token)))
+            failed=[e for e in observed_tools if e['args'].get('path')=='read-error.txt' and 'error' in e]
+            self.assertTrue(failed,observed_tools)
+            reads=[e for e in observed_tools if e['tool']=='read_file' and e['args']['path']=='large.py' and 'result' in e]
+            self.assertTrue(any(e['args'].get('offset',0)==0 for e in reads))
+            self.assertTrue(any(e['args'].get('offset',0)>=32768 and token in e['result']['text'] for e in reads))
+            self.assertTrue(any(e['tool']=='edit_file' and 'result' in e for e in observed_tools))
+            self.assertTrue(any(e['tool']=='run_check' and e.get('statuses')==['satisfied'] for e in observed_tools))
+            processes=authority.store.db.execute('SELECT o.phase,p.containment FROM wf_processes p JOIN wf_operations o USING(op_id)').fetchall()
+            for process in processes:
+                self.assertEqual(process['phase'],'completed')
+                receipt=json.loads(process['containment'])
+                self.assertEqual(coordinate.gateway.containment.populated(receipt),0)
+                if receipt not in self.receipts:self.receipts.append(receipt)
+            self.assertEqual(authority.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE kind='sdk-turn' AND phase='completed'").fetchone()[0],1)
             observed=[json.loads(row[0]) for row in authority.store.db.execute("SELECT payload FROM wf_events WHERE kind LIKE 'sdk:%'")]
             self.assertTrue(any(value.get('model')=='gpt-5.6-terra' and value.get('wire_effort')=='medium' for value in observed))
-            print(canonical({'proof':'a2-single-task','binding':terra,'baseline':checkpoint['parent'],
+            print(canonical({'proof':'a2-single-task','binding':terra,
+                'observed_binding':next({k:value[k] for k in ('provider','model','wire_effort') if k in value} for value in observed if value.get('model')=='gpt-5.6-terra' and value.get('wire_effort')=='medium'),
+                'attempt_id':json.loads(authority.store.db.execute("SELECT intent FROM wf_operations WHERE kind='sdk-turn' AND phase='completed'").fetchone()[0])['attempt_id'],
+                'baseline':checkpoint['parent'],
                 'result':checkpoint['sha'],'check':json.loads(authority.store.db.execute("SELECT receipt FROM wf_checks WHERE run_id='a2'").fetchone()[0]),
-                'read_operations':observed_reads,'custody':'all recorded process scopes settled before checkpoint'}))
+                'tool_operations':[{**e,'result':({k:v for k,v in e['result'].items() if k!='text'} if isinstance(e.get('result'),dict) else e.get('result'))} for e in observed_tools],
+                'diff':git(self.project,'diff',checkpoint['parent'],checkpoint['sha'],'--stat').decode(),
+                'owned_diff':git(self.project,'diff','--unified=1',checkpoint['parent'],checkpoint['sha'],'--','owned.txt').decode(),
+                'process_tools':[json.loads(row[0])['tool'] for row in authority.store.db.execute("SELECT intent FROM wf_operations WHERE kind='process'")],
+                'settled_processes':len(processes),'custody':'all recorded process scopes settled before checkpoint'}))
 
 
 class SequentialCliTests(IsolatedCustody):
@@ -217,53 +268,33 @@ class SequentialCliTests(IsolatedCustody):
 
 
 class DiagnosticRetentionTests(IsolatedCustody):
-    def test_offline_schema_failure_is_sanitized_retained_drained_and_not_released(self):
+    def test_offline_invalid_arguments_return_correctable_error_without_process_or_poison(self):
+        from types import SimpleNamespace
         from coherence_workflow.pi_adapter import PiAdapter
-        from coherence_workflow.store import Authority, Blocked
-        from test_pi_adapter import environment
-        from fixtures.custody_support import process_tool
+        from test_review_repair import coordinate_fixture
+        from unittest.mock import patch
         with Authority(self.project) as owner:
-            gateway=self.gateway(owner)
-            sdk=manifest(self.project)
-            adapter=PiAdapter(gateway,sdk,node='offline-diagnostic-host',environment=environment(),
-                session_context={'role':'implement','affinity':'story','review_lineage':None})
-            for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
-                self.receipts.append(json.loads(row[0]))
-            original_send=adapter.send;initial_generation=adapter.snapshot['generation']
-            def inject(op,payload,**kwargs):
-                if op=='prompt':
-                    adapter.current['command_id']='offline-no-send'
-                    adapter._launch_tool({**adapter.binding,'operation_id':adapter.current['operation_id'],
-                        'attempt_id':adapter.current['attempt_id'],'session_id':adapter.session_id,
-                        'command_id':'offline-no-send','payload':{
-                        'generation':adapter.lifecycle.generation,'call':'invalid-schema-fixture','tool':'fixture','version':'1',
-                        'args':{'mode':'DO_NOT_LOG_AUTH_SENTINEL','exit':0}}})
-                    raise AssertionError('schema fixture unexpectedly admitted')
-                # No prompt reached the actual host; drain its observed initial generation.
-                if op=='abort':payload={**payload,'generation':initial_generation}
-                return original_send(op,payload,**kwargs)
-            adapter.send=inject
-            with self.assertRaisesRegex(Blocked,'cause=tool_or_record_schema; phase=tool_admission'):
-                adapter.prompt(node='offline-schema',task_id='offline-schema',attempt_id='offline-schema:0',role='implement',
-                    text='Offline no-send schema fixture.',skill='bounded-proof',contract_hash=digest('offline-schema'),selection={'reason':'offline-no-send'})
-            self.assertTrue(adapter.lifecycle.poisoned)
-            self.assertFalse(any(r['type']=='request_observation' for r in adapter.records),'offline seam made a provider request')
-            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],1,'invalid tool launched a process')
-            pending=owner.store.db.execute("SELECT * FROM wf_operations WHERE kind='sdk-turn'").fetchone()
-            self.assertEqual(pending['phase'],'intent');self.assertIsNone(pending['result'])
-            diagnostic=json.loads(owner.store.db.execute("SELECT payload FROM wf_events WHERE kind='sdk_failure_diagnostic'").fetchone()[0])
-            self.assertEqual(diagnostic['schema_validator'],'enum')
-            self.assertEqual(diagnostic['classification'],'tool_or_record_schema')
-            adapter.close(force=True)
-            result=subprocess.CompletedProcess(['offline-schema-fixture'],2,'sanitized offline schema blocker','')
-            retained=retain_failure(self,result,{})
-            metadata=(retained/'metadata.json').read_text()
-            self.assertNotIn('DO_NOT_LOG_AUTH_SENTINEL',metadata)
-            self.assertFalse(json.loads(metadata)['cleanup_errors'])
-            self.assertEqual(json.loads(metadata)['environment_hash'],digest(json.loads(metadata)['environment']))
-            self.assertTrue(all(r['populated']==0 for r in json.loads(metadata)['empty_receipts']))
-            self.assertTrue((retained/'project/.coherence/workflow/workflow.sqlite').is_file())
-            self.assertTrue((retained/'project/.coherence/workflow/sdk/sessions').is_dir())
+            coordinate=coordinate_fixture(self.project,owner)
+            tool=coordinate._tools(coordinate.contract['tasks'][0])['read_file']
+            adapter=object.__new__(PiAdapter)
+            adapter.gateway=coordinate.gateway;adapter.gateway.tools={tool.id:tool}
+            adapter.manifest={'tools':[{'name':tool.id,'version':'1','parameters':tool.arguments}]}
+            adapter.lifecycle=SimpleNamespace(active=True,poisoned=False,generation=1)
+            adapter.compatibility={'role':'implement'};adapter.binding={'run_id':'run'}
+            adapter.current={'operation_id':'offline','attempt_id':'A:0','command_id':'offline-command'}
+            adapter.session_id='offline-session';adapter.tool_calls_seen=set();adapter.question_gate=None
+            replies=[];dispositions=[]
+            adapter.send=lambda *args,**kwargs:replies.append((args,kwargs))
+            adapter._tool_disposition=lambda record,state,**kwargs:dispositions.append(state)
+            record={**adapter.binding,**adapter.current,'session_id':adapter.session_id,
+                'payload':{'generation':1,'call':'invalid','tool':tool.id,'version':'1','args':{'path':'../escape'}}}
+            with patch.object(adapter.gateway,'launch',side_effect=AssertionError('invalid arguments launched process')):
+                adapter._launch_tool(record)
+            output=json.loads(replies[0][0][1]['result']['content'][0]['text'])
+            self.assertIn('invalid arguments',output['error']['message'])
+            self.assertIn('continue',output['error']['correction'])
+            self.assertEqual(dispositions,['invalid_arguments']);self.assertFalse(adapter.lifecycle.poisoned)
+            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
 
 class CliPreflightTests(IsolatedCustody):
@@ -300,7 +331,7 @@ class CliPreflightTests(IsolatedCustody):
             task=json.loads(coordinate.store.db.execute('SELECT contract FROM wf_tasks WHERE task_id=?',('A',)).fetchone()[0])
             actual=coordinate._tools(task)
             Coordinate.admit_node_tools({'tools':list(actual),'permissions':list(actual)},actual)
-            self.assertEqual(set(actual),{'read_file','write_file'})
+            self.assertEqual(set(actual),{'read_file','search_file','write_file','edit_file','run_check'})
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
     def test_raw_cli_yaml_rejects_alias_duplicate_tag_and_oversize_before_store_or_dispatch(self):
@@ -318,7 +349,7 @@ class CliPreflightTests(IsolatedCustody):
             self.assertEqual(json.loads(result.stdout)['status'],'blocked')
             self.assertFalse((self.project/'.coherence/workflow/workflow.sqlite').exists())
 
-    def test_upfront_gap_output_aggregates_profile_check_git_and_gate_without_dispatch(self):
+    def test_upfront_gap_output_aggregates_profile_check_and_git_without_dispatch(self):
         from coherence_workflow.store import Authority, Blocked
         from test_review_repair import coordinate_fixture
         with Authority(self.project) as owner:
@@ -327,7 +358,7 @@ class CliPreflightTests(IsolatedCustody):
             coordinate.contract['tasks'][0]['required'][0]['check']['id']='workflow.NotRegistered'
             with self.assertRaisesRegex(Blocked,'known admission gaps') as error:coordinate.authority_check({})
             gaps=json.loads(str(error.exception).split(': ',1)[1])
-            self.assertTrue({'profile','check','git_capability','gate'} <= {gap['kind'] for gap in gaps})
+            self.assertTrue({'profile','check','git_capability'} <= {gap['kind'] for gap in gaps})
             self.assertTrue(all(gap['impact'] and gap['options'] for gap in gaps))
             self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
@@ -355,41 +386,81 @@ class CliPreflightTests(IsolatedCustody):
 
 class LeanReadinessTests(unittest.TestCase):
     def test_five_facts_and_invalidation_boundaries(self):
-        # Intake is complete admission; a later tool boundary rejects only
-        # active-contract drift rather than replaying intake for each read.
         from coherence_workflow.store import Authority
+        from coherence_workflow.engine import load_workflow
         from test_review_repair import coordinate_fixture
+        from unittest.mock import patch
+        from fixtures.support import make_project
         with tempfile.TemporaryDirectory() as temporary:
-            from fixtures.support import make_project
             project=make_project(Path(temporary)/'project')
+            def setup(contract):
+                config=yaml.safe_load((ROOT/'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
+                contract['authorization_envelope']['profiles']=[config['profiles']['sol-medium']]
             with Authority(project) as authority:
-                coordinate=coordinate_fixture(project,authority)
-                coordinate.intake({})
-                coordinate.verify_action_origin()
-                coordinate.contract['tasks'][0]['outcome']='changed after intake'
+                c=coordinate_fixture(project,authority,task_setup=setup)
+                self.assertEqual(load_workflow(c.registry(),resource_root=ROOT),c.config)
+                self.assertEqual(c.authority_check({}),{'outcome':'ok'})
+                original=copy.deepcopy(c.contract)
+                c.contract['tasks'][0]['depends']=['B']
+                with self.assertRaises(Blocked):c.intake({})
+                c.contract=copy.deepcopy(original)
+                approval=project/c.contract['approval_refs'][0]['record_ref']
+                saved=approval.read_bytes();approval.write_text('not the approved record')
+                with self.assertRaisesRegex(Blocked,'approval record content drift'):c.intake({})
+                approval.write_bytes(saved)
+                profile=c.manifest['profile'];c.manifest['profile']={**profile,'model':'unavailable'}
+                with self.assertRaisesRegex(Blocked,'known admission gaps'):c.authority_check({})
+                c.manifest['profile']=profile
+                check=c.contract['tasks'][0]['required'][0]['check']
+                c.contract['tasks'][0]['required'][0]['check']={**check,'id':'workflow.Unavailable'}
+                with self.assertRaisesRegex(Blocked,'REQUIRED oracle unavailable|known admission gaps'):c.authority_check({})
+                c.contract=copy.deepcopy(original)
+                # A second actual authority and dirty owned overlap both stop selection.
+                with self.assertRaises(Blocked):Authority(project)
+                owned=project/'owned.txt';saved=owned.read_bytes();owned.write_text('unrelated preexisting edit')
+                with self.assertRaisesRegex(Blocked,'dirty owned overlap'):c.select({})
+                owned.write_bytes(saved)
+                self.assertEqual(c.select({}),{'outcome':'work'})
+                c.agent_node=next(n for n in c.config['nodes'] if n['id']=='implement')
+                c.gateway.tools=c._tools(c.contract['tasks'][0])
+                # Tool calls do not recursively re-admit the whole contract.
+                with patch('coherence_workflow.cli.admit',side_effect=AssertionError('repeated intake')):
+                    self.assertEqual(c.gateway.direct('read_file',{'path':'owned.txt'})['text'],'base')
+                c.contract['tasks'][0]['outcome']='changed after intake'
                 with self.assertRaisesRegex(Blocked,'contract drift'):
-                    coordinate.verify_action_origin()
+                    c.gateway.direct('read_file',{'path':'owned.txt'})
+                self.assertEqual(authority.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
 
 class LeanCheckpointTests(unittest.TestCase):
     def test_required_check_and_gate_precede_commit(self):
-        from coherence_workflow.git_effects import GitEffects
         from coherence_workflow.store import Authority
         from fixtures.support import make_project
+        from test_review_repair import coordinate_fixture
+        from unittest.mock import patch
         with tempfile.TemporaryDirectory() as temporary:
             project=make_project(Path(temporary)/'project')
-            class NoLaunch:
-                tools={}
-                def launch(self,*args,**kwargs):
-                    raise AssertionError('commit launched before required evidence/gate')
             with Authority(project) as authority:
-                authority.store.reserve('lean','fixture')
-                effects=GitEffects(authority,'lean',NoLaunch())
-                task={'id':'T','owned_paths':['owned.txt'],'required':[{'id':'T/V'}]}
-                baseline=effects.begin(task)
-                (project/'owned.txt').write_text('changed')
-                with self.assertRaisesRegex(Blocked,'REQUIRED evidence/original gates'):
-                    effects.checkpoint(task,baseline,[],gates_satisfied=False)
+                c=coordinate_fixture(project,authority)
+                c.select({});task=c.contract['tasks'][0]
+                c.agent_node=next(n for n in c.config['nodes'] if n['id']=='implement')
+                c.gateway.tools=c._tools(task)
+                with patch.object(c.gateway,'launch',side_effect=AssertionError('commit before REQUIRED/gates')):
+                    # Actual failed REQUIRED receipt; original (empty) gates are true.
+                    self.assertTrue(c.gates_satisfied(task))
+                    self.assertNotEqual(c.verify({}),{'outcome':'ok'})
+                    evidence=json.loads(c.current()['evidence'])
+                    self.assertEqual(c.verification.audit(task,evidence)[0]['status'],'failed')
+                    with self.assertRaisesRegex(Blocked,'REQUIRED evidence/original gates'):c.checkpoint({})
+                    # Correct the source and collect a genuine satisfied receipt.
+                    c.gateway.direct('write_file',{'path':'owned.txt','text':'first\n'})
+                    self.assertEqual(c.verify({}),{'outcome':'ok'})
+                    evidence=json.loads(c.current()['evidence'])
+                    self.assertEqual(c.verification.audit(task,evidence)[0]['status'],'satisfied')
+                    with patch.object(c,'gates_satisfied',return_value=False):
+                        with self.assertRaisesRegex(Blocked,'REQUIRED evidence/original gates'):c.checkpoint({})
+                self.assertEqual(authority.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE kind='git-checkpoint'").fetchone()[0],0)
+                self.assertEqual(authority.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
 
 
 class InternalPythonBindingTests(IsolatedCustody):
@@ -422,12 +493,9 @@ class InternalPythonBindingTests(IsolatedCustody):
                     if path:env['PYTHONPATH']=path
                     with patch.dict(os.environ,env,clear=True):
                         # Root task-origin custody permits the second understood owned write.
-                        if index==0:c.gateway.bind_task_origin('internal:',task['owned_paths'],json.loads(c.current()['baseline']))
-                        op,process=c.gateway.launch('internal:'+str(index),'write_file','1',{'path':'owned.txt','text':'first\n'})
-                        receipt=c.gateway.settle(op,process.wait(timeout=10));self.assertTrue(receipt['replacement_allowed'])
-                        read,reader=c.gateway.launch('read:'+str(index),'read_file','1',{'path':'owned.txt'})
-                        observed=c.gateway.settle(read,reader.wait(timeout=10))
-                        self.assertEqual(c.gateway.tools['read_file'].result_reader({'path':'owned.txt'},observed)['text'],'first\n')
+                        if index==0:c.gateway.audit_task_boundary(task['owned_paths'],json.loads(c.current()['baseline']))
+                        c.gateway.direct('write_file',{'path':'owned.txt','text':'first\n'})
+                        self.assertEqual(c.gateway.direct('read_file',{'path':'owned.txt'})['text'],'first\n')
                 self.assertFalse(marker.exists())
                 # Distinct explicit oracle capability intentionally executes trusted project imports.
                 evidence=c.verification.run_checks(task)

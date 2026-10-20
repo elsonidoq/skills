@@ -90,9 +90,9 @@ class Verification:
             raise Blocked('unmet/denied/cancelled/stale manual sample STOP')
         return True
 
-    def run_checks(self, task):
+    def run_checks(self, task, *, admitted_host_ops=()):
         self.authority.assert_held()
-        self.store.assert_dispatchable(self.run)
+        self.store.assert_dispatchable(self.run,admitted_host_ops=admitted_host_ops)
         results, shared = [], {}
         for item in task['required']:
             identity = item_identity(self.authority.project, task, item, self.environment)

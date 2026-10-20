@@ -101,16 +101,12 @@ class AuthorityCompositionTests(unittest.TestCase):
         task=self.contract['tasks'][0];baseline=self.c.git.begin(task)
         self.c.agent_node=next(n for n in self.config['nodes'] if n['id']=='implement')
         self.c.gateway.tools=self.c._tools(task)
-        op,process=self.c.gateway.launch('authorized-write','write_file','1',{'path':'owned.txt','text':'first\n'})
-        receipt=self.c.gateway.settle(op,process.wait(timeout=10))
-        self.assertTrue(receipt['replacement_allowed'])
-        # Cleanup only the exact new owned empty scope.
-        record,scope=self.c.gateway._record(op);self.c.gateway.containment.remove(scope)
+        self.assertEqual(self.c.gateway.direct('write_file',{'path':'owned.txt','text':'first\n'})['written'],6)
         evidence=self.c.verification.run_checks(task);self.assertEqual(evidence[0]['status'],'satisfied')
         before=snapshot(self.project,[])
         self.c.contract['authorization_envelope']['capabilities']=[]
         for action in (lambda:self.c.verification.run_checks(task),
-                       lambda:self.c.gateway.launch('denied-write','write_file','1',{'path':'owned.txt','text':'denied'}),
+                       lambda:self.c.gateway.direct('write_file',{'path':'owned.txt','text':'denied'}),
                        lambda:self.c.git.checkpoint(task,baseline,self.c.verification.audit(task,evidence),gates_satisfied=True)):
             with self.assertRaises(Blocked):action()
         self.assertEqual(before,snapshot(self.project,[]))

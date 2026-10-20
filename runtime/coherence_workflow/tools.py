@@ -26,11 +26,14 @@ def owned_file(project, name):
     if name.startswith(('.git/', '.coherence/')) or name in ('.git', '.coherence'):
         raise Blocked('tools cannot mutate authority storage: ' + name)
     try:
-        mode = p.lstat().st_mode
+        info = p.lstat()
+        mode = info.st_mode
     except FileNotFoundError:
         return p
     if not stat.S_ISREG(mode):
         raise Blocked('owned tool path must be a file: ' + name + ' (' + entry_kind(mode) + ')')
+    if info.st_nlink != 1:
+        raise Blocked('owned tool path is hard-linked: '+name+'; use an independent regular file before editing')
     return p
 
 
@@ -206,6 +209,8 @@ class ProcessTool:
 
     def argv(self, args):
         Draft202012Validator(self.arguments).validate(args)
+        if self.build_argv is None:
+            raise Blocked('direct tool has no process argv')
         result = self.build_argv(args)
         if not isinstance(result, list) or not result or not all(isinstance(x,str) and '\0' not in x for x in result):
             raise Blocked('invalid registered argv')
@@ -224,48 +229,11 @@ class Gateway:
         self.tools = dict(tools)
         self.authorize = authorize
         self.require_authorization = require_authorization
-        self.task_origin = None
 
-    def bind_task_origin(self, prefix, owned, baseline):
-        if snapshot(self.authority.project, owned) != baseline:
-            raise Blocked('task origin is not current verified baseline')
-        self.task_origin = (prefix, tuple(owned), baseline)
-
-    def _owned_admission(self, owned):
-        if not self.task_origin or tuple(owned) != self.task_origin[1]:
-            clean_owned(self.authority.project, owned)
-            return
-        prefix, _, expected = self.task_origin
-        rows = self.store.db.execute("""SELECT o.* FROM wf_operations o JOIN wf_events e
-            ON e.op_id=o.op_id AND e.kind='intent' WHERE o.run_id=? AND o.kind='process' ORDER BY e.seq""", (self.run,)).fetchall()
-        matched = False
-        for row in rows:
-            if not row['node_id'].startswith(prefix):
-                continue
-            details = json.loads(row['intent'])
-            if details['scope_kind'] != 'task_tools':
-                continue
-            # Reads are settled/custodied separately but carry no mutation
-            # baseline into a later owned-write audit chain.
-            if not details['owned_paths']:
-                continue
-            if row['phase'] != 'completed':
-                raise Blocked('unsettled task-origin operation')
-            process, receipt = self._record(row['op_id'])
-            result = json.loads(row['result'])
-            if (self.containment.populated(receipt) or not result.get('replacement_allowed') or
-                    any(details['baseline'][k] != expected[k] for k in ('head','index','files'))):
-                raise Blocked('task-origin audit chain gap')
-            event = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='completed'", (row['op_id'],)).fetchone()
-            if not event or event[0] != row['result'] or process['reconciliation'] != canonical(result['reconciliation']):
-                raise Blocked('task-origin result/event mismatch')
-            expected = result['reconciliation']
-            matched = True
-        now = snapshot(self.authority.project, owned)
-        if any(now[k] != expected[k] for k in ('head','index','files')):
-            raise Blocked('unexplained task-origin drift')
-        if not matched:
-            clean_owned(self.authority.project, owned)
+    def audit_task_boundary(self, owned, baseline):
+        """Audit owned/unrelated material once before a task attempt, not per tool."""
+        self.authority.assert_held()
+        reconcile(self.authority.project, owned, baseline)
 
     def command_identity(self, node, tool_id, argv, environment):
         """Executable payload is private; only safe commit argv is required for replay audit."""
@@ -310,12 +278,9 @@ class Gateway:
         owned = list(tool.owned_paths)
         if len(set(owned)) != len(owned):
             raise Blocked('duplicate owned paths')
-        if owned or scope_kind=='host':
-            self._owned_admission(owned)
-            baseline = snapshot(self.authority.project, owned)
-        else:
-            # Read-only task tools do not recursively fingerprint the worktree.
-            baseline = read_baseline(self.authority.project)
+        for path in owned:
+            owned_file(self.authority.project, path)
+        baseline = read_baseline(self.authority.project)
         nonce = uuid.uuid4().hex
         name = self.containment.reserve_name()
         details = {'tool': tool_id, 'version': version, **self.command_identity(node,tool_id,argv,tool.environment),
@@ -391,8 +356,7 @@ class Gateway:
             if durable_receipt != receipt or json.loads(registered['identity']) != identity:
                 raise Blocked('durable registration differs before release')
             self.containment.member(receipt, identity, nonce)
-            current=(reconcile(self.authority.project,owned,baseline) if owned or scope_kind=='host' else
-                     reconcile_read(self.authority.project,baseline))
+            current=reconcile_read(self.authority.project,baseline)
             if current != baseline:
                 raise Blocked('owned path drift before release')
             self.store.transition(op,'prepared','released',{'nonce':nonce})
@@ -458,72 +422,8 @@ class Gateway:
             return {'outcome':'idle_host','replacement_allowed':False}
         return self.resolve(op, drain=False)
 
-    def _host_reconciliation(self, operation, details):
-        """Replay only durable, kernel-empty same-run tool audits since host launch.
-
-        Host lifetime spans task writes, but owns none of them. Original snapshots
-        remain immutable; unknown gaps, forged receipts or Git changes still block.
-        """
-        import copy
-        if self.store.db.execute("SELECT 1 FROM wf_alarms WHERE state='active'").fetchone():
-            raise Blocked('host reconciliation blocked by active orphan alarm')
-        original = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='intent'",(operation['op_id'],)).fetchone()
-        if not original or original[0] != operation['intent']:
-            raise Blocked('host original intent/event mismatch')
-        expected = copy.deepcopy(details['baseline'])
-        chain = []
-        start = self.store.db.execute("SELECT seq FROM wf_events WHERE op_id=? AND kind='intent'",(operation['op_id'],)).fetchone()[0]
-        rows = self.store.db.execute("""SELECT o.*, e.seq FROM wf_operations o
-            JOIN wf_processes p USING(op_id) JOIN wf_events e ON e.op_id=o.op_id AND e.kind='intent'
-            WHERE o.run_id=? AND p.scope_kind='task_tools' AND e.seq>? ORDER BY e.seq""",(self.run,start)).fetchall()
-        # Preserve registered host-owned paths supported by the foundation (its
-        # lifecycle fixture has these). SDK hosts own no worktree files. Mixing
-        # direct host writes with task-tool audit chains is not supported.
-        if details['owned_paths']:
-            if rows:
-                raise Blocked('mixed direct host writes/task-tool audit unavailable')
-            return reconcile(self.authority.project,details['owned_paths'],details['baseline']), []
-        for row in rows:
-            row = dict(row)
-            process, receipt = self._record(row['op_id'])
-            if row['phase'] != 'completed' or self.containment.populated(receipt) != 0:
-                raise Blocked('host has unresolved task-tool effects')
-            result = json.loads(row['result'])
-            event = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='completed'",(row['op_id'],)).fetchone()
-            if not event or event[0] != row['result'] or not result.get('replacement_allowed'):
-                raise Blocked('task-tool completed receipt/event mismatch')
-            intent = json.loads(row['intent'])
-            original = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='intent'",(row['op_id'],)).fetchone()
-            if not original or original[0] != row['intent']:
-                raise Blocked('task-tool original intent/event mismatch')
-            before, after = intent['baseline'], result['reconciliation']
-            if not intent['owned_paths']:
-                # A read is contained and settled, but carries no worktree
-                # mutation proof to splice into the host's task boundary audit.
-                if before != after:
-                    raise Blocked('scoped read Git drift')
-                continue
-            if any(before[k] != expected[k] for k in ('head','index','files')):
-                raise Blocked('host task-tool audit chain gap')
-            if after['head'] != before['head'] or after['index'] != before['index']:
-                raise Blocked('host cannot reconcile runner Git changes yet')
-            owned = intent['owned_paths']
-            for name in set(before['files']) | set(after['files']):
-                if unrelated_drift(name, before['files'].get(name), after['files'].get(name), owned):
-                    raise Blocked('unrelated task-tool receipt drift')
-            if result['empty_receipt']['containment'] != receipt or result['empty_receipt']['populated'] != 0:
-                raise Blocked('task-tool empty receipt mismatch')
-            if json.loads(process['reconciliation']) != after or json.loads(process['empty_receipt']) != result['empty_receipt']:
-                raise Blocked('task-tool process/result mismatch')
-            expected['files'] = after['files']
-            chain.append(row['op_id'])
-        now = snapshot(self.authority.project, details['owned_paths'])
-        if any(now[k] != expected[k] for k in ('head','index','files')):
-            raise Blocked('unexplained host lifetime file/Git drift')
-        return now, chain
-
     def resolve(self, op, drain=True):
-        """Empty AND actual partial-work/Git audit required. Does not grant task acceptance."""
+        """Empty custody and Git identity required; task-boundary audit owns file acceptance."""
         row, receipt = self._record(op)
         operation = self.store.operation(op)
         details = json.loads(operation['intent'])
@@ -532,12 +432,8 @@ class Gateway:
             if details['tool'] == 'runner-git-commit':
                 from .git_effects import reconcile_commit_process
                 current = reconcile_commit_process(self.authority, op)
-            elif row['scope_kind']=='host':
-                current=snapshot(self.authority.project,details['owned_paths'])
-            elif not details['owned_paths']:
-                current=reconcile_read(self.authority.project,details['baseline'])
             else:
-                current=reconcile(self.authority.project,details['owned_paths'],details['baseline'])
+                current=reconcile_read(self.authority.project,details['baseline'])
             if (self.containment.populated(receipt) != 0 or current != recorded['reconciliation']):
                 raise Blocked('completed tool receipt no longer applicable')
             return recorded
@@ -547,17 +443,11 @@ class Gateway:
             raise Blocked('task tools not quiescent')
         if details['tool'] == 'runner-git-commit':
             from .git_effects import reconcile_commit_process
-            observed, chain = reconcile_commit_process(self.authority, op), []
-        elif row['scope_kind'] == 'host':
-            observed, chain = self._host_reconciliation(operation, details)
-        elif not details['owned_paths']:
-            observed, chain = reconcile_read(self.authority.project, details['baseline']), []
+            observed = reconcile_commit_process(self.authority, op)
         else:
-            observed, chain = reconcile(self.authority.project, details['owned_paths'], details['baseline']), []
+            observed = reconcile_read(self.authority.project, details['baseline'])
         result = {'logical_exit':row['exit_code'],'empty_receipt':empty,'reconciliation':observed,
                   'replacement_allowed':True, 'task_accepted':False}
-        if row['scope_kind'] == 'host':
-            result['task_tool_chain'] = chain
         with self.store.transaction() as db:
             db.execute('UPDATE wf_processes SET empty_receipt=?,reconciliation=? WHERE op_id=?',
                        (canonical(empty),canonical(observed),op))
@@ -569,84 +459,38 @@ class Gateway:
         return result
 
     def verify_closed_host(self, op):
-        """Reconcile a saved conversation through later VERIFIED checkpoints.
+        """Session reuse requires a settled original host and current task-boundary audit.
 
-        Original host/tool snapshots are immutable. Only an exact ordered chain
-        of completed same-run process effects and actual focused Git receipts can
-        bridge them; unknown Git, tool, index or file changes remain blockers.
+        File ownership is audited at task/checkpoint boundaries, not reconstructed
+        from recursive per-tool snapshot chains.
         """
-        import copy
-        from .git_effects import entries, assert_safe_git_inputs
+        self.authority.assert_held()
         self.store.assert_dispatchable(self.run)
         operation = self.store.operation(op)
-        process, containment = self._record(op)
+        process, receipt = self._record(op)
         if (operation['phase'] != 'completed' or process['scope_kind'] != 'host' or
-                self.containment.populated(containment) != 0):
-            raise Blocked('original host is not verified closed/empty')
-        result = json.loads(operation['result'])
-        event = self.store.db.execute("SELECT seq,payload FROM wf_events WHERE op_id=? AND kind='completed'", (op,)).fetchone()
-        if (not event or event['payload'] != operation['result'] or not result.get('replacement_allowed') or
-                process['reconciliation'] != canonical(result['reconciliation']) or
-                process['empty_receipt'] != canonical(result['empty_receipt'])):
-            raise Blocked('closed host original result/event mismatch')
-        expected = copy.deepcopy(result['reconciliation'])
-        chain = []
-        rows = self.store.db.execute("""SELECT o.*,e.seq FROM wf_operations o JOIN wf_events e USING(op_id)
-            WHERE o.run_id=? AND e.kind='completed' AND e.seq>? AND o.kind IN ('process','git-checkpoint')
-            ORDER BY e.seq""", (self.run,event['seq'])).fetchall()
-        for row in rows:
-            details, after = json.loads(row['intent']), json.loads(row['result'])
-            proof = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='intent'", (row['op_id'],)).fetchone()
-            completed = self.store.db.execute("SELECT payload FROM wf_events WHERE op_id=? AND kind='completed'", (row['op_id'],)).fetchone()
-            if row['phase'] != 'completed' or not proof or proof[0] != row['intent'] or not completed or completed[0] != row['result']:
-                raise Blocked('closed host successor receipt/event mismatch')
-            if row['kind'] == 'process':
-                successor, receipt = self._record(row['op_id'])
-                if successor['scope_kind'] == 'host':
-                    continue
-                if self.containment.populated(receipt) != 0 or not after.get('replacement_allowed'):
-                    raise Blocked('closed host successor task scope not empty')
-                if successor['reconciliation'] != canonical(after['reconciliation']) or successor['empty_receipt'] != canonical(after['empty_receipt']):
-                    raise Blocked('closed host successor process receipt drift')
-                if details['tool'] == 'runner-git-commit':
-                    # Staging/commit are admitted solely by the later checkpoint
-                    # receipt below, not by accepting arbitrary process HEAD drift.
-                    checkpoint = self.store.operation(row['node_id'].removeprefix('commit:'))
-                    if checkpoint['kind'] != 'git-checkpoint' or checkpoint['phase'] != 'completed':
-                        raise Blocked('closed host successor Git receipt unavailable')
-                    continue
-                before = details['baseline']
-                if any(before[k] != expected[k] for k in ('head','index','files')):
-                    raise Blocked('closed host successor tool chain gap')
-                if after['reconciliation']['head'] != before['head'] or after['reconciliation']['index'] != before['index']:
-                    raise Blocked('closed host successor unknown Git effect')
-                owned = details['owned_paths']
-                for name in set(before['files']) | set(after['reconciliation']['files']):
-                    if unrelated_drift(name, before['files'].get(name), after['reconciliation']['files'].get(name), owned):
-                        raise Blocked('closed host successor unrelated tool drift')
-            else:
-                before = details['before']
-                if any(before[k] != expected[k] for k in ('head','index','files')):
-                    raise Blocked('closed host checkpoint chain gap')
-                assert_safe_git_inputs(self.authority.project,details['owned_paths'])
-                if not after['read_only']:
-                    sha = after['sha']
-                    if (after['parent'] != expected['head'] or
-                            git(self.authority.project,'rev-list','--parents','-n','1',sha).decode().strip().split() != [sha,expected['head']] or
-                            entries(self.authority.project,tree=sha) != details['expected_entries'] or
-                            git(self.authority.project,'log','-1','--format=%B',sha).decode().splitlines().count('Coherence-Operation: '+row['op_id']) != 1):
-                        raise Blocked('closed host checkpoint actual parent/tree/identity mismatch')
-                    changed = set(git(self.authority.project,'diff-tree','--no-commit-id','--name-only','-r','-z',sha).decode().split('\0'))-{''}
-                    if not changed or not changed <= set(details['owned_paths']):
-                        raise Blocked('closed host checkpoint ownership mismatch')
-                if after['reconciliation']['files'] != before['files']:
-                    raise Blocked('closed host checkpoint hook/file drift')
-            expected = after['reconciliation']
-            chain.append(row['op_id'])
-        now = snapshot(self.authority.project, [])
-        if any(now[k] != expected[k] for k in ('head','index','files')):
-            raise Blocked('closed host unexplained current Git/file/index drift')
-        return {'host_op':op,'successors':chain,'reconciliation':now}
+                self.containment.populated(receipt) != 0 or
+                not json.loads(operation['result']).get('replacement_allowed')):
+            raise Blocked('original host is not verified closed/empty; settle before reuse')
+        return {'host_op':op, 'reconciliation':read_baseline(self.authority.project)}
+
+    def admit_direct(self, tool_id, args, *, admitted_host_ops=()):
+        self.authority.assert_held()
+        self.store.assert_dispatchable(self.run, admitted_host_ops=admitted_host_ops)
+        tool = self.tools[tool_id]
+        if tool.build_argv is not None:
+            raise Blocked('process tool requires custody')
+        if self.require_authorization and self.authorize is None:
+            raise Blocked('tool action authority unavailable')
+        if self.authorize is not None:
+            self.authorize(tool_id,args,'task_tools')
+        Draft202012Validator(tool.arguments).validate(args)
+        return tool
+
+    def direct(self, tool_id, args, *, admitted_host_ops=()):
+        """Execute a registered scoped operation without manufacturing a process."""
+        tool=self.admit_direct(tool_id,args,admitted_host_ops=admitted_host_ops)
+        return tool.result_reader(args, {'admitted_host_ops':admitted_host_ops})
 
     def recover(self):
         """Observe durable scopes; never release/replay tools or adopt unknown identities."""

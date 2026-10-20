@@ -76,12 +76,12 @@ Lean T001 execution uses five boundary facts—valid work, usable selected confi
 scoped current authority, one-writer safe ownership and runnable REQUIRED checks. Optional
 telemetry is observed, not an execution veto; scoped external action and own-child custody
 remain required. This approved refactor is delivered through bounded instruction-managed
-Terra writer checkpoints, not by launching the runtime under refactor.
+owner-selected writer checkpoints, not by launching the runtime under refactor.
 
 Standalone CLI needs no Paseo. Interactive-parent requires selected public transport (Paseo0.9.2
 tested), verified actual launching-parent and registered ask_user readiness/real tool provenance.
 Missing UI stays pending; never silent polling or fabricated answers. Original-conversation
-answer pin overrides greedy session selection. Missing/unsafe/low/unknown original blocks,
+answer pin overrides greedy session selection. Missing/incompatible/unsettled original blocks,
 never fresh substitution. Received/queued/SDK-delivered/worker-acknowledged are separate.
 Host exit stops work, no background continuation. Cgroups cover trusted single-host/same-UID
 local processes, not filesystem sandboxing, remote/adversarial tracking or power-loss guarantees.
