@@ -78,6 +78,47 @@ nodes are read-only and role isolated; actual fresh-first SDK session selection 
 full-range review are required, not a green synthetic handler. Runtime configuration/registry/source
 and schema identities are pinned; changed inputs cannot silently apply to an existing run.
 
+## Read-only inventory before launch approval
+
+Before requesting final launch approval, run the **source-local** entry with the already
+prepared interpreter and unchanged task contract (installed callers use their approved entry):
+
+```sh
+COHERENCE_PYTHON=/absolute/path/to/existing/venv/bin/python \
+  /approved/suite/scripts/coordinate-implementation preflight \
+  --project /canonical/project --tasks /approved/tasks.json
+```
+
+`preflight` validates the task schema and uses the same Git prerequisites, owned-path
+cleanliness, and actual full worktree snapshot as task selection. It needs no owner catalog,
+model manifest, containment, run identity, approval receipt or database. It neither acquires
+Authority nor creates/reserves a run, starts a controller/model, writes workflow storage,
+or grants launch authority. Its hashes/counts are observations, not approval receipts or
+proof of custody. Recheck after checkout/input changes; all original launch gates still apply.
+Start/resume repeat this real validation **before** Authority/storage/controller startup;
+task selection and the gateway recheck before dispatch/release. A failing entry reports its
+relative path and kind (for example `retained/toy/pipe (fifo)`), never its contents.
+
+Ignored nested repositories are expanded recursively, including their nested Git data;
+no retained ignored user material is deleted, adopted or broadly excluded. Inventory reads
+regular-file content and file identity through held directory descriptors, fingerprints
+symlink text (including external/broken links) without following it, and records directory
+identity plus descendants. Root Git administration and root private workflow storage remain
+excluded; identically named nested user directories are not. Unsupported special kinds,
+unsafe ancestors and observed read-time changes fail closed. New/removed directories needed
+solely as owned-file ancestors are allowed, but unrelated children and replacement of an
+existing ancestor still block. This is local cooperative custody, not a hostile-filesystem
+atomic snapshot or a sandbox.
+
+Runtime code changes invalidate Engine's immutable identity for an existing run. `resume`
+cannot silently renew that identity. The supported `control cancel` path reconciles and
+records cancellation but currently **retains the reservation**; it is not a release/reset
+API. Only successful acceptance releases a reservation. Consequently a blocked reserved
+run whose runtime identity has changed cannot currently be resumed or replaced through
+supported interfaces. Stop and report this blocker; never clear SQL/reservations, rewrite
+history, manufacture approval, or claim cancellation enables a fresh run. A separate
+owner-approved implemented settlement/migration capability is required in that case.
+
 ## Storage, launch and failure rules
 
 The canonical store is `.coherence/workflow/workflow.sqlite`, with per-worktree admin

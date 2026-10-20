@@ -18,6 +18,28 @@ from .tool_process import MAX_MANIFEST_BYTES
 from .store import Blocked, canonical, digest, git, safe_path
 
 
+def owned_file(project, name):
+    try:
+        p = safe_path(project, name)
+    except Blocked as exc:
+        raise Blocked(str(exc) + ': ' + str(name)) from None
+    if name.startswith(('.git/', '.coherence/')) or name in ('.git', '.coherence'):
+        raise Blocked('tools cannot mutate authority storage: ' + name)
+    try:
+        mode = p.lstat().st_mode
+    except FileNotFoundError:
+        return p
+    if not stat.S_ISREG(mode):
+        raise Blocked('owned tool path must be a file: ' + name + ' (' + entry_kind(mode) + ')')
+    return p
+
+
+def entry_kind(mode):
+    return ('directory' if stat.S_ISDIR(mode) else 'symlink' if stat.S_ISLNK(mode) else
+            'fifo' if stat.S_ISFIFO(mode) else 'socket' if stat.S_ISSOCK(mode) else
+            'character-device' if stat.S_ISCHR(mode) else 'block-device' if stat.S_ISBLK(mode) else 'unknown')
+
+
 def _identity(s):
     return {'mode': s.st_mode, 'uid': s.st_uid, 'device': s.st_dev, 'inode': s.st_ino}
 
@@ -62,9 +84,7 @@ def _read_entry(parent, base, name, files):
         finally:
             os.close(fd)
     else:
-        kind = ('fifo' if stat.S_ISFIFO(mode) else 'socket' if stat.S_ISSOCK(mode) else
-                'character-device' if stat.S_ISCHR(mode) else 'block-device' if stat.S_ISBLK(mode) else 'unknown')
-        raise Blocked('unsupported worktree entry: ' + name + ' (' + kind + ')')
+        raise Blocked('unsupported worktree entry: ' + name + ' (' + entry_kind(mode) + ')')
     if _stable(os.stat(base, dir_fd=parent, follow_symlinks=False)) != _stable(before):
         raise Blocked('worktree entry changed during inventory: ' + name)
     files[name] = value
@@ -95,11 +115,7 @@ def unrelated_drift(name, before, after, owned):
 
 def snapshot(project, owned):
     for name in owned:
-        p = safe_path(project, name)
-        if name.startswith(('.git/', '.coherence/')) or name in ('.git', '.coherence'):
-            raise Blocked('tools cannot mutate authority storage')
-        if p.exists() and not p.is_file():
-            raise Blocked('owned tool path must be a file')
+        owned_file(project, name)
     names = set(git(project, 'ls-files', '-z').decode().split('\0'))
     names.update(git(project, 'ls-files', '--others', '--exclude-standard', '-z').decode().split('\0'))
     # Include ignored user data as well; runtime's private subtree alone is excluded.

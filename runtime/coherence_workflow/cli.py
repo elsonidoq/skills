@@ -15,7 +15,7 @@ from jsonschema.exceptions import ValidationError
 
 from .authority import AuthorityAdmission, action_requirement, required_actions
 from .engine import Engine, StrictLoader, load_workflow
-from .git_effects import GitEffects, assert_safe_git_inputs
+from .git_effects import GitEffects, assert_safe_git_inputs, inventory_preflight
 from .intake import Approvals, admit, content_hash, load_contract, verify_execution_intent
 from .pi_adapter import PiAdapter, host_resource
 from .registry import CHECKS, Handler, Registry, validate_schema
@@ -906,6 +906,9 @@ def main(argv=None):
         p.add_argument('--suite-root', help='explicit approved skill/settings resource root (required for installed wheel)')
         p.add_argument('--parent-binding')
         if name == 'resume': p.add_argument('--resume-authority',required=True)
+    p = subs.add_parser('preflight', help='read-only actual worktree inventory/ownership; no launch authority')
+    p.add_argument('--project', required=True)
+    p.add_argument('--tasks', required=True)
     p = subs.add_parser('intake')
     for flag in ('project','tasks','owner-catalog','config-hash'):
         p.add_argument('--' + flag, required=True)
@@ -920,6 +923,15 @@ def main(argv=None):
         if name!='parent-ready':p.add_argument('--event',required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == 'preflight':
+            contract = load_contract(args.tasks)
+            validate_schema('task.schema.json', contract)
+            observed = inventory_preflight(args.project, contract['tasks'])
+            print(canonical({'status':'ready', 'scope':'inventory/ownership only; not launch approval',
+                'head':observed['head'], 'index_hash':observed['index'],
+                'inventory_hash':digest(observed['files']), 'entries':len(observed['files']),
+                'directories':sum(v is not None and v.get('kind')=='directory' for v in observed['files'].values()),
+                'owned_paths':sorted(observed['owned'])})); return 0
         if args.command in ('parent-ready','parent-received','parent-answer'):
             from .notifications.paseo import facade
             print(canonical(facade(Path(args.project).absolute(),args.run,args.command,args.nonce,getattr(args,'event',None))));return 0
@@ -1003,6 +1015,10 @@ def main(argv=None):
             raise Blocked('approved suite resource root unavailable; provide --suite-root, no automatic installation')
         manifest = json.loads(Path(args.manifest).read_text())
         environment = {k:v for k,v in os.environ.items() if k in ('PATH','HOME','PYTHONPATH','PYTHONDONTWRITEBYTECODE','TMPDIR','PI_OFFLINE')}
+        validate_schema('task.schema.json', contract)
+        # The same real baseline admission used by task selection, before opening
+        # authority/storage, reserving a run, creating a controller or SDK host.
+        inventory_preflight(args.project, contract['tasks'])
         with Authority(args.project) as authority:
             # Engine reserves the run before handler operations can be persisted.
             coordinate = Coordinate(authority,args.run,contract,catalog,config,args.containment,manifest,environment)

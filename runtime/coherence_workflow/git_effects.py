@@ -6,16 +6,13 @@ from pathlib import Path
 import shutil
 
 from .store import Blocked, canonical, digest, git, safe_path
-from .tools import ProcessTool, clean_owned, reconcile, snapshot
+from .tools import ProcessTool, clean_owned, reconcile, snapshot, owned_file
 
 
 def assert_safe_git_inputs(project, owned):
     """Builtin inspection only; never probe an external filter or index hook."""
     for name in owned:
-        path=safe_path(project,name)
-        if name in ('.git','.coherence') or name.startswith(('.git/','.coherence/')):
-            raise Blocked('Git owned path overlaps authority storage')
-        if path.exists() and not path.is_file():raise Blocked('Git owned path must be a file')
+        owned_file(project, name)
     try:
         raw=git(project,'config','--null','--list')
     except (Blocked,OSError):raise Blocked('Git config capability inspection unavailable') from None
@@ -53,6 +50,23 @@ def assert_safe_git_inputs(project, owned):
                     raise Blocked('Git external clean/process filter requires a contained adapter')
 
 
+def inventory_preflight(project, tasks):
+    """Read-only real baseline admission; no Authority, ledger or process launch."""
+    owned = set()
+    for task in tasks:
+        paths = task['owned_paths']
+        if len(paths) != len(set(paths)) or any(a != b and b.startswith(a + '/') for a in paths for b in paths):
+            raise Blocked('overlapping owned inventory paths')
+        assert_safe_git_inputs(project, paths)
+        clean_owned(project, paths)
+        owned.update(paths)
+    # Even a read-only task needs safe Git inventory (not a configured fsmonitor).
+    assert_safe_git_inputs(project, [])
+    git(project, 'var', 'GIT_AUTHOR_IDENT')
+    git(project, 'var', 'GIT_COMMITTER_IDENT')
+    return snapshot(project, sorted(owned))
+
+
 def entries(project, *, tree=None):
     raw = git(project, 'ls-tree', '-r', '-z', tree) if tree else git(project, 'ls-files', '--stage', '-z')
     result = {}
@@ -88,11 +102,8 @@ class GitEffects:
         self.require_authorization = require_authorization
 
     def begin(self, task):
-        assert_safe_git_inputs(self.project,task['owned_paths'])
         self.store.assert_dispatchable(self.run)
-        clean_owned(self.project, task['owned_paths'])
-        git(self.project, 'var', 'GIT_AUTHOR_IDENT'); git(self.project, 'var', 'GIT_COMMITTER_IDENT')
-        return snapshot(self.project, task['owned_paths'])
+        return inventory_preflight(self.project, [task])
 
     def checkpoint(self, task, baseline, dispositions, *, gates_satisfied, phase_hook=None):
         assert_safe_git_inputs(self.project,task['owned_paths'])

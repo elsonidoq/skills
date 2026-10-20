@@ -42,6 +42,25 @@ never supplies mechanical acceptance. Registered unittest checks have closed `te
 constants/version `1`; file-byte/PythonAnswer oracles have their own closed arguments. Foundation selectors include: `workflow.ConfigGraphTests`, `workflow.CustodyTests`,
 `workflow.LaunchCrashTests`, `workflow.LedgerCheckpointTests`.
 
+## Read-only inventory preflight (no storage schema change)
+
+`preflight --project CANONICAL_ROOT --tasks TASK_CONTRACT.json` validates the existing
+closed task schema and performs the actual task-selection Git/ownership/full-inventory
+admission without Authority, SQLite, reservation, controller or model dispatch. It does not
+verify approvals or grant execution authority. Success is JSON with `status: ready`,
+`scope`, `head`, `index_hash`, `inventory_hash`, `entries`, `directories`, and `owned_paths`.
+Failure uses the existing exit-2 `{status: blocked, reason: ...}` envelope; special kinds
+identify relative path/type, not contents. Start/resume invoke the same implementation before
+opening writable authority/storage, and task selection invokes it again before dispatch.
+
+Internal snapshot file maps include expanded ignored nested-repository descendants and
+directory entries, not just Git-emitted leaf paths. Entry values retain mode/UID/device/inode;
+`kind` is `file`, `symlink` or `directory`. File hashes cover content, symlink hashes cover
+link text (no following), directories are audited by identity **and** recursive descendants.
+Missing tracked entries retain null. Root `.git` and `.coherence/workflow` alone are excluded.
+Read-time instability/unsupported kinds fail closed. The existing additive application schema
+is unchanged; old snapshots are never rewritten to pretend compatibility after runtime drift.
+
 ## One application database, schema version 1
 
 The lock and storage binding are under Git's verified per-worktree admin directory;

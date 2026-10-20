@@ -1,4 +1,7 @@
 """Real Git ignored nested-repository inventory, without a controller/model."""
+import contextlib
+import io
+import json
 import os
 import socket
 from pathlib import Path
@@ -7,6 +10,9 @@ import unittest
 
 from coherence_workflow.store import Blocked, git
 from coherence_workflow.tools import snapshot, reconcile
+from coherence_workflow.cli import main
+from coherence_workflow.git_effects import inventory_preflight
+from test_intake import approved_fixture
 
 
 class InventoryTests(unittest.TestCase):
@@ -107,6 +113,61 @@ class InventoryTests(unittest.TestCase):
         (self.root / 'alias').symlink_to(self.nested, target_is_directory=True)
         for owned in (['alias/data'], ['retained/toy']):
             with self.assertRaises(Blocked): snapshot(self.root, owned)
+
+    def test_preflight_cli_no_authority_or_storage_and_matches_selection(self):
+        contract, _ = approved_fixture(self.root, 'isolated')
+        tasks = self.root / 'tasks.json'
+        tasks.write_text(json.dumps(contract))
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = main(['preflight', '--project', str(self.root), '--tasks', str(tasks)])
+        self.assertEqual(result, 0, output.getvalue())
+        report = json.loads(output.getvalue())
+        observed = inventory_preflight(self.root, contract['tasks'])
+        self.assertEqual(report['entries'], len(observed['files']))
+        from coherence_workflow.store import digest
+        self.assertEqual(report['inventory_hash'], digest(observed['files']))
+        self.assertFalse((self.root / '.coherence').exists())
+        self.assertFalse((self.root / '.git/coherence-workflow.lock').exists())
+        (self.root / 'owned.txt').write_text('preexisting dirt')
+        with self.assertRaisesRegex(Blocked, 'dirty owned overlap: owned.txt'):
+            inventory_preflight(self.root, contract['tasks'])
+
+    def test_preflight_owned_kind_overlap_and_fsmonitor_fail_closed(self):
+        os.mkfifo(self.root / 'owned-pipe')
+        with self.assertRaisesRegex(Blocked, r'owned-pipe \(fifo\)'):
+            inventory_preflight(self.root, [{'owned_paths':['owned-pipe']}])
+        with self.assertRaisesRegex(Blocked, 'overlapping owned'):
+            inventory_preflight(self.root, [{'owned_paths':['new', 'new/child']}])
+        sentinel = self.root / 'must-not-run'
+        hook = self.root / 'fsmonitor-hook'
+        hook.write_text('#!/bin/sh\ntouch ' + str(sentinel) + '\n')
+        hook.chmod(0o700)
+        git(self.root, 'config', 'core.fsmonitor', str(hook))
+        with self.assertRaisesRegex(Blocked, 'fsmonitor process capability unavailable'):
+            inventory_preflight(self.root, [{'owned_paths':[]}])
+        self.assertFalse(sentinel.exists())
+
+    def test_startup_fails_closed_before_authority_for_special_kind(self):
+        contract, _ = approved_fixture(self.root, 'isolated')
+        tasks = self.root / 'tasks.json'
+        tasks.write_text(json.dumps(contract))
+        manifest = self.root / 'manifest.json'
+        manifest.write_text('{}')
+        os.mkfifo(self.nested / 'pipe')
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json') as catalog:
+            catalog.write('{}'); catalog.flush()
+            output = io.StringIO()
+            suite = Path(__file__).resolve().parents[2]
+            with contextlib.redirect_stdout(output):
+                result = main(['start', '--project', str(self.root), '--tasks', str(tasks),
+                    '--owner-catalog', catalog.name, '--manifest', str(manifest),
+                    '--workflow', str(suite / 'runtime/coherence_workflow/workflows/coordinate.yaml'),
+                    '--suite-root', str(suite), '--containment', '/unused', '--run', 'no-dispatch'])
+        self.assertEqual(result, 2, output.getvalue())
+        self.assertIn('retained/toy/pipe (fifo)', json.loads(output.getvalue())['reason'])
+        self.assertFalse((self.root / '.coherence').exists())
+        self.assertFalse((self.root / '.git/coherence-workflow.lock').exists())
 
     def test_private_root_exclusion_only(self):
         private = self.root / '.coherence/workflow'
