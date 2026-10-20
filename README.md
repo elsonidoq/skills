@@ -15,12 +15,14 @@ scripts/install.sh --probe  # additionally invokes one model; authorize separate
 
 Foreign entries at installation destinations are preserved and reported, not overwritten.
 Retired links are backed up only when their target proves they belong to this checkout.
-After installation or global skill changes, run `/reload` inside pi.
+After installation or global skill changes outside Paseo, run `/reload` inside pi. In Paseo, prepare a fresh-session handoff instead; the fresh agent verifies the checkout and loaded capabilities before work.
 
 On a project, use [Initialize Coherence](skills/initialize-coherence/SKILL.md)
 (`initialize-coherence`) for proposal-first suite instructions, project memory association,
 and documentation owners/indexes/routing, including a schema owner when a persistent
-database exists. Compatible association is validated without rewriting it; a missing/outdated
+database exists. Use [Save ADR](skills/save-adr/SKILL.md) before affected planning or changes
+to discover the project's decision owner, consult its whole index and relevant accepted records,
+and propagate applicable constraints; it never assumes or creates a general ADR store. Compatible association is validated without rewriting it; a missing/outdated
 managed policy still proposes a bounded refresh. Approved changes preserve custom paths/policy,
 existing memory and planning artifacts.
 
@@ -50,7 +52,7 @@ require SpecKit; Standard retains its stage capability gates.
 
 Installation/update alone does not refresh already-adopted project instructions. After later
 approved integration, use the existing installer above to install/update the suite, then run
-`/reload` inside pi for changed global skills. In each explicitly selected and authorized target,
+a Pi reload outside Paseo for changed global skills; in Paseo, prepare a fresh-session handoff instead. In each explicitly selected and authorized target,
 request: “Use initialize-coherence for a policy-only parsimony refresh of this already-adopted project.”
 It compares the actual installed [canonical policy fragment](skills/planner/references/parsimony.md),
 not a version/hash/receipt. Inspect and approve its exact bounded instructions diff; resolve
@@ -176,7 +178,7 @@ partial files/history. Current terminal input answers material questions without
 proofs; noninteractive questions stop honestly. No automatic resume/replay or expensive retry
 loop. An ordinary writer lock prevents cooperating overlap; SDK tools are not an adversarial
 sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
-After adopting changed global skills/prompts, run `/reload` inside pi.
+After adopting changed global skills/prompts, reload pi outside Paseo; in Paseo, prepare a fresh-session handoff instead.
 
 ## Context-first recovery and coordination feedback
 
@@ -204,7 +206,7 @@ wrapping; stage authority/reviewer independence remain. Executable implementatio
 Coordinator trusts settled approved design, cheaply audits actual diffs/focused commits/
 REQUIRED outputs, then advances ready tasks. Only concrete invalidation reopens affected
 work; no routine replanning or unchanged preflight loops. Independent final review remains.
-After changing global assets, run `/reload` in pi.
+After changing global assets, reload pi outside Paseo; in Paseo, prepare a fresh-session handoff instead.
 
 ## Supporting Skills
 
@@ -214,6 +216,8 @@ After changing global assets, run `/reload` in pi.
 - `delegating-architectural-planning`: observed SpecKit planning adapter.
 - `initialize-coherence`: single adoption/memory/documentation entry point;
   substantive documentation work goes through planner, without a forced depth exception.
+- `save-adr`: canonical discovery, save, consultation and propagation for consequential
+  decisions; project routing selects the actual owner and store, if any.
 - `requesting-code-review` / `receiving-code-review`: independent assessment and disposition.
 - `memory-handling`, `track-open-issue`, `finish-session`: durable guidance and closeout.
 
@@ -239,4 +243,4 @@ creates no empty commit. Preserve unrelated staged/unstaged work; ambiguous owne
 or incompatible policy stops rather than waives the checkpoint. Executable runs use runner-owned real verification, diff audits, focused commits and actual Git inspection; workers do not stage/commit or own workflow state. Planning/standalone and an
 ongoing instruction-managed bootstrap keep their authorized writer checkpoints. The interface
 cannot waive safety or create routine evidence-only checkpoints. Static/Git fixtures are not
-universal model-obedience proof. After changed global skills/prompts are adopted, run `/reload`.
+universal model-obedience proof. After changed global skills/prompts are adopted, reload pi outside Paseo; in Paseo, prepare a fresh-session handoff instead.

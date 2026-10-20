@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [ADR decisions and continuity — planning review and approval](adr-decisions-planning-review.md): exact source/task review and implementation authorization; independent final full-range implementation review remains required.
 - [Lean workflow runtime — planning review and approval](workflow-runtime-lean-planning-review.md): exact-content TinySpec/three-task approval, Terra/medium instruction-managed delivery and proposed policy amendments; planning-only, implementation/live/recovery authority not granted.
 - [Workflow monitor — parsimony review and receiving-agent brief](workflow-monitor-parsimony-brief.md): seven simplification findings against the other branch's monitor proposal; preserves script coordination, real protections and owner dogfooding requirements.
 - [Proportionate Coherence — planning review and approval](coherence-parsimony-planning-review.md): current-content TinySpec/T001–T002 approval and planning-only handoff; implementation and rollout remain separately authorized.

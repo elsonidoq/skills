@@ -17,6 +17,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
 | Verified unresolved bug, risk or investigation | [Open Issues](open_issues.md), via `track-open-issue` |
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
+| Consequential decision records and accepted decision constraints | [Save ADR](../skills/save-adr/SKILL.md) discovers the project-selected owner/index and preserves its format; this routing guide selects no general ADR store |
 | Model-routing benchmark evidence and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md); keep the source record discoverable as project guidelines evolve. [Batch Routing Contracts Research](../specs/002-batch-routing-contracts/research.md) owns the newer batch-only seed evidence and runtime limitations |
 | Project-local explicit feedback guidance and selective history | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
@@ -38,6 +39,7 @@ adoption never initializes execution state in unrelated projects. The legacy por
 
 - [Project Constitution](../.specify/memory/constitution.md): Portable global assets, feedback-only coordination memory and current-content approval and pragmatic verification.
 - [Initialize Coherence](../skills/initialize-coherence/SKILL.md): Proposal-first suite adoption/memory and bounded documentation structural readiness.
+- [Save ADR](../skills/save-adr/SKILL.md): Canonical discovery, save, consultation and propagation contract for consequential decisions; before affected work, read the selected project's whole decision index and relevant accepted records. This repository does not select a general ADR store.
 - [Planner](../skills/planner/SKILL.md): Single coordination entry point, scope assessment, user-selected depth, fresh delegated artifact creation, bounded mechanical correction, complete approval briefs and handoff.
 - [Parsimony and Actionable Checks](../skills/planner/references/parsimony.md): Canonical planning/review policy and managed project-copy fragment; adoption/refresh belongs to initialize-coherence.
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
