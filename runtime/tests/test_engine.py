@@ -101,9 +101,15 @@ class SequentialExecutionTests(ProjectTest):
         self.assertEqual(len(answers), 1)
         import sqlite3
         db = sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite')
-        phases = [row[0] for row in db.execute('SELECT phase FROM execution_observations')]
+        rows = list(db.execute('SELECT occurrence_id,phase,kind,facts FROM execution_observations ORDER BY seq'))
         db.close()
-        self.assertNotIn('worker', phases)
+        self.assertNotIn('worker', [row[1] for row in rows])
+        gate = [(row[0], row[2], json.loads(row[3])) for row in rows if row[1] == 'gate']
+        self.assertIn('question_requested', [row[1] for row in gate])
+        self.assertIn('answer_returned', [row[1] for row in gate])
+        self.assertNotIn('answer_sent', [row[1] for row in gate])
+        question = next(row for row in gate if row[1] == 'question_requested')
+        self.assertTrue(question[2]['parent_occurrence_id'])
 
     def test_review_base_must_be_ancestor_and_actual_prompt_uses_it(self):
         project = self.project

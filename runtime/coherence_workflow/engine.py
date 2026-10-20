@@ -30,32 +30,39 @@ class Engine:
         checkpoints = []
         try:
             for task in self.contract['tasks']:
-                focused = FocusedGit(project, task)
-                store.task(self.run, task['id'], 'running', focused.base)
                 preparation = recorder.occurrence()
                 recorder.emit(preparation, 'prepare', 'started', task_id=task['id'])
+                focused = None
                 try:
+                    focused = FocusedGit(project, task)
+                    store.task(self.run, task['id'], 'running', focused.base)
                     recorder.emit(preparation, 'prepare', 'passed', task_id=task['id'])
                     gate_number = [0]
                     def gate_question(text):
                         gate_number[0] += 1
-                        occurrence = recorder.occurrence()
-                        recorder.emit(occurrence, 'gate', 'started', task_id=task['id'], facts={'ordinal': gate_number[0]})
+                        gate_occurrence, question_occurrence = recorder.occurrence(), recorder.occurrence()
+                        facts = {'ordinal': gate_number[0]}
+                        recorder.emit(gate_occurrence, 'gate', 'started', task_id=task['id'], facts=facts)
+                        recorder.emit(question_occurrence, 'gate', 'question_requested', task_id=task['id'], facts={**facts, 'parent_occurrence_id': gate_occurrence})
                         try:
                             answer = self.question(text)
                         except BaseException as exc:
-                            recorder.emit(occurrence, 'gate', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'ordinal': gate_number[0], 'error_category': type(exc).__name__})
+                            recorder.emit(question_occurrence, 'gate', 'delivery_failed', task_id=task['id'], facts={**facts, 'parent_occurrence_id': gate_occurrence, 'error_category': 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'blocked'})
+                            recorder.emit(gate_occurrence, 'gate', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={**facts, 'error_category': 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'blocked'})
                             raise
-                        recorder.emit(occurrence, 'gate', 'returned', task_id=task['id'], facts={'ordinal': gate_number[0]})
-                        recorder.emit(occurrence, 'gate', 'answer_sent', task_id=task['id'], facts={'ordinal': gate_number[0], 'parent_occurrence_id': occurrence})
+                        recorder.emit(question_occurrence, 'gate', 'answer_returned', task_id=task['id'], facts={**facts, 'parent_occurrence_id': gate_occurrence})
+                        recorder.emit(gate_occurrence, 'gate', 'passed' if answer.strip().lower() in ('yes', 'y') else 'failed', task_id=task['id'], facts=facts)
                         return answer
                     manual_gates(task, gate_question)
                     worker_occurrence = recorder.occurrence()
                     role = 'fixing_worker' if isinstance(self.contract.get('monitor'), dict) and self.contract['monitor'].get('correction_of') else 'worker'
                     recorder.emit(worker_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
-                    question_occurrence = recorder.occurrence()
+                    question_occurrence = [None]
                     def worker_question(state):
-                        recorder.emit(question_occurrence, 'worker', state, task_id=task['id'], facts={'parent_occurrence_id': worker_occurrence})
+                        mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
+                        if state == 'requested' or question_occurrence[0] is None:
+                            question_occurrence[0] = recorder.occurrence()
+                        recorder.emit(question_occurrence[0], 'worker', mapping[state], task_id=task['id'], facts={'parent_occurrence_id': worker_occurrence})
                     worker = self.adapter(project, self.executor, question=self.question, observe_question=worker_question)
                     worker.lock_fd = self.authority.lock.fileno()
                     try:
@@ -97,7 +104,7 @@ class Engine:
                 except BaseException as exc:
                     recorder.emit(preparation, 'prepare', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'error_category': type(exc).__name__})
                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                    store.task(self.run, task['id'], state, focused.base, details={'error': str(exc)})
+                    store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': str(exc)})
                     raise
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             review_base = self.contract.get('review_base', base)
