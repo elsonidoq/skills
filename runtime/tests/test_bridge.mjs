@@ -64,6 +64,7 @@ for (const mode of ['idle', 'busy']) test(`bridge wakes ${mode} parent and retur
     const question = messages.find(item => item.message.customType === 'coordinate_implementation_question');
     assert.equal(question.options.triggerTurn, true);
     assert.equal(question.options.deliverAs, 'followUp');
+    assert.match(question.message.content, /Fixture owner question\?/);
     const requestId = question.message.details.request_id;
     await tools.get('coordinate_implementation_reply').execute('reply', {request_id: requestId, run: `run-${mode}`, answer: 'yes'}, undefined, undefined, ctx);
     await assert.rejects(() => tools.get('coordinate_implementation_reply').execute('duplicate', {request_id: requestId, run: `run-${mode}`, answer: 'yes'}, undefined, undefined, ctx), /no matching pending/);
