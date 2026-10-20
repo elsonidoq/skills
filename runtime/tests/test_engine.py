@@ -111,6 +111,24 @@ class SequentialExecutionTests(ProjectTest):
         question = next(row for row in gate if row[1] == 'question_requested')
         self.assertTrue(question[2]['parent_occurrence_id'])
 
+    def test_worker_question_lifecycle_uses_distinct_question_occurrence(self):
+        project = self.project
+        class OfflineQuestions:
+            def __init__(self, project, executor, **kwargs): self.observe_question = kwargs.get('observe_question')
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                for state in ('requested', 'returned', 'sent'):
+                    self.observe_question(state)
+                return 'offline question adapter'
+        self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineQuestions)
+        import sqlite3
+        db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
+        rows = list(db.execute("SELECT occurrence_id,kind,facts FROM execution_observations WHERE phase='worker' AND kind LIKE 'answer_%' OR phase='worker' AND kind='question_requested'"))
+        db.close()
+        self.assertEqual([row[1] for row in rows], ['question_requested', 'answer_returned', 'answer_sent'])
+        self.assertEqual(len({row[0] for row in rows}), 1)
+        self.assertTrue(json.loads(rows[0][2])['parent_occurrence_id'])
+
     def test_review_base_must_be_ancestor_and_actual_prompt_uses_it(self):
         project = self.project
         prompts = []
