@@ -1,0 +1,2 @@
+# workflow-monitor has no third-party runtime dependencies.
+# The reader is intentionally implemented with Python's standard library only.
