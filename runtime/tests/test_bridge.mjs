@@ -18,7 +18,7 @@ function mockPi(messages, tools) {
   };
 }
 
-async function fixture() {
+async function fixture({hold = false} = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-bridge-'));
   const project = path.join(root, 'project');
   await fs.mkdir(path.join(project, 'scripts'), {recursive: true});
@@ -33,9 +33,18 @@ async function fixture() {
   const executor = path.join(root, 'executor.json');
   const host = path.join(root, 'offline-host.py');
   const node = path.join(root, 'offline-node');
+  const marker = path.join(root, 'host-started');
   await fs.writeFile(tasks, JSON.stringify([{id: 'question', description: 'Ask then continue'}]));
   await fs.writeFile(executor, JSON.stringify({provider: 'fixture', model: 'offline', effort: 'medium'}));
-  await fs.writeFile(host, `import json, sys
+  await fs.writeFile(host, hold ? `import os, pathlib, sys, time
+json = __import__('json')
+request=json.loads(input())
+if request['readOnly']:
+ print(json.dumps({'type':'result','text':'{"approved":true,"findings":[]}'}), flush=True)
+else:
+ pathlib.Path(${JSON.stringify(marker)}).write_text(str(os.getpid()))
+ time.sleep(1000)
+` : `import json, sys
 request=json.loads(input())
 if request['readOnly']:
  print(json.dumps({'type':'result','text':'{"approved":true,"findings":[]}'}), flush=True)
@@ -45,8 +54,53 @@ else:
  print(json.dumps({'type':'result','text':'continued'}), flush=True)
 `);
   await fs.writeFile(node, `#!/bin/sh\nexec python3 ${JSON.stringify(host)}\n`, {mode: 0o700});
-  return {root, project, tasks, executor, host, node};
+  return {root, project, tasks, executor, host, node, marker};
 }
+
+test('bridge session shutdown cancels and waits for only its owned runner', async () => {
+  const value = await fixture({hold: true});
+  const messages = [], tools = new Map();
+  const pi = mockPi(messages, tools);
+  const {default: bridge} = await import(bridgeModule);
+  const originalNode = process.env.COHERENCE_NODE;
+  process.env.COHERENCE_NODE = value.node;
+  try {
+    bridge(pi);
+    const ctx = {cwd: value.project, sessionManager: {getSessionId: () => 'parent-session'}};
+    await tools.get('coordinate_implementation_start').execute('start', {tasks: value.tasks, executor: value.executor, run: 'cancelled'}, undefined, undefined, ctx);
+    while (!(await fs.stat(value.marker).then(() => true, () => false))) await new Promise(resolve => setTimeout(resolve, 10));
+    const hostPid = Number(await fs.readFile(value.marker, 'utf8'));
+    await pi.shutdown();
+    assert.throws(() => process.kill(hostPid, 0), {code: 'ESRCH'});
+    execFileSync('python3', ['-c', "import fcntl; f=open('.git/coherence-workflow.lock', 'r+'); fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)"], {cwd: value.project});
+  } finally {
+    if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
+    await fs.rm(value.root, {recursive: true, force: true});
+  }
+});
+
+test('bridge start abort signal cancels the retained owned runner after launch', async () => {
+  const value = await fixture({hold: true});
+  const messages = [], tools = new Map();
+  const pi = mockPi(messages, tools);
+  const {default: bridge} = await import(bridgeModule);
+  const controller = new AbortController();
+  const originalNode = process.env.COHERENCE_NODE;
+  process.env.COHERENCE_NODE = value.node;
+  try {
+    bridge(pi);
+    const ctx = {cwd: value.project, sessionManager: {getSessionId: () => 'parent-session'}};
+    await tools.get('coordinate_implementation_start').execute('start', {tasks: value.tasks, executor: value.executor, run: 'aborted'}, controller.signal, undefined, ctx);
+    while (!(await fs.stat(value.marker).then(() => true, () => false))) await new Promise(resolve => setTimeout(resolve, 10));
+    controller.abort();
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete')) await new Promise(resolve => setTimeout(resolve, 10));
+    execFileSync('python3', ['-c', "import fcntl; f=open('.git/coherence-workflow.lock', 'r+'); fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)"], {cwd: value.project});
+  } finally {
+    if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
+    await pi.shutdown?.();
+    await fs.rm(value.root, {recursive: true, force: true});
+  }
+});
 
 for (const mode of ['idle', 'busy']) test(`bridge wakes ${mode} parent and returns the correlated answer`, async () => {
   const value = await fixture();

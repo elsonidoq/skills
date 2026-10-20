@@ -26,13 +26,20 @@ function textResult(text, details = undefined) {
 export default function coordinateImplementationBridge(pi) {
   let active;
 
-  const close = async () => {
-    if (!active) return;
-    const bridge = active;
-    active = undefined;
-    bridge.server.close();
-    for (const socket of bridge.sockets) socket.destroy();
-    await rm(bridge.directory, {recursive: true, force: true});
+  const close = async (bridge, cancel = false) => {
+    if (bridge.closing) return bridge.closing;
+    bridge.closing = (async () => {
+      if (cancel && bridge.child && bridge.child.exitCode === null && !bridge.child.killed) {
+        bridge.child.kill('SIGTERM');
+        await bridge.exited;
+      }
+      if (bridge.abortSignal) bridge.abortSignal.removeEventListener('abort', bridge.abort);
+      if (active === bridge) active = undefined;
+      bridge.server.close();
+      for (const socket of bridge.sockets) socket.destroy();
+      await rm(bridge.directory, {recursive: true, force: true});
+    })();
+    return bridge.closing;
   };
 
   const send = (socket, value) => {
@@ -65,56 +72,71 @@ export default function coordinateImplementationBridge(pi) {
     name: 'coordinate_implementation_start', label: 'Start coordinate implementation',
     description: 'Launch the approved coordinate-implementation runner through this parent session.',
     parameters: startParameters, executionMode: 'sequential',
-    async execute(_id, params, _signal, _update, ctx) {
+    async execute(_id, params, signal, _update, ctx) {
       if (active) throw new Error('coordinate implementation bridge already has an active run');
       const directory = await mkdtemp(path.join(tmpdir(), 'coordinate-implementation-'));
-      await chmod(directory, 0o700);
       const endpoint = path.join(directory, 'bridge.sock');
       const session = ctx.sessionManager.getSessionId();
       const token = randomBytes(32).toString('hex');
       const sockets = new Set();
-      const bridge = {directory, endpoint, session, token, run: params.run, sockets, pending: undefined, server: undefined};
-      const server = createServer(socket => {
-        sockets.add(socket);
-        let data = '';
-        let handled = false;
-        socket.setEncoding('utf8');
-        socket.on('data', chunk => {
-          data += chunk;
-          const end = data.indexOf('\n');
-          if (!handled && end >= 0) {
-            handled = true;
-            receive(bridge, socket, data.slice(0, end));
-          }
+      const bridge = {directory, endpoint, session, token, run: params.run, sockets, pending: undefined,
+        server: undefined, child: undefined, exited: undefined, closing: undefined, abortSignal: signal, abort: undefined};
+      try {
+        await chmod(directory, 0o700);
+        const server = createServer(socket => {
+          sockets.add(socket);
+          let data = '';
+          let handled = false;
+          socket.setEncoding('utf8');
+          socket.on('data', chunk => {
+            data += chunk;
+            const end = data.indexOf('\n');
+            if (!handled && end >= 0) {
+              handled = true;
+              receive(bridge, socket, data.slice(0, end));
+            }
+          });
+          socket.on('close', () => {
+            sockets.delete(socket);
+            if (bridge.pending?.socket === socket) bridge.pending = undefined;
+          });
+          socket.on('error', () => {});
         });
-        socket.on('close', () => {
-          sockets.delete(socket);
-          if (bridge.pending?.socket === socket) bridge.pending = undefined;
+        bridge.server = server;
+        await new Promise((resolve, reject) => server.once('error', reject).listen(endpoint, resolve));
+        await chmod(endpoint, 0o600);
+        active = bridge;
+        const child = spawn(path.join(ctx.cwd, 'scripts/coordinate-implementation'), [
+          'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,
+        ], {cwd: ctx.cwd, stdio: 'inherit', env: {...process.env,
+          COHERENCE_PARENT_BRIDGE_SOCKET: endpoint, COHERENCE_PARENT_BRIDGE_TOKEN: token,
+          COHERENCE_PARENT_BRIDGE_SESSION: session, COHERENCE_PARENT_BRIDGE_RUN: params.run}});
+        bridge.child = child;
+        bridge.exited = new Promise(resolve => {
+          child.once('exit', (...result) => resolve(result));
+          child.once('error', () => resolve());
         });
-        socket.on('error', () => {});
-      });
-      bridge.server = server;
-      await new Promise((resolve, reject) => server.once('error', reject).listen(endpoint, resolve));
-      await chmod(endpoint, 0o600);
-      active = bridge;
-      const child = spawn(path.join(ctx.cwd, 'scripts/coordinate-implementation'), [
-        'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,
-      ], {cwd: ctx.cwd, stdio: 'inherit', env: {...process.env,
-        COHERENCE_PARENT_BRIDGE_SOCKET: endpoint, COHERENCE_PARENT_BRIDGE_TOKEN: token,
-        COHERENCE_PARENT_BRIDGE_SESSION: session, COHERENCE_PARENT_BRIDGE_RUN: params.run}});
-      child.once('error', async error => {
-        if (active === bridge) await close();
-        pi.sendMessage({customType: 'coordinate_implementation_complete', display: true,
-          content: `Coordinate implementation ${params.run} could not start: ${error.message}`, details: {run: params.run}},
-          {triggerTurn: true, deliverAs: 'followUp'});
-      });
-      child.once('exit', async (code, signal) => {
-        if (active === bridge) await close();
-        pi.sendMessage({customType: 'coordinate_implementation_complete', display: true,
-          content: `Coordinate implementation ${params.run} finished (exit ${code}${signal ? `, ${signal}` : ''}).`, details: {run: params.run}},
-          {triggerTurn: true, deliverAs: 'followUp'});
-      });
-      return textResult(`Started coordinate implementation run ${params.run}.`, {run: params.run});
+        bridge.abort = () => { void close(bridge, true); };
+        signal?.addEventListener('abort', bridge.abort, {once: true});
+        if (signal?.aborted) bridge.abort();
+        child.once('error', async error => {
+          await close(bridge);
+          pi.sendMessage({customType: 'coordinate_implementation_complete', display: true,
+            content: `Coordinate implementation ${params.run} could not start: ${error.message}`, details: {run: params.run}},
+            {triggerTurn: true, deliverAs: 'followUp'});
+        });
+        child.once('exit', async (code, childSignal) => {
+          await close(bridge);
+          pi.sendMessage({customType: 'coordinate_implementation_complete', display: true,
+            content: `Coordinate implementation ${params.run} finished (exit ${code}${childSignal ? `, ${childSignal}` : ''}).`, details: {run: params.run}},
+            {triggerTurn: true, deliverAs: 'followUp'});
+        });
+        return textResult(`Started coordinate implementation run ${params.run}.`, {run: params.run});
+      } catch (error) {
+        if (bridge.server) await close(bridge);
+        else await rm(directory, {recursive: true, force: true});
+        throw error;
+      }
     },
   });
 
@@ -134,5 +156,5 @@ export default function coordinateImplementationBridge(pi) {
     },
   });
 
-  pi.on('session_shutdown', () => close());
+  pi.on('session_shutdown', () => active && close(active, true));
 }
