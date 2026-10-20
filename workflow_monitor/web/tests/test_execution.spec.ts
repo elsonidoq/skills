@@ -58,7 +58,7 @@ test('production HTTP compacts recorded executions, exposes stopping checks and 
   await expect(page.locator('.react-flow__node')).toHaveCount(1)
   await expect(page.locator('.react-flow__node')).toContainText('Prepare T001')
   await expect(page.locator('.react-flow__edge')).toHaveCount(0)
-  await select(snapshot => snapshot.records.some((item: any) => item.kind === 'question_requested'))
+  await select(snapshot => snapshot.occurrences.some((item: any) => item.parent_ref && item.record_refs.length === 1) && snapshot.records.some((item: any) => item.kind === 'question_requested'))
   await expect(page.locator('.react-flow__node')).toHaveCount(1)
   await expect(page.locator('.react-flow__node')).toHaveClass(/waiting/); await expect(page.locator('.react-flow__node')).toContainText('waiting — recorded question')
   await expect(page.locator('.react-flow__node')).toHaveCSS('background-color', 'rgb(255, 240, 194)')
@@ -78,4 +78,33 @@ test('production HTTP compacts recorded executions, exposes stopping checks and 
   await expect(details).toContainText('approved true; findings 0')
   await expect(details).toContainText('range ')
   expect(stderr).not.toContain('PRIVATE-SENTINEL')
+})
+
+test('a question answered beyond the history page boundary does not falsely mark its worker waiting', async ({ page }) => {
+  await page.goto('/')
+  const views: any[] = await page.evaluate(async () => {
+    const headers = { 'X-Workflow-Monitor': '1' }
+    const runs = (await (await fetch('/api/monitor/v1/runs', { headers })).json()).runs
+    return Promise.all(runs.map(async (run: { ref: string }) => (await fetch(`/api/monitor/v1/runs/${run.ref}/snapshot`, { headers })).json()))
+  })
+  const index = views.findIndex(view => view.next_cursor && view.occurrences.some((item: any) => item.parent_ref && item.record_refs.length === 3))
+  expect(index).toBeGreaterThanOrEqual(0)
+  const view = views[index]
+  const question = view.occurrences.find((item: any) => item.parent_ref && item.record_refs.length === 3)
+  expect(view.records).toHaveLength(50)
+  expect(view.records[49].kind).toBe('question_requested')
+  expect(view.records.filter((item: any) => question.record_refs.includes(item.ref))).toHaveLength(1)
+  await page.getByRole('button', { name: /Recorded run/ }).nth(index).click()
+  const worker = page.locator(`.react-flow__node[data-id="${question.parent_ref}"]`)
+  await expect(page.locator('.react-flow__node')).toHaveCount(1)
+  await expect(worker).toHaveClass(/neutral/)
+  await expect(worker).not.toContainText('waiting')
+  await expect(page.getByLabel('Collapsed history badges')).toContainText('0 waiting;')
+  await page.getByRole('button', { name: 'Load more history', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Load more history', exact: true })).toHaveCount(0)
+  await expect(worker).toHaveClass(/neutral/)
+  await expect(worker).toContainText('returned — acceptance not established')
+  await expect(page.getByLabel('Collapsed history badges')).toContainText('0 waiting;')
+  await worker.click()
+  await expect(page.getByLabel('Selected execution details')).toContainText('answer_sent')
 })

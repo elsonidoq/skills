@@ -12,7 +12,10 @@ export function status(item: Occurrence, records: Observation[]) {
   const own = records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref)
   if (item.outcome === 'failed' || own.some(record => record.kind === 'failed' || record.kind === 'delivery_failed')) return 'failed'
   if (item.outcome === 'passed') return 'success'
-  if (own.some(record => record.kind === 'question_requested') && !own.some(record => record.kind === 'answer_sent' || record.kind === 'answer_returned')) return 'waiting'
+  // An answer may be on an unloaded history page. Only complete question evidence
+  // can establish a pending question; missing observations remain neutral/unknown.
+  const allOwnRecordsLoaded = item.record_refs.every(ref => own.some(record => record.ref === ref))
+  if (allOwnRecordsLoaded && own.some(record => record.kind === 'question_requested') && !own.some(record => record.kind === 'answer_sent' || record.kind === 'answer_returned')) return 'waiting'
   return 'neutral'
 }
 export function outcomeText(item: Occurrence, records: Observation[]) {

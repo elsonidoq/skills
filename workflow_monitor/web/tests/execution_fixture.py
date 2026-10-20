@@ -26,7 +26,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     base = git(project, 'rev-parse', 'HEAD').decode().strip()
     presentation = descriptor({'tasks': [{'id': 'one', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'T001'}}}}, {})
     with Authority(project) as owner:
-        for run in ('stopping', 'before-agent', 'waiting', 'success'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(presentation)
@@ -39,6 +39,15 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                 emit(recorder, 'worker', 'worker', 'started', role='worker')
                 if run == 'waiting':
                     emit(recorder, 'question', 'worker', 'question_requested', parent_occurrence_id='worker')
+                elif run == 'answered-paged':
+                    # The request is the 50th retained record; its answers are on page two.
+                    for ordinal in range(47):
+                        emit(recorder, f'check-{ordinal}', 'check', 'passed', ordinal=ordinal, exit_code=0)
+                    emit(recorder, 'question', 'worker', 'question_requested', parent_occurrence_id='worker')
+                    emit(recorder, 'question', 'worker', 'answer_returned', parent_occurrence_id='worker')
+                    emit(recorder, 'question', 'worker', 'answer_sent', parent_occurrence_id='worker')
+                    emit(recorder, 'worker', 'worker', 'returned', role='worker')
+                    emit(recorder, 'terminal', 'terminal', 'passed', task=None, head=base)
                 else:
                     emit(recorder, 'worker', 'worker', 'returned', role='worker')
                     if run == 'success':
