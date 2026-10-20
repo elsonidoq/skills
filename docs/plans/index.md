@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Workflow monitor complete planned graph — tasks](workflow-monitor-complete-graph-tasks.md): six bounded descriptor, execution-summary, task-progress, graph, identity and Details outcomes with executable [JSON](workflow-monitor-complete-graph-tasks.json), A1–A4 REQUIRED evidence and synthetic-only limits; planning draft, review/combined approval and implementation pending.
 - [Workflow monitor complete planned graph — TinySpec](workflow-monitor-complete-graph-tinyspec.md): retained planning draft for persistent run identity, permanent declared topology and separate execution color/acceptance; source preparation checkpoint only, separate tasks, review and combined owner approval pending.
 - [ADR decisions and continuity — TinySpec](adr-decisions-tinyspec.md): approved bounded continuity source; its canonical owner is [Save ADR](../../skills/save-adr/SKILL.md), while this repository deliberately selects no general ADR store.
 - [ADR decisions and continuity — tasks](adr-decisions-tasks.md): eleven bounded outcomes with executable [JSON](adr-decisions-tasks.json); [independent review and correction acceptance](reviews/adr-decisions-planning-review.md#independent-implementation-review-and-acceptance) records the full-range findings and fresh Sol 6.1/medium recheck with explicit validation limits.
