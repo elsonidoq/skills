@@ -1,64 +1,48 @@
-# App execution scope — owner approved, runtime admission required
+# Fresh Sol app execution — bounded owner-authorized renewal
 
-This scope was submitted at c0fa694ba1aaac504889860b064aebdf1f5a02c0. The actual parent ask_user subsequently returned **Approve and launch Sol build**, following the executive brief for all four tasks. The positive specification renewal retains its unchanged spec scope. Historical overall-review.md is the verbatim F1 report; current focused launch-binding rereview b2419b23-68dd-41ad-82b8-a324e3d5497b independently found no blockers and READY FOR FINAL OWNER APPROVAL. This record does not itself authenticate its author or claim a launch receipt; the trusted external catalog must bind the genuine owner decision to these exact scopes before admission.
+## Genuine decision and provenance
 
-## Exact prospective delivery
+The owner previously approved the reviewed four-task Sol/medium app build through actual parent ask_user (recorded at Git5635e21). After the real launch blocked before any worker, the owner explicitly chose the simpler archive/fresh-start approach instead of adding a settlement capability:
 
-Four sequential tasks/eight REQUIRED maps in tasks.md/tasks.json, unchanged check IDs/version/arguments and dependency chain:
+- Actual registered question: **Switch to archiving the old workflow state and starting fresh with Sol?**
+- Noncancelled selection: **Archive old state and launch fresh Sol build**.
+- Actual context authorized keeping verified inventory/preflight fixes, verifying no active process/unrelated run depends on old state, archiving it intact, renewing necessary launch bindings and starting the unchanged four-task Sol/medium build. No unrelated fixtures/project work/global settings removed. Archived history is not automatically in the new live list.
+- Parent session `01a155ad-f798-745f-b6ce-032eca08f263`; recipient `82269029-2130-467f-a9f9-091c7f180104`.
+- Call entry `7f20873b`; result entry `39b7c52c`.
+- Call ID `call_89f5b01d9863483591ef6b9ab8db223c|fc_01305286d04759d8016ad6bbbf80c4819cb6c32ecfb5e4bd82`.
+- Arguments hash `cdfda368a7b3928d216aaa223371fa9c898f7bfb0b188950ea3355b2216d685c`; actual result hash `c98340ed470962d5e69830c20fbeeed4aaebebdb05087cb95bb694efad8e5937`.
 
-1. **T001**: verified retained pins, bounded SQL-read/mapper/minimizer, direct Python manifest/setup_inputs and permanent inventory plus actual isolated concurrent-runtime noninterference proof before UI reliance. Narrowly add only `!workflow_monitor/web/package.json` to root .gitignore in this task, before T002 manifest creation; runner uses git add -A -- owned, never force.
-2. **T002**: early usable production loopback ASGI/static viewer, left run list/ONE selected-run graph, safe details, measured React Flow/ELK navigation/stable polling, real browser/origin proof. Operator can now inspect this SAME build retrospectively and observe genuinely remaining T003/T004 live.
-3. **T003**: full faithful repair/recovery/question/review/metrics/unknown history, hidden-visit discovery, privacy/XSS/origin/noninterference and honest near-live proof, retaining failures and deviations.
-4. **T004**: SAME-build retrospective/live evidence and accurate operating/rollback docs/discovery. It does not require its own future checkpoint or final review/acceptance to pass; runner performs fresh independent original-base-to-current-head review, scoped corrections/rereview and exact current acceptance afterward.
+Parent verified this call/result on the official active session branch. This is bounded renewal under that new decision, NOT a claim the earlier approval covered later unknown hashes. Current exact source/implementation scopes and this record's hash are derived in tasks.json and authenticated against the trusted external catalog. This document alone authenticates nothing.
 
-Task-local acceptance maps remain complete in both task artifacts. All six SC/17 FR remain REQUIRED. Additional fixtures/setup smokes cannot substitute for application proofs, live active-writer composition or SAME-build evidence. Missing permissions/capability/unrun proof stops, never skips or constant-success answer(). No new decomposition/product scope or app implementation in this preparation.
+## Scope retained without replanning
 
-## Mutation paths and custody
+- T001: verified pins, bounded read-only SQL snapshots, minimized versioned DTO and real reader/setup proof.
+- T002: early usable interactive run graph and safe loopback viewer.
+- T003: complete history, privacy and live fidelity.
+- T004: SAME actual build retrospective/live evidence and operating guidance.
 
-Owned sets are cumulative; exact lists in human/machine tasks agree. T001 owns .gitignore plus workflow_monitor/{__init__.py,reader.py,pins.py,mapping.py,public.py,snapshot.schema.json,pyproject.toml,tests/test_reader.py,tests/accept_reader.py,tests/setup_inputs.py}. T002 adds workflow_monitor/{__main__.py,app.py,web/package.json,web/vite.config.js,web/index.html,web/src/main.jsx,web/src/graph.jsx,web/src/layout.js,web/src/style.css,web/tests/viewer.spec.js,tests/accept_viewer.py}. T003 adds workflow_monitor/{tests/test_history.py,tests/test_safety.py,web/tests/history.spec.js,tests/accept_history.py}. T004 adds workflow_monitor/{README.md,tests/accept_build.py,web/tests/build.spec.js} and docs/index.md.
+The task bodies, ownership, dependencies, all REQUIRED checks/versions/arguments/pass conditions/evidence, original gates, execution intent and effect boundaries remain unchanged. Specification approval is retained only for its unchanged scope. Existing historical overall-review.md remains the verbatim F1 report; later planning rereviews resolved F1 and found no launch-binding blockers before the first attempt. This renewal changes only reviewed runtime-source hashes, human launch-status context, a fresh parent binding, descriptor/run identity, presentation's matching workflow hash and approval metadata. No new app behavior or weaker acceptance is authorized.
 
-Earlier owned files are read context by default; only causal current-outcome fixes may modify them. .gitignore ownership persists for context but ONLY T001's exact exception is authorized; no broader edits. No runtime/host/schema/skill/global/settings/auth/memory/STATE/history changes or app source prepared outside runner. Worker tools are read_file/write_file/request_owner_input only; no shell/Git/SDK/question UI. Runner alone chooses tasks, validates effects/custody, checks and focused commits; one writer. Preserve hooks/signing/unrelated work. All ordinary app source/config/direct manifests/helpers are produced during this actual app run, under full-range independent review.
+Runtime remains exact `openai-codex/gpt-6.1-sol:medium`, observer `codex-final-payload:1`, SDK0.87.1 and checkout-local Coordinate skill/resource. No fallback/model substitution or global skill discovery. The inventory/preflight fixes at a3c779b,65bb37e,2bdbb16,9793528 were owner-authorized and focused-committed; parent inspected actual code/diffs and independently reran all22 inventory tests. The agent reported167 available nonlive regressions, including six offline SDK-host cases. Full mandatory/live suite is NOT claimed; actual app checks/full-range fresh independent review and acceptance remain required and NOT RUN. Original SDK OI-3/SQLite residuals remain; no blanket security clearance.
 
-## Read-only and test actions requested for genuine final approval
+## Actual archive and fresh identity
 
-Canonical worktree is this checkout. App run preselected as `monitor-app-20261019-f7d128ac7546`; not yet started. Retain raw source pins, approval metadata and baseline through execution. Governing AGENTS/constitution/local memory/task-commit context is explicitly pinned/readable; SDK custom loader intentionally discovers no AGENTS files. No global discovery or new SDK tools.
+Old run `monitor-app-20261019-f7d128ac7546` passed readiness/intake/authority/custody, then blocked at select:0 due inventory. Its controller stopped; all four tasks remained pending with null baselines/checkpoints and zero process/SDK-turn operations. Parent held the existing per-worktree writer lock, verified those facts and matching controller death, and atomically archived the entire workflow subtree on the same filesystem:
 
-Envelope declares exact canonical action_requirement streams: local read/question (external), worker write/runner Git (mutation), workflow.PythonAnswer (test, execution=trusted-project-python). Ordinary approved Sol/medium model traffic has no financial gate; paid-service authority remains denied. Product-priority/unexpected-material-change questions route to genuine same parent ask_user, never routine setup courier. Scope change needs renewed authority.
+`/home/dev/.paseo/workflow-archives/monitor-app-20261019-f7d128ac7546-bbdf6ba1bb59/workflow`
 
-Trusted PythonAnswer helpers get existing15s and zero worktree generation paths. They may read declared app/source/approval paths, frozen descriptor/dependency inputs and exact bound app/fixture runtime records; no private SDK/parent conversations, credentials/catalog contents or arbitrary external paths. Fixed approved Python/Node/Vite/Playwright/Chrome commands may test/build ONLY in descriptor-declared writable work children, bytecode off, explicit tempfile dirs and child TMPDIR; no dependency writes/install/network/download/auth/global operations. Current frontend bytes copied to scratch retain source hashes; scratch node_modules links only admitted tree. All check descendants close/drain. Long genuine isolated-runtime scenarios remain separately operator-owned under standing test-only authority/custody, not oracle children; supplementary existing fixtures do not establish active concurrency by themselves.
+All13 entries retained identical file bytes/modes/UID/device/inodes. No old SQL/reservation/history edits; original Git authority binding/lock retained. No settlement code was written or shipped, and no unrelated fixture moved. Archive metadata records the actual checks/decision. No universal claim about unrelated host-service file descriptors is made.
 
-After T002 checkpoint the operator will start/inspect a separately owned read-only loopback viewer/browser of THIS SAME run, from verified current scratch-built assets, while later required work continues. Not a second scheduler/writer, task/check descendant or control API; no pause/resume required. Observer uses fixed canonical mode=ro/query_only/authorizer snapshots and safe sidecar identities. Permit SQLite's standard empty WAL/SHM bookkeeping after closed historical WAL DBs, not authoritative SQL mutation, projection publication, app-side repair/chmod/checkpoint, immutable/nolock shortcuts or active-writer interference. Stop viewer only to disable; preserve runtime/Git/private history.
+Fresh run: `monitor-app-20261020-0ec48f3fe91b`.
+Descriptor: `/tmp/coherence-monitor-inputs-q0ww12wq/monitor-inputs.json`, SHA256 `d12624227927a5a216c08376c55f3d030d1800c7b4fd9786c8e9ff17a6242be4`.
+Current runtime checkpoint: `97935288f857d430d022ab25dacc681a3ae30133`; exact raw hashes are frozen in the descriptor. Four fixture inputs are supplemental genuine prior isolated SDK/runtime records, NOT this build's acceptance. New config canonical hash `50e5925a916cef36cabc45c3413ecd420a1ddd8fcb86b19492a0c72b063099d6`; raw workflow hash `d7ad0d7a454c726adc5bd86c745b23b53e2296a3b1442a738f849c0d0ef78371`. Fresh binding `monitor-parent-5f248e4fa5804017b24752a08c6b562a` requires a new genuine launch/readiness handshake. A preselected ID does not claim a dispatch event.
 
-## Actual setup/runtime and remaining truth
+## Permission and operating boundaries
 
-Runtime precursor73dbaad0030c36245b078a18d9e33c9de987a6e1 implemented, fresh independent full-range review NO FINDINGS/READY, parent accepted. Historical prerequisite artifacts/approvals stay exact approved bytes, not rehashed as current runnable inputs. Accepted runtime remains unchanged throughout app build.
+One runner writer selects work/model/session, verifies real required checks, performs focused owned-path commits, and requests fresh full-original-range independent final review. Scoped corrections remain limited to original approved criterion/path/unchanged task requirements and current repair budgets; out-of-scope findings require new authority. Original scope effects and all actual permission/manual gates remain enforced by consumers, not narrative.
 
-quickstart owns actual descriptor SHA/run ID/schema/tools/roots/fixture bindings; no self-attestation/hash cycles. Setup imports/ASGI config/Flow exports/ELK cyclic coordinates/Vite vendor build/sandboxed Chrome interaction passed; npm audit0 and8 resolved PyPI versions0 reported, not blanket SDK clearance. Initial Vite smoke's single-output assumption failed; installed build() union includes arrays, targeted assertion fixed/passed. EPL2 ELK and12 MPL2 entries retain notices/source availability. Four fresh actual SDK/runtime monitored-contract fixtures cover repair, SAME-project/spec repeat, correction/rereview and controlled crash/reconcile/question/original continuation; test-only CLI authority is not human ask_user consent. None is app acceptance.
+Standing isolated test-only scenarios and trusted project checks are authorized under existing custody. Routine setup does not use product-question tools/CLI answer as a courier. No SDK/tool enlargement, artificial size rule, paid services, auth refresh, global installs/config changes, deployment or private-data exposure. Exact frozen dependency/tool/lock/tree inputs must revalidate. .gitignore change remains only T001's exact exception for workflow_monitor/web/package.json, never deletion of generic ignores. Normal SQLite read-only WAL/SHM bookkeeping is allowed; SQL mutation/checkpoint/publication is not.
 
-Custody is operational read-only (write bits removed, independent expected hashes/canonical identities, full tree/tool/lock checks before use), NOT malicious-same-UID/root isolation or a bind mount. Any drift/missing/unsafe identity stops. Exact versions/engines fit Python3.12/Node22.23.3; no new research/install requested.
+After usable T002 checkpoint, separately operator-owned read-only viewer must inspect earlier steps and genuinely later T003/T004 work of THIS fresh build. It is not a task descendant or second scheduler; no pause/resume prerequisite, seeded demo or fixture substitute. Missing interval is SC-006 NOT VERIFIED. Bindings/runtime/resources remain frozen during execution.
 
-monitor-workflow.yaml is actual19-node config with ONLY interaction fields changed to interactive_parent/paseo-0.9.2/fresh parent-binding/ask_user, all roles Sol/medium/local coordinate resource unchanged. Public parent inspection and metadata/tool probe passed; runtime launch receipt and fresh run-bound readiness challenge/ACK still MUST succeed before dispatch, no default/manual polling fallback. Private operator control paths are not fixture approvals or browser data. The genuine final overall/implementation decision is captured below; exact external-catalog binding and runtime launch/readiness admission still precede dispatch. SDK OI-3/SQLite residuals remain; no SDK-wide clearance. Application tests/live interval/final independent acceptance remain NOT RUN/NOT VERIFIED.
-
-## Prospective scope identity
-
-Filled mechanically only after human/source/action scopes are final. No own-file hash or raw taskJSON hash is included here; approval metadata is excluded by actual intake.approval_scope, preventing cycles. Final genuine decision may update this request with actual evidence and ref actor/action/record hash; unchanged body scopes remain comparable. Any substantive contract/source change renews affected review/approval.
-
-- Source-list digest: e9e167c731ad0a0da4746fa4b0d19d917f4101bb0e3d797b54ab1810ec294430
-- Implementation approval_scope: 811a77cad450a2a87b1fc0b367ce15c76d3e0286e7af45c0ec865d0c49b65c83
-- Canonical workflow config hash: 772adad23810b44c0cf85325d092e78cbc220c72d251da735341daa7ebe7cfab
-- Workflow raw SHA256: 4c3d403c2244a9525c0cbc80e0c5cca50fb4d1a905bafa45afcfa83c105f9ada
-
-Selected planning/implementation intent: openai-codex/gpt-6.1-sol:medium. Actual provider acknowledgement and the original producer's observed binding/effort are unknown; no benchmark superiority or fallback claimed. Empty local gotcha index/coordination guidelines impose no invented guidance; no memory writes.
-
-## Genuine current app approval
-
-Parent Pi session `01a155ad-f798-745f-b6ce-032eca08f263`, recipient `82269029-2130-467f-a9f9-091c7f180104`, actually invoked registered `ask_user` with question **Launch the current reviewed four-task build with Sol/medium now?**. Its noncancelled selection was **Approve and launch Sol build**. Parent verified the complete actual call/result on the active official session branch before preparing authority:
-
-- Call entry: `9e187239`; result entry: `164ad666`.
-- Call ID: `call_2b264ebbac254b889b92136918250260|fc_01305286d04759d8016ad6ae061f40819cab189e21922c63ac`.
-- Arguments hash: `838d527fc628ffd1ef14ccc311117eebf0e81e530f8cf3a0e8251d37cbe49a96`.
-- Result hash: `ad8b16962f03252a546cc779c03cc12aa64d1caa66d6173dab109d7e520ed44e`.
-
-Approval authorizes this exact four-task scope and current Sol/medium configuration, including required tests, bounded in-scope repairs/corrections and fresh independent final review, focused runner commits and operator-owned read-only inspection of this SAME build. It does not authorize global/auth/service changes, paid actions or public deployment. No controller/task dispatch is claimed by this record.
-
-The owner separately directed that AFTER this build finishes and is quiescent, future executor configuration should become Terra and planning must derive executor capabilities/intent from that configuration independently of planner/reviewer/session model choices, with validation/regression coverage. That follow-up is NOT an app-run task or permission to change this run's pinned runtime/configuration/resources. Preserve this run's Sol provenance; no mid-run model substitution.
+Terra/configuration-first executor planning remains an explicit AFTER-build follow-up. It is not part of these app tasks or permission to alter active pinned configuration. No app execution or acceptance is claimed by this record; source-local authority/preflight/readiness admission still precedes dispatch.

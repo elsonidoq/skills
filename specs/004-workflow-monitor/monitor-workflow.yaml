@@ -377,5 +377,5 @@ settings_manifest:
 interaction:
   mode: interactive_parent
   question_transport: paseo-0.9.2
-  parent_binding_ref: monitor-parent-0e6f96de10184a5a89d1171b2bbad11f
+  parent_binding_ref: monitor-parent-5f248e4fa5804017b24752a08c6b562a
   question_tool: ask_user

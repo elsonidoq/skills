@@ -1,6 +1,6 @@
 {
   "monitor_version": 1,
-  "workflow_sha256": "4c3d403c2244a9525c0cbc80e0c5cca50fb4d1a905bafa45afcfa83c105f9ada",
+  "workflow_sha256": "d7ad0d7a454c726adc5bd86c745b23b53e2296a3b1442a738f849c0d0ef78371",
   "tasks": {
     "T001": {
       "label": "Verified read seam",

@@ -49,7 +49,7 @@
       "path": "specs/004-workflow-monitor/quickstart.md",
       "kind": "source",
       "section": null,
-      "sha256": "66ea2a6562e5b90d090c17a997edae55f7760f5ea4f556cd9f75b70ad2ede3a1"
+      "sha256": "c0a1f4f51722a6f6409d17885817dfeaa113a8ef208c7b040d27c04fbeb5043b"
     },
     {
       "path": "specs/004-workflow-monitor/specification-approval.md",
@@ -61,13 +61,13 @@
       "path": "specs/004-workflow-monitor/monitor-workflow.yaml",
       "kind": "config",
       "section": "monitor-workflow/v1",
-      "sha256": "4c3d403c2244a9525c0cbc80e0c5cca50fb4d1a905bafa45afcfa83c105f9ada"
+      "sha256": "d7ad0d7a454c726adc5bd86c745b23b53e2296a3b1442a738f849c0d0ef78371"
     },
     {
       "path": "specs/004-workflow-monitor/monitor-presentation.json",
       "kind": "config",
       "section": "monitor-presentation/v1",
-      "sha256": "9095b71e3fb2808c1f144c294668c483d8fe379ed9c71d4e3a1fd06fd46735ed"
+      "sha256": "dabbdba948f2ba0762d78bee599edb5d713e31ae0d994b700ff53f8533cf710f"
     },
     {
       "path": "runtime/coherence_workflow/engine.py",
@@ -103,7 +103,7 @@
       "path": "runtime/coherence_workflow/tools.py",
       "kind": "source",
       "section": null,
-      "sha256": "2ffcfcdb2758b5dcdbac735fae6424b68b44d427f6ffd7948014985537aea694"
+      "sha256": "3a0fe9c828e4b3929008dabf7953e79e67df31ef63ec5466131bf49a708ab370"
     },
     {
       "path": "runtime/coherence_workflow/intake.py",
@@ -139,7 +139,7 @@
       "path": "specs/004-workflow-monitor/tasks.md",
       "kind": "tasks",
       "section": null,
-      "sha256": "4b6800beab90e5fcec1326fd1c733ffa38bc908eacb5158a318780c28a09c3f1"
+      "sha256": "62b1b6914a9aa8eea603d6078f0f63bc9bc75e63e2f9314f5fde847be9300d3f"
     },
     {
       "path": "specs/004-workflow-monitor/overall-review.md",
@@ -197,25 +197,25 @@
       "record_sha256": "3a816bb8513471a6e6eeba2685364f224a6d28e552a7f7258609c7e48ec2c188",
       "scope_hash": "f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55",
       "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
-      "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/specification",
+      "authority_ref": "owner/monitor-app-20261020-0ec48f3fe91b/specification",
       "action": "approve"
     },
     {
       "gate_kind": "overall",
       "record_ref": "specs/004-workflow-monitor/app-scope.md",
-      "record_sha256": "71b31a21b4ac6fc5b5060431384d07b11d7a88588088f3d0035cb58e05e6ec75",
-      "scope_hash": "e9e167c731ad0a0da4746fa4b0d19d917f4101bb0e3d797b54ab1810ec294430",
+      "record_sha256": "573d6df8692254c4b7060c9caeddfce2d31fc05a2bb6324a62e97104d153daa8",
+      "scope_hash": "d1e0bb26c325902529aa76e8f8a87f0c5dfeffd94b916c3fa024772fb3996fd8",
       "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
-      "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/overall",
+      "authority_ref": "owner/monitor-app-20261020-0ec48f3fe91b/overall",
       "action": "approve"
     },
     {
       "gate_kind": "implementation",
       "record_ref": "specs/004-workflow-monitor/app-scope.md",
-      "record_sha256": "71b31a21b4ac6fc5b5060431384d07b11d7a88588088f3d0035cb58e05e6ec75",
-      "scope_hash": "811a77cad450a2a87b1fc0b367ce15c76d3e0286e7af45c0ec865d0c49b65c83",
+      "record_sha256": "573d6df8692254c4b7060c9caeddfce2d31fc05a2bb6324a62e97104d153daa8",
+      "scope_hash": "c1e0d3494c96eaa36399f2b7a50f9fb0c9065e20b43a9e7cf8d01ea5dbe2b8ac",
       "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
-      "authority_ref": "owner/monitor-app-20261019-f7d128ac7546/implementation",
+      "authority_ref": "owner/monitor-app-20261020-0ec48f3fe91b/implementation",
       "action": "approve"
     }
   ],
