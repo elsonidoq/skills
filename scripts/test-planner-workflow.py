@@ -1420,6 +1420,95 @@ class AcceptedDecisionBriefContinuityTests(unittest.TestCase):
                                     for error in checker.check_contracts(changed)))
 
 
+class AcceptedDecisionTaskAdapterTests(unittest.TestCase):
+    """Bounded accepted-authority fixtures for source-to-task adapters, not live tasking."""
+
+    def test_source_acceptance_reaches_task_gate_check_and_brief(self):
+        records = (
+            {"status": "accepted", "constraint": "preserve the export capability",
+             "source": "decisions/export.md#accepted", "observable": "export remains available",
+             "gate": "existing approved supersession"},
+            {"status": "accepted", "constraint": "retain the stable wire format",
+             "source": "decisions/wire.md#accepted", "observable": "wire payload remains stable",
+             "gate": None},
+            {"status": "proposed", "constraint": "replace the exporter",
+             "source": "decisions/replacement.md#proposed"},
+            {"status": "superseded", "constraint": "use the retired wire format",
+             "source": "decisions/old-wire.md#superseded"},
+        )
+        accepted = tuple(record for record in records if record["status"] == "accepted")
+
+        def adapt(adapter, context, source_record):
+            # The fixture represents the required source observable → task mapping.
+            source_acceptance = {key: source_record[key]
+                                 for key in ("constraint", "source", "observable", "gate")}
+            return {
+                "adapter": adapter,
+                "context": context,
+                "requirements_truth": "TinySpec" if adapter == "direct" else "specification",
+                "source_acceptance": source_acceptance,
+                "dependency_or_gate": source_acceptance["gate"],
+                "required_check": {"observable": source_acceptance["observable"],
+                                   "constraint": source_acceptance["constraint"],
+                                   "source": source_acceptance["source"]},
+                "brief": (source_acceptance["constraint"], source_acceptance["source"]),
+            }
+
+        mappings = [adapt(adapter, context, record)
+                    for adapter in ("direct", "SpecKit")
+                    for context in ("fresh", "resumed")
+                    for record in accepted]
+
+        def assert_mapping(output):
+            self.assertEqual(len(output), 8)
+            for mapping in output:
+                source = mapping["source_acceptance"]
+                self.assertIn(mapping["adapter"], ("direct", "SpecKit"))
+                self.assertIn(mapping["context"], ("fresh", "resumed"))
+                self.assertEqual(mapping["requirements_truth"],
+                                 "TinySpec" if mapping["adapter"] == "direct" else "specification")
+                self.assertEqual(mapping["dependency_or_gate"], source["gate"])
+                self.assertEqual(mapping["required_check"], {
+                    "observable": source["observable"], "constraint": source["constraint"],
+                    "source": source["source"],
+                })
+                self.assertEqual(mapping["brief"], (source["constraint"], source["source"]))
+
+        assert_mapping(mappings)
+        missing_check = copy.deepcopy(mappings)
+        missing_check[0]["required_check"] = {}
+        with self.assertRaises(AssertionError):
+            assert_mapping(missing_check)
+
+        # Current accepted authority wins: a task source that removes it must stop pending
+        # its existing supersession gate; proposed/superseded records never become truth.
+        conflict = adapt("direct", "resumed", accepted[0])
+        conflict["required_check"]["observable"] = "export removed"
+
+        def assert_source_truth(mapping):
+            self.assertEqual(mapping["required_check"]["observable"],
+                             mapping["source_acceptance"]["observable"])
+
+        with self.assertRaises(AssertionError):
+            assert_source_truth(conflict)
+        self.assertEqual(conflict["dependency_or_gate"], "existing approved supersession")
+        self.assertNotIn("replace the exporter", [m["brief"][0] for m in mappings])
+        self.assertNotIn("use the retired wire format", [m["brief"][0] for m in mappings])
+
+    def test_adapter_carriers_detect_removal(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, selector, clauses in checker.ACCEPTED_ADAPTER_CARRIERS:
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    changed = dict(texts)
+                    body = checker.operational_carrier(changed[key], selector)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, "REMOVED", body), 1)
+                    self.assertTrue(any(error.startswith(label + ":")
+                                        for error in checker.check_contracts(changed)))
+
+
 BRIEF = "\n".join((
     "- Outcome: fix search ranking.",
     "- Scope: ranking only; exclude API migration.",

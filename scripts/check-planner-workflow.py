@@ -42,6 +42,27 @@ ROUTING_SEQUENCE = (
     "Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate",
 )
 
+# A5 adapter carriers: source acceptance must become a task-local gate/check/brief.
+ACCEPTED_ADAPTER_CARRIERS = (
+    ("accepted-tiny-source", "tiny", "## Inputs and preflight", (
+        "direct entry and fresh/resumed", "re-establish relevant accepted authority",
+        "current supersession", "source observable must yield its task dependency or gate",
+        "task-local REQUIRED check and worker brief", "not merely a link",
+        "source/task conflict or uncertain current\nsupersession stops only the affected acceptance mapping",
+    )),
+    ("accepted-task-preflight", "tasks", "## Preconditions and adapters", (
+        "direct entry and fresh/resumed", "re-establish relevant accepted authority",
+        "current supersession", "task's\ndependency or gate, task-local REQUIRED check and worker brief",
+        "not merely a link", "source/task conflict\nor uncertain current supersession stops only the affected task mapping",
+    )),
+    ("accepted-speckit-adapter", "tasks", "item:- A SpecKit adapter", (
+        "fresh/resumed", "source observable → dependency or gate → REQUIRED\n  check → brief mapping",
+    )),
+    ("accepted-direct-adapter", "tasks", "item:- A direct adapter", (
+        "direct fresh/resumed", "source observable → dependency\n  or gate → REQUIRED check → brief mapping",
+    )),
+)
+
 
 def section(text, heading):
     start = text.find(heading)
@@ -188,6 +209,8 @@ def check_contracts(texts):
             "Keep task-specific work and useful checks clear",
             "verify the exact affected operation", "A worker file-tool bound is not a task-contract loader bound",
             "An inference or agreement to a narrowly explained remedy")
+    for label, key, selector, clauses in ACCEPTED_ADAPTER_CARRIERS:
+        require(label, operational_carrier(texts[key], selector), *clauses)
     require("draft-editing", section(texts["approval"], "## Bounded mechanical corrections"),
             "Ordinary drafting is not submitted-artifact correction",
             "without a supervisor decision", "Once submitted, defects follow")

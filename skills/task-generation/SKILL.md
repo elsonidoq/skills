@@ -27,12 +27,14 @@ compact guidelines; missing store or STATE is nonblocking. Do not auto-initializ
 routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
 future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
 explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
-and evidence references through source observables → dependencies/REQUIRED checks → brief;
-Verify a relevant decision reaches the dependency/check and runtime brief, not merely a link.
-Never override source/owner authority. No default
-history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
-on no match. Required gotcha-memory gates remain separate.
+sensitive-data and dirty/concurrent ownership safeguards. On direct entry and fresh/resumed
+production, re-establish relevant accepted authority and current supersession. Both adapters
+carry exact applicable constraints and source links from source observables into the task's
+dependency or gate, task-local REQUIRED check and worker brief; verify the relevant decision
+affects that mapping, not merely a link. Preserve source/owner authority: source/task conflict
+or uncertain current supersession stops only the affected task mapping. No default history
+intake; explicit relevant retrieval is index-first where useful and retains uncertainty on no
+match. Required gotcha-memory gates remain separate.
 
 Optional residual-reasoning notes describe remaining inference, not an execution assignment or runtime routing.
 Planning selection belongs to the [qualified seed rubric](../planner/references/profile-selection.md).
@@ -44,8 +46,10 @@ Use the adapter matching the producing workflow:
   project's observed task-stage command and follows its instructions; unavailable required
   stage capability is a stop. Specification is requirements truth; approved plan is derived
   sequencing only. No SDD forwarding/rereading as direct requirements input. Trace source
-  criteria into task checks. Governing instructions/contracts, memory and permission/safety
-  still apply. Keep the stage create-only when its producer requires it: ordinary drafting,
+  criteria into task checks. Re-establish accepted-decision authority for fresh/resumed
+  production and preserve each applicable source observable → dependency or gate → REQUIRED
+  check → brief mapping. Governing instructions/contracts, memory and permission/safety still
+  apply. Keep the stage create-only when its producer requires it: ordinary drafting,
   revision, shortening and mechanical validation of unsubmitted output are permitted within
   authorized scope, without a supervisor gate. Production does not substitute for independent
   review or authorize upstream requirement changes. Submitted defects follow the producing
@@ -54,8 +58,10 @@ Use the adapter matching the producing workflow:
   requirement/source and does not
   require a plan or SpecKit; final approval follows the produced-artifact review. TinySpec/
   legacy source is requirements truth. No SDD forwarding/rereading as direct requirements
-  input. Trace source criteria into task checks. Governing instructions/contracts, memory
-  and permission/safety still apply.
+  input. Trace source criteria into task checks. Re-establish accepted-decision authority for
+  direct fresh/resumed production and preserve each applicable source observable → dependency
+  or gate → REQUIRED check → brief mapping. Governing instructions/contracts, memory and
+  permission/safety still apply.
 
 New TinySpec work always has a separate source and tasks file. Reference source sections
 or acceptance criteria; put work-unit outcomes and task-specific checks in tasks, not a

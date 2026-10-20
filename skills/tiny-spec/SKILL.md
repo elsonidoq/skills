@@ -24,11 +24,14 @@ compact guidelines; missing store or STATE is nonblocking. Do not auto-initializ
 routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
 future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
 explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
-and evidence references through source observables → dependencies/REQUIRED checks → brief;
-verify their effect on a relevant decision, never override source/owner authority. No default
-history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
-on no match. Required gotcha-memory gates remain separate.
+sensitive-data and dirty/concurrent ownership safeguards. On direct entry and fresh/resumed
+production, re-establish relevant accepted authority and current supersession before carrying
+exact applicable constraints and source links into source acceptance: each relevant source
+observable must yield its task dependency or gate, task-local REQUIRED check and worker brief,
+not merely a link. Preserve source/owner authority; a source/task conflict or uncertain current
+supersession stops only the affected acceptance mapping. No default history intake; explicit
+relevant retrieval is index-first where useful and retains uncertainty on no match. Required
+gotcha-memory gates remain separate.
 
 Use the owner's established source format where it is complete. Link authoritative
 existing sources rather than copying long transcripts. If the request exists only
