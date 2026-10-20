@@ -232,6 +232,75 @@ else:
         db.close()
         self.assertEqual(facts['review_base'], self.base)
 
+    def test_store_recording_failures_do_not_veto_actual_engine_boundaries(self):
+        project = self.project
+        class Successful:
+            def __init__(self, *a, **k): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                kwargs['claim']('owned.txt')
+                project.joinpath('owned.txt').write_text('done\n')
+                return 'offline worker'
+        task = admit([{'id': 'fix', 'description': 'Fix', 'checks': [['python3', '-B', '-c', "assert open('owned.txt').read() == 'done\\n'"]]}])
+        # Initial registration failure leaves no fabricated eligible monitor run.
+        with Authority(project) as owner, patch.object(owner.store, 'register_monitor_run', side_effect=RuntimeError('setup unavailable')):
+            self.assertEqual(Engine(owner, 'registration-failure', task, EXECUTOR, adapter=Successful).invoke()['status'], 'complete')
+            self.assertIsNone(owner.store.monitor('registration-failure'))
+        # A transient append failure recovers with ordinary worker/check/Git/review execution intact.
+        with Authority(project) as owner:
+            original, calls = owner.store.append_monitor_observation, [0]
+            def transient(*args):
+                calls[0] += 1
+                if calls[0] == 1: raise RuntimeError('append unavailable')
+                return original(*args)
+            with patch.object(owner.store, 'append_monitor_observation', side_effect=transient):
+                result = Engine(owner, 'mid-failure', task, EXECUTOR, adapter=Successful).invoke()
+            self.assertEqual(result['status'], 'complete')
+            kinds = [row['kind'] for row in owner.store.monitor('mid-failure')['observations']]
+            self.assertIn('gap', kinds)
+            self.assertIn('passed', kinds)
+        # Final terminal append failure cannot replace the completed review/result.
+        with Authority(project) as owner:
+            original = owner.store.append_monitor_observation
+            def end_failure(*args):
+                if args[2] == 'terminal' and args[4] == 'passed': raise RuntimeError('end unavailable')
+                return original(*args)
+            with patch.object(owner.store, 'append_monitor_observation', side_effect=end_failure):
+                self.assertEqual(Engine(owner, 'end-failure', task, EXECUTOR, adapter=Successful).invoke()['status'], 'complete')
+            self.assertEqual(owner.store.db.execute("SELECT state FROM execution_runs WHERE run_id='end-failure'").fetchone()[0], 'complete')
+
+    def test_append_failure_preserves_original_worker_check_and_review_errors(self):
+        project = self.project
+        class WorkerFailure:
+            def __init__(self, *a, **k): pass
+            def prompt(self, *a, **k): raise Blocked('original worker failure')
+        class ReviewFailure:
+            def __init__(self, *a, **k): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): return '{"approved":false,"findings":["original review failure"]}'
+                return 'worker'
+        for run, task, adapter, reason in (
+            ('append-worker', admit([{'id': 'worker', 'description': 'Worker'}]), WorkerFailure, 'original worker failure'),
+            ('append-check', admit([{'id': 'check', 'description': 'Check', 'checks': ['exit 23']}]), ReviewFailure, 'exit 23'),
+            ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'original review failure')):
+            with self.subTest(run=run), Authority(project) as owner, patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('append unavailable')):
+                with self.assertRaisesRegex(Blocked, reason):
+                    Engine(owner, run, task, EXECUTOR, adapter=adapter).invoke()
+        class GitFailure:
+            def __init__(self, *a, **k): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                kwargs['claim']('git-failure.txt')
+                project.joinpath('git-failure.txt').write_text('partial\n')
+                return 'worker'
+        hook = project/'.git/hooks/pre-commit'
+        hook.write_text('#!/bin/sh\nexit 9\n')
+        hook.chmod(0o755)
+        self.addCleanup(lambda: hook.unlink(missing_ok=True))
+        with Authority(project) as owner, patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('append unavailable')):
+            with self.assertRaisesRegex(Blocked, 'Git operation failed'):
+                Engine(owner, 'append-git', admit([{'id': 'git', 'description': 'Git'}]), EXECUTOR, adapter=GitFailure).invoke()
+
     def test_sdk_error_retains_partial_work_and_releases_writer_lock(self):
         project = self.project
         class OfflineSDKError:
