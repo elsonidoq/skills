@@ -1,8 +1,11 @@
 // SDK transport only. SDK owns tools, retries, compaction and conversation state.
 import path from 'node:path';
+import { constants } from 'node:fs';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
-import { createAgentSession, DefaultResourceLoader, getAgentDir, ModelRuntime, SessionManager }
+import { createAgentSession, createEditToolDefinition, createWriteToolDefinition,
+  DefaultResourceLoader, getAgentDir, ModelRuntime, SessionManager }
   from '@earendil-works/pi-coding-agent';
 
 export async function promptSession(session, prompt, emit) {
@@ -25,6 +28,48 @@ export async function promptSession(session, prompt, emit) {
   }
 }
 
+export function mutationTools(project, ask) {
+  const claim = async absolutePath => {
+    // Operations receive the SDK's effective path, after all SDK normalization.
+    const answer = await ask({type: 'claim', path: path.relative(project, absolutePath)});
+    if (answer.error) throw new Error(answer.error);
+  };
+  const write = createWriteToolDefinition(project);
+  return [
+    {
+      ...write,
+      execute: (id, args, signal, onUpdate, ctx) => createWriteToolDefinition(project, {
+        operations: {
+          // The SDK supplies only the directory here. Defer mkdir until writeFile
+          // supplies the full effective target, so consent precedes EVERY mutation.
+          mkdir: async () => {},
+          writeFile: async (absolutePath, content) => {
+            await claim(absolutePath);
+            if (signal?.aborted) throw new Error('Operation aborted');
+            await mkdir(path.dirname(absolutePath), {recursive: true});
+            if (signal?.aborted) throw new Error('Operation aborted');
+            await writeFile(absolutePath, content, 'utf-8');
+          },
+        },
+      }).execute(id, args, signal, onUpdate, ctx),
+    },
+    {
+      ...createEditToolDefinition(project),
+      execute: (id, args, signal, onUpdate, ctx) => createEditToolDefinition(project, {
+        operations: {
+          access: absolutePath => access(absolutePath, constants.R_OK | constants.W_OK),
+          readFile,
+          writeFile: async (absolutePath, content) => {
+            await claim(absolutePath);
+            if (signal?.aborted) throw new Error('Operation aborted');
+            await writeFile(absolutePath, content, 'utf-8');
+          },
+        },
+      }).execute(id, args, signal, onUpdate, ctx),
+    },
+  ];
+}
+
 export async function execute(request, emit, ask) {
   const {project, executor, prompt, readOnly = false} = request;
   const modelRuntime = await ModelRuntime.create({
@@ -41,14 +86,10 @@ export async function execute(request, emit, ask) {
     noSkills: readOnly,
     noPromptTemplates: true,
     extensionFactories: [pi => {
+      if (!readOnly) for (const tool of mutationTools(project, ask)) pi.registerTool(tool);
       pi.on('tool_call', async event => {
         if (event.toolName === 'bash') {
           const answer = await ask({type: 'command', phase: 'start', call: event.toolCallId});
-          if (answer.error) return {block: true, reason: answer.error};
-        }
-        if (event.toolName === 'edit' || event.toolName === 'write') {
-          const name = path.relative(project, path.resolve(project, event.input.path));
-          const answer = await ask({type: 'claim', path: name});
           if (answer.error) return {block: true, reason: answer.error};
         }
       });
