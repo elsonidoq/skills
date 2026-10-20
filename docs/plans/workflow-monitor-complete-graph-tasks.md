@@ -1,6 +1,6 @@
 # Workflow monitor complete planned graph — tasks
 
-**Draft; planning only.** DIRECT adapter. Requirements truth is the [TinySpec](workflow-monitor-complete-graph-tinyspec.md), commit `253efd51047b5017cc3f42ec5d3643eb64fcae26`, SHA256 `4443aad4440b8a9817f7f9354bdffc3b89717d1dcafb85c79be4f349d65ea9b5`. [Executable JSON](workflow-monitor-complete-graph-tasks.json) carries the same six outcomes, dependencies, owned paths and REQUIRED checks; this document supplies shared worker context and human traceability. Current-content independent source/tasks review and combined owner approval remain pending. Preparing/checkpointing these artifacts is not implementation authorization.
+**Draft; planning only.** DIRECT adapter. Requirements truth is the [TinySpec](workflow-monitor-complete-graph-tinyspec.md), commit `253efd51047b5017cc3f42ec5d3643eb64fcae26`, SHA256 `4443aad4440b8a9817f7f9354bdffc3b89717d1dcafb85c79be4f349d65ea9b5`. [Executable JSON](workflow-monitor-complete-graph-tasks.json) carries the same six outcomes, dependencies, owned paths and REQUIRED checks; this document supplies shared worker context and human traceability. Planner-owned source/tasks review passed; the owner approved the planning-only handoff as recorded below. Preparing/checkpointing these artifacts is not implementation authorization.
 
 ## Shared worker brief and boundaries
 
@@ -97,4 +97,18 @@ Highest risk is confusing acceptance with execution and deriving truth from part
 
 Planning validation checks task syntax/order/intake, local links, scope/traceability and diff whitespace only. They do not establish A1–A4 product acceptance. No ADR store was selected or process initiated; verified `memory/MEMORY.md` has no gotchas and `memory/coordination/GUIDELINES.md` no approved guidance. No memory writes.
 
-Residual limits: malformed historical review results cannot always prove returned execution; invalid descriptors cannot establish complete topology; recorded running is not liveness. Reviewer interpretation remains proposed source truth subject to combined review. Application commands are planned, NOT RUN; implementation and final approval remain pending.
+Residual limits: malformed historical review results cannot always prove returned execution; invalid descriptors cannot establish complete topology; recorded running is not liveness. The reviewer interpretation is included in the approved planning scope. Application commands are planned, NOT RUN; implementation remains separately unauthorized.
+
+## Planning review and owner approval
+
+The planner reviewed A1–A4 coverage, producer-first evidence, task boundaries, explicit/implicit dependencies, REQUIRED checks, permissions, compatibility and exclusions. No blocking planning defects were found. TinySpec needs no independent planning reviewer; independent implementation review remains required after separately authorized delivery.
+
+Reviewed content at commit `a38caf4c59dfeeb6746612bc2b2d827b35c49683`:
+
+- Source: `workflow-monitor-complete-graph-tinyspec.md`, SHA256 `4443aad4440b8a9817f7f9354bdffc3b89717d1dcafb85c79be4f349d65ea9b5`.
+- Human tasks: this file before the factual approval update, SHA256 `ea14e0378636ff6beb032444d7985fb53d7d1864c2f884c689ba9ca69559d6af`.
+- Executable tasks: `workflow-monitor-complete-graph-tasks.json`, SHA256 `39cf7a51cfb45e779836f512c96afded521e8da632d0e2bb054b2a32a54c9ab8`.
+
+Parent validation: both task-order validator invocations PASS; owned paths and Markdown/JSON REQUIRED check-command parity PASS; `git diff --check` PASS. Product tests/build/browser acceptance NOT RUN. These checks establish planning consistency, not implemented behavior.
+
+After a six-task executive brief and explicit planning-only question, the owner answered **“Approve planning handoff”** through `ask_user`. Approval includes separate execution outcome/acceptance semantics and the stated valid-returned-review interpretation. It authorizes this planning handoff and its approval checkpoint only; **no implementation or coordinator launch is authorized**. The running ADR workflow remains untouched. This factual record/status update changes no source requirement, task outcome, dependency, owned path or acceptance check; approved substantive content remains comparable to the commit/digests above. Future implementation must revalidate content and obtain separate authorization.
