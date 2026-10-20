@@ -82,6 +82,34 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(len({item["ref"] for item in retained}), 55)
         self.assertTrue(any(item["source_seq"] is None for item in retained))
 
+    def test_multiple_null_unknowns_cross_page_boundaries(self):
+        for mixed in (False, True):
+            with self.subTest(mixed=mixed):
+                raw = copy.deepcopy(snapshot())
+                raw["runs"] = [row for row in raw["runs"] if row["run_id"] == "run-a"]
+                import json
+                description = json.loads(raw["runs"][0]["description"])
+                description["phases"].extend([{"PRIVATE-SENTINEL": "withheld"}] * 55)
+                raw["runs"][0]["description"] = json.dumps(description)
+                if not mixed:
+                    raw["observations"] = []
+                self.reader.value = raw
+                run = self.client.get("/api/monitor/v1/runs", headers=self.api_headers).json()["runs"][0]["ref"]
+                first = self.client.get(f"/api/monitor/v1/runs/{run}/snapshot", headers=self.api_headers).json()
+                expected = first["inventory"]["total_count"]
+                pages = [first]
+                while pages[-1]["next_cursor"]:
+                    response = self.client.get(f"/api/monitor/v1/runs/{run}/history?snapshot={first['snapshot_ref']}&cursor={pages[-1]['next_cursor']}&limit=2", headers=self.api_headers)
+                    self.assertEqual(response.status_code, 200)
+                    self.assert_safe(response)
+                    pages.append(response.json())
+                retained = [item for page in pages for item in page["records"] + page["unknown_records"]]
+                self.assertEqual(len(retained), expected)
+                self.assertEqual(len({item["ref"] for item in retained}), expected)
+                self.assertEqual(sum(item.get("source_seq") is None for item in retained), 55)
+                bad = self.client.get(f"/api/monitor/v1/runs/{run}/history?snapshot={first['snapshot_ref']}&cursor=cursor_unknown_not_this_run", headers=self.api_headers)
+                self.assertEqual(bad.status_code, 400)
+
     def test_snapshot_scopes_graph_entities_to_selected_root(self):
         runs = self.client.get("/api/monitor/v1/runs", headers=self.api_headers).json()["runs"]
         selected, unrelated = (item["ref"] for item in runs)

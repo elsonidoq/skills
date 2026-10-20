@@ -117,8 +117,8 @@ def _cursor(value: str | None) -> int | str | None:
         return -1
     if value.startswith("cursor_") and value[7:].isdigit():
         return int(value[7:])
-    if value.startswith("cursor_unknown_") and value[15:].startswith("unknown_"):
-        return value[15:]
+    if value.startswith("cursor_unknown_") and value[15:]:
+        return value[7:]
     return None
 
 
