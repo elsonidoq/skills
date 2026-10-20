@@ -19,7 +19,7 @@ Obtain a findings-first assessment against explicit requirements and observable 
 ## Choose A Review Path
 
 - If an independent reviewer capability is available, provide it the prepared context and the contract in [code-reviewer.md](code-reviewer.md).
-- For executable Coordinate Implementation, missing independent reviewer blocks final acceptance; self-review cannot substitute. The runner requests fresh read-only full-range review with schema-bound findings and criterion proof. For other workflows only, an explicitly permitted separate self-review pass must be labeled self-review, never independent review.
+- For executable Coordinate Implementation, missing independent review leaves final acceptance incomplete; self-review cannot substitute. Review the actual full committed range in a fresh read-only context against the requested work and relevant project checks. No schema, provenance receipt or evidence template is required. For other workflows, label any explicitly permitted self-review as self-review, never independent review.
 - If the change evidence cannot be accessed, request or produce an accessible patch or file set. Do not claim a review occurred without reading the changed code.
 
 The reviewer mechanism may be an agent, person, service, or local review tool. Do not assume a fixed agent name, model, Git host, branch, commit layout, or shell command.

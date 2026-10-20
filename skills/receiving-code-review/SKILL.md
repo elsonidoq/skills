@@ -34,12 +34,11 @@ Do not implement speculative infrastructure or compatibility behavior without ob
 
 ## Executable corrections
 
-In executable runs the runner records each schema finding disposition and admits only an
-explicit authorized correction contract. The reviewer stays read-only and never repairs.
-A correction preserves original REQUIRED/gates, gets its own focused verified runner commit,
-and renews affected checks/current full-range independent review; scope changes return to
-owner/producing approval. Missing authority or exhausted configured repair bound blocks,
-never model escalation or confidence-only acceptance.
+Evaluate findings against the requested work. Fix ordinary in-scope defects without a new
+approval envelope or correction template; ask the owner for material scope or permission
+changes. Keep the reviewer read-only and implement each independently verifiable correction
+in a focused commit after relevant checks. Re-review the updated range before acceptance.
+No schema dispositions, receipt chain or numerical repair budget is required.
 
 ## Implement And Verify
 
