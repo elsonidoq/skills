@@ -33,9 +33,12 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
         self.assertEqual(claimed, ['owned.txt'])
 
     def test_current_ui_question_no_receipts_or_transcript_proof(self):
-        a, b = self.fixture("print(json.dumps({'type':'question','question':'Proceed?'}),flush=True)\nassert json.loads(input()) == {'answer':'yes'}\nprint(json.dumps({'type':'result','text':'answered'}),flush=True)\n")
+        a, b = self.fixture("print(json.dumps({'type':'question','question':'PRIVATE-SENTINEL'}),flush=True)\nassert json.loads(input()) == {'answer':'yes'}\nprint(json.dumps({'type':'result','text':'answered'}),flush=True)\n")
+        events = []
         with a, b:
-            self.assertEqual(PiAdapter(self.project, {}, question=lambda q: 'yes').prompt('fixture'), 'answered')
+            self.assertEqual(PiAdapter(self.project, {}, question=lambda q: 'yes', observe_question=events.append).prompt('fixture'), 'answered')
+        self.assertEqual(events, ['requested', 'returned', 'sent'])
+        self.assertNotIn('PRIVATE-SENTINEL', str(events))
 
     def test_noninteractive_question_stops_without_fabricating_answer(self):
         with patch('sys.stdin.isatty', return_value=False):

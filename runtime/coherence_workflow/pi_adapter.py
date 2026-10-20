@@ -15,11 +15,12 @@ def host_path():
 
 
 class PiAdapter:
-    def __init__(self, project, executor, *, question=None, observe=None):
+    def __init__(self, project, executor, *, question=None, observe=None, observe_question=None):
         self.project, self.executor = Path(project), executor
         self.lock_fd = None
         self.question = question or terminal_question
         self.observe = observe or (lambda value: print(canonical(value), file=sys.stderr, flush=True))
+        self.observe_question = observe_question or (lambda state: None)
 
     def prompt(self, prompt, *, claim=None, command=None, read_only=False):
         request = {'project': str(self.project), 'executor': self.executor,
@@ -63,7 +64,18 @@ class PiAdapter:
                         except (Blocked, ValueError, KeyError) as exc:
                             send({'error': str(exc)})
                     elif kind == 'question':
-                        send({'answer': self.question(value['question'])})
+                        try:
+                            self.observe_question('requested')
+                            answer = self.question(value['question'])
+                            self.observe_question('returned')
+                            send({'answer': answer})
+                            self.observe_question('sent')
+                        except BaseException:
+                            try:
+                                self.observe_question('delivery_failed')
+                            except Exception:
+                                pass
+                            raise
                     elif kind == 'result':
                         if not isinstance(value.get('text'), str):
                             raise Blocked('SDK result text must be a string')

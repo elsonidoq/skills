@@ -41,6 +41,8 @@ retain closed phase/kind/fact fields, never prompts, answers, commands, output, 
 Existing progress and historical rows are neither converted nor inferred. Engine emissions include
 per-command check start/outcome and checkpoint start/outcome; command text and output remain private.
 A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.
+Question observations retain only requested, terminal-returned, host-sent, or delivery-failed state and a
+parent occurrence ID. They never retain question or answer text; a send is not a consumption claim.
 
 ## Historical records
 

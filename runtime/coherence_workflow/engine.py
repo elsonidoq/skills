@@ -41,12 +41,16 @@ class Engine:
                             recorder.emit(occurrence, 'gate', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'ordinal': gate_number[0], 'error_category': type(exc).__name__})
                             raise
                         recorder.emit(occurrence, 'gate', 'returned', task_id=task['id'], facts={'ordinal': gate_number[0]})
+                        recorder.emit(occurrence, 'gate', 'answer_sent', task_id=task['id'], facts={'ordinal': gate_number[0], 'parent_occurrence_id': occurrence})
                         return answer
                     manual_gates(task, gate_question)
                     worker_occurrence = recorder.occurrence()
                     role = 'fixing_worker' if isinstance(self.contract.get('monitor'), dict) and self.contract['monitor'].get('correction_of') else 'worker'
                     recorder.emit(worker_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
-                    worker = self.adapter(project, self.executor, question=self.question)
+                    question_occurrence = recorder.occurrence()
+                    def worker_question(state):
+                        recorder.emit(question_occurrence, 'worker', state, task_id=task['id'], facts={'parent_occurrence_id': worker_occurrence})
+                    worker = self.adapter(project, self.executor, question=self.question, observe_question=worker_question)
                     worker.lock_fd = self.authority.lock.fileno()
                     try:
                         text = worker.prompt(
@@ -93,7 +97,10 @@ class Engine:
             diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', base + '..' + head).decode(errors='replace')
             reviewer_occurrence = recorder.occurrence()
             recorder.emit(reviewer_occurrence, 'review', 'started', facts={'role': 'reviewer', 'review_base': base, 'review_head': head})
-            reviewer = self.adapter(project, self.executor, question=self.question)
+            review_question_occurrence = recorder.occurrence()
+            def review_question(state):
+                recorder.emit(review_question_occurrence, 'review', state, facts={'parent_occurrence_id': reviewer_occurrence})
+            reviewer = self.adapter(project, self.executor, question=self.question, observe_question=review_question)
             reviewer.lock_fd = self.authority.lock.fileno()
             review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Inspect relevant source with read/search tools; continue long reads with offsets. Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + base + '..' + head + '\nDiff:\n' + diff, read_only=True)
             try:
