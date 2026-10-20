@@ -13,6 +13,17 @@ planner owns architectural decomposition, not implementation or product scope.
 
 Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply to standalone approach decisions.
 
+Before approved-specification/plan-request preflight, consult [save-adr](../save-adr/SKILL.md)'s
+**Consult and propagate** contract. In standalone or manager-governed entry, and in fresh or
+resumed contexts, read the discovered decision index and relevant accepted records/supersession
+links (or re-establish applicability from supplied accepted authority). Carry each exact applicable
+accepted outcome constraint and source link into the planning brief and any resume/handoff; verify
+its effect on a relevant architectural decision. Proposed or superseded records are not current
+policy. A contradictory accepted constraint, uncertain applicability, or scope/mechanism change
+that conflicts with an accepted outcome stops the affected continuation through the existing owner
+and approval-renewal gates. Compatible helper/mechanism cleanup that preserves the outcome needs
+no new gate.
+
 Apply the [project coordination contract](../memory-handling/references/project-coordination.md)
 during initial understanding, including standalone/direct entry: consult relevant existing
 compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
@@ -93,8 +104,9 @@ configuration. If delegation is unavailable, state
 `Architectural delegation: UNAVAILABLE` and offer to run the installed SpecKit
 planning stage locally with a separate review pass.
 
-Brief the planner to follow the detected SpecKit planning instructions and
-verify the generated artifacts. If the capability is exposed as
+Brief the planner to follow the detected SpecKit planning instructions, including the exact
+applicable accepted outcome constraints and source links, and verify the generated artifacts. On
+resume, re-establish their applicability before reissuing the brief or handoff. If the capability is exposed as
 `/speckit.plan`, use that installed capability through its supported runtime
 interface; do not simulate the slash command in a shell. The plan requirements
 below supplement the generated artifacts and do not replace the SpecKit stage.

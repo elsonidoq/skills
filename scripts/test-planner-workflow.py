@@ -1420,6 +1420,60 @@ class AcceptedDecisionBriefContinuityTests(unittest.TestCase):
                                     for error in checker.check_contracts(changed)))
 
 
+class ArchitecturalAcceptedDecisionContinuityTests(unittest.TestCase):
+    """Supplied accepted-authority preflight/brief fixture; no SpecKit invocation."""
+
+    def test_standalone_manager_and_resumed_briefs_preserve_exact_constraints(self):
+        records = (
+            {"status": "accepted", "constraint": "preserve the export capability",
+             "source": "decisions/export.md#accepted", "outcome": "export remains available"},
+            {"status": "accepted", "constraint": "retain the stable wire format",
+             "source": "decisions/wire.md#accepted", "outcome": "wire payload remains stable"},
+            {"status": "proposed", "constraint": "replace the exporter"},
+            {"status": "superseded", "constraint": "use the retired wire format"},
+        )
+        accepted = tuple((record["constraint"], record["source"])
+                         for record in records if record["status"] == "accepted")
+
+        def preflight(entry, context, change=None):
+            brief = {"entry": entry, "accepted_constraints": accepted, "source_links": accepted,
+                     "reestablished": context == "resumed"}
+            if change == "remove export":
+                return {"stop": "existing owner and approval-renewal gates", "brief": brief}
+            return {"stop": None, "brief": brief}
+
+        runs = [preflight(entry, context)
+                for entry in ("standalone", "manager")
+                for context in ("fresh", "resumed")]
+        self.assertEqual(len(runs), 4)
+        self.assertEqual([run["brief"]["entry"] for run in runs],
+                         ["standalone", "standalone", "manager", "manager"])
+        for run in runs:
+            self.assertIsNone(run["stop"])
+            self.assertEqual(run["brief"]["accepted_constraints"], accepted)
+            self.assertEqual(run["brief"]["source_links"], accepted)
+        self.assertFalse(runs[0]["brief"]["reestablished"])
+        self.assertTrue(runs[-1]["brief"]["reestablished"])
+        self.assertEqual(preflight("standalone", "fresh", "remove export")["stop"],
+                         "existing owner and approval-renewal gates")
+
+        text = (ROOT / "skills/delegating-architectural-planning/SKILL.md").read_text()
+        preflight_text = checker.section(text, "## Preflight")
+        for clause in (
+            "standalone or manager-governed entry, and in fresh or resumed contexts",
+            "each exact applicable accepted outcome constraint and source link into the planning brief and any resume/handoff",
+            "existing owner and approval-renewal gates",
+            "Compatible helper/mechanism cleanup that preserves the outcome needs no new gate",
+            "including the exact applicable accepted outcome constraints and source links",
+        ):
+            with self.subTest(clause=clause):
+                normalized = " ".join(clause.split())
+                self.assertIn(normalized, " ".join(preflight_text.split()))
+                removed = re.sub(r"\s+".join(re.escape(word) for word in clause.split()),
+                                 "OMITTED", preflight_text, count=1)
+                self.assertNotIn(normalized, " ".join(removed.split()))
+
+
 class BrainstormAcceptedDecisionContinuityTests(unittest.TestCase):
     """Supplied-constraint walkthrough for standalone brainstorming; no ADR/model call."""
 
