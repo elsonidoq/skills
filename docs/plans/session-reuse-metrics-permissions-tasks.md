@@ -1,172 +1,149 @@
-# Session reuse, metrics, authority and resume — revised TASKS DRAFT
+# Session reuse, metrics, authority and resume — tasks
 
-**Planning artifacts; not approved or implementation-ready.** This revises the prior 15-outcome draft to 21 bounded outcomes for R8/V9, sized for Terra/medium workers independently of the planning model. Owner withheld approval; independent review and renewed approval remain pending. Planning model selection is not an implementation assignment; no worker/provider is launched or bound here. Only our planning-file retention/commits are now authorized; no implementation, runtime tests, builds, provider calls or active-run changes are authorized or performed.
+**Retained planning only; renewed review, combined approval and implementation authority pending.** Author selection remains `openai-codex/gpt-6.1-sol` / medium; these 22 bounded outcomes are sized for Terra/medium, not assigned to an implementation provider/model. Owner authorized this task-production planning checkpoint only. No implementation, runtime tests/builds/providers, workflow/database/resume actions or active-run investigation occurred.
 
-## Contract and delivery boundaries
+Requirements truth: [canonical TinySpec](session-reuse-metrics-permissions-tinyspec.md), read in full, source checkpoint `b560ad8d9f638342a3aa38bc8570cfa9a1d0c557`, SHA256 `af92ea8835af9ac06bb69a4b1765f2edbbe082507934f711179b139c30229af2`. [Executable JSON](session-reuse-metrics-permissions-tasks.json) owns the complete worker descriptions, explicit mutation scopes, local REQUIRED checks and useful optional context groups. Source references supply context, not content-pinned execution admission. This Markdown is the concise matching outcome/dependency map.
 
-Requirements truth: the retained [TinySpec](session-reuse-metrics-permissions-tinyspec.md), R1–R8/V1–V9, read in full for this revision. R8 explicitly permits only the bounded review–fix chain and its necessary monitor display, superseding earlier blanket prohibitions to that extent. R7 keeps HEAD movement conflict-aware, not equality-gated; its one-small-case testing bound remains. The source's historical unit count is not a requirement.
+## Operative shared constraints
 
-**Latest present authority: “you can commit now.”** This supersedes the earlier no-commit restriction for our planning files only. Implementation, workflow database/configuration changes and active-run actions remain forbidden. Proposed retained destinations remain source `docs/plans/session-reuse-metrics-permissions-tinyspec.md`, tasks `docs/plans/session-reuse-metrics-permissions-tasks.md` and matching `.json`; no retention/checkpoint is claimed yet. Parent must reconcile source/current content before planning retention; implementation still requires separate authority. Descriptions reference the eventual retained source; do not dispatch before it exists and authority applies.
+- **S10 supersedes old drift contracts completely.** Observing ANY new/modified/deleted file, size, output, directory/index/HEAD change or incoming commit never stops execution, requests permission or requires registration/proof of unrelatedness. Delete passive command/startup/task/resume policing and baseline/full-index/dirty snapshots; do not rename them concrete-conflict/check-invalidation/custody observers. Status/diff may inform actual task actions, not continuation admission.
+- **Safety remains at the actual action.** Respect explicit source scope, exact intended edit/stage/commit paths/hunks and actual destructive-cleanup targets; never adopt/stage/delete/overwrite others' work. Preserve hooks/signing, incoming ancestry, actual checkpoint parent and ORIGINAL selected review-base→ACTUALLY reviewed head. An actual unsafe operation can be corrected or report its precise blocker; unrelated commands do not halt merely because files changed. Generated declarations guide commands/selective known-artifact cleanup, not allowlisting or admission. No automatic cleanup policy, blanket `dist/` exemption or sandbox claim.
+- **S11 requires operative recovery, not prompt advice.** Runner-owned check/checkpoint nonzero returns ACTUAL command/error to authorized live/compatible SAME-TASK/fixing context; reasoned scoped correction and real affected REQUIRED reruns precede a real checkpoint. Failed attempts remain failed. Same-task completion correction is separate from the ONE bounded post-review fixing round. No unchanged blind spin, invented retry count/budget/timeout, taxonomy/service or blanket suite. When no safe corrective action remains, report the actual blocker/material decision honestly.
+- Ordinary SDK tool/read-size/pagination/argument/edit errors and SDK-supported transient provider recovery stay at existing same-invocation boundaries; isolated necessary setup is routine. Terminal expensive failure still requires inspected session/call/cause and targeted justified continuation, never blind paid relaunch, auth refresh, model/provider substitution or cross-run restart. Missing/denied authority, cancellation, unknown completed effects and genuinely unrecoverable problems remain real limits, not synonyms for file changes.
+- Required input/history/progress storage is safely corrected before dependent mutation, with uncertain completed operations reconciled before retry. Optional metrics/monitor/telemetry persistence reports gaps and continues. Original/legacy missing history cannot be invented. Retain operation-local task/artifact/commit facts only, not full-worktree snapshots. Existing implementation-lock busy is cancellable waiting/busy, not fabricated failed work/expensive attempt; cancellation drain is a separate seam. Planning writers and Git activity are not implementation-writer conflicts.
+- Every future regression/live acceptance uses **purpose-built synthetic/dummy work in disposable projects**. NEVER any real implementation task/list/run or actual project build, including historical T009/T010/monitor. Production helpers/SDK/Git may run against dummy work only after implementation authority. No tests now beyond pure task/text/linter parsing. Routine isolated work needs no question; paid use still requires explicit scope, no artificial 150k burn. Every reviewer is fresh independent read/search-only.
+- Preserve R1/R2 routing/accounting, effective headroom **>=150000** default and fresh fallback on unknown telemetry, separate task checks/checkpoints, distinct usage/membership/compactions, R8 actual causal recording and MOST-graph viewport overview. Maximum TWO actual reviews/ONE post-review fixing round across resume. No skipped checks, invented approval/execution or monitor-derived dispatch authority. Configured executor is not selected by these planning tasks.
 
-Shared constraints remain in the source. Critical handoff: **all workloads are purpose-built synthetic/dummy work in disposable projects**, never real implementation tasks/lists/runs/project builds, including T010/monitor. History is reference only. Routine isolated work needs no question after implementation authority; paid usage needs separate scope; reviewer stays fresh/read-only. Use one writer; each capability includes tests/docs and focused verified checkpoint. Preserve unrelated work and source exclusions. `generated_outputs` is derived observation scope, never blanket ownership or a seventh linter rule. Missing REQUIRED evidence is NOT VERIFIED/NOT RUN. Automatic checks are offline; live proofs require stated paid scope, no artificial 150k burn or silent model/threshold change. Each reviewer remains fresh/read-only. Runtime R8 permits at most two reviews/one fixing round, persisted across resume; delivery review is still independently required, not a review-prep task. No arbitrary retry/repair policy is added.
+The source owns requirements/supersession. Derived choices are optional `generated_outputs`, small private history/registry and the decomposition below; no new architectural decision or hardening programme is introduced. Context groups are optional affinity hints, never startup gates. Six intake checks remain the whole task linter.
 
 ## Human task list
 
-Each unit owns a production capability plus its focused tests/docs. “Bound” explains the Terra-sized boundary, not a claim of Terra execution success. Dependencies are capability prerequisites; shared engine/store/docs files still require sequential writer ownership.
+Each outcome includes its own normal tests, operative documentation and focused verified implementation checkpoint after separate authority. Shared runtime/store/docs paths still require sequential authorized implementation ownership. No task is a standalone evidence/review-prep/cleanup ceremony.
 
-- [ ] T001 Propagate routine authority to every delivered role
+- [ ] T001 Propagate routine authority to all delivered roles
   - **Depends**: none
-  - Engine/host zero-send payload and actual reviewer tools prove defaults/exclusions. Bounded to instruction propagation; settlement is T002.
+  - Final zero-send provider-bound instructions/tools prove defaults/exclusions and read-only reviewer. Bounded instruction propagation, not recovery implementation.
 
-- [ ] T002 Settle scoped paid usage before calls
+- [ ] T002 Settle explicit paid scope before affected calls
   - **Depends**: T001
-  - Terminal/attached launch fixtures prove denied scope yields zero paid calls. Bounded to existing owner-input boundary, not persistence/framework.
+  - Actual terminal/bridge launch fixtures prove scope-before-call and zero denied paid launches. No new permission/persistence service.
 
-- [ ] T003 Classify declared generated outputs for worker commands
+- [ ] T003 Replace passive path policing with action-scoped source/artifact handling
   - **Depends**: T001
-  - Parser/FocusedGit fixtures prove known-output regeneration/cleanup, sentinel preservation and artifact exclusion. Bounded to classification/worker callback; runner lifecycle is T004.
+  - Delete command/inspect HEAD/index/dirty/unclaimed-path machinery. Parser/worker/Git fixtures show undeclared output never blocks commands; selective known cleanup and exact source staging preserve unknown/unrelated work. Bounded Git action/output interface, no snapshot observer.
 
-- [ ] T004 Reconcile runner-check outputs even after failure
-  - **Depends**: T003
-  - Actual synthetic build→output→checks→cleanup→source commit proves zero question/deadlock. Bounded to runner end/error handling using T003.
+- [ ] T004 Return runner-check failures to authorized same-task correction
+  - **Depends**: T003, T002
+  - Actual engine synthetic failed build delivers command/error to corrective worker, then affected REQUIRED pass, output cleanup and source checkpoint. Produces reusable check/corrective-return interface; does not implement checkpoint recovery or session selection.
 
-- [ ] T005 Retain original run input and invocation history
-  - **Depends**: T002
-  - Store/engine round-trip proves baselines/executor/authority/attempts survive projections. Bounded to run archive/history, not ownership/recovery.
+- [ ] T005 Retain original input and operation-local attempt/task facts
+  - **Depends**: T002, T004
+  - Actual store/engine round-trip preserves exact contract/executor/authority/review baseline and true failed attempts/task paths/artifacts. No global index/dirty/tree snapshots; storage recovery follows separately.
 
-- [ ] T006 Retain source/output ownership facts
-  - **Depends**: T004, T005
-  - FocusedGit/store reopening preserves original index/dirty/claims/output facts. Bounded durable producer; no resume adoption.
-
-- [ ] T007 Preserve unrelated incoming commits through focused checkpoints/recovery
-  - **Depends**: T006
-  - Actual parent/result comparison replaces obsolete-baseline equality. One small synthetic unrelated-commit regression; original lost-progress proof remains. Bounded FocusedGit/checkpoint seam, not a concurrency framework.
-
-- [ ] T008 Reopen SDK sessions with current tools/observations
-  - **Depends**: T002
-  - Host/adapter saved-open proof observes identity, rebound callbacks and idle snapshots. Bounded SDK interface; includes earliest paid-gated reopen proof, no routing policy.
-
-- [ ] T009 Restore deterministic session selection
-  - **Depends**: T008
-  - Synthetic boundary/compatibility/tie fixtures prove pure decisions/reasons. Bounded policy helper, no orchestration.
-
-- [ ] T010 Route engine tasks through eligible sessions
-  - **Depends**: T004, T005, T008, T009
-  - Two dummy tasks prove shared identity/two commits/fresh reviewer. Bounded consumer of completed policy/lifecycle; includes real paid-gated routing proof, no accounting.
-
-- [ ] T011 Compute honest usage/compaction deltas
-  - **Depends**: T008
-  - Snapshots/entries prove fieldwise values/unknowns/no double charge. Bounded accounting helper; includes paid-gated manual compaction, no reporting.
-
-- [ ] T012 Record/report usage and distinct task membership
-  - **Depends**: T005, T010, T011
-  - Store/CLI fixtures prove totals/privacy/legacy unknown/nonblocking gaps. Bounded reporting consumer; extends applicable live evidence, no resume.
-
-- [ ] T013 Retain durable review/fix attempts, findings and remaining rounds
+- [ ] T006 Correct required persistence before dependent mutation
   - **Depends**: T005
-  - Ordinary history preserves actual execution IDs/outcomes/counts/private findings and original checkpoint identities. Bounded continuation-data producer; no automatic fixing yet.
+  - Tiny store/engine fault fixture proves safe correction/order, no replay of completed effect, precise missing-history limit. Required continuation data only; optional telemetry remains nonblocking.
 
-- [ ] T014 Record closed optional chain relations with real execution IDs
+- [ ] T007 Correct checkpoint failures and reconcile actual commit results
+  - **Depends**: T006
+  - Real whitespace/hook error returns through corrective context/affected checks; reported-failed/completed commit is recognized without recommit. ONE V8 case expands only to new document + modified unrelated file + incoming commit, preserving unrelated staged work and actual parent/review range. No filesystem conflict watcher.
+
+- [ ] T008 Reopen SDK sessions and retain normal SDK/tool recovery
+  - **Depends**: T002
+  - Saved-open/production adapter proof observes identity/rebinding/idle, ordinary tool correction and supported same-invocation recovery versus inspected terminal failure/no blind relaunch. Earliest small paid-scoped SDK proof stays here; no recovery service or routing policy.
+
+- [ ] T009 Restore deterministic pure session selection
+  - **Depends**: T008
+  - Actual helper fixtures prove 150000/149999 cutoff, explicit affinity, stable compatibility, settled-only eligibility, deterministic reasons/ties and fresh fallback. File activity is not eligibility.
+
+- [ ] T010 Route tasks and corrective continuations through compatible contexts
+  - **Depends**: T007, T008, T009
+  - Existing composed dummy two-task flow proves real shared identity/two checkpoints/fresh reviewer and consumes earlier check/checkpoint repair. Failed contexts never become cross-task candidates; no duplicated live programme.
+
+- [ ] T011 Compute honest usage and compaction deltas
+  - **Depends**: T008
+  - Actual interval/SDK-entry fixtures prove fieldwise counters/USD/unknowns/epochs and compaction deduplication. One paid-scoped real manual compaction remains separate from auto-pressure claims; no reporting here.
+
+- [ ] T012 Record/report distinct membership and nonblocking telemetry gaps
+  - **Depends**: T006, T010, T011
+  - Engine/store/CLI proves exact intervals, distinct dispatched tasks versus attempts, separate reviewer totals, legacy unknowns and continued work after optional storage failure. No public private content/metrics UI.
+
+- [ ] T013 Retain review/fix identities, findings and consumed rounds
+  - **Depends**: T006
+  - Ordinary required history preserves actual executions/counts/uncertainty/rejection/original checkpoints through reopen. No automatic routing or monitor-derived continuation.
+
+- [ ] T014 Record closed optional execution-chain relations
   - **Depends**: T013
-  - Recorder fixtures round-trip explicit trigger/predecessor/check/checkpoint links and safe detail fields; recording failure cannot change durable state. Bounded optional contract, not dispatch authority.
+  - Recorder/Store round-trip explicit trigger/predecessor/check/checkpoint IDs and safe details. Missing optional facts are honest gaps, never dispatch authority or invented causality.
 
-- [ ] T015 Execute one scoped fixer with normal verification/checkpoint
-  - **Depends**: T004, T007, T010, T012, T013, T014
-  - Explicit helper invocation runs dummy fixing work, checks and distinct focused checkpoint without rewriting original task records. Bounded execution primitive; controller owns routing.
+- [ ] T015 Execute one scoped fixer using corrective check/checkpoint interfaces
+  - **Depends**: T007, T010, T012, T013, T014
+  - Callable fixer performs normal checks, ordinary safe correction/affected reruns and distinct focused checkpoint inside ONE round. Genuine unrecoverable failure retains work. Controller owns review routing.
 
-- [ ] T016 Dispatch the bounded first-review/fix/second-review branch
+- [ ] T016 Dispatch bounded reviews/fixer with safe result correction
   - **Depends**: T015
-  - Four synthetic engine scenarios prove early success, repaired success, final rejection and fixer failure; malformed/uncertain review never fixes. Bounded branch using finished history/fixer/recording interfaces.
+  - Four synthetic production cases: immediate approve, corrected repair/approve, final rejection, genuinely unrecoverable fixer failure. Safe same-invocation format correction/normalization never invents approval or extra execution. Preserve two/one counts, scope, authority and full range; unknown review never fixes.
 
-- [ ] T017 Project recorded chain into reader/mapper/public details
+- [ ] T017 Project actual recorded chains and safe findings
   - **Depends**: T014, T016
-  - Actual engine recordings map to explicit causal edges, safe findings/refs and honest gaps/legacy unknowns. Bounded backend projection; no control routes or inferred execution.
+  - Four engine recordings traverse reader/mapper/public with exact actual edges, failed-check/pass history, preserved initial rejection, inert safe details and legacy unknowns. No inferred executions/control routes/backfill.
 
 - [ ] T018 Display actual chain/findings with an initial execution overview
   - **Depends**: T017
-  - Existing ELK/React Flow view should initially fit most recorded graph into its actual available viewport, exposing context/branches/chain while retaining detail navigation and unchanged-poll viewport. Add one focused wide/multilevel synthetic bounds/zoom/details check alongside existing V9 view cases; no app build or layout subsystem.
+  - Existing ELK/React Flow initially fits MOST recorded context/branches/chain in actual graph panel; one focused wide/multilevel synthetic bounds/zoom/details case preserves navigation on unchanged topology. Four existing view cases remain; no app build/new layout subsystem/download.
 
-- [ ] T019 Resume at completed/clean boundaries without resetting chain state
-  - **Depends**: T007, T012, T016
-  - CLI/bridge fixtures preserve original inputs/range/checkpoints and consumed review/fixing rounds. Bounded working resume consumer; uncertain stages never replay.
+- [ ] T019 Present implementation-lock busy as cancellable waiting/busy
+  - **Depends**: T006
+  - Tiny actual lock/CLI subprocess fixture proves busy is not failed task/expensive attempt, cancellation is transparent and release allows entry. Existing lock only, no queue/watch service; writer cancellation drain is T022.
 
-- [ ] T020 Continue understood failed-check partial work
-  - **Depends**: T019
-  - Failed-check continuation restores known source/output facts, reruns invalidated checks and retains consumed fixing round/history. Bounded ownership consumer; cancellation drain is T021.
+- [ ] T020 Resume original same run without clean/partial drift admission
+  - **Depends**: T007, T012, T016, T019
+  - Production CLI/bridge retains original inputs/checkpoints/authority/range and two/one chain state, reconciles actual unfinished effects, never replays completed tasks/commits. No pristine-tree or changed-file eligibility contract.
 
-- [ ] T021 Continue only after cancelled writers drain
+- [ ] T021 Continue unfinished task edits/artifact actions from operation history
   - **Depends**: T020
-  - Actual SDK/tool/process/lock observations precede same-run continuation, without resetting chain counts or repeating uncertain invocation. Bounded cancellation seam, not final mega-integration.
+  - Genuine interrupted partial work continues with ordinary scoped tools/runner correction and selective known cleanup. Unknown contents constrain actual deletion, not all commands/resume; no snapshot-based restoration/ownership proof.
 
-### Old → new boundaries and coverage
+- [ ] T022 Resume only after actual cancelled implementation writers drain
+  - **Depends**: T021
+  - Real SDK/tool/process/lock seam proves owned cancellation drain before explicit continuation, not whole-tree stability. Preserve history/metrics/chain bounds and unrelated bytes; label offline transport versus paid-gated SDK evidence.
 
-| Previous unit | Replacement | Why split / source mapping |
+## S10/S11 delta and producer ordering
+
+| Prior 21-task contract | Current outcome | Required change / boundary |
 | --- | --- | --- |
-| Old T001 authority | T001–T002 | Prompt propagation versus actual paid-launch settlement; V3. |
-| Old T002 generated output | T003–T004 | Classification/worker boundary versus runner-check failure/end handling; V7, V3. |
-| Old T003 retention | T005–T007 | Original run/attempt archive, durable task ownership, then actual Git checkpoint comparison; V6/V7. |
-| Old T004 reuse | T008–T010 | SDK saved-open interface, pure selector, then engine consumer; V1/V4/V5. |
-| Old T005 metrics | T011–T012 | Trustworthy interval calculation versus ordinary persistence/membership/reporting; V2/V5. |
-| Old T006 resume | T007, T019–T021 | Interrupted-commit comparison stays with producer; resume consumers now include durable bounded-chain state; V6/V7/V9. |
+| T003/T004 output classification/admission | T003 action scope, T004 runner feedback | DELETE declared-root/command/full-index/dirty admission; declared artifacts guide actual cleanup only. Check failures return through actual engine, not prose/terminal exception. |
+| T005 input archive + T006 snapshot ownership | T005 operation-local input/history; T006 required-write recovery | REMOVE whole index/pre-existing-dirty/baseline ownership snapshot producer. Keep only actual task/operation facts. Independent required-storage correction precedes mutation consumers. |
+| T007 conflict-aware checkpoints | T007 actual checkpoint correction/reconciliation | REMOVE proof-of-unrelatedness, concrete-conflict watcher, result-tree/full-index equality and passive check-invalidation tests. Preserve action safety and actual commit identity/parent. |
+| T008–T012 lifecycle/routing/accounting | Same IDs/outcome areas | SDK same-invocation correction, same-task engine repair and nonblocking optional STORAGE gaps; original routing/150000/accounting/live scope unchanged. |
+| T013–T018 bounded chain/projection/view | Same IDs/outcome areas | Required-write recovery consumed, corrective errors handled within one fixer round, review format safely corrected without extra execution. Genuine failures/unknowns still stop; graph facts/overview unchanged. |
+| No separate busy outcome | NEW T019 | Existing implementation-lock waiting/busy is independently testable from drain and does not fabricate failed work. No new lock service. |
+| Old T019/T020/T021 resume | T020/T021/T022 | Drop clean/partial drift restoration gates; use actual operation/result history and shared correction. Lock entry is separate from cancellation quiescence. |
 
-R1: T008–T010 and fresh chain reviewers T016. R2: T011–T012, fixer intervals T015 and resumed occurrences T019–T021. R3: T001–T002 plus fixer/reviewer/resume consumers. R4: lifecycle/reporting and narrow R8 projection/view T014/T017/T018. R5: T005–T007/T013/T019–T021. R6: T003–T004/T006/T015/T020–T021. R7/V8 remains T007 with T019 consumption; no new concurrent-commit testing programme. R8/V9: T013 required history → T014 optional facts → T015 fixer → T016 controller → T017 projection → T018 view; resume T019–T021 consumes durable chain state. T004 keeps V7's exact synthetic regression, T010 keeps V4 composed routing, and original V5 proofs are not duplicated for R8. Reuse unchanged applicable evidence; rerun only invalidated seams.
+There are **22 outcomes, not a count quota**. The obsolete snapshot producer is removed, not retained under a safer name. Required-storage recovery and lock-busy are concrete existing-boundary outcomes; check feedback, checkpoint correction and SDK recovery stay separate, rather than becoming a giant repair milestone. Task-local artifact facts now belong to T003/T005, not a new custody layer.
 
-### R8 revision delta and independent boundaries
+Producer/consumer chain: T003 action scope → T004 actual verification/corrective return → T005 original/attempt facts → T006 safe required persistence → T007 checkpoint correction/actual-result reconciliation → T010 composed routing. SDK interface T008 precedes pure selector T009 and routing T010. T013 history → T014 optional recording → T015 callable fixer → T016 bounded controller → T017 projection → T018 view. T019 lock entry and all completed history/checkpoint/chain interfaces precede T020 resume; T021 unfinished actions precede T022 cancellation continuation. Every dependency is earlier in file; transitive dependencies carry interface ownership without duplicate edges. Monitor facts never authorize execution.
 
-Previous T001–T012 keep their IDs/outcomes (T007's resume-consumer reference becomes T019). Previous T013/T014/T015 become T019/T020/T021 and gain chain-state consumption; no original acceptance is dropped. New T013–T018 separate six real interfaces rather than adding a chain-sized milestone: required ordinary history is distinct from nonblocking monitor facts, fixer execution from branch control, and backend projection from web presentation. Each has its own production oracle before consumers; no test-only/report/prototype task is added.
+## Source acceptance mapping and proof economy
 
-Dependency safety: chain history T013 follows original-input retention, not resume. Fixer T015 uses existing ownership/check/checkpoint/routing/accounting producers. Controller T016 consumes that completed helper; resume T019 depends on controller/history, never the reverse. Monitor consumers do not control dispatch or continuation. The four V9 scenarios originate in T016 and flow through actual recording/projection/view; producer tests remain local and unchanged proof is reused.
+| Source | Delivery / earliest real oracle |
+| --- | --- |
+| R1/V1 | T008 SDK lifecycle, T009 pure policy, T010 actual routing; every reviewer fresh. Default effective headroom >=150000, unknown/disabled telemetry fresh. No filesystem eligibility. |
+| R2/V2 | T011 deltas/compactions, T012 persistence/reporting; T015/T020–T022 consume occurrence identity without duplicate membership/spend. Optional storage gaps stay nonblocking. |
+| R3/V3 | T001 final prompt/tools, T002 actual scope-before-paid-call; T004 check return, T007 checkpoint return, T008 SDK/tool correction; downstream roles/resume preserve authority. |
+| R1–R4/V4 | T004/T007 provide actual check/checkpoint correction, T008 actual SDK lifecycle, T010 first composed dummy two-task flow. Reuse those small fault cases, no mandatory new suite/matrix. |
+| V5 | T008 earliest paid-scoped dummy reopen proof, T010 real two-task routing, T011 one real manual compaction, T012 extend applicable observed accounting. No extra live proof for recovery/chain; NOT RUN/UNAVAILABLE is not pass. |
+| R4/R5/V6 | T005 input/operation history, T006 required-storage fault, T007 actual lost-progress commit, T019 real lock-busy, T020 explicit same-run, T021 partial work, T022 actual SDK drain. No generic HEAD/index/partial-drift rejection. |
+| R6/V7 | T003 actual mutation/cleanup safety; T004 existing tiny synthetic failed build→correction→real pass/output/further commands/cleanup/source commit; T005 retains known task artifacts and T021 consumes only for actual actions. No declaration admission, unknown-artifact veto or actual monitor build. |
+| R7/V8 | T007 ONLY ONE small expanded disposable-Git case, consumed by T020/T016 without expanded matrix. New unrelated document/modified file/commit do not stop commands/checks/own checkpoint; preserve staged bytes/ancestry/actual parent/review range. |
+| R8/V9 | T013–T018 four composed actual engine→recording→public→view cases; T015 safely correctable check fault stays one fixing round, T016 safe format correction/normalization stays same review execution, terminal/unknown failures remain stops. T020–T022 preserve two/one limits. T018 existing wide/multilevel MOST-graph fixture measures actual panel/transformed bounds. |
 
-Source R8, not this artifact, owns the exact two-review/one-fixing-round supersession. Operative blanket no-auto-repair/no-monitor-expansion wording is replaced only within that exception. Malformed/failed/uncertain review stops, never triggers fixing; unknown invocation state and consumed counts survive explicit resume. Required continuation history cannot be reconstructed from optional monitor gaps.
+Known bounded rules use permanent actual-helper tests inside their outcome, not new prototypes. Consequential SDK saved-open/rebinding/settlement is proved at T008 before live reliance; commit interruption is proved at T007 before resume. Missing/disproved evidence blocks the affected claim and returns design/approval, not unrelated offline work or weaker criteria. Frontend uses existing Playwright/Vite synthetic source-module fixture, NEVER actual build/current dist/new package or browser download. Overview may reduce label readability; zoom/select provides detail, no invented coverage percentage/node cap/direction change/microscopic-label requirement.
 
-Frontend feasibility: inspected `web/package.json` (`test` is Playwright; `build` invokes tsc/Vite), Playwright config and existing graph fixture. Existing graph test serves dist and therefore is NOT the proposed regression command. T018 adds a focused synthetic fixture using existing Vite source-module serving/Playwright and production graph/view with mapped dummy executions; no actual monitor/project build, current dist, real implementation task, new package/browser install or paid programme. Missing existing tools/browser is UNAVAILABLE, not an automatic setup/build fallback.
+## Production validation, historical review and status
 
-### Narrow T018 presentation clarification — source aligned; focused recheck pending
+**Historical only:** earlier independent full review and T018 viewport recheck covered the old 21-task/S9 content retained at `e456ad0`; that historical revision preserves their original verdicts/hashes. They are explicitly superseded as current review evidence by material S10/S11; no old no-findings/ready verdict applies to this revision. Source author checkpoint precedes this task checkpoint; fresh independent review and source/tasks combined approval follow parent inspection. No runtime implementation or model binding is granted.
 
-Direct owner requirement: “most of the graph should fit in the viewport, so the user has an overall understanding of the execution context.” Luigi screenshot is inspiration for an understandable dependency overview, not styling, a dependency, algorithm replacement or invented edges.
+Task-production validation **PASS (pure text/JSON only)**: `PYTHONDONTWRITEBYTECODE=1 python3 -B skills/task-generation/scripts/check-task-order.py` passed for BOTH `.md` and `.json`. Python parsing matched all 22 human/executable IDs/dependencies, earlier producer edges, task-local REQUIRED tags, optional context groups, path/check ownership and synthetic-only briefs; manual boundary/source mapping above covers R1–R8/V1–V9 and S10/S11. Current source hash matched the linked checkpoint. Own index diff changes only this task row, preserving ADR/source/other entries; owned whitespace diff passes. No Engine/Authority/Store/SDK/database was invoked by validation. These checks do not approve the plan or prove runtime behavior. Planned task-local runtime/SDK/Git/browser/provider/resume checks above and in JSON are **NOT RUN**. Static task validation cannot prove runtime recovery, authority enforcement, granularity success or layout usability. This production revises planning files only; its one focused task-production checkpoint, actual hashes and residual state are reported in the producer handoff/Git before renewed review.
 
-**Source-aligned R8/V9 presentation clause:** Reuse existing ELK layered/React Flow overview behavior so the default selected-run view after layout fits most of the recorded execution graph in the actual graph viewport, showing overall context/branches/review–fix chain without initial hunting/panning. Retain pan/zoom/selection for detail and deliberate navigation on unchanged-topology polling; do not clip merely because of restrictive fit clamps. Preserve statuses and explicit recorded relations. Add one focused representative wide/multilevel synthetic recorded-graph fixture measuring actual viewport/layout bounds and usable zoom/details through existing source-module tooling. No numeric coverage threshold, node cap, forced always-fit/microscopic labels, direction change, new layout dependency/harness/browser install or actual app build.
-
-**Impact/review provenance:** only T018's outcome/acceptance and actual view-owned paths change; all 21 IDs/dependencies and other scope/budgets remain. Parent reports independent reviewer `b1ac15d8` found no findings on source SHA256 `59cf0642eb23050e16553ca1693e5cdcc53483bb36cd2d08913dcd29e6bd48c0` and prior artifact SHA256 `de0842ff734c7f3249b3231d12a38ea47b1c602296e9dcbf880db701a0b2377a`. That historical review does not cover changed bytes; source-owner reconciliation is complete; focused independent T018 recheck and owner approval remain pending.
-
-Read-only current seam check: layout remains ELK layered RIGHT (180×70 layout nodes, 25 node spacing, 60 layer spacing); fitView uses padding .15/maxZoom 1/minZoom .25 while React Flow minZoom is .15. CSS allocates graph space beside sidebar/details, with responsive stacking; unchanged topology retains positions/navigation. These are observed settings, not new fixed requirements. A zoom clamp can prevent a wider graph fitting the smaller real panel; adjust only the existing layout/fit/CSS seam as needed, not the algorithm or graph facts. Tradeoff: initial overview may reduce label readability; zoom/select supplies detail. No all-labels-readable-at-overview mandate is added.
-
-## Retained handoff and review
-
-Executable worker briefs and checks: [task JSON](session-reuse-metrics-permissions-tasks.json). The JSON is byte-identical to the independently reviewed embedded JSON; this human presentation is extracted from the reviewed artifact with only the source link relocated to the identical retained source. Task outcomes, dependencies, ownership and acceptance are unchanged. Review is planning-only; combined owner approval and implementation authority remain pending.
-
-## Review — focused T018 recheck
-
-No issues found.
-
-**Verdict: ready for planning approval, not implementation.** The unchanged scope retains the earlier independent review; this recheck covers only presentation and matching authority changes.
-
-### Category verdicts
-
-- **Parsimony — OK.** Source S9/R8/V9 presentation clauses (lines 34, 106, 128) and task clarification/T018 (lines 124–132, 261–265) reuse ELK layered RIGHT, React Flow and existing frontend tooling. They add no layout subsystem, numeric coverage quota, node cap or testing programme.
-- **Terra/medium granularity — OK.** T018 remains one view-owned outcome consuming T017’s completed public DTO contract. Initial overview, detail navigation and polling stability belong to the same layout/viewport seam; the added representative fixture verifies that outcome rather than creating another milestone.
-- **Correctness/verifiability/source agreement — OK.** Human and executable T018 preserve explicit graph facts, failures, original rejection, safe details and unchanged-poll navigation. Acceptance measures the actual graph panel and transformed layout bounds, not browser dimensions alone. It requires usable overview/detail behavior without demanding microscopic always-fit or universally readable overview labels.
-
-### Relevant source evidence
-
-- `workflow_monitor/web/src/main.tsx:42–43` already owns ELK layout and post-layout fitting. Existing `.25` fit minimum and `.15` React Flow minimum (`:82`) substantiate the narrow clamp-adjustment concern.
-- `workflow_monitor/web/src/style.css` allocates graph width beside sidebar/details and stacks details responsively. Actual panel measurement is therefore appropriate.
-- `graph.ts::graphFor` supplies the production graph; the proposed viewport change does not authorize inferred edges or hiding failures.
-- Existing Playwright/Vite dependencies support the scheduled synthetic source-module fixture without an application build or new dependency.
-
-Authority text correctly limits renewed commit permission to planning retention. Historical provenance and pending-status wording do not grant implementation permission.
-
-### Structure and reviewed hashes
-
-Pure parsing confirmed **21 unchanged IDs/dependency lists**, an acyclic graph, and T018 depending only on T017.
-
-SHA256:
-- Source: `d29f0b3ebb887c1d59a4cac57dd76e0e90a36191478c6df4fb2826dcbbf29be3`
-- Task artifact: `27043acffed2e26e5982ff0968110d3c02ac40a7116db0a8f54cb6bbfe48a5b0`
-- Exact embedded JSON plus final LF: `4bcca1a0eb56eddd838b21788d6ecc1b59c9039d8acd31233fb22cafb327daec`
-
-Hashes were rechecked before completion. Checkout HEAD: `a14447b61a0f9cc08c91478ecf492d83ddd315dc`.
-
-**Open material decisions/corrections:** None.
-
-**Limits:** No runtime, tests, builds, browser, SDK/provider, database or workflow execution occurred. Viewport behavior remains scheduled evidence, not proven implementation. Equivalent retention may separate Markdown/JSON, relocate source references and update status/index metadata without changing reviewed outcomes or acceptance. No files or commits were changed by this review.
+Residual risks: compatible same-task corrective context and actual error payload delivery; commit-success/progress-write uncertainty without duplicate effects; required versus optional storage handling; legacy missing operation history; SDK reopening/cancellation and incomplete counters; actual mixed-content destructive actions; overview/detail tradeoff. No material unresolved owner scope decision identified. These are implementation proof obligations, not new admission gates, observer services, retry budgets or permission questions.
