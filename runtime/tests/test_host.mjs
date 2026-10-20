@@ -7,7 +7,23 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { test } from 'node:test';
 import { createReadTool, createEditTool, createWriteTool, createBashTool } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
-import { mutationTools, promptSession } from '../pi-host/host.mjs';
+import { createWorkflowSession, mutationTools, promptSession } from '../pi-host/host.mjs';
+
+test('actual SDK worker exposes ask_owner while independent reviewer remains read-only', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-owner-tools-'));
+  try {
+    // Resolve local model metadata only: no prompt, provider request or authentication refresh.
+    const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'};
+    for (const readOnly of [false, true]) {
+      const session = await createWorkflowSession({project, executor, readOnly}, async () => ({answer: 'fixture'}));
+      try {
+        const tools = session.getActiveToolNames();
+        if (readOnly) assert.deepEqual([...tools].sort(), ['find', 'grep', 'ls', 'read']);
+        else assert.ok(tools.includes('ask_owner'), 'registered ask_owner must also be active for workers');
+      } finally { session.dispose(); }
+    }
+  } finally { await fs.rm(project, {recursive: true, force: true}); }
+});
 
 test('SDK compaction events continue to actual prompt completion without telemetry or deadline', async () => {
   let callback, removed = false;

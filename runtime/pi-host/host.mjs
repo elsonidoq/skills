@@ -70,8 +70,7 @@ export function mutationTools(project, ask) {
   ];
 }
 
-export async function execute(request, emit, ask) {
-  const {project, executor, prompt, readOnly = false} = request;
+export async function createWorkflowSession({project, executor, readOnly = false}, ask) {
   const modelRuntime = await ModelRuntime.create({
     ...(process.env.COHERENCE_AUTH_PATH ? {authPath: process.env.COHERENCE_AUTH_PATH} : {}),
     ...(process.env.COHERENCE_CATALOG_PATH ? {modelsStorePath: process.env.COHERENCE_CATALOG_PATH} : {}),
@@ -114,15 +113,20 @@ export async function execute(request, emit, ask) {
   await resourceLoader.reload();
   const {session} = await createAgentSession({
     cwd: project, modelRuntime, model, thinkingLevel: executor.effort,
-    tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash'],
+    tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner'],
     sessionManager: SessionManager.inMemory(project), resourceLoader,
   });
   await session.bindExtensions({});
+  return session;
+}
+
+export async function execute(request, emit, ask) {
+  const session = await createWorkflowSession(request, ask);
   const cancel = () => { void session.abort(); };
   process.on('SIGTERM', cancel);
   process.on('SIGINT', cancel);
   try {
-    return await promptSession(session, prompt, emit);
+    return await promptSession(session, request.prompt, emit);
   } finally {
     process.off('SIGTERM', cancel);
     process.off('SIGINT', cancel);
