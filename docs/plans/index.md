@@ -4,6 +4,7 @@ This directory contains source, task, execution, coverage and regression records
 subject-specific record for its approval and currentness; this index is a map, not a new
 source of authority. [Review records](reviews/index.md) are in the direct child directory.
 
+- [Proportionate Coherence policy and adoption refresh — tasks](coherence-parsimony-tasks.md): two ordered policy/consumer/defaults and bounded adoption/fixture/operator-doc deliveries; A1–A7 REQUIRED mappings and static-only limits, combined approval and separate implementation authorization pending.
 - [Proportionate Coherence policy and adoption refresh — TinySpec](coherence-parsimony-tinyspec.md): shared parsimony defaults, managed new-adoption copies and bounded idempotent policy-only refresh; source preparation only, separate tasks/combined approval and later implementation authorization pending.
 - [SpecKit assets in Coherence initialization — tasks](coherence-speckit-initialization-tasks.md): one coupled operational-guidance/regression/setup-runtime-doc delivery with A1–A6 REQUIRED evidence, immutable provenance and static-only limits; preparation only, combined approval pending.
 - [SpecKit assets in Coherence initialization — TinySpec](coherence-speckit-initialization-tinyspec.md): every-initialization asset checks and proposal-first official repair with custom-file preservation; preparation only, separate tasks and combined approval pending.
