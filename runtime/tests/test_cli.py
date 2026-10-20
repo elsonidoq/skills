@@ -34,6 +34,42 @@ class CliTests(ProjectTest):
         self.assertEqual(observed['monitoring']['recording_version'], 1)
         self.assertTrue(any(row['phase'] == 'review' for row in observed['monitoring']['observations']))
 
+    def test_selected_reviewer_profile_reaches_only_fresh_read_only_session(self):
+        tasks, executor = self.root/'tasks.json', self.root/'executor.json'
+        tasks.write_text('[{"id":"dummy","description":"Synthetic no-change fixture"}]')
+        worker = {'provider': 'fixture', 'model': 'offline-worker', 'effort': 'medium'}
+        reviewer = {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}
+        executor.write_text(json.dumps(dict(worker, reviewer=reviewer)))
+        sessions, calls = [], []
+        class Boundary:
+            def __init__(self, project, profile, **kwargs):
+                self.profile = profile
+                sessions.append(self)
+            def prompt(self, prompt, **kwargs):
+                calls.append((self.profile, kwargs.get('read_only', False)))
+                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'synthetic no-change fixture'
+        with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out:
+            code = main(['start', '--project', str(self.project), '--tasks', str(tasks),
+                         '--executor', str(executor), '--run', 'separate-reviewer'])
+        self.assertEqual(code, 0, out.getvalue())
+        self.assertEqual(calls, [(worker, False), (reviewer, True)])
+        self.assertIsNot(sessions[0], sessions[1])
+        self.assertTrue(json.loads(out.getvalue())['checkpoints'][0]['no_change'])
+
+    def test_invalid_explicit_reviewer_does_not_fall_back_or_launch(self):
+        tasks, executor = self.root/'tasks.json', self.root/'executor.json'
+        tasks.write_text('[{"id":"dummy","description":"Synthetic no-change fixture"}]')
+        for reviewer in (None, {}, {'provider': 'fixture', 'model': 'offline', 'effort': ''}):
+            with self.subTest(reviewer=reviewer):
+                executor.write_text(json.dumps({'provider': 'fixture', 'model': 'offline-worker',
+                                                'effort': 'medium', 'reviewer': reviewer}))
+                with patch('coherence_workflow.cli.PiAdapter') as adapter, contextlib.redirect_stdout(io.StringIO()) as out:
+                    code = main(['start', '--project', str(self.project), '--tasks', str(tasks),
+                                 '--executor', str(executor), '--run', 'invalid-reviewer'])
+                self.assertEqual(code, 2)
+                self.assertIn('correct the reviewer profile', json.loads(out.getvalue())['reason'])
+                adapter.assert_not_called()
+
     def test_bad_attached_configuration_stops_before_storage_or_sdk(self):
         tasks, executor = self.root/'tasks.json', self.root/'executor.json'
         tasks.write_text('[{"id":"smoke","description":"No changes"}]')

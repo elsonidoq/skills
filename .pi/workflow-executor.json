@@ -1,0 +1,10 @@
+{
+  "provider": "openai-codex",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "reviewer": {
+    "provider": "openai-codex",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  }
+}

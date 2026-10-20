@@ -119,6 +119,10 @@ rules above for reusable skills and commands.
   independently verifiable tasks sized for Terra workers, regardless of the planning model.
   Split independently testable concerns rather than bundling milestones into implementation tasks.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.
+  Every workflow launch in this repository, including continuations and corrective runs, uses
+  `.pi/workflow-executor.json`: Terra/medium workers and `openai-codex/gpt-6.1-sol`
+  at medium effort for every fresh reviewer session. Do not reuse historical Terra-only
+  executor files for new launches or rewrite historical reviewer records.
   Historical approvals stay historical. The latest owner direction supersedes older graph/SQL/
   custody/evidence eligibility mandates: task startup linter has only readable file, parsed list,
   ID/work description, unique IDs, existing dependency references and acyclic dependencies.

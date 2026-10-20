@@ -25,7 +25,14 @@ _DECISION_CONSTRAINTS = (
 class Engine:
     def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question):
         self.authority, self.run, self.contract = authority, run, contract
-        self.executor, self.adapter, self.question = executor, adapter, question
+        self.executor = {key: value for key, value in executor.items() if key != 'reviewer'}
+        self.reviewer_executor = executor.get('reviewer', self.executor)
+        if not isinstance(self.reviewer_executor, dict) or any(
+            not isinstance(self.reviewer_executor.get(key), str) or not self.reviewer_executor[key]
+            for key in ('provider', 'model', 'effort')
+        ):
+            raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
+        self.adapter, self.question = adapter, question
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store
@@ -137,7 +144,7 @@ class Engine:
                 if state == 'requested' or review_question_occurrence[0] is None:
                     review_question_occurrence[0] = recorder.occurrence()
                 recorder.emit(review_question_occurrence[0], 'review', mapping[state], facts={'parent_occurrence_id': reviewer_occurrence})
-            reviewer = self.adapter(project, self.executor, question=self.question, observe_question=review_question)
+            reviewer = self.adapter(project, self.reviewer_executor, question=self.question, observe_question=review_question)
             reviewer.lock_fd = self.authority.lock.fileno()
             try:
                 review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. ' + _DECISION_CONSTRAINTS + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
