@@ -15,6 +15,11 @@ def _ref(kind: str, run: str, value: object = "") -> str:
     return f"{kind}_{digest}"
 
 
+def run_ref(run_id: str) -> str:
+    """Create the opaque public reference for a private run identity."""
+    return _ref("run", run_id)
+
+
 def _text(value: object, fallback: str, limit: int) -> str:
     return value if isinstance(value, str) and 0 < len(value) <= limit else fallback
 
@@ -100,4 +105,4 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
             "followups": followups}
 
 
-__all__ = ["minimize"]
+__all__ = ["minimize", "run_ref"]

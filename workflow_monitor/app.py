@@ -1,9 +1,11 @@
 """Closed, loopback-only HTTP presentation for workflow monitor snapshots."""
 from __future__ import annotations
 
+import copy
 import hashlib
 import mimetypes
 from pathlib import Path
+import time
 from typing import Any, Protocol
 
 from starlette.applications import Starlette
@@ -12,8 +14,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
+from .liveness import qualify
 from .mapping import normalize
-from .public import minimize
+from .public import minimize, run_ref
 
 _CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 _ASSET_SUFFIXES = frozenset({".css", ".gif", ".html", ".ico", ".jpeg", ".jpg", ".js", ".png", ".svg", ".webp", ".woff", ".woff2"})
@@ -111,13 +114,48 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
     fixed_assets = _assets(assets)
     expected_host = f"127.0.0.1:{port}"
 
+    last_safe: dict[str, Any] | None = None
+    last_success_at: float | None = None
+
+    def observed(result: dict[str, Any], *, read_state: str, warning: str | None = None) -> dict[str, Any]:
+        """Attach closed freshness facts without changing retained graph facts."""
+        value = copy.deepcopy(result)
+        recorded = [item.get("recorded_at") for item in value.get("records", [])
+                    if type(item.get("recorded_at")) in (int, float)]
+        warnings: list[str] = []
+        if warning is not None:
+            warnings.append(warning)
+        if any(item.get("completeness") == "incomplete" for item in value.get("occurrences", [])):
+            warnings.append("incomplete_history")
+        value["observation"] = {"read_at": time.time(), "last_success_at": last_success_at,
+                                "last_recorded_at": max(recorded) if recorded else None,
+                                "read_state": read_state, "warnings": warnings}
+        return value
+
     def snapshot() -> tuple[dict[str, Any] | None, JSONResponse | None]:
+        nonlocal last_safe, last_success_at
         try:
-            result = minimize(normalize(reader.open_snapshot()))
+            raw = reader.open_snapshot()
+            result = minimize(normalize(raw))
+            if result.get("state") != "ok":
+                if last_safe is None:
+                    return None, _state_response(result)
+                raise RuntimeError("reader unavailable")
+            # Runner identities are private input.  Only a closed local qualification
+            # is associated with the corresponding public run, never the identity.
+            identities = {item.get("run_id"): item.get("runner_identity") for item in raw.get("runs", [])
+                          if isinstance(item, dict)}
+            for item in result["runs"]:
+                raw_id = next((row.get("run_id") for row in raw.get("runs", []) if isinstance(row, dict)
+                               and isinstance(row.get("run_id"), str) and item["ref"] == run_ref(row["run_id"])), None)
+                item["runner_state"] = qualify(identities.get(raw_id))
+            last_success_at = time.time()
+            last_safe = observed(result, read_state="current")
+            return last_safe, None
         except Exception:
+            if last_safe is not None:
+                return observed(last_safe, read_state="unavailable", warning="read_unavailable"), None
             return None, _error("internal", 500, retryable=True)
-        error = _state_response(result)
-        return (result if error is None else None), error
 
     def run(data: dict[str, Any], reference: str) -> dict[str, Any] | None:
         return next((item for item in data["runs"] if item["ref"] == reference), None)
