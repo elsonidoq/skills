@@ -20,20 +20,21 @@ After installation or global skill changes, run `/reload` inside pi.
 On a project, use [Initialize Coherence](skills/initialize-coherence/SKILL.md)
 (`initialize-coherence`) for proposal-first suite instructions, project memory association,
 and documentation owners/indexes/routing, including a schema owner when a persistent
-database exists. Compatible adoption is validated without rewriting it; an approved
-bounded refresh preserves custom paths/policy, existing memory and planning artifacts.
+database exists. Compatible association is validated without rewriting it; a missing/outdated
+managed policy still proposes a bounded refresh. Approved changes preserve custom paths/policy,
+existing memory and planning artifacts.
 
-Initially clean projects may initialize required documentation with verified content.
+On full initialization, initially clean projects may initialize required documentation with verified content.
 Tracked-dirty or untracked-only projects require a fresh read-only investigation and approval
 of the current plan plus exact missing-shell/index bounds; documentation writes remain
 empty/template shells, maps and indexes only. Structural readiness requires all approved
 instructions/memory and required documentation structure; missing requirements, denied
 approval or missing structure prevent a ready claim. Empty/stale substantive documentation
 remains explicit outstanding work for planner's owner-selected TinySpec/Standard path.
-On every initialization, including compatible adoption and refresh, check actual
+On every full initialization, including compatible adoption and refresh, check actual
 SpecKit commands, templates and scripts against the detected integration/version inventory,
 including readability, nonempty files, permissions and references. Complete/custom valid
-assets need no rewrite; compatible adoption remains an instructions/memory no-op but
+assets need no rewrite; compatible association remains an association/memory no-op but
 continues to this check. Missing/incomplete assets block initialization-ready claims.
 The bounded exception is proposal-first project-asset repair with the installed official
 CLI: explicitly detected integration/script/options, isolated fresh staging and
@@ -44,6 +45,27 @@ install/upgrade tooling. Conflict/drift/failure stops; report partial outputs wi
 readiness, automatic retry or destructive rollback. Other missing runtime prerequisites
 are reported, not installed by initialization. TinySpec/direct tasking still does not
 require SpecKit; Standard retains its stage capability gates.
+
+### Existing-project policy refresh
+
+Installation/update alone does not refresh already-adopted project instructions. After later
+approved integration, use the existing installer above to install/update the suite, then run
+`/reload` inside pi for changed global skills. In each explicitly selected and authorized target,
+request: “Use initialize-coherence for a policy-only parsimony refresh of this already-adopted project.”
+It compares the actual installed [canonical policy fragment](skills/planner/references/parsimony.md),
+not a version/hash/receipt. Inspect and approve its exact bounded instructions diff; resolve
+local keep/reconcile/location choices and separately approve already-dirty exact overlaps.
+It re-reads before patching and stops on concurrent drift or unsafe paths, preserving custom
+owners/overrides/paths, memory, history, docs and SpecKit. Unchanged repeat is a no-op without
+writes, duplicates or empty commits. Verify only `policy refresh applied` or `policy already current`,
+not full initialization/Standard readiness.
+
+Explicit policy-only intent does not require unrelated installation, full reinitialization,
+documentation repair, broad dirty-project documentation investigation or SpecKit provisioning,
+even when unrelated assets/docs are missing. Applicable bounded runtime/question/approval and
+ownership safeguards remain; missing required capability stops that operation. Use normal full
+initialization (the default) only when its broader adoption/docs/assets work is intended.
+No arbitrary target refresh or rollout is implied by installing this repository.
 
 This repository tracks its project-local SpecKit 1.0.12 setup: `.specify/` contains shared
 scripts, templates, integration metadata and the [project constitution](.specify/memory/constitution.md);

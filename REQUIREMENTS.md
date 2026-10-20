@@ -22,11 +22,11 @@ Keep this table in sync with the dependency statements inside the skills. The
 instructions during adoption. It reports missing prerequisites without installing them;
 its mandatory question/approval-contract gates stop when unavailable.
 
-On every initialization, including compatible adoption and refresh, the bounded exception
+On every full initialization, including compatible adoption and refresh, the bounded exception
 is proposal-first project-local SpecKit assets, not global tooling installation. Discover
 integration/version/script/options and verify commands, templates and scripts against an
 authoritative expected inventory and actual files. Complete valid/custom assets remain
-untouched; compatible association stays an instructions/memory no-op, not an early exit.
+untouched; compatible association stays an association/memory no-op, not an early exit.
 Missing/incomplete assets block initialization-ready claims. Use an installed official CLI
 with a source-verified recipe, explicit integration/options, isolated fresh staging and
 approved missing-file-only transfer; reconcile only approved necessary manifest entries.
@@ -36,6 +36,23 @@ do not silently install/upgrade tooling. Conflict/drift/failure stops without re
 automatic retry or destructive rollback; report partial outputs. Other missing runtime prerequisites
 retain stop/report behavior. TinySpec/direct tasking still does not require SpecKit, and
 Standard capability gates remain. After global skill changes, run `/reload` inside pi.
+
+Explicit policy-only parsimony refresh on an already-adopted project is narrower than full
+initialization. It requires applicable runtime/question, approval-contract, safe path/readability,
+status/ownership and exact-overlap/concurrent protections for the bounded instructions change,
+not unrelated tooling installation, full reinitialization, documentation repair/investigation or
+SpecKit inventory/provisioning. Missing unrelated assets/docs do not block the limited result;
+missing capability required for that operation does. Full default new/compatible/refresh routes
+retain their applicable documentation, SpecKit and structural readiness duties.
+
+After later integration, install/update through the existing [setup procedure](README.md#setup)
+and run `/reload` for changed global skills. Installation alone does not refresh existing project
+instructions. Only in an explicitly selected authorized project, request initialize-coherence
+policy-only refresh, compare actual canonical policy text, approve the exact bounded diff and
+separately approve dirty exact overlap. Retain custom/equivalent owners and overrides; drift stops.
+Verify `policy refresh applied` / `policy already current`, never full initialization/Standard
+readiness; unchanged repeat has no write, duplicate or empty commit. Use full initialization only
+when broader work is intended. No global activation or fleet rollout follows from this guidance.
 
 When SpecKit metadata is absent (not malformed/conflicting), inspect supported installed-CLI
 choices and version read-only, propose from current runtime/repository evidence and obtain

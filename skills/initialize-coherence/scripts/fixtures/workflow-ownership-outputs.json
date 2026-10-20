@@ -2,11 +2,246 @@
   {
     "name": "new-adoption-resolving-custom-associations",
     "before": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n",
-    "after": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nPackage contracts:\n[contract](INSTALL/planner/SKILL.md)\n[contract](INSTALL/coordinate-implementation/SKILL.md)\n[contract](INSTALL/task-generation/SKILL.md)\n[contract](INSTALL/planner/references/approval-and-recovery.md)\n[contract](INSTALL/memory-handling/references/task-commit-contract.md)\nExisting STATE location: scratch/STATE.md; preserve content, no upkeep.\n<!-- coherence-suite-contract:end -->\n"
+    "after": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nPackage contracts:\n[contract](INSTALL/planner/SKILL.md)\n[contract](INSTALL/coordinate-implementation/SKILL.md)\n[contract](INSTALL/task-generation/SKILL.md)\n[contract](INSTALL/planner/references/approval-and-recovery.md)\n[contract](INSTALL/memory-handling/references/task-commit-contract.md)\nExisting STATE location: scratch/STATE.md; preserve content, no upkeep.\n<!-- coherence-parsimony:start -->\n### Parsimony and Actionable Checks\n\n- Start with the smallest working solution. A speculative concern is not a requirement.\n  Omit unnecessary optional behavior without asking about every imagined safeguard;\n  surface consequential unresolved trade-offs. Job first; bookkeeping is subordinate.\n- New safeguards, limits or blockers need an explicit requirement, actual external/interface/\n  platform constraint, or concrete material implementation risk. Cheap necessary protection\n  for serious exposed security/data-loss risk need not wait for an incident. Preserve real\n  budgets/platform limits; invent no thresholds.\n- Weigh false blocking, availability loss, interruption, recovery friction, maintenance and\n  legitimate behavior prevented. Unrequested shutdown, expiration, deletion, cleanup,\n  throttling and spending/resource ceilings are out of scope by default. Observe/report\n  where safe, never instead of necessary protection.\n- Reuse SDK/tool/compiler/platform behavior. Check the relevant boundary; repeat only when\n  changed state invalidates evidence. Return ordinary safe errors with actionable correction:\n  a file-read size error calls for a smaller/paginated read, not a fatal workflow gate.\n  Concrete unsafe/invalid state such as target drift stops affected continuation.\n- Distinguish original requirements, necessary implementation choices with their basis,\n  and optional hardening in existing fields. Agent assumptions remain revisitable, not\n  original requirements merely because a plan labeled them REQUIRED. Change binding\n  approvals/acceptance only through existing gates.\n- Review unnecessary additions as well as omissions. Application/task acceptance proves\n  the requested outcome; framework regression/internal proofs are not application startup\n  or admission ceremonies. Preserve real tests, permissions and safety protections.\n<!-- coherence-parsimony:end -->\n<!-- coherence-suite-contract:end -->\n",
+    "target": "AGENTS.md",
+    "route": "full",
+    "outcome": "full initialization validated (authored)"
   },
   {
     "name": "bounded-refresh-preserves-custom-policy-memory-docs",
     "before": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nOld mechanics\n<!-- coherence-suite-contract:end -->\n",
-    "after": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nPackage contracts:\n[contract](INSTALL/planner/SKILL.md)\n[contract](INSTALL/coordinate-implementation/SKILL.md)\n[contract](INSTALL/task-generation/SKILL.md)\n[contract](INSTALL/planner/references/approval-and-recovery.md)\n[contract](INSTALL/memory-handling/references/task-commit-contract.md)\nExisting STATE location: scratch/STATE.md; preserve content, no upkeep.\n<!-- coherence-suite-contract:end -->\n"
+    "after": "Product policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\nDocs: handbook/index.md; unresolved: handbook/issues.md.\n<!-- coherence-suite-contract:start -->\nPackage contracts:\n[contract](INSTALL/planner/SKILL.md)\n[contract](INSTALL/coordinate-implementation/SKILL.md)\n[contract](INSTALL/task-generation/SKILL.md)\n[contract](INSTALL/planner/references/approval-and-recovery.md)\n[contract](INSTALL/memory-handling/references/task-commit-contract.md)\nExisting STATE location: scratch/STATE.md; preserve content, no upkeep.\n<!-- coherence-parsimony:start -->\n### Parsimony and Actionable Checks\n\n- Start with the smallest working solution. A speculative concern is not a requirement.\n  Omit unnecessary optional behavior without asking about every imagined safeguard;\n  surface consequential unresolved trade-offs. Job first; bookkeeping is subordinate.\n- New safeguards, limits or blockers need an explicit requirement, actual external/interface/\n  platform constraint, or concrete material implementation risk. Cheap necessary protection\n  for serious exposed security/data-loss risk need not wait for an incident. Preserve real\n  budgets/platform limits; invent no thresholds.\n- Weigh false blocking, availability loss, interruption, recovery friction, maintenance and\n  legitimate behavior prevented. Unrequested shutdown, expiration, deletion, cleanup,\n  throttling and spending/resource ceilings are out of scope by default. Observe/report\n  where safe, never instead of necessary protection.\n- Reuse SDK/tool/compiler/platform behavior. Check the relevant boundary; repeat only when\n  changed state invalidates evidence. Return ordinary safe errors with actionable correction:\n  a file-read size error calls for a smaller/paginated read, not a fatal workflow gate.\n  Concrete unsafe/invalid state such as target drift stops affected continuation.\n- Distinguish original requirements, necessary implementation choices with their basis,\n  and optional hardening in existing fields. Agent assumptions remain revisitable, not\n  original requirements merely because a plan labeled them REQUIRED. Change binding\n  approvals/acceptance only through existing gates.\n- Review unnecessary additions as well as omissions. Application/task acceptance proves\n  the requested outcome; framework regression/internal proofs are not application startup\n  or admission ceremonies. Preserve real tests, permissions and safety protections.\n<!-- coherence-parsimony:end -->\n<!-- coherence-suite-contract:end -->\n",
+    "target": "AGENTS.md",
+    "route": "full",
+    "outcome": "full initialization validated (authored)"
+  },
+  {
+    "name": "compatible-missing-policy-unrelated-assets-absent",
+    "route": "policy-only",
+    "target": "AGENTS.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\n<!-- coherence-parsimony:start -->\n### Parsimony and Actionable Checks\n\n- Start with the smallest working solution. A speculative concern is not a requirement.\n  Omit unnecessary optional behavior without asking about every imagined safeguard;\n  surface consequential unresolved trade-offs. Job first; bookkeeping is subordinate.\n- New safeguards, limits or blockers need an explicit requirement, actual external/interface/\n  platform constraint, or concrete material implementation risk. Cheap necessary protection\n  for serious exposed security/data-loss risk need not wait for an incident. Preserve real\n  budgets/platform limits; invent no thresholds.\n- Weigh false blocking, availability loss, interruption, recovery friction, maintenance and\n  legitimate behavior prevented. Unrequested shutdown, expiration, deletion, cleanup,\n  throttling and spending/resource ceilings are out of scope by default. Observe/report\n  where safe, never instead of necessary protection.\n- Reuse SDK/tool/compiler/platform behavior. Check the relevant boundary; repeat only when\n  changed state invalidates evidence. Return ordinary safe errors with actionable correction:\n  a file-read size error calls for a smaller/paginated read, not a fatal workflow gate.\n  Concrete unsafe/invalid state such as target drift stops affected continuation.\n- Distinguish original requirements, necessary implementation choices with their basis,\n  and optional hardening in existing fields. Agent assumptions remain revisitable, not\n  original requirements merely because a plan labeled them REQUIRED. Change binding\n  approvals/acceptance only through existing gates.\n- Review unnecessary additions as well as omissions. Application/task acceptance proves\n  the requested outcome; framework regression/internal proofs are not application startup\n  or admission ceremonies. Preserve real tests, permissions and safety protections.\n<!-- coherence-parsimony:end -->\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "outcome": "policy refresh applied",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": true,
+    "change": "insertion",
+    "unrelated_missing": [
+      "SpecKit inventory",
+      "documentation routing"
+    ],
+    "writes": [
+      "AGENTS.md"
+    ]
+  },
+  {
+    "name": "managed-outdated-policy",
+    "route": "policy-only",
+    "target": "AGENTS.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\n<!-- coherence-parsimony:start -->\n### Parsimony and Actionable Checks\nStart small; preserve source approval.\n<!-- coherence-parsimony:end -->\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\n<!-- coherence-parsimony:start -->\n### Parsimony and Actionable Checks\n\n- Start with the smallest working solution. A speculative concern is not a requirement.\n  Omit unnecessary optional behavior without asking about every imagined safeguard;\n  surface consequential unresolved trade-offs. Job first; bookkeeping is subordinate.\n- New safeguards, limits or blockers need an explicit requirement, actual external/interface/\n  platform constraint, or concrete material implementation risk. Cheap necessary protection\n  for serious exposed security/data-loss risk need not wait for an incident. Preserve real\n  budgets/platform limits; invent no thresholds.\n- Weigh false blocking, availability loss, interruption, recovery friction, maintenance and\n  legitimate behavior prevented. Unrequested shutdown, expiration, deletion, cleanup,\n  throttling and spending/resource ceilings are out of scope by default. Observe/report\n  where safe, never instead of necessary protection.\n- Reuse SDK/tool/compiler/platform behavior. Check the relevant boundary; repeat only when\n  changed state invalidates evidence. Return ordinary safe errors with actionable correction:\n  a file-read size error calls for a smaller/paginated read, not a fatal workflow gate.\n  Concrete unsafe/invalid state such as target drift stops affected continuation.\n- Distinguish original requirements, necessary implementation choices with their basis,\n  and optional hardening in existing fields. Agent assumptions remain revisitable, not\n  original requirements merely because a plan labeled them REQUIRED. Change binding\n  approvals/acceptance only through existing gates.\n- Review unnecessary additions as well as omissions. Application/task acceptance proves\n  the requested outcome; framework regression/internal proofs are not application startup\n  or admission ceremonies. Preserve real tests, permissions and safety protections.\n<!-- coherence-parsimony:end -->\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "outcome": "policy refresh applied",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": true,
+    "change": "replacement",
+    "writes": [
+      "AGENTS.md"
+    ]
+  },
+  {
+    "name": "unchanged-repeat",
+    "route": "policy-only",
+    "target": "AGENTS.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\n<!-- coherence-parsimony:start -->\n### Parsimony and Actionable Checks\n\n- Start with the smallest working solution. A speculative concern is not a requirement.\n  Omit unnecessary optional behavior without asking about every imagined safeguard;\n  surface consequential unresolved trade-offs. Job first; bookkeeping is subordinate.\n- New safeguards, limits or blockers need an explicit requirement, actual external/interface/\n  platform constraint, or concrete material implementation risk. Cheap necessary protection\n  for serious exposed security/data-loss risk need not wait for an incident. Preserve real\n  budgets/platform limits; invent no thresholds.\n- Weigh false blocking, availability loss, interruption, recovery friction, maintenance and\n  legitimate behavior prevented. Unrequested shutdown, expiration, deletion, cleanup,\n  throttling and spending/resource ceilings are out of scope by default. Observe/report\n  where safe, never instead of necessary protection.\n- Reuse SDK/tool/compiler/platform behavior. Check the relevant boundary; repeat only when\n  changed state invalidates evidence. Return ordinary safe errors with actionable correction:\n  a file-read size error calls for a smaller/paginated read, not a fatal workflow gate.\n  Concrete unsafe/invalid state such as target drift stops affected continuation.\n- Distinguish original requirements, necessary implementation choices with their basis,\n  and optional hardening in existing fields. Agent assumptions remain revisitable, not\n  original requirements merely because a plan labeled them REQUIRED. Change binding\n  approvals/acceptance only through existing gates.\n- Review unnecessary additions as well as omissions. Application/task acceptance proves\n  the requested outcome; framework regression/internal proofs are not application startup\n  or admission ceremonies. Preserve real tests, permissions and safety protections.\n<!-- coherence-parsimony:end -->\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\n<!-- coherence-parsimony:start -->\n### Parsimony and Actionable Checks\n\n- Start with the smallest working solution. A speculative concern is not a requirement.\n  Omit unnecessary optional behavior without asking about every imagined safeguard;\n  surface consequential unresolved trade-offs. Job first; bookkeeping is subordinate.\n- New safeguards, limits or blockers need an explicit requirement, actual external/interface/\n  platform constraint, or concrete material implementation risk. Cheap necessary protection\n  for serious exposed security/data-loss risk need not wait for an incident. Preserve real\n  budgets/platform limits; invent no thresholds.\n- Weigh false blocking, availability loss, interruption, recovery friction, maintenance and\n  legitimate behavior prevented. Unrequested shutdown, expiration, deletion, cleanup,\n  throttling and spending/resource ceilings are out of scope by default. Observe/report\n  where safe, never instead of necessary protection.\n- Reuse SDK/tool/compiler/platform behavior. Check the relevant boundary; repeat only when\n  changed state invalidates evidence. Return ordinary safe errors with actionable correction:\n  a file-read size error calls for a smaller/paginated read, not a fatal workflow gate.\n  Concrete unsafe/invalid state such as target drift stops affected continuation.\n- Distinguish original requirements, necessary implementation choices with their basis,\n  and optional hardening in existing fields. Agent assumptions remain revisitable, not\n  original requirements merely because a plan labeled them REQUIRED. Change binding\n  approvals/acceptance only through existing gates.\n- Review unnecessary additions as well as omissions. Application/task acceptance proves\n  the requested outcome; framework regression/internal proofs are not application startup\n  or admission ceremonies. Preserve real tests, permissions and safety protections.\n<!-- coherence-parsimony:end -->\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "outcome": "policy already current",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": false,
+    "change": "none",
+    "writes": []
+  },
+  {
+    "name": "equivalent-approved-owner",
+    "route": "policy-only",
+    "target": "PROJECT.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nLocal approved policy: smallest outcome; justified safeguards only.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nLocal approved policy: smallest outcome; justified safeguards only.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "outcome": "keep approved equivalent local policy",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": true,
+    "change": "none",
+    "writes": [],
+    "choice": "keep",
+    "owner": "PROJECT.md"
+  },
+  {
+    "name": "customized-policy-choice",
+    "route": "policy-only",
+    "target": "AGENTS.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\n<!-- coherence-parsimony:start -->\nLocal retention override; do not replace.\n<!-- coherence-parsimony:end -->\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\n<!-- coherence-parsimony:start -->\nLocal retention override; do not replace.\n<!-- coherence-parsimony:end -->\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "outcome": "specific keep/reconcile/location choice required",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": false,
+    "change": "none",
+    "writes": []
+  },
+  {
+    "name": "denied-dirty-overlap",
+    "route": "policy-only",
+    "target": "AGENTS.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "outcome": "no write: exact-overlap approval denied",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": true,
+    "overlap_approved": false,
+    "change": "none",
+    "writes": []
+  },
+  {
+    "name": "concurrent-drift",
+    "route": "policy-only",
+    "target": "AGENTS.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\nIntervening owner edit.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\nIntervening owner edit.\n",
+    "outcome": "stop affected patch: concurrent drift",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": true,
+    "approved_before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "change": "none",
+    "writes": []
+  },
+  {
+    "name": "unsafe-path",
+    "route": "policy-only",
+    "target": "AGENTS.md",
+    "before": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "after": "Custom policy: local-only fixtures.\nMemory: custom/gotchas/MEMORY.md.\n<!-- coherence-suite-contract:start -->\nLocal override: keep exports until owner deletes them.\nExisting STATE: scratch/STATE.md; preserve, no upkeep.\n<!-- coherence-suite-contract:end -->\nCustom trailing instructions.\n",
+    "outcome": "stop affected patch: escaping symlink",
+    "files_before": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "files_after": {
+      "custom/gotchas/MEMORY.md": "# Existing gotchas\nPreserve index.\n",
+      "custom/coordination/GUIDELINES.md": "Owner feedback.\n",
+      "scratch/STATE.md": "Existing custom state.\n",
+      "history/decisions.md": "Historical decision.\n",
+      "handbook/index.md": "Custom docs.\n",
+      ".specify/templates/spec-template.md": "Custom SpecKit.\n"
+    },
+    "approved": true,
+    "unsafe_target": "../outside/AGENTS.md",
+    "change": "none",
+    "writes": []
   }
 ]

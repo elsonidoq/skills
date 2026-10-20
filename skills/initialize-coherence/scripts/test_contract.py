@@ -79,7 +79,7 @@ SPECKIT_RULES = {
   'resolved, without readiness.']),
  'assets-discovery': ('Discovery',
                       ['After the dirty-first capability gate, check SpecKit project assets on '
-                       'every initialization: new adoption, compatible adoption and refresh.',
+                       'every full initialization: new adoption, compatible adoption and refresh.',
                        'Detect integration, script variant, command location, recorded version and '
                        'relevant options from target metadata/configuration; do not silently '
                        'select noninteractive Copilot defaults.',
@@ -120,9 +120,9 @@ SPECKIT_RULES = {
                       '`--force` permits merge/overwrite and managed refresh is not an overwrite '
                       'waiver.']),
  'assets-continuation': ('Adoption',
-                         ['Compatible adoption remains an instructions/memory no-op, not an exit '
-                          'that bypasses the SpecKit check.',
-                          'New, compatible and refresh routes all continue from Discovery through '
+                         ['Compatible association remains an association/memory no-op, not an exit '
+                          'that bypasses the full-initialization SpecKit check; approved bounded policy changes remain separate.',
+                          'Full new, compatible and refresh routes continue from Discovery through '
                           'Approval to the approved asset operation below and final Validation; no '
                           'adoption early return.',
                           'Asset repair is separately bounded by Approval, not authority to change '
@@ -145,7 +145,7 @@ SPECKIT_RULES = {
                           'Complete assets remain untouched on repeat runs; revalidate the actual '
                           'three-family inventory after approved repair.']),
  'assets-report': ('Validation',
-                   ['On all new, compatible and refresh routes, report detected SpecKit '
+                   ['On full new, compatible and refresh routes, report detected SpecKit '
                     'integration/version, actual commands/templates/scripts completeness, repair '
                     'or no-op, partial outputs and blockers.',
                     'Missing or incomplete required SpecKit project assets block '
@@ -155,6 +155,25 @@ SPECKIT_RULES = {
                     'nonempty files, required permissions and resolving references; manifest-only '
                     'success or CLI exit status is insufficient.',
                     'After global skill changes, tell the user to run `/reload` inside pi.'])}
+
+POLICY_RULES = {
+    "policy-selection": ("Preflight", ["Full initialization is the default", "Only explicit policy-only refresh intent",
+        "targeted dirty ownership", "missing capability required for the bounded operation stops it"]),
+    "policy-discovery": ("Discovery", ["existing approved association and equivalent instructions owner",
+        "not policy-only refresh", "not silent initialization"]),
+    "policy-investigation": ("Investigation", ["Policy-only skips broad documentation investigation"]),
+    "policy-approval": ("Approval", ["exact instructions target, subsection bounds and before/after policy diff"]),
+    "policy-copy": ("Adoption", ["compare actual policy text", "irrelevant whitespace/line endings",
+        "Dates, hashes, versions, receipts, headings or links are not currency proof",
+        "coherence-parsimony:start", "including equivalent local policy",
+        "specific keep/reconcile/location choice", "separate explicit overlap approval",
+        "Re-read immediately before patching", "concurrent drift stops", "every unrelated byte",
+        "Never regenerate the outer contract wholesale"]),
+    "policy-docs": ("Documentation", ["Full initialization only", "Policy-only refresh does not discover/repair documentation"]),
+    "policy-validation": ("Validation", ["policy refresh applied", "policy already current",
+        "not full initialization/Standard readiness", "no empty commit"]),
+}
+
 
 SOURCE_HASHES = {
     "skills/install-memory/SKILL.md": "7894452bb308c5292c13f5cfb3d19ed945842d88e1a31e1d5dbb8861dddc715f",
@@ -182,7 +201,7 @@ def check_contract(text):
     for diagnostic, pattern in (UNSAFE | BOOKKEEPING_UNSAFE).items():
         if re.search(pattern, normalized(text)):
             errors.append(f"{diagnostic}: contradictory permission")
-    for diagnostic, (name, phrases) in SPECKIT_RULES.items():
+    for diagnostic, (name, phrases) in (SPECKIT_RULES | POLICY_RULES).items():
         body = normalized(stage(text, name))
         for phrase in phrases:
             if normalized(phrase) not in body:
@@ -288,7 +307,7 @@ class CandidateTests(unittest.TestCase):
         for phrase in ("proposal-first", "compatible adoption", "bounded refresh", "fresh read-only investigation", "empty/template shells", "structural readiness", "outstanding work", "/reload", "authorize separately"):
             self.assertIn(phrase, readme)
         for doc in (readme, requirements):
-            for phrase in ("every initialization", "commands, templates and scripts", "compatible adoption and refresh", "approved missing-file-only transfer", "missing usable cli", "other missing runtime prerequisites", "tinyspec/direct tasking", "no blanket", "--force", "/reload"):
+            for phrase in ("every full initialization", "commands, templates and scripts", "compatible adoption and refresh", "approved missing-file-only transfer", "missing usable cli", "other missing runtime prerequisites", "tinyspec/direct tasking", "no blanket", "--force", "/reload"):
                 self.assertIn(phrase, doc)
         for phrase in ("0.87.x", "0.87.1", "pi-subagents@0.73.1", "pi-ask-user@0.15.1", "tinyspec/direct tasking does not require it", "manual routing", "schema owner", "missing required structure blocks readiness"):
             self.assertIn(phrase, requirements)
@@ -310,12 +329,114 @@ class CandidateTests(unittest.TestCase):
         self.assertIn("no suite-level persistent database/schema owner", normalized(index))
 
 
+class PolicyRefreshTests(unittest.TestCase):
+    """Static carrying clauses and authored diffs, never an executed updater."""
+
+    def test_policy_only_route_custody_and_limited_result(self):
+        text = SKILL.read_text()
+        for name, clauses in {
+            "Preflight": ("Full initialization is the default", "explicit policy-only", "targeted dirty ownership"),
+            "Discovery": ("approved association", "equivalent instructions owner", "not policy-only"),
+            "Investigation": ("Policy-only skips broad documentation investigation",),
+            "Adoption": ("compare actual policy text", "coherence-parsimony:start", "equivalent local policy",
+                         "Re-read immediately before patching", "concurrent drift stops", "every unrelated byte"),
+            "Validation": ("policy refresh applied", "policy already current", "no empty commit", "not full initialization/Standard readiness"),
+        }.items():
+            body = stage(text, name)
+            for clause in clauses:
+                self.assertIn(clause, body, (name, clause))
+
+
+    def test_authored_policy_copies_and_bounded_diffs(self):
+        rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
+        canonical = (ROOT / "skills/planner/references/parsimony.md").read_text()
+        start, end = "<!-- coherence-parsimony:start -->", "<!-- coherence-parsimony:end -->"
+        def fragment(text):
+            return text.split(start, 1)[1].split(end, 1)[0]
+        expected = " ".join(fragment(canonical).split())  # whitespace only, not casefold
+        changed = []
+        for row in rows:
+            with self.subTest(case=row["name"], expected=row["outcome"]):
+                before, after = row["before"], row["after"]
+                if row["route"] == "full" or row.get("change") in ("insertion", "replacement") or row["name"] == "unchanged-repeat":
+                    self.assertEqual(after.count(start), 1)
+                    self.assertEqual(after.count(end), 1)
+                    self.assertEqual(" ".join(fragment(after).split()), expected)
+                if row["route"] != "policy-only":
+                    continue
+                self.assertEqual(row["files_before"], row["files_after"])
+                self.assertIn("custom/gotchas/MEMORY.md", before)
+                self.assertIn("Local override: keep exports", after)
+                if row["writes"]:
+                    self.assertTrue(row["approved"])
+                    self.assertEqual(row["writes"], [row["target"]])
+                    prefix, tail = after.split(start, 1)
+                    suffix = tail.split(end, 1)[1]
+                    if row["change"] == "insertion":
+                        self.assertEqual(before, prefix + suffix.lstrip("\n"))
+                    else:
+                        self.assertEqual(before.split(start, 1)[0], prefix)
+                        self.assertEqual(before.split(end, 1)[1], suffix)
+                    self.assertTrue(prefix.count("coherence-suite-contract:start") == 1)
+                    self.assertIn("coherence-suite-contract:end", suffix)
+                    self.assertEqual(row["outcome"], "policy refresh applied")
+                    changed.append(row["name"])
+                else:
+                    self.assertEqual(before, after)
+                    self.assertEqual(row["change"], "none")
+        self.assertEqual(changed, ["compatible-missing-policy-unrelated-assets-absent", "managed-outdated-policy"])
+        by_name = {row["name"]: row for row in rows}
+        self.assertEqual(by_name["equivalent-approved-owner"]["target"], "PROJECT.md")
+        self.assertEqual(by_name["equivalent-approved-owner"]["choice"], "keep")
+        self.assertIn("choice required", by_name["customized-policy-choice"]["outcome"])
+        self.assertFalse(by_name["denied-dirty-overlap"]["overlap_approved"])
+        self.assertNotEqual(by_name["concurrent-drift"]["approved_before"], by_name["concurrent-drift"]["before"])
+        self.assertIn("stop affected patch", by_name["concurrent-drift"]["outcome"])
+        self.assertIn("escaping symlink", by_name["unsafe-path"]["outcome"])
+        self.assertEqual(by_name["unchanged-repeat"]["outcome"], "policy already current")
+        self.assertEqual(by_name["compatible-missing-policy-unrelated-assets-absent"]["unrelated_missing"],
+                         ["SpecKit inventory", "documentation routing"])
+
+    def test_compare_proposal_approval_reread_patch_validation_order(self):
+        text = stage(SKILL.read_text(), "Adoption").split("### Managed parsimony comparison and refresh", 1)[1]
+        steps = ("1. Compare canonical text", "2. Propose the exact target", "obtain normal",
+                 "3. Re-read immediately before patching", "4. Patch only the approved", "5. Validate by re-reading")
+        positions = [text.index(step) for step in steps]
+        self.assertEqual(positions, sorted(positions))
+
+    def test_route_clauses_are_required_in_carrying_stages(self):
+        text = SKILL.read_text()
+        self.assertEqual(check_contract(text), [])
+        for diagnostic, (name, phrases) in POLICY_RULES.items():
+            with self.subTest(boundary=diagnostic):
+                # One representative deletion per actual boundary, not a sentence matrix.
+                phrase = phrases[0]
+                pattern = r"\s+".join(re.escape(word) for word in phrase.split())
+                body = stage(text, name)
+                changed = text.replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
+                self.assertTrue(any(e.startswith(diagnostic + ":") for e in check_contract(changed)))
+
+    def test_operator_docs_and_repo_copy_match_route(self):
+        owner = (ROOT / "skills/planner/references/parsimony.md").read_text()
+        agents = (ROOT / "AGENTS.md").read_text()
+        start, end = "<!-- coherence-parsimony:start -->", "<!-- coherence-parsimony:end -->"
+        self.assertEqual(agents.count(start), 1)
+        self.assertEqual(owner.split(start)[1].split(end)[0], agents.split(start)[1].split(end)[0])
+        for path in ("README.md", "REQUIREMENTS.md"):
+            doc = normalized((ROOT / path).read_text())
+            for clause in ("policy-only", "installation", "does not refresh", "explicitly selected",
+                           "exact bounded", "dirty exact overlap", "policy already current", "no-op" if path == "README.md" else "no write",
+                           "not full initialization/standard readiness" if path == "README.md" else "never full initialization/standard readiness"):
+                self.assertIn(clause, doc, path)
+
+
 class WorkflowOwnershipOutputTests(unittest.TestCase):
     """Authored adoption outputs, not a generator or live agent simulation."""
     def test_new_and_refresh_resolve_contracts_preserve_associations(self):
         rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
         adoption = stage(SKILL.read_text(), "Adoption")
-        self.assertEqual(len(rows), 2)
+        self.assertEqual(len([row for row in rows if row.get("route") != "policy-only"]), 2)
+        rows = [row for row in rows if row.get("route") != "policy-only"]
         for row in rows:
             with self.subTest(case=row["name"]):
                 custom = row["before"].split("<!-- coherence-suite-contract:start -->")[0]
@@ -383,7 +504,7 @@ def scenario_check(scenario):
             body = normalized(stage(text, row["stage"]))
             for phrase in row["requires"]:
                 self.assertIn(normalized(phrase), body, f"{scenario['name']}: {scenario['bound']}")
-        for rule in scenario.get("asset_rules", []):
+        for rule in scenario.get("asset_rules", []) + scenario.get("policy_rules", []):
             self.assertFalse(any(e.startswith(rule + ":") for e in check_contract(text)), scenario["name"])
         if scenario.get("asset_route"):
             self.assertLess(normalized(text).index("first verify"),
