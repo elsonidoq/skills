@@ -77,7 +77,10 @@ claimed satisfied by planning syntax or scenario descriptions.
 
 ## Approval
 
-Pending owner combined source/task approval. Even affirmative planning approval leaves
-implementation stopped until the owner's separate explicit go-ahead. Any future material
-source/task change requires affected review and renewed approval; current runtime/path
-state must be inspected again before implementation.
+Owner answered **“Approve planning only”** through `ask_user` after the full task brief.
+This approves the combined source/task contents identified by the SHA-256 values above,
+not implementation. **Implementation remains stopped until the owner's separate explicit
+go-ahead.** Intended implementation family/effort remains Terra/medium; exact binding and
+usable configuration are unresolved until later preflight. Any future material source/task
+change requires affected review and renewed approval; current runtime/path state must be
+inspected again before implementation.
