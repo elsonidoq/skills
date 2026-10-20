@@ -13,7 +13,7 @@ runtime simplification, not merely a fix for one file-read limit.
 
 Retain the useful LangGraph/SQLite runner, thin Pi host and focused Git checkpoints;
 prune redundant enforcement rather than build a replacement platform. The proposed
-path is **validate → execute task → configured checks → focused commit → next →
+product path is **validate → execute task → configured checks → focused commit → next →
 independent final review**. It covers runtime, host, workflow configuration, necessary
 schemas and operative skills/docs. It does not overhaul planner routing or its fresh
 producer/exact-profile requirements, implement the monitor app, install dependencies,
@@ -33,8 +33,8 @@ start/resume/control/archive/reset, source renewal, process adoption or recovery
 
 ## Proposed operating contract
 
-Readiness is five independent facts, checked at admission and again only where a
-relevant change invalidates them—not the whole proof chain before every action:
+Simplified-runtime readiness is five independent facts, checked at admission and again
+only where a relevant change invalidates them—not the whole proof chain before every action:
 
 1. **Executable work:** tasks have outcomes, owned paths, valid dependency order and
    task-local REQUIRED checks; reject the affected malformed contract with its repair.
@@ -167,9 +167,29 @@ inspection handles names/types/deletion coverage. No giant fault-injection prere
 or live/provider call is authorized by source preparation. A failed/unrun REQUIRED
 exercise cannot establish readiness, and changed assumptions renew affected approval.
 
-Before task decomposition, the owner still selects the refactor implementation executor
-and effort from the **selected workflow configuration**, not this producer/session.
-Do not invent a Terra binding or execution intent. The existing monitor build remains
-Sol/medium unchanged. Parent review, separate tasks and combined current-content approval
-(including affected policy changes) are still pending; any later execution exercise needs
-its own explicit authority. No current-run recovery or additional archive/reset is implied.
+For **delivery of this refactor**, the owner rejected using the runtime being simplified
+and selected instruction-managed coordination: bounded workers, actual REQUIRED checks,
+focused task commits and independent full-range final review. The actual owner answer
+“Yes — gpt-5.6-terra / medium” selects **`openai-codex/gpt-5.6-terra`, effort `medium`**
+for implementation tasks. Each Terra writer verifies and focused-commits its task under
+the [shared checkpoint contract](../../skills/memory-handling/references/task-commit-contract.md);
+the coordinator inspects actual diffs, SHAs and check evidence. Runner-owned commits above
+remain proposed **product behavior**, not this refactor's delivery mechanism. No retired
+skill is restored and no runtime-generated launch approval, custody proof or manifest is
+a prerequisite. Before implementation in this worktree, reconcile real sole-writer/custody
+safety; if necessary use a clean isolated workspace rather than repair the broken runtime
+first. The uncertain monitor attempt stays untouched; no recovery programme is implied.
+
+Tasks must carry this owner-selected binding explicitly, without fabricating a selected
+workflow YAML or modifying existing app/base configuration. Future runtime/planning
+consumers still derive executor intent from selected workflow configuration, not the
+planner/session; this explicit owner selection governs this instruction-managed delivery.
+The existing monitor build remains Sol/medium unchanged.
+
+Parent review, separate tasks and combined current-content approval remain pending.
+That approval must explicitly include this bounded execution-route exception to current
+planner/adoption/constitution automatic-runner clauses and any affected policy amendments;
+it is not an already-approved implementation or global process rewrite. Real tests, Git
+checkpoints, ownership and independent review remain mandatory. Later live acceptance
+needs separate explicit authority. No implementation, worktree creation, current-run
+recovery or additional archive/reset is authorized by this planning correction.
