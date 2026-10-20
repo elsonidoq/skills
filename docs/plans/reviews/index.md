@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [Lean workflow runtime — planning review and approval](workflow-runtime-lean-planning-review.md): exact-content TinySpec/three-task approval, Terra/medium instruction-managed delivery and proposed policy amendments; planning-only, implementation/live/recovery authority not granted.
 - [Defensible routing — planning review and approval](defensible-routing-planning-review.md): current-content TinySpec/T001 approval; exact execution/reviewer routing and separately authorized behavioral evaluation remain gated.
 - [Pragmatic planning — review and approval](pragmatic-planning-review.md): digest-bound TinySpec/T001 approval including small informational `[PROTOTYPE]` tasks; coordinator execution-profile approval and independent final review remain required.
 - [Rubric-first routing — planning review](rubric-first-routing-planning-review.md): owner-approved digest-bound A1–A7 planning-only handoff, three producer-first tasks and proportional readiness safeguards; implementation remains on hold.
