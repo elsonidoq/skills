@@ -18,16 +18,79 @@ from .tool_process import MAX_MANIFEST_BYTES
 from .store import Blocked, canonical, digest, git, safe_path
 
 
-def fingerprint(path):
-    s = path.lstat()
-    if path.is_symlink():
-        value = os.readlink(path).encode()
-    elif path.is_file():
-        value = path.read_bytes()
+def _identity(s):
+    return {'mode': s.st_mode, 'uid': s.st_uid, 'device': s.st_dev, 'inode': s.st_ino}
+
+
+def _stable(s):
+    return (s.st_mode, s.st_uid, s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+
+
+def _entry(parent, base, name, files):
+    """Inventory through held directory FDs, never following a symlink."""
+    if name in ('.git', '.coherence/workflow') or name.startswith(('.git/', '.coherence/workflow/')):
+        return
+    try:
+        _read_entry(parent, base, name, files)
+    except OSError as exc:
+        raise Blocked('inventory unavailable: ' + name + ' (' + type(exc).__name__ + ')') from None
+
+
+def _read_entry(parent, base, name, files):
+    before = os.stat(base, dir_fd=parent, follow_symlinks=False)
+    mode = before.st_mode
+    value = _identity(before)
+    if stat.S_ISLNK(mode):
+        value.update(kind='symlink', hash=hashlib.sha256(os.fsencode(os.readlink(base, dir_fd=parent))).hexdigest())
+    elif stat.S_ISREG(mode) or stat.S_ISDIR(mode):
+        fd = os.open(base, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK |
+                     (os.O_DIRECTORY if stat.S_ISDIR(mode) else 0), dir_fd=parent)
+        try:
+            if _stable(os.fstat(fd)) != _stable(before):
+                raise Blocked('worktree entry changed during inventory: ' + name)
+            if stat.S_ISDIR(mode):
+                value['kind'] = 'directory'
+                for child in sorted(os.listdir(fd)):
+                    _entry(fd, child, name + '/' + child, files)
+            else:
+                h = hashlib.sha256()
+                while chunk := os.read(fd, 1024 * 1024):
+                    h.update(chunk)
+                value.update(kind='file', hash=h.hexdigest())
+            if _stable(os.fstat(fd)) != _stable(before):
+                raise Blocked('worktree entry changed during inventory: ' + name)
+        finally:
+            os.close(fd)
     else:
-        raise Blocked('unsupported worktree entry')
-    return {'hash': hashlib.sha256(value).hexdigest(), 'mode': s.st_mode, 'uid': s.st_uid,
-            'device': s.st_dev, 'inode': s.st_ino}
+        kind = ('fifo' if stat.S_ISFIFO(mode) else 'socket' if stat.S_ISSOCK(mode) else
+                'character-device' if stat.S_ISCHR(mode) else 'block-device' if stat.S_ISBLK(mode) else 'unknown')
+        raise Blocked('unsupported worktree entry: ' + name + ' (' + kind + ')')
+    if _stable(os.stat(base, dir_fd=parent, follow_symlinks=False)) != _stable(before):
+        raise Blocked('worktree entry changed during inventory: ' + name)
+    files[name] = value
+
+
+def fingerprint(path):
+    files = {}
+    fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        _entry(fd, path.name, path.name, files)
+    finally:
+        os.close(fd)
+    return files[path.name]
+
+
+def unrelated_drift(name, before, after, owned):
+    if name in owned or before == after:
+        return False
+    # Creating/removing a parent for an owned file is legitimate; replacement of
+    # an existing parent (inode/mode/owner) is not. Other children still audit.
+    if any(path.startswith(name + '/') for path in owned):
+        if before is None and after and after.get('kind') == 'directory':
+            return False
+        if after is None and before and before.get('kind') == 'directory':
+            return False
+    return True
 
 
 def snapshot(project, owned):
@@ -42,11 +105,42 @@ def snapshot(project, owned):
     # Include ignored user data as well; runtime's private subtree alone is excluded.
     names.update(git(project, 'ls-files', '--others', '--ignored', '--exclude-standard', '-z').decode().split('\0'))
     files = {}
-    for name in sorted(names - {''}):
-        if name.startswith('.coherence/workflow/'):
-            continue
-        path = Path(project) / name
-        files[name] = fingerprint(path) if path.exists() or path.is_symlink() else None
+    root = Path(project).absolute()
+    if root != root.resolve(strict=True) or Path(git(root, 'rev-parse', '--show-toplevel').decode().strip()) != root:
+        raise Blocked('inventory project must be canonical worktree root')
+    fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        for raw in sorted(names - {''}):
+            name = raw.rstrip('/')
+            parts = name.split('/')
+            if any(p in ('', '.', '..') for p in parts):
+                raise Blocked('unsafe inventory relative path: ' + name)
+            if parts[0] == '.git' or parts[:2] == ['.coherence', 'workflow']:
+                continue
+            parent = os.dup(fd)
+            try:
+                for part in parts[:-1]:
+                    child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
+                    os.close(parent)
+                    parent = child
+                try:
+                    os.stat(parts[-1], dir_fd=parent, follow_symlinks=False)
+                except FileNotFoundError:
+                    files[name] = None
+                    continue
+                _entry(parent, parts[-1], name, files)
+            except FileNotFoundError:
+                # A missing parent is legitimate only for an absent tracked file;
+                # disappearance while recursively reading must fail closed.
+                if os.path.lexists(root / name):
+                    raise Blocked('inventory entry changed: ' + name) from None
+                files[name] = None
+            except OSError as exc:
+                raise Blocked('inventory unavailable: ' + name + ' (' + type(exc).__name__ + ')') from None
+            finally:
+                os.close(parent)
+    finally:
+        os.close(fd)
     return {'head': git(project,'rev-parse','HEAD').decode().strip(),
             'index': hashlib.sha256(git(project,'ls-files','--stage','-z')).hexdigest(),
             'files': files,
@@ -58,7 +152,7 @@ def reconcile(project, owned, baseline):
     if now['head'] != baseline['head'] or now['index'] != baseline['index']:
         raise Blocked('HEAD/index drift; no automatic Git replay')
     for name in set(now['files']) | set(baseline['files']):
-        if name not in owned and now['files'].get(name) != baseline['files'].get(name):
+        if unrelated_drift(name, baseline['files'].get(name), now['files'].get(name), owned):
             raise Blocked('unrelated file drift: ' + name)
     return now
 
@@ -384,7 +478,7 @@ class Gateway:
                 raise Blocked('host cannot reconcile runner Git changes yet')
             owned = intent['owned_paths']
             for name in set(before['files']) | set(after['files']):
-                if name not in owned and before['files'].get(name) != after['files'].get(name):
+                if unrelated_drift(name, before['files'].get(name), after['files'].get(name), owned):
                     raise Blocked('unrelated task-tool receipt drift')
             if result['empty_receipt']['containment'] != receipt or result['empty_receipt']['populated'] != 0:
                 raise Blocked('task-tool empty receipt mismatch')
@@ -492,7 +586,7 @@ class Gateway:
                     raise Blocked('closed host successor unknown Git effect')
                 owned = details['owned_paths']
                 for name in set(before['files']) | set(after['reconciliation']['files']):
-                    if name not in owned and before['files'].get(name) != after['reconciliation']['files'].get(name):
+                    if unrelated_drift(name, before['files'].get(name), after['reconciliation']['files'].get(name), owned):
                         raise Blocked('closed host successor unrelated tool drift')
             else:
                 before = details['before']
