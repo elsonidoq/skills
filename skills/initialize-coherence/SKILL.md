@@ -58,6 +58,13 @@ are loaded automatically as context files, but also read them for the associatio
 and conventions. Read existing documentation indexes, registers, runbooks,
 architecture records, decisions, specifications, and memory configuration.
 
+Discover the actual project decision owner, index and record convention from those
+instructions and routing. Preserve a readable owner/index and custom location; do not
+assume a global or default decision store. If ownership is absent, unreadable or
+conflicting, propose or confirm the material owner/location/format choice before an
+affected adoption write or decision-dependent operation. An absent store alone does
+not block unrelated legacy work.
+
 - Preserve existing authoritative owners and formats; do not create competing
   documents. Discover every documentation directory, including nested directories.
   Each uses the local or owner-selected index mechanism; use suitable sections.
@@ -137,7 +144,10 @@ Proposal-first: do not write, edit, or overwrite any target until explicit owner
 For policy-only, propose only the exact instructions target, subsection bounds and before/after
 policy diff, including local customization conflicts. For full initialization, propose requirements
 to record, instructions-section bounds, memory path/skeleton or preservation, documentation
-targets/formats and branch-specific operations.
+targets/formats and branch-specific operations. For a new adoption or explicitly approved
+bounded refresh that adds decision consultation, include the discovered decision owner/index,
+canonical contract location and exact managed before/after instructions diff; approval for another
+refresh or incidental skill use does not authorize that addition.
 For non-clean documentation, explicitly approve the current investigation plan plus
 exact shell/index bounds. Show exact overlaps for already-dirty targets separately.
 
@@ -209,6 +219,15 @@ and `compact-memory` can cite it. Record:
 - Policy: Resolve the installed [Parsimony and Actionable Checks](../planner/references/parsimony.md)
   owner and include its marked project-copy fragment exactly once in the approved managed
   instructions. Verify it is readable before relying on it; no hard-coded installation path.
+- Decision consultation: resolve the installed canonical `save-adr/SKILL.md` from the
+  discoverable suite configuration, not a fixed developer path, and verify it is readable.
+  In approved managed instructions, direct affected planning or changes to read the whole
+  discovered decision index, then relevant accepted records in full and needed supersession
+  links. Carry applicable accepted outcomes/source links into the work; proposed or superseded
+  records are not current policy. A capability removal that conflicts with an accepted outcome
+  needs explicit approved supersession; compatible cleanup that preserves the outcome does not.
+  The actual project decision owner/index remains authoritative; this managed consultation does
+  not create an unapproved store or replace a custom owner.
 - Memory: default `<project-root>/memory/` with `memory/MEMORY.md` and entry files;
   owner-chosen paths remain valid. Follow `memory-handling` trigger-first retrieval:
   Read the whole index first, then trigger-matching entries. Recheck after any memory
@@ -235,8 +254,10 @@ Create the approved memory skeleton only for new adoption: only the header, cont
 rules, and a no-gotchas-yet placeholder—never fabricated facts.
 
 For older adoption, propose a bounded refresh. Refresh only owner-approved bounds
-of the marked suite-owned section; preserve custom memory paths, docs, policy and
-every unrelated byte.
+of the marked suite-owned section; preserve custom memory paths, docs, policy and every unrelated byte.
+Preserve the discovered decision owner/index as well. Add managed decision consultation only through a new adoption or an explicitly
+approved bounded refresh with its exact diff; do not incidentally refresh a project merely because
+`save-adr` is consulted.
 For unmarked, ambiguously customized, dirty or concurrently changed sections, show
 exact bounds/diff and obtain approval; a concurrent change first stops the patch
 under Preflight. Do not globally rename references, overwrite local modifications,

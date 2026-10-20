@@ -156,6 +156,19 @@ SPECKIT_RULES = {
                     'success or CLI exit status is insufficient.',
                     'After global skill changes, tell the user to run `/reload` inside pi.'])}
 
+DECISION_RULES = {
+    "decision-discovery": ("Discovery", ["actual project decision owner, index and record convention",
+        "do not assume a global or default decision store", "absent store alone does not block unrelated legacy work"]),
+    "decision-approval": ("Approval", ["new adoption or explicitly approved bounded refresh",
+        "discovered decision owner/index, canonical contract location and exact managed before/after instructions diff",
+        "incidental skill use does not authorize that addition"]),
+    "decision-managed-consultation": ("Adoption", ["resolve the installed canonical `save-adr/SKILL.md`",
+        "not a fixed developer path", "read the whole discovered decision index, then relevant accepted records in full",
+        "A capability removal that conflicts with an accepted outcome needs explicit approved supersession",
+        "does not create an unapproved store or replace a custom owner",
+        "do not incidentally refresh a project merely because `save-adr` is consulted"]),
+}
+
 POLICY_RULES = {
     "policy-selection": ("Preflight", ["Full initialization is the default", "Only explicit policy-only refresh intent",
         "targeted dirty ownership", "missing capability required for the bounded operation stops it"]),
@@ -201,7 +214,7 @@ def check_contract(text):
     for diagnostic, pattern in (UNSAFE | BOOKKEEPING_UNSAFE).items():
         if re.search(pattern, normalized(text)):
             errors.append(f"{diagnostic}: contradictory permission")
-    for diagnostic, (name, phrases) in (SPECKIT_RULES | POLICY_RULES).items():
+    for diagnostic, (name, phrases) in (SPECKIT_RULES | POLICY_RULES | DECISION_RULES).items():
         body = normalized(stage(text, name))
         for phrase in phrases:
             if normalized(phrase) not in body:
@@ -432,6 +445,45 @@ class PolicyRefreshTests(unittest.TestCase):
                 self.assertIn(clause, doc, path)
 
 
+class DecisionConsultationTests(unittest.TestCase):
+    """Authored managed-instruction diffs, not an adoption runner."""
+
+    def test_decision_fixture_diffs_preserve_owner_and_stops(self):
+        rows = {row["name"]: row for row in SCENARIOS if "managed_diff" in row}
+        self.assertEqual(set(rows), {"decision-new-adoption", "decision-approved-custom-refresh",
+                                     "decision-unchanged-repeat", "decision-denial",
+                                     "decision-dirty-overlap", "decision-concurrent-drift"})
+        for name, row in rows.items():
+            with self.subTest(case=name):
+                diff = row["managed_diff"]
+                self.assertIn("history/decisions/index.md", diff["before"])
+                self.assertIn("Local decision owner", diff["before"])
+                if diff["writes"]:
+                    self.assertTrue(diff["approved"])
+                    self.assertIn("read the whole discovered decision index", diff["after"])
+                    self.assertIn("relevant accepted records", diff["after"])
+                    self.assertIn("capability removal", diff["after"])
+                    self.assertIn("history/decisions/index.md", diff["after"])
+                    self.assertIn("Local decision owner", diff["after"])
+                else:
+                    self.assertEqual(diff["before"], diff["after"])
+        self.assertEqual(rows["decision-unchanged-repeat"]["managed_diff"]["outcome"], "no write: already current")
+        self.assertFalse(rows["decision-denial"]["managed_diff"]["approved"])
+        self.assertFalse(rows["decision-dirty-overlap"]["managed_diff"]["overlap_approved"])
+        self.assertEqual(rows["decision-concurrent-drift"]["managed_diff"]["outcome"], "stop affected patch: concurrent drift")
+
+    def test_decision_carrying_clauses_reject_deletion(self):
+        text = SKILL.read_text()
+        self.assertEqual(check_contract(text), [])
+        for diagnostic, (name, phrases) in DECISION_RULES.items():
+            with self.subTest(boundary=diagnostic):
+                phrase = phrases[0]
+                body = stage(text, name)
+                pattern = r"\s+".join(re.escape(word) for word in phrase.split())
+                changed = text.replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
+                self.assertTrue(any(error.startswith(diagnostic + ":") for error in check_contract(changed)))
+
+
 class WorkflowOwnershipOutputTests(unittest.TestCase):
     """Authored adoption outputs, not a generator or live agent simulation."""
     def test_new_and_refresh_resolve_contracts_preserve_associations(self):
@@ -506,7 +558,7 @@ def scenario_check(scenario):
             body = normalized(stage(text, row["stage"]))
             for phrase in row["requires"]:
                 self.assertIn(normalized(phrase), body, f"{scenario['name']}: {scenario['bound']}")
-        for rule in scenario.get("asset_rules", []) + scenario.get("policy_rules", []):
+        for rule in scenario.get("asset_rules", []) + scenario.get("policy_rules", []) + scenario.get("decision_rules", []):
             self.assertFalse(any(e.startswith(rule + ":") for e in check_contract(text)), scenario["name"])
         if scenario.get("asset_route"):
             self.assertLess(normalized(text).index("first verify"),
