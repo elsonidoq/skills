@@ -7,6 +7,7 @@ from pathlib import Path, PurePosixPath
 import sqlite3
 import subprocess
 import uuid
+import time
 
 class Blocked(RuntimeError):
     """An operation could not complete; partial work is retained."""
@@ -84,6 +85,14 @@ class Store:
             run_id TEXT NOT NULL, task_id TEXT NOT NULL, state TEXT NOT NULL,
             baseline TEXT NOT NULL, result TEXT, details TEXT,
             PRIMARY KEY(run_id, task_id));
+        CREATE TABLE IF NOT EXISTS execution_monitor_runs(
+            run_id TEXT PRIMARY KEY, recording_version INTEGER NOT NULL,
+            description TEXT NOT NULL, started_at REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS execution_observations(
+            seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
+            recording_version INTEGER NOT NULL, occurrence_id TEXT NOT NULL,
+            phase TEXT NOT NULL, task_id TEXT, kind TEXT NOT NULL,
+            recorded_at REAL NOT NULL, facts TEXT NOT NULL);
         """)
     @contextmanager
     def transaction(self):
@@ -108,6 +117,25 @@ class Store:
             self.db.execute("INSERT INTO execution_runs VALUES(?,'running',?,NULL,NULL)", (run,baseline))
         except sqlite3.IntegrityError:
             raise Blocked('run ID already exists; inspect its progress and choose a fresh run ID, never replay it') from None
+    def register_monitor_run(self, run, description):
+        """Add recording metadata without touching ordinary progress rows."""
+        from .monitoring import RECORDING_VERSION
+        self.authority.assert_held()
+        self.db.execute('INSERT INTO execution_monitor_runs(run_id,recording_version,description,started_at) VALUES(?,?,?,?)',
+                        (run, RECORDING_VERSION, canonical(description), time.time()))
+
+    def append_monitor_observation(self, run, occurrence_id, phase, task_id, kind, facts):
+        """One short append; a caller treats all errors as optional warnings."""
+        self.authority.assert_held()
+        return self.db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
+                               (run, 1, occurrence_id, phase, task_id, kind, time.time(), canonical(facts))).lastrowid
+
+    def monitor(self, run):
+        row = self.db.execute('SELECT * FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
+        if not row:
+            return None
+        return {'run': dict(row), 'observations': [dict(r) for r in self.db.execute('SELECT * FROM execution_observations WHERE run_id=? ORDER BY seq', (run,))]}
+
     def task(self, run, task, state, baseline, result=None, details=None):
         self.db.execute('INSERT INTO execution_tasks VALUES(?,?,?,?,?,?) ON CONFLICT(run_id,task_id) DO UPDATE SET state=excluded.state,result=excluded.result,details=excluded.details',
                         (run,task,state,baseline,result,canonical(details)))

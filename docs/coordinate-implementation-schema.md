@@ -31,6 +31,15 @@ SQLite errors report the actual operation. No graph saver, attempt selection or 
 is consumed to run new work. The writer lock is the ordinary per-worktree
 `coherence-workflow.lock`, held by the runner and inherited by its active SDK host.
 
+## Monitoring recording v1
+
+New runs may additionally retain a closed `execution_monitor_runs` descriptor and ordered
+`execution_observations`. These are append-only best-effort monitoring facts: registration or
+append failures warn safely and never alter normal progress, checks, Git, or errors. Descriptors
+retain only declared task IDs/dependencies and explicitly supplied public presentation; observations
+retain closed phase/kind/fact fields, never prompts, answers, commands, output, findings, or errors.
+Existing progress and historical rows are neither converted nor inferred.
+
 ## Historical records
 
 All historical `wf_*` and LangGraph tables/rows remain readable in place. No automatic rewrite,
