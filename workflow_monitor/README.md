@@ -14,12 +14,21 @@ npm --prefix workflow_monitor/web run build
 workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/worktree --assets "$PWD/workflow_monitor/web/dist" --port 8765
 ```
 
+The package also declares the equivalent `workflow-monitor` console entry point for a
+separately prepared local installation. It uses the same required `--project` and
+`--assets` arguments; neither form installs dependencies, builds assets, or starts the
+workflow runtime. Keep `requirements.lock` with the package metadata when preparing
+that isolated environment. A missing build root, missing `index.html`, symlinked root,
+or non-directory asset root stops before binding with a fixed actionable diagnostic;
+rebuild to a regular local `dist/` directory and retry.
+
 Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It uses local ELK layout and polls the closed snapshot API about every two seconds. Status-only polls preserve node IDs, selection, positions, and viewport; topology changes are laid out locally. Stale fetch and layout completions from an old selected run are discarded. The view displays the current read time, last successful read, and last recorded activity separately. A failed read retains the last sanitized graph with a recoverable unavailable warning; the next successful read replaces it. The selected run also reports a read-only recorded-process qualification (`live`, `stopped`, or `unknown`): process presence is not progress, and missing ends remain incomplete. The initial API snapshot is a bounded first history page. Use **Load more history** to reveal the next page at the same snapshot watermark; an expired or changed watermark refreshes instead of mixing pages. The inventory reports total, loaded, hidden, and unsupported records, while collapsed failure and waiting badges remain discoverable.
 
 The selected-root graph expands only explicitly declared local followups. A resolved relation links the original reviewer to the distinct fixing-worker execution and its checks, checkpoint, and rereviewer; every expanded node carries its opaque source-run ref. Review detail shows its recorded base→head range. The original rejected run remains failed even when a later full-original-range review succeeds. Correction-only, unresolved, conflicting, or cyclic relations are shown as such and never display a current accepted head. Collapsed history still reports failures and inventory retains hidden/unsupported records for reveal.
 
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
-asset-building overrides. It serves only the fixed startup asset inventory (not
+asset-building overrides. Stopping it is the rollback: it closes observation only and leaves
+Git, authoritative SQLite rows, and any writer untouched. It serves only the fixed startup asset inventory (not
 sourcemaps, symlinks, directories, or arbitrary files) and exposes closed GET routes:
 
 - `/api/monitor/v1/runs`

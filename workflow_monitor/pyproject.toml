@@ -9,6 +9,9 @@ description = "Read-only snapshots for recorded Coherence workflow runs"
 requires-python = ">=3.10"
 dependencies = ["starlette==0.46.2", "uvicorn==0.34.0"]
 
+[project.scripts]
+workflow-monitor = "workflow_monitor.__main__:main"
+
 [tool.setuptools]
 packages = ["workflow_monitor"]
 package-dir = {workflow_monitor = "."}

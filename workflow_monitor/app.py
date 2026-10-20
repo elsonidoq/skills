@@ -47,9 +47,15 @@ def _state_response(data: dict[str, Any]) -> JSONResponse | None:
 
 
 def _assets(root: str | Path) -> dict[str, Path]:
-    root = Path(root).resolve(strict=True)
-    if not root.is_dir() or root.is_symlink():
-        raise ValueError("assets must be a regular directory")
+    root = Path(root)
+    try:
+        if root.is_symlink() or (root.exists() and not root.is_dir()):
+            raise ValueError("assets must be a regular directory")
+        if not root.exists():
+            raise ValueError("assets directory is missing or unreadable")
+        root = root.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError("assets directory is missing or unreadable") from exc
     files: dict[str, Path] = {}
     for candidate in root.rglob("*"):
         if not candidate.is_file():
