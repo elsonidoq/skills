@@ -8,7 +8,32 @@ import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const repository = fileURLToPath(new URL('../../', import.meta.url));
-const bridgeModule = pathToFileURL(path.join(repository, '.pi/extensions/coordinate-implementation-bridge.mjs')).href;
+const bridgeModule = pathToFileURL(path.join(repository, '.pi/extensions/coordinate-implementation-bridge.js')).href;
+
+// Exercise Pi's normal project discovery, not a direct import of the factory.
+test('Pi discovers the project bridge and registers both tools without explicit paths', async () => {
+  const {DefaultResourceLoader, SettingsManager} = await import('../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-discovery-'));
+  try {
+    const project = path.join(root, 'project');
+    await fs.mkdir(path.join(project, '.pi'), {recursive: true});
+    await fs.symlink(path.join(repository, '.pi/extensions'), path.join(project, '.pi/extensions'));
+    const loader = new DefaultResourceLoader({
+      cwd: project, agentDir: path.join(root, 'agent'),
+      settingsManager: SettingsManager.inMemory(),
+      noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true,
+    });
+    await loader.reload();
+    const loaded = loader.getExtensions();
+    assert.deepEqual(loaded.errors, []);
+    const bridge = loaded.extensions.find(extension =>
+      extension.tools.has('coordinate_implementation_start'));
+    assert.ok(bridge, 'normal project discovery must register the bridge start tool');
+    assert.ok(bridge.tools.has('coordinate_implementation_reply'));
+  } finally {
+    await fs.rm(root, {recursive: true, force: true});
+  }
+});
 
 function mockPi(messages, tools) {
   return {

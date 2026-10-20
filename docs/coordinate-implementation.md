@@ -87,8 +87,11 @@ it wakes that parent with the exact pending question and returns only its correl
 waiting worker. It retains neither questions nor answers in SQLite. Parent-session shutdown or the
 launch tool's cancellation signal terminates only its owned runner through that runner's normal
 SIGTERM path and waits for it before bridge cleanup. The bridge is optional: direct terminal
-invocation remains unchanged. In Paseo, use a fresh session that has loaded the extension;
-do not reload or restart the current session automatically. There is no Paseo
+invocation remains unchanged. The project entry is
+`.pi/extensions/coordinate-implementation-bridge.js`; Pi auto-discovers `.js`/`.ts`, not `.mjs`.
+In Paseo, use a fresh session and verify both `coordinate_implementation_start` and
+`coordinate_implementation_reply` are available before launch; do not reload or restart the
+current session automatically. There is no Paseo
 version/transcript/binding/receipt gate. No automatic resume/control mailbox or daemon.
 Cancellation aborts the owned SDK session and waits for its host; it never signals parent/sibling
 processes or provisions/signals cgroups.
