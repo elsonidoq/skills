@@ -53,9 +53,10 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(view.status_code, 200)
         self.assert_safe(view)
         record = view.json()["records"][0]["ref"]
-        history = self.client.get(f"/api/monitor/v1/runs/{run_ref}/history", headers=self.api_headers)
+        snapshot_ref = view.json()["snapshot_ref"]
+        history = self.client.get(f"/api/monitor/v1/runs/{run_ref}/history?snapshot={snapshot_ref}", headers=self.api_headers)
         self.assertEqual(history.status_code, 200)
-        detail = self.client.get(f"/api/monitor/v1/runs/{run_ref}/records/{record}", headers=self.api_headers)
+        detail = self.client.get(f"/api/monitor/v1/runs/{run_ref}/records/{record}?snapshot={snapshot_ref}", headers=self.api_headers)
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(self.client.get("/").status_code, 200)
 

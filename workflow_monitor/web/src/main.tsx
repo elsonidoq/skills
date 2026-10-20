@@ -7,121 +7,41 @@ import './style.css'
 
 type Run = { ref: string; label: string; started_at: number | null; completeness: string }
 type Observation = { ref: string; run_ref: string; occurrence_ref: string; kind: string; source_seq: number; recorded_at: number | null; exit_code: number | null; finding_count: number | null; review_base: string | null; review_head: string | null }
+type Unknown = { ref: string; run_ref: string; source_seq: number | null; code: string }
 type Occurrence = { ref: string; run_ref: string; phase_ref: string; task_ref: string | null; role: string; outcome: string | null; completeness: string; record_refs: string[] }
 type GraphEdge = { ref: string; run_ref: string; type: string; from_ref: string; to_ref: string; resolution: string }
-type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: Array<{ ref: string; run_ref: string; label: string; summary: string }>; occurrences: Occurrence[]; records: Observation[]; edges: GraphEdge[]; inventory: { phase_count: number; occurrence_count: number; observation_count: number; hidden_count: number } }
-
+type Inventory = { phase_count: number; occurrence_count: number; observation_count: number; total_count: number; loaded_count: number; hidden_count: number; unsupported_count: number }
+type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: Array<{ ref: string; run_ref: string; label: string; summary: string }>; occurrences: Occurrence[]; records: Observation[]; unknown_records: Unknown[]; edges: GraphEdge[]; inventory: Inventory; snapshot_ref: string; next_cursor: string | null }
 type Graph = { nodes: Node[]; edges: Edge[]; topology: string }
 
 const headers = { 'X-Workflow-Monitor': '1' }
 const elk = new ELK()
 const edgeLabels: Record<string, string> = { possible_flow: 'Possible flow', task_prerequisite: 'Task prerequisite', recorded_next: 'Recorded sequence', phase_occurrence: 'Phase occurrence', execution_milestone: 'Execution milestone', reviewed_range: 'Reviewed range', declared_correction: 'Declared correction' }
-
-async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(path, { headers })
-  if (!response.ok) throw new Error('The monitor snapshot is unavailable.')
-  return response.json() as Promise<T>
-}
-
+async function getJson<T>(path: string): Promise<T> { const response = await fetch(path, { headers }); if (!response.ok) throw new Error(response.status === 409 ? 'The snapshot changed; refreshing history.' : 'The monitor snapshot is unavailable.'); return response.json() as Promise<T> }
 function graphFor(snapshot: Snapshot, selectedRun: string): Graph {
   const records = snapshot.records.filter(record => record.run_ref === selectedRun)
   const occurrences = snapshot.occurrences.filter(item => item.run_ref === selectedRun)
   const anchors = [...snapshot.phases.filter(item => item.run_ref === selectedRun), ...snapshot.tasks.filter(item => item.run_ref === selectedRun)]
-  const nodes: Node[] = [
-    ...anchors.map(item => ({ id: item.ref, position: { x: 0, y: 0 }, data: { label: item.label }, className: 'anchor-node' })),
-    ...occurrences.map(item => ({ id: item.ref, position: { x: 0, y: 0 }, data: { label: `${item.role}: ${item.outcome ?? 'recorded'}` }, className: `occurrence-node ${item.outcome === 'failed' ? 'failed' : ''}` })),
-    ...records.map(item => ({ id: item.ref, position: { x: 0, y: 0 }, data: { label: `${item.kind} #${item.source_seq}` }, className: item.kind === 'failed' ? 'failed' : 'record-node' }))
-  ]
-  const ids = new Set(nodes.map(node => node.id))
-  const edges = snapshot.edges.filter(item => item.run_ref === selectedRun && ids.has(item.from_ref) && ids.has(item.to_ref)).map(item => ({ id: item.ref, source: item.from_ref, target: item.to_ref, label: edgeLabels[item.type] ?? item.type, type: 'smoothstep', animated: item.type === 'recorded_next' }))
+  const nodes: Node[] = [...anchors.map(item => ({ id: item.ref, position: { x: 0, y: 0 }, data: { label: item.label }, className: 'anchor-node' })), ...occurrences.map(item => ({ id: item.ref, position: { x: 0, y: 0 }, data: { label: `${item.role}: ${item.outcome ?? 'recorded'}` }, className: `occurrence-node ${item.outcome === 'failed' ? 'failed' : ''}` })), ...records.map(item => ({ id: item.ref, position: { x: 0, y: 0 }, data: { label: `${item.kind} #${item.source_seq}` }, className: item.kind === 'failed' ? 'failed' : 'record-node' }))]
+  const ids = new Set(nodes.map(node => node.id)); const edges = snapshot.edges.filter(item => item.run_ref === selectedRun && ids.has(item.from_ref) && ids.has(item.to_ref)).map(item => ({ id: item.ref, source: item.from_ref, target: item.to_ref, label: edgeLabels[item.type] ?? item.type, type: 'smoothstep', animated: item.type === 'recorded_next' }))
   return { nodes, edges, topology: JSON.stringify({ nodes: nodes.map(node => node.id).sort(), edges: edges.map(edge => [edge.id, edge.source, edge.target]).sort() }) }
 }
-
-function App() {
-  const [runs, setRuns] = useState<Run[]>([])
-  const [selectedRun, setSelectedRun] = useState<string | null>(null)
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
-  const [nodes, setNodes] = useState<Node[]>([])
-  const [edges, setEdges] = useState<Edge[]>([])
-  const [selected, setSelected] = useState<{ kind: 'node' | 'edge'; id: string } | null>(null)
-  const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 })
-  const [message, setMessage] = useState('Loading monitor…')
-  const fetchGeneration = useRef(0)
-  const layoutGeneration = useRef(0)
-  const topology = useRef<string | null>(null)
-  const positions = useRef<Record<string, { x: number; y: number }>>({})
-
-  useEffect(() => {
-    let active = true
-    const loadRuns = async () => {
-      try {
-        const data = await getJson<{ runs: Run[] }>('/api/monitor/v1/runs')
-        if (!active) return
-        setRuns(data.runs)
-        setSelectedRun(current => current && data.runs.some(run => run.ref === current) ? current : (data.runs[0]?.ref ?? null))
-      } catch (error) { if (active) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') }
-    }
-    void loadRuns()
-    const timer = window.setInterval(() => void loadRuns(), 2000)
-    return () => { active = false; window.clearInterval(timer) }
-  }, [])
-
-  useEffect(() => {
-    if (!selectedRun) return
-    const generation = ++fetchGeneration.current
-    let active = true
-    const loadSnapshot = async () => {
-      try {
-        const data = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/snapshot`)
-        if (active && generation === fetchGeneration.current) { setSnapshot(data); setMessage('Updated from the recorded snapshot.') }
-      } catch (error) { if (active && generation === fetchGeneration.current) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') }
-    }
-    void loadSnapshot()
-    const timer = window.setInterval(() => void loadSnapshot(), 2000)
-    return () => { active = false; window.clearInterval(timer); ++fetchGeneration.current }
-  }, [selectedRun])
-
-  useEffect(() => {
-    if (!snapshot || !selectedRun) return
-    const graph = graphFor(snapshot, selectedRun)
-    const known = new Set([...graph.nodes.map(node => node.id), ...graph.edges.map(edge => edge.id)])
-    setSelected(current => current && known.has(current.id) ? current : null)
-    setEdges(graph.edges)
-    if (topology.current === graph.topology) {
-      setNodes(graph.nodes.map(node => ({ ...node, position: positions.current[node.id] ?? node.position })))
-      return
-    }
-    topology.current = graph.topology
-    const generation = ++layoutGeneration.current
-    let active = true
-    void elk.layout({ id: 'monitor', layoutOptions: { 'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.spacing.nodeNode': '40', 'elk.layered.spacing.nodeNodeBetweenLayers': '100' }, children: graph.nodes.map(node => ({ id: node.id, width: 180, height: 54 })), edges: graph.edges.map(edge => ({ id: edge.id, sources: [edge.source], targets: [edge.target] })) }).then(layout => {
-      if (!active || generation !== layoutGeneration.current) return
-      const laidOut = graph.nodes.map(node => {
-        const result = layout.children?.find(child => child.id === node.id)
-        const position = { x: result?.x ?? 0, y: result?.y ?? 0 }
-        positions.current[node.id] = position
-        return { ...node, position }
-      })
-      setNodes(laidOut)
-    })
-    return () => { active = false }
-  }, [selectedRun, snapshot])
-
-  const details = useMemo(() => {
-    if (!snapshot || !selectedRun || !selected) return null
-    if (selected.kind === 'node') {
-      const occurrence = snapshot.occurrences.find(item => item.run_ref === selectedRun && item.ref === selected.id)
-      const record = snapshot.records.find(item => item.run_ref === selectedRun && item.ref === selected.id)
-      return occurrence ? `${occurrence.role}; ${occurrence.outcome ?? occurrence.completeness}` : record ? `${record.kind}; sequence ${record.source_seq}${record.exit_code !== null ? `; exit ${record.exit_code}` : ''}` : null
-    }
-    const edge = snapshot.edges.find(item => item.run_ref === selectedRun && item.ref === selected.id)
-    return edge ? `${edgeLabels[edge.type] ?? edge.type}; ${edge.resolution}` : null
-  }, [selected, selectedRun, snapshot])
-
-  return <main>
-    <aside aria-label="Recorded runs"><h1>Workflow monitor</h1><p className="status" role="status">{message}</p><h2>Runs</h2><div className="run-list">{runs.map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; setSnapshot(null); setSelectedRun(run.ref); setSelected(null) }}>{run.label} · {run.completeness}</button>)}</div></aside>
-    <section className="viewer"><header><h2>Selected run graph</h2><p>Pan and zoom the graph. Select a node or edge for its brief details.</p></header><div className="legend" aria-label="Edge legend">{Object.entries(edgeLabels).map(([type, label]) => <span key={type}>{label}</span>)}</div><div className="graph" aria-label="Workflow graph"><ReactFlow nodes={nodes} edges={edges} viewport={viewport} onMoveEnd={(_, next) => setViewport(next)} onNodeClick={(_, node) => setSelected({ kind: 'node', id: node.id })} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}><Background /><Controls /></ReactFlow></div><section className="details" aria-live="polite"><h2>Details</h2><p>{details ?? 'Select a graph node or edge.'}</p><p>{snapshot ? `Inventory: ${snapshot.inventory.observation_count} records, ${snapshot.inventory.occurrence_count} occurrences, ${snapshot.inventory.phase_count} phases; ${snapshot.inventory.hidden_count} hidden.` : 'Inventory unavailable.'}</p></section></section>
-  </main>
+function mergePage(current: Snapshot | null, page: Snapshot): Snapshot {
+  if (!current || current.snapshot_ref !== page.snapshot_ref) return page
+  const records = [...current.records, ...page.records.filter(item => !current.records.some(old => old.ref === item.ref))]
+  const oldUnknown = current.unknown_records ?? []; const pageUnknown = page.unknown_records ?? []
+  const unknown_records = [...oldUnknown, ...pageUnknown.filter(item => !oldUnknown.some(old => old.ref === item.ref))]
+  return { ...page, records, unknown_records, inventory: { ...page.inventory, loaded_count: records.length + unknown_records.length, hidden_count: Math.max(0, page.inventory.total_count - records.length - unknown_records.length) } }
 }
-
+function App() {
+  const [runs, setRuns] = useState<Run[]>([]); const [selectedRun, setSelectedRun] = useState<string | null>(null); const [snapshot, setSnapshot] = useState<Snapshot | null>(null); const [nodes, setNodes] = useState<Node[]>([]); const [edges, setEdges] = useState<Edge[]>([]); const [selected, setSelected] = useState<{ kind: 'node' | 'edge'; id: string } | null>(null); const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 }); const [message, setMessage] = useState('Loading monitor…')
+  const fetchGeneration = useRef(0); const layoutGeneration = useRef(0); const topology = useRef<string | null>(null); const positions = useRef<Record<string, { x: number; y: number }>>({})
+  useEffect(() => { let active = true; const loadRuns = async () => { try { const data = await getJson<{ runs: Run[] }>('/api/monitor/v1/runs'); if (!active) return; setRuns(data.runs); setSelectedRun(current => current && data.runs.some(run => run.ref === current) ? current : (data.runs[0]?.ref ?? null)) } catch (error) { if (active) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } }; void loadRuns(); const timer = window.setInterval(() => void loadRuns(), 2000); return () => { active = false; window.clearInterval(timer) } }, [])
+  useEffect(() => { if (!selectedRun) return; const generation = ++fetchGeneration.current; let active = true; const loadSnapshot = async () => { try { const page = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/snapshot`); if (active && generation === fetchGeneration.current) { setSnapshot(current => mergePage(current, page)); setMessage('Updated from the recorded snapshot.') } } catch (error) { if (active && generation === fetchGeneration.current) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } }; void loadSnapshot(); const timer = window.setInterval(() => void loadSnapshot(), 2000); return () => { active = false; window.clearInterval(timer); ++fetchGeneration.current } }, [selectedRun])
+  const loadMore = async () => { if (!snapshot || !selectedRun || !snapshot.next_cursor) return; try { const page = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/history?snapshot=${encodeURIComponent(snapshot.snapshot_ref)}&cursor=${encodeURIComponent(snapshot.next_cursor)}`); setSnapshot(current => mergePage(current, page)) } catch (error) { setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.'); setSnapshot(null) } }
+  useEffect(() => { if (!snapshot || !selectedRun) return; const graph = graphFor(snapshot, selectedRun); const known = new Set([...graph.nodes.map(node => node.id), ...graph.edges.map(edge => edge.id)]); setSelected(current => current && known.has(current.id) ? current : null); setEdges(graph.edges); if (topology.current === graph.topology) { setNodes(graph.nodes.map(node => ({ ...node, position: positions.current[node.id] ?? node.position }))); return } topology.current = graph.topology; const generation = ++layoutGeneration.current; let active = true; void elk.layout({ id: 'monitor', layoutOptions: { 'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.spacing.nodeNode': '40', 'elk.layered.spacing.nodeNodeBetweenLayers': '100' }, children: graph.nodes.map(node => ({ id: node.id, width: 180, height: 54 })), edges: graph.edges.map(edge => ({ id: edge.id, sources: [edge.source], targets: [edge.target] })) }).then(layout => { if (!active || generation !== layoutGeneration.current) return; setNodes(graph.nodes.map(node => { const result = layout.children?.find(child => child.id === node.id); const position = { x: result?.x ?? 0, y: result?.y ?? 0 }; positions.current[node.id] = position; return { ...node, position } })) }); return () => { active = false } }, [selectedRun, snapshot])
+  const details = useMemo(() => { if (!snapshot || !selectedRun || !selected) return null; if (selected.kind === 'node') { const occurrence = snapshot.occurrences.find(item => item.run_ref === selectedRun && item.ref === selected.id); const record = snapshot.records.find(item => item.run_ref === selectedRun && item.ref === selected.id); return occurrence ? `${occurrence.role}; ${occurrence.outcome ?? occurrence.completeness}` : record ? `${record.kind}; sequence ${record.source_seq}${record.exit_code !== null ? `; exit ${record.exit_code}` : ''}` : null } const edge = snapshot.edges.find(item => item.run_ref === selectedRun && item.ref === selected.id); return edge ? `${edgeLabels[edge.type] ?? edge.type}; ${edge.resolution}` : null }, [selected, selectedRun, snapshot])
+  const failures = snapshot?.occurrences.filter(item => item.run_ref === selectedRun && item.outcome === 'failed').length ?? 0; const waiting = snapshot?.occurrences.filter(item => item.run_ref === selectedRun && item.completeness === 'incomplete').length ?? 0
+  return <main><aside aria-label="Recorded runs"><h1>Workflow monitor</h1><p className="status" role="status">{message}</p><h2>Runs</h2><div className="run-list">{runs.map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; setSnapshot(null); setSelectedRun(run.ref); setSelected(null) }}>{run.label} · {run.completeness}</button>)}</div></aside><section className="viewer"><header><h2>Selected run graph</h2><p>Pan and zoom the graph. Select a node or edge for its brief details.</p></header><div className="legend" aria-label="Edge legend">{Object.entries(edgeLabels).map(([type, label]) => <span key={type}>{label}</span>)}</div><div className="graph" aria-label="Workflow graph"><ReactFlow nodes={nodes} edges={edges} viewport={viewport} onMoveEnd={(_, next) => setViewport(next)} onNodeClick={(_, node) => setSelected({ kind: 'node', id: node.id })} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}><Background /><Controls /></ReactFlow></div><section className="details" aria-live="polite"><h2>Details</h2><p>{details ?? 'Select a graph node or edge.'}</p><p>{snapshot ? `Inventory: ${snapshot.inventory.total_count ?? snapshot.inventory.observation_count} total, ${snapshot.inventory.loaded_count ?? snapshot.records.length} loaded, ${snapshot.inventory.hidden_count} hidden, ${snapshot.inventory.unsupported_count ?? 0} unsupported.` : 'Inventory unavailable.'}</p>{snapshot && <p>Inventory: {snapshot.inventory.observation_count} records, {snapshot.inventory.occurrence_count} occurrences, {snapshot.inventory.phase_count} phases; {snapshot.inventory.hidden_count} hidden.</p>}<p aria-label="Collapsed history badges">{failures} failed; {waiting} waiting.</p>{snapshot?.next_cursor && <button onClick={() => void loadMore()}>Load more history</button>}</section></section></main>
+}
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)

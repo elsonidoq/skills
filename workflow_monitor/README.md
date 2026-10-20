@@ -14,7 +14,7 @@ npm --prefix workflow_monitor/web run build
 workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/worktree --assets "$PWD/workflow_monitor/web/dist" --port 8765
 ```
 
-Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It uses local ELK layout and polls the closed snapshot API about every two seconds. Status-only polls preserve node IDs, selection, positions, and viewport; topology changes are laid out locally. Stale fetch and layout completions from an old selected run are discarded. The initial API snapshot loads all currently returned history; the visible inventory reports loaded and hidden counts (incremental history browsing is not yet implemented).
+Then open `http://127.0.0.1:8765/` in a local browser. The React/React Flow view has a left recorded-run selector, one selected-run graph, brief node/edge details, typed-edge legend, and pan/zoom controls. It uses local ELK layout and polls the closed snapshot API about every two seconds. Status-only polls preserve node IDs, selection, positions, and viewport; topology changes are laid out locally. Stale fetch and layout completions from an old selected run are discarded. The initial API snapshot is a bounded first history page. Use **Load more history** to reveal the next page at the same snapshot watermark; an expired or changed watermark refreshes instead of mixing pages. The inventory reports total, loaded, hidden, and unsupported records, while collapsed failure and waiting badges remain discoverable.
 
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
 asset-building overrides. It serves only the fixed startup asset inventory (not
@@ -23,7 +23,9 @@ sourcemaps, symlinks, directories, or arbitrary files) and exposes closed GET ro
 - `/api/monitor/v1/runs`
 - `/api/monitor/v1/runs/{run_ref}/snapshot`
 - `/api/monitor/v1/runs/{run_ref}/history`
-- `/api/monitor/v1/runs/{run_ref}/records/{record_ref}`
+- `/api/monitor/v1/runs/{run_ref}/records/{record_ref}?snapshot=`
+
+Snapshots return an opaque `snapshot_ref` and `next_cursor`. History and record lookup require that snapshot reference; stale references return closed `409` responses, and invalid cursors or other-run record references are rejected.
 
 `followups` is deliberately unavailable until its separately owned implementation.
 API requests require the exact loopback `Host`, same-origin Fetch Metadata, and the

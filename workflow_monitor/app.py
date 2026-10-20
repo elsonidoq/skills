@@ -1,6 +1,7 @@
 """Closed, loopback-only HTTP presentation for workflow monitor snapshots."""
 from __future__ import annotations
 
+import hashlib
 import mimetypes
 from pathlib import Path
 from typing import Any, Protocol
@@ -16,6 +17,7 @@ from .public import minimize
 
 _CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 _ASSET_SUFFIXES = frozenset({".css", ".gif", ".html", ".ico", ".jpeg", ".jpg", ".js", ".png", ".svg", ".webp", ".woff", ".woff2"})
+_DEFAULT_PAGE_SIZE = 50
 
 
 class SnapshotReader(Protocol):
@@ -59,6 +61,49 @@ def _assets(root: str | Path) -> dict[str, Path]:
     return files
 
 
+def _token(run_ref: str, records: list[dict[str, Any]], unknown: list[dict[str, Any]]) -> str:
+    watermark = max((item.get("source_seq", -1) for item in records + unknown if type(item.get("source_seq")) is int), default=-1)
+    return "snapshot_" + hashlib.sha256(f"{run_ref}:{watermark}".encode()).hexdigest()[:24]
+
+
+def _cursor(value: str | None) -> int | None:
+    if value is None:
+        return -1
+    if not value.startswith("cursor_") or not value[7:].isdigit():
+        return None
+    return int(value[7:])
+
+
+def _page_size(value: str | None) -> int | None:
+    if value is None:
+        return _DEFAULT_PAGE_SIZE
+    return int(value) if value.isdigit() and int(value) > 0 else None
+
+
+def _page(data: dict[str, Any], reference: str, after: int, size: int) -> dict[str, Any]:
+    records = [item for item in data["records"] if item["run_ref"] == reference]
+    unknown = [item for item in data["unknown_records"] if item["run_ref"] == reference]
+    retained = sorted(records + unknown, key=lambda item: item.get("source_seq", -1))
+    if after >= 0 and not any(item.get("source_seq") == after for item in retained):
+        raise ValueError("cursor")
+    visible = [item for item in retained if item.get("source_seq", -1) > after][:size]
+    visible_records = [item for item in visible if item in records]
+    visible_unknown = [item for item in visible if item in unknown]
+    next_cursor = None
+    if len([item for item in retained if item.get("source_seq", -1) > after]) > len(visible):
+        next_cursor = "cursor_" + str(visible[-1]["source_seq"])
+    result = dict(data)
+    result["records"] = visible_records
+    result["unknown_records"] = visible_unknown
+    inventory = dict(data["inventory"])
+    inventory.update({"total_count": len(retained), "loaded_count": len(visible), "hidden_count": len(retained) - len(visible),
+                      "unsupported_count": len(unknown)})
+    result["inventory"] = inventory
+    result["snapshot_ref"] = _token(reference, records, unknown)
+    result["next_cursor"] = next_cursor
+    return result
+
+
 def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlette:
     """Create an application bound to one reader, fixed asset inventory, and port."""
     if type(port) is not int or not 1 <= port <= 65535:
@@ -77,6 +122,12 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
     def run(data: dict[str, Any], reference: str) -> dict[str, Any] | None:
         return next((item for item in data["runs"] if item["ref"] == reference), None)
 
+    def selected(data: dict[str, Any], request: Request) -> tuple[dict[str, Any] | None, JSONResponse | None]:
+        reference = request.path_params["run_ref"]
+        if run(data, reference) is None:
+            return None, _error("not_found", 404)
+        return _page(data, reference, -1, _DEFAULT_PAGE_SIZE), None
+
     async def runs(request: Request) -> Response:
         data, error = snapshot()
         if error:
@@ -87,9 +138,11 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         data, error = snapshot()
         if error:
             return error
-        if run(data, request.path_params["run_ref"]) is None:
-            return _error("not_found", 404)
-        return JSONResponse(data)
+        try:
+            result, error = selected(data, request)
+        except ValueError:
+            return _error("bad_request", 400)
+        return error or JSONResponse(result)
 
     async def history(request: Request) -> Response:
         data, error = snapshot()
@@ -98,9 +151,17 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         reference = request.path_params["run_ref"]
         if run(data, reference) is None:
             return _error("not_found", 404)
+        cursor, size = _cursor(request.query_params.get("cursor")), _page_size(request.query_params.get("limit"))
+        if cursor is None or size is None or request.query_params.get("snapshot") is None:
+            return _error("bad_request", 400)
         records = [item for item in data["records"] if item["run_ref"] == reference]
-        return JSONResponse({"monitor_version": 1, "selected_run": reference, "records": records,
-                             "next_cursor": None, "inventory": data["inventory"]})
+        unknown = [item for item in data["unknown_records"] if item["run_ref"] == reference]
+        if request.query_params["snapshot"] != _token(reference, records, unknown):
+            return _error("snapshot_conflict", 409, retryable=True)
+        try:
+            return JSONResponse(_page(data, reference, cursor, size))
+        except ValueError:
+            return _error("bad_request", 400)
 
     async def record(request: Request) -> Response:
         data, error = snapshot()
@@ -109,7 +170,11 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         reference = request.path_params["run_ref"]
         if run(data, reference) is None:
             return _error("not_found", 404)
-        item = next((value for value in data["records"] if value["run_ref"] == reference and value["ref"] == request.path_params["record_ref"]), None)
+        records = [item for item in data["records"] if item["run_ref"] == reference]
+        unknown = [item for item in data["unknown_records"] if item["run_ref"] == reference]
+        if request.query_params.get("snapshot") != _token(reference, records, unknown):
+            return _error("snapshot_conflict", 409, retryable=True)
+        item = next((value for value in records + unknown if value["ref"] == request.path_params["record_ref"]), None)
         return JSONResponse(item) if item else _error("not_found", 404)
 
     async def static(request: Request) -> Response:
