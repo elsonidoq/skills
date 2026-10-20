@@ -70,6 +70,24 @@ class LineageTests(unittest.TestCase):
                                                "tasks": [{"id": "later", "description": "Later"}]}, True)["status"], "complete")
         self.assertEqual(normalize(reader.open_snapshot())["review_acceptance"]["original"]["state"], "correction_only")
 
+    def test_reviewer_only_or_no_check_corrections_cannot_accept_a_repair_chain(self):
+        def rejected(name):
+            with self.assertRaisesRegex(Blocked, "fixture defect"):
+                self._run(name, {"tasks": [{"id": name, "description": "Original"}]}, False)
+            with sqlite3.connect(self.project / ".coherence/workflow/workflow.sqlite") as db:
+                occurrence, facts = db.execute("SELECT occurrence_id, facts FROM execution_observations WHERE run_id=? AND phase='review' AND kind='failed'", (name,)).fetchone()
+                return occurrence, json.loads(facts)["review_base"]
+
+        reviewer_only_review, reviewer_only_base = rejected("reviewer-only-original")
+        self.assertEqual(self._run("reviewer-only", {"monitor": {"correction_of": {"run_id": "reviewer-only-original", "review_execution_id": reviewer_only_review}},
+                                                       "review_base": reviewer_only_base, "tasks": []}, True)["status"], "complete")
+        no_check_review, no_check_base = rejected("no-check-original")
+        self.assertEqual(self._run("no-check", {"monitor": {"correction_of": {"run_id": "no-check-original", "review_execution_id": no_check_review}},
+                                                  "review_base": no_check_base, "tasks": [{"id": "fix", "description": "Fix"}]}, True)["status"], "complete")
+        acceptance = normalize(Reader(self.project).open_snapshot())["review_acceptance"]
+        self.assertEqual(acceptance["reviewer-only-original"]["state"], "unknown")
+        self.assertEqual(acceptance["no-check-original"]["state"], "unknown")
+
     def test_dangling_wrong_and_cyclic_declarations_never_accept(self):
         def description(correction):
             return json.dumps({"version": 1, "description_version": 1, "phases": [], "tasks": [], "requested_executor": {}, "correction_of": correction})

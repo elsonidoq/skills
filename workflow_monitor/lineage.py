@@ -76,6 +76,16 @@ def resolve(runs: list[dict[str, Any]], occurrences: list[dict[str, Any]]) -> tu
             seen.add(node)
             node = parent[node]
 
+    def completed_repair(run_id: str) -> bool:
+        """Require the recorded fixing worker, check, and checkpoint boundaries."""
+        run_occurrences = [item for item in occurrences if item["run_id"] == run_id]
+        def has(phase: str, predicate) -> bool:
+            return any(item["phase"] == phase and predicate(item["observations"]) for item in run_occurrences)
+        return (has("worker", lambda rows: rows and rows[0]["facts"].get("role") == "fixing_worker" and
+                    any(row["kind"] == "returned" for row in rows)) and
+                has("check", lambda rows: any(row["kind"] == "passed" for row in rows)) and
+                has("checkpoint", lambda rows: any(row["kind"] == "passed" for row in rows)))
+
     summaries: dict[str, dict[str, Any]] = {}
     for run_id in by_run:
         summaries[run_id] = {"state": "unknown", "base": None, "head": current_heads[run_id]}
@@ -94,10 +104,16 @@ def resolve(runs: list[dict[str, Any]], occurrences: list[dict[str, Any]]) -> tu
         candidates = [value for key, value in reviews.items() if key[0] == leaf]
         latest = candidates[-1] if candidates else None
         head = current_heads[leaf]
+        chain: list[str] = []
+        node = leaf
+        while node != relation["source_run_id"]:
+            chain.append(node)
+            node = parent[node]
+        repairs_complete = all(completed_repair(run_id) for run_id in chain)
         if latest is None or not latest["complete"]:
             state = "unknown"
         elif latest["approved"] and latest["base"] == original["base"] and latest["head"] == head:
-            state = "accepted_full_range"
+            state = "accepted_full_range" if repairs_complete and not original["approved"] else "unknown"
         elif latest["approved"]:
             state = "correction_only"
         else:
