@@ -90,3 +90,41 @@ not unrelated scope changes. Intended implementation family/effort remains Terra
 exact binding and usable configuration remain for preflight. Any future material source/task
 change requires affected review and renewed approval; current runtime/path state must be
 inspected again before implementation.
+
+## Independent implementation review and acceptance
+
+The fresh Sol 6.1 full-range reviewer inspected
+`81cabbac7fbdbaa9556747f88af42cae41ece34c..14741a43fbb14f6ef11a0aaccc59f9307b6add58`
+and returned **NOT APPROVED** with two findings: missing canonical `save-adr` links in
+planner/TinySpec/task-generation, and preselection instructions excluding read-only
+existing-ADR discovery. Its separate review of
+`14741a43fbb14f6ef11a0aaccc59f9307b6add58..2cc0402ef36fd264abde4bb5b1bdb7a2a46f80a6`
+returned **APPROVE** for separate worker/reviewer executor configuration. Review session:
+`d6312a55-a1c8-4f32-9e35-89d993991af3` (Sol 6.1/high, launched before the owner's
+subsequent medium-effort selection for future workflow reviews).
+
+A different Sol 6.1/medium writer corrected the two findings in
+`06ad7c2d4aea099a4216c546e9783315bd420bb9` and
+`9a4f3043f0c24ae8a2ba234dba8ecff9cd907242`. The writer reported resolving-link and
+omission checks, corrected read-only discovery/resume assertions and synthetic disposable
+walkthroughs, plus 146 planner tests passing after each correction. Parent inspection
+confirmed the focused commits and source changes; the writer is not the final reviewer.
+
+Fresh independent **Sol 6.1/medium** recheck session
+`c19b9a99-9950-43ac-a1ac-393586bea558` inspected
+`2cc0402ef36fd264abde4bb5b1bdb7a2a46f80a6..9a4f3043f0c24ae8a2ba234dba8ecff9cd907242`
+and returned: **“No issues found. Verdict: APPROVE corrected ADR implementation.
+Merge verdict: OK.”** Both original findings were explicitly resolved; no necessary
+corrective follow-up remained within scope. Combined correction diff SHA-256:
+`4374fe4b3c93144f7996c320df1e7bfafb45b3bef860c6aaa094657ef6d900a1`.
+This acceptance combines the original full-range review with the focused independent
+recheck; unchanged reviewer configuration retains its separate approval.
+
+Limits: reviewers inspected committed source/diffs, not live model behavior, and did not
+independently rerun the reported test suites. Earlier worker validation reported 146
+planner, 189 initialization and 12 engine tests; the separate configuration change passed
+20 synthetic CLI/engine tests. Static/scenario/prompt wiring does not prove actual agent
+obedience. Workflow-script attempts retain their actual failed history; this independent
+acceptance does not relabel them successful or alter SQLite. No runtime installation,
+project ADR store creation, fleet refresh or activation is claimed. In Paseo, activation
+requires a fresh session that verifies this checkout and its loaded capabilities.

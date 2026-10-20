@@ -12,10 +12,17 @@ unchanged historical documents, not byte-equality or execution-eligibility manda
 second launch validator. A bare task list or `tasks` object is accepted. No mandatory
 approvals, evidence, order, execution intent, check catalogue, path list or envelope.
 
-`--executor` is ordinary JSON containing `provider`, `model`, `effort`. The SDK resolves that
-actual selected model or reports its real error. No observed-versus-requested proof, config
-hash, resource pin, binding assessment or SDK/Node equality check. `package-lock.json` remains
-explicit installation metadata for the tested SDK, not launch ceremony.
+`--executor` is ordinary JSON containing worker `provider`, `model`, `effort`, with an
+optional `reviewer` object containing its own `provider`, `model`, `effort`. The engine
+passes the worker profile to implementation sessions and the reviewer profile to the
+separate fresh read-only review session. Omission preserves worker-profile review for
+compatibility; an explicitly malformed reviewer profile is an error, not a fallback.
+The SDK resolves each actual selected model or reports its real error. No observed-versus-requested
+proof, config hash, resource pin, binding assessment or SDK/Node equality check.
+`package-lock.json` remains explicit installation metadata for the tested SDK, not launch
+ceremony. Project-specific selection is in the [operating guide](coordinate-implementation.md).
+The monitoring descriptor's `requested_executor` still describes the worker profile; it
+does not establish the reviewer's actual model or retrofit historical reviewer records.
 
 ## Current progress tables
 
