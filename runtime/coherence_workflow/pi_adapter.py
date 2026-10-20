@@ -64,18 +64,24 @@ class PiAdapter:
                         except (Blocked, ValueError, KeyError) as exc:
                             send({'error': str(exc)})
                     elif kind == 'question':
-                        try:
-                            self.observe_question('requested')
-                            answer = self.question(value['question'])
-                            self.observe_question('returned')
-                            send({'answer': answer})
-                            self.observe_question('sent')
-                        except BaseException:
+                        def observe_question(state):
                             try:
-                                self.observe_question('delivery_failed')
+                                self.observe_question(state)
                             except Exception:
-                                pass
+                                pass  # Recording is never transport control flow.
+                        observe_question('requested')
+                        try:
+                            answer = self.question(value['question'])
+                        except BaseException:
+                            observe_question('delivery_failed')
                             raise
+                        observe_question('returned')
+                        try:
+                            send({'answer': answer})
+                        except BaseException:
+                            observe_question('delivery_failed')
+                            raise
+                        observe_question('sent')
                     elif kind == 'result':
                         if not isinstance(value.get('text'), str):
                             raise Blocked('SDK result text must be a string')

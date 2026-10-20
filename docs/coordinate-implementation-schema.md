@@ -49,6 +49,8 @@ Facts are validated by phase and milestone before append: Git fields are hashes,
 are closed enums, and counters/exit codes/booleans retain their actual types. Allowlisted names do not admit
 arbitrary scalar data. Question observations retain only requested, terminal-returned, host-sent, or delivery-failed state and a
 parent occurrence ID. They never retain question or answer text; a send is not a consumption claim.
+Recorder callbacks are independently best effort at requested, returned, sent and delivery-failed points;
+their failures cannot prevent a terminal answer or replace a transport error.
 Read-only status/history exposes recording version, stable occurrence IDs and review base/head ranges when
 present; absent or corrupt monitoring is reported unknown. Explicit abandon preserves prior progress/error
 history and appends an `abandoned` observation when the run was registered.
