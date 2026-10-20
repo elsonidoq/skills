@@ -16,7 +16,7 @@ class SequentialExecutionTests(ProjectTest):
             return Engine(owner, 'fixture', admit(tasks), EXECUTOR, adapter=adapter, **kwargs).invoke()
 
     def test_dependencies_real_checks_focused_commits_and_independent_read_only_review(self):
-        sessions = []
+        sessions, prompts = [], []
         project = self.project
         case = self
         class OfflineOperations:
@@ -24,6 +24,7 @@ class SequentialExecutionTests(ProjectTest):
                 case.assertEqual(executor, EXECUTOR)
                 sessions.append(self)
             def prompt(self, prompt, *, claim=None, command=None, read_only=False):
+                prompts.append((prompt, read_only))
                 if read_only:
                     case.assertIn('Diff:', prompt)
                     case.assertIn('consumer', prompt)
@@ -44,6 +45,16 @@ class SequentialExecutionTests(ProjectTest):
                          "[os.path.realpath('/proc/self/fd/'+fd) for fd in os.listdir('/proc/self/fd')]"]]},
             {'id': 'producer', 'description': 'Produce'}], OfflineOperations)
         self.assertEqual(result['status'], 'complete')
+        worker_prompts = [prompt for prompt, read_only in prompts if not read_only]
+        review_prompts = [prompt for prompt, read_only in prompts if read_only]
+        instruction = ('Discover the canonical save-adr decision contract from the configured/installed suite and project routing, '
+                       'or use supplied relevant accepted constraints.')
+        self.assertEqual(len(worker_prompts), 2)
+        self.assertEqual(len(review_prompts), 1)
+        self.assertTrue(all(instruction in prompt for prompt in worker_prompts + review_prompts))
+        self.assertIn('Task: {"description":"Produce","id":"producer"}', worker_prompts[0])
+        self.assertIn('Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools;', review_prompts[0])
+        self.assertIn('Range: ' + self.base + '..', review_prompts[0])
         self.assertEqual(len(sessions), 3)
         self.assertEqual(len({id(s) for s in sessions}), 3)
         self.assertEqual(len(result['checkpoints']), 2)

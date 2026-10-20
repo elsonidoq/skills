@@ -15,6 +15,13 @@ def _failure(exc):
     return 'transport' if isinstance(exc, Blocked) else 'unknown'
 
 
+_DECISION_CONSTRAINTS = (
+    'Discover the canonical save-adr decision contract from the configured/installed suite and project routing, '
+    'or use supplied relevant accepted constraints. Do not ignore known accepted constraints because the contract '
+    'is unavailable; report the affected evidence gap without blocking unrelated legacy work. '
+)
+
+
 class Engine:
     def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question):
         self.authority, self.run, self.contract = authority, run, contract
@@ -80,6 +87,7 @@ class Engine:
                             'Preserve all unrelated and pre-existing dirty work. Ask the owner for material scope '
                             'or permission questions. No new planning/evidence artifacts. '
                             'Return an honest concise summary and check outcomes.\n'
+                            + _DECISION_CONSTRAINTS + '\n'
                             'Pre-existing dirty paths (do not edit): ' + canonical(sorted(focused.dirty)) + '\n'
                             'Task: ' + canonical(task), claim=focused.claim, command=focused.command)
                     except BaseException as exc:
@@ -132,7 +140,7 @@ class Engine:
             reviewer = self.adapter(project, self.executor, question=self.question, observe_question=review_question)
             reviewer.lock_fd = self.authority.lock.fileno()
             try:
-                review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Inspect relevant source with read/search tools; continue long reads with offsets. Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
+                review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. ' + _DECISION_CONSTRAINTS + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
             except BaseException as exc:
                 recorder.emit(reviewer_occurrence, 'review', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': _failure(exc)})
                 raise
