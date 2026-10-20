@@ -1,1 +1,12 @@
-{"name":"coherence-pi-host","version":"0.1.0","private":true,"type":"module","engines":{"node":">=22.23.3 <23"},"dependencies":{"@earendil-works/pi-coding-agent":"0.87.1"}}
+{
+  "name": "coherence-pi-host",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.87.1"
+  }
+}

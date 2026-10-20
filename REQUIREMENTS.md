@@ -45,59 +45,44 @@ staging/target proposal still needs explicit approval; unresolved selections/rec
 
 ## Executable implementation runtime
 
-Coordinate Implementation is a deterministic Python LangGraph1.2.16/SQLite-saver3.1.2 runner,
-with PyYAML6.0.3/jsonschema4.26.0 and thin pinned Pi SDK0.87.1 Node host. Python >=3.10
-(3.12.3 tested), compatible Node22.23.3–22.x, local Git/SQLite and approved delegated Linux
-cgroup-v2 own-child capability are required for mutation. No daemon/server is required.
-Source and wheel resource discovery includes YAML/schemas/host/package lock. Installation
-is optional explicit isolated setup, never ordinary-use provisioning/global auth/settings changes.
-Use the actual CLI --help and [operating/schema owners](docs/coordinate-implementation.md).
+Coordinate Implementation uses the existing Python CLI, PyYAML6.0.3, standard-library
+SQLite/Git process handling and the installed Pi SDK (0.87.1 tested). Python >=3.10,
+local Git and a usable Node/SDK installation are actual dependencies. The tested SDK lock
+is install metadata, not an exact runtime version/provenance admission gate. No LangGraph,
+SQLite saver, cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
+Optional explicit isolated setup never runs on ordinary entry; missing dependencies/auth/model
+report their actual operation errors, not administrative readiness failures.
 
-The runner alone selects tasks/sessions from approved exact config, owns SQLite persistence,
-executes/audits real REQUIRED/gates and focused owned-path commits/checkpoint reconciliation.
-Workers never stage/commit or select work; planning/standalone/bootstrap writers keep existing
-checkpoint duties. One writer, earlier producer verification/checkpoint before consumers,
-unknown/live effects block replacement. Preserve hooks/signing, unrelated index/custom/STATE/
-history and original approvals. No LLM batches/local task thresholds/escalation or execution
-coordination-feedback obligations. Only satisfied REQUIRED items/gates release dependents;
-optional green cannot compensate, missing proof is insufficient-evidence. Fresh independent
-full-range review and resolved findings are required for acceptance, separate from implementation
-completion. Repairs retain original contracts and configured limits; unknown causes stop retry.
+Task validity has only six linter checks: readable file, parsed task list, ID/work description,
+unique IDs, existing dependency references and acyclic dependencies. Empty work launches nothing.
+Nonempty work takes project/tasks and ordinary executor JSON (`provider`, `model`, `effort`).
+Preserve the actual owner-selected model/effort without silent substitution or provenance
+assessment. Ordinary selected-model tokens need no financial receipt; obtain narrow permission
+for unrequested chargeable/irreversible external actions.
 
-Exact provider/model/effort, resources/tools/permissions and requested versus observed evidence
-remain mandatory. Root executor class/effort intent is captured before architecture/decomposition,
-separate from planning/reviewer profiles, with assumptions/provenance/resolution/rationale.
-Approved compatible implementation/repair bindings must be resolved before dispatch; changed
-intent assesses affected detail/boundaries and renews affected producing approval without silent
-substitution or whole-plan regeneration. Ordinary model tokens have no financial approval/cap/
-reservation. Separately chargeable service actions need purpose/cost-impact and scoped authority.
+Tasks run sequentially with normal SDK read/search/edit/write/command tools. The runner owns
+actual project check execution and explicit-owned-path focused commits; workers never stage
+or commit. Checks and path limits are optional context, not universally required metadata.
+Actual check failures cannot be reported passed. Normal Git hooks/signing and unrelated
+staged/unstaged/untracked/STATE/custom work are preserved. No no-change empty commit. One
+fresh independent read-only full-range final review remains distinct from implementation.
+Findings are reported honestly, not accepted through a SQL disposition or evidence hash.
 
-Lean execution uses five boundary facts—valid work, usable selected configuration,
-scoped current authority, one-writer safe ownership and runnable REQUIRED checks. Optional
-telemetry is observed, not an execution veto; scoped external action and own-child custody
-remain required. This approved refactor is delivered through bounded instruction-managed
-owner-selected writer checkpoints, not by launching the runtime under refactor.
+SQLite stores useful ordinary progress/history. Old tables/rows remain readable in place;
+new work never replays or settles old intent records. Optional history errors cannot veto coding.
+An ordinary exclusive worktree writer lock prevents cooperating overlap. Current recorded live
+writers cannot be replaced/killed; explicit historical abandon inspects identities/scopes,
+releases only the old reservation and preserves incomplete effects/partial work. No cgroup
+provisioning for normal tasks. SDK compaction and output continuation are normal behavior;
+no pressure fields, lifetime caps, watchdogs, repair budgets or arbitrary workflow deadlines.
+The SDK's ordinary errors/cancellation remain real failures, not permanent launch poison.
 
-Durability uses existing LangGraph/SQLite and ordered task/check/decision/review/effect history.
-Compatible runtime revisions may append new attempts only at settled boundaries; whole-code
-identity is not permanent eligibility. Current configuration/schema/authority incompatibility
-and incomplete SDK/tool/Git effects still block affected replay. Retained actual YAML/graph and
-private semantic SQLite reader v1 are documented in the operating/schema owners. Old pins and
-records remain historical/read-only or explicitly unsupported, never auto-migrated. Optional
-metrics/publication cannot veto authoritative results; recorded state is not observed liveness.
-Monitor-v1 needs separate reader/data-model/source/task approval renewal for retired Engine-pin
-and parent/proof assumptions; no unchanged-app compatibility or monitor remediation is implied.
-
-Standalone CLI needs no Paseo. Interactive-parent requires selected public transport (Paseo0.9.2
-tested), verified original parent/session and registered ask_user capability. Answers derive from
-actual scoped original-session tool results, not launch/ACK/provenance chains. Uncertain sends
-are not blindly retried/reasked. Full-range review uses actual base/head/source/evidence references
-and read-only file continuation, not binary bundles or document-byte/SDK-delivery attestation.
-Missing UI stays pending; never silent polling or fabricated answers. Original-conversation
-answer pin overrides greedy session selection. Missing/incompatible/unsettled original blocks,
-never fresh substitution. Received/queued/SDK-delivered/worker-acknowledged are separate.
-Host exit stops work, no background continuation. Cgroups cover trusted single-host/same-UID
-local processes, not filesystem sandboxing, remote/adversarial tracking or power-loss guarantees.
+Questions use actual current terminal input, not Paseo versions, original-session proofs,
+transcript receipts or external owner catalogues. Noninteractive unanswered questions stop
+honestly with partial work retained. No automatic legacy resume/restart, auth refresh,
+installation, global settings changes, mass conversion or background daemon. Inspect actual
+failed operations/partial commits before targeted follow-up; no autonomous expensive retry loop.
+See the [operating](docs/coordinate-implementation.md) and [storage/interface](docs/coordinate-implementation-schema.md) owners.
 
 ### Planning/advisory selection
 

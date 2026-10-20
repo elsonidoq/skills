@@ -10,8 +10,8 @@ ROOT=Path(__file__).resolve().parents[3]
 class RuntimeAuthorityTests(unittest.TestCase):
     def test_interface_cannot_own_orchestration_or_persistence(self):
         introduction=TEXT.split('## Load and Verify',1)[0]
-        for phrase in ('Python LangGraph/SQLite','cannot select tasks, models, sessions, retries, repairs, commits or acceptance',
-                       'No background LLM decides workflow transitions','Pi persistence is conversation data'):
+        for phrase in ('existing CLI runs sequential tasks', 'installed Pi SDK',
+                       'not effect proof or execution eligibility'):
             self.assertIn(phrase,' '.join(introduction.split()))
             self.assertNotIn(phrase,' '.join(introduction.split()).replace(phrase,'REMOVED'))
         self.assertEqual(contract_errors(TEXT),[])

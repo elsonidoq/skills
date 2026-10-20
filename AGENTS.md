@@ -109,18 +109,19 @@ rules above for reusable skills and commands.
   recent context, selective artifact/Git/check reconstruction and active-child reconciliation
   under the executable interface's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
   Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
-- Approved local lean-runtime delivery exception: T001–T003 use sequential instruction-managed
-  writers and verified focused writer checkpoints, not the runtime under change. The owner
-  explicitly renewed implementation to `openai-codex/gpt-6.1-sol`, effort `medium`, after
-  inspected incomplete Terra runs. Historical source/tasks/binding approvals stay unchanged;
-  product bindings remain selected-config driven. Five readiness facts (valid work, usable
-  configuration, current scoped approval, safe sole ownership, runnable checks) apply at
-  relevant invalidation boundaries. Keep actual custody, REQUIRED/manual gates and independent
-  full-range final review. No launch manifest/catalog/pin ceremony bootstraps manual delivery.
-- Execution: `coordinate-implementation` is the thin CLI facade; LangGraph/SQLite owns task/session
-  selection, checks, focused commits and durable operational state. Keep bootstrap writer checkpoints
-  distinct from future runner-owned Git. Standalone is portable; interactive mode needs verified
-  same-parent actual ask_user. No automatic install, reload, legacy restart or mass conversion.
+- Execution delivery uses a single instruction-managed writer and one verified focused checkpoint,
+  not recursive execution through the runtime being changed. Owner-selected implementation is
+  `openai-codex/gpt-6.1-sol`, effort `medium`; product bindings remain selected-config driven.
+  Historical approvals stay historical. The latest owner direction supersedes older graph/SQL/
+  custody/evidence eligibility mandates: task startup linter has only readable file, parsed list,
+  ID/work description, unique IDs, existing dependency references and acyclic dependencies.
+- Execution: the existing `coordinate-implementation` CLI runs sequential tasks with normal SDK
+  tools, actual specified project checks/manual gates, focused explicit-owned-path Git commits and
+  fresh independent read-only final review. SQLite stores ordinary progress/history, not effect
+  proof. No manifest, catalogue, cgroup provisioning, session/parent receipts or binding assessment.
+  Preserve sole writer ownership, unrelated work, hooks/signing, old rows and actual errors.
+  Current terminal input is authority when needed; no automatic install, auth refresh, reload,
+  legacy restart, expensive failure retry loop or mass conversion.
 - Documentation: `docs/index.md` is the routing guide and root directory index;
   `docs/plans/index.md` and `docs/plans/reviews/index.md` map their direct files.
   `README.md` owns setup/workflow, `REQUIREMENTS.md` runtime requirements,

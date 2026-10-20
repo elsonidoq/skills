@@ -22,8 +22,8 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Context-first implementation recovery | [Coordinator recovery contract](../skills/coordinate-implementation/SKILL.md#recover-context); summary/recent context then selective artifact/Git/check/runtime reconstruction, no automatic STATE writes |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
-| Coordinate Implementation executable operation, custody and supported limits | [Runtime operating guide](coordinate-implementation.md); optional explicit runtime setup, thin executable interface |
-| Delivered runtime SQLite and packaged versioned contract schemas | [Runtime schema owner](coordinate-implementation-schema.md) |
+| Coordinate Implementation executable operation and focused Git safety | [Runtime operating guide](coordinate-implementation.md); optional explicit runtime setup, thin executable interface |
+| Current task progress, historical SQLite and SDK interfaces | [Runtime schema owner](coordinate-implementation-schema.md) |
 
 This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
 [gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
@@ -41,7 +41,7 @@ adoption never initializes execution state in unrelated projects. The legacy por
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.
-- [Executable implementation entry](../skills/coordinate-implementation/SKILL.md): Thin CLI/interactive facade; deterministic runtime owns tasks, configured bindings, sessions, REQUIRED/gates, focused commits and acceptance. [Operating](coordinate-implementation.md) and [schema](coordinate-implementation-schema.md) owners cover actual interfaces/cutover/rollback.
+- [Executable implementation entry](../skills/coordinate-implementation/SKILL.md): Thin CLI/interactive facade; sequential runtime uses selected executors, actual project checks/manual gates, focused commits and independent review. [Operating](coordinate-implementation.md) and [schema](coordinate-implementation-schema.md) owners cover actual interfaces/cutover/rollback.
 - [Qualified routing rubric](../skills/planner/references/profile-selection.md): Canonical first-proposal and six-factor planning/advisory selection prior: demands/oracles → material evidence or explicit non-reliance → independent family/effort comparison → proposal; suitability remains separate from authenticated/runtime readiness and observed launch. Standard `plan_create` requires Sol/medium for its entire delegated non-helper/helper pass, with no unavailable-profile substitution. Implementation-only batching rules are not planning prerequisites.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
 - [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Relevant existing guidance, selective history and explicit future-directed user feedback; no routine persistence or inferred learning.

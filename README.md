@@ -122,47 +122,39 @@ Approval evidence: [combined approval, or specification and overall approvals]
 Approved current content/revisions and implementation scope: [evidence]
 ```
 
-Coordinate Implementation is now an executable workflow, not an LLM coordinator. The skill
-is a thin start/status/pending/answer/control/authorized-resume facade; LangGraph/SQLite selects
-dependency-ready tasks and role-safe sessions from approved exact configuration, audits real
-REQUIRED evidence/original gates and commits one focused verified task/repair before consumers.
-No subjective implementation batches, task-count thresholds, escalation or execution-feedback
-paperwork. Planning profile selection remains skill-owned under the
-[planning rubric](skills/planner/references/profile-selection.md), including the Standard
-Sol/medium plan-stage exception; planning-producer profiles do not supply executor intent.
+Coordinate Implementation executes requested tasks sequentially using the existing CLI and
+installed Pi SDK. Ordinary direct owner-authorized coding needs no new planning artifacts.
+Task intake checks only readable file, parsed list, ID/work, unique IDs, existing dependencies
+and no cycles; empty work launches nothing. Dependency order need not match file order.
 
-Resolve explicit coding class/effort before architecture/decomposition and carry assumptions,
-provenance, resolution and rationale through human/machine tasks. Runtime resolves approved
-compatible exact bindings before dispatch; missing/incompatible historical intent returns to
-producing assessment/renewal, no invented approvals or mass conversion. TinySpec/Standard/legacy
-source shapes and original gates remain. Known separately chargeable service actions need
-purpose/cost-impact and scoped authority; ordinary model tokens have no financial gate/cap.
+```sh
+scripts/coordinate-implementation intake --tasks /tmp/tasks.json
+scripts/coordinate-implementation start --project /absolute/project \
+  --tasks /tmp/tasks.json --executor /tmp/executor.json --run requested-fix
+```
 
-Optional setup is explicit: `scripts/install-workflow.sh --prefix NEW_ABSOLUTE_DIRECTORY
---allow-network` only with owner-scoped install/network authority. Ordinary entry/adoption never
-installs or refreshes auth. Source launcher: `scripts/coordinate-implementation --help`;
-installed wheel provides `coordinate-implementation`. `start`/`resume` take explicit `--project`,
-`--workflow`, `--tasks`, `--owner-catalog`, `--manifest`, `--containment`, `--run`; wheel users
-also supply `--suite-root` for approved skill/settings resources. See
-[operation/security/cutover/rollback](docs/coordinate-implementation.md) and
-[actual schema/state owners](docs/coordinate-implementation-schema.md).
+Minimal tasks: `[{"id":"fix","description":"Fix the requested behavior and run its project test."}]`.
+Executor JSON contains the actual selected `provider`, `model`, `effort`; no substitution or
+provenance assessment. No workflow graph, manifest, catalogue, cgroup delegation, original
+session, parent receipt or proof-of-effect database is required. Installed entry is
+`coordinate-implementation`; optional explicit isolated setup is separate install/network authority,
+never ordinary-use provisioning or auth refresh. Read actual `--help` and the
+[operating guide](docs/coordinate-implementation.md) / [storage owner](docs/coordinate-implementation-schema.md).
 
-Standalone mode has no Paseo dependency. Interactive mode requires verified actual same-parent
-transport/ask_user; no polling fallback or fabricated receipts. Accepted questions reopen the
-original conversation only, never a fresh substitute; missing/unsafe/unsettled original blocks.
-Optional headroom is not a veto. Reviewers read the actual committed range/files with continuation,
-not embedded binary patches or SDK document-delivery proofs. Scoped original-session ask_user
-results authenticate interactive answers; launch/ACK chains do not. Uncertain sends remain pending
-for reconciliation, never blind resend/reask.
-Host exit stops work; status is a separate no-agent reader, not background continuation.
-Core supports trusted single-host/same-UID Linux cgroup-v2 custody, not an adversarial filesystem
-sandbox, remote effects or physical-power-loss promise. Missing capability blocks before reliance.
+Workers use ordinary SDK tools and correct harmless read/argument errors in the same conversation.
+The runner inspects baseline/actual edits, preserves unrelated work, runs optional specified project
+commands, and creates one focused explicit-path commit per task with normal hooks/signing.
+No mandatory collected-count/evidence format or no-change empty commit. Fresh independent
+read-only full-range review remains required; concrete findings are honestly reported.
+SDK compaction and long-output continuation remain normal behavior, not launch poison.
 
-Readiness is five facts: valid work, usable selected configuration, scoped current approval,
-safe sole ownership and runnable checks. Historical migration/UI proof programmes are not launch
-gates. There is no automatic global activation or legacy restart. Fresh independent full-range
-review remains required for final acceptance, after verified writer checkpoints for this refactor.
-Use `/reload` inside pi when adopting changed skills/prompts.
+`status`/`history` are passive readers. `abandon` explicitly labels an inspected old run abandoned,
+releases its reservation without signalling processes or settling old effects, and preserves
+partial files/history. Current terminal input answers material questions without transcript
+proofs; noninteractive questions stop honestly. No automatic resume/replay or expensive retry
+loop. An ordinary writer lock prevents cooperating overlap; SDK tools are not an adversarial
+sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
+After adopting changed global skills/prompts, run `/reload` inside pi.
 
 ## Context-first recovery and coordination feedback
 
@@ -222,8 +214,7 @@ For authorized retained repository output, the shared [task-commit contract](ski
 requires a focused, verified per-task commit before later task work, completion reporting, or handoff. A task is an
 independently verifiable work unit, not a tool call or batch. Read-only, no-change, scratch, and external-only work
 creates no empty commit. Preserve unrelated staged/unstaged work; ambiguous ownership, unavailable Git, failed hooks,
-or incompatible policy stops rather than waives the checkpoint. Executable runs use runner-owned real verification, diff audits, focused commits and receipt
-reconciliation; workers do not stage/commit or own workflow state. Planning/standalone and an
+or incompatible policy stops rather than waives the checkpoint. Executable runs use runner-owned real verification, diff audits, focused commits and actual Git inspection; workers do not stage/commit or own workflow state. Planning/standalone and an
 ongoing instruction-managed bootstrap keep their authorized writer checkpoints. The interface
 cannot waive safety or create routine evidence-only checkpoints. Static/Git fixtures are not
 universal model-obedience proof. After changed global skills/prompts are adopted, run `/reload`.

@@ -621,9 +621,8 @@ class ProportionateValidationTests(unittest.TestCase):
         for key, clause, diagnostic in (
             ("coordination", "explicit user corrective/future-round direction", "coordination-feedback"),
             ("coordination", "No feedback means no write", "coordination-feedback"),
-            ("coordinator", "inspect run/invocation, partial commits and check evidence", "coordination-routing"),
-            ("coordinator", "reruns invalidated", "coordination-routing"),
-            ("coordinator", "Unknown cause blocks blind restart", "coordination-routing"),
+            ("coordinator", "Do not autonomously loop expensive failed runs", "coordination-routing"),
+            ("coordinator", "No arbitrary workflow", "coordination-routing"),
         ):
             self.assert_clause_required(key, clause, diagnostic)
 
@@ -647,7 +646,7 @@ class ProportionateValidationTests(unittest.TestCase):
         self.assert_clause_required("tasks", "real outcome", "validation-tasks")
 
     def test_timeout_narrows_remaining_work_without_blind_retry(self):
-        for clause in ("Inspect a failed\nrun and its invocation", "unknown cause stops blind retries",
+        for clause in ("Inspect a failed run and its invocation", "unknown cause stops blind retries",
                        "Preserve partial and unrelated work"):
             self.assert_clause_required("coordinator", clause, "validation-timeout")
 
@@ -660,7 +659,7 @@ class ProportionateValidationTests(unittest.TestCase):
 class VerificationCarrierTests(unittest.TestCase):
     def test_unconditional_escalation_restoration_rejected_with_summaries_intact(self):
         texts = checker.load_texts()
-        conditional = "Targeted repair retains"
+        conditional = "Do not autonomously loop expensive failed runs"
         carrier = checker.section(texts["coordinator"], "## Execute and Integrate")
         self.assertIn(conditional, carrier)
         texts["coordinator"] = texts["coordinator"].replace(
@@ -742,7 +741,7 @@ class InstructionTests(unittest.TestCase):
             ("coordinator", "exactly six linter checks", "required source checklist", "intake:"),
             ("coordinator", "owner-selected executor/effort", "agent default bindings", "execution-selection:"),
             ("coordinator", "without silent substitutions", "substitute defaults", "execution-selection:"),
-            ("coordinator", "never fresh-session substitution", "use a fresh session", "execution-strategy:"),
+            ("coordinator", "never invent an answer", "invent an answer", "execution-strategy:"),
             ("adoption", "every unrelated byte", "custom content", "adoption:"),
             ("docs", "not substantive implementation authorization", "implementation authorization", "docs:"),
         ]
@@ -1977,7 +1976,7 @@ class ComparativeCarrierTests(unittest.TestCase):
             ("routing", "Family explains sufficient capability versus the named adequate alternative", "routing-comparison:"),
             ("routing", "pending readiness is not inadequacy", "routing-comparison:"),
             ("routing", "strict requirement versus a default preference", "routing-comparison:"),
-            ("coordinator", "cannot select tasks, models, sessions, retries, repairs, commits or acceptance", "runtime-authority:"),
+            ("coordinator", "not effect proof or execution eligibility", "runtime-authority:"),
         ):
             with self.subTest(clause=clause):
                 changed = dict(texts)
@@ -2008,30 +2007,20 @@ class PlanningSeedPreservationTests(unittest.TestCase):
 
 
 class RuntimeHandoffTests(unittest.TestCase):
-    def test_exact_approved_policy_carriers_and_mutations(self):
+    def test_current_runtime_policy_replaces_historical_eligibility_not_historical_records(self):
         import hashlib
         source=(ROOT/'specs/003-coordinate-workflow/tasks.md').read_text()
         approved=source.split('## T008 exact operative amendment proposals',1)[1].split('Remaining constitution/task-commit safeguards',1)[0]
         self.assertEqual(hashlib.sha256(approved.encode()).hexdigest(),'a318e50bf8914fce910f62d9aedf8700e3b9a1bb0b804a08281e46b0423bdcea')
-        clauses=[line[5:] for line in approved.splitlines() if line.startswith('   > ')]
         constitution=(ROOT/'.specify/memory/constitution.md').read_text()
         checkpoint=(ROOT/'skills/memory-handling/references/task-commit-contract.md').read_text()
-        self.assertEqual(len(clauses),3)
-        import importlib.util
-        spec=importlib.util.spec_from_file_location('checkpoint_policy',ROOT/'scripts/check-task-commit-contract.py')
-        policy=importlib.util.module_from_spec(spec);spec.loader.exec_module(policy)
-        self.assertEqual(policy.operative_amendment_errors(constitution,checkpoint,clauses),[])
-        for clause in clauses:
-            changed=constitution.replace(clause,'REMOVED',1)+'\n## Footer\n'+clause
-            self.assertTrue(policy.operative_amendment_errors(changed,checkpoint,clauses))
-
-        for clause in clauses:
-            self.assertIn(clause,constitution)
-            self.assertNotIn(clause,constitution.replace(clause,'REMOVED',1))
-        self.assertIn(clauses[2],checkpoint)
-        self.assertIn('Version**: 4.0.0',constitution)
-        self.assertIn('Approve policy amendments',constitution)
-        self.assertIn('instruction-managed migration continues',constitution)
+        for text in (constitution, checkpoint):
+            for phrase in ('Six task-linter checks', 'focused verified owned-path',
+                           'failed hooks/checks/signing', 'historical rows',
+                           'no graph, cgroup, manifest, original-session, intent-settlement or evidence-receipt eligibility'):
+                self.assertIn(phrase, text)
+            self.assertNotIn('durable effect identity', text)
+            self.assertNotIn('current Git state and durable receipt', text)
 
     def test_installed_adapter_template_is_sequential_and_hashes_honest(self):
         import hashlib,json

@@ -16,6 +16,6 @@ python3 -m venv "$PREFIX"
 "$PREFIX/bin/python" -m pip install --require-hashes -r "$ROOT/runtime/requirements.lock"
 "$PREFIX/bin/python" -m pip install 'setuptools==82.0.1' 'wheel==0.46.3' 'packaging==26.3'
 "$PREFIX/bin/python" -m pip install --no-deps --no-build-isolation "$ROOT/runtime"
-HOST=$("$PREFIX/bin/python" -c 'from coherence_workflow.pi_adapter import host_resource; print(host_resource().parent)')
+HOST=$("$PREFIX/bin/python" -c 'from coherence_workflow.pi_adapter import host_path; print(host_path().parent)')
 npm ci --prefix "$HOST" --cache "$PREFIX/npm-cache" --ignore-scripts
-printf 'Isolated workflow ready: %s/bin/coordinate-implementation\nUse explicit --project and --suite-root %s; no global activation.\n' "$PREFIX" "$ROOT"
+printf 'Isolated workflow ready: %s/bin/coordinate-implementation\nUse explicit --project, --tasks and --executor; no global activation.\n' "$PREFIX"

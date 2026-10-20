@@ -70,7 +70,7 @@ class StaticContractMutationTests(unittest.TestCase):
         mutations = (
             (text.replace("No skip/defer", "ask whether to skip/defer"), "coordinator checkpoint guard missing"),
             (text.replace("never adopts or commits unknown work", "may commit unknown inherited work"), "coordinator checkpoint guard missing"),
-            (text.replace("Runner alone reconciles matching checkpoint receipts", "implementer may recover"), "coordinator checkpoint guard missing"),
+            (text.replace("Never blindly replay a Git commit", "implementer may recover"), "coordinator checkpoint guard missing"),
             (text.replace("ownership conflict block", "ownership conflict may continue"), "coordinator checkpoint guard missing"),
             (text + "\nA coordinator may proceed without per-task commits.\n", "coordinator checkpoint waiver reintroduced"),
         )

@@ -15,14 +15,11 @@ def contract_errors(text):
     end = text.find("\n## ", start + len("## Recover Context"))
     body = " ".join((text[start:] if end < 0 else text[start:end]).split()) if start >= 0 else ""
     clauses = (
-        "available conversation summary/recent context", "do not assume retained tokens",
-        "Selectively reconstruct only uncertain authorization, completion",
-        "Git HEAD/diffs/index ownership", "actual check/commit evidence",
-        "Unknown approval/completion blocks", "never guess completion or repeat commits",
-        "recorded and unrecorded active children", "running child means inspect/wait, not duplicate dispatch",
-        "unknown child status", "missing runtime evidence stops replacement",
+        "available summary/recent context", "inspect Git, partial work",
         "Inspect a failed run and its invocation", "unknown cause stops blind retries",
-        "Preserve partial and unrelated work",
+        "Preserve partial and unrelated work", "inspect conflicting writers and actual files",
+        "replay uncertain external effects", "kill unrelated processes",
+        "not converted to successful completion",
     )
     errors = ["recovery: missing " + c for c in clauses if c not in body]
     for unsafe in ("Automatically create STATE.md", "Update STATE after child-ID return",

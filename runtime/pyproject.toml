@@ -5,13 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "coherence-workflow"
 version = "0.1.0"
-description = "Opt-in local durable workflow and tool custody substrate"
+description = "Sequential task execution with the Pi SDK and focused Git checkpoints"
 requires-python = ">=3.10"
 dependencies = [
-  "langgraph==1.2.16",
-  "langgraph-checkpoint-sqlite==3.1.2",
   "PyYAML==6.0.3",
-  "jsonschema==4.26.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -19,7 +16,7 @@ where = ["."]
 include = ["coherence_workflow*"]
 
 [tool.setuptools.package-data]
-coherence_workflow = ["schemas/*.json", "workflows/*.yaml"]
+coherence_workflow = ["schemas/*.json"]
 
 [project.scripts]
 coordinate-implementation = "coherence_workflow.cli:main"

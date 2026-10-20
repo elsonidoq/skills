@@ -1,217 +1,127 @@
-"""T003/V4 actual focused Git checkpoints and safety negatives."""
-import json
+"""Real focused commits, dirty preservation, paths, hooks and signing failures."""
 import os
 from pathlib import Path
+from unittest.mock import patch
 
-from coherence_workflow.git_effects import GitEffects, reconcile_checkpoint
-from coherence_workflow.store import Authority, Blocked, digest, git
-from coherence_workflow.tools import Gateway, snapshot
-from test_custody import IsolatedCustody
+from coherence_workflow.git_effects import FocusedGit, editable_path
+from coherence_workflow.store import Blocked, git
+from fixtures.support import ProjectTest
 
 
-class FocusedCheckpointTests(IsolatedCustody):
-    def test_actual_cli_sdk_dependency_sequence(self):
-        from test_cli import live_sequence
-        live_sequence(self)
-
-    def test_symlink_and_missing_identity_block_before_mutation(self):
-        from unittest.mock import patch
-        with Authority(self.project) as owner:
-            owner.store.reserve('run','fixture')
-            effects=GitEffects(owner,'run',Gateway(owner,'run',self.parent,{}))
-            (self.project/'escape').symlink_to(self.outside)
-            with self.assertRaises(Blocked):effects.begin({'id':'escape','owned_paths':['escape']})
-            with patch.dict(os.environ,{'GIT_AUTHOR_NAME':''}):
-                with self.assertRaises(Blocked):effects.begin(self.task())
-            self.assertEqual(self.outside.read_text(),'outside unchanged')
-
-    def test_repeated_owned_writes_use_task_boundary_unrelated_audit(self):
-        from fixtures.custody_support import process_tool
-        with Authority(self.project) as owner:
-            owner.store.reserve('run','fixture')
-            gateway=Gateway(owner,'run',self.parent,{'fixture':process_tool(self.project)})
-            baseline=snapshot(self.project,['owned.txt'])
-            gateway.audit_task_boundary(['owned.txt'], baseline)
-            for visit in range(2):
-                op,proc=gateway.launch('attempt:'+str(visit),'fixture','1',{'mode':'quick','exit':0})
-                self.capture('released',op,owner)
-                self.assertTrue(gateway.settle(op,proc.wait(timeout=10))['replacement_allowed'])
-            (self.project/'custom.md').write_text('unrelated external drift')
-            with self.assertRaisesRegex(Blocked,'unrelated file drift'):
-                GitEffects(owner,'run',gateway).checkpoint(self.task(),baseline,
-                    [{'item_id':'A/V1','status':'satisfied'}])
-            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],2)
-
-    def test_actual_signing_failure_blocks_without_disabling_or_retry(self):
-        git(self.project,'config','commit.gpgsign','true')
-        git(self.project,'config','gpg.program','/usr/bin/false')
-        with Authority(self.project) as owner:
-            owner.store.reserve('run','fixture')
-            baseline=snapshot(self.project,['owned.txt'])
-            (self.project/'owned.txt').write_text('retained partial signing failure')
-            with self.assertRaisesRegex(Blocked,'Git commit/hooks/signing failed'):
-                self.checkpoint(owner,self.task(),baseline)
-            self.assertEqual(git(self.project,'rev-parse','HEAD').decode().strip(),baseline['head'])
-            self.assertEqual(git(self.project,'config','commit.gpgsign').decode().strip(),'true')
-            self.assertEqual((self.project/'owned.txt').read_text(),'retained partial signing failure')
-
-    def task(self):
-        return {'id':'A','owned_paths':['owned.txt'],'required':[{'id':'A/V1'}]}
-
-    def checkpoint(self, owner, task, baseline, **kwargs):
-        gateway=Gateway(owner,'run',self.parent,{})
-        try:
-            return GitEffects(owner,'run',gateway).checkpoint(task,baseline,
-                [{'item_id':'A/V1','status':'satisfied'}],**kwargs)
-        finally:
-            for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
-                receipt=json.loads(row[0])
-                if receipt not in self.receipts:self.receipts.append(receipt)
+class FocusedCheckpointTests(ProjectTest):
+    def focused(self, **context):
+        return FocusedGit(self.project, {'id': 'fix', 'description': 'Fix', **context})
 
     def test_actual_commit_preserves_unrelated_staged_unstaged_untracked(self):
-        (self.project/'other.txt').write_text('unrelated staged');git(self.project,'add','--','other.txt')
-        (self.project/'custom.md').write_text('unrelated unstaged')
-        (self.project/'user-untracked').write_text('unrelated untracked')
-        with Authority(self.project) as owner:
-            owner.store.reserve('run','fixture')
-            before=snapshot(self.project,['owned.txt'])
-            (self.project/'owned.txt').write_text('implementation')
-            result=self.checkpoint(owner,self.task(),before)
-            self.assertEqual(result['parent'],before['head'])
-            self.assertEqual(git(self.project,'diff-tree','--no-commit-id','--name-only','-r',result['sha']).decode().strip(),'owned.txt')
-            self.assertEqual(git(self.project,'diff','--cached','--name-only').decode().strip(),'other.txt')
-            self.assertEqual(reconcile_checkpoint(owner,result['operation_id']),result)
-            for name in before['files']:
-                if name!='owned.txt':self.assertEqual(before['files'][name],result['reconciliation']['files'][name])
-            with self.assertRaises(Blocked):self.checkpoint(owner,self.task(),before)
-            print(json.dumps(result))
+        self.write('other.txt', 'staged\n')
+        git(self.project, 'add', '--', 'other.txt')
+        self.write('other.txt', 'unstaged\n')
+        self.write('unknown.txt', 'untracked\n')
+        before_index = git(self.project, 'show', ':other.txt')
+        f = self.focused()
+        f.claim('owned.txt')
+        self.write('owned.txt', 'fixed\n')
+        result = f.checkpoint()
+        self.assertEqual(result['paths'], ['owned.txt'])
+        self.assertNotEqual(result['sha'], self.base)
+        self.assertEqual(git(self.project, 'show', ':other.txt'), before_index)
+        self.assertEqual((self.project/'other.txt').read_text(), 'unstaged\n')
+        self.assertEqual((self.project/'unknown.txt').read_text(), 'untracked\n')
+        self.assertEqual(git(self.project, 'show', 'HEAD:STATE.md'), b'custom\n')
 
-    def test_read_only_no_empty_commit_and_failed_evidence_blocks(self):
-        with Authority(self.project) as owner:
-            owner.store.reserve('run','fixture')
-            task=self.task(); baseline=snapshot(self.project,task['owned_paths'])
-            effects=GitEffects(owner,'run',Gateway(owner,'run',self.parent,{}))
-            with self.assertRaises(Blocked):effects.checkpoint(task,baseline,[])
-            result=self.checkpoint(owner,task,baseline)
-            self.assertTrue(result['read_only']);self.assertEqual(result['sha'],baseline['head'])
-            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_processes').fetchone()[0],0)
+    def test_no_change_no_empty_commit(self):
+        self.assertTrue(self.focused().checkpoint()['no_change'])
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
-    def test_owned_overlap_symlink_unrelated_drift_and_hook_failure_stop(self):
-        with Authority(self.project) as owner:
-            owner.store.reserve('run','fixture')
-            effects=GitEffects(owner,'run',Gateway(owner,'run',self.parent,{}));task=self.task()
-            (self.project/'owned.txt').write_text('preexisting')
-            with self.assertRaises(Blocked):effects.begin(task)
-            # Each negative uses a new isolated Git baseline rather than discarding user work.
-            baseline=snapshot(self.project,task['owned_paths'])
-            (self.project/'custom.md').write_text('drift')
-            with self.assertRaises(Blocked):self.checkpoint(owner,task,baseline)
-        # Hook failure is tested in this fixture's own repository, never configured around.
-        self.project=__import__('fixtures.support',fromlist=['make_project']).make_project(self.root/'hook-project')
-        hook=self.project/'.git/hooks/pre-commit';hook.write_text('#!/bin/sh\nexit 1\n');hook.chmod(0o700)
-        with Authority(self.project) as owner:
-            owner.store.reserve('run','fixture')
-            baseline=snapshot(self.project,['owned.txt']);(self.project/'owned.txt').write_text('changed')
-            with self.assertRaisesRegex(Blocked,'Git commit/hooks/signing failed'):self.checkpoint(owner,self.task(),baseline)
-            self.assertEqual(git(self.project,'rev-parse','HEAD').decode().strip(),baseline['head'])
-            self.assertEqual((self.project/'owned.txt').read_text(),'changed')
+    def test_command_edits_derive_owned_paths(self):
+        f = self.focused()
+        f.command('start', 'fixture-command')
+        self.write('new.txt', 'new\n')
+        f.command('end', 'fixture-command')
+        self.assertEqual(f.checkpoint()['paths'], ['new.txt'])
 
+    def test_optional_limits_prevent_out_of_scope_commit(self):
+        f = self.focused(owned_paths=['owned.txt'])
+        with self.assertRaisesRegex(Blocked, 'outside optional'):
+            f.claim('other.txt')
+        self.write('other.txt', 'out of scope\n')
+        with self.assertRaisesRegex(Blocked, 'unclaimed changes'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'diff', '--cached'), b'')
 
-class GitCapabilityTests(IsolatedCustody):
-    def setUp(self):
-        super().setUp()
-        self.marker=self.root/'callback-marker'
+    def test_dirty_path_never_claimed_or_adopted(self):
+        self.write('owned.txt', 'prior work\n')
+        f = self.focused()
+        with self.assertRaisesRegex(Blocked, 'pre-existing dirty'):
+            f.claim('owned.txt')
+        self.write('owned.txt', 'changed unknown work\n')
+        with self.assertRaisesRegex(Blocked, 'pre-existing work changed'):
+            f.checkpoint()
 
-    def effects(self,owner):
-        owner.store.reserve('run',digest('git-capability-fixture'))
-        return GitEffects(owner,'run',Gateway(owner,'run',self.parent,{}))
+    def test_index_or_head_changes_stop_commit(self):
+        f = self.focused()
+        f.claim('owned.txt')
+        self.write('owned.txt', 'fixed\n')
+        git(self.project, 'add', '--', 'owned.txt')
+        with self.assertRaisesRegex(Blocked, 'index changed'):
+            f.checkpoint()
 
-    def assert_rejected_without_effect(self,owner,effects):
-        index=(self.project/'.git/index').read_bytes()
-        head=git(self.project,'rev-parse','HEAD')
-        with self.assertRaisesRegex(Blocked,'filter|post-index-change') as error:effects.begin(self.task())
-        self.assertNotIn('DO_NOT_LOG_COMMAND_SECRET',str(error.exception))
-        self.assertFalse(self.marker.exists())
-        self.assertEqual((self.project/'.git/index').read_bytes(),index)
-        self.assertEqual(git(self.project,'rev-parse','HEAD'),head)
-        self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_operations').fetchone()[0],0)
-        self.assertEqual(self.outside.read_text(),'outside unchanged')
+    def test_symlink_traversal_and_administrative_paths_refused(self):
+        (self.project/'link').symlink_to(self.root, target_is_directory=True)
+        for path in ('link/outside', '../outside', '/tmp/outside', '.git/config', '.coherence/state'):
+            with self.assertRaises(Blocked, msg=path):
+                editable_path(self.project, path)
 
-    def task(self):return {'id':'A','owned_paths':['owned.txt'],'required':[{'id':'A/V1'}]}
+    def test_hook_failure_honored_no_configure_around(self):
+        hook = self.project/'.git/hooks/pre-commit'
+        hook.write_text('#!/bin/sh\necho actual-hook-failure >&2\nexit 23\n')
+        hook.chmod(0o755)
+        f = self.focused()
+        f.claim('owned.txt')
+        self.write('owned.txt', 'fixed\n')
+        with self.assertRaisesRegex(Blocked, 'actual-hook-failure'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+        self.assertEqual((self.project/'owned.txt').read_text(), 'fixed\n')
+        self.assertEqual(hook.read_text().splitlines()[-1], 'exit 23')
 
-    def test_applicable_clean_and_process_filters_never_execute_or_stage(self):
-        import shlex
-        for kind in ('clean','process'):
-            project=self.project
-            if kind=='process':
-                from fixtures.support import make_project
-                self.project=make_project(self.root/'process-project')
-            (self.project/'.gitattributes').write_text('owned.txt filter=ScopedDriver\n')
-            command='printf DO_NOT_LOG_COMMAND_SECRET > '+shlex.quote(str(self.marker))+'; cat'
-            git(self.project,'config','filter.ScopedDriver.'+kind,command)
-            with Authority(self.project) as owner:self.assert_rejected_without_effect(owner,self.effects(owner))
-        self.project=project
+    def test_signing_failure_honored_no_disable_or_retry(self):
+        git(self.project, 'config', 'commit.gpgsign', 'true')
+        git(self.project, 'config', 'gpg.program', '/nonexistent/coherence-signing-program')
+        f = self.focused()
+        f.claim('owned.txt')
+        self.write('owned.txt', 'fixed\n')
+        with self.assertRaisesRegex(Blocked, 'Git operation failed'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'config', '--get', 'commit.gpgsign'), b'true\n')
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
-    def test_executable_index_hook_and_custom_hook_directory_never_execute(self):
-        hookdir=self.project/'configured-hooks';hookdir.mkdir()
-        git(self.project,'config','core.hooksPath','configured-hooks')
-        hook=hookdir/'post-index-change'
-        hook.write_text('#!/bin/sh\nprintf DO_NOT_LOG_COMMAND_SECRET > '+str(self.marker)+'\n');hook.chmod(0o700)
-        with Authority(self.project) as owner:self.assert_rejected_without_effect(owner,self.effects(owner))
+    def test_ambient_git_override_refused(self):
+        with patch.dict(os.environ, {'GIT_INDEX_FILE': str(self.root/'foreign-index')}):
+            with self.assertRaisesRegex(Blocked, 'ambient Git'):
+                self.focused()
 
-    def test_late_hook_and_attribute_change_block_before_checkpoint_effect(self):
-        import shlex
-        from coherence_workflow.git_effects import assert_safe_git_inputs
-        with Authority(self.project) as owner:
-            effects=self.effects(owner);baseline=effects.begin(self.task())
-            (self.project/'owned.txt').write_text('approved implementation')
-            index=(self.project/'.git/index').read_bytes()
-            git(self.project,'config','filter.late.clean','printf marker > '+shlex.quote(str(self.marker))+'; cat')
-            # An unused external filter does not deny ordinary built-in operations.
-            assert_safe_git_inputs(self.project,self.task()['owned_paths'])
-            (self.project/'.gitattributes').write_text('owned.txt filter=late\n')
-            with self.assertRaisesRegex(Blocked,'filter'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}])
-            self.assertEqual((self.project/'.git/index').read_bytes(),index);self.assertFalse(self.marker.exists())
-            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_operations').fetchone()[0],0)
-        # Separate fixture: no reset/discard/configuration-around the rejected case.
-        from fixtures.support import make_project
-        self.project=make_project(self.root/'late-hook-project')
-        with Authority(self.project) as owner:
-            effects=self.effects(owner);baseline=effects.begin(self.task())
-            (self.project/'owned.txt').write_text('retained partial')
-            hook=self.project/'.git/hooks/post-index-change';hook.write_text('#!/bin/sh\nexit 0\n');hook.chmod(0o700)
-            index=(self.project/'.git/index').read_bytes()
-            with self.assertRaisesRegex(Blocked,'post-index-change'):effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}])
-            self.assertEqual((self.project/'.git/index').read_bytes(),index)
-            self.assertEqual((self.project/'owned.txt').read_text(),'retained partial')
+    def test_unrelated_post_selection_changes_are_not_adopted(self):
+        f = self.focused()
+        self.write('unknown.txt', 'external change\n')
+        with self.assertRaisesRegex(Blocked, 'unclaimed changes'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'diff', '--cached'), b'')
+        self.assertEqual((self.project/'unknown.txt').read_text(), 'external change\n')
 
-    def test_normal_builtin_normalization_and_contained_commit_remain_supported(self):
-        (self.project/'.gitattributes').write_text('owned.txt text eol=lf\n')
-        with Authority(self.project) as owner:
-            effects=self.effects(owner);baseline=effects.begin(self.task())
-            (self.project/'owned.txt').write_bytes(b'normalized\r\n')
-            try:
-                result=effects.checkpoint(self.task(),baseline,[{'item_id':'A/V1','status':'satisfied'}])
-                self.assertEqual(git(self.project,'show',result['sha']+':owned.txt'),b'normalized\n')
-                self.assertEqual((self.project/'owned.txt').read_bytes(),b'normalized\r\n')
-                self.assertEqual(result['parent'],baseline['head'])
-            finally:
-                for row in owner.store.db.execute('SELECT containment FROM wf_processes WHERE containment IS NOT NULL'):
-                    receipt=json.loads(row[0])
-                    if receipt not in self.receipts:self.receipts.append(receipt)
+    def test_unrelated_symlink_and_fifo_are_preserved_without_following(self):
+        (self.project/'link').symlink_to(self.root/'unknown-target')
+        os.mkfifo(self.project/'pipe')
+        f = self.focused()
+        f.claim('owned.txt')
+        self.write('owned.txt', 'fixed\n')
+        self.assertEqual(f.checkpoint()['paths'], ['owned.txt'])
+        self.assertTrue((self.project/'link').is_symlink())
+        self.assertTrue((self.project/'pipe').exists())
 
-    def test_only_exact_bound_noncontent_commit_argv_may_enter_intent(self):
-        from coherence_workflow.tools import ProcessTool
-        marker='R006_NON_SECRET_NOT_A_COMMIT_MESSAGE'
-        with Authority(self.project) as owner:
-            owner.store.reserve('run',digest('fixture'))
-            planned=owner.store.intent('run','planned','git-checkpoint',{},
-                {'task_id':'A','owned_paths':['owned.txt']})['op_id']
-            tool=ProcessTool('runner-git-commit','1',{'type':'object','additionalProperties':False},
-                lambda args:['/usr/bin/git','-C',str(self.project),'commit','--only','-m',marker,'--','owned.txt'],(),{'PATH':'/usr/bin:/bin'})
-            gateway=Gateway(owner,'run',self.parent,{tool.id:tool})
-            with self.assertRaisesRegex(Blocked,'argv/operation mismatch'):
-                gateway.launch('commit:'+planned,tool.id,'1',{})
-            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE kind='process'").fetchone()[0],0)
-            self.assertNotIn(marker,str([tuple(row) for row in owner.store.db.execute('SELECT * FROM wf_events')]))
-            self.assertEqual((self.project/'owned.txt').read_text(),'base')
+    def test_owned_deletion_is_a_real_focused_commit(self):
+        f = self.focused()
+        f.claim('owned.txt')
+        (self.project/'owned.txt').unlink()
+        self.assertEqual(f.checkpoint()['paths'], ['owned.txt'])
+        self.assertNotIn('owned.txt', git(self.project, 'ls-tree', '--name-only', 'HEAD').decode().splitlines())

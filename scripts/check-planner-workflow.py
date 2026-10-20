@@ -327,7 +327,7 @@ def check_contracts(texts):
             "do not direct it to create the plan again", "standalone local\nfallback")
     c = texts["coordinator"]
     require("intake", section(c, "## Load and Verify"), "exactly six linter checks",
-            "Empty lists", "No required sources/hashes", "without regeneration")
+            "An empty", "Optional context stays intact")
     validation = section(p, "## Proportionate validation")
     require("validation-focused", validation,
             "actual changed seam", "concrete failure", "lowest validation layer",
@@ -355,14 +355,14 @@ def check_contracts(texts):
     require("execution-checkpoints", section(c, "## Execute and Integrate"),
             "runner establishes baseline HEAD", "one focused verified owned-path",
             "checkpoint per implementation/repair task", "before subsequent mutation or handoff",
-            "No extra evidence-only checkpoint", "Runner alone reconciles matching checkpoint receipts")
+            "No extra evidence-only checkpoint", "Never blindly replay a Git commit")
     require("execution-sequential", section(c, "## Execute and Integrate"), "Dependencies release after",
             "real focused checkpoint", "not an approval envelope")
     require("execution-selection", section(c, "## Prepare Approved Execution"), "owner-selected executor/effort",
-            "without silent substitutions", "no owner catalog", "Do not claim full six-check startup yet")
+            "without silent substitutions", "no owner catalog", "No automatic")
     require("execution-strategy", section(c, "## Interface Actions"),
-            "task metadata is not an approval prerequisite", "Received, queued, SDK-delivered",
-            "ORIGINAL saved worker conversation", "never fresh-session substitution")
+            "task metadata is not an approval prerequisite", "current terminal owner input",
+            "never invent an answer", "No automatic resume")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
@@ -500,18 +500,16 @@ def check_contracts(texts):
             "do not authorize STATE creation/edit/removal", "history/index updates", "reflection",
             "evidence-only commits", "No renamed durable snapshot")
     require("coordination-routing", section(c, "## Execute and Integrate"),
-            "inspect run/invocation, partial commits and check evidence", "reruns invalidated",
-            "Unknown cause blocks blind restart", "Preserve valid work and prior attempts")
+            "No arbitrary workflow", "Do not autonomously loop expensive failed runs")
     require("coordination-intake", section(c, "## Load and Verify"),
-            "Missing coordination store or STATE is nonblocking", "No automatic STATE creation, editing or removal")
+            "Missing memory or STATE is nonblocking", "no automatic summaries/indexes")
     require("routing-comparison", section(texts.get("routing", ""), "## Provisional family and effort choices"),
             "suitable options even with zero previous launches", "Family explains sufficient capability versus the named adequate alternative",
             "actual shortfall or select the adequate candidate without an unsupported premium", "pending readiness is not inadequacy",
             "orchestration overhead", "stateful tooling/recovery",
             "strict requirement versus a default preference")
     require("runtime-authority", section(c, "# Coordinate Implementation"),
-            "cannot select tasks, models, sessions, retries, repairs, commits or acceptance",
-            "No background LLM decides workflow transitions")
+            "SQLite stores ordinary", "not effect proof or execution eligibility")
     dispatch = section(p, "## Selected production and stage handoffs")
     require("stage-dispatch", dispatch, "direct asynchronous single-stage dispatch",
             "selected profile unchanged", "Inspect the returned artifact/checkpoint",
@@ -731,11 +729,11 @@ VERIFICATION_CARRIERS = (
     ("verification-graph", "coordinator", "## Execute and Integrate",
      ("runner establishes baseline HEAD", "before subsequent mutation or handoff")),
     ("verification-audit", "coordinator", "## Execute and Integrate",
-     ("actual diff", "focused commit/SHA", "check outputs", "residual owned changes",
-      "Never adopt existing dirty files", "explicit-path", "Dependencies release after")),
+     ("actual diff", "explicit paths", "normal Git hooks/signing",
+      "Never adopt existing dirty files", "Dependencies release after")),
     ("verification-repair", "coordinator", "## Execute and Integrate",
-     ("Targeted repair retains", "same original contracts", "Unknown cause blocks blind restart",
-      "Clean retry is exceptional", "safe ownership and applicable owner gates")),
+     ("No arbitrary workflow", "Do not autonomously loop expensive failed runs",
+      "Never blindly replay a Git commit")),
     ("verification-feedback-owner", "coordination", "## Explicit feedback only",
      ("Ordinary implementation approval, agent observations", "explanation-only questions", "No feedback means no write")),
 )
