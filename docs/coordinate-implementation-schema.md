@@ -50,8 +50,12 @@ admission without Authority, SQLite, reservation, controller or model dispatch. 
 verify approvals or grant execution authority. Success is JSON with `status: ready`,
 `scope`, `head`, `index_hash`, `inventory_hash`, `entries`, `directories`, and `owned_paths`.
 Failure uses the existing exit-2 `{status: blocked, reason: ...}` envelope; special kinds
-identify relative path/type, not contents. Start/resume invoke the same implementation before
-opening writable authority/storage, and task selection invokes it again before dispatch.
+identify relative path/type, not contents. Start invokes this fresh-baseline admission before
+opening writable authority/storage. Resume shares safe Git/path/type validation and the actual
+snapshot but does not require pristine owned bytes: the existing external recovery authority
+and original-baseline reconciliation must still validate preserved partial work before any
+dispatch. Read-only `preflight` and pending-task selection retain owned-path cleanliness;
+there is no worker-facing bypass flag.
 
 Internal snapshot file maps include expanded ignored nested-repository descendants and
 directory entries, not just Git-emitted leaf paths. Entry values retain mode/UID/device/inode;

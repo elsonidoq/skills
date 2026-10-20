@@ -50,21 +50,38 @@ def assert_safe_git_inputs(project, owned):
                     raise Blocked('Git external clean/process filter requires a contained adapter')
 
 
-def inventory_preflight(project, tasks):
-    """Read-only real baseline admission; no Authority, ledger or process launch."""
+def inventory_inputs(project, tasks):
+    """Shared safe Git/path prerequisites, without adopting any existing bytes."""
     owned = set()
     for task in tasks:
         paths = task['owned_paths']
         if len(paths) != len(set(paths)) or any(a != b and b.startswith(a + '/') for a in paths for b in paths):
             raise Blocked('overlapping owned inventory paths')
         assert_safe_git_inputs(project, paths)
-        clean_owned(project, paths)
         owned.update(paths)
     # Even a read-only task needs safe Git inventory (not a configured fsmonitor).
     assert_safe_git_inputs(project, [])
     git(project, 'var', 'GIT_AUTHOR_IDENT')
     git(project, 'var', 'GIT_COMMITTER_IDENT')
-    return snapshot(project, sorted(owned))
+    return sorted(owned)
+
+
+def inventory_preflight(project, tasks):
+    """Fresh baseline admission; pending task selection still requires clean ownership."""
+    owned = inventory_inputs(project, tasks)
+    for task in tasks:
+        clean_owned(project, task['owned_paths'])
+    return snapshot(project, owned)
+
+
+def recovery_inventory_preflight(project, tasks):
+    """Observe partial bytes, not approve them; original recovery must reconcile them.
+
+    Only the resume facade uses this structural inventory before opening Authority.
+    It cannot certify dirty work against the original ledger baseline or authorize
+    continuation. No worker-facing bypass of fresh selection/cleanliness exists.
+    """
+    return snapshot(project, inventory_inputs(project, tasks))
 
 
 def entries(project, *, tree=None):

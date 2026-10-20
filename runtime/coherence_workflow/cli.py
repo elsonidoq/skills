@@ -15,7 +15,7 @@ from jsonschema.exceptions import ValidationError
 
 from .authority import AuthorityAdmission, action_requirement, required_actions
 from .engine import Engine, StrictLoader, load_workflow
-from .git_effects import GitEffects, assert_safe_git_inputs, inventory_preflight
+from .git_effects import GitEffects, assert_safe_git_inputs, inventory_preflight, recovery_inventory_preflight
 from .intake import Approvals, admit, content_hash, load_contract, verify_execution_intent
 from .pi_adapter import PiAdapter, host_resource
 from .registry import CHECKS, Handler, Registry, validate_schema
@@ -1016,9 +1016,13 @@ def main(argv=None):
         manifest = json.loads(Path(args.manifest).read_text())
         environment = {k:v for k,v in os.environ.items() if k in ('PATH','HOME','PYTHONPATH','PYTHONDONTWRITEBYTECODE','TMPDIR','PI_OFFLINE')}
         validate_schema('task.schema.json', contract)
-        # The same real baseline admission used by task selection, before opening
-        # authority/storage, reserving a run, creating a controller or SDK host.
-        inventory_preflight(args.project, contract['tasks'])
+        # Observe the real inventory before Authority/storage/controller startup.
+        # Resume must preserve dirty owned bytes for the ORIGINAL authorized
+        # recovery/reconciliation below; structural inventory is not their approval.
+        if args.command == 'resume':
+            recovery_inventory_preflight(args.project, contract['tasks'])
+        else:
+            inventory_preflight(args.project, contract['tasks'])
         with Authority(args.project) as authority:
             # Engine reserves the run before handler operations can be persisted.
             coordinate = Coordinate(authority,args.run,contract,catalog,config,args.containment,manifest,environment)

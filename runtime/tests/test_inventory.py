@@ -7,10 +7,17 @@ import socket
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from coherence_workflow.store import Blocked, git
+import yaml
+
+from coherence_workflow.store import Authority, Blocked, canonical, digest, git
 from coherence_workflow.tools import snapshot, reconcile
-from coherence_workflow.cli import main
+from coherence_workflow.cli import Coordinate, main
+from coherence_workflow.engine import Engine
+from coherence_workflow.intake import content_hash
+from coherence_workflow.pi_adapter import host_resource
+from fixtures.support import make_project
 from coherence_workflow.git_effects import inventory_preflight
 from test_intake import approved_fixture
 
@@ -178,6 +185,118 @@ class InventoryTests(unittest.TestCase):
         files = snapshot(self.root, [])['files']
         self.assertNotIn('.coherence/workflow/not-inventoried', files)
         self.assertIn('retained/toy/.coherence/workflow/data', files)
+
+
+class ResumeInventoryTests(unittest.TestCase):
+    """Actual CLI/Engine/Coordinate recovery, without an SDK host or worker."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.project = make_project(self.root / 'project')
+        self.suite = Path(__file__).resolve().parents[2]
+        self.parent = os.environ['COHERENCE_TEST_CGROUP_PARENT']
+        self.config = yaml.safe_load((self.suite / 'runtime/coherence_workflow/workflows/coordinate.yaml').read_text())
+        self.contract, self.catalog = approved_fixture(self.project, digest(self.config))
+        self.environment = {k:v for k,v in os.environ.items() if k in
+            ('PATH','HOME','PYTHONPATH','PYTHONDONTWRITEBYTECODE','TMPDIR','PI_OFFLINE')}
+        self.args = ['--project',str(self.project),'--run','partial',
+            '--suite-root',str(self.suite),'--containment',self.parent]
+        for flag, name, value in [('workflow','workflow.yaml',yaml.safe_dump(self.config)),
+                ('tasks','tasks.json',canonical(self.contract)),
+                ('owner-catalog','catalog.json',canonical(self.catalog)),
+                ('manifest','manifest.json','{}')]:
+            path = self.root / name
+            path.write_text(value); path.chmod(0o600)
+            self.args += ['--' + flag, str(path)]
+        # Admit/select with real original authority and a real saved baseline. No
+        # graph effect/SDK operation is fabricated or replayed; this fixture tests
+        # the existing reconciliation gate, not recovery of an unknown SDK turn.
+        with Authority(self.project) as owner:
+            coordinate = self.coordinate(owner)
+            maximum = max([self.config['defaults']['max_repair_attempts'],
+                *[n.get('max_repair_attempts',0) for n in self.config['nodes']]])
+            engine = Engine(owner,'partial',self.config,coordinate.registry(),self.suite,
+                boundary_hook=coordinate.controls_boundary,
+                max_task_visits=len(self.contract['tasks'])*(maximum+1)+maximum+1,
+                input_identity={'contract':self.contract,'catalog_hash':digest(self.catalog),
+                    'manifest':{},'environment':self.environment,'host_hash':content_hash(host_resource())})
+            try:
+                coordinate.publish_run_binding()
+                coordinate.intake({})
+                self.assertEqual(coordinate.select({}), {'outcome':'work'})
+                self.saved_baseline = owner.store.db.execute(
+                    "SELECT baseline FROM wf_tasks WHERE run_id='partial' AND task_id='A'").fetchone()[0]
+                self.authorization = {'action':'reconcile','run_id':'partial','config_hash':engine.hash,
+                    'operations':[],'actor':'isolated fixture owner','provenance':'current isolated recovery test'}
+            finally:
+                engine.close()
+        (self.project / 'owned.txt').write_text('retained owned partial')
+        self.auth_path = self.root / 'recovery.json'
+        self.auth_path.write_text(canonical(self.authorization)); self.auth_path.chmod(0o600)
+
+    def coordinate(self, owner):
+        return Coordinate(owner,'partial',self.contract,self.catalog,self.config,self.parent,{},self.environment)
+
+    def resume(self):
+        output = io.StringIO()
+        # A deterministic stop AFTER real recovery, BEFORE any graph/worker
+        # dispatch. No mocked recovery or invented mechanical acceptance.
+        with patch.object(Engine,'invoke',side_effect=Blocked('isolated stop after recovery')) as invoke:
+            with contextlib.redirect_stdout(output):
+                result = main(['resume',*self.args,'--resume-authority',str(self.auth_path)])
+        self.assertEqual(result, 2, output.getvalue())
+        self.assertEqual((self.project / 'owned.txt').read_text(), 'retained owned partial')
+        return json.loads(output.getvalue())['reason'], invoke.call_count
+
+    def test_partial_owned_resume_reconciles_before_any_dispatch(self):
+        reason, calls = self.resume()
+        self.assertEqual(reason, 'isolated stop after recovery')
+        self.assertEqual(calls, 1)
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.db.execute(
+                "SELECT baseline FROM wf_tasks WHERE run_id='partial' AND task_id='A'").fetchone()[0], self.saved_baseline)
+            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_events WHERE kind='recovery_authorized'").fetchone()[0], 1)
+            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE kind IN ('process','sdk-turn')").fetchone()[0], 0)
+
+    def test_partial_resume_still_requires_original_external_authority(self):
+        self.auth_path.write_text('{}')
+        reason, calls = self.resume()
+        self.assertEqual(reason, 'current scoped external recovery authority required')
+        self.assertEqual(calls, 0)
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.db.execute('SELECT COUNT(*) FROM wf_controllers').fetchone()[0], 0)
+            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_events WHERE kind='recovery_authorized'").fetchone()[0], 0)
+
+    def test_partial_resume_unrelated_drift_rejected_by_original_reconciliation(self):
+        (self.project / 'other.txt').write_text('unrelated drift')
+        reason, calls = self.resume()
+        self.assertIn('unrelated file drift: other.txt', reason)
+        self.assertEqual(calls, 0)
+        self.assertEqual((self.project / 'other.txt').read_text(), 'unrelated drift')
+
+    def test_partial_resume_unsupported_kind_fails_before_recovery(self):
+        nested = self.project / 'untracked-repo'
+        nested.mkdir()
+        git(nested, 'init', '-q')
+        os.mkfifo(nested / 'unsafe-pipe')
+        reason, calls = self.resume()
+        self.assertIn('untracked-repo/unsafe-pipe (fifo)', reason)
+        self.assertEqual(calls, 0)
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_events WHERE kind='recovery_authorized'").fetchone()[0], 0)
+
+    def test_fresh_start_and_pending_selection_still_require_clean_owned_paths(self):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = main(['start',*self.args])
+        self.assertEqual(result, 2)
+        self.assertIn('preexisting dirty owned overlap: owned.txt', output.getvalue())
+        (self.project / 'second.txt').write_text('not an admitted task baseline')
+        with Authority(self.project) as owner:
+            coordinate = self.coordinate(owner)
+            with self.assertRaisesRegex(Blocked, 'preexisting dirty owned overlap: second.txt'):
+                coordinate.git.begin(self.contract['tasks'][1])
 
 
 if __name__ == '__main__':

@@ -95,8 +95,13 @@ model manifest, containment, run identity, approval receipt or database. It neit
 Authority nor creates/reserves a run, starts a controller/model, writes workflow storage,
 or grants launch authority. Its hashes/counts are observations, not approval receipts or
 proof of custody. Recheck after checkout/input changes; all original launch gates still apply.
-Start/resume repeat this real validation **before** Authority/storage/controller startup;
-task selection and the gateway recheck before dispatch/release. A failing entry reports its
+Start repeats fresh-baseline validation **before** Authority/storage/controller startup.
+Resume performs the same safe Git/path/type and actual inventory checks there, but preserves
+owned partial bytes for the existing externally authorized recovery and original-baseline
+reconciliation; structural inventory alone never approves those bytes or continuation.
+The read-only `preflight` command and pending-task selection still require clean ownership;
+task selection and the gateway recheck before dispatch/release. No worker cleanliness-bypass
+flag is exposed. A failing entry reports its
 relative path and kind (for example `retained/toy/pipe (fifo)`), never its contents.
 
 Ignored nested repositories are expanded recursively, including their nested Git data;
