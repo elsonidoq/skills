@@ -205,6 +205,96 @@ class LeanToolTests(unittest.TestCase):
         self.assertIn('call',adapter.pending)
 
 
+class PromptContinuationTests(unittest.TestCase):
+    """Production prompt/tool/storage paths with an explicit offline transport fixture."""
+    def exercise(self, *, interrupted=False):
+        from test_review_repair import coordinate_fixture
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as temporary:
+            project=make_project(Path(temporary)/'project')
+            with Authority(project) as authority:
+                coordinate=coordinate_fixture(project,authority)
+                coordinate.select({});task=coordinate.contract['tasks'][0]
+                coordinate.agent_node=next(n for n in coordinate.config['nodes'] if n['id']=='implement')
+                gateway=coordinate.gateway;gateway.tools=coordinate._tools(task)
+                adapter=object.__new__(PiAdapter)
+                adapter.gateway=gateway;adapter.host_op='offline-host'
+                adapter.manifest={'tools':[{'name':t.id,'version':t.version,'parameters':t.arguments} for t in gateway.tools.values()]}
+                adapter.compatibility={'role':'implement'};adapter.lifecycle=Lifecycle()
+                adapter.snapshot={'session_id':'offline','branch':'one','epoch':'one','counters':{k:0 for k in ('input','output','cacheRead','cacheWrite')},'cost':0}
+                adapter.binding={'host_id':'offline-host','run_id':gateway.run,'nonce':'offline'}
+                adapter.session_id='offline';adapter.pending={};adapter.tool_queue=[]
+                adapter.tool_calls_seen=set();adapter.queued_tool_bytes=0;adapter.records=[]
+                adapter.control_commands={};adapter.control_acknowledgements={}
+                sent=[]
+                adapter.send=lambda kind,payload,**kw:sent.append((kind,payload)) or 'prompt-command'
+                adapter.abort=lambda:setattr(adapter.lifecycle,'active',False)
+                events=[('lifecycle',{'type':'agent_start'}),
+                        ('lifecycle',{'type':'pressure'}),('lifecycle',{'type':'compaction_start'}),
+                        ('lifecycle',{'type':'compaction_end'})]
+                if not interrupted:
+                    # Typo and invalid schema have no effect; admission failure
+                    # also returns to this SAME prompt, followed by a real edit.
+                    for call,name,args in [
+                        ('typo','reed_file',{'path':'owned.txt'}),
+                        ('schema','read_file',{'path':'not-authorized.txt'}),
+                        ('admission','read_file',{'path':'owned.txt'}),
+                        ('read','read_file',{'path':'owned.txt'}),
+                        ('edit-error','edit_file',{'path':'owned.txt','old':'absent','new':'fixed'}),
+                        ('edit','edit_file',{'path':'owned.txt','old':'base','new':'fixed'})]:
+                        events.append(('tool_request',{'call':call,'tool':name,'version':'1','args':args}))
+                    events.extend([('lifecycle',{'type':'agent_settled'}),
+                                   ('settled',{'promise_done':True,'idle':True,'snapshot':adapter.snapshot,'output':'corrected'})])
+                def receive(timeout):
+                    if not events:raise BrokenPipeError('SECRET provider/transport text')
+                    kind,payload=events.pop(0)
+                    record={**adapter.binding,**adapter.current,'command_id':'prompt-command',
+                            'session_id':'offline','type':kind,'sequence':len(adapter.records)+1,
+                            'payload':{'generation':1,**payload}}
+                    adapter.records.append(record);return record
+                adapter.receive=receive
+                admit=gateway.admit_direct
+                def admit_once(tool,args,**kwargs):
+                    if len([p for k,p in sent if k=='tool'])==2:
+                        raise Blocked('authorized read unavailable: select an authorized regular file')
+                    return admit(tool,args,**kwargs)
+                dispatch=authority.store.assert_dispatchable
+                from itertools import count
+                # A long SDK turn must not be failed by an internal wall timer.
+                clock=count(0,1_000_000)
+                with patch.object(authority.store,'assert_dispatchable',side_effect=lambda run,**kw:dispatch(run)),patch.object(gateway,'admit_direct',side_effect=admit_once),patch('coherence_workflow.pi_adapter.time.monotonic',side_effect=lambda:next(clock)):
+                    args=dict(node='offline-turn',task_id='A',attempt_id='one',role='implement',text='offline fixture',skill='fixture',contract_hash='one',selection={})
+                    if interrupted:
+                        with self.assertRaisesRegex(Blocked,'interrupted/uncertain'):
+                            adapter.prompt(**args)
+                    else:
+                        result=adapter.prompt(**args)
+                        self.assertEqual(result['output'],'corrected')
+                turn=authority.store.db.execute("SELECT * FROM wf_operations WHERE kind='sdk-turn'").fetchone()
+                self.assertEqual(authority.store.db.execute("SELECT COUNT(*) FROM wf_operations WHERE kind='sdk-turn'").fetchone()[0],1)
+                if interrupted:
+                    self.assertEqual(turn['phase'],'intent');self.assertIsNone(turn['result'])
+                    self.assertTrue(adapter.lifecycle.poisoned)
+                    diagnostic=json.loads(authority.store.db.execute("SELECT payload FROM wf_events WHERE kind='sdk_failure_diagnostic'").fetchone()[0])
+                    self.assertEqual(diagnostic['exception_types'][0],'BrokenPipeError')
+                    self.assertEqual(diagnostic['origin']['function'],'receive')
+                    self.assertNotIn('SECRET',canonical(diagnostic))
+                else:
+                    self.assertEqual(turn['phase'],'completed');self.assertFalse(adapter.lifecycle.poisoned)
+                    self.assertEqual((project/'owned.txt').read_text(),'fixed')
+                    results=[json.loads(p['result']['content'][0]['text']) for k,p in sent if k=='tool']
+                    self.assertEqual(len(results),6)
+                    self.assertTrue(all('error' in results[i] for i in (0,1,2,4)))
+                    self.assertEqual(results[3]['output']['text'],'base')
+                    self.assertEqual(results[5]['output']['replacements'],1)
+
+    def test_compaction_and_harmless_errors_continue_same_turn(self):
+        self.exercise()
+
+    def test_interrupted_transport_does_not_complete_sdk_turn(self):
+        self.exercise(interrupted=True)
+
+
 class LifecycleTests(IsolatedCustody):
     def test_decoder_bounded_utf8_and_partial_eof(self):
         d=Decoder(8)
@@ -469,8 +559,11 @@ class ToolBatchTests(IsolatedCustody):
                 stale=self.request(adapter,'stale');stale['payload']['generation']=0
                 with self.assertRaisesRegex(Blocked,'outside current'):adapter._launch_tool(stale)
                 wrong=self.request(adapter,'version');wrong['payload']['version']='2'
-                with self.assertRaisesRegex(Blocked,'binding'):adapter._launch_tool(wrong)
-                with self.assertRaises(ValidationError):adapter._launch_tool(self.request(adapter,'schema','not-approved'))
+                adapter._launch_tool(wrong)
+                adapter._launch_tool(self.request(adapter,'schema','not-approved'))
+                self.assertEqual([p['call'] for p in adapter.tool_results],['version','schema'])
+                self.assertTrue(all('error' in json.loads(p['result']['content'][0]['text']) for p in adapter.tool_results))
+                self.assertFalse(adapter.lifecycle.poisoned)
                 original=adapter.gateway.tools['read_fixture']
                 adapter.gateway.tools['read_fixture']=replace(original,owned_paths=('owned.txt',))
                 with self.assertRaisesRegex(Blocked,'review tool mutation'):adapter._launch_tool(self.request(adapter,'mutation'))

@@ -135,9 +135,9 @@ atomic snapshot or a sandbox.
 
 A compatible runtime bugfix can open a new revision-aware attempt at a settled boundary.
 It does not rewrite old run identity or authorize replay of incomplete effects. The supported
-`control cancel` path still retains the reservation; only acceptance releases it. Historical
-runs without the new attempt protocol are read-only/unsupported for execution, not silently
-adopted. Never clear reservations, manufacture approval or reinterpret old pins.
+`control cancel` path still retains the reservation. Acceptance or explicit `abandon`
+releases it. Historical runs without the attempt protocol cannot be resumed, but can be
+explicitly abandoned without adopting them or reinterpreting their old pins.
 
 ## Storage, launch and failure rules
 
@@ -148,6 +148,29 @@ stores are rejected; moving storage needs a separately implemented/approved migr
 Never put this trusted private database/checkpoints under agent mutation tools. A durable
 reservation survives process/lock exit, including a parked run. There is no automatic
 reservation-clearing, schema migration, downgrade or legacy restart API in this foundation.
+
+### Explicit abandon (including historical runs)
+
+After inspecting current writers, Git HEAD/index/diffs and partial work, use:
+
+```sh
+scripts/coordinate-implementation abandon --project /canonical/project --run OLD_RUN_ID
+```
+
+This is not resume, cancellation or successful completion. It takes the existing worktree
+writer lock, checks recorded controller/child process identities and current child-scope
+membership, refuses live conflicting writers, and never signals processes. Stale metadata
+alone is not a live writer. Unregistered external writers still require operator inspection.
+The run becomes `ABANDONED` with reservation zero; operations (including incomplete SDK,
+Git or external-effect intents), history, staged changes and partial files stay intact.
+`status` reports the abandoned run read-only. Start separately with a new run ID; never
+blindly replay an uncertain prior effect. No catalog, manifest, attempt row or cgroup
+provisioning is needed for abandon. Unsupported database versions remain unsupported;
+this command does not migrate them.
+
+This explicit release supersedes older statements below that only acceptance can release
+a reservation or that an uncertain run must retain it forever. It does not weaken any
+Git/data-preservation assertion or authorize launching overlapping writers.
 Unresolved legacy/external writers must be reconciled by the operator before opt-in use;
 legacy agents do not participate in the new lock protocol. Do not run both against a project.
 
@@ -721,7 +744,7 @@ The independent full-range migration reviewer must inspect this residual and its
 
 ## Final operating/rollback acceptance boundary
 
-Current public commands are start/resume/intake/status/pending/answer/control and generated
+Current public commands are start/resume/abandon/intake/status/pending/answer/control and generated
 parent-answer callback. Status/pending print structured JSON
 without a --json flag. Intake uses --config-hash; start/resume use the flags above and resume
 requires --resume-authority. The parent-answer callback binds --project/--run/--nonce/--event.

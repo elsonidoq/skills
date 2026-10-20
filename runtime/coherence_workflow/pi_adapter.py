@@ -32,11 +32,10 @@ def failure_diagnostic(exc, *, phase, host_op, operation_id, pending):
         seen.add(id(cause));name=type(cause).__name__
         names.append(name if name in classes else 'unclassified_exception')
         cause=cause.__cause__ or cause.__context__
-    category='tool_or_record_schema' if isinstance(exc,ValidationError) else 'unclassified_failure'
+    category='tool_or_record_schema' if isinstance(exc,ValidationError) else type(exc).__name__ if type(exc).__name__ in classes else 'unclassified_exception'
     known={'SDK host EOF; task tools require reconciliation':'host_eof',
-           'SDK prompt deadline':'prompt_deadline','SDK prompt failed':'sdk_prompt_failed',
+           'SDK prompt failed':'sdk_prompt_failed',
            'controlled pressure/pause':'controlled_interrupt',
-           'SDK context pressure/compaction; drain and owner recovery required':'context_pressure',
            'unregistered tool binding':'tool_binding','tool outside current prompt':'tool_correlation',
            'ORPHAN_PROCESS: tool result cannot release prompt':'orphan_process',
            'unreconciled process operation; replacement_allowed=false':'unsettled_process_admission',
@@ -44,9 +43,16 @@ def failure_diagnostic(exc, *, phase, host_op, operation_id, pending):
            'duplicate/invalid tool call identity':'tool_call_identity',
            'review tool mutation denied':'review_tool_scope',
            'settlement with pending/queued task tools':'unsettled_tool_batch'}
-    if isinstance(exc,Blocked):category=known.get(str(exc),'local_guard_or_protocol_blocker')
+    # Source locations identify the failing operation without exception text,
+    # which can contain arguments, file contents or credentials.
+    tb=exc.__traceback__
+    while tb and tb.tb_next:tb=tb.tb_next
+    origin=({'module':Path(tb.tb_frame.f_code.co_filename).stem,
+             'function':tb.tb_frame.f_code.co_name,'line':tb.tb_lineno} if tb else None)
+    if isinstance(exc,Blocked):category=known.get(str(exc),'Blocked')
     validator=exc.validator if isinstance(exc,ValidationError) and exc.validator in ('enum','type','required','additionalProperties','const','maxLength','oneOf') else None
     return {'classification':category,'exception_types':names,'schema_validator':validator,
+            'origin':origin,'errno':exc.errno if isinstance(exc,OSError) else None,
             'phase':phase,'host_op':host_op,'operation_id':operation_id,'pending_tool_operations':sorted(pending)}
 
 
@@ -382,7 +388,12 @@ class PiAdapter:
             # Replay IDs span the prompt; they are not the current batch's liveness.
             # A completed earlier tool is safe only with durable process quiescence.
             self.gateway.store.assert_dispatchable(self.gateway.run, admitted_host_ops=(self.host_op,))
-            Draft202012Validator(spec['parameters']).validate(p['args'])
+            try:
+                Draft202012Validator(spec['parameters']).validate(p['args'])
+            except ValidationError as exc:
+                self.tool_calls_seen.add(call)
+                self._tool_error(call,name,'invalid arguments ('+str(exc.validator)+')')
+                return
             binding = {**self.question_binding, 'session_id': self.session_id}
             result = self.interaction.request(self.current['operation_id'], call, binding, p['args'], batch=p.get('batch'))
             self.question_gate = result['gate_id']
@@ -394,7 +405,9 @@ class PiAdapter:
             return
         tool=self.gateway.tools.get(name)
         if not spec or not tool or tool.version!=p.get('version') or spec['version']!=tool.version:
-            raise Blocked('unregistered tool binding')
+            self.tool_calls_seen.add(call)
+            self._tool_error(call,'tool lookup','unknown tool/version; use a declared tool')
+            return
         if self.compatibility['role']=='review' and tool.owned_paths:
             raise Blocked('review tool mutation denied')
         try:
@@ -417,6 +430,13 @@ class PiAdapter:
         self.tool_queue.append(record);self.queued_tool_bytes+=size
         self._start_next_tool()
 
+    def _tool_error(self,call,operation,message):
+        output={'error':{'operation':operation,'message':message,
+                         'correction':'correct the request and continue'}}
+        self.send('tool',{'generation':self.lifecycle.generation,'call':call,
+            'result':{'content':[{'type':'text','text':canonical(output)}],
+                      'details':{'operation_id':None,'quiescent':True},'isError':True}})
+
     def _start_next_tool(self):
         if self.pending or not self.tool_queue:return
         record=self.tool_queue.pop(0);self.queued_tool_bytes-=self._tool_record_size(record)
@@ -429,7 +449,16 @@ class PiAdapter:
         if tool.build_argv is None:
             # Scoped reads/searches have no child effect. Validate and return
             # their actual bounded result directly instead of spawning a no-op.
-            self.gateway.admit_direct(tool.id,p['args'],admitted_host_ops=(self.host_op,))
+            try:
+                self.gateway.admit_direct(tool.id,p['args'],admitted_host_ops=(self.host_op,))
+            except (Blocked,ValidationError,OSError,ValueError) as exc:
+                # Admission has not executed the tool; this is not an uncertain effect.
+                message=('invalid arguments ('+str(exc.validator)+')' if isinstance(exc,ValidationError)
+                         else exc.strerror if isinstance(exc,OSError) else str(exc))
+                self._tool_error(p['call'],tool.id,message)
+                self._tool_disposition(record,'admission_error')
+                self._start_next_tool()
+                return
             output=self.tool_output(tool,p['args'],{'admitted_host_ops':(self.host_op,)},0,None)
             self.send('tool',{'generation':self.lifecycle.generation,'call':p['call'],
                 'result':{'content':[{'type':'text','text':canonical(output)}],
@@ -481,7 +510,7 @@ class PiAdapter:
             raise Blocked('settlement with pending/queued task tools or unconfirmed control enqueue')
         self.lifecycle.finish(payload)
 
-    def prompt(self,*,node,task_id,attempt_id,role,text,skill,contract_hash,selection,timeout=120,interrupt=None):
+    def prompt(self,*,node,task_id,attempt_id,role,text,skill,contract_hash,selection,interrupt=None):
         if self.pending or self.tool_queue:raise Blocked('pending/queued task tools prevent a new prompt')
         self.gateway.store.assert_dispatchable(self.gateway.run,admitted_host_ops=(self.host_op,))
         family=lambda r:'implement' if r in ('implement','repair') else r
@@ -506,8 +535,7 @@ class PiAdapter:
         try:
             command=self.send('prompt',{'generation':generation,'text':text,'skill':skill})
             self.current['command_id']=command
-            deadline=time.monotonic()+timeout
-            while time.monotonic()<deadline:
+            while True:
                 self.failure_phase='tool_poll'
                 self._poll_tools()
                 if interrupt and interrupt(self):raise Blocked('controlled pressure/pause')
@@ -538,8 +566,6 @@ class PiAdapter:
                         self.control_acknowledgements[p['input_id']]={k:p[k] for k in ('input_id','user_entry_id','assistant_entry_id')}
                         self._flush_control_ack(p['input_id'])
                     self.lifecycle.event(p)
-                    if p.get('type') in ('pressure','compaction_start'):
-                        raise Blocked('SDK context pressure/compaction; drain and owner recovery required')
                 if record['type']=='settled':
                     self.failure_phase='settlement'
                     self._settle_prompt(p)
@@ -551,7 +577,6 @@ class PiAdapter:
                         request_observed=[r['payload'] for r in self.records if r['command_id']==command and r['type']=='request_observation'])
                     self.gateway.store.transition(operation['op_id'],'intent','completed',segment)
                     return {'snapshot':self.snapshot,'segment':segment,'output':p.get('output',''), 'question_gate': self.question_gate}
-            raise Blocked('SDK prompt deadline')
         except BaseException as exc:
             self.lifecycle.poisoned=True
             diagnostic=failure_diagnostic(exc,phase=self.failure_phase,host_op=self.host_op,
@@ -568,6 +593,7 @@ class PiAdapter:
                 segment.update(details,ended_ns=None,end_unknown_reason='prompt_or_host_interrupted',
                     stopped_observed_ns=time.time_ns(),elapsed_ns=time.monotonic_ns()-started)
                 self._persist('sdk_interrupted',segment,operation['op_id'])
+            if not isinstance(exc,Exception):raise
             raise Blocked('SDK turn interrupted/uncertain; no replay or reuse; cause='+diagnostic['classification']+
                           '; phase='+diagnostic['phase']+'; operation='+operation['op_id']+
                           '; diagnostic_recorded='+str(diagnostic_recorded).lower()) from exc
@@ -586,8 +612,7 @@ class PiAdapter:
             if not receipt.get('replacement_allowed'):raise Blocked('task drain unknown')
             del self.pending[call]
         command=self.send('abort',{'generation':self.lifecycle.generation})
-        deadline=time.monotonic()+15
-        while time.monotonic()<deadline:
+        while True:
             record=self.receive(.1)
             if record and record['command_id']==command and record['type']=='response':
                 if not record['payload'].get('ok') or not record['payload'].get('idle'):raise Blocked('SDK drain unknown')
@@ -595,7 +620,6 @@ class PiAdapter:
                 self._persist('sdk_drained',{'host_op':self.host_op,'idle':True,'tools_empty':True})
                 if cancellation_unrecorded:raise Blocked('queued cancellation receipt unavailable; no reuse')
                 return
-        raise Blocked('SDK abort deadline; custody unresolved')
 
     def enqueue_control(self, value):
         if (self.interaction is None or self.question_gate or not self.lifecycle.active or self.lifecycle.poisoned or

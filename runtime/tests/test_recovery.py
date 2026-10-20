@@ -197,6 +197,99 @@ class PressureRecoveryTests(IsolatedCustody):
         self.assertEqual(result.testsRun,1);self.assertTrue(result.wasSuccessful(),result.errors+result.failures);self.assertFalse(result.skipped)
 
 
+class AbandonTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
+        self.project=make_project(Path(self.temp.name)/'project')
+
+    def test_historical_incomplete_run_released_without_replaying_or_losing_work(self):
+        from coherence_workflow.cli import main, status
+        from contextlib import redirect_stdout
+        from io import StringIO
+        with Authority(self.project) as owner:
+            owner.store.reserve('historical','old-pin')
+            sdk=owner.store.intent('historical','sdk','sdk-turn',{}, {'original':'retained'})
+            owner.store.intent('historical','graph','graph',{}, {})
+            process=owner.store.intent('historical','tool','process',{}, {})
+            # Uncertain historical process records must be retained, not faked as
+            # completed just to admit a fresh run. The old PID is absent today.
+            owner.store.db.execute('INSERT INTO wf_processes(op_id,scope_kind,name) VALUES(?,?,?)',
+                                   (process['op_id'],'task_tools','historical-absent-scope'))
+            seq=owner.store.db.execute("SELECT seq FROM wf_events WHERE op_id=? AND kind='intent'",(process['op_id'],)).fetchone()[0]
+            owner.store.db.execute("INSERT INTO wf_alarms VALUES('old-alarm',?,'ORPHAN_PROCESS','active',?,NULL)",(process['op_id'],seq))
+            alarms=[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_alarms')]
+            owner.store.register_controller('historical')
+            stale=json.loads(owner.store.db.execute('SELECT identity FROM wf_controllers').fetchone()[0])
+            stale['start']='not-this-process-start'
+            owner.store.db.execute('UPDATE wf_controllers SET identity=?',(canonical(stale),))
+            operations=[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_operations')]
+            events=[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_events')]
+            self.assertFalse(owner.store.db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_attempts'").fetchone())
+        (self.project/'owned.txt').write_text('partial user work')
+        (self.project/'other.txt').write_text('unrelated staged work');git(self.project,'add','--','other.txt')
+        (self.project/'ignored').mkdir();(self.project/'ignored/partial').write_text('retain nested bytes')
+        before=snapshot(self.project,['owned.txt'])
+        output=StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(main(['abandon','--project',str(self.project),'--run','historical']),0)
+        self.assertEqual(json.loads(output.getvalue())['state'],'ABANDONED')
+        self.assertEqual(status(self.project,'historical')['state'],'ABANDONED')
+        with Authority(self.project) as owner:
+            self.assertEqual(operations,[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_operations')])
+            self.assertEqual(events,[tuple(r) for r in owner.store.db.execute("SELECT * FROM wf_events WHERE kind!='abandoned'")])
+            row=owner.store.db.execute('SELECT * FROM wf_runs').fetchone()
+            self.assertEqual((row['state'],row['reservation']),('ABANDONED',0))
+            registry,config=configuration(self.project)
+            engine=Engine(owner,'fresh',config,registry,self.project)
+            try:
+                owner.store.assert_dispatchable('fresh')
+                gateway=object.__new__(Gateway);gateway.store=owner.store
+                self.assertEqual(gateway.recover(),[],'abandoned process effects must not be reconciled/replayed')
+                self.assertEqual(alarms,[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_alarms')])
+                self.assertEqual(engine.invoke()['outcome'],'done')
+            finally:engine.close()
+            self.assertEqual(owner.store.operation(sdk['op_id'])['phase'],'intent')
+            self.assertEqual(owner.store.db.execute('PRAGMA integrity_check').fetchone()[0],'ok')
+        self.assertEqual(before,snapshot(self.project,['owned.txt']))
+
+    def test_actual_live_controller_refused_even_when_metadata_says_stopped(self):
+        with Authority(self.project) as owner:
+            owner.store.reserve('old','pin');owner.store.register_controller('old')
+            owner.store.settle_controller('old','interrupted')
+            with self.assertRaisesRegex(Blocked,'live controller'):
+                owner.store.abandon('old')
+            self.assertEqual(owner.store.db.execute('SELECT reservation FROM wf_runs').fetchone()[0],1)
+
+    def test_actual_live_child_refused_without_signalling_or_requiring_cgroups(self):
+        from coherence_workflow.containment import process_identity
+        child=subprocess.Popen(['/usr/bin/sleep','60'])
+        try:
+            with Authority(self.project) as owner:
+                owner.store.reserve('old','pin')
+                op=owner.store.intent('old','child','process',{}, {})
+                identity=process_identity(child.pid,'owned-test')
+                # A live reparented child remains a conflict.
+                identity['ppid']=-1
+                owner.store.db.execute('INSERT INTO wf_processes(op_id,scope_kind,name,identity) VALUES(?,?,?,?)',
+                    (op['op_id'],'task_tools','no-scope',canonical(identity)))
+                with self.assertRaisesRegex(Blocked,'live child'):
+                    owner.store.abandon('old')
+                self.assertIsNone(child.poll())
+                self.assertEqual(owner.store.db.execute('SELECT reservation FROM wf_runs').fetchone()[0],1)
+        finally:child.terminate();child.wait(timeout=5)
+
+    def test_held_worktree_writer_lock_refuses_cli_abandon(self):
+        from coherence_workflow.cli import main
+        from contextlib import redirect_stdout
+        from io import StringIO
+        with Authority(self.project) as owner:
+            owner.store.reserve('old','pin')
+            with redirect_stdout(StringIO()) as output:
+                self.assertEqual(main(['abandon','--project',str(self.project),'--run','old']),2)
+            self.assertIn('writer lock already held',output.getvalue())
+            self.assertEqual(owner.store.db.execute('SELECT reservation FROM wf_runs').fetchone()[0],1)
+
+
 class VersionRecoveryTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)

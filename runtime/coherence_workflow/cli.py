@@ -498,7 +498,7 @@ class Coordinate:
 
     def finish_stop(self, value):
         self.authority.assert_held()
-        if self.store.db.execute("SELECT 1 FROM wf_operations WHERE kind='process' AND phase!='completed'").fetchone():
+        if self.store.db.execute("SELECT 1 FROM wf_operations o JOIN wf_runs r USING(run_id) WHERE o.kind='process' AND o.phase!='completed' AND r.state!='ABANDONED'").fetchone():
             raise Blocked('pause/cancel custody not quiescent; no stopped claim')
         empty=[]
         for row in self.store.db.execute('SELECT p.op_id FROM wf_processes p JOIN wf_operations o USING(op_id) WHERE o.run_id=?',(self.run,)):
@@ -828,7 +828,7 @@ class Coordinate:
         self.store.assert_dispatchable(self.run)
         uncertain=[r for r in pending if r['kind']=='sdk-turn']
         if uncertain:
-            raise Blocked('partial SDK invocation requires diagnosed original-session recovery; no replacement')
+            raise Blocked('partial SDK invocation cannot be replayed; inspect partial work and writers, then use abandon --project PROJECT --run RUN for a fresh run')
         checkpoints=[r for r in pending if r['kind']=='git-checkpoint']
         for op in checkpoints:
             from .git_effects import reconcile_checkpoint
@@ -971,11 +971,20 @@ def status(project, run):
         db.execute('BEGIN')
         if [r[0] for r in db.execute('SELECT version FROM wf_meta')] != [1]:
             raise Blocked('unsupported application schema; read-only status cannot interpret version')
-        from .projections import state_record
-        projection = state_record(db,run)
         row = db.execute('SELECT * FROM wf_runs WHERE run_id=?', (run,)).fetchone()
         if not row:
             raise Blocked('unknown run')
+        if row['state']=='ABANDONED':
+            return {'run':dict(row),'state':'ABANDONED','accepted':False,
+                    'operations':[dict(r) for r in db.execute(
+                        'SELECT op_id,node_id,kind,phase FROM wf_operations WHERE run_id=?',(run,))],
+                    'questions':[dict(r) for r in db.execute('SELECT * FROM wf_questions WHERE run_id=?',(run,))]
+                        if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_questions'").fetchone() else [],
+                    'controls':[dict(r) for r in db.execute('SELECT i.* FROM wf_owner_inputs i JOIN wf_controls c USING(input_id) WHERE i.run_id=?',(run,))]
+                        if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_controls'").fetchone() else [],
+                    'note':'historical rows and partial work retained; no effects replayed or completed'}
+        from .projections import state_record
+        projection = state_record(db,run)
         from .projections import records, latest_metrics
         metrics_reason=None
         try:
@@ -1022,6 +1031,8 @@ def main(argv=None):
     for flag in ('project','tasks','owner-catalog','config-hash'):
         p.add_argument('--' + flag, required=True)
     p = subs.add_parser('status'); p.add_argument('--project', required=True); p.add_argument('--run', required=True)
+    p = subs.add_parser('abandon', help='explicitly release an inactive run; preserve partial work and uncertain effects')
+    p.add_argument('--project', required=True); p.add_argument('--run', required=True)
     for name in ('pending','answer','control'):
         p = subs.add_parser(name); p.add_argument('--project', required=True); p.add_argument('--run', required=True)
         if name != 'pending':
@@ -1044,6 +1055,10 @@ def main(argv=None):
         if args.command == 'parent-answer':
             from .notifications.paseo import facade
             print(canonical(facade(Path(args.project).absolute(),args.run,args.command,args.nonce,getattr(args,'event',None))));return 0
+        if args.command == 'abandon':
+            with Authority(args.project) as authority:
+                result=authority.store.abandon(args.run)
+            print(canonical({'run':result,'state':result['state'],'accepted':False}));return 0
         if args.command == 'status':
             print(canonical(status(args.project, args.run))); return 0
         if args.command == 'pending':

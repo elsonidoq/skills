@@ -78,6 +78,26 @@ class IsolatedCustody(unittest.TestCase):
 
 
 class CustodyTests(IsolatedCustody):
+    def test_abandon_refuses_populated_scope_after_leader_exit_then_releases_empty_scope(self):
+        with Authority(self.project) as owner:
+            gateway,op,proc=self.launch(owner,mode='survivor')
+            self.assertEqual(proc.wait(timeout=5),0)
+            row,receipt=gateway._record(op)
+            self.assertEqual(self.capability.populated(receipt),1)
+            # The helper PID has exited but its actual child scope is populated.
+            with self.assertRaisesRegex(Blocked,'populated child scope'):
+                owner.store.abandon('run')
+            self.assertEqual(self.capability.populated(receipt),1,'abandon killed a conflicting writer')
+            self.assertIsNone(self.sentinel.poll())
+            self.capability.drain(receipt)
+            partial=(self.project/'owned.txt').read_bytes()
+            old=[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_operations')]
+            owner.store.abandon('run')
+            self.assertEqual((self.project/'owned.txt').read_bytes(),partial)
+            self.assertEqual(old,[tuple(r) for r in owner.store.db.execute('SELECT * FROM wf_operations')])
+            owner.store.reserve('fresh','new')
+            owner.store.assert_dispatchable('fresh')
+
     def test_real_child_controls_identity_and_kernel_empty(self):
         name=self.capability.reserve_name()
         self.capability.create(name)

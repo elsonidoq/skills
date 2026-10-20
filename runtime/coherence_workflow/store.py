@@ -220,12 +220,12 @@ class Store:
             previous = db.execute('SELECT * FROM wf_attempts WHERE run_id=? ORDER BY attempt DESC LIMIT 1',
                                   (run,)).fetchone() if exists else None
             if old and not previous:
-                raise Blocked('historical run is read-only; runtime attempt protocol unsupported')
+                raise Blocked('historical run is read-only; use explicit abandon after inspecting writers and partial work, then start a new run')
             if old and old['config_hash'] != compatibility:
                 raise Blocked('attempt configuration/schema/authority incompatible; renew affected inputs explicitly')
             if previous and previous['runtime_revision'] != revision:
                 if (db.execute("SELECT 1 FROM wf_operations WHERE run_id=? AND phase!='completed'", (run,)).fetchone() or
-                        db.execute("SELECT 1 FROM wf_alarms WHERE state='active'").fetchone()):
+                        db.execute("SELECT 1 FROM wf_alarms a JOIN wf_operations o USING(op_id) JOIN wf_runs r USING(run_id) WHERE a.state='active' AND r.state!='ABANDONED'").fetchone()):
                     raise Blocked('incomplete effects block new runtime attempt; reconcile original SDK/tool/Git operations')
                 if db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_questions'").fetchone() and db.execute(
                         "SELECT 1 FROM wf_questions WHERE run_id=? AND stage NOT IN ('continued','cancelled')", (run,)).fetchone():
@@ -249,6 +249,63 @@ class Store:
                            (run, attempt, revision, compatibility, workflow_yaml, canonical(config)))
                 self.event(db, run, None, 'attempt_started', {'attempt':attempt,
                            'runtime_revision':revision,'compatibility':compatibility})
+
+    def abandon(self, run):
+        """Release an explicitly abandoned run, never replay or complete its effects.
+
+        The worktree lock excludes cooperating controllers. Inspect recorded live
+        identities and scopes as well: a stopped row is not proof of an empty child.
+        No process is signalled and no worktree bytes are changed.
+        """
+        from .containment import boot_id, process_identity
+
+        def live(identity):
+            if not identity or identity.get('boot') != boot_id():
+                return False
+            pid=identity['pid']
+            if not Path(f'/proc/{pid}').exists():
+                return False
+            try:
+                observed=process_identity(pid,identity['nonce'])
+            except Blocked:
+                if not Path(f'/proc/{pid}').exists():return False
+                raise Blocked('abandon cannot inspect recorded PID; inspect its current identity before release') from None
+            # Reparenting does not make a still-live child safe to replace.
+            return all(observed[k]==identity[k] for k in ('boot','pid','start','uid'))
+
+        with self.transaction() as db:
+            row=db.execute('SELECT * FROM wf_runs WHERE run_id=?',(run,)).fetchone()
+            if not row:raise Blocked('unknown run; select the historical run to abandon')
+            if row['state']=='ABANDONED':return dict(row)
+            if not row['reservation']:
+                raise Blocked('run already released; only a reserved run can be abandoned')
+            for controller in db.execute('SELECT identity FROM wf_controllers'):
+                if live(json.loads(controller['identity'])):
+                    raise Blocked('abandon refused: live controller; wait for that writer to stop and inspect again')
+            for process in db.execute('SELECT identity,containment FROM wf_processes'):
+                if process['identity'] and live(json.loads(process['identity'])):
+                    raise Blocked('abandon refused: live child; inspect and stop its owning operation before release')
+                if not process['containment']:continue
+                receipt=json.loads(process['containment'])
+                parent=Path(receipt['parent']);path=parent/receipt['name']
+                if (parent != parent.resolve() or not parent.is_relative_to('/sys/fs/cgroup') or
+                        path.parent != parent or path != path.resolve()):
+                    raise Blocked('abandon cannot inspect recorded scope path; inspect custody before release')
+                if not path.exists():continue
+                # Even a replaced scope with live members is a conflict; stale
+                # identity metadata alone, or a removed empty scope, is not.
+                try:
+                    events=dict(line.split() for line in (path/'cgroup.events').read_text().splitlines())
+                    members=(path/'cgroup.procs').read_text().strip()
+                except OSError:
+                    raise Blocked('abandon cannot read recorded scope; inspect its membership before release') from None
+                if events.get('populated') not in ('0','1'):
+                    raise Blocked('abandon cannot determine scope membership; inspect before release')
+                if events['populated']=='1' or members:
+                    raise Blocked('abandon refused: populated child scope; wait for its writer to stop and inspect again')
+            db.execute("UPDATE wf_runs SET state='ABANDONED',reservation=0 WHERE run_id=?",(run,))
+            self.event(db,run,None,'abandoned',{'reason':'explicit operator abandon; partial work and incomplete effects retained'})
+            return dict(db.execute('SELECT * FROM wf_runs WHERE run_id=?',(run,)).fetchone())
 
     def park(self, run):
         with self.transaction() as db:
@@ -287,7 +344,7 @@ class Store:
     def assert_dispatchable(self, run, *, admitted_host_ops=()):
         self.authority.assert_held()
         row = self.db.execute("SELECT * FROM wf_runs WHERE run_id=? AND reservation=1", (run,)).fetchone()
-        if self.db.execute("SELECT 1 FROM wf_alarms WHERE state='active'").fetchone():
+        if self.db.execute("SELECT 1 FROM wf_alarms a JOIN wf_operations o USING(op_id) JOIN wf_runs r USING(run_id) WHERE a.state='active' AND r.state!='ABANDONED'").fetchone():
             raise Blocked("ORPHAN_PROCESS: replacement_allowed=false")
         if not row or row['state'] != 'running':
             raise Blocked("run does not hold running reservation")
@@ -297,7 +354,7 @@ class Store:
         allowed = set(admitted_host_ops)
         if len(allowed) != len(admitted_host_ops):
             raise Blocked('duplicate host admission')
-        active = self.db.execute("SELECT * FROM wf_operations WHERE kind='process' AND phase!='completed'").fetchall()
+        active = self.db.execute("SELECT o.* FROM wf_operations o JOIN wf_runs r USING(run_id) WHERE o.kind='process' AND o.phase!='completed' AND r.state!='ABANDONED'").fetchall()
         found = set()
         for operation in active:
             if operation['op_id'] not in allowed:
