@@ -7,9 +7,14 @@ handoffs:
     send: true
   - label: Implement Project
     agent: speckit.implement
-    prompt: Start the implementation in phases
+    prompt: Implement the approved tasks in dependency order
     send: true
 ---
+
+Resolve the shared `task-generation` skill and `skills/planner/references/parsimony.md`
+through the authorized suite installation, not a presumed adopting-project layout.
+Apply their task semantics and parsimony guidance: preserve Standard stages and approved
+acceptance; distinguish source-backed requirements, necessary choices and optional hardening.
 
 ## User Input
 
@@ -69,24 +74,21 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Load spec.md and extract user stories with their priorities (P1, P2, P3, etc.)
    - If data-model.md exists: Extract entities and map to user stories
    - If contracts/ exists: Map interface contracts to user stories
-   - If research.md exists: Extract decisions for setup tasks
-   - Generate tasks organized by user story (see Task Generation Rules below)
-   - Generate dependency graph showing user story completion order
-   - Preserve one sequential implementation writer and explicit earlier prerequisites
-   - Validate task completeness (each user story has all needed tasks, independently testable)
+   - If research.md exists: Extract applicable decisions and real prerequisites
+   - Generate coherent, independently verifiable outcomes covering approved scope
+   - Derive task dependencies from actual producer/consumer relationships
+   - Preserve one script-owned sequential implementation writer and verified producer checkpoints before dependent work
+   - Validate scope coverage and task acceptance; story grouping is optional presentation, not execution machinery
 
 4. **Generate tasks.md**: Use TASKS_TEMPLATE_CONTENT (from the JSON output above) as the structure. For compatibility with older setup scripts that omit TASKS_TEMPLATE_CONTENT, read TASKS_TEMPLATE instead. Fill with:
    - Correct feature name from plan.md
-   - Phase 1: Setup tasks (project initialization)
-   - Phase 2: Foundational tasks (blocking prerequisites for all user stories)
-   - Phase 3+: One phase per user story (in priority order from spec.md)
-   - Each phase includes: story goal, independent test criteria, tests (if requested), implementation tasks
-   - Final Phase: Polish & cross-cutting concerns
-   - All tasks must follow the strict checklist format (see Task Generation Rules below)
-   - Clear file paths for each task
-   - Dependencies section showing story completion order
-   - Sequential producer verification/checkpoints before consumers
-   - Implementation strategy section (MVP first, incremental delivery)
+   - Coherent outcome entries with unique IDs and clear work descriptions
+   - Actual dependencies, applicable acceptance and required checks, with shared constraints stated once
+   - Useful paths/interfaces where known, without inventing exact paths to fill fields
+   - Routine verification, documentation and teardown within the delivery outcome
+   - An adjacent JSON/YAML executable task list (or object containing `tasks`) using the shared intake format
+   - Optional story/MVP grouping when useful, without mandatory setup/foundation/polish phases
+   - Sequential producer verification/checkpoints before consumers, with no task-count quota
 
 ## Mandatory Post-Execution Hooks
 
@@ -124,81 +126,57 @@ Check if `.specify/extensions.yml` exists in the project root.
 
 ## Completion Report
 
-Output path to generated tasks.md and summary:
-- Total task count
-- Task count per user story
-- Dependency order and one-writer boundary
-- Independent test criteria for each story
-- Suggested MVP scope (typically just User Story 1)
-- Format validation: Confirm ALL tasks follow the checklist format (checkbox, ID, labels, file paths)
+Output paths to generated tasks.md and executable JSON/YAML, with a concise summary:
+- Coherent outcomes and actual dependency order
+- Acceptance and specified checks, distinguishing optional hardening
+- Script-owned sequential execution and producer checkpoint boundary
+- Shared intake validation result and any relevant scope/feasibility limits
+- Story/MVP grouping only when useful
 
 Context for task generation: $ARGUMENTS
 
-The tasks.md should be immediately executable - each task must be specific enough that an LLM can complete it without additional context.
+Tasks and referenced shared context must describe the work and applicable checks clearly;
+the JSON/YAML handoff is executable input and Markdown is its human presentation.
 
 ## Task Generation Rules
 
-**CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
+A task delivers an independently verifiable outcome, not a phase, layer or entity noun.
+Story labels may help readers but do not determine execution order.
 
-**Verification is REQUIRED**: Preserve every source/owner/safety acceptance check and manual/permission gate; optional hardening stays distinct. Tests normally remain inside each coherent task.
+**Verification**: Preserve owner/source-required checks, necessary security, persistence and
+integration protections, and actual manual/permission gates. Broader hardening is optional,
+not an acceptance blocker; verification does not mean every imaginable test is required.
 
-### Checklist Format (REQUIRED)
+### Human presentation and executable input
 
-Every task MUST strictly follow this format:
+A compact Markdown entry may use:
 
 ```text
-- [ ] [TaskID] [Story?] Description with file path
+- [ ] fix-title Correct the settings page title
+  - Acceptance/context: [Useful outcome-specific criteria or references]
+  - Check: [Relevant command and expected behavior, when specified]
 ```
 
-**Format Components**:
-
-1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
-2. **Task ID**: Sequential number (T001, T002, T003...) in execution order
-3. **Sequential execution**: One writer; each verified focused task checkpoint precedes dependent mutation.
-4. **[Story] label**: REQUIRED for user story phase tasks only
-   - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
-   - Setup phase: NO story label
-   - Foundational phase: NO story label
-   - User Story phases: MUST have story label
-   - Polish phase: NO story label
-5. **Description**: Clear action with exact file path
-
-**Examples**:
-
-- ✅ CORRECT: `- [ ] T001 Create project structure per implementation plan`
-- ✅ CORRECT: `- [ ] T005 Implement authentication middleware in src/middleware/auth.py`
-- ✅ CORRECT: `- [ ] T012 [US1] Create User model in src/models/user.py`
-- ✅ CORRECT: `- [ ] T014 [US1] Implement UserService in src/services/user_service.py`
-- ❌ WRONG: `- [ ] Create User model` (missing ID and Story label)
-- ❌ WRONG: `T001 [US1] Create model` (missing checkbox)
-- ❌ WRONG: `- [ ] [US1] Create User model` (missing Task ID)
-- ❌ WRONG: `- [ ] T001 [US1] Create model` (missing file path)
+Executable JSON/YAML contains a task list or an object containing `tasks`. Each task needs
+a unique nonempty string `id` and `outcome` (or `description`); optional `depends` lists
+existing task IDs without cycles. IDs need not be numbered or contiguous, and file order
+is not execution order. Acceptance, paths, story labels and check commands are useful
+context, not universal startup fields. Specified checks remain required after the work.
+Optional `checks` accepts shell strings, argv lists or objects containing `command`/`argv`;
+`check` and `required[].check` use the same command format.
 
 ### Task Organization
 
-1. **From User Stories (spec.md)** - PRIMARY ORGANIZATION:
-   - Each user story (P1, P2, P3...) gets its own phase
-   - Map all related components to their story:
-     - Models needed for that story
-     - Services needed for that story
-     - Interfaces/UI needed for that story
-     - If tests requested: Tests specific to that story
-   - Mark story dependencies (most stories should be independent)
-
-2. **From Contracts**:
-   - Map each interface contract → to the user story it serves
-   - If tests requested: Each interface contract → contract test task before implementation in that story's phase
-
-3. **From Data Model**:
-   - Map each entity to the user story(ies) that need it
-   - If entity serves multiple stories: Put in earliest story or Setup phase
-   - Relationships → service layer tasks in appropriate story phase
-   - Preserve each applicable field constraint (max length, nullable/required, enum values, validation rules) in authoritative shared context and map it to the consuming task/check; do not repeat the same constraint prose in every task or leave it to implementation-time discretion
-
-4. **From Setup/Infrastructure**:
-   - Shared infrastructure → Setup phase (Phase 1)
-   - Foundational/blocking tasks → Foundational phase (Phase 2)
-   - Story-specific setup → within that story's phase
+- **Stories and contracts**: Cover approved story outcomes and interface obligations without
+  splitting automatically by models, services, endpoints or tests. Include justified interface
+  checks within the delivery task. Separate a test/proof task only when it provides an
+  independently necessary prerequisite.
+- **Data model**: Preserve applicable field constraints in authoritative shared context and
+  map them to consuming tasks/checks without repeating the same prose in every entry.
+- **Setup/infrastructure**: Include only source-backed or concretely necessary work; genuine
+  prerequisites block only their actual consumers, not every story by default.
+- **Verification/docs**: Keep them inside the outcome unless a separately necessary
+  deliverable, prerequisite, gate or resource boundary justifies separation.
 
 ### Outcome boundaries and structured handoff
 
@@ -221,10 +199,12 @@ and required project checks; task preparation does not launch implementation.
 
 ## Done When
 
-- [ ] tasks.md generated with all phases, task IDs, and file paths
+- [ ] Compact tasks.md and executable JSON/YAML generated with coherent outcomes and actual dependencies
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
-- [ ] Completion reported to user with task count, story breakdown, and MVP scope
+- [ ] Shared intake validated and completion reported with applicable checks and limits
 
 ## Task checkpoint boundary
 
-Apply the shared [task-commit contract](../../skills/memory-handling/references/task-commit-contract.md): read-only analysis creates no empty commit; authorized retained artifacts checkpoint as bounded tasks without bypassing their existing approval gates.
+Apply `skills/memory-handling/references/task-commit-contract.md` from the authorized suite
+installation: read-only analysis creates no empty commit; authorized retained artifacts
+checkpoint as bounded tasks without bypassing their existing approval gates.

@@ -11,6 +11,8 @@ Obtain a findings-first assessment against explicit requirements and observable 
 
 ## Prepare The Review
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Include source basis and legitimate-behavior costs for proposed safeguards.
+
 1. Identify the requirements or acceptance criteria.
 2. Define the exact change scope using the evidence available: a working-tree diff, staged diff, patch, pull request, file list, or revision range. Do not invent a base branch or commit.
 3. Include verification already performed and known constraints.

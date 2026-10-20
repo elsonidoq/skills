@@ -11,9 +11,18 @@ Follow the stages below; approvals authorize only their stated bounded writes.
 
 ## Preflight
 
+Full initialization is the default. Only explicit policy-only refresh intent for an
+already-adopted project selects instructions-policy inspection/proposal/update/validation.
+It does not install tooling, reinitialize, create memory/shells, repair documentation or
+inspect/repair SpecKit inventory. Missing unrelated assets/docs do not block that route.
+Retain applicable runtime/question, approval-contract, safe-path/readability and task-checkpoint
+requirements; missing capability required for the bounded operation stops it. Use targeted dirty ownership
+and exact-overlap inspection for policy-only, not broad investigation merely for unrelated dirt.
+The full-route documentation/sub-agent and asset duties below remain unchanged in scope.
+
 - Run `git status --short`. Clean means no output; untracked files make the project
   non-clean. Classify from the initial status, not from changes made by this workflow.
-- On a non-clean project FIRST verify native task/sub-agent capability. If absent,
+- For full initialization: On a non-clean project FIRST verify native task/sub-agent capability. If absent,
   report exactly `documentation initialization blocked: sub-agent capability unavailable`
   and stop without edits. No adoption write may precede this dirty capability gate.
 - Confirm the suite runtime requirements from the discoverable global configuration
@@ -37,6 +46,12 @@ Follow the stages below; approvals authorize only their stated bounded writes.
   Do not write credentials, tokens, personal data, or sensitive payloads.
 
 ## Discovery
+
+For policy-only, confirm the existing approved association and equivalent instructions owner;
+reuse an already-approved owner rather than automatically creating AGENTS.md. Absent or
+materially ambiguous adoption needs a specific owner choice, not silent initialization.
+Inspect only relevant instructions, policy, path/symlink bounds and ownership. Broad docs
+and SpecKit discovery below apply to full initialization, not policy-only refresh.
 
 Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent); in pi these
 are loaded automatically as context files, but also read them for the association
@@ -64,9 +79,9 @@ architecture records, decisions, specifications, and memory configuration.
   locations and formats. Do not assume a `docs/` layout or create owners before those
   choices. Preserve the suite's canonical unresolved-work register described below.
 
-**SpecKit project-asset discovery (read-only).**
+**SpecKit project-asset discovery (full initialization, read-only).**
 
-- After the dirty-first capability gate, check SpecKit project assets on every initialization:
+- After the dirty-first capability gate, check SpecKit project assets on every full initialization:
   new adoption, compatible adoption and refresh.
 - Detect integration, script variant, command location, recorded version and relevant options
   from target metadata/configuration; do not silently select noninteractive Copilot defaults.
@@ -90,6 +105,9 @@ architecture records, decisions, specifications, and memory configuration.
   paths stop the affected operation with specific gaps/conflicts, not guessed readiness.
 
 ## Investigation
+
+Policy-only skips broad documentation investigation; perform targeted status/ownership and
+exact-overlap checks from Preflight. The rest of this stage applies to full initialization.
 
 Skip this stage only for an initially clean project. On a non-clean project,
 launch a fresh read-only investigation sub-agent before any documentation
@@ -116,8 +134,10 @@ Separate shells/indexes from substantive scope; shells establish discoverability
 ## Approval
 
 Proposal-first: do not write, edit, or overwrite any target until explicit owner approval.
-Propose requirements to record, instructions-section bounds, memory path/skeleton or
-preservation, documentation targets/formats and branch-specific operations.
+For policy-only, propose only the exact instructions target, subsection bounds and before/after
+policy diff, including local customization conflicts. For full initialization, propose requirements
+to record, instructions-section bounds, memory path/skeleton or preservation, documentation
+targets/formats and branch-specific operations.
 For non-clean documentation, explicitly approve the current investigation plan plus
 exact shell/index bounds. Show exact overlaps for already-dirty targets separately.
 
@@ -134,7 +154,7 @@ artifact/decision conventions; avoid recursive self-hashes. Recheck evidence on 
 Ancillary adoption/shell approvals are not substantive implementation authorization.
 Continue only the approved bounded stages, not investigated implementation.
 
-**SpecKit install/repair proposal.**
+**SpecKit install/repair proposal (full initialization only).**
 
 - For absent metadata, obtain material owner selection of integration, script, command location
   and relevant options via `ask_user` under the existing brief/capability/denial gates;
@@ -171,7 +191,8 @@ operations or agent-tool-check bypasses merely to make scaffolding succeed.
 ## Adoption
 
 For a compatible existing adoption, report adoption unnecessary and validate the
-existing association as a no-op (instructions/memory only). For new adoption, apply
+existing association as a no-op (association/memory only); policy currency is a separate
+comparison below, even on compatible adoption. For new adoption, apply
 the approved requirements block and append a marked, self-contained suite contract
 to existing instructions,
 preserving existing custom content verbatim. `memory-handling`, `finish-session`,
@@ -185,6 +206,9 @@ and `compact-memory` can cite it. Record:
   Verify each target before writing; missing installed contracts stop adoption/refresh.
   Refer to these owners rather than reproduce their workflow rules. Neither automatically
   creates an Epic. Package references do not supersede local product policy or authorize work.
+- Policy: Resolve the installed [Parsimony and Actionable Checks](../planner/references/parsimony.md)
+  owner and include its marked project-copy fragment exactly once in the approved managed
+  instructions. Verify it is readable before relying on it; no hard-coded installation path.
 - Memory: default `<project-root>/memory/` with `memory/MEMORY.md` and entry files;
   owner-chosen paths remain valid. Follow `memory-handling` trigger-first retrieval:
   Read the whole index first, then trigger-matching entries. Recheck after any memory
@@ -223,11 +247,52 @@ on refresh, never replace them with a skeleton.
 For association changes, Adoption writes are limited to approved instructions/memory; do not create
 documentation directories or planning artifacts in this stage.
 
-**Approved SpecKit project-asset operation (all routes).**
+### Managed parsimony comparison and refresh
 
-- Compatible adoption remains an instructions/memory no-op, not an exit that bypasses the
-  SpecKit check.
-- New, compatible and refresh routes all continue from Discovery through Approval to the
+Apply this comparison on new adoption and existing full/policy-only refresh. Association
+compatibility alone does not establish policy currency. Resolve the installed canonical
+fragment above and compare actual policy text with the managed copy, normalizing only
+irrelevant whitespace/line endings. Dates, hashes, versions, receipts, headings or links
+are not currency proof. Exact normalized equality is unchanged; arbitrary customized text
+is not automatically equivalent.
+
+Reuse approved outer `<!-- coherence-suite-contract:start -->` / `<!-- coherence-suite-contract:end -->`
+bounds or an already-approved equivalent managed convention. Within standard bounds use
+`<!-- coherence-parsimony:start -->` / `<!-- coherence-parsimony:end -->` around the copied
+**Parsimony and Actionable Checks** subsection. These are delimiters, not authorization.
+Missing policy proposes insertion only inside approved bounds; clearly managed outdated
+policy proposes only subsection replacement. Preserve local overrides even inside outer bounds.
+Unmarked, ambiguous, duplicated or customized sections, including equivalent local policy,
+need a specific keep/reconcile/location choice, never mechanical replacement or a competing block.
+An approved semantically equivalent local policy may be retained; record that choice in ordinary
+approval evidence, not a registry.
+
+Follow this order:
+
+1. Compare canonical text and initial target bytes/status, verifying safe project-local
+   path/symlink bounds, readability, ownership and current scope. Unsafe paths stop.
+2. Propose the exact target and bounded before/after diff, including conflicts; obtain normal
+   current-content approval under Approval. Already-dirty exact overlap requires separate explicit
+   overlap approval; general approval is not a waiver. Denial/ambiguity or unavailable mandatory
+   question capability grants no write.
+3. Re-read immediately before patching; concurrent drift stops the affected patch even after
+   approval. Do not adopt intervening work or automatically retry.
+4. Patch only the approved insertion/replacement, preserving every unrelated byte, overrides,
+   custom paths/association, memory/guidelines/STATE/history/docs/SpecKit. Never regenerate the
+   outer contract wholesale, reset memory, reinstall or destructively roll back.
+5. Validate by re-reading and comparing the result with the approved candidate/canonical text,
+   inspecting the actual bounded diff and unchanged surrounding content.
+
+Unchanged repeat has no proposal to write, duplicate or unrelated work. For failed/partial
+operations report actual state and the smallest necessary correction, without automatic retry
+or readiness claim. A mistaken text edit needs an authorized bounded correction preserving
+intervening work, not blanket reset.
+
+**Approved SpecKit project-asset operation (full initialization routes only).**
+
+- Compatible association remains an association/memory no-op, not an exit that bypasses the
+  full-initialization SpecKit check; approved bounded policy changes remain separate.
+- Full new, compatible and refresh routes continue from Discovery through Approval to the
   approved asset operation below and final Validation; no adoption early return.
 - Asset repair is separately bounded by Approval, not authority to change instructions/memory or
   documentation.
@@ -254,6 +319,8 @@ approval does not waive exact overlap approval or approve an unlisted asset repa
 
 ## Documentation
 
+Full initialization only. Policy-only refresh does not discover/repair documentation or create shells.
+
 After approval re-discover owners/directories, retaining existing formats and source
 bounds. Create parent directories only as needed for approved files.
 
@@ -273,6 +340,14 @@ architecture facts. Apply Preflight dirty-target/concurrent-edit protections to 
 
 ## Validation
 
+For policy-only, re-read instructions, compare with the approved candidate/canonical fragment,
+verify one retained policy and unchanged surrounding bytes/overrides. Report only `policy refresh applied`
+or `policy already current`, with target/diff/approval evidence and actual limits:
+not full initialization/Standard readiness. Unchanged repetition means no write, duplicate,
+unrelated work or no-op checkpoint: no empty commit. Do not audit missing unrelated docs,
+SpecKit or memory structure for this result. Full-initialization validation below retains its
+applicable obligations; policy-only has no substantive documentation handoff.
+
 Re-read approved instructions and the whole memory index; then relevant trigger entries.
 Verify marked contract, associated store path, resolving index, no fabricated gotchas
 and no unrelated changes. Validate only introduced documentation paths/headings/links/references,
@@ -284,9 +359,9 @@ Missing required structure blocks readiness. Report empty/stale substantive cont
 separately as outstanding planner work. Never treat shell initialization as substantive
 completion. Do not promise readiness when requirements or approval gates failed.
 
-**SpecKit validation/reporting (all routes).**
+**SpecKit validation/reporting (full initialization routes only).**
 
-- On all new, compatible and refresh routes, report detected SpecKit integration/version, actual
+- On full new, compatible and refresh routes, report detected SpecKit integration/version, actual
   commands/templates/scripts completeness, repair or no-op, partial outputs and blockers.
 - Missing or incomplete required SpecKit project assets block initialization-ready claims even
   on compatible adoption; documentation shell readiness is not asset completeness.

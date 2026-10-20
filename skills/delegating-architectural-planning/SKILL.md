@@ -11,6 +11,8 @@ planner owns architectural decomposition, not implementation or product scope.
 
 ## Preflight
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply to standalone approach decisions.
+
 Apply the [project coordination contract](../memory-handling/references/project-coordination.md)
 during initial understanding, including standalone/direct entry: consult relevant existing
 compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
@@ -118,6 +120,8 @@ a real change affects the work, but do not require model assessments, approval/s
 or regeneration of historical tasks to execute ordinary requested coding.
 
 ## Planner Standard adapter contract
+
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Carry into managed production and review.
 
 Apply the shared early-risk contract and task-generation boundaries (see the
 [task-generation contract](../task-generation/SKILL.md)) throughout the managed pass and

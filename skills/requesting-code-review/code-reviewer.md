@@ -13,6 +13,13 @@ If an input is unavailable, identify the gap and limit the verdict accordingly. 
 
 ## Review Focus
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Review
+additions as well as omissions: identify absent source basis for invented safeguards,
+false blocking and legitimate behavior prevented. Distinguish original requirements,
+necessary choices and optional hardening; concrete serious security/data-loss risks and
+actual platform limits retain protection. Changing approved REQUIRED acceptance returns
+through existing producing review/approval, never a reviewer waiver.
+
 Check:
 
 - behavior and requirement alignment

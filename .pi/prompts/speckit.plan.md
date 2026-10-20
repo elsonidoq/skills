@@ -10,6 +10,10 @@ handoffs:
     prompt: Create a checklist for the following domain...
 ---
 
+Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimony.md)
+at this stage. Preserve Standard stages and approved acceptance; source-backed requirements,
+necessary choices and optional hardening are distinct.
+
 ## User Input
 
 ```text
@@ -111,16 +115,15 @@ Command ends after Phase 1 design. Report branch, IMPL_PLAN path, and generated 
 
 1. **Extract unknowns from Technical Context** above:
    - For each NEEDS CLARIFICATION → research task
-   - For each dependency → best practices task
-   - For each integration → patterns task
+   - Reuse adequate repository/dependency evidence; research only consequential missing, stale or conflicting portions
 
 2. **Generate and dispatch research agents**:
 
    ```text
    For each unknown in Technical Context:
      Task: "Research {unknown} for {feature context}"
-   For each technology choice:
-     Task: "Find best practices for {tech} in {domain}"
+   Only for a consequential technology uncertainty not covered by applicable evidence:
+     Task: "Resolve {specific uncertainty} for {feature context}"
    ```
 
 3. **Consolidate findings** in `research.md` using format:

@@ -65,6 +65,8 @@ settings belong to the selected runtime configuration. Existing optional context
 
 ## Compact source contract
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply to approach and acceptance, including standalone entry.
+
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
 verify it is readable or stop with a missing-install report, including direct/standalone
 entry. In approach/acceptance, justify proof selection/omission: use permanent actual-helper

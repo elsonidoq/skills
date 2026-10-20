@@ -2,6 +2,10 @@
 description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
 ---
 
+Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimony.md)
+at this stage. Preserve Standard stages and approved acceptance; source-backed requirements,
+necessary choices and optional hardening are distinct.
+
 ## User Input
 
 ```text
@@ -110,6 +114,8 @@ Create internal representations (do not include raw artifacts in output):
 
 ### 4. Detection Passes (Token-Efficient Analysis)
 
+Challenge unsupported safeguards/limits/blockers and their legitimate-behavior costs as well as omissions. Missing optional nonfunctional hardening is not a defect; distinguish it from missing approved requirements or concrete exposed risks.
+
 Focus on high-signal findings. Limit to 50 findings total; aggregate remainder in overflow summary.
 
 #### A. Duplication Detection
@@ -119,7 +125,7 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 
 #### B. Ambiguity Detection
 
-- Flag vague adjectives (fast, scalable, secure, intuitive, robust) lacking measurable criteria
+- Flag source-required outcomes that cannot be objectively verified; do not demand numeric targets for optional qualities
 - Flag unresolved placeholders (TODO, TKTK, ???, `<placeholder>`, etc.)
 
 #### C. Underspecification
@@ -151,8 +157,8 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 Use this heuristic to prioritize findings:
 
 - **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion
-- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case
+- **HIGH**: Duplicate or conflicting requirement, ambiguous source-required security/performance attribute, untestable approved acceptance criterion
+- **MEDIUM**: Terminology drift, missing source-required non-functional task coverage, underspecified edge case
 - **LOW**: Style/wording improvements, minor redundancy not affecting execution order
 
 ### 6. Produce Compact Analysis Report

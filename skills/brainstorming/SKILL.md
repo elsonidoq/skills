@@ -39,6 +39,8 @@ Offer two or three viable approaches with trade-offs and a recommendation. Prese
 
 ## Decision Rules
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply when choosing the smallest approach.
+
 - Ask only questions whose answers can change the design.
 - Follow established project patterns unless they conflict with the request or create a demonstrated risk.
 - Include targeted cleanup only when necessary for the requested change.

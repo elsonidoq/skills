@@ -596,6 +596,77 @@ class ComposedAcceptanceTests(unittest.TestCase):
         self.assertEqual(result.testsRun, 2)
 
 
+class ParsimonyTests(unittest.TestCase):
+    """Bounded authored decisions + actual carrier inspection, not agent behavior."""
+
+    def test_canonical_policy_and_consumer_boundaries(self):
+        policy = ROOT / "skills/planner/references/parsimony.md"
+        self.assertTrue(policy.is_file(), "canonical parsimony owner missing")
+        text = policy.read_text()
+        for clause in ("smallest working solution", "legitimate behavior", "serious exposed",
+                       "paginated read", "target drift", "existing gates", "not application startup"):
+            self.assertIn(clause, text)
+        for path, heading in (
+            ("planner", "## Before selection"),
+            ("brainstorming", "## Decision Rules"),
+            ("planning-brainstorming", "## 1. Gate assessment"),
+            ("tiny-spec", "## Compact source contract"),
+            ("delegating-architectural-planning", "## Preflight"),
+            ("delegating-architectural-planning", "## Planner Standard adapter contract"),
+            ("task-generation", "## Preconditions and adapters"),
+            ("requesting-code-review", "## Prepare The Review"),
+            ("receiving-code-review", "## Evaluate Feedback"),
+        ):
+            with self.subTest(consumer=path, boundary=heading):
+                body = checker.section((ROOT / "skills" / path / "SKILL.md").read_text(), heading)
+                self.assertIn("parsimony.md", body)
+
+    def test_policy_removal_is_detected(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        texts["parsimony"] = ""
+        self.assertTrue(any(e.startswith("parsimony-policy:") for e in checker.check_contracts(texts)))
+
+    def test_authored_simple_feature_and_justified_protection_review(self):
+        # Expected findings for two authored review inputs, not generated reviews.
+        cases = (
+            ("rename saved view", "delete views after 30 days", "reject optional addition",
+             ("absent source basis", "legitimate behavior", "false blocking")),
+            ("public cross-tenant export", "authorize tenant before export", "retain protection",
+             ("serious exposed", "security", "necessary protection")),
+            ("upload to platform", "enforce actual platform limit", "retain protection",
+             ("platform constraint", "invent no thresholds")),
+        )
+        policy = (ROOT / "skills/planner/references/parsimony.md").read_text()
+        review = (ROOT / "skills/requesting-code-review/code-reviewer.md").read_text()
+        for request, addition, expected, basis in cases:
+            with self.subTest(request=request, addition=addition, expected=expected):
+                for clause in basis:
+                    self.assertIn(clause, policy + review)
+        self.assertIn("additions as well as omissions", review)
+        self.assertIn("REQUIRED", review)
+
+    def test_safe_read_correction_versus_unsafe_target_drift(self):
+        text = (ROOT / "skills/planner/references/parsimony.md").read_text()
+        for clause in ("SDK/tool/compiler/platform", "invalidates evidence",
+                       "smaller/paginated read", "target drift stops", "actionable correction"):
+            self.assertIn(clause, text)
+
+    def test_generated_defaults_do_not_invent_requirements(self):
+        paths = [".specify/templates/" + n + "-template.md" for n in ("spec", "plan", "tasks")]
+        paths += [".pi/prompts/speckit." + n + ".md" for n in ("specify", "plan", "tasks", "analyze", "checklist")]
+        forbidden = ("Data retention: Industry-standard", "Include both quantitative metrics",
+                     "For each dependency → best practices task", "Security hardening",
+                     "No user story work can begin until this phase is complete",
+                     "Include specific metrics (time, percentage, count, rate)")
+        for path in paths:
+            with self.subTest(path=path):
+                text = (ROOT / path).read_text()
+                self.assertIn("parsimony.md", text)
+                for old in forbidden:
+                    self.assertNotIn(old, text)
+
+
 class ProportionateValidationTests(unittest.TestCase):
     """Instruction-removal regressions, not behavioral/model evaluations."""
 
@@ -1986,6 +2057,22 @@ class ComparativeCarrierTests(unittest.TestCase):
 
 class PlanningSeedPreservationTests(unittest.TestCase):
     """Planning-only safety from retired execution seed; no callable ranking oracle."""
+    def test_preproposal_completeness_stays_in_planning_owner(self):
+        text = (ROOT / checker.PATHS['routing']).read_text()
+        body = ' '.join(checker.section(text, '## First proposal recipe').split())
+        for clause in (
+            'Before presenting the proposal, check completeness',
+            'all six factors and the weakest adequate oracle',
+            'each family in this rubric is considered or briefly accounted for',
+            'family and effort have separate comparative rationales',
+            'prior launch success is used only as readiness evidence',
+            'ties remain explicit rather than becoming superiority claims',
+            'Repair missing items before asking for profile approval',
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, body)
+
+
     def test_six_factors_family_effort_and_evidence_boundaries_survive_owner_move(self):
         text=(ROOT/checker.PATHS['routing']).read_text()
         for factor in ('Residual reasoning','Agentic/tool depth','Verification blind spots',
@@ -2035,6 +2122,18 @@ class RuntimeHandoffTests(unittest.TestCase):
             self.assertEqual(metadata['files'][path],actual)
             self.assertEqual(metadata['local_overrides'][path]['current_sha256'],actual)
             self.assertNotEqual(metadata['local_overrides'][path]['upstream_sha256'],actual)
+
+    def test_compact_task_adapter_has_no_phase_or_batch_execution_protocol(self):
+        for path in ('.pi/prompts/speckit.tasks.md', '.specify/templates/tasks-template.md'):
+            text = (ROOT / path).read_text()
+            for retired in ('Sequential number', 'all phases, task IDs',
+                            'Each user story (P1, P2, P3...) gets its own phase',
+                            'Description with file path', 'Normally 4–7',
+                            'contract test task [P] before implementation'):
+                self.assertNotIn(retired, text, path)
+            for required in ('authorized suite installation', 'independently necessary prerequisite',
+                             'required', 'optional', 'JSON/YAML', 'required[].check'):
+                self.assertIn(required, text, path)
 
     def test_task_producers_do_not_recreate_executor_eligibility_metadata(self):
         for path in ('skills/planner/SKILL.md', 'skills/tiny-spec/SKILL.md',

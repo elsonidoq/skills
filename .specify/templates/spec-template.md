@@ -1,5 +1,9 @@
 # Feature Specification: [FEATURE NAME]
 
+Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimony.md).
+Use source-backed requirements and necessary choices; omit inapplicable examples rather
+than inventing constraints to fill fields. Assumptions remain revisitable.
+
 **Feature Branch**: `[###-feature-name]`
 
 **Created**: [DATE]
@@ -91,12 +95,12 @@
 - **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-005**: System MUST [behavior, e.g., "perform the requested action"]
 
 *Example of marking unclear requirements:*
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-007**: [Clarify retention only when a source requirement or concrete data obligation makes it necessary]
 
 ### Key Entities *(include if feature involves data)*
 
@@ -112,17 +116,15 @@
 
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: [Observable requested outcome, e.g., "Users can save and reopen their selected view"]
+- **SC-002**: [Source-backed quantitative target only if applicable; do not invent a number]
 
 ## Assumptions
 
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
+  Record revisitable assumptions separately from original requirements and necessary choices
+  with their basis. Do not manufacture retention, logging, caps or safety behavior.
 -->
 
 - [Assumption about target users, e.g., "Users have stable internet connectivity"]

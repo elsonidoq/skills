@@ -4,6 +4,8 @@ These records contain review findings, approval evidence and historical verifica
 their verdicts and validation limits belong to each linked record, not this index.
 
 - [Lean workflow runtime — planning review and approval](workflow-runtime-lean-planning-review.md): exact-content TinySpec/three-task approval, Terra/medium instruction-managed delivery and proposed policy amendments; planning-only, implementation/live/recovery authority not granted.
+- [Workflow monitor — parsimony review and receiving-agent brief](workflow-monitor-parsimony-brief.md): seven simplification findings against the other branch's monitor proposal; preserves script coordination, real protections and owner dogfooding requirements.
+- [Proportionate Coherence — planning review and approval](coherence-parsimony-planning-review.md): current-content TinySpec/T001–T002 approval and planning-only handoff; implementation and rollout remain separately authorized.
 - [Defensible routing — planning review and approval](defensible-routing-planning-review.md): current-content TinySpec/T001 approval; exact execution/reviewer routing and separately authorized behavioral evaluation remain gated.
 - [Pragmatic planning — review and approval](pragmatic-planning-review.md): digest-bound TinySpec/T001 approval including small informational `[PROTOTYPE]` tasks; coordinator execution-profile approval and independent final review remain required.
 - [Rubric-first routing — planning review](rubric-first-routing-planning-review.md): owner-approved digest-bound A1–A7 planning-only handoff, three producer-first tasks and proportional readiness safeguards; implementation remains on hold.

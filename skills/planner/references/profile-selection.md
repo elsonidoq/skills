@@ -34,6 +34,12 @@ use diversity as a reason. `Complex`, `safe`, `more margin`, benchmark-leader, o
 cheapest/fastest claims are not comparisons. The objective is sufficient capability
 without an unsupported premium, not a universal size, quality, or cost ladder.
 
+Before presenting the proposal, check completeness in the existing row/brief:
+all six factors and the weakest adequate oracle are covered; each family in this rubric is considered or briefly accounted for;
+family and effort have separate comparative rationales; prior launch success is used only as readiness evidence;
+ties remain explicit rather than becoming superiority claims. Repair missing items before asking for profile approval.
+This is a self-check, not another owner gate, separate report, or proof of runtime compliance.
+
 **Compact example (after demands and explicit non-reliance):** “The remaining inference
 is reconciling async settlement with cross-mode publication; the weakest adequate oracle
 misses failure custody. Luna/medium and Sol/medium are plausible adequate alternatives;
