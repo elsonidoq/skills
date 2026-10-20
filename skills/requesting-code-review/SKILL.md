@@ -13,6 +13,8 @@ Obtain a findings-first assessment against explicit requirements and observable 
 
 Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Include source basis and legitimate-behavior costs for proposed safeguards.
 
+For direct review requests in fresh or resumed contexts, consult [save-adr](../save-adr/SKILL.md)'s **Consult and propagate** contract when a discovered decision owner or supplied accepted constraints apply. Re-establish applicable accepted authority from the whole discovered index, relevant accepted records, and needed supersession links rather than parent context or a prior-read claim. Put each applicable accepted outcome, explicit mechanism constraint, and source link in the requirements or constraints already supplied with the review scope; proposed and superseded records are not current policy. Contradictory accepted authority or uncertain current supersession stops only the affected review pending an owner decision.
+
 1. Identify the requirements or acceptance criteria.
 2. Define the exact change scope using the evidence available: a working-tree diff, staged diff, patch, pull request, file list, or revision range. Do not invent a base branch or commit.
 3. Include verification already performed and known constraints.

@@ -20,6 +20,18 @@ necessary choices and optional hardening; concrete serious security/data-loss ri
 actual platform limits retain protection. Changing approved REQUIRED acceptance returns
 through existing producing review/approval, never a reviewer waiver.
 
+For direct reviews in fresh or resumed contexts, consult [save-adr](../save-adr/SKILL.md)'s
+**Consult and propagate** contract when a discovered decision owner or supplied accepted
+constraints apply. Re-establish applicable authority from the supplied outcome/mechanism
+constraints and source links or the whole discovered index, relevant accepted records, and
+needed supersession links; do not rely on parent context or a prior-read claim. Compare the
+actual diff, including deletion or simplification, against each applicable accepted outcome
+and explicit mechanism constraint. A capability removal that conflicts with an accepted
+outcome, or removal of an explicitly accepted mechanism, requires existing approved
+supersession; compatible helper deletion that preserves the outcome needs no new gate.
+Proposed and superseded records are not current policy. Contradictory accepted authority or
+uncertain current supersession stops only the affected verdict pending an owner decision.
+
 Check:
 
 - behavior and requirement alignment

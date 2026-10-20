@@ -2475,5 +2475,101 @@ class CoordinateAcceptedDecisionBriefTests(unittest.TestCase):
                         assert_carriers(changed)
 
 
+class ReviewAcceptedDecisionScopeTests(unittest.TestCase):
+    """Paired request/reviewer scope walkthroughs, not a live review."""
+
+    def test_direct_fresh_and_resumed_review_scope_compares_actual_changes(self):
+        records = (
+            {"status": "accepted", "constraint": "preserve the export capability",
+             "source": "decisions/export.md#accepted", "outcome": "export capability"},
+            {"status": "accepted", "constraint": "retain the stable wire format",
+             "source": "decisions/wire.md#accepted", "mechanism": "stable wire helper"},
+            {"status": "proposed", "constraint": "replace the exporter",
+             "source": "decisions/replacement.md#proposed"},
+            {"status": "superseded", "constraint": "use the retired wire format",
+             "source": "decisions/old-wire.md#superseded"},
+        )
+        accepted = tuple(record for record in records if record["status"] == "accepted")
+
+        def request(context, authority=accepted):
+            return {
+                "entry": "direct",
+                "context": context,
+                "requirements": tuple((record["constraint"], record["source"])
+                                      for record in authority),
+            }
+
+        def reviewer_verdict(scope, actual_diff, authority=accepted):
+            self.assertEqual(scope["requirements"], tuple(
+                (record["constraint"], record["source"]) for record in authority))
+            if authority != accepted:
+                return "owner decision for conflicting accepted authority"
+            active = tuple(record for record in records if record["status"] == "accepted")
+            if any(record.get("outcome") and record["outcome"] in actual_diff for record in active):
+                return "stop for existing approved supersession"
+            if any(record.get("mechanism") and record["mechanism"] in actual_diff for record in active):
+                return "stop for existing approved supersession"
+            return "ready"
+
+        scopes = [request(context) for context in ("fresh", "resumed")]
+        for scope in scopes:
+            with self.subTest(context=scope["context"], change="capability removal"):
+                self.assertEqual(reviewer_verdict(scope, "- export capability"),
+                                 "stop for existing approved supersession")
+            with self.subTest(context=scope["context"], change="helper deletion"):
+                self.assertEqual(reviewer_verdict(scope, "- unused internal helper"), "ready")
+            with self.subTest(context=scope["context"], change="explicit mechanism removal"):
+                self.assertEqual(reviewer_verdict(scope, "- stable wire helper"),
+                                 "stop for existing approved supersession")
+            with self.subTest(context=scope["context"], change="proposed/superseded records"):
+                self.assertEqual(reviewer_verdict(scope, "- replacement exporter - retired wire format"),
+                                 "ready")
+
+        conflicting = accepted + ({"status": "accepted", "constraint": "remove the export capability",
+                                   "source": "decisions/conflict.md#accepted"},)
+        self.assertEqual(reviewer_verdict(request("resumed", conflicting), "- export capability", conflicting),
+                         "owner decision for conflicting accepted authority")
+
+    def test_request_and_reviewer_carriers_each_detect_removal(self):
+        request = (ROOT / "skills/requesting-code-review/SKILL.md").read_text()
+        reviewer = (ROOT / "skills/requesting-code-review/code-reviewer.md").read_text()
+        carriers = (
+            (request, "## Prepare The Review", (
+                "consult [save-adr](../save-adr/SKILL.md)'s **Consult and propagate** contract",
+                "fresh or resumed contexts",
+                "rather than parent context or a prior-read claim",
+                "accepted outcome, explicit mechanism constraint, and source link",
+                "proposed and superseded records are not current policy",
+            )),
+            (reviewer, "## Review Focus", (
+                "consult [save-adr](../save-adr/SKILL.md)'s **Consult and propagate** contract",
+                "fresh or resumed contexts",
+                "do not rely on parent context or a prior-read claim",
+                "Compare the actual diff, including deletion or simplification",
+                "explicitly accepted mechanism",
+                "compatible helper deletion that preserves the outcome needs no new gate",
+                "Contradictory accepted authority or uncertain current supersession stops only the affected verdict",
+            )),
+        )
+
+        def assert_carriers(texts):
+            for text, heading, clauses in texts:
+                body = checker.section(text, heading)
+                for clause in clauses:
+                    self.assertIn(" ".join(clause.split()), " ".join(body.split()))
+
+        assert_carriers(carriers)
+        for index, (text, heading, clauses) in enumerate(carriers):
+            for clause in clauses:
+                with self.subTest(half=heading, clause=clause):
+                    changed = list(carriers)
+                    body = checker.section(text, heading)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[index] = (text.replace(body, re.sub(pattern, "OMITTED", body, count=1), 1),
+                                      heading, clauses)
+                    with self.assertRaises(AssertionError):
+                        assert_carriers(changed)
+
+
 if __name__ == "__main__":
     unittest.main()
