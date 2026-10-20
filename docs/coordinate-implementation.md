@@ -84,7 +84,12 @@ Material questions use actual current terminal input. Without an interactive ter
 stops with the question, preserves partial work and does not fabricate an answer. A loaded project
 parent-session bridge may instead launch this same command with its private socket environment;
 it wakes that parent with the exact pending question and returns only its correlated reply to the
-waiting worker. It retains neither questions nor answers in SQLite. Parent-session shutdown or the
+waiting worker. Before attached execution, the runner checks the existing socket's authenticated
+readiness response and active parent reply tool; incomplete/mismatched configuration stops before
+storage or SDK launch, without terminal fallback. Each worker's actual SDK tool set must contain
+`ask_owner` before its prompt starts. This proves current readiness, not future delivery; later
+connection failures retain partial work and report the error. No model probe or heartbeat is used.
+It retains neither questions nor answers in SQLite. Parent-session shutdown or the
 launch tool's cancellation signal terminates only its owned runner through that runner's normal
 SIGTERM path and waits for it before bridge cleanup. The bridge is optional: direct terminal
 invocation remains unchanged. The project entry is

@@ -34,6 +34,26 @@ class CliTests(ProjectTest):
         self.assertEqual(observed['monitoring']['recording_version'], 1)
         self.assertTrue(any(row['phase'] == 'review' for row in observed['monitoring']['observations']))
 
+    def test_bad_attached_configuration_stops_before_storage_or_sdk(self):
+        tasks, executor = self.root/'tasks.json', self.root/'executor.json'
+        tasks.write_text('[{"id":"smoke","description":"No changes"}]')
+        executor.write_text('{"provider":"fixture","model":"offline","effort":"medium"}')
+        prefix = 'COHERENCE_PARENT_BRIDGE_'
+        base_env = {k: v for k, v in os.environ.items() if not k.startswith(prefix)}
+        cases = [({'TOKEN': 'partial'}, 'run mismatch'),
+                 ({'RUN': 'attached'}, 'bridge unavailable'),
+                 ({'RUN': 'attached', 'SOCKET': str(self.root/'absent.sock'),
+                   'SESSION': 'parent', 'TOKEN': 'token'}, 'bridge unavailable')]
+        for values, error in cases:
+            with self.subTest(values=values):
+                env = base_env | {prefix+k: v for k, v in values.items()}
+                result = subprocess.run([str(ROOT/'scripts/coordinate-implementation'), 'start',
+                    '--project', str(self.project), '--tasks', str(tasks), '--executor', str(executor),
+                    '--run', 'attached'], env=env | {'COHERENCE_PYTHON': sys.executable}, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn(error, json.loads(result.stdout)['reason'])
+                self.assertFalse((self.project/'.coherence').exists())
+
     def test_actual_script_empty_task_does_not_create_storage(self):
         tasks = self.root/'empty.yaml'
         tasks.write_text('[]')

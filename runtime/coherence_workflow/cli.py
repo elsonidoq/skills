@@ -92,7 +92,12 @@ def main(argv=None):
                                                  for k in ('provider', 'model', 'effort')):
             raise Blocked('executor needs provider, model and effort strings')
         run_id = args.run or uuid.uuid4().hex
-        question = parent_question if os.environ.get('COHERENCE_PARENT_BRIDGE_SOCKET') else None
+        question = None
+        if any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')):
+            if os.environ.get('COHERENCE_PARENT_BRIDGE_RUN') != run_id:
+                raise Blocked('parent owner bridge run mismatch; launch this run through its parent-session bridge')
+            parent_question(None, ready=True)
+            question = parent_question
         with Authority(args.project) as authority:
             result = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
                             **({'question': question} if question else {})).invoke()

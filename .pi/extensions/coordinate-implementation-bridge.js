@@ -49,11 +49,19 @@ export default function coordinateImplementationBridge(pi) {
   const receive = (bridge, socket, line) => {
     let request;
     try { request = JSON.parse(line); } catch { send(socket, {error: 'invalid bridge request'}); return; }
-    if (!request || request.type !== 'question' || request.token !== bridge.token ||
+    if (!request || !['ready', 'question'].includes(request.type) || request.token !== bridge.token ||
         request.session_id !== bridge.session || request.run_id !== bridge.run ||
         typeof request.request_id !== 'string' || !request.request_id ||
-        typeof request.question !== 'string') {
+        (request.type === 'question' && typeof request.question !== 'string')) {
       send(socket, {request_id: request?.request_id, error: 'bridge request does not target this parent session and run'});
+      return;
+    }
+    if (!pi.getActiveTools().includes('coordinate_implementation_reply')) {
+      send(socket, {request_id: request.request_id, error: 'parent reply tool unavailable; enable coordinate_implementation_reply before launch'});
+      return;
+    }
+    if (request.type === 'ready') {
+      send(socket, {request_id: request.request_id, ready: true});
       return;
     }
     if (bridge.pending) {

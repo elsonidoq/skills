@@ -5,8 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { test } from 'node:test';
-import { createReadTool, createEditTool, createWriteTool, createBashTool } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
+import { mock, test } from 'node:test';
+import { AgentSession, createReadTool, createEditTool, createWriteTool, createBashTool } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
 import { createWorkflowSession, mutationTools, promptSession } from '../pi-host/host.mjs';
 
 test('actual SDK worker exposes ask_owner while independent reviewer remains read-only', async () => {
@@ -22,6 +22,10 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
         else assert.ok(tools.includes('ask_owner'), 'registered ask_owner must also be active for workers');
       } finally { session.dispose(); }
     }
+    const missingTool = mock.method(AgentSession.prototype, 'getActiveToolNames', () => []);
+    try {
+      await assert.rejects(createWorkflowSession({project, executor}, async () => ({})), /Worker ask_owner tool unavailable/);
+    } finally { missingTool.mock.restore(); }
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 

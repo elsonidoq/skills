@@ -117,6 +117,10 @@ export async function createWorkflowSession({project, executor, readOnly = false
     sessionManager: SessionManager.inMemory(project), resourceLoader,
   });
   await session.bindExtensions({});
+  if (!readOnly && !session.getActiveToolNames().includes('ask_owner')) {
+    session.dispose();
+    throw new Error('Worker ask_owner tool unavailable; enable it in the SDK worker tool list before execution');
+  }
   return session;
 }
 

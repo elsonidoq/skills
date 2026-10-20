@@ -45,7 +45,7 @@ test('runner output stays off the parent RPC stdout channel', async () => {
     const code = `
       import bridge from ${JSON.stringify(bridgeModule)};
       const tools = new Map();
-      bridge({registerTool: tool => tools.set(tool.name, tool), on() {},
+      bridge({registerTool: tool => tools.set(tool.name, tool), getActiveTools: () => [...tools.keys()], on() {},
         sendMessage(message) { process.stdout.write(JSON.stringify({type: message.customType}) + '\\n'); }});
       await tools.get('coordinate_implementation_start').execute('start',
         {tasks: 'unused', executor: 'unused', run: 'output-probe'}, undefined, undefined,
@@ -62,6 +62,7 @@ test('runner output stays off the parent RPC stdout channel', async () => {
 function mockPi(messages, tools) {
   return {
     registerTool(tool) { tools.set(tool.name, tool); },
+    getActiveTools() { return [...tools.keys()]; },
     on(event, handler) { if (event === 'session_shutdown') this.shutdown = handler; },
     sendMessage(message, options) { messages.push({message, options}); },
   };
@@ -105,6 +106,32 @@ else:
   await fs.writeFile(node, `#!/bin/sh\nexec python3 ${JSON.stringify(host)}\n`, {mode: 0o700});
   return {root, project, tasks, executor, host, node, marker};
 }
+
+test('missing parent reply capability stops the actual CLI before storage or SDK launch', async () => {
+  const value = await fixture({hold: true});
+  const messages = [], tools = new Map();
+  const pi = mockPi(messages, tools);
+  pi.getActiveTools = () => ['coordinate_implementation_start'];
+  const {default: bridge} = await import(bridgeModule);
+  const originalNode = process.env.COHERENCE_NODE;
+  process.env.COHERENCE_NODE = value.node;
+  try {
+    bridge(pi);
+    await tools.get('coordinate_implementation_start').execute('start',
+      {tasks: value.tasks, executor: value.executor, run: 'not-ready'}, undefined, undefined,
+      {cwd: value.project, sessionManager: {getSessionId: () => 'parent-session'}});
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
+      await new Promise(resolve => setTimeout(resolve, 10));
+    assert.match(messages.at(-1).message.content, /exit 2/);
+    await assert.rejects(fs.access(value.marker), {code: 'ENOENT'});
+    await assert.rejects(fs.access(path.join(value.project, '.coherence')), {code: 'ENOENT'});
+    assert.equal(messages.some(item => item.message.customType === 'coordinate_implementation_question'), false);
+  } finally {
+    if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
+    await pi.shutdown?.();
+    await fs.rm(value.root, {recursive: true, force: true});
+  }
+});
 
 test('bridge session shutdown cancels and waits for only its owned runner', async () => {
   const value = await fixture({hold: true});

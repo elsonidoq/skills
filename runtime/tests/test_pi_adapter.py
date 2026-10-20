@@ -72,6 +72,33 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
         self.assertEqual(received[0]['run_id'], 'run')
         self.assertNotIn('PRIVATE-SENTINEL', str(received[0] | {'question': '<redacted>'}))
 
+    def test_parent_readiness_requires_positive_correlated_response(self):
+        for ready, correlate in [(True, True), (False, True), (True, False)]:
+            with self.subTest(ready=ready, correlate=correlate):
+                endpoint = str(self.root/('ready-' + str(ready) + str(correlate) + '.sock'))
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+                    server.bind(endpoint)
+                    server.listen(1)
+                    received = []
+                    def serve():
+                        client, _ = server.accept()
+                        with client:
+                            request = json.loads(client.makefile('r', encoding='utf-8').readline())
+                            received.append(request)
+                            response = {'request_id': request['request_id'] if correlate else 'wrong', 'ready': ready}
+                            client.sendall((json.dumps(response) + '\n').encode())
+                    thread = threading.Thread(target=serve)
+                    thread.start()
+                    values = {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint, 'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
+                              'COHERENCE_PARENT_BRIDGE_SESSION': 'session', 'COHERENCE_PARENT_BRIDGE_RUN': 'run'}
+                    with patch.dict(os.environ, values):
+                        if ready and correlate:
+                            self.assertIsNone(parent_question(None, ready=True))
+                        else:
+                            with self.assertRaises(Blocked): parent_question(None, ready=True)
+                    thread.join()
+                    self.assertEqual(received[0]['type'], 'ready')
+
     def test_parent_question_reports_unavailable_bridge(self):
         with patch.dict(os.environ, {'COHERENCE_PARENT_BRIDGE_SOCKET': str(self.root/'missing.sock'),
                                      'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',

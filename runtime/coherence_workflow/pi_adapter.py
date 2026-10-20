@@ -16,8 +16,8 @@ def host_path():
     return source if source.exists() else Path(sys.prefix) / 'share/coherence-workflow/pi-host/host.mjs'
 
 
-def parent_question(question):
-    """Ask the explicitly selected parent-session bridge, or report it unavailable."""
+def parent_question(question, *, ready=False):
+    """Use the existing parent socket for readiness or an owner question."""
     endpoint = os.environ.get('COHERENCE_PARENT_BRIDGE_SOCKET')
     token = os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN')
     session = os.environ.get('COHERENCE_PARENT_BRIDGE_SESSION')
@@ -28,7 +28,7 @@ def parent_question(question):
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
             client.connect(endpoint)
-            client.sendall((canonical({'type': 'question', 'request_id': request_id, 'run_id': run,
+            client.sendall((canonical({'type': 'ready' if ready else 'question', 'request_id': request_id, 'run_id': run,
                                       'session_id': session, 'token': token, 'question': question}) + '\n').encode())
             stream = client.makefile('r', encoding='utf-8')
             try:
@@ -47,6 +47,10 @@ def parent_question(question):
         raise Blocked('parent owner bridge returned an uncorrelated response')
     if isinstance(response.get('error'), str):
         raise Blocked('parent owner bridge unavailable: ' + response['error'])
+    if ready:
+        if response.get('ready') is not True:
+            raise Blocked('parent owner bridge not ready; start from a session with the reply tool enabled')
+        return
     if not isinstance(response.get('answer'), str):
         raise Blocked('parent owner bridge returned an invalid answer')
     return response['answer']
