@@ -48,7 +48,8 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
         public_runs.append({"ref": _ref("run", run["run_id"]), "label": "Recorded run", "started_at": _time(run.get("started_at")),
                             "description_version": description.get("description_version") if type(description.get("description_version")) is int else None,
                             "requested_executor": {key: _text(requested.get(key), "unknown", 80) for key in ("provider", "model", "effort")},
-                            "completeness": "incomplete" if run.get("incomplete") else "recorded"})
+                            "completeness": "incomplete" if run.get("incomplete") else "recorded",
+                            "review_acceptance": graph.get("review_acceptance", {}).get(run["run_id"], {"state": "unknown", "base": None, "head": None})})
     phases = [{"ref": _ref("phase", row["run_id"], row["phase_id"]), "run_ref": _ref("run", row["run_id"]),
                "label": _text(row.get("label"), "Workflow phase", 80), "pre_recording": row.get("pre_recording") is True}
               for row in graph.get("phases", [])]
@@ -88,10 +89,15 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                 "source_seq": item.get("seq") if type(item.get("seq")) is int else None,
                 "code": item.get("code") if item.get("code") in {"description_invalid", "phase_invalid", "task_invalid", "unsupported_observation"} else "unsupported"}
                for item in graph.get("unknown_records", [])]
+    followups = [{"run_ref": _ref("run", row["run_id"]), "source_run_ref": _ref("run", row["source_run_id"]),
+                  "review_occurrence_ref": _ref("occ", row["source_run_id"], row["review_occurrence_id"]),
+                  "resolution": row["resolution"]}
+                 for row in graph.get("followups", [])]
     inventory = {"phase_count": len(phases), "occurrence_count": len(occurrences), "observation_count": len(records),
                  "supported_count": len(records), "unsupported_count": len(unknown) + len(graph.get("unsupported_run_ids", [])), "hidden_count": 0}
     return {"monitor_version": 1, "state": "ok", "runs": public_runs, "phases": phases, "tasks": tasks,
-            "occurrences": occurrences, "records": records, "edges": edges, "unknown_records": unknown, "inventory": inventory}
+            "occurrences": occurrences, "records": records, "edges": edges, "unknown_records": unknown, "inventory": inventory,
+            "followups": followups}
 
 
 __all__ = ["minimize"]

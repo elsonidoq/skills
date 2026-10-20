@@ -163,6 +163,35 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         except ValueError:
             return _error("bad_request", 400)
 
+    async def followups(request: Request) -> Response:
+        data, error = snapshot()
+        if error:
+            return error
+        reference = request.path_params["run_ref"]
+        if run(data, reference) is None:
+            return _error("not_found", 404)
+        cursor, size = _cursor(request.query_params.get("cursor")), _page_size(request.query_params.get("limit"))
+        records = [item for item in data["records"] if item["run_ref"] == reference]
+        unknown = [item for item in data["unknown_records"] if item["run_ref"] == reference]
+        if cursor is None or size is None or request.query_params.get("snapshot") != _token(reference, records, unknown):
+            return _error("bad_request", 400) if request.query_params.get("snapshot") is None else _error("snapshot_conflict", 409, retryable=True)
+        all_relations = data.get("followups", [])
+        # Expand the finite explicitly declared component only; do not infer links or
+        # search outside this fixed snapshot/worktree.
+        related = {reference}
+        while True:
+            expanded = related | {item["run_ref"] for item in all_relations if item["source_run_ref"] in related} | {item["source_run_ref"] for item in all_relations if item["run_ref"] in related}
+            if expanded == related:
+                break
+            related = expanded
+        relations = [item for item in all_relations if item["run_ref"] in related or item["source_run_ref"] in related]
+        if cursor >= len(relations) and cursor != -1:
+            return _error("bad_request", 400)
+        start = cursor + 1
+        visible = relations[start:start + size]
+        return JSONResponse({"monitor_version": 1, "run_ref": reference, "followups": visible,
+                             "next_cursor": "cursor_" + str(start + len(visible) - 1) if start + len(visible) < len(relations) else None})
+
     async def record(request: Request) -> Response:
         data, error = snapshot()
         if error:
@@ -211,6 +240,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         Route("/api/monitor/v1/runs/{run_ref}/snapshot", run_snapshot, methods=["GET"]),
         Route("/api/monitor/v1/runs/{run_ref}/history", history, methods=["GET"]),
         Route("/api/monitor/v1/runs/{run_ref}/records/{record_ref}", record, methods=["GET"]),
+        Route("/api/monitor/v1/runs/{run_ref}/followups", followups, methods=["GET"]),
         Route("/{path:path}", static, methods=["GET", "HEAD"]),
     ])
     app.add_middleware(BaseHTTPMiddleware, dispatch=protected)

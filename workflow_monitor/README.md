@@ -24,10 +24,10 @@ sourcemaps, symlinks, directories, or arbitrary files) and exposes closed GET ro
 - `/api/monitor/v1/runs/{run_ref}/snapshot`
 - `/api/monitor/v1/runs/{run_ref}/history`
 - `/api/monitor/v1/runs/{run_ref}/records/{record_ref}?snapshot=`
+- `/api/monitor/v1/runs/{run_ref}/followups?snapshot=&cursor=&limit=`
 
-Snapshots return an opaque `snapshot_ref` and `next_cursor`. History and record lookup require that snapshot reference; stale references return closed `409` responses, and invalid cursors or other-run record references are rejected.
+Snapshots return an opaque `snapshot_ref` and `next_cursor`. History and record lookup require that snapshot reference; stale references return closed `409` responses, and invalid cursors or other-run record references are rejected. Followups are only explicitly declared local correction references. A reference resolves only when it names a recorded reviewer occurrence; dangling, conflicting, and cyclic declarations remain unresolved. Current acceptance requires an approving findings-free review recorded from the original base through the current linked head. A correction-only range is labelled honestly, and the original rejected run remains failed history.
 
-`followups` is deliberately unavailable until its separately owned implementation.
 API requests require the exact loopback `Host`, same-origin Fetch Metadata, and the
 `X-Workflow-Monitor: 1` request header. All responses use no-store, CSP, nosniff,
 no-referrer, and frame-denial protections; errors use fixed closed codes/messages.
@@ -35,7 +35,7 @@ no-referrer, and frame-denial protections; errors use fixed closed codes/message
 Run the focused HTTP/launcher and production-web checks with prepared local dependencies:
 
 ```sh
-workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_http workflow_monitor.tests.test_launch
+workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_http workflow_monitor.tests.test_launch workflow_monitor.tests.test_lineage
 npm --prefix workflow_monitor/web run build
 npm --prefix workflow_monitor/web test
 ```

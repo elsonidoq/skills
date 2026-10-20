@@ -9,6 +9,8 @@ import json
 from collections import defaultdict
 from typing import Any
 
+from .lineage import resolve
+
 KNOWN_KINDS = frozenset({"started", "returned", "passed", "failed", "interrupted", "question_requested", "answer_returned", "answer_sent", "delivery_failed", "abandoned", "gap"})
 KNOWN_PHASES = frozenset({"prepare", "gate", "worker", "check", "checkpoint", "review", "terminal"})
 
@@ -139,9 +141,11 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             if row["phase"] == "review" and "review_base" in row["facts"] and "review_head" in row["facts"]:
                 edges.append({"run_id": run_id, "type": "reviewed_range", "from": ("occurrence", occurrence_id),
                               "to": ("observation", row["seq"])})
+    followups, review_acceptance = resolve(runs, occurrences)
     return {"state": "ok", "runs": runs, "phases": phases, "tasks": tasks, "occurrences": occurrences,
             "observations": observations, "edges": edges, "unknown_records": unknown,
-            "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", []))}
+            "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", [])), "followups": followups,
+            "review_acceptance": review_acceptance}
 
 
 __all__ = ["normalize"]
