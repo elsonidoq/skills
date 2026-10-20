@@ -1,71 +1,132 @@
-# Monitor data model v1
+# Monitor data model v1 — proposed, not implemented
 
-Derived from [approved spec](spec.md), [research](research.md) and [runtime schema owner](../../docs/coordinate-implementation-schema.md). This is an observer model, **not new runtime DDL**. Exact external fields are in [monitor contract](contracts/monitor-v1.md). Never deserialize saver checkpoints or open an authoritative writer.
+[Specification](spec.md) owns requirements; [monitor contract](contracts/monitor-v1.md) owns boundaries.
+Existing `execution_runs` and `execution_tasks` remain latest-state records. Never reinterpret their
+row order, overwritten details or legacy `wf_*` records as new-contract history.
 
-## Identity and provenance
+## Minimal additive storage
 
-Use tagged identities, never display-position/task-name-derived identity:
+Two proposed tables in the existing worktree database; no new database, workflow engine or saver.
+Names below are the implementation target, not a claim that these tables already exist.
 
-| Entity | Stable internal identity | Relations / invariant |
-|---|---|---|
-| Worktree | canonical Git worktree/admin identity | Fixed at server start, one `.coherence/workflow/workflow.sqlite`; no browser-selected project/path |
-| Run | SQL `wf_runs.run_id` | All queries additionally bound to selected run; API returns opaque run ref mapped only in this process |
-| Definition | run + retained workflow raw SHA256 | Parsed canonical config digest must equal `wf_run_bindings.binding.config_hash`; Engine combined hash is separate |
-| Definition node | run + definition hash + exact node id | One finite anchor per actual definition node, whether visited or not; not a task container |
-| Visit | run + graph operation UUID | `wf_operations.kind='graph'`; logical node/visit index is validated metadata, not primary identity |
-| SDK invocation | run + sdk-turn UUID | Optional task/role/attempt/session relations from actual intent/result; never assumed one per graph visit |
-| Semantic record | run + SQL event UUID or typed table PK | Distinct type/shape from visit/definition; some records have no graph operation |
-| Task | run + task contract id | Declared depends are prerequisites only; correction has explicit original task relation |
-| Question/input | run + gate/input PK | Distinct park/accepted/queued/delivered/continuation-entered/request-observed facts, no content |
-| Check evidence | run + evidence_id + item_id | Immutable status/applicability/revision/environment facts, not raw output/args |
-| Review/finding | run + review_id + finding_id | Base/head/rereview/correction disposition remains historical |
-| Metric revision | original event/op-derived metric ID | supersedes relation, null reasons, zero and four binding provenance classes |
-| Snapshot | process-random token + database identity + watermark | Short-lived sanitized in-memory DTOs; no DB transaction across HTTP requests |
+### `execution_monitor_runs`
 
-Browser IDs are bounded opaque encoded/HMAC refs over typed keys (ephemeral server key); raw stored arbitrary strings are not routing paths/URLs. Restart may invalidate refs; stable domain identity lets UI warn/reselect, not cross-wire history. Identifiers that could contain paths/secrets are represented by opaque refs; approved presentation may supply separately validated safe labels. Safe UUID/commit/hash values may be shown when type/length validated. No raw paths/session filenames/approval refs/OS identities are public.
+- `run_id`: existing run identity, primary key.
+- `recording_version`: 1.
+- `description`: closed JSON containing retained descriptive script phases/possible branches,
+  description version and runtime source revision (null with reason if unavailable), ordered task
+  IDs/dependencies, optional reviewed public-safe labels/brief summaries, requested executor identity,
+  and optional declared correction reference.
+- `started_at`: actual recording timestamp; not retroactively reconstructed intake time.
+- `runner_identity`: private PID/start/boot identity for read-only liveness observation, if available.
 
-## Required new-contract sources
+The description is captured from the current script's maintained phase description and admitted task
+list, not parsed from retired executable YAML or resolved from whatever files exist at viewing time.
+Focused engine tests exercise the actual described boundaries. It is not a second executable definition.
+No full task contract, source file bodies, check commands, owner input, prompts or private filesystem
+paths enter this record. Optional safe presentation is copied from explicit `monitor` metadata, not
+inferred from `description`/`outcome`. Generic labels are valid when presentation is absent.
 
-One source `kind=config,section=monitor-workflow/v1` and one `kind=config,section=monitor-presentation/v1` in the admitted contract. Section is a convention; the runner hashes the **whole file**, not that section. Presentation v1 is a closed JSON document:
+### `execution_observations`
 
-- `monitor_version:1`.
-- `workflow_sha256`: exact retained workflow raw digest.
-- `tasks`: exact original task IDs to `{label, executive_summary}`; approved brief text, not arbitrary `task.outcome`. Label<=80 Unicode characters; summary<=240, normally one sentence. No required LLM generation.
-- `nodes`: optional exact definition node IDs to approved descriptions<=240; supported handler/version default descriptions cover the shipped inventory. Unknown custom handler uses generic “Unsupported recorded stage”, not invented business explanation.
-- `safe_evidence_labels`: optional declared opaque reference labels; never target filenames/URLs or content gateways.
+- `seq`: database-generated monotonic primary key; order of recording, not proof of causal completion.
+- `run_id`, `recording_version`.
+- `occurrence_id`: stable unique phase execution identity assigned before a start; reused for its end.
+- `phase`: known script phase identifier.
+- `task_id`: nullable; graph review and terminal phases are run-level.
+- `kind`: closed milestone enum, e.g. `started`, `returned`, `passed`, `failed`, `interrupted`,
+  `question_requested`, `answer_returned`, `answer_sent`, `delivery_failed`, `abandoned`.
+- `recorded_at`: actual emission time, not provider/tool execution time.
+- `facts`: closed, phase-specific safe fields: execution role, check ordinal/exit code, baseline/head,
+  no-change flag, review approval/finding count, parent execution occurrence for questions/checks,
+  fixed error category, and recording-gap indicator. No arbitrary details/reason/metadata field.
 
-Reject unknown keys, duplicate IDs, excessive sizes, control characters, invalid hashes and task/definition mismatches. Presentation text must be reviewed explicitly as public-safe; a schema/regex cannot determine arbitrary secrets. Raw values from DB are never substituted when presentation unavailable. Detect corrupt new pins with explicit unavailable/unsupported state, not legacy conversion. Strict YAML forbids tags/aliases/duplicates and arbitrary imports; bound input262144 bytes/node128, matching shipped validation bounds. Never execute it.
+Phase occurrences: task preparation/manual gates, worker invocation, each runner check, checkpoint,
+independent review and terminal outcome. Each actual worker/reviewer `prompt()` call has its own
+occurrence, even when the same role recurs. A task association is not an occurrence identity.
+Terminal review is successful only after actual response validation; malformed/rejected responses
+remain failed/incomplete. Retain a valid rejected review's count/range before the runner raises.
 
-Retain committed source objects before the actual app build. Match raw hash at resolution and actual SQL canonical config hash; Git blob lookup uses validated revision/path, no hooks/textconv/external diff, no shell interpolation, no worktree writes. Stored contract source paths remain private resolver inputs. Cache only verified content identities. A run with no monitoring marker is not eligible and its history is not exposed.
+## Emission and optionality
 
-## Graph and execution edge derivation
+| Existing point | Observation needed |
+| --- | --- |
+| `Engine.invoke` after ordinary run start | Description; terminal occurrence start; tasks known before they execute. Intake and lock acquisition predate this recording and are labelled pre-recording, not fabricated visits. |
+| Task preparation / `manual_gates` | Preparation start/result, gate ordinal/outcome, no gate content. Preparation failure before worker creation remains visible. |
+| Immediately around worker/reviewer `prompt` | Distinct execution start/return/failure/interruption with role; reviewer range and parsed outcome/count. Worker return is not verification. |
+| `run_checks` around each actual command | Check start and exit/failure/interruption, emitted before failure propagation; command text/output withheld. No requested checks means not applicable, not verified. |
+| `FocusedGit.checkpoint` call boundary | Start/result with actual baseline/head and `no_change`; failure after uncertain Git work is not a fabricated commit. |
+| Wrapped question callback and `PiAdapter` send | Requested, terminal return, sent/failure; SDK question links to its execution, gate question to its gate. No answer text or answer-consumed event. |
+| Run finish and explicit new-run abandon | Actual terminal state/error category/head; abandonment appends without erasing prior failure. |
 
-1. Build finite actual definition anchors/allowed outcome transitions from retained YAML. Distinct gray/dashed definition links are possibilities, never claims of execution.
-2. Enumerate **all** run graph operations and events ordered by SQL seq. Visit index suffix parsed only against known node IDs; unknown operations remain opaque unresolved recorded visits, not dropped.
-3. For each graph visit, reconstruct completed trace prefix as Engine does: exact node/handler/profile/skill/config hash/operation_id. Recompute operation args hash for `{config_hash: wf_runs.config_hash,node: actual_node,trace: prefix}` and compare intent input hash and event proof. Result outcome must be permitted by pinned node transitions. Only a verified chain justifies a recorded transition to the next matching visit; sequence alone gives “recorded before”, not causal transition.
-4. Intent without completion is an attempted/incomplete visit; **not confirmed failure**. A later block/alarm may attach causally only through exact references. Result `ok` in an implement node means worker stage returned, not final acceptance. Result `repair` from verify is failed-check/repair-needed, not success because handler completed.
-5. Owner-input interrupt executes before graph intent; `wf_question_parks` supplies explicit park semantic record linked to original graph op and definition gate. Show waiting on anchor plus that record, never invent graph UUID/visit. Saver state is not read. A recovered identical op returns same visit UUID, not a duplicate.
-6. Task associations require actual task_selected/SDK/check/checkpoint/question/correction references. Reconstruct sequential selected-task interval only where those proofs agree. Select can have no current task or precede selection event; authority/custody/review/terminal nodes may be run-level. Uncertain associations null with reason. Task-spanning nodes accept plural refs.
-7. Prerequisites connect task annotations attached within the same graph, visually distinct from definition/recorded/semantic links. They never determine trace prefix or execution order.
+Observations use short independent writes with the existing sole writer; never a transaction held across
+model execution, terminal input, checks or Git. Do not alter existing progress semantics or error paths.
+Recording exceptions, including optional table/description setup failures, warn through safe fixed
+diagnostics and do not replace an execution error or veto work. If writing later recovers, append a gap
+marker; if it never recovers there may be no durable gap marker. If initial registration fails entirely,
+the run cannot be identified as eligible by the viewer; the producer warns and its monitor acceptance
+is NOT VERIFIED. Missing ends, a corrupt registered description or a latest-state/history mismatch are
+incomplete, not evidence that every missing event is detectable. No replay, transcript scraping or synthetic repair.
+New-contract history is useful observation, not an exactly-once/effect-proof guarantee.
 
-Every event is covered by a known semantic decoder or opaque unsupported-record badge/ref/count. Unknown event payload is not exported. Visible history windows are views over a declared complete inventory, not silently truncated graphs. Collapsed history aggregates counts by failed/waiting/blocked/unknown, exposes hidden count and paged reveal/find by stable ref. Layout copies cannot mutate domain identities/endpoints/types.
+## Corrections and actual review coverage
 
-## Recorded status, not observer authority
+Optional input context (not new startup linter checks):
 
-Store status dimensions separately: `visit_phase`, `milestone`, `disposition`, `controller`, `evidence`, `freshness`; do not flatten to a universal done boolean.
+```json
+{
+  "monitor": {
+    "correction_of": {"run_id": "prior-run", "review_execution_id": "recorded-review-id"},
+    "tasks": {"fix": {"label": "Fix review defects", "executive_summary": "Address the reported correctness defects."}}
+  },
+  "review_base": "FULL_ORIGINAL_BASE_COMMIT",
+  "tasks": [{"id": "fix", "description": "Owner-authorized correction work"}]
+}
+```
 
-- Definition anchor without visits: gray “Not started”. Finite loop, no infinitely unfolded planned visits.
-- Active SDK/process/graph intent **and** live controller evidence: blue “Running/worker active”. Controller stopped/dead/unknown overrides active-progress claim; historical operation remains incomplete with interruption/unknown warning.
-- Confirmed check fail/explicit failed outcome: red “Failed check/visit”. Preserve failed historical record after later repair success. Insufficient/missing/stale evidence: warning “Not verified”, not red failure.
-- Question parked pending: amber “Waiting for owner”. Answer accepted: amber “Accepted; delivery pending”. Queued original vs actual `original_answer_entry` and continuation-entered/request-start/completed shown separately. No answer/control content or button.
-- ORPHAN_PROCESS, unmet gate, unresolved finding, unsupported/uncertain recovery: amber “Blocked” with distinct typed reason; confirmed final_failure red. Unknown reason remains unknown; no inference from exception prose.
-- Completed implementation stage: green “Worker finished”; successful current recorded checks green “Verified”; checkpoint receipt green “Committed/read-only complete”; independent review pass green “Review passed at <head>”; exact `workflow_accepted` reference green “Finally accepted at <head>”. These are separate badges and references, never interchangeable.
-- Acceptance current only when latest acceptance is not superseded by recorded blocker, pending question/control stop, active alarm, unmet gate/unresolved finding or newer recorded task/checkpoint/review head inconsistent with acceptance. Conflicts/incomplete evidence warn “Acceptance not established”, no authority/check rerun. Preserve historical accepted event independently.
+`monitor.correction_of` is a declared relationship, **not permission or proof of causality**. The recorder
+copies it without a new catalog/receipt gate. The reader resolves it only against a supported reviewer
+occurrence in this same worktree; dangling/conflicting references are visible unresolved relations.
+Fixing executions retain their own run/task/occurrence IDs. A task in an explicitly declared correction
+run is labelled fixing worker; unrelated workers are not retroactively reclassified by heuristic.
 
-Descriptions are trusted versioned handler dictionary plus approved presentation. Current shipped mapping: intake validates source/task intake; authority checks capabilities/approval; custody checks writer/process custody; select chooses next task/end; dispatch chooses implementation/repair; implement produces work; repair addresses diagnosed original failure; owner-input-* parks that role; continue-* continues original conversation; verify checks REQUIRED evidence; checkpoint records focused Git; review/continue-review judge original full range; authorize-correction admits scoped correction; complete audits final acceptance; failure represents blocked terminal. Inventory still comes from YAML, not this description list.
+`review_base` is different: it proposes a bounded operational option, necessary when rereview must cover
+the original range rather than only the new correction commits. The future engine must actually use
+that base in the independent review prompt/diff and record the actual base/head. Resolve it as a commit
+and require it to be an ancestor of the run baseline using normal Git behavior. Invalid/unrelated input
+fails the affected review with a corrective diagnostic, not a telemetry/admission gate. Default remains
+the run baseline. Run baseline/ownership do not change. No automatic fixing, retry, state replay or
+review result injection. This option requires explicit implementation approval along with recording.
 
-## Metrics and freshness
+The viewer marks original-range acceptance only for an approving, findings-free independent review
+whose recorded range covers the required original base through the displayed current head. A later
+correction-only review is labelled exactly that, not full acceptance. Newer linked work or incomplete
+review invalidates a claim of current acceptance; historical review success remains visible. An earlier
+run can stay failed even though its linked correction lineage later has a passing full-range review.
 
-Metric values use `{value,source,unknown_reason}`; value null requires nonempty reason, zero is valid. `supersedes` selects current revision per invocation, never summed across revisions. Distinguish requested profile, SDK runtime observation, final request observation, provider acknowledgement. Unknown acknowledgement stays null. Reopen/session epoch change does not join counters. Non-agent stages have no fabricated sessions/tokens. Costs remain unknown if source segment does not retain them; no recalculation from current prices.
+## Graph and public identity
 
-Snapshot records observation wall/monotonic time, per-run SQL high-watermark, projection cursor/lag if present and controller observation independently. Original events often have **no timestamp**; seq is order only, use null/reason. SDK/check timing can be actual recorded nanoseconds. Freshness timestamp is not execution timestamp. Clock skew/unknown age is explicit. Failed poll retains last sanitized data plus visible last-success/read-error warning, never replaces it with fake empty success. No raw state.json/event payload forwarding.
+One finite anchor per retained defined phase; task annotations/dependency edges; separate occurrence
+nodes including all model executions; milestone details attached by explicit occurrence references.
+Graph edge kinds: `possible_flow`, `task_prerequisite`, `recorded_next`, `phase_occurrence`,
+`execution_milestone`, `declared_correction`, `reviewed_range`. No edge is called a proven execution
+transition merely because sequence or dependencies suggest it.
+
+Selected run is the root. Expand only explicit local correction ancestors/descendants, fetched by those
+references with cycle detection and a visited set. Attribute every node to its source run; no whole-store
+merge, cross-worktree traversal or inferred relation. Layout may collapse history with counts; all
+records remain reachable through paging/reveal in the same graph.
+
+Internal identity is `(run_id, occurrence_id)` or `(run_id, seq)`, not display order. Public opaque refs
+are run-scoped and cannot be filesystem paths. Schema-validated hashes may be displayed; other raw IDs
+may be sensitive and become opaque refs. Presentation is inert text reviewed as public-safe, not secret
+redaction by regex. Brief labels/summaries may retain 80/240-character presentation choices; invalid
+optional presentation becomes generic/unknown without blocking execution.
+
+## Unknowns, liveness and freshness
+
+Show snapshot read time separately from event record time. Read-only local process identity checks may
+report live/stopped/unknown; they never signal, lock or reconcile. An unverifiable identity is unknown;
+an alive process is not proof it is making progress. Retain incomplete occurrences after process loss.
+Unknown metrics are not zero; no metric collection/revision schema or provider acknowledgement is added.
+Actual zero exit code/finding count remains zero. API request failure preserves the last sanitized view.

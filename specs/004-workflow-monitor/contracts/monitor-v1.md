@@ -1,90 +1,134 @@
-# Read-only monitoring contract v1
+# Monitoring contract v1 — proposed, not implemented
 
-Status: designed, NOT implemented/accepted. [Data model](../data-model.md) supplies exact semantic rules; [research](../research.md) supplies APIs/evidence; [validation](validation.md) supplies REQUIRED proofs.
+[Data model](../data-model.md) owns record identities/emission points; [spec](../spec.md) owns outcomes.
+This version replaces the retired `wf_*`/executable-YAML design. It is not an existing API.
 
-## Process boundary and named seams
+## Producer boundary
 
-`workflow_monitor` is a new top-level application, outside `runtime/coherence_workflow`. Public observer entry constructs a canonical worktree-bound reader and serves static production UI. It cannot import/construct `Coordinate`, `Authority`, `Store`, `Engine`, `Gateway`, `OwnerChannel`, `Interaction`, `Publisher`, PiAdapter, SDK host or SqliteSaver. Import-time effects, process/model launch and dynamic plugin imports are forbidden. Static app launch is distinct from execution CLI, never invokes start/resume/control.
+Only the existing script writer creates `execution_monitor_runs` and `execution_observations`.
+Record closed run descriptions and phase-specific facts, never arbitrary SDK event dictionaries.
+No private prompt/result/summary/error/command/finding/question/answer content enters monitoring rows.
+Recording failure emits a safe warning, never blocks execution or replaces its original exception.
+No observer dependency, network, subprocess or new package is needed for the emitter.
 
-- `reader.open_snapshot(project) -> RawSnapshot`: private backend-only fixed SQL SELECTs in bounded mode=ro transaction.
-- `pins.resolve(raw_snapshot) -> VerifiedDefinition, SafePresentation`: exact marked sources, raw hashes, strict parsing and actual run-binding config digest equality. No current-YAML fallback.
-- `mapping.normalize(raw_snapshot,pins) -> MonitorSnapshotV1`: source-derived nodes/visits/edges/status/metrics, explicit unknowns, complete counts and provenance. Trusted internal structs never serialized wholesale.
-- `public.minimize(normalized) -> PublicSnapshotV1`: allowlist and bound every field; schema validation last, no arbitrary mapping extras. No raw text “reason” escape hatch.
-- `http.create_app(reader,assets) -> ASGI`: closed same-origin GET routes, bounded in-memory sanitized snapshot cache, immutable versioned DTOs. Synchronous DB work runs on bounded thread worker, connection created/closed there; no shared connection/cursor.
-- `graph.layout(topology,dimensions,generation)`: frontend-only positions/routes on copy; React Flow uses stable IDs. Layout never changes domain topology.
+Optional `monitor` input provides explicit public-safe presentation and a declared correction reference;
+invalid optional metadata loses that facet with a warning, not the work. It grants no permissions.
+Optional operational `review_base` is separate: the future reviewer must actually inspect the specified
+valid ancestor range or report the actual review error. The viewer cannot select/change that option.
+The script remains sequential, with a fresh independent reviewer and no automatic correction loop.
 
-Separate contexts explicitly enforce absence of a viewer→runtime effect route. Versioned monitoring schema belongs to app, not existing projection schema or runner DDL. The separately approved prerequisite changes review document delivery only; existing tool/protocol semantics stay unchanged, with no universal artifact-size rule.
+## Reader and mapping boundary
 
-## Eligible runs and pin proof
+- `reader.open_snapshot(project, run_ref, cursor)`: private SELECTs from the fixed existing worktree DB.
+- `mapping.normalize(snapshot)`: phase definitions, task annotations, occurrences, milestones and
+  explicitly resolved local correction references; no saver deserialization or legacy history adapter.
+- `public.minimize(normalized)`: construct closed public objects explicitly; never serialize raw rows.
+- `http.create_app(reader, assets)`: same-origin read-only JSON and fixed production assets only.
 
-Require unique source conventions described in [data model](../data-model.md): `monitor-workflow/v1` and `monitor-presentation/v1` on kind=config sources. Load source contract from `wf_run_inputs.contract`, cross-check `wf_run_bindings` source digest against contract sources and config digest against retained strict YAML. Raw SHA of both files must match source pins, presentation.workflow_sha256 must match YAML, task IDs must agree.
+Viewer imports no Authority/Store/Engine/PiAdapter/SDK/controller/publisher entry and cannot start one.
+No startup DDL, implicit migration, projection writes or installation. Database absence is `no_store`;
+no description-v1 runs is `no_monitored_runs`. An initial registration failure can leave no marker:
+the producer warns, but the viewer cannot identify that run as eligible or promise its history. A marked
+supported candidate with corrupt/missing data is unavailable/incomplete, not silently hidden or mapped
+from old rows. Unknown recording versions
+are unsupported, not decoded by guessing. Existing `wf_*` history is neither exposed nor converted.
 
-Git-addressable retained bytes must exist before app run starts and remain retrievable. Prefer the actual initial task baseline Git tree; while no baseline exists, hash-verified current source is temporary observation, explicitly labelled. At baseline admission resolve committed blob; no shell, arbitrary revision expression, hook, textconv or broad history traversal. Safe source path components checked without following symlinks, and `.git`/private workflow/approval/session paths forbidden as presentation/config content. Hash mismatch, lost objects or changed actual config prevents full mapped graph reliance. Config source may point to existing accepted YAML if approved pins match; do not mutate that YAML to add monitoring fields.
+Canonical worktree and its Git-admin identity are selected by trusted CLI once; browser input cannot
+select paths, databases, roots or SQL. Refuse symlink/path escape, unsafe private-file ownership or
+cross-worktree substitution; recheck file identity when reopening/changing stores, not as a repeated
+full-environment attestation. Open URI mode=ro, query_only and a SELECT-only SQLite authorizer;
+parameterize run/cursor filters. No ATTACH, extension loading, checkpoint, DDL, saver or write PRAGMA.
+Normal SQLite WAL/SHM bookkeeping may occur; do not require nonexistent historical sidecars or repair
+unsafe ones. Never use immutable/nolock on an active database. Authoritative rows must not change.
 
-No marker → not eligible; list does not expose old run records or old-run count/metadata. Partial marker/unsupported new version → eligible candidate with safe unavailable classification, not silent old-run filtering. No DB → `no_store`; no eligible rows → `no_monitored_runs`. Corrupt/future new inputs yield safe explicit failure, never migration/downgrade.
+Fetch within short thread-owned snapshot transactions; close before HTTP/layout. Use ordinary busy/error
+handling and pagination, not fixed 250/500ms admission. No transaction held across requests. No copied
+main-DB snapshot that loses WAL changes. Supported columns are explicitly selected; raw execution
+`details`/`error` are private and not forwarded. Unknown observation kind retains opaque identity/order
+and an unsupported badge, never its arbitrary payload or raw name. Completeness counts include it.
 
-## SQL read/noninterference contract
+Read process identity locally only when available to distinguish live/stopped/unknown; never signal,
+acquire the writer lock or reconcile. Fresh read time is not proof the runner is making progress.
 
-Resolve exact canonical worktree root and Git admin read-only; reject ambient Git authority override, symlink/hardlink/private-file identity violations, wrong owner/permissions or cross-worktree binding. Inspect existing binding read-only; never instantiate Authority or create storage. Fixed DB path `.coherence/workflow/workflow.sqlite`, validated identity before/after connection; existing sidecars validated for canonical same-owner regular single-link identity/permissions before/after use. Absent WAL/SHM after a closed WAL DB is normal: SQLite3.45.1 mode=ro/query_only SELECT may create empty WAL/SHM bookkeeping without SQL writes. Permit only SQLite's normal bookkeeping under the validated owned DB directory, not application-created/chmod/repair sidecars or authoritative record mutation. Check newly appearing sidecars safely too; unsafe identity or unavailable SQLite locking/permissions fails closed. Active reads never use immutable/nolock or copying just main DB.
+## Public DTOs
 
-Open URI `mode=ro`, explicit query_only and deny-by-default authorizer. Never ATTACH, DDL, write PRAGMA, VACUUM, checkpoint, backup, projection publish, extension load or saver table SELECT/deserialization. Query only required application tables/columns, all run filters parameterized. Schema support is **app schema1 plus recognized table/column shapes**, not version1 alone; additive unknown record fields never blindly decoded. Optional missing table yields explicit unknown facet only if allowed by supported shape; required missing structure unavailable.
+All objects closed, no arbitrary `metadata`, `details`, reason text or extra payload. IDs/cursors are
+opaque, typed and scoped to the selected worktree/run. Safe hashes are validated before display.
+Optional reviewed presentation is inert text (labels 80 characters, summaries/descriptions 240);
+invalid/missing text uses fixed generic labels. No private task description fallback or regex promise
+of secret detection. No arbitrary URL/path fields or file/transcript/output downloads.
 
-One short deferred `BEGIN`, fetch bounded rows and liveness facts, then ROLLBACK/close before network response/layout. Busy timeout250ms and wall/VM budget<=500ms initial engineering bounds, cancellable; tuning may change only with observed same-seam noninterference proof, not weakening approximate freshness or silent omission. Cap concurrent readers and snapshot bytes; no request-driven uncontrolled full scans. SQL watermark and all rows from one snapshot; process liveness may change independently and carries observation time/unknown. Cache sanitized immutable snapshots by run/watermark/controller generation, expire promptly, discard on DB identity change. No persistent monitor DB/cache.
+- **Envelope:** monitor_version, snapshot_ref/revision, selected run ref, observation, warnings,
+  inventory and pagination. No raw database/source objects.
+- **Observation:** observed_at, last_success_at, last_recorded_at, source_seq, read_state and separately
+  observed runner state with unknown reason. No fabricated timestamps, heartbeat or projection cursor.
+- **Run:** opaque ref, safe label, baseline/result SHA if available, stored state, description version,
+  requested executor identity (known supported values only, otherwise unknown), recorded start/end,
+  recording completeness and review acceptance summary with actual base/head. No raw error text.
+- **Phase:** ref, fixed role/description, possible branches, pre-recording flag, occurrence counts and
+  status summary. Pre-start intake/ownership checks are not fabricated executed visits.
+- **Task:** opaque ref, safe brief presentation, declared prerequisite refs and actual order declaration.
+- **Occurrence:** ref, source run ref, phase/task refs, role worker|fixing_worker|reviewer|non_model,
+  milestone/outcome, recorded timestamps, check ordinal/exit code, checkpoint no_change/baseline/head,
+  review approved/finding_count/base/head and safe parent refs where applicable. Fields are typed,
+  phase-specific and nullable with fixed unknown reasons; no model response or findings text.
+- **Edge:** ref, endpoints, type possible_flow|task_prerequisite|recorded_next|phase_occurrence|
+  execution_milestone|declared_correction|reviewed_range, fixed label and resolution state. A declaration
+  is not observed causality or authorization. A recorded sequence is not an effect-proof transition.
+- **Unknown record:** opaque ref, source run, sequence, unsupported/incomplete code; payload withheld.
+- **Inventory:** total phase/occurrence/observation counts, supported/unsupported/hidden counts,
+  loaded sequence ranges and next cursor. Every hidden item remains retrievable.
 
-Load-bearing table allowlist (columns containing private JSON are parsed **privately** by closed decoders, never passed through):
+Current task/run rows may corroborate latest state, never fill missing history. Resolve acceptance from
+actual independent review outcomes and range coverage; worker/checkpoint/task completion alone is
+insufficient. Review findings block acceptance even if commits exist. A later linked correction never
+rewrites the original failed run. Incomplete/contradictory records yield unknown acceptance.
 
-| Table | Permitted semantic extraction / excluded content |
-|---|---|
-| wf_meta, wf_runs | supported version, run identity/config Engine hash/state; no reservation control |
-| wf_run_inputs, wf_run_bindings | typed source/config/task identity for pin proof only; no approval/envelope/catalog content export |
-| wf_operations, wf_events | typed IDs/kind/phase/seq; closed graph result/outcome/input-hash, SDK segment observations; no arbitrary intent/result/payload, args/env/tool/prompt text |
-| wf_tasks | task ID/order/deps, baseline/checkpoint SHA and state; presentation supplies summary; no owned-path/file snapshots/contract prose |
-| wf_checks, wf_gates | item IDs, recorded status/applicability/ref/revision/time; safe gate pending/approve/deny/cancel; no output/args/answer/sample paths/approval artifacts |
-| wf_controllers, wf_processes, wf_alarms | liveness/custody state, opaque process/alarm refs, resolved history; no PID/path/nonce/containment identities public |
-| wf_questions, wf_question_parks, wf_owner_inputs, wf_controls, wf_outbox | stage/typed binding refs/park and delivery receipts existence; no question/options/answer/message/nonce/file content |
-| wf_reviews, wf_findings, wf_corrections, wf_repair_budgets | range base/head, role-independent proof presence, disposition, criterion and opaque refs, original-task/correction/budget relationships; no finding observation/action/location prose or authority JSON |
-| wf_parent_preflight, wf_parent_delivery, wf_parent_attempts | supported stages and typed transport blockers/attempt counts only; no recipient/session-file/actual approval/tool receipts |
-| wf_projections | publication seq only; derived files never required or written |
+## HTTP and assets
 
-Unknown event kind retains opaque ref/sequence plus “Unsupported record; details withheld”; arbitrary raw kind/value may itself be sensitive, so only known kind names public. Unknown graph operation is a distinct unresolved visit with opaque identity and null definition relation. Missing/conflicting transition proof yields unresolved edge warning, not invented chain. Full coverage count includes these records.
+Proposed trusted CLI: `python -m workflow_monitor --project CANONICAL_WORKTREE --assets BUILD_ROOT
+[--port PORT]`. Numeric 127.0.0.1 only; no database/host/plugin overrides, reload, proxy trust or debugger.
+Production build root serves only known asset files, no directory listings, symlinks, sourcemaps or
+arbitrary filesystem access. Startup does not build, install or start execution.
 
-## HTTP interface
+| GET route | Result |
+| --- | --- |
+| `/` and fixed build assets | Static application only; no embedded private/run data. |
+| `/api/monitor/v1/runs?cursor=&limit=` | New-contract run summaries, next cursor. |
+| `/api/monitor/v1/runs/{ref}/snapshot` | Phase/task graph, initial history, complete inventory and observation. |
+| `/api/monitor/v1/runs/{ref}/history?snapshot=&cursor=&limit=` | Next history page at the same watermark; expired snapshot asks client to refresh. |
+| `/api/monitor/v1/runs/{ref}/records/{ref}?snapshot=` | One minimized detail record. |
+| `/api/monitor/v1/runs/{ref}/followups?snapshot=&cursor=&limit=` | Explicitly linked local correction/review occurrences for in-graph expansion, with source-run attribution. |
 
-Trusted CLI: `python -m workflow_monitor --project CANONICAL_WORKTREE --assets VERIFIED_BUILD_ROOT [--port PORT]`. No host/address/database/query/plugin/resource/auth override. Bind preselected free numeric loopback port, record actual bound port in exact-host middleware, no reload/background controller. Asset root must be independently built verified app output (not arbitrary directory server); manifest names/content hashes/types determine routes. Observer never builds/installs on startup. No broad filesystem routes, symlink files, sourcemaps, directory listing, raw DB/download/export or external detail links.
+Follow-up traversal uses explicit references, cycle detection and run-scoped queries, not broad project
+scanning. Paging counts disclose unloaded records; no new universal byte ceiling or silent truncation.
+Normal request/page sizing is an implementation detail, not an execution gate. Snapshot pages cannot
+silently mix watermarks; refresh on expiry/conflict. No arbitrary search, SQL, path or URL endpoint.
 
-GET only (HEAD allowed for static assets with no data body). API GET requires custom header `X-Coherence-Monitor:1`, `Sec-Fetch-Site:same-origin`, exact Host `127.0.0.1:<bound-port>`, and if Origin present exact same origin. Reject duplicate/ambiguous Host, foreign/same-site/none API fetch metadata, forwarded spoofing, encoded separator/traversal/NUL, unknown/duplicate query keys, unbounded cursor/ID values and request bodies. No CORS/OPTIONS grant, websocket, write verbs or redirects. Reject unsupported headers/input before DB read. Non-browser same-UID clients can spoof headers: **not authentication or local-client isolation**.
+GET only (HEAD for static assets); no write/control routes or websocket. Require exact bound Host:port
+and API same-origin Fetch Metadata/custom header; reject foreign Origin, ambiguous inputs/traversal and
+cross-origin preflight, enable no CORS. Browser origin defenses are not authentication against malicious
+same-UID clients. Request input never selects a worktree or triggers a model/process action.
 
-| Route | Success shape and paging |
-|---|---|
-| `/`, fixed manifest asset paths | static app only; no run data embedded; no API fallback to HTML |
-| `/api/monitor/v1/runs?cursor=&limit=` | envelope + eligible run summaries, bounded limit<=100, opaque cursor, explicit next cursor; never old rows |
-| `/api/monitor/v1/runs/{ref}/snapshot` | envelope + full definition anchors/allowed transitions/task annotations and visit/event counts/ranges; initial bounded history window<=200 records with continuation; optional unchanged revision response still includes fresh liveness/read observation |
-| `/api/monitor/v1/runs/{ref}/history?snapshot=&cursor=&limit=` | same sanitized snapshot identity, next bounded window; no long read transaction; expired snapshot409 requiring refresh, never mix watermarks |
-| `/api/monitor/v1/runs/{ref}/records/{ref}?snapshot=` | one safe detail DTO and explicit typed links within graph only; selected hidden visit can be found/revealed without loading every record |
+Use no-store, nosniff, no-referrer and frame denial; CSP allows only local scripts/connect/workers/styles,
+no eval/inline script/remote assets. Library-calculated geometry styles may be allowed without accepting
+stored styles. Text rendering only; no stored HTML/Markdown/link/component execution. No cookies,
+browser persistence, service worker, telemetry or private-profile reuse.
 
-No arbitrary SQL/search/path URL. Ref lookup is bound to selected run and safe cache, cannot authorize file access. IDs/cursors are opaque length-bounded tokens; malformed400, unknown404, expired409, unsupported source/schema422, temporary read/budget unavailable503. Error body only `{monitor_version:1,error:{code,public_message,retryable},observation:{...}}`, fixed messages no interpolation. Endpoint path/query never echoed in errors/logs. Server logs allowlisted error codes/request counts only, no exception/traceback/request content; Uvicorn access logging off and sanitizing error logging mandatory.
+Errors: closed code/public_message/retryable plus safe observation; fixed messages only. Bad input400,
+unknown404, expired/conflicting snapshot409, unsupported422, unavailable503. Logs contain safe codes,
+not request content, raw IDs, exceptions or tracebacks. Disable access/debug leakage, including actual500
+paths. No private text in response headers, links, assets or logs.
 
-All responses including errors: JSON correct content type/nosniff, Cache-Control:no-store; Referrer-Policy:no-referrer, frame denial and CSP. CSP: default-src none; script-src self; connect-src self; worker-src self; style-src self; style-src-attr unsafe-inline for library numeric positions only; img-src self if used; object-src none; base-uri none; form-action none; frame-ancestors none. No eval/inline scripts/HTML/remote assets. No cookies, local/session storage, service worker, shared auth or telemetry.
+## UI invariants
 
-## Public DTO field allowlist
+Left run list, one graph right and brief detail panel/drawer. Switching runs replaces the selected root;
+only explicit local followups expand into that graph. Distinct model execution nodes survive collapsing;
+hidden failures/waits retain badges/counts. Every record can be found/revealed, including earlier rejected
+review and its fixing/rereview lineage. No answer/edit/connect/delete/launch/control affordance.
 
-All objects closed; unknown fields rejected before exposure. Strings/arrays/counts have explicit bounds; canonical hashing rejects NaN/Infinity. Public IDs opaque; strings from reviewed presentation are inert text, never URLs/HTML/style/component code. Runtime-derived reason/status/kind/provider/model/effort values pass versioned known-value allowlists; unrecognized free text becomes null plus fixed reason code, never an error/metric backdoor. No “metadata:any”, “details:any”, raw message or exception field.
-
-- Envelope: `monitor_version=1`, `snapshot_ref`, `run_ref|null`, `source_revision` (monotonic per-process revision), `topology_revision`, `observation` and `warnings` closed code/count objects.
-- Observation: `observed_at` actual wall ISO time, `observed_monotonic_ms`, `last_success_at|null`, `source_seq`, `projection_seq|null`, `projection_lag|null`, `controller={state:live|stopped|dead|unknown,observed_at,unknown_reason|null}`, `read_state:current|failed|budget_exceeded`, `unknown_reason|null`. No fabricated event timestamp or controller-progress implication.
-- Run summary: `id`, approved `label|null`, `spec_ref` opaque, `engine_hash`, `workflow_hash`, `presentation_hash`, `recorded_status` enum, `acceptance` enum/ref/head|null, observed start/end nullable reasoned values, historical failure/wait/unknown counts. Same-spec runs have distinct identities.
-- Definition node: `id`, approved label, description, `node_type:code|gate|agent|terminal|unsupported`, supported role|null, `task_refs[]`, `visit_count`, `hidden_counts`, status summary. Definition ID stays distinct from visit ID.
-- Visit: `id`, `definition_ref|null`, `logical_index|null`, `operation_ref`, `task_refs[]`, `phase:intent|completed|unsupported`, `outcome` known enum|null, `milestones[]`, `disposition`, `started_at/ended_at` observed values+reasons, `evidence_refs[]`, `relation_refs[]`, `warnings[]`. No raw handler output.
-- Semantic record: `id`, known `kind` enum or unsupported, seq, optional visit/task/invocation refs, typed stage/disposition, safe refs, nullable observed timestamp/reason. **Not a visit** merely because displayed in graph.
-- Edge: `id`, `source`, `target`, `type:allowed_transition|recorded_transition|task_prerequisite|semantic_relation|definition_visit`, known outcome/relation label|null, `proof_refs[]`, uncertainty flag. No inferred execution order from prerequisite. Semantic and definition association connectors never masquerade as execution.
-- Detail: repeats safe entity fields plus milestone/check/gate/review/correction/question-stage/metric arrays of closed typed summaries. Each evidence ref opens only another minimized record, never raw file/transcript/output. Commit refs are validated SHA text, no filesystem links.
-- Metrics: integer/finite number/null observations with source and unknown reason; four independent binding observations; invocation/session opaque refs, retry/repair counts only where recorded, supersedes/current flag. Non-agent nulls and observed zero preserved.
-- Inventory: definition/visit/semantic totals, supported/unsupported counts, loaded ranges and next cursor. Every omitted-from-window item must remain retrievable/revealable, or response fails explicit budget error; no count pretending all loaded.
-
-## UI and compatibility invariants
-
-Run list stays left; one selected-run graph right, details panel/drawer within it. Switching run replaces graph, no merged views. Narrow width uses collapsible left rail and detail drawer, not a second primary task/workflow screen. Native mouse/keyboard selection, pan/zoom, legend, explicit organize, search/reveal and finite definition anchors are REQUIRED design behavior; no answer/pause/cancel/edit/connect/delete controls. Focus descriptions and text/icons supplement colors. Recovered current badge never recolors historical red visit green.
-
-React Flow grouping and ELK cycle breaking are visual only. Layout worker receives minimized graph, not private data; stable viewport/selection preserved across status polling, stale generations ignored. A hidden failure/wait remains on aggregate with count, and find/reveal brings it back in this same graph. Pagination/windowing cannot claim completeness unless inventory and record access prove it.
-
-Monitor API versions independently of runtime/projection schema. Unknown monitor version fails closed with incompatible-client warning; no silent downgrade. Server restart/expired refs require explicit refresh/reselection. New missing/corrupt/incompatible records fail safe while preserving last sanitized view and honest freshness; observer never repairs data. Rollback stops only viewer, retains runtime DB/Git/records and normal execution authority, never starts legacy or resets state.
+Stable identities, keyboard/click node and edge selection, pan/zoom/organize; layout changes coordinates
+only. Preserve selection/viewport/positions on status polls; discard old-run layout results. Gray possible
+flow/prerequisite edges are visually distinct from recorded sequence and declared followups. About-two-
+second updates are approximate; errors retain the last safe view with warnings. Stop viewer only to
+roll back; never mutate/reset/restart runtime state.

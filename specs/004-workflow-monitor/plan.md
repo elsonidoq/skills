@@ -1,145 +1,127 @@
 # Implementation Plan: Read-only Workflow Monitor
 
-**Branch**: `follow-attached-workflow-migration-instructions` | **Date**: 2026-10-19 | **Spec**: [spec.md](spec.md)
+**Status:** revised proposal, not implementation approval. Requirements: [spec](spec.md).
+Owner authorized direct artifact revision in this session and explicitly retained fixing-agent nodes.
+Historical approvals/research setup do not establish current execution permission or acceptance.
 
-**Input**: renewed approved specification SHA256 `f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55`; [approval](specification-approval.md). Architecture baseline `b12d0145e55947311707d933710d021547653712`. Standard preparation only; tasks/independent overall review/final implementation approval pending.
+## Recommended architecture
 
-## Summary
+1. **Existing script + small recording seam:** keep `execution_runs`/`execution_tasks`, sequential
+   tasks, actual project checks, focused Git and fresh independent review. Add retained descriptive
+   run metadata and append-only boundary observations as specified in [data model](data-model.md).
+   This supplies missing history; no legacy graph execution, saver, proof system or generic telemetry.
+2. **Separate read-only application:** short parameterized `mode=ro` SQLite snapshots → closed mapping
+   → minimized versioned DTO → same-origin polling. No imports of runner/controller/SDK/writer objects,
+   projection publication or database mutation. Writer-side recording never runs in the viewer.
+3. **One graph:** retained script-phase anchors, task prerequisite annotations and actual occurrences,
+   including model execution nodes. Review, explicitly linked fixing execution, checks/checkpoint and
+   rereview remain navigable in this graph with source-run attribution and actual review ranges.
+4. **Local UI:** React/React Flow, ELK for organized layout, Starlette/Uvicorn for closed GET routes.
+   Keep the existing library choices as proposals; conventional manifests/locks and explicit setup
+   authority replace the frozen-tree descriptor protocol. [Research](research.md) preserves useful
+   official references without claiming the old scratch installations are current dependencies.
 
-Separate worktree-local read-only observer: selectable runs left, **one execution graph for the selected run** right, safe brief details. React Flow supplies maintained interaction/accessibility; ELK supplies organized layout. Starlette/Uvicorn serves production assets and explicit versioned minimized JSON from short read-only SQLite snapshots. No scheduler/controller/SDK/effect/repair seam.
+## Boundaries and compatibility
 
-New monitoring-contract runs only, including **THIS actual app build**, retrospectively and live once usable. Older runtime-migration runs excluded by renewed owner direction; no adapter/import/archive/fallback. Preserve all new completed/failed/recovered/same-spec histories and every SC-001–006. Planning chat/fixtures/different demonstration cannot substitute for own build.
+Only new recording-contract runs in the viewed worktree. No conversion/import or legacy incomplete
+fallback. Retired `monitor-workflow.yaml` is a non-executable retirement notice, not the script's
+configuration. `monitor-presentation.json` supplies example public-safe labels for the revised tasks;
+no workflow digest or source-binding proof is required. The recording description is retained with
+runs so later code/presentation changes do not rewrite history.
 
-## Technical Context
+Best-effort observations cannot gate normal execution. Missing records warn, never fabricate visits.
+Ordinary progress/check/Git errors keep their existing behavior. Privacy is enforced before storage
+of monitoring facts and again before HTTP exposure. Arbitrary worker text/errors/findings/commands
+remain private. Requested executor identity is not observed/provider-acknowledged identity.
 
-**Language/Version**: Python3.12, browser JavaScript/JSX, build Node22.23.3 observed.
+The current engine stops on review findings. Corrections remain separately owner-authorized fresh
+runs, optionally carrying a `monitor.correction_of` reference. A small explicit `review_base` option
+is proposed for original-range rereview; it changes the actual review diff/prompt, not merely a label.
+It does not change the task baseline, writer ownership or automatically launch fixes. Its exact scope,
+recording changes and tests must be approved before implementation. No full finding-disposition ledger.
 
-**Primary Dependencies**: agent-derived under owner delegated community-use/documentation criteria: React/ReactDOM19.3.1, @xyflow/react12.12.0, elkjs0.12.0, Vite8.3.4; Starlette1.9.0/Uvicorn0.54.0, separately pinned PyYAML6.0.3. Playwright1.64.1 against installed Chrome154.0.8037.92 sandboxed capability smoke PASS; application tests NOT RUN. [Research](research.md) owns attributable adoption, exact-version official guidance, alternatives, APIs/pitfalls and checks. Actual isolated locks/audit/license/setup metadata is descriptor-bound in quickstart; final app execution authority/readiness still pending, no installations now.
-
-**Storage**: viewed-worktree SQLite schema1 sole authority; retained Git-addressable config/presentation pins; bounded sanitized in-memory snapshots. No new runtime DDL, persistent app DB, browser storage or projection publication.
-
-**Testing**: permanent focused production-helper fixtures, actual isolated shipped-runtime composition before UI reliance, real DOM/browser checks, SAME own-build retrospective/live evidence. All implementation tests NOT RUN. [Validation contract](contracts/validation.md) preserves REQUIRED criteria, evidence, dependencies and gates.
-
-**Target Platform**: numeric127.0.0.1 local Linux trusted single-host/same-UID operator; modern browser with Fetch Metadata. Browser-origin defenses, not user authentication/malicious-local-client isolation or remote/multiuser deployment.
-
-**Project Type**: separate ASGI/static web application, no execution API.
-
-**Performance Goals**: normal about2s update target; initial1000ms polling/one in flight, stable selection/viewport, finite anchors and explicitly revealable history windows, cancelable ELK worker. No invented percentile/throughput promise.
-
-**Constraints**: existing tool/protocol limits remain unchanged; they are not universal artifact-size requirements. Small reference-based reviewer adjustment precedes app build, independently accepted under separate concrete task approval. No runtime mutation during its own app build.
-
-**Scale/Scope**: one worktree, multiple new eligible runs, selected run only; shipped19 nodes are baseline, never hard-coded inventory. Every pinned node and recorded visit remains accessible, including finite unvisited loops, repeats, non-task stages and unsupported records.
-
-## Constitution Check
-
-*Checked before Phase0 and again after Phase1.*
-
-| Principle | Disposition |
-|---|---|
-| I portable assets | PASS: project app/research owns local specifics; no global changes |
-| II evidence | PASS: actual record/identity/replay source and official versioned documentation; unknowns/counterevidence retained |
-| III authority | PASS: genuine specification renewal; technical selections delegated, not owner-picked brands. Subsequent small prerequisite direction is planning scope, not code authorization |
-| IV proportionate checks | PASS: smallest helpers/composed/browser observables, no disposable prototype/report chain or unrelated exhaustive matrix |
-| V safe execution | PASS design: one runner writer, real REQUIRED/gates, focused commits and fresh full-range independent review preserved; exact future admission still required |
-| VI ownership/compatibility | PASS: only explicitly narrowed older compatibility; no memory/STATE/feedback writes or history erasure |
-
-No exception/waiver. Design validation is not runtime/application acceptance.
-
-## Project Structure
-
-### Documentation (this feature)
-
-- [research.md](research.md): canonical dependency/source evidence and version-specific implementation cookbook.
-- [data-model.md](data-model.md): identities, graph/replay/task/status/metric mapping.
-- [contracts/monitor-v1.md](contracts/monitor-v1.md): exact read seam, pin proof, SQL fields, HTTP/DTO/privacy/origin/interaction contracts.
-- [contracts/validation.md](contracts/validation.md): REQUIRED proofs, reference prerequisite, capability/custody and own-build gates.
-- [quickstart.md](quickstart.md): future validation/operator sequence; [contract index](contracts/README.md).
-
-No tasks generated by plan stage. These owners avoid copying the entire requirements/API/cookbook into each document.
-
-### Source Code (proposed, not created)
+## Proposed source layout
 
 ```text
+runtime/coherence_workflow/
+  monitoring.py                 # proposed closed descriptor/emitter; not executable workflow
+  store.py / engine.py          # additive tables and actual execution boundaries
+  verification.py / pi_adapter.py # per-check and coarse question observations
+  cli.py                        # optional correction-review context, honest status as needed
+runtime/tests/                  # focused emission/error/privacy/range regressions
 workflow_monitor/
-├── __main__.py / app.py            # fixed CLI/ASGI/closed boundary
-├── reader.py / pins.py             # read-only snapshots/actual config pins
-├── mapping.py / public.py / schemas/
-├── pyproject.toml / README.md       # worker-written exact direct dependencies
-├── web/
-│   ├── package.json / vite.config.js # worker-written; immutable locks external
-│   ├── src/                       # run list/one graph/details/ELK worker
-│   └── tests/                     # real browser assertions
-└── tests/                         # permanent helpers/fixtures/composed tests
-    └── acceptance_*.py            # bounded registered PythonAnswer entrypoints
+  reader.py / mapping.py / public.py
+  app.py / __main__.py
+  pyproject.toml / dependency lock
+  web/package.json / package-lock.json / src/ / tests/
+  tests/ / README.md
 ```
 
-**Structure Decision**: app outside active runtime package. No runtime/config/schema/host/skill edits during app build. Sensible modules, no larger read/write/ranged tools or new file-size guards. All app source, direct-dependency manifests and config are written DURING this run under runner custody/full review. Before final app binding/start, separately approved operator setup resolves the already-selected exact direct versions, complete integrity/hash locks, audited installed trees and tools in external scratch; these immutable dependency inputs are reviewable, not app source or a staging route. The fixed `TMPDIR/monitor-inputs.json` descriptor is raw-hash-bound through the existing pinned quickstart source; [validation](contracts/validation.md#pre-admitted-dependency-inputs-and-launch-binding) defines the concrete no-cycle recipe and actual record checks. No routine setup question/answer courier or raw third-party lock copying. Build/test output stays in separate approved writable scratch; no check generates retained app artifacts.
+Keep modules small as needed; this is a seam map, not a mandate to create every module. App owns its
+manifests/locks; runtime dependency/SDK changes are not needed. No new dependencies solely for recording.
+Existing ignore rules may need a narrow application-manifest exception, never blanket ignore removal.
 
-## Phase 0 — research and decisions
+## Outcome-based delivery
 
-[Canonical research](research.md) completed before consequential design. Official tagged archives/docs successfully replace failed website403/DNS retrieval, not recollection. Maintained graph renderer+layout selected after owner's organized-interaction concern; adoption is not correctness proof. Backend framework chosen over custom HTTP burden, not dependency-count preference. Loopback no-token same-origin design accepted for pursuit under delegated backend choice, final plan approval pending.
+### T001 — Recording and correction-review foundation, before the app run
 
-Concrete hardest seam: actual pinned SQL semantics→complete minimized DTO while writer runs. Use smallest real production-reader/shipped-runtime composition before UI reliance; permanent helper tests for known bounded mapping. No mandatory prototype chain. Preserve proof/counterevidence through consumers; failed/unrun proof blocks reliance.
+Deliver additive metadata/observations at existing execution boundaries, explicit correction relation
+and bounded actual original-range review support. Include emission/readback, failed-check retention,
+review findings, question delivery/error paths, recording failure noninterference and existing runtime
+regressions; update operating/schema owners for actual delivered behavior. No application launch or
+automatic review/fix loop. This is separately approved implementation work, not authorized now.
 
-Residual dependencies: SDK OI-3 remains restricted-host reachability residual, not clearance; app cannot expose SDK package/default/glob/model-scope APIs. Official WAL-reset advisory includes observed SQLite3.45.1; observer never writes/checkpoints and cannot certify existing runtime writer arrangement. No silent upgrades; actual environment/advisory/setup assessment remains required.
+After validation and a focused checkpoint, record the delivered recording-version/runtime revision.
+Only then start a fresh run containing **T002 and T003**. T001 is not retroactively part of that
+recorded application build; its history is not substituted for self-history.
 
-## Phase 1 — architecture
+### T002 — Early usable selected-run monitor
 
-Detailed invariants live in linked owners, not repeated prose:
+Deliver safe reader/mapping, local production API/assets and graph/details/polling together with
+focused reader/browser/concurrent-writer checks. Already expose recorded occurrences, failure history,
+unknowns and review nodes; not a disposable task-status UI. Normal app manifests/locks accompany source.
+At its focused checkpoint the operator can inspect that same application's earlier steps and keep an
+independently owned read-only viewer open during genuine T003 work.
 
-1. **Pins**: uniquely marked kind=config workflow/presentation sources, full raw SHA, retained committed bytes; strict YAML canonical digest must equal actual SQL `wf_run_bindings.binding.config_hash`, not combined `wf_runs.config_hash`. No unrelated config declaration/current-YAML fallback/runtime archival/launch wrapper.
-2. **Identity**: finite definition anchors, graph-op UUID visits, SDK turns and semantic records separate. Reconstruct/verify Engine trace-prefix args hashes before asserting execution transitions; prerequisites never execution order. Owner-input can interrupt before gate operation intent: semantic park, no invented visit. Unknown records remain opaque accessible evidence.
-3. **Status**: separate worker-finished/verified/committed/review-head/finally-accepted badges; historical failure stays red after recovery. Running blue only with controller/operation facts; waiting/blocked amber labelled distinctly; missing evidence warning not red failure. Accepted input/delivery/continuation-entered/request-start distinct. Nulls/zero/superseding revisions/four binding provenance classes preserved.
-4. **Read/privacy**: fixed existing canonical DB, mode=ro/query_only/authorizer, bounded short thread-owned snapshot closed before network. No Authority/saver/Publisher/controller/DDL/checkpoint/repair import. Only allowlisted minimized DTO; reviewed pinned brief labels, never arbitrary outcome/question/approval/tool/finding text. Errors/logs/links/assets included in exclusion, no raw file gateway.
-5. **HTTP/trust**: closed GET routes/static production asset manifest; numeric127.0.0.1 and exact bound Host:port, no proxy/debug/reload/websocket. Same-origin custom API header/Fetch Metadata/Origin checks, no CORS/cookies/persistent auth UX. CSP protects script/connect/worker/frame boundaries; library geometry style attributes explicitly permitted, never stored executable content. Not malicious-local-client authentication.
-6. **Graph**: maintained click/keyboard node+edge selection, details/pan/zoom/find/reveal/collapse/organize only, all editor/control actions absent. ELK Worker handles measured nodes/compound coordinates/cycles on copy; no changed domain edges. Stable IDs, topology/status revisions, no poll relayout/refit, discard stale run-generation results. Hidden red/amber counts + finite windows + explicit inventory ensure every visit reachable in the same graph. Narrow screens use rail/detail drawer, not competing task/workflow views.
+### T003 — Complete review/fix history, composed acceptance and operation
 
-## Small prerequisite — reference-based independent review
+Complete correction-lineage expansion/reveal, adversarial privacy/error checks, stale/liveness behavior
+and composed review→fixing-worker→checks/checkpoint→rereview tests. Include actual same-build live
+observation and operating documentation. Tests/docs remain with this coherent faithful-observation
+outcome, not a separate evidence/cleanup task. Do not create artificial work to keep the run alive.
 
-Owner directed “referencing files rather than copying” and authorized planning the small change and continuation. The later correction explicitly withdraws the parent's invented universal32KB artifact requirement:32KB was a tool limit, not agreed product scope. This was planning authority only; later separate approval implemented the precursor at73dbaad0030c36245b078a18d9e33c9de987a6e1, fresh independent full-range review passed and parent accepted. Runtime now stays unchanged through app build; historical prerequisite-tasks.md/json remain exact approved bytes.
+Final fresh independent review follows task delivery. T003 cannot require the future final review to
+have passed before it can finish. Operator acceptance observes that final outcome afterward; unresolved
+findings require separately authorized linked corrections and full-range rereview, not auto-retry.
 
-Before accepted precursor, `ReviewRepair.bundle()` embedded full source/approval bytes plus whole task contract, repeated task contracts in receipts, full original-range binary patch, evidence/findings. Existing `Coordinate._tools(review=True)` already authorizes reads of source/approval/owned paths; `intake.admit` rechecks immutable raw source/approval hashes, safe paths, current scope and authority. Therefore retain this mechanism and remove redundant embedding, not raise120000/262144 constants or introduce a generic artifact platform.
+## Validation and operation
 
-Narrow planned change:
+[Validation contract](contracts/validation.md) maps SC-001–006 to focused tests. Ordinary Python,
+Node/build and browser commands replace registered PythonAnswer and its deadline workarounds. Use
+available dependencies or request the actual missing setup permission; no automatic install/download,
+auth refresh or global changes. Ordinary temporary output and normal teardown are sufficient; no
+source-copy hash custody, dependency-tree inventory gate or repeated environment attestation.
 
-- Replace source/approval **content values** in review prompt with exact authorized `{path,sha256,kind/section or approval role, revision where available}` references from current admitted contract. Complete inventory remains; no omitted required context. Keep current contract/approval validation at actual read and acceptance.
-- Reviewer must actually obtain every required referenced document through existing read_file. Read bytes once, validate file identity/UTF-8 decoding/raw pinned hash on those same bytes, and return exactly that content (no separate hash-then-reread race). Bind a minimal read receipt (path/ref, raw content hash, read process operation and originating review host/turn) to actual returned bytes; audit required receipt coverage for that independent review before accepting result. No transcript/raw content ledger, generic tool or authority relaxation. Missing/stale/wrong-host/unread reference blocks.
-- Remove redundant per-task contract copies from receipts only where exact canonical task hash/reference to the already supplied authoritative contract proves identity; preserve all task states/checkpoint/evidence/gate/finding content and dynamic correction contracts not already represented.
-- Leave existing mechanics unchanged: `Coordinate._tools` read_file admits up to32768 bytes; write schema permits32768 characters. `intake.load_contract` admits task JSON up to2_000_000 bytes. These are distinct tool/loader facts, not universal admission/final-file guards or new scope. Human tasks should be naturally concise; machine JSON may exceed32KB.
-- Preserve full original base→current-head patch, source→task/REQUIRED review, original authority/custody/protocol and final-current acceptance. Measure remaining actual contract/receipt/diff overhead separately; unchanged bounds still block genuinely oversized final payload. No speculative streaming/patch platform.
+Short read transactions, SQLite locking, mode=ro, query_only and parameterized queries preserve active
+writer progress. Exact 250/500ms budgets are not product requirements; tune only if observed contention
+requires it. About-two-second display is the owner's approximate target, not a percentile SLA. No
+universal payload/file ceiling is introduced; paginate history without silent omission.
 
-Validate with permanent focused actual-helper tests: unchanged full-range patch/evidence; all referenced bytes actually read; changed/deleted/unsafe/unread/wrong-review sources reject; unrelated source not authorized; complete review succeeds; final bundle measured. Composed shipped-runtime review verifies these guards precede acceptance. No mock-only claim for actual tool receipt chain.
+Keep numeric-loopback Host/Origin defenses, safe text/CSP, no CORS/control/write endpoints or raw file
+serving. Standard local trusted-operator scope is not protection from a malicious same-UID process.
+Reader failures preserve last safe state with warnings, never repair or restart execution.
 
-Separate reviewed prerequisite scope/approval/implementation/independent acceptance is complete. Current app source pins now reference actual accepted semantic owners, including review_documents.py. Accepted adjusted runtime then stays unchanged throughout SAME app build; no app code staged outside runner or split-demo workaround. No larger-file tooling or broad runtime redesign.
+## Approval, ownership and rollback
 
-## Ordered delivery stages (not task IDs)
+Future executor remains owner-selected `openai-codex/gpt-6.1-sol`, effort `medium`. Verify actual usable
+capabilities before their stage, preserving current terminal authority, sole-writer lock, unrelated work,
+normal hooks/signing, explicit path checkpoints and fresh independent read-only final review. No
+catalog/manifest/receipt/containment/binding admission is revived.
 
-1. **Narrow review-reference prerequisite accepted** at73dbaad as above. Refreshed actual runtime source pins preserve all boundaries; no repeat task or implementation in this pass.
-2. **App admission and real read seam**: finalize approved immutable config/presentation/task inputs, exact setup/capabilities and existing protocol checks; implement read/normalize/minimize and permanent fixtures + actual isolated noninterference/pin proof before UI reliance.
-3. **Usable selected-run graph**: production API/assets, measured React Flow/ELK, safe details/read-only navigation/polling; basic browser/origin checks. Early usable checkpoint allows operator-owned read-only viewer while SAME build proceeds.
-4. **Full history/security/freshness integration**: all source-required repair/question/recovery/review/metrics/unknown/large-history/adversarial cases, real runtime and browser proof. Keep tests/evidence/ordinary teardown with each coherent outcome; genuine remaining work supplies live interval, no busywork.
-5. **Own-build acceptance and docs**: retrospective + live same app run, retained failures, exact source/config/checkpoints/observations, aligned operating/API/setup docs and fresh full-original-range independent review/current final acceptance. Completion is not acceptance.
+Current scope is artifacts only. Review revised sources/tasks and explicitly approve recording plus
+review-range changes before T001; approve app execution/setup/observer launch before applicable work.
+Historical `specification-approval.md`, prerequisite tasks/approval and overall review stay historical.
 
-One runner writer/checkpointer; worker never Git/select work. Independently operator-owned observer is not a task descendant left alive at settlement or task coordinator. If live SAME-build evidence missing, SC-006 NOT VERIFIED; no separate demo substitute.
-
-## Executor and handoff
-
-Preserve root intent: `model_class:Sol`, `effort:medium`, `resolution:resolved`, compatible target `openai-codex/gpt-6.1-sol:medium`; owner provenance “use6.1 sol medium”. Assessment: current restricted observer supports only this exact binding; fresh usable SDK/auth/resources/tools/effort still required. Assumptions/scaffolding: named seams/status/privacy/proofs/dependencies explicit, routine component/file choices open. Outcome-oriented decomposition, no artificial microtasks; class/effort change needs affected compatibility review, no silent escalation/fallback.
-
-Planning six factors: coupled history/privacy/status inference; bounded stateful tools; weakest adequate oracle semantic/security coverage not generic green; one UI/backend seam; reversal preserves records/runtime authority; no approved coordination guidance/benchmark reliance. Sol explicitly selected versus plausible Terra/medium, no established comparative superiority; medium required, empirical benefit over low unclaimed. Original plan stage reported selected/environment Sol/medium matched; not this producer's observation. Current binding pass selects Sol/medium; actual observed provider/model/effort and provider acknowledgement are unknown. Actual catalog is exactly the three supplied checkout-local skill paths/hashes, verified; no global bodies/aliases loaded.
-
-Separate fresh task producer inherits [whole REQUIRED contract](contracts/validation.md), not source-pointer-only acceptance: exact registered check/version/args/pass/evidence/producer/gate maps. Existing PythonAnswer executes explicitly trusted project helpers under concrete scoped test authority, no arbitrary selector/shell/install backdoor and no retained worktree generation. Exact dependency/lock/file/custody/browser admission required, ordinary stop gates not owner-choice ceremonies.
-
-## Documentation, rollback and stage review
-
-Future app README owns launch/trust/limits and app schema/API owner matches actual DTO. Root README/REQUIREMENTS/runtime owners updated only for actual affected facts under task authority; docs/index gets bounded discovery now. No global setting/install/reload, STATE/memory/feedback record.
-
-Rollback stops viewer only; preserves DB/WAL/private records/Git/partial work/unrelated history; no control/DB downgrade/projection rebuild/reset/legacy restart. Runtime prerequisite rollback/release is separately reviewed, never observer effect.
-
-## Complexity Tracking
-
-No constitutional exception. SQL read adapter, minimized DTO and layout worker serve actual completeness/privacy/responsiveness failures. No registry/platform/scheduler/prototype chain.
-
-## Plan-stage evidence
-
-Followed actual `.pi/prompts/speckit.plan.md`1.0.12/pi/sequential. `setup-plan.sh --json` ran ONCE before interruption, copied real template to004; logical BRANCH004 did not switch Git branch. Revival reused retained pass after inspected timeout, no stage/research replay. Research→entities/contracts/quickstart→post-design constitution review completed; pre/post extensions.yml absent, no hooks. Specification correction separately committed/renewed, approved bytes unchanged since. Original draft/link/FR-SC review and checkpoint remain historical. Current launch-input binding adds exact descriptor/config/parent inputs, SQLite bookkeeping correction and narrow T001 package-manifest ignore exception; app tests/launch NOT RUN, current focused review/final app approval pending.
+Stopping the viewer disables observation only. Preserve progress/history/Git/partial work. No downgrade,
+cleanup of old rows, projection rebuild, runtime restoration, process signalling or legacy restart.
+If recording is unavailable, the script continues and monitor acceptance remains NOT VERIFIED.

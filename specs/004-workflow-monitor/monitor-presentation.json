@@ -1,22 +1,17 @@
 {
   "monitor_version": 1,
-  "workflow_sha256": "d7ad0d7a454c726adc5bd86c745b23b53e2296a3b1442a738f849c0d0ef78371",
   "tasks": {
     "T001": {
-      "label": "Verified read seam",
-      "executive_summary": "Read new monitored runs safely and prove their pinned definitions and recorded inventory."
+      "label": "Recording foundation",
+      "executive_summary": "Retain script milestones and actual review ranges before the application build."
     },
     "T002": {
       "label": "Usable run graph",
-      "executive_summary": "Select a run and explore its production read-only graph and safe details."
+      "executive_summary": "Select a run and inspect its workflow, model executions and recorded progress safely."
     },
     "T003": {
-      "label": "Faithful live history",
-      "executive_summary": "Preserve failures, recovery, questions and evidence while observing live changes safely."
-    },
-    "T004": {
-      "label": "Own-build evidence and guide",
-      "executive_summary": "Verify this build retrospectively and live, and document safe local operation."
+      "label": "Review, fixes and live history",
+      "executive_summary": "Connect review and fixing executions, validate private live history and document operation."
     }
   }
 }

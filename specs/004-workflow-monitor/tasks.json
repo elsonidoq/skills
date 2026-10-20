@@ -1,587 +1,115 @@
 {
-  "schema_version": 1,
-  "origin": "Standard",
-  "legacy_origin": null,
-  "sources": [
-    {
-      "path": "specs/004-workflow-monitor/spec.md",
-      "kind": "spec",
-      "section": null,
-      "sha256": "f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55"
-    },
-    {
-      "path": "specs/004-workflow-monitor/plan.md",
-      "kind": "plan",
-      "section": null,
-      "sha256": "ba77a0090a31e90266f37e0812f1287f77cf1da6feed4b766a4887983f5f3887"
-    },
-    {
-      "path": "specs/004-workflow-monitor/research.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "c653ff9044aac7703decdcaac70a2123b8c15e52abbf65d72bff8beca5049564"
-    },
-    {
-      "path": "specs/004-workflow-monitor/data-model.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "86a162463d27bae0b88f055acab4221b3e540a600162166146664e01218718c9"
-    },
-    {
-      "path": "specs/004-workflow-monitor/contracts/monitor-v1.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "8251061b3eab874da5f9a9dee6b69c3bc2b8345d38b72756a14ff99c8e4d25b6"
-    },
-    {
-      "path": "specs/004-workflow-monitor/contracts/validation.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "bf722f3aa61533c0ac8031b66a8ba0024ae2053a1fea6fdc19d09b60ffb14501"
-    },
-    {
-      "path": "specs/004-workflow-monitor/contracts/README.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "459afb6be3622e220aafc8d0deaa4b89d41f6e916ec1bf65fdfe8d5e380e991c"
-    },
-    {
-      "path": "specs/004-workflow-monitor/quickstart.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "c0a1f4f51722a6f6409d17885817dfeaa113a8ef208c7b040d27c04fbeb5043b"
-    },
-    {
-      "path": "specs/004-workflow-monitor/specification-approval.md",
-      "kind": "decision",
-      "section": null,
-      "sha256": "3a816bb8513471a6e6eeba2685364f224a6d28e552a7f7258609c7e48ec2c188"
-    },
-    {
-      "path": "specs/004-workflow-monitor/monitor-workflow.yaml",
-      "kind": "config",
-      "section": "monitor-workflow/v1",
-      "sha256": "d7ad0d7a454c726adc5bd86c745b23b53e2296a3b1442a738f849c0d0ef78371"
-    },
-    {
-      "path": "specs/004-workflow-monitor/monitor-presentation.json",
-      "kind": "config",
-      "section": "monitor-presentation/v1",
-      "sha256": "dabbdba948f2ba0762d78bee599edb5d713e31ae0d994b700ff53f8533cf710f"
-    },
-    {
-      "path": "runtime/coherence_workflow/engine.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "775783471d92e96c91ac356bede7f84a77e7366756b88aa41944a566748f57a8"
-    },
-    {
-      "path": "runtime/coherence_workflow/store.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "b149af915c19dc6151752b200ed99b7b914e3aac967245c515ada27e30696728"
-    },
-    {
-      "path": "runtime/coherence_workflow/projections.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "20cccc1da05b7acd30a2d888d18dec4e72bad8cabffd54576c74a4c2f76b728c"
-    },
-    {
-      "path": "runtime/coherence_workflow/interaction.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "0b50b64214373345e4ca7f7db709c190730d9bfa08cccb8fef2b0a239e306b9e"
-    },
-    {
-      "path": "runtime/coherence_workflow/authority.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "d9cf9bcea528d13e33a4f75d390ff2654105b694f2718ddf16f69da310b5a314"
-    },
-    {
-      "path": "runtime/coherence_workflow/tools.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "3a0fe9c828e4b3929008dabf7953e79e67df31ef63ec5466131bf49a708ab370"
-    },
-    {
-      "path": "runtime/coherence_workflow/intake.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "09931a6333625343740b6433eebf2da3da0ff9ce4f6f26e28f7679ce26dec749"
-    },
-    {
-      "path": "runtime/coherence_workflow/verification.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "6c8496276008139cd683e01c929c277bb5864c324ee6c0f8054f11cc820904f0"
-    },
-    {
-      "path": "runtime/coherence_workflow/schemas/task.schema.json",
-      "kind": "source",
-      "section": null,
-      "sha256": "1c879e8f85273fbcceba65e393a416903d2032315f802f6f61c4e686dfef7f63"
-    },
-    {
-      "path": "runtime/coherence_workflow/schemas/shared.schema.json",
-      "kind": "source",
-      "section": null,
-      "sha256": "066a06cbc88dc674bdd558ce9ee5bd1069ab6a79e907dcd8606744b6cfcea593"
-    },
-    {
-      "path": "runtime/coherence_workflow/schemas/workflow.schema.json",
-      "kind": "source",
-      "section": null,
-      "sha256": "9bc47a1227f225d5928b80d0ac778171f5557da617a046119c4da8db7b096a78"
-    },
-    {
-      "path": "specs/004-workflow-monitor/tasks.md",
-      "kind": "tasks",
-      "section": null,
-      "sha256": "62b1b6914a9aa8eea603d6078f0f63bc9bc75e63e2f9314f5fde847be9300d3f"
-    },
-    {
-      "path": "specs/004-workflow-monitor/overall-review.md",
-      "kind": "review",
-      "section": null,
-      "sha256": "c24ad58557d1eb34d165ddb3072339e3ba866cfe36f5a7d47c6e3e4b3c9e3e12"
-    },
-    {
-      "path": "AGENTS.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "f2b189926b0841b1f921223b747c71977d4538dd63ed5d16b0f0cb5b23c39efb"
-    },
-    {
-      "path": ".specify/memory/constitution.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "1c459f94efe3d2bcb24b171e8dfcc8c7ecf084884b1c617ddfa1b6bff60c3106"
-    },
-    {
-      "path": "memory/MEMORY.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "1e3319682f677fde8ee5f52540776b3fbfcf167ccde9888e3de8c2559adc3b93"
-    },
-    {
-      "path": "skills/memory-handling/SKILL.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "ffd7db74584eb4976e68aeb3dce55735d5b3f8f598dc264dbc338f16910a3176"
-    },
-    {
-      "path": "skills/memory-handling/references/task-commit-contract.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "b00e11d55283351857853bdced069769342d22ce1556e06e3f13a74a6cf52845"
-    },
-    {
-      "path": "skills/memory-handling/references/project-coordination.md",
-      "kind": "source",
-      "section": null,
-      "sha256": "3f1ebe1f393bd0834affce14326b6c3aa2b2ee8899fdb6cafc27591ac47b37b7"
-    },
-    {
-      "path": "runtime/coherence_workflow/review_documents.py",
-      "kind": "source",
-      "section": null,
-      "sha256": "18dd89f2ab25d450ae804de8304506553bc206a8f18ef68f6f69911eb6a1c7a9"
-    }
+  "status": "proposal-only; implementation not authorized",
+  "source": "specs/004-workflow-monitor/spec.md",
+  "contracts": [
+    "specs/004-workflow-monitor/plan.md",
+    "specs/004-workflow-monitor/data-model.md",
+    "specs/004-workflow-monitor/contracts/monitor-v1.md",
+    "specs/004-workflow-monitor/contracts/validation.md",
+    "specs/004-workflow-monitor/quickstart.md",
+    "specs/004-workflow-monitor/tasks.md"
   ],
-  "approval_refs": [
-    {
-      "gate_kind": "specification",
-      "record_ref": "specs/004-workflow-monitor/specification-approval.md",
-      "record_sha256": "3a816bb8513471a6e6eeba2685364f224a6d28e552a7f7258609c7e48ec2c188",
-      "scope_hash": "f8c8040942a509f5d62fa2f4d21b5bdf3de4c6c424eeaf644a28a091ca4e3f55",
-      "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
-      "authority_ref": "owner/monitor-app-20261020-0ec48f3fe91b/specification",
-      "action": "approve"
-    },
-    {
-      "gate_kind": "overall",
-      "record_ref": "specs/004-workflow-monitor/app-scope.md",
-      "record_sha256": "573d6df8692254c4b7060c9caeddfce2d31fc05a2bb6324a62e97104d153daa8",
-      "scope_hash": "d1e0bb26c325902529aa76e8f8a87f0c5dfeffd94b916c3fa024772fb3996fd8",
-      "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
-      "authority_ref": "owner/monitor-app-20261020-0ec48f3fe91b/overall",
-      "action": "approve"
-    },
-    {
-      "gate_kind": "implementation",
-      "record_ref": "specs/004-workflow-monitor/app-scope.md",
-      "record_sha256": "573d6df8692254c4b7060c9caeddfce2d31fc05a2bb6324a62e97104d153daa8",
-      "scope_hash": "c1e0d3494c96eaa36399f2b7a50f9fb0c9065e20b43a9e7cf8d01ea5dbe2b8ac",
-      "actor": "owner via genuine parent ask_user in Pi session 01a155ad-f798-745f-b6ce-032eca08f263",
-      "authority_ref": "owner/monitor-app-20261020-0ec48f3fe91b/implementation",
-      "action": "approve"
-    }
-  ],
-  "execution_intent": {
-    "model_class": "Sol",
+  "executor_intent": {
+    "provider": "openai-codex",
+    "model": "gpt-6.1-sol",
     "effort": "medium",
-    "resolution": "resolved",
-    "assumptions": [
-      "One runner writer; explicit pin/replay/status/privacy/layout/check seams, routine module internals open. Existing tool/loader/protocol mechanics remain unchanged; no universal artifact-size rule, new byte guard, lock splitting or invented integrity.",
-      "Accepted separate runtime precursor precedes this fresh app run and stays unchanged. Exact installed dependencies, operator setup/input route, bounded 15-second oracles, isolated integration and same-build observer readiness remain admission gates, not claims of availability."
-    ],
-    "provenance": "Owner separately selected implementation Sol/medium: 'use 6.1 sol medium', preserved in approved spec and specification-approval.md; planning/reviewer profiles grant no execution authority.",
-    "decomposition_rationale": "Four coherent outcomes: real read/pin proof before UI reliance; early usable graph before necessary full-history/security work; own-build acceptance and operating guide. Tests/evidence/teardown stay with delivery, no prototype/admin chain. Sol/medium gets named invariants without per-task routing or claimed family/effort superiority.",
-    "compatible_bindings": [
-      {
-        "provider": "openai-codex",
-        "model": "gpt-6.1-sol",
-        "effort": "medium",
-        "assessment": "Compatible intended implementation/repair target with explicit seams and gates; exact SDK/resources/auth/effort and tool readiness must be verified anew. Existing codex-final-payload:1 observer supports only this exact target.",
-        "provenance": "Owner implementation selection in spec.md/specification-approval.md and unchanged parent task brief; not inferred from producer."
-      }
-    ]
+    "provenance": "Existing owner selection, retained; not dispatch permission"
   },
-  "authorization_envelope": {
-    "id": "monitor-app-draft",
-    "approval_refs": [],
-    "profiles": [
-      {
-        "provider": "openai-codex",
-        "model": "gpt-6.1-sol",
-        "effort": "medium",
-        "observer_id": "codex-final-payload",
-        "observer_version": "1"
-      }
-    ],
-    "capabilities": [
-      {
-        "id": "read_file",
-        "action_scope": "{\"action\":\"read_file\",\"readable_paths\":[\".gitignore\",\".specify/memory/constitution.md\",\"AGENTS.md\",\"docs/index.md\",\"memory/MEMORY.md\",\"runtime/coherence_workflow/authority.py\",\"runtime/coherence_workflow/engine.py\",\"runtime/coherence_workflow/intake.py\",\"runtime/coherence_workflow/interaction.py\",\"runtime/coherence_workflow/projections.py\",\"runtime/coherence_workflow/review_documents.py\",\"runtime/coherence_workflow/schemas/shared.schema.json\",\"runtime/coherence_workflow/schemas/task.schema.json\",\"runtime/coherence_workflow/schemas/workflow.schema.json\",\"runtime/coherence_workflow/store.py\",\"runtime/coherence_workflow/tools.py\",\"runtime/coherence_workflow/verification.py\",\"skills/memory-handling/SKILL.md\",\"skills/memory-handling/references/project-coordination.md\",\"skills/memory-handling/references/task-commit-contract.md\",\"specs/004-workflow-monitor/app-scope.md\",\"specs/004-workflow-monitor/contracts/README.md\",\"specs/004-workflow-monitor/contracts/monitor-v1.md\",\"specs/004-workflow-monitor/contracts/validation.md\",\"specs/004-workflow-monitor/data-model.md\",\"specs/004-workflow-monitor/monitor-presentation.json\",\"specs/004-workflow-monitor/monitor-workflow.yaml\",\"specs/004-workflow-monitor/overall-review.md\",\"specs/004-workflow-monitor/plan.md\",\"specs/004-workflow-monitor/quickstart.md\",\"specs/004-workflow-monitor/research.md\",\"specs/004-workflow-monitor/spec.md\",\"specs/004-workflow-monitor/specification-approval.md\",\"specs/004-workflow-monitor/tasks.md\",\"workflow_monitor/README.md\",\"workflow_monitor/__init__.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/public.py\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/reader.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/build.spec.js\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/web/vite.config.js\"],\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
-        "effects": [
-          "external"
-        ]
-      },
-      {
-        "id": "write_file",
-        "action_scope": "{\"action\":\"write_file\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
-        "effects": [
-          "mutation"
-        ]
-      },
-      {
-        "id": "request_owner_input",
-        "action_scope": "{\"action\":\"request_owner_input\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
-        "effects": [
-          "external"
-        ]
-      },
-      {
-        "id": "runner-git-commit",
-        "action_scope": "{\"action\":\"runner-git-commit\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
-        "effects": [
-          "mutation"
-        ]
-      },
-      {
-        "id": "workflow.PythonAnswer",
-        "action_scope": "{\"action\":\"workflow.PythonAnswer\",\"checks\":[{\"args_hash\":\"fed8da193e30072e7c41062a0d6fb87f59937b420f0b0a51df8862b228dd21ae\",\"task_id\":\"T001\",\"version\":\"1\"},{\"args_hash\":\"fed8da193e30072e7c41062a0d6fb87f59937b420f0b0a51df8862b228dd21ae\",\"task_id\":\"T001\",\"version\":\"1\"},{\"args_hash\":\"8590ce445fbe9fae276183b36d197d13cf69c0267689c0d1c3ce7d125ff6b7db\",\"task_id\":\"T002\",\"version\":\"1\"},{\"args_hash\":\"8590ce445fbe9fae276183b36d197d13cf69c0267689c0d1c3ce7d125ff6b7db\",\"task_id\":\"T002\",\"version\":\"1\"},{\"args_hash\":\"fca0e21f4607fddb7ce3a0472ce96ee3ce431b026ec11425ab6b307f15d89d2a\",\"task_id\":\"T003\",\"version\":\"1\"},{\"args_hash\":\"fca0e21f4607fddb7ce3a0472ce96ee3ce431b026ec11425ab6b307f15d89d2a\",\"task_id\":\"T003\",\"version\":\"1\"},{\"args_hash\":\"f70ea0dd00e692d47e4b195ca6ab5a48928ee5602c08a89bcf1975fea4422e47\",\"task_id\":\"T004\",\"version\":\"1\"},{\"args_hash\":\"f70ea0dd00e692d47e4b195ca6ab5a48928ee5602c08a89bcf1975fea4422e47\",\"task_id\":\"T004\",\"version\":\"1\"}],\"execution\":\"trusted-project-python\",\"tasks\":[{\"id\":\"T001\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\"]},{\"id\":\"T002\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\"]},{\"id\":\"T003\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\"]},{\"id\":\"T004\",\"owned_paths\":[\".gitignore\",\"workflow_monitor/__init__.py\",\"workflow_monitor/reader.py\",\"workflow_monitor/pins.py\",\"workflow_monitor/mapping.py\",\"workflow_monitor/public.py\",\"workflow_monitor/snapshot.schema.json\",\"workflow_monitor/pyproject.toml\",\"workflow_monitor/tests/test_reader.py\",\"workflow_monitor/tests/accept_reader.py\",\"workflow_monitor/tests/setup_inputs.py\",\"workflow_monitor/__main__.py\",\"workflow_monitor/app.py\",\"workflow_monitor/web/package.json\",\"workflow_monitor/web/vite.config.js\",\"workflow_monitor/web/index.html\",\"workflow_monitor/web/src/main.jsx\",\"workflow_monitor/web/src/graph.jsx\",\"workflow_monitor/web/src/layout.js\",\"workflow_monitor/web/src/style.css\",\"workflow_monitor/web/tests/viewer.spec.js\",\"workflow_monitor/tests/accept_viewer.py\",\"workflow_monitor/tests/test_history.py\",\"workflow_monitor/tests/test_safety.py\",\"workflow_monitor/web/tests/history.spec.js\",\"workflow_monitor/tests/accept_history.py\",\"workflow_monitor/README.md\",\"workflow_monitor/tests/accept_build.py\",\"workflow_monitor/web/tests/build.spec.js\",\"docs/index.md\"]}],\"version\":1}",
-        "effects": [
-          "test"
-        ]
-      }
-    ],
-    "limits": [],
-    "external_paid_authority": "denied"
+  "delivery": {
+    "foundation": ["T001"],
+    "application_build": ["T002", "T003"],
+    "handoff": "After separately approving, delivering and accepting T001, prepare a fresh ordinary application input containing T002/T003 only. Remove T002's satisfied T001 dependency and note its checkpoint as context. Keep T003 depending on T002. Copy the matching safe T002/T003 entries from monitor-presentation.json into root monitor.tasks for retained brief details. No automatic launch or unsupported CLI subset flag.",
+    "final_acceptance": "Fresh independent full-application-range review follows T003. Operator inspects its recorded actual result afterward. Same-build retrospective/live observation is required; missing evidence is NOT VERIFIED. Findings require separately authorized linked fixing execution and original-range rereview, not automatic retries."
   },
+  "constraints": [
+    "Proposal artifacts only in this session; no runtime/monitor implementation, installation, application/model launch, global activation, merge or push.",
+    "One existing script writer, actual project checks, explicit owned-path task checkpoints, unrelated-work preservation, normal hooks/signing and fresh independent read-only final review.",
+    "Recording failures warn but never gate execution or replace original errors; missing records are incomplete, never fabricated or reconstructed from private transcripts.",
+    "Each actual worker, fixing worker and reviewer execution is a distinct graph node; declarations, recorded sequence and prerequisites are different relationships.",
+    "No retired runtime/YAML execution, catalog/manifest/custody/receipt admission, PythonAnswer/deadline workaround, frozen descriptor/tree attestation or universal payload ceiling.",
+    "No dependency install/download, auth refresh, external operation or observer launch without separate applicable authority; tests and startup do not install."
+  ],
   "tasks": [
     {
       "id": "T001",
-      "order": 0,
-      "outcome": "Deliver verified pins, bounded read-only SQL snapshots and minimized versioned DTO in workflow_monitor/reader.py, pins.py, mapping.py and public.py, with exact dependency/setup input validation, permanent inventory fixtures and actual isolated shipped-runtime noninterference proof before UI reliance.",
+      "description": "First read specs/004-workflow-monitor/tasks.md and its linked spec/plan/data/API/validation sources; obey its shared constraints and this task's required pass conditions. Deliver and separately accept the minimal recording and original-range correction-review foundation BEFORE the application build. Add retained descriptive phase/task metadata and closed append-only observations in the existing DB, preserving current progress and legacy rows. Emit at task preparation/manual gates, every actual worker/reviewer call, each runner check before failure propagation, checkpoint/no-change, coarse terminal/host question delivery, terminal results and explicit abandon. Record distinct model occurrence identities/roles and actual review base/head/approval/finding count without private content. Accept optional monitor.correction_of as declared context, not authority; expose actual recording occurrence IDs through script status/history. Add bounded optional review_base so a separately approved fixing run's fresh reviewer actually sees the full original range; normal Git commit/ancestor validation, default review and task ownership unchanged. No automatic fixes/retries, legacy adapters, new dependency or telemetry gate. Include focused tests and runtime operating/schema documentation.",
       "depends": [],
-      "context_group": "foundation",
       "owned_paths": [
-        ".gitignore",
-        "workflow_monitor/__init__.py",
-        "workflow_monitor/reader.py",
-        "workflow_monitor/pins.py",
-        "workflow_monitor/mapping.py",
-        "workflow_monitor/public.py",
-        "workflow_monitor/snapshot.schema.json",
-        "workflow_monitor/pyproject.toml",
-        "workflow_monitor/tests/test_reader.py",
-        "workflow_monitor/tests/accept_reader.py",
-        "workflow_monitor/tests/setup_inputs.py"
+        "runtime/coherence_workflow/monitoring.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/verification.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/tests/test_monitoring.py",
+        "runtime/tests/test_engine.py",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_recovery.py",
+        "runtime/tests/test_verification.py",
+        "runtime/tests/test_cli.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
       ],
-      "required": [
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest discover -v -s runtime/tests",
+        ["node", "--test", "runtime/tests/test_host.mjs"]
+      ],
+      "acceptance": [
         {
-          "id": "T001/V1",
-          "criterion": "SC-001/004, FR-001-007/009/010/012/014: production pins.resolve + reader.open_snapshot + mapping.normalize + public.minimize obey monitor-v1/data-model. Exact new-contract markers; raw SHA and strict YAML canonical digest equal wf_run_bindings.binding.config_hash (NOT Engine combined hash); retained committed Git bytes, no current-YAML fallback/old-run adapter. Source-derived whole definitions/tasks/deps/events/visits; finite unvisited loops, unique repeats, non-task/task-spanning/unsupported records and justified replay-hash execution edges distinct from prerequisites. NULL/zero/supersedes/epoch/four profile provenances remain distinct.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_reader.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "Permanent actual-helper tests positively collect, no skips; compare complete expected and observed ID/edge/count sets for shipped cyclic definition plus changed definition, repetitions, semantic parks and unsupported records. No invented causal edges, values or task containment; all inventory items retrievable. Reject duplicate/tag/alias YAML, corrupt/missing pins, unrelated config, task mismatch and unsupported new inputs safely.",
-          "expected_evidence": "Bounded non-sensitive inventory/set/hash/edge assertions, source-to-DTO null/zero/revision/provenance comparisons and safe unavailable cases; exact tested revision/environment and positive counts. Required collection must finish inside actual 15s oracle deadline, else NOT VERIFIED.",
-          "producer_dependencies": [],
-          "gates": []
+          "criteria": ["SC-001", "SC-002", "SC-004", "SC-005", "SC-006"],
+          "pass_condition": "Real engine/check/Git paths with labelled offline adapters emit/read back complete supported boundaries. Distinct worker/reviewer/fixing occurrences, rejected/invalid reviews, failed checks before raise, interruption, gate/question send/error, no-change/uncertain checkpoint and abandon retain honest history. Privacy sentinels never enter monitoring rows; default review unchanged; explicit valid original-base range actually reaches rereviewer and records, invalid range fails the affected review. No auto-retry or legacy mutation.",
+          "evidence": "Focused monitoring tests in the discovered runtime suite, actual disposable Git/check/DB results, adapter call/range assertions and ordinary test output. Offline fixtures do not claim live-provider success."
         },
         {
-          "id": "T001/V2",
-          "criterion": "SC-005/006, FR-013-017: real production reader observes actual isolated accepted shipped-runtime records while writer progresses, before UI relies on it. Fixed worktree DB mode=ro/query_only/deny authorizer, short thread-owned <=500ms snapshot/250ms busy budget, safe existing/new sidecar identity checks and SQLite-only normal empty WAL/SHM bookkeeping for historical reads; no authoritative mutation, no immutable/nolock/saver/Authority/Publisher/DDL/repair route. Exact installed Python pins Starlette1.9.0/Uvicorn0.54.0/PyYAML6.0.3; worker writes direct manifest in-run matching pre-admitted external locks/tree; scoped read-only setup validation, no courier. In T001 only, narrowly add !workflow_monitor/web/package.json to root .gitignore before T002 writes its manifest; no broader ignore edit or force staging.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_reader.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "Actual operator-owned isolated shipped CLI/SDK harness supplies fresh bound records and controller progress; oracle reopens the real DB read-only and compares causal events/quiescent authoritative/projection fingerprints before/after reads, proving zero viewer effects and controller progress (not naive active DB byte equality). Snapshot closes before network. Trusted setup_inputs verifies descriptor bytes against quickstart's admitted raw pin, actual app/fixture stores and operationally read-only dependency/tool/lock/inventory identities with independent hash revalidation, exact worker direct manifests and license/audit provenance. Fixed installed tools may build a hash-bound copy of current owned source only in writable scratch with admitted read-only node_modules; no hidden app source/install or retained-file generation. All children drain. Actual git_effects uses git add -A -- owned (not force); focused assertion compares .gitignore baseline and exactly that exception, and git check-ignore --no-index confirms only this manifest exception. Retrospective closed-WAL DB without preexisting sidecars succeeds with standard SQLite bookkeeping only; SQL mutation/unsafe identities still deny.",
-          "expected_evidence": "Actual isolated run/config/source/controller/read observations and causal noninterference evidence; lock provenance, real dependency/browser readiness or exact unavailable gap. Setup/live harness are separately authorized operator processes, not completed by this 15s PythonAnswer or fixture-only green.",
-          "producer_dependencies": [],
-          "gates": []
+          "criteria": ["SC-004", "SC-005"],
+          "pass_condition": "Injected recorder failures at start/mid/end and callbacks never prevent real SDK/check/Git/review, replace original exceptions or invent completion. Missing history stays unavailable/incomplete; no private text fallback. Docs describe delivered interfaces, status IDs and recording non-guarantees.",
+          "evidence": "Failure injection and noninterference regressions, default execution regression suite and documentation/interface checks."
         }
       ],
-      "optional": [],
-      "gates": [],
-      "authorization_envelope_id": "monitor-app-draft"
+      "permission": "Explicit implementation approval for recording and bounded review_base support is required before execution. Current authorization is artifact revision only."
     },
     {
       "id": "T002",
-      "order": 1,
-      "outcome": "Deliver an early usable production local viewer in workflow_monitor/app.py and web/src/: left run list, one selected-run graph, brief safe details and stable polling/navigation; prove real measured DOM and browser-origin defenses so the operator can observe later work of THIS build.",
-      "depends": [
-        "T001"
+      "description": "First read specs/004-workflow-monitor/tasks.md and its linked spec/plan/data/API/validation sources; obey its shared constraints and this task's required pass conditions. Deliver the early usable safe selected-run monitor as the first task of a fresh recorded application build after T001 acceptance. Implement short mode=ro reader snapshots, mapping/minimization, numeric-loopback production API/assets, left run list, one graph and brief details. Retained phases, declared task prerequisites and observed occurrences are distinct; every model execution is a node. Include recorded failure/milestone history, core review ranges, unknowns, stable polling/navigation and complete inventory/reveal, not a status-only UI. No writer/SDK/control imports or private raw text/path output. Use conventional app manifests/locks and separately approved existing tools/setup, narrow ignore changes, focused tests and early usable launch README. At checkpoint the operator can inspect this same build retrospectively before genuine T003 work.",
+      "depends": ["T001"],
+      "owned_paths": [".gitignore", "workflow_monitor", "docs/index.md"],
+      "checks": [
+        ["python3", "-B", "-m", "unittest", "discover", "-v", "-s", "workflow_monitor/tests"],
+        ["npm", "--prefix", "workflow_monitor/web", "run", "build"],
+        ["npm", "--prefix", "workflow_monitor/web", "test"]
       ],
-      "context_group": "US1",
-      "owned_paths": [
-        ".gitignore",
-        "workflow_monitor/__init__.py",
-        "workflow_monitor/reader.py",
-        "workflow_monitor/pins.py",
-        "workflow_monitor/mapping.py",
-        "workflow_monitor/public.py",
-        "workflow_monitor/snapshot.schema.json",
-        "workflow_monitor/pyproject.toml",
-        "workflow_monitor/tests/test_reader.py",
-        "workflow_monitor/tests/accept_reader.py",
-        "workflow_monitor/tests/setup_inputs.py",
-        "workflow_monitor/__main__.py",
-        "workflow_monitor/app.py",
-        "workflow_monitor/web/package.json",
-        "workflow_monitor/web/vite.config.js",
-        "workflow_monitor/web/index.html",
-        "workflow_monitor/web/src/main.jsx",
-        "workflow_monitor/web/src/graph.jsx",
-        "workflow_monitor/web/src/layout.js",
-        "workflow_monitor/web/src/style.css",
-        "workflow_monitor/web/tests/viewer.spec.js",
-        "workflow_monitor/tests/accept_viewer.py"
-      ],
-      "required": [
+      "acceptance": [
         {
-          "id": "T002/V1",
-          "criterion": "SC-001/005/006, FR-002-006/008/009/013/015/017: production app/React19.3.1+ReactDOM19.3.1/@xyflow/react12.12.0/elkjs0.12.0/Vite8.3.4 deliver left list and ONE graph PER selected run with sanitized brief node/task text. layoutGraph(topology,dimensions,generation) copies topology; measured cards, stable IDs, parent-before-child parentId/relative coordinates, original cycle/multiedge direction, keyboard/click nodes AND edges, pan/zoom/find/reveal/collapse/organize; no editor/control actions.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_viewer.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "Local locked Vite builds only approved external scratch assets with manifest/local worker/no sourcemaps; real installed Chrome/Playwright1.64.1 DOM checks assert non-overlapping measured cards/readable typed edges, details, same-spec run switching without mixing and finite inventory/reveal. React Flow text children, CSS/attribution; nodesDraggable/connectable/edgesReconnectable false, deleteKeyCode null, focus/a11y enabled. No SDK/runner imports or exposed control API. All test server/browser children close before settlement.",
-          "expected_evidence": "Actual build manifest/hash and browser DOM assertions/positive count/no skips, exact dependency lock/license/advisory checks and child-drain proof. This usable committed checkpoint permits separate operator read-only viewer launch while T003/T004 genuinely remain, not a demo or task-owned daemon.",
-          "producer_dependencies": [
-            "T001"
-          ],
-          "gates": []
-        },
-        {
-          "id": "T002/V2",
-          "criterion": "SC-003/005, FR-011/013-015: closed GET/asset-manifest HTTP routes, exact numeric127.0.0.1 Host:bound-port, same-origin API X-Coherence-Monitor:1 + Fetch Metadata and Origin checks; no CORS/cookies/tokens/proxy/debug/reload/websocket/public auth. Server-side allowlist minimization before all responses; constant safe errors/logs, no raw SQL/DB/transcript/reasoning/tool/question/approval/path leak. CSP self scripts/connect/worker, frame denial, numeric geometry style attributes only.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_viewer.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "Actual HTTP/real DOM checks reject Host/Origin/Fetch-Metadata/method/preflight/body/traversal/ambiguous inputs BEFORE DB read. Uvicorn workers1/proxy_headersFalse/ws none/access_logFalse/debugFalse; outer error/log guards tested. One in-flight1000ms poll preserves run/node/viewport/existing coordinates with no poll relayout/refit; switched-run stale ELK result discarded. Production assets only; supported new missing inputs warn, no old-run fallback.",
-          "expected_evidence": "HTTP statuses/headers/read-call counts, sentinel scans of responses/headers/logs/assets/links including actual500, CSP-compatible DOM and stable before/after graph state; no generic screenshot/green substitution. About2s live proof continues in T003, no invented hard percentile.",
-          "producer_dependencies": [
-            "T001"
-          ],
-          "gates": []
+          "criteria": ["SC-001", "SC-003", "SC-004", "SC-005", "SC-006"],
+          "pass_condition": "Production mapper inventory/IDs/typed edges match retained description and real emitted history including unsupported/missing/null/zero/no-change cases. Actual isolated script writer plus read-only production reader progresses without viewer authoritative mutations. Browser node/edge/details selection, run switching, pan/zoom/history reveal and stable polling work with normally about-two-second observed updates, no invented percentile. Host/Origin/method/path and actual error routes reject unsafe input; malicious labels do not execute and private sentinels are excluded. No viewer control/execution effects.",
+          "evidence": "Reader/mapper/HTTP unit and composed tests, real browser DOM/network assertions, record/read/display timing and ordinary test output; conventional locks and usable instructions accompany source. Same-run retrospective load becomes possible at focused checkpoint; operator launch remains separately authorized, not a hidden execution gate."
         }
       ],
-      "optional": [],
-      "gates": [],
-      "authorization_envelope_id": "monitor-app-draft"
+      "permission": "Explicit application execution approval after T001 acceptance; dependency setup and independent operator viewer launch require separate applicable permission."
     },
     {
       "id": "T003",
-      "order": 2,
-      "outcome": "Deliver faithful complete history and safe live observation in workflow_monitor/mapping.py, public.py and web/src/graph.jsx: all repair/recovery/question/review/metric/unknown states, hidden-visit discovery, adversarial output exclusion and real active-runtime/browser evidence.",
-      "depends": [
-        "T002"
+      "description": "First read specs/004-workflow-monitor/tasks.md and its linked spec/plan/data/API/validation sources; obey its shared constraints and this task's required pass conditions. Complete faithful review/fix lineage, live acceptance and operating guidance during genuinely later work of that SAME recorded application build. Expand explicit local correction references in the one graph: rejected reviewer, declared follow-up, distinct fixing-agent execution, checks/checkpoint and rereviewer, with source-run attribution and actual reviewed ranges. Preserve original failure after later linked success; dangling/conflicting/cyclic references cannot fabricate acceptance and all hidden/unsupported history remains reachable. Complete composed privacy/error/stale/liveness/gap regressions and docs for actual setup, launch, correction context, trust/permissions/limits and rollback. Include actual isolated shipped engine/check/Git review-fix-rereview tests with labelled offline adapters plus actual same-build retrospective/live observation under explicit operator authority. No production fault injection, busywork, clean-demo substitute or automatic retry.",
+      "depends": ["T002"],
+      "owned_paths": ["workflow_monitor", "docs/index.md"],
+      "checks": [
+        ["python3", "-B", "-m", "unittest", "discover", "-v", "-s", "workflow_monitor/tests"],
+        ["npm", "--prefix", "workflow_monitor/web", "run", "build"],
+        ["npm", "--prefix", "workflow_monitor/web", "test"]
       ],
-      "context_group": "US2",
-      "owned_paths": [
-        ".gitignore",
-        "workflow_monitor/__init__.py",
-        "workflow_monitor/reader.py",
-        "workflow_monitor/pins.py",
-        "workflow_monitor/mapping.py",
-        "workflow_monitor/public.py",
-        "workflow_monitor/snapshot.schema.json",
-        "workflow_monitor/pyproject.toml",
-        "workflow_monitor/tests/test_reader.py",
-        "workflow_monitor/tests/accept_reader.py",
-        "workflow_monitor/tests/setup_inputs.py",
-        "workflow_monitor/__main__.py",
-        "workflow_monitor/app.py",
-        "workflow_monitor/web/package.json",
-        "workflow_monitor/web/vite.config.js",
-        "workflow_monitor/web/index.html",
-        "workflow_monitor/web/src/main.jsx",
-        "workflow_monitor/web/src/graph.jsx",
-        "workflow_monitor/web/src/layout.js",
-        "workflow_monitor/web/src/style.css",
-        "workflow_monitor/web/tests/viewer.spec.js",
-        "workflow_monitor/tests/accept_viewer.py",
-        "workflow_monitor/tests/test_history.py",
-        "workflow_monitor/tests/test_safety.py",
-        "workflow_monitor/web/tests/history.spec.js",
-        "workflow_monitor/tests/accept_history.py"
-      ],
-      "required": [
+      "acceptance": [
         {
-          "id": "T003/V1",
-          "criterion": "SC-001/002/004, FR-004-010/012: preserve failure->repair->success, interruption->reconciliation, pending->accepted->original-entry-delivered->continuation-entered->request-start, review->correction->rereview and exact-current-acceptance histories. Worker-finished/verified/committed/finally-accepted distinct; old red failures survive recovery. Stopped controller/missing evidence/pending question/blocked/failure terminal differ. Resume not automatic invocation/attempt. Null timestamps/metrics, zero, superseding revisions, non-agent nulls and requested/runtime/request/provider provenance preserved.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_history.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "Permanent production fixtures AND actual operator-owned isolated shipped-runtime scenario records establish distinct identities/ranges/heads/findings/relations; verify against SQL/pins, not chat/fake production receipts. Real browser checks all milestone/color+text/icon labels: gray unstarted, green named success milestone, red historical failure, blue actual live running, amber waiting vs blocked distinct, unknown/stale warning. Collapse retains red/amber hidden counts; finite windows/find/reveal can access EVERY defined node and recorded visit, no second graph.",
-          "expected_evidence": "Item-mapped SQL->DTO->DOM assertions and actual new same-spec/completed/failed/recovered run identities/receipts with test-only authority provenance; earlier failures retained. Actual scenario producer may take longer than15s and must run outside oracle under separate authorized custody; oracle boundedly reobserves source records, not a fabricated summary.",
-          "producer_dependencies": [
-            "T002"
-          ],
-          "gates": []
+          "criteria": ["SC-001", "SC-002", "SC-003", "SC-004", "SC-005", "SC-006"],
+          "pass_condition": "All revised criteria complete: distinct reviewer/fixing-worker/rereviewer model nodes and actual original-range review navigable together; first failure retained; correction-only review not full acceptance. Complete reveal/cycle/unresolved cases; private sentinels escape nowhere, no viewer writes/control effects; measured freshness/last-success and liveness/incomplete labels honest. Docs commands/flags match delivery. Missing capabilities/evidence are FAIL/NOT VERIFIED, not skipped passes.",
+          "evidence": "Expanded actual production-helper/composed/browser tests and ordinary outputs, real isolated run/range/readback references, adversarial output scans and command/interface documentation checks."
         },
         {
-          "id": "T003/V2",
-          "criterion": "SC-003/004/005, FR-011-016: representative live controller observations appear normally about2s; preserve selection/viewport/positions, no poll layout storm. Forced failed/stale/budget reads, projection lag and controller loss warn with last success; unchanged seq is not controller liveness. Closed DTO minimization and origin/read-only boundaries hold across list/refresh/select/details/paging and large histories/adversarial stored content.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_history.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "Actual isolated writer+production HTTP+Chrome capture source/display times with deviations retained, no invented percentile. Bounded independent timing slices fit15s; forced failures/loss occur only in approved isolated harness. Compare causal authoritative records/quiescent fingerprints, deny write SQL/effects and prove controller continues. Sentinel/XSS/private-path/tool/approval/question/finding values absent from EVERY accessible output/error/log/link/asset, not merely hidden DOM. Snapshot paging preserves watermark, expired refs warn, bounded render/worker cancellation never silently truncate visits.",
-          "expected_evidence": "Actual timing pairs/source watermark/controller identity, before/after navigation/position state, forced warning assertions, SQL trace/causal nonmutation and network/log sentinel evidence; zero empty/skipped passes. Test children fully drained. Unknown provider acknowledgement remains unknown, OI-3/SQLite residuals not clearance/upgrades.",
-          "producer_dependencies": [
-            "T002"
-          ],
-          "gates": []
+          "criteria": ["SC-006"],
+          "pass_condition": "Operator observes retrospective T002 and genuine live T003 work of the SAME application run; record/read/display timing and safe occurrence references retained. Missing interval is NOT VERIFIED; fixtures/another run cannot replace it. Actual build failures, if any, remain visible. Future final reviewer result is not a prerequisite for T003 completion: after checkpoint, runner performs fresh independent full-range review and operator inspects actual recorded outcome separately.",
+          "evidence": "Actual same-build run ID and observation interval, baseline/checkpoint references and later final review outcome/range. Observation is a required application acceptance step, never a new optional-telemetry execution gate."
         }
       ],
-      "optional": [],
-      "gates": [],
-      "authorization_envelope_id": "monitor-app-draft"
-    },
-    {
-      "id": "T004",
-      "order": 3,
-      "outcome": "Deliver SAME app-build retrospective AND later-live evidence and an accurate operating/rollback guide in workflow_monitor/README.md with docs/index.md discovery; preserve final runner-owned independent review/current acceptance as separate later gates, not an implementation task.",
-      "depends": [
-        "T003"
-      ],
-      "context_group": "US3",
-      "owned_paths": [
-        ".gitignore",
-        "workflow_monitor/__init__.py",
-        "workflow_monitor/reader.py",
-        "workflow_monitor/pins.py",
-        "workflow_monitor/mapping.py",
-        "workflow_monitor/public.py",
-        "workflow_monitor/snapshot.schema.json",
-        "workflow_monitor/pyproject.toml",
-        "workflow_monitor/tests/test_reader.py",
-        "workflow_monitor/tests/accept_reader.py",
-        "workflow_monitor/tests/setup_inputs.py",
-        "workflow_monitor/__main__.py",
-        "workflow_monitor/app.py",
-        "workflow_monitor/web/package.json",
-        "workflow_monitor/web/vite.config.js",
-        "workflow_monitor/web/index.html",
-        "workflow_monitor/web/src/main.jsx",
-        "workflow_monitor/web/src/graph.jsx",
-        "workflow_monitor/web/src/layout.js",
-        "workflow_monitor/web/src/style.css",
-        "workflow_monitor/web/tests/viewer.spec.js",
-        "workflow_monitor/tests/accept_viewer.py",
-        "workflow_monitor/tests/test_history.py",
-        "workflow_monitor/tests/test_safety.py",
-        "workflow_monitor/web/tests/history.spec.js",
-        "workflow_monitor/tests/accept_history.py",
-        "workflow_monitor/README.md",
-        "workflow_monitor/tests/accept_build.py",
-        "workflow_monitor/web/tests/build.spec.js",
-        "docs/index.md"
-      ],
-      "required": [
-        {
-          "id": "T004/V1",
-          "criterion": "SC-006 plus SC-001-005, FR-016/017: THIS app build is executed/recorded by accepted unchanged source-local runtime with committed matching workflow/presentation pins BEFORE start. Once T002 usable operator launches independent read-only viewer; inspect earlier T001/T002 of THAT run retrospectively AND observe genuinely necessary later T003/T004 of THAT SAME run LIVE. No fixtures/other demo run/planning-chat/history003 IDs substitute; keep actual failures/recovery.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_build.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "answer() reobserves fresh authoritative own-build run ID/source/config/baseline/checkpoint chain and production reader/browser observations tied to that ID; require earlier retrospective inventory and later live source/display interval already captured by independently authorized operator observer. Bind to actual runtime receipts, never copied nonce/ID. Additional real isolated/same-spec/failed/recovered histories supplement. Check does NOT require current T004 checkpoint or future own-run final review/acceptance before returning: runner alone performs those later. Missing same-run live interval remains NOT VERIFIED.",
-          "expected_evidence": "Actual own-build run/config/pin hashes, earlier focused checkpoint receipts, retrospective node/visit inventory, same-ID live observation times and preserved counterevidence from operator-owned scratch; bounded browser/reader assertions, no prose-only acceptance. Test server/browser descendants drain; operator viewer ownership explicitly separate.",
-          "producer_dependencies": [
-            "T003"
-          ],
-          "gates": []
-        },
-        {
-          "id": "T004/V2",
-          "criterion": "SC-001-006 and documentation: app README launch/setup/trust/read-only/new-contract/freshness/privacy/unknown/limits/rollback agrees with implementation; docs/index routes it. All permanent required checks/current evidence remain valid; external operationally read-only locks/tree/provenance/licenses/audits stay reviewable, worker direct manifests match. Full original-range fresh independent review/finding correction/current acceptance remain runner-owned AFTER task checkpoint, not implementer work or inferred green.",
-          "check": {
-            "id": "workflow.PythonAnswer",
-            "version": "1",
-            "args": {
-              "path": "workflow_monitor/tests/accept_build.py",
-              "expected": 1
-            }
-          },
-          "pass_condition": "Compare delivered --project/--assets/--port launcher and fixed API/schema/error/guard behavior against README examples in focused tests; validate source/lock/pin identities and no retained cache/build/vendor pollution. Stop only viewer preserves DB/WAL/Git/private history, never control/repair/reset/legacy restart. All SC mappings have nonempty current proof; longer/operator proof provenance is validated against real source records. Measure actual current task contract/full-diff/receipt payload against unchanged120000 review/262144 wire guards at admission/review; oversize blocks, no truncation/limit workaround.",
-          "expected_evidence": "Executable launcher/doc assertions, source/lock/license checks and complete SC->item proof references with PASS/FAIL/NOT VERIFIED; actual remaining payload measurement, test exit/count/child drain. No claim of final acceptance, no per-task independent-review task or extra report chain.",
-          "producer_dependencies": [
-            "T003"
-          ],
-          "gates": []
-        }
-      ],
-      "optional": [],
-      "gates": [],
-      "authorization_envelope_id": "monitor-app-draft"
+      "permission": "Same approved application scope; independently owned observer launch needs explicit operator authority. Review findings require separately approved linked corrections and actual original-range rereview."
     }
   ]
 }

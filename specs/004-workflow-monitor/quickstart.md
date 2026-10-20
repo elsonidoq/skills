@@ -1,85 +1,110 @@
-# Planned monitor validation/operator guide
+# Proposed monitor setup and acceptance guide
 
-**Not delivered application commands or acceptance results.** Four app tasks are unchanged. The owner authorized archive-and-fresh-Sol launch after runtime fixes; exact external authority binding and live readiness remain required. Isolated setup and supplemental runtime fixtures exist; they do not certify the app. Canonical details: [API/privacy](contracts/monitor-v1.md), [REQUIRED proofs/admission](contracts/validation.md), [record mapping](data-model.md), [version-specific usage cookbook](research.md).
+**Not delivered commands or passing application results.** See [plan](plan.md), [contract](contracts/monitor-v1.md)
+and [required validation](contracts/validation.md). Historical launch IDs, external scratch descriptors
+and approvals are not current prerequisites or execution permission.
 
-## Prerequisites in order
+## Before implementation
 
-1. Reference-only precursor was independently accepted at `73dbaad0030c36245b078a18d9e33c9de987a6e1`. Subsequent owner-authorized inventory/preflight fixes through `97935288f857d430d022ab25dacc681a3ae30133` passed 167 available nonlive tests; parent inspected code and reran all 22 inventory tests. Full mandatory/live suite is NOT claimed. Freeze the current runtime throughout this new app execution; retain all REQUIRED/custody/review gates.
-2. Preserve the independently reviewed four tasks and every SC/check/version/args/pass/evidence/dependency/gate. The actual owner selected **Archive old state and launch fresh Sol build**, authorizing only reviewed runtime-source/launch-binding renewal and this unchanged Sol/medium plan. Bind that genuine decision through the trusted external catalog; do not relabel historical approvals or infer authority from intent.
-3. Actual isolated dependency setup/audit/smoke is complete, with operational read-only inputs (write bits removed, independently pinned hashes/identities), not malicious-same-UID isolation. No app source/config/helper exists outside runner. Follow [descriptor validation](contracts/validation.md#pre-admitted-dependency-inputs-and-launch-binding); workers write exact direct manifests and all app source DURING this build, checks only declared scratch. Drift or unsafe identity stops.
-4. Before first app run, committed retained raw-hash config and public presentation sources carry v1 markers. Verify workflow canonical digest against **actual** `wf_run_bindings.binding.config_hash`, not combined Engine hash; preserve Git objects. No old-run conversion.
-5. Fresh descriptor/run identity are pinned below. Revalidate all hashes, exact SDK/local resources/cgroup capability and run the actual read-only CLI `preflight` before startup. Bind the actual owner archive/fresh-launch decision and reviewed source renewal to exact scopes in the external catalog. Start source-local CLI with this run ID and `TMPDIR=/tmp/coherence-monitor-inputs-q0ww12wq`. A NEW real launch/challenge/ready handshake must succeed; no old receipt, manual implementation or unfinished-viewer prerequisite. The old never-dispatched attempt was archived intact under explicit owner approval; it is not in the new live database and is not substituted as own-build acceptance.
+Review the revised spec/tasks and explicitly approve T001 recording plus bounded original-range review
+support. Future executor stays `openai-codex/gpt-6.1-sol`, effort `medium`. Verify actual available Python,
+Git/SQLite, Node/Pi SDK and relevant project tools; do not install, refresh auth, reload or substitute a
+model automatically. Preserve unrelated work, existing writer ownership and normal Git configuration.
 
-## Prelaunch pins — actual frozen input bytes, not launch approval
+T001 adds the small recording seam, focused tests and actual runtime operating/schema documentation.
+It is delivered and validated **before** the new application-build run. Do not expect existing
+`execution_runs`/`execution_tasks` or legacy `wf_*` rows to supply new history.
 
-```text
-monitor_inputs_sha256: d12624227927a5a216c08376c55f3d030d1800c7b4fd9786c8e9ff17a6242be4
-monitor_app_run_id: monitor-app-20261020-0ec48f3fe91b
-```
+## Application build
 
-These exact lines are consumed by worker-written `workflow_monitor/tests/setup_inputs.py` and pinned through this existing quickstart source in the admitted contract. Actual raw SHA256 and preselected ID do not grant execution: current review/approval/catalog and launch preflight remain required. Descriptor excludes this document/task/final-approval hashes, so no cycle. Its exact canonical project/run/source/config/tool/lock/tree/fixture bindings are checked against real read-only stores. At each check the expected descriptor hash must come from this source as pinned in actual `wf_run_inputs.contract.sources`, not descriptor self-attestation. A preselected ID does not establish any runtime event.
+After T001 acceptance and separate application execution approval, execute T002/T003 as one fresh run
+through `scripts/coordinate-implementation`, using the ordinary tasks object, `--tasks`, `--executor`,
+`--project` and a fresh `--run`. Root proposal metadata is not an execution envelope. For the application
+build, select only those approved task records; do not rerun T001 inside the same build. The runtime
+CLI has no task-subset flag: prepare a separate ordinary task file containing T002/T003, with T002's
+already-satisfied T001 dependency removed and its prerequisite checkpoint noted as context. Copy the
+matching T002/T003 safe entries from `monitor-presentation.json` into root `monitor.tasks`; the future
+recorder retains those brief labels/summaries, not the private task work descriptions.
 
-Keep `request_owner_input`/CLI answer/resume only for genuine product-priority/unexpected-material-change questions, never anticipated technical setup or approved tests; genuine answers are separately capped at16384 UTF-8 bytes.
+Use ordinary application `pyproject.toml`/lock and web `package.json`/package-lock. No external frozen
+tree, descriptor hash, custody inventory, manifest or launch receipts. Existing environments may be
+used after relevant compatibility checks. Dependency installation, network and browser provisioning
+need explicit separate permission; tests/startup never install. Do not assume historical `/tmp` setup
+or exact versions from old research remain available. Record actual selected compatible locks during
+implementation; dependency/API changes receive affected review.
 
-## Actual descriptor schema and trusted consumer
-
-The fixed file is `/tmp/coherence-monitor-inputs-q0ww12wq/monitor-inputs.json`. Read once as raw UTF-8 JSON with duplicate-key rejection; expected raw hash comes from the exact quickstart bytes pinned by **actual** `wf_run_inputs.contract.sources`, never this descriptor itself. SDK read_file cannot open it; this declared schema is implementer context for the trusted `setup_inputs` consumer, not a new model tool.
-
-Closed root fields (schema_version=1): `purpose`, `project`, `app_run_id`, `workflow`, `runtime`, `tools`, `dependencies`, `fixtures`, `scratch`, `observer`. Exact shapes:
-
-- `workflow={source,sha256,config_hash}` names `specs/004-workflow-monitor/monitor-workflow.yaml`, its raw hash and canonical parsed config digest. Resolve this one marked source from actual app contract, compare retained raw bytes, `wf_run_bindings.binding.config_hash` and source-list digest; Engine combined hash is different.
-- `runtime={accepted_revision,suite_root,source_hashes,sdk_version}`; `source_hashes` maps checkout-relative runtime/host/schema files to raw SHA256, SDK version0.87.1. Verify current files against every entry and accepted revision9793528; later approval/binding commits need not equal that runtime revision. No future app-file hashes here.
-- `tools={python,python_root,node,node_sha256,node_version,node_modules,vite_cli,playwright_package,chrome,chrome_version,chromium_sandbox_verified}`. Python is `/tmp/coherence-monitor-deps-vjwa035g/python/bin/python`; Node is `/home/dev/.nvm/versions/node/v22.23.3/bin/node` (22.23.3); Vite/Playwright resolve inside the declared node_modules; Chrome `/opt/google/chrome/google-chrome`154.0.8037.92. Boolean sandbox observation is setup evidence, not a waiver of actual sandbox checks. No arbitrary executable/env override.
-- `dependencies={python_direct,node_direct,python_lock,node_lock,inventory,python_advisories,node_advisories,node_licenses,license_selection,operational_custody}`. `python_direct` maps starlette/uvicorn/PyYAML to exact versions; `node_direct` is the actual resolver package object `{name,private,version,type,dependencies,devDependencies}`. Compare worker manifest dependency intent, not its project name, to the exact dependency/devDependency maps. T001 requires Python only; T002 onward also requires frontend/test manifest. Each lock/inventory/advisory/license entry is `{path,sha256}`: verify same bytes and identity. `license_selection` records EPL2/MPL2 notice/source obligations; `operational_custody` describes write bits removed, not stronger sandboxing.
-- Inventory is a2894-entry array rooted at `/tmp/coherence-monitor-deps-vjwa035g`: files `{path,kind:"file",bytes,mode,sha256}` (2885), symlinks `{path,kind:"symlink",target,resolved}` (9). Validate full declared tree/hash/identity before use, missing/extra/changed entries stop. Only enumerated symlinks are permitted, with exact targets/resolutions; Python bin links explicitly resolve to system `/usr/bin/python3.12`, lib64 to local lib, Node bin links within admitted tree. Never reject a documented interpreter link merely for being external, nor allow arbitrary escape. Tool/base-interpreter identity is revalidated; read-only prefix is python/node and frozen metadata/locks, **not** every child of the broader setup root.
-- `fixtures` is four objects sharing `{kind,project,run_id,source_root,events,status,workflow_sha256,config_hash,provenance}`, with optional `tasks`, `cli_exit`, `question_stage` only as present. Kinds: `failed-check-repair`, `review-correction`, `same-spec-repeat`, `question-crash-recovery-original-continuation`. Each fixed DB is `project/.coherence/workflow/workflow.sqlite`; use real `wf_run_inputs`/bindings, baseline/checkpoint/source pins and typed events, not the descriptor's counts/status as proof. First and repeat share the SAME fixture project/spec but have distinct run IDs. Config/presentation pins must resolve from each actual fixture contract; no invented alias or production approval. Fresh controlled crash/question fixture is test-only CLI authority, NOT human ask_user consent. All four are supplemental inputs, never SC-006 own-build acceptance or active-writer proof by themselves. Mutable runtime observations are not dependency inventory entries; do not edit fixtures.
-- `scratch={root,assets,results,fixture_projects,browser_tmp}` names only writable children of `/tmp/coherence-monitor-inputs-q0ww12wq/work`. Descriptor/root is operationally read-only, this work child writable. Explicitly set `tempfile.tempdir=scratch.root` (or pass dir on EVERY tempfile call); child fixed env `TMPDIR=scratch.browser_tmp` or an explicit declared work child. Never default to inherited descriptor-root TMPDIR, HOME, worktree caches or generic /tmp. Use explicit results/build/browser paths; fixed shell=False argv, bytecode off, no installs/download/network or dependency writes. Copy current owned frontend/test/config bytes to scratch and bind hashes; scratch-only node_modules link points to declared tree. Close/drain all check descendants within existing15s bounds.
-- `observer={project,run_id,start_after_task,authority}` binds this app run, T002 then independently operator-owned read-only viewer; no scheduler/control or task descendant. Live interval and acceptance do not exist yet.
-
-The separate private operator control root holds SDK manifest/parent-binding/catalog inputs; it is **not** a fixture project, approved browser data or oracle-readable dependency input. Do not open auth/catalog/session conversations. Actual interactive-parent config is explicit (paseo-0.9.2/ask_user, fresh parent binding); no standalone/manual-poll default. Parent metadata was probed read-only successfully; genuine run-bound challenge/launch/ready tool receipts remain mandatory before dispatch.
-
-Custody is trusted single-host/same-UID operational read-only: write bits removed plus independently expected hashes and canonical identities; revalidate descriptor/tool/lock/full-tree bytes before use. Model file tools cannot write these external paths. Trusted project-code tests are scoped, not adversarial filesystem-sandboxed; chmod/hash checks cannot defeat malicious same-UID/root races. Any drift/missing/unsafe identity stops, never silently refresh pins during execution.
-
-## Intended delivered commands
-
-Application README must confirm exact supported flags/owned paths before use:
+Proposed delivered app checks (NOT RUN now):
 
 ```sh
-# After validating the frozen descriptor and current worker manifests/source:
-# copy CURRENT owned web/test/config bytes into approved scratch; bind source hashes.
-# Scratch-only node_modules links the admitted immutable tree; no worktree link/install.
-# Actual paths/argv come from validated descriptor, not arbitrary environment input.
-"$APP_NODE_ENV/node_modules/.bin/vite" build "$SCRATCH_WEB_SOURCE" --outDir "$OWNED_ASSET_OUTPUT"
-
-# Separately operator-owned read-only viewer after early usable checkpoint:
-"$APP_PYTHON" -B -m workflow_monitor --project "$CANONICAL_WORKTREE" \
-  --assets "$OWNED_VERIFIED_ASSET_OUTPUT" --port "$LOOPBACK_PORT"
+python -B -m unittest discover -v -s workflow_monitor/tests
+npm --prefix workflow_monitor/web run build
+npm --prefix workflow_monitor/web test
 ```
 
-Verify asset manifest/hash/identity, use exact printed numeric127.0.0.1 origin. No token/cookie/persistence ceremony; APIs require same-origin Fetch Metadata/custom header. Observer never builds/installs/starts execution. A task/check-owned viewer/browser must settle/drain before its check exits; independently operator-owned observer can remain open while SAME app run continues.
+Browser tests use the installed locked local test tool/browser; no automatic download, private browser
+profile, CDN or sandbox-disabling workaround. Build output/caches use ordinary ignored or temporary
+locations. Generated assets are not committed; manifests/locks/source/tests are.
 
-## Validation sequence
+## Early usable viewer and own-build observation
 
-### Before UI reliance
+After the T002 focused checkpoint, the operator may separately authorize a read-only viewer launch
+using the delivered app environment and production assets. Proposed interface, confirmed by the future
+application README before use:
 
-Run permanent production-reader/mapper tests against source-derived actual-definition inventory, not a chosen route: changed YAML inventory, shipped19-node cycles, all repeated/non-task/terminal/unvisited visits, trace hashes/typed edges, unsupported records, null/zero/revision/binding provenance. Unrelated config source fails actual binding proof.
+```sh
+python -B -m workflow_monitor --project /absolute/viewed-worktree \
+  --assets /absolute/production-assets --port PORT
+```
 
-Then actual isolated shipped-runtime + reader/HTTP composition: current authoritative records while controller writes, no viewer SQL/control/model/process effects or projection publication, bounded read snapshots and controller noninterference. Compare causal records/quiescent fingerprints, not naive byte equality of a writing DB. Test-only authority must be genuine through shipped interfaces, not fake production approvals. Failed/unrun proof blocks dependent reliance.
+Use the actual numeric `127.0.0.1:PORT` origin. No dev server, reload, remote binding, public service or
+execution controls. Viewer startup neither builds assets nor starts/resumes execution. An independently
+operator-owned viewer can remain open while the runner performs genuine T003 work; task/check-owned
+servers/browsers must close normally before their checks end.
 
-### Browser graph and safe output
+Select **that same application run**: inspect earlier T002 records retrospectively and later T003
+work live. Retain safe run/occurrence references and record/read/display timing in ordinary acceptance
+output. No fixture/different-run replacement or artificial work to extend the live interval. Missing
+same-run observation is SC-006 NOT VERIFIED.
 
-Use actual measured DOM/ELK: keyboard/click node **and edge** detail selection, non-overlapping organized cards, preserved original cycle/multiedge endpoints, distinct possible/recorded/prerequisite/semantic connectors. Run A→same-spec B replaces graph. Hidden failed/waiting counts and find/reveal reach every visit in one graph; narrow rail/detail drawer, no competing task view/editor/control buttons.
+## Reviewing fixes in the graph
 
-Status refresh preserves viewport/selected ID/existing positions; stale worker from old run discarded. Real source/display observation pairs show normal about2s, retain deviations; forced read/stale/controller loss warns with last success, not fake progress. Actual failure→repair, interruption→reconciliation, question→accepted→entry-delivery→continuation/request, review→correction→rereview keep all milestones/history distinct.
+An independent review finding defects remains visible. A separately authorized fresh correction task
+file may include root context:
 
-Sentinels in private fixture payloads/paths/errors/tool/check/approval/question/finding text must occur in **no response/header/log/asset/link**. Safe approved adversarial text cannot execute. Foreign origin/Host/Fetch-Metadata/preflight/write methods/traversal/duplicate cursor/frame requests reject before data access. Test actual500 response and logs. CSP supports graph geometry styles, never stored HTML/script/URL.
+```json
+{
+  "monitor": {
+    "correction_of": {"run_id": "original-run", "review_execution_id": "actual-review-occurrence"},
+    "tasks": {"fix": {"label": "Fix review defects", "executive_summary": "Address the reported defects."}}
+  },
+  "review_base": "ACTUAL_FULL_ORIGINAL_BASE_SHA",
+  "tasks": [{"id": "fix", "description": "Explicitly approved correction work and relevant checks"}]
+}
+```
 
-### SAME actual app build
+These are proposed T001 interfaces, not current CLI capabilities. The reference declares the review
+relationship; it never grants permission. `review_base` must actually drive the independent review's
+range; it is not a cosmetic monitor field. Default review still covers only that run's baseline→head.
+Get actual occurrence IDs via the delivered script status/history interface; browser opaque refs are
+not raw recording IDs. Do not guess IDs from names or read private transcripts to find them.
 
-Retain real build run ID/raw pins/canonical config binding/baseline/checkpoint/range and failures. At early usable graph checkpoint, operator opens that run and inspects its earlier build steps, then observes genuine later work of **that same run** live before final acceptance. Capture source/display timing tied to ID. Additional real isolated/same-spec/completed/failed/recovered runs supplement, never replace it. No planning-chat import/old migration/clean demo. If live own-build interval absent, SC-006 NOT VERIFIED.
+Expand explicit local followups inside the selected root graph: original reviewer, fixing-agent
+execution, checks/checkpoint, rereviewer. Verify each actual range and run badge. A correction-only
+review is not full-range acceptance. Original failed run remains failed; lineage review acceptance is
+shown separately. No automated correction or expensive retry loop is introduced.
 
-## Reporting and disable
+## Validate, report and disable
 
-Use [REQUIRED matrix](contracts/validation.md) for each SC PASS/FAIL/NOT VERIFIED and actual command/args/version/environment/evidence/permission/manual gate. Positive collection/no skips; missing browser/authority/setup/real integration is NOT VERIFIED, generic green insufficient. Shared checks retain every mapping; ordinary teardown/evidence stay with coherent delivery.
+Follow SC-001–006 in the validation contract. Real isolated script emission/readback and concurrent
+reader checks supplement deterministic fixtures; real browser tests cover graph interaction and private
+output exclusion. Offline adapters are not live-provider evidence. Report missing capabilities or
+permissions exactly, without turning setup into an owner-question courier or execution gate.
 
-Stop only viewer to disable. Preserve runtime DB/WAL/private evidence/Git/history/partial work; no pause/cancel/control/repair/downgrade/projection rebuild/reset/legacy restart. Prerequisite runtime changes require separate reviewed/accepted scope, never monitor repair.
+After T003, fresh independent review checks the full application range. Observe its final result
+separately; no task check depends on a future review result. Keep all actual failures and any explicitly
+linked corrections. No application completion/acceptance is claimed by this guide.
+
+Stop only the viewer to disable observation. Preserve the runtime database/history, Git, partial work
+and private records. Never reset/convert old rows, repair projections, abandon runs from the viewer,
+signal the writer or restart legacy execution. No global configuration/skill changes are part of this
+proposal, so it needs no global activation or `/reload`.

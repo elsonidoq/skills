@@ -1,144 +1,86 @@
-# Workflow monitor — canonical integration and dependency research
+# Workflow monitor — current integration basis and reusable dependency research
 
-Research date: 2026-10-19. Requirements truth: [spec.md](spec.md), renewed by [approval](specification-approval.md). **Planning evidence, not executed application proof.** This is the canonical research owner; [plan](plan.md), [data model](data-model.md), [contracts](contracts/README.md) and [validation](quickstart.md) translate it. Original research launched nothing. Later parent-authorized isolated setup and four supplemental SDK/runtime fixtures are now available; no app implementation/acceptance or launch is claimed.
+**Status:** revised proposal. Current repository inspection baseline: `213d0a7`.
+The corrected brief was read directly from the owner-specified `dull-swan` worktree; no merge was needed.
+Historical research remains available in Git, but its runtime model and scratch setup are not authority.
 
-## Decisions, alternatives and authority
+## What the script actually supplies
 
-The owner delegated graph and backend technical selection against established community use and sufficient documentation; these are **agent-derived selections**, not owner-selected package brands. Final overall planning approval remains pending.
+| Source | Actual behavior → design consequence |
+| --- | --- |
+| `runtime/coherence_workflow/store.py` | Creates `execution_runs` and `execution_tasks`; task/run writes update latest state. No retained phase definition or append-only new-run history. Legacy `read_history` reads `wf_*`, not these new-run execution traces. Add minimal new-contract records; do not adapt old graph tables. |
+| `engine.py` | Sequential task worker, checks, checkpoint, then fresh independent reviewer. Rejected review raises with commits retained; no automatic correction/rereview loop. Record actual boundaries; explicitly link separately approved correction runs. |
+| `verification.py` | Actual optional command checks; failed command raises before successful-task details can retain the check list. Add per-check observations before failure propagation; never export command/output. No PythonAnswer/deadline/catalog required. |
+| `pi_adapter.py` | Optional observer callback exceptions are swallowed; questions use terminal input and send answers to host. Neither callback delivery nor stderr is durable history. Wrap coarse question milestones, not private SDK event streams. |
+| `cli.py` / `intake.py` | Six task-linter checks; dependencies sort ordinary tasks; optional context survives. New status reads raw progress, not browser-safe DTOs. Additive metadata cannot become another startup validator. |
+| `git_effects.py` | Real focused checkpoint or explicit no_change baseline/head; normal hooks/signing. Record the result rather than invent a receipt or equate no change with a new commit. |
+| Runtime operating/schema guides | No graph/effect admission, catalog, host manifest, cgroup requirement or universal transport cap. Preserve ordinary writer ownership, actual checks, permissions and historical rows. |
 
-- Select React Flow `@xyflow/react==12.12.0` for interactive DOM nodes/edges and ELK `elkjs==0.12.0` for layout. Rendering/interaction and coordinate calculation are separate seams. React/React DOM `19.3.1`, Vite `8.3.4`, JavaScript/JSX (no TypeScript/compiler plugin required) complete the proposed frontend. Keep React Flow attribution; no Pro feature or paid component required.
-- Select Starlette `1.9.0` + Uvicorn `0.54.0`, Python 3.12, for a separate read-only ASGI application. Do not import SDK/runner/authority/saver modules. SQLite is Python's stdlib binding. Separately pre-admitted immutable application dependency environment and external lock, not changes to `runtime/requirements.lock` or `runtime/pi-host`. Worker writes the direct-version manifest during the app run; raw third-party locks need not be copied into owned files.
-- Proposed development browser oracle: `@playwright/test==1.64.1`, Node >=20, using installed Chrome via `channel: 'chrome'`. This capability was subsequently installed/smoked by the parent; app DOM acceptance remains unrun. `node22.23.3`, `npm10.9.9` and `/usr/bin/google-chrome` were observed; Playwright was absent at initial research; current isolated installed1.64.1 capability smoke passed. No browser installation/download is implied.
-- Transport: same-origin GET JSON polling, initially every 1000ms with one request in flight. No websocket/SSE/control plane. Numeric `127.0.0.1` only, exact bound Host:port, same-origin browser request defenses, no user-authentication claim. No token-paste ceremony/cookies/persistent browser state. Parent accepted pursuing this bounded trust design under delegated backend authority; final approval still required.
-- Compatibility: owner explicitly excluded pre-feature/runtime-migration runs. Do no old-run adaptation, import, archival, fallback or migration. New contracts retain exact definitions and full new history, including **this actual app build**, not a substitute demo.
+Existing checks run during this revision's investigation:
 
-Alternatives actually evaluated:
+```sh
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests \
+  .pi/workflow-validation/venv/bin/python -B -m unittest -v \
+  test_engine test_pi_adapter test_recovery test_verification
+```
 
-| Candidate | Relevant evidence and tradeoff | Disposition |
-|---|---|---|
-| React Flow + ELK | Keyboard/click/DOM cards, compound layout, ports and routing; larger build and EPL notices | Selected for this scope, not a universal ranking |
-| Cytoscape `3.34.4` + cytoscape-elk `2.3.0` | MIT canvas renderer, pan/zoom/selection/compound graph support; adapter package requires `elkjs ^0.9.3`, **not 0.12.x**; application-built semantic keyboard/card access needed | Credible alternative, not selected |
-| React Flow + `@dagrejs/dagre 3.1.1` (`graphlib4.0.5`, MIT) | Simpler directed layout; React Flow guide explicitly flags subflow/external-edge layout limitation; no comparable ELK edge-routing support | Good flat-graph alternative; less fit for history groups |
-| Hand-built SVG | No external interaction library, but duplicates selection/accessibility/layout handling requested by owner | Rejected after owner's interaction/organized-layout feedback |
-| stdlib `http.server` | Python 3.12 documentation warns “not recommended for production”/basic security only | Dependency count alone insufficient; reject custom HTTP burden |
-| FastAPI `0.149.0` | Established, MIT; current PyPI manifest adds Pydantic/typing/annotated-doc and mandatory opentelemetry-api>=1.44.0; automatic schema/API surface unnecessary | Starlette directly fits closed read DTO routes |
+**33 passed.** These existing tests exercise real disposable Git/check/process behavior and labelled
+offline SDK transports. They confirm ordering, failed checks, review rejection, terminal input, large
+transport results, optional-observer noninterference and legacy preservation. They do not implement
+monitor recording, certify a live provider or establish application acceptance.
 
-### Attributable adoption (not correctness evidence)
+## Consequential choices
 
-Retrieved public APIs, 2026-10-19:
+- **Selected:** retained descriptive phase inventory + append-only boundary observations. Without it,
+  latest-state rows cannot support the intended graph/history. A task-status list is insufficient.
+- **Rejected:** restore retired workflow runtime/YAML, trace proofs or broad SDK telemetry. These add
+  machinery/privacy exposure without supplying a necessary product behavior.
+- **Preserved:** explicit model execution nodes for rejected reviewer, fixing worker and rereviewer,
+  with actual range/status history. Linked fresh correction runs avoid a new scheduler.
+- **Necessary supporting change proposed:** optional actual review-base selection for full-original-range
+  rereview. Current engine always starts review at its own run baseline; declaring a relationship alone
+  cannot make a correction-only review cover earlier work. This small operational option needs explicit
+  implementation approval, not just recording labels. Default execution semantics remain unchanged.
+- **Privacy:** record only closed facts/public-safe presentation; no transcript mining or raw status
+  forwarding. Missing presentation means generic label, not unreviewed task prose.
 
-- `https://api.npmjs.org/downloads/point/last-week/@xyflow/react`: 8,349,970 downloads, 2026-10-12 through 2026-10-18; `elkjs`: 7,499,856; `cytoscape`: 11,124,275. Counts include automation/transitive use, not unique users.
-- `https://api.github.com/repos/xyflow/xyflow`: 38,720 stars, last push 2026-10-16; `kieler/elkjs`: 2,833, Oct19; `cytoscape/cytoscape.js`: 11,243, Oct15. All unarchived.
-- `Kludex/starlette`: 12,676 stars/Oct18; `Kludex/uvicorn`: 11,018/Oct19; `fastapi/fastapi`: 103,257/Oct19; all unarchived. Starlette is also the dependency named by inspected FastAPI metadata.
+## Reusable library choices and official references
 
-Public metadata supports established use/activity only. No performance, zero-bug, model-family or security superiority is inferred.
+Retain earlier agent-selected React/React Flow + ELK and Starlette/Uvicorn proposals, originally chosen
+under owner-delegated established-use/documentation criteria. They are not new owner package mandates.
+The historical research recorded React/DOM19.3.1, @xyflow/react12.12.0, elkjs0.12.0, Vite8.3.4,
+Starlette1.9.0/Uvicorn0.54.0 and Playwright1.64.1. These are **historical candidate versions**, not a
+claim the current environment supplies them. Conventional compatible manifests/locks, relevant package
+metadata/API/license/advisory checks and explicit setup approval replace forensic tree custody.
+No new network research, dependency installation or app launch occurred in this revision.
 
-## Repository-first evidence and concrete constraints
+| Reference | Applicable guidance and check |
+| --- | --- |
+| [React Flow layout](https://reactflow.dev/learn/layouting/layouting), [accessibility](https://reactflow.dev/learn/advanced-use/accessibility), [testing](https://reactflow.dev/learn/advanced-use/testing) | Interaction and layout are separate. Use stable IDs, measured DOM nodes, selectable/focusable nodes/edges, no connect/delete/editor handlers. Browser test real edges/navigation, not screenshot-only claims. |
+| [React Flow props](https://reactflow.dev/api-reference/react-flow), [subflows](https://reactflow.dev/learn/layouting/sub-flows) | Disable editing, retain pan/zoom/selection. If grouping, parent before children and relative coordinates. Grouping never establishes task ownership. |
+| [ELK README](https://github.com/kieler/elkjs), [layered algorithm](https://eclipse.dev/elk/reference/algorithms/org-eclipse-elk-layered.html) | Layout on a topology copy, preserve original edge endpoints/types despite cycle handling; local worker, discard stale generations. Re-layout only when needed, not every poll. Preserve notices/attribution. |
+| [Vite build](https://vite.dev/guide/build.html), [assets](https://vite.dev/guide/assets.html) | Production local assets/worker, no HMR/CDN/sourcemaps exposed. Normal build output/locks, no external source-copy binding protocol. Check actual chosen version's Node requirements. |
+| [React DOM common props](https://react.dev/reference/react-dom/components/common), [MDN textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) | Inert text only, no dangerouslySetInnerHTML/stored URLs/styles/components. Test malicious stored labels and all response surfaces. |
+| [Playwright assertions](https://playwright.dev/docs/test-assertions), [browsers](https://playwright.dev/docs/browsers) | Local installed browser/tool under approved setup; no automatic downloads or private profile reuse. Await observation assertions, never retry execution effects. |
+| [Starlette routing](https://www.starlette.io/routing/), [responses](https://www.starlette.io/responses/), [exceptions](https://www.starlette.io/exceptions/), [Uvicorn settings](https://www.uvicorn.org/settings/) | Closed GET routes, explicit minimized DTOs, debug/reload/proxy/access-log leakage off. JSON serialization is not sanitization. Test actual500 response and log paths. Verify APIs at delivered locked versions. |
+| [SQLite URI](https://www.sqlite.org/uri.html), [WAL](https://www.sqlite.org/wal.html), [Python sqlite3](https://docs.python.org/3/library/sqlite3.html) | mode=ro, short parameterized snapshots, normal locking and safe sidecars. No immutable/nolock/checkpoint/DDL. Closed-WAL retrospective read may need normal SQLite sidecar bookkeeping; don't forbid it categorically. |
+| [Fetch Metadata](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site), [CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy) | Numeric-loopback exact Host/origin, same-origin API fetch, no CORS/control methods; safe CSP local resources. These are origin defenses, not malicious-local-client authentication. |
 
-Read completely: `docs/coordinate-implementation.md`, `docs/coordinate-implementation-schema.md`, `docs/open_issues.md`, `runtime/coherence_workflow/workflows/coordinate.yaml`, all eight packaged schemas, `cli.py`, `projections.py`, `store.py`, `engine.py`; relevant `registry.py`, `verification.py`, projection tests and lock/declaration evidence. Governing local contracts, constitution4.0.0, entire memory index and empty coordination guidelines were read. No gotchas/approved coordination guidance apply; no memory writes.
+Alternatives remain credible but are not a new research project: Cytoscape requires custom accessible
+card/navigation work; hand-built SVG duplicates interaction/layout; FastAPI adds unneeded API surface;
+stdlib HTTP requires bespoke web-boundary handling. No adoption metric implies security/correctness.
 
-| Inspected supporting source | Verified fact → repository decision → observable check |
-|---|---|
-| `cli.py:Coordinate.publish_run_binding` | `wf_run_bindings.binding.config_hash = digest(self.config)` is the actual canonical workflow configuration hash. **Different** from `wf_runs.config_hash`, which is Engine's combined identity. A new contract's marked config source must raw-hash match retained bytes AND canonical parsed YAML digest match this SQL binding → unrelated/mismatched declaration fails closed. |
-| `engine.py:Engine.__init__, _assert_pins`; `registry.py:Registry.identity` | Engine pins all top-level `coherence_workflow/*.py`, schemas, registry function modules, config, inputs and resources → place app outside runtime package, never change runtime/check registration/host/schema/skill during its own build → source/config/resource hashes unchanged through actual own-build execution. |
-| `cli.py:registered_checks`; `verification.py:run_checks, unittest_oracle` | Unittest selectors are closed constants; arbitrary new selectors/shell checks are unavailable. Registered `workflow.PythonAnswer` accepts exact `{path,expected}` and invokes trusted project `answer()` in custody → app-owned acceptance entrypoints can call permanent tests/build/browser/composed tests under explicit original authority. Return exact integer only after positive collection/no skips and all assertions pass; never constant-success or receipt import. |
-| `cli.py:_tools` | Worker read/write limited to authorized paths; read permits up to32768 bytes, write schema permits32768 characters; no shell. `intake.load_contract` separately permits task JSON up to2_000_000 bytes. These unchanged mechanics imply no universal artifact bound or byte-guard feature. Keep complete pinned readable context and existing permissions. Registered test oracle is not a retained-file generator. |
-| `store.py:Store.intent, transition` | Stable op UUID, UNIQUE(run,node,kind), immutable ordered event seq/IDs, separate intent/completion → visit identity is graph op UUID; append sequence is ordering, not time. Reconciliation/replay reuses recorded result, not a new visit/invocation. |
-| `engine.py:Engine._node, audit` | Graph logical name `node:visit` under bounded progress; args hash covers actual config node and completed trace prefix; intent contains handler/version/input hash. Reconstruct and verify source-derived prefix from ordered graph intents/completions to justify execution edges; reject conflicts, never infer from task deps. Owner-input interrupt can precede graph operation intent; `wf_question_parks` exposes that **semantic park**, not an invented visit. |
-| `cli.py:implement, continue_original, recover`; `interaction.py` delivery interfaces | Task attempts, continuation invocation identities, graph visits and original-conversation identity differ. Recover may reconcile a commit/result without invoking a model. `continued` question state is set before subsequent prompt result → label it continuation-entered; require new `sdk-turn` intent/request observation for invocation/request-start claims. |
-| `projections.py:state_record, records, latest_metrics` | Public events usually contain hashes only, Publisher mutates projections, status includes private question/control/results. Neither is a browser-safe graph API. Reimplement a closed versioned SQL read adapter with semantics anchored here; no raw status forwarding/Publisher call. Tests compare raw records and pinned definitions to DTOs. |
-| `verification.py:Verification.audit, ReviewRepair.acceptance` | Missing/stale/unrun proof differs from failure; completion/check/checkpoint/current full-range review/exact acceptance are distinct. Monitor reports recorded receipts/applicability facts, never reruns authority or checks to “verify” status. |
-| `store.py:Authority, Store.__init__`; `cli.py:status` | Authority creates/locks/writes; status uses read-only URI and snapshot but is overbroad/private. Observer opens fixed canonical worktree DB directly `mode=ro`, no authority object, no saver/deserialization/DDL. |
-| `runtime/pyproject.toml`, `requirements.lock`, runtime owners | Existing pins: LangGraph1.2.16, sqlite-saver3.1.2, PyYAML6.0.3, jsonschema4.26.0, SDK0.87.1. Reuse current semantics evidence, not runtime dependencies in browser. Strict YAML parser may use separately pinned PyYAML6.0.3 in app env; no `load_workflow` call because that requires executable registry. |
+## Validation and residuals
 
-### New monitored-contract pin strategy (no runtime extension)
+Use focused production-helper tests, real isolated script emission/readback/concurrent readers, and
+browser graph/privacy checks. No mandatory prototype or proof-report chain. Exact snapshot budgets,
+wire caps and dependency-tree attestations are not product acceptance.
 
-Two uniquely marked, approved source entries already fit `shared.schema.json#/$defs/source`: `kind=config, section=monitor-workflow/v1` and `kind=config, section=monitor-presentation/v1`. These are monitoring conventions in **new** task contracts, not new runner schema fields. The former names exact YAML; the latter a closed non-sensitive presentation JSON. Retain both as Git-addressable committed immutable bytes before run start, within the viewed worktree's repository. The observer resolves only these exact source objects, validates full raw SHA256, never follows arbitrary paths or reads approval artifacts. Resolve from the initial task baseline commit (or exact current bytes before baseline exists); verify raw hash on every resolution and cache by content identity. If bytes cannot be retained/retrieved safely, new input is unavailable, not downgraded to current YAML or an old adapter.
+Historical SDK/SQLite advisory observations are not clearance of the current environment. Consult
+`docs/open_issues.md` and actual selected versions for relevant exposure before delivery. Monitor must
+not import/expose SDK package/auth/resource APIs or act as a database writer/checkpointer. Dependency
+changes/remediation need their proper authority; no silent upgrade. Preserve license notices (including
+React Flow attribution and applicable ELK obligations) during ordinary dependency/distribution review.
 
-The actual `wf_run_bindings` canonical config digest must equal strict parsed retained YAML; `wf_run_inputs.contract.sources` supplies the raw pin. A forged declaration/config-kind source alone cannot establish mapping. No new launch wrapper, runtime archival table, publisher or second scheduler is needed. A contract marker makes a run a candidate; validation failure yields a safe supported-input error, not silent disappearance.
-
-Use curated presentation summaries instead of raw task `outcome`, source paragraphs, question/answer/control text, finding prose or tool output. Exact per-run task IDs and brief summaries/descriptions are prepared/reviewed before start, without mandatory model generation. Unrecognized runtime records remain opaque typed evidence references/counts, never raw payload. This is allowlisting, not a promise that regex redaction understands every secret.
-
-## Official dependency evidence → implementation cookbook → checks
-
-### React Flow12.12.0 and ELKjs0.12.0
-
-Exact npm metadata/tarballs were retrieved in memory from `https://registry.npmjs.org/<package>/<version>` and inspected without extraction/install. `@xyflow/react` depends on `@xyflow/system0.0.83`, `zustand^4.4.0`, `classcat^5.0.3`; optional type peers, React/DOM>=17. These range dependencies require an exact integrity lock later. Tarball `dist/esm/types/component-props.d.ts` verifies below options at selected version; no older React Flow `parentNode` API.
-
-Primary inspected sources:
-
-- [Layout guide](https://reactflow.dev/learn/layouting/layouting): renderer has no built-in layout; table describes ELK dynamic-size/compound/edge-routing support and Dagre subflow external-edge issue.
-- [Accessibility](https://reactflow.dev/learn/advanced-use/accessibility): node/edge keyboard focus and operation; `nodesFocusable`, `edgesFocusable`, `disableKeyboardA11y` and ARIA labels.
-- [Performance](https://reactflow.dev/learn/advanced-use/performance): memoize components/callbacks, avoid whole-node subscriptions in unrelated UI, collapse large trees using hidden state, simplify styles.
-- [ReactFlow props](https://reactflow.dev/api-reference/react-flow), exact package types: `nodesDraggable`, `nodesConnectable`, `edgesReconnectable`, `deleteKeyCode`, `onlyRenderVisibleElements`, controlled `viewport` and viewport handlers; visibility optimization adds overhead, not guaranteed faster.
-- [Instance API](https://reactflow.dev/api-reference/types/react-flow-instance): `getViewport(): Viewport`, `setViewport(viewport,options?): Promise<boolean>`, `fitView`; no automatic refit each refresh.
-- [Subflows](https://reactflow.dev/learn/layouting/sub-flows): **parent nodes before children**, `parentId`, positions relative to parent, optional `extent:'parent'`; hierarchy is presentation, not execution/task ownership.
-- [Testing](https://reactflow.dev/learn/advanced-use/testing): recommends Cypress/Playwright because nodes need DOM measurement for edges; Jest alone requires additional sizing mocks. Real browser checks selected for that exact failure.
-- [ELK example](https://reactflow.dev/examples/layout/elkjs), [ELK layered](https://eclipse.dev/elk/reference/algorithms/org-eclipse-elk-layered.html), [cycle strategy](https://eclipse.dev/elk/reference/options/org-eclipse-elk-layered-cycleBreaking-strategy.html).
-- Exact `elkjs0.12.0` tarball `README.md:7–10,60–69,138–216,235–260,299–305`: computes positions only; `new ELK({workerUrl})`, `layout(graph,{layoutOptions})` returns promise; `terminateWorker()`; bundled/browser API alternatives; version matches ELK minor but patch can differ; cycle breaker followed by reversed-edge restoration. Current ELK option docs are corroborated by selected README; use only supported queried options, not every newest option in live reference.
-
-**Named interface**: `layoutGraph(topology, dimensions, generation) -> positions/routes` owns a disposable copy of the DTO graph. Input uses stable string IDs, `{children:[{id,width,height}], edges:[{id,sources:[id],targets:[id]}]}` and `elk.algorithm:'layered'`, directionRIGHT, explicit spacing. Use local ELK API and a separately emitted worker asset; resolve `workerUrl` at build time, not arbitrary stored URLs, blob/eval/CDN. Measure actual cards or enforce bounded card dimensions, await `useNodesInitialized`/measurement before layout. Convert ELK coordinates once, including relative parent coordinates. Multi-edges have separate IDs; retain original endpoints/type even if layout internally breaks cycles. Render routing consistent with original direction; do not reuse a reversed internal edge as domain truth. Unknown/out-of-date layout results discarded by run+topology generation; switching run cancels old work.
-
-**Read-only interaction configuration**: `nodesConnectable=false`, `edgesReconnectable=false`, `nodesDraggable=false`, `deleteKeyCode=null`, no mutation handlers/tools; `nodesFocusable=true`, `edgesFocusable=true`, `disableKeyboardA11y=false`, selectable elements and explicit accessible descriptions. Use custom text cards and details; handles are nonconnectable. Pan/zoom, keyboard focus, edge/node selection, reveal/collapse, find visit and explicit Organize are navigation only. Do not disable all events merely to enforce read-only. Keep React Flow attribution and use free core APIs.
-
-**Stability**: source DTO IDs never regenerated on polls. Separate topology revision from status/content revision. Status-only updates patch data, not layout. Keep positions and controlled viewport in ephemeral memory per selected run; no `fitView` after poll. On appended history retain existing coordinates, add/reveal new group outside occupied bounds, offer “new records” and explicit organize. Full organize preserves selected ID and makes selected target reachable; viewport changes only by explicit operation/focus. Default finite definition anchors plus bounded expanded visit windows; all visits discoverable by count/find/reveal. Groups retain red/amber badges and hidden count. Run-level and task-spanning nodes stay run-level, never forced into task boxes.
-
-**Checks**: real DOM measurement yields non-overlapping cards/readable directed edges on actual19-node definition with loops and repeats; keyboard/click node+edge selection opens correct detail; no editor mutations; status update leaves viewport/selection/positions unchanged; stale worker result cannot replace switched run; collapse/find reveals each hidden failed/waiting visit. Larger history has bounded rendered elements, cancelable worker and no every-second layout storm. No benchmark rank or arbitrary latency percentile.
-
-### Browser/build documentation
-
-[Vite build](https://vite.dev/guide/build.html) documents production `build`/static output and warns cached HTML may point to removed chunks; [assets](https://vite.dev/guide/assets.html) supports `new URL(...,import.meta.url)` and `?worker` separate chunks. Use production assets only, no Vite dev server/HMR exposed as monitor. Import React Flow CSS, emit local worker and asset manifest, no sourcemaps/private sources served, HTML/API `Cache-Control:no-store`. Ordinary frontend files outside active runtime pins. Vite8.3.4 requires Node^20.19 or >=22.12; observed22.23.3 fits. Use JSX transform in Vite, no unneeded React plugin; `React` binding explicitly imported if classic JSX transform chosen. Exact build/native transitive lock now exists as descriptor-bound external setup evidence. Operator resolves/installs the selected dependency intent in external scratch BEFORE final app binding; worker still writes package.json and all app source during the run. Bounded builds may copy current runner-owned source byte-for-byte into writable scratch with a node_modules link to the separately immutable admitted tree, run its local Vite with fixed argv/config, and bind outputs to copied source hashes. No worktree node_modules/symlink, npm install, prebuilt app source or hidden code substitution. Browser tests likewise resolve installed Playwright from this scratch project, not npx fetching.
-
-[React DOM common props](https://react.dev/reference/react-dom/components/common) explicitly warns untrusted `dangerouslySetInnerHTML` is an XSS hole. Use text children/DOM textContent, never HTML/markdown/URL injection. All stored values are text, not component types/CSS/class/ELK option values. [MDN textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) contrasts raw innerHTML/XSS. CSP permits only self scripts/workers/connect; React Flow needs computed inline position/style attributes: allow `style-src-attr 'unsafe-inline'` only, not inline script/eval. Static stylesheet self; no stored style attributes. Browser test asserts CSP compatibility and sentinel exclusion in **responses**, not merely hidden DOM.
-
-[Playwright assertions](https://playwright.dev/docs/test-assertions): await auto-retrying `expect(locator).toHaveText/toBeVisible`; retry observation assertions, never runtime effects. [Browsers](https://playwright.dev/docs/browsers): `channel:'chrome'` can target installed branded Chrome. Proposed1.64.1 manifest pins playwright1.64.1, Apache-2.0, Node>=20. No automatic `npx` download: later invoke local locked binary; absent browser/dependency blocks REQUIRED proof. No sandbox-disabling flags or user-profile reuse.
-
-### Starlette1.9.0 / Uvicorn0.54.0
-
-Authoritative exact-version PyPI metadata and source archives retrieved successfully; Starlette website DNS and Uvicorn website DNS failed; FastAPI tutorials403. **Successful official tagged source/docs replace failed websites, not generic recollection**:
-
-- `https://raw.githubusercontent.com/Kludex/starlette/1.9.0/docs/{applications,routing,middleware,responses,exceptions,testclient}.md` inspected relevant complete sections; corresponding PyPI1.9.0 source `applications.py`, `routing.py`, `responses.py`, `middleware/trustedhost.py`, `middleware/errors.py`, `testclient.py` corroborates API behavior.
-- Routing docs: `Route(path,endpoint,methods=['GET'])`; specific routes precede parameter routes, sync functions supported, GET function routes admit HEAD. Reject body/unknown methods in outer boundary; do not accidentally add POST/OPTIONS/websocket. `Starlette(debug=False,routes=...,exception_handlers=...,lifespan=...)`; no automatic OpenAPI/docs.
-- `JSONResponse` serializes explicit object with `allow_nan=False`; **does not sanitize raw rows**. DTO construction must precede response serialization.
-- TrustedHost protects hostname, but source strips port before matching. Use `allowed_hosts=['127.0.0.1'], www_redirect=False` PLUS own exact Host:bound-port validation; no wildcard/forwarded-host trust.
-- Exception docs: debug mode returns traceback instead of installed500 handler; set debugFalse, custom closed error DTO handler, and outer response/header/error guard. Never forward `str(exc)`, request body/path or SQL diagnostics. Uvicorn logging can log reraised server errors despite handled500; sanitize/disable exception-bearing log paths as well as access logs.
-- Testclient1.9.0 docs: built on httpx2; plain httpx supported but deprecated; lifecycle runs only in context manager; `raise_server_exceptions=False` required to inspect actual500 body. Avoid adding client dependency solely for unit tests: minimal in-process ASGI request harness can test middleware, actual HTTP/Chrome tests cover real transport. If TestClient chosen later, pin/admit its dependency and use these rules, never old tutorial assumptions.
-- Uvicorn0.54.0 exact `config.py:196–230,361–365,543–544`, `main.py:run`: explicit `host='127.0.0.1', workers=1, reload=False, proxy_headers=False, ws='none', access_log=False, server_header=False`, bounded concurrency and timeouts, no env file. Defaults proxy_headers/access_log=True are unsuitable here. No import-string app factory selected by browser; trusted CLI builds app with canonical project first.
-
-Starlette requires Python>=3.11, anyio<5>=4, typing-extensions on Python<3.13. Uvicorn requires>=3.10, click>=7 and h11>=0.8. Select no `full`, `standard`, telemetry, websocket or reload extras. Before final app binding, pin complete transitive Python lock with hashes in the separately authorized external application environment; keep it immutable and reviewable, not worker-copied app source. Selected top-level versions resolved/audited in actual isolated setup; future drift/incompatibility stops, never silently substitutes newest versions.
-
-### SQLite3.45.1 observed / Python3.12 documentation
-
-Inspected [SQLite URI](https://www.sqlite.org/uri.html) `mode`, `immutable`, `nolock`; [WAL](https://www.sqlite.org/wal.html) §§2.2,5,6,9,11; [Python3.12 sqlite3](https://docs.python.org/3.12/library/sqlite3.html) URI examples, transactions, `set_authorizer`, `set_progress_handler`, thread ownership.
-
-Documented: `mode=ro` opens readonly; `immutable=1` disables locking/change detection and is unsafe if database changes; `nolock` can corrupt with concurrent connections. WAL permits readers alongside writer but busy/errors remain possible, long readers prevent checkpoint progress. Read-only WAL needs existing appropriate sidecars or ability to create them. **Corrected decision**: require existing supported DB and safe identity/permissions for sidecars when present, allowing SQLite's normal empty WAL/SHM bookkeeping for closed historical WAL DBs, not app-authored sidecar creation/repair or authoritative mutation. Parent's inexpensive SQLite3.45.1 probe created WAL DB/committed/closed (only main file remained), then mode=ro/query_only SELECT produced normal empty WAL/SHM; requiring preexisting sidecars would break REQUIRED retrospective viewing. Preserve bounded short BEGIN/ROLLBACK snapshot, busy timeout and query VM deadline, close before HTTP send/layout, no immutable/nolock/checkpoint/DDL/attach/load_extension/saver. Keep read transaction within one worker thread; never share SQLite connection across threads or hold it for browser pagination. Explicit query_only plus authorizer allowlisted SELECT/table columns is defense in depth, not substitute for readonly URI. On unsafe identity/race, busy or unavailable SQLite locking/permission prerequisites return unavailable and retain last successful sanitized view with freshness warning; no writer lock or runtime replay.
-
-Use server-held bounded sanitized snapshots for paging with opaque expiring snapshot IDs; source reads complete within bounded work, resource exhaustion yields explicit limit/needs narrower history window, never hidden truncation. DTO inventory declares total counts and unloaded ranges. Poll cheap per-run seq/controller observation first; no full-history reread every second. Include controller identity/liveness observation per refresh, because seq unchanged does not mean process still alive. Liveness checks only validate PID/start/boot/UID against read-only OS facts; no signal/cleanup/cgroup mutation.
-
-**Newly observed upstream residual**: WAL documentation§11 says versions3.7.0..3.51.2 affected by WAL-reset race, fixed3.51.3 and backports3.44.6/3.50.7. Observed3.45.1 is affected. Necessary condition: multiple connections concurrently **write or checkpoint**; monitor does neither and cannot be used as a repair/backup/checkpointer. Existing app+saver writer arrangement is not certified by monitor tests. Official guidance recommends upgrade but describes rare/non-emergency occurrence; no unapproved upgrade or corruption experiment. Reassess actual accepted execution environment before launch; any required runtime remediation is separate owner-approved work, never bootstrap during app build. This is retained residual, not clearance or waiver of SC-005.
-
-### Web-origin safety
-
-[MDN Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) documents `mode:'same-origin'`, credentials omission and simple cross-origin requests; [Sec-Fetch-Site](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site) distinguishes same-origin from same-site/cross-site/none; [CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy) documents fallback/connect/script/frame restrictions.
-
-Derived controls: exact numeric Host:port, no proxy headers, reject duplicate/ambiguous hosts and foreign Origin, require browser `Sec-Fetch-Site:same-origin` plus constant `X-Coherence-Monitor:1` on APIs; do not enable CORS/OPTIONS preflight; no API top-level navigation/embed. Fixed assets may be direct navigation, but never contain workflow data. CSP frame-ancestors none; no object/base/forms; no external links/resources/content. Client `credentials:'omit', mode:'same-origin'`. Reject alternate loopback hostname and forwarded origin tricks. Missing Fetch Metadata is unsupported browser, not permissive fallback. This is browser-origin protection under trusted local single-UID model, **not authentication against local clients capable of forging headers**. No multiuser/remote service claim.
-
-## Minimal reviewer-reference adjustment
-
-Owner selects file references rather than redundant source embedding and explicitly corrects the parent's invented universal32KB artifact rule; no file-size feature is required. Before accepted precursor73dbaad0030c36245b078a18d9e33c9de987a6e1, `verification.py:ReviewRepair.bundle` built `source_content` by reading every source/approval file, includes whole contract, then duplicates task contracts in task_receipts and rejects canonical payload>120000. `cli.py:Coordinate._tools(review=True)` already admits reads of owned/source/approval paths. `intake.py:admit` verifies raw source hashes, safe paths, immutable authority and rejects owned/source overlap; `Approvals.verify` checks actual approval record hash. Reuse those exact boundaries.
-
-Accepted remedy: complete pinned document refs replace bodies; actual same-byte/hash/identity read receipts and settled SDK delivery coverage precede review/acceptance. Exact-equal contract copies deduplicate only; dynamic corrections/full original-range patch/REQUIRED evidence remain. No limit/tool/permission increase. See plan/validation and current pinned review_documents.py; separate precursor acceptance is not app approval.
-
-## Routine setup interface correction
-
-Actual `cli.py:Coordinate.implement` describes request_owner_input as product/priority or unexpected material impact, **never routine technical work or approved tests**; interaction.schema.json permits only `product_priority` / `unexpected_material_change`. Planned dependency resolution/descriptor delivery uses neither category. Genuine answers additionally have a separate16384-UTF8-byte cap (`Interaction.answer`), not a lock-size inference. Keep genuine question/answer/resume readiness for real questions only.
-
-Repository-derived replacement: [validation's pre-admission recipe](contracts/validation.md#pre-admitted-dependency-inputs-and-launch-binding) uses already inherited TMPDIR and existing pinned quickstart.md, no runtime tool/schema change or new platform. External locks/installed trees/fixture bindings are immutable admitted inputs; current app manifests must exactly match that dependency intent, while ordinary app source remains entirely runner-written/reviewed. Official version/API research above is reused, not new resolution/install evidence.
-
-## Security/dependency gates and research limits
-
-- Existing OI-3 SDK brace-expansion advisories remain bounded-host residual, not clearance; monitor does not import SDK or expose package/default/resource/glob/model-scope APIs. Any such new reachability reopens assessment. No SDK upgrade.
-- EPL2.0 ELK license, MIT frontend, BSD backend and Apache Playwright require exact license/notices/source-availability obligations checked before distribution; not a legal clearance claim. Preserve React Flow attribution. Do not copy proprietary Pro examples.
-- Initial PyPI/npm usage research was not an audit. Subsequent actual isolated setup resolved locks and audited dependencies: npm0 advisories, all8 resolved PyPI versions0 reported; not blanket safety or SDK clearance. No new installs/auth/network/paid services in this binding pass.
-- Known APIs and graph inventory use permanent focused tests; no disposable prototype chain. The non-isolatable concurrency/privacy/runtime-composition question needs actual isolated shipped-runtime + actual monitor before dependent UI reliance. Retain disproof and all failures, renew only invalidated design/approvals. All SC-001–006 are REQUIRED, not waived by optional regressions or generic test green.
-- Setup imports/ASGI config, React Flow exports, ELK cyclic layered coordinates, Vite vendor build and actual sandboxed Chrome interaction passed (not app certification). Initial Vite smoke incorrectly assumed build() single output; installed d.ts:3078 permits output array, targeted assertion corrected and passed. Inventory2894 entries; EPL2 ELK path and12 MPL2 entries retain notices/source availability. Four fresh actual monitored-contract fixtures cover repair, SAME-project/spec repeat, independent correction/rereview and controlled crash/reconcile/question/original continuation; test-only provenance, not production consent or app acceptance. Reobserve real bindings/records in checks. Operational custody is write bits removed plus independent hash/identity validation, not malicious-same-UID/root protection. Final owner catalog/approval and actual launch readiness remain pending.
+All implementation checks remain prospective. Historical scratch fixtures/setup, old launch failures,
+source hashes and receipts are not current app evidence or grounds to recreate retired admission.

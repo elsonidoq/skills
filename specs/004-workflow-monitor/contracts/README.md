@@ -1,6 +1,9 @@
 # Workflow monitor contracts
 
-- [Read-only monitor v1](monitor-v1.md): source pins, normalized SQL seam, HTTP/DTO, security, compatibility and UI invariants.
-- [Acceptance/admission contract](validation.md): REQUIRED SC proof, real own-build/live evidence, unchanged runtime and capability gates.
+- [Monitor v1](monitor-v1.md): proposed producer/read-only boundary, minimized DTO/API, privacy and graph behavior.
+- [Required validation](validation.md): focused SC-001–006 checks, recording noninterference and same-build acceptance.
 
-[Specification](../spec.md) is requirements truth; [plan](../plan.md) sequences derived work. [Research](../research.md) owns version-specific dependency guidance; [data model](../data-model.md) owns identities and mappings. These are design contracts, not implemented endpoints or runtime approval.
+[Spec](../spec.md) owns requirements; [plan](../plan.md) sequences delivery; [data model](../data-model.md)
+owns proposed records, emission points and review/fixing execution relationships. [Research](../research.md)
+records actual script evidence and reusable library guidance. These are proposals, not delivered APIs or
+implementation permission. Historical approvals remain historical.
