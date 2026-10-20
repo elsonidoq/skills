@@ -16,7 +16,7 @@
     "effort": "medium",
     "resolution": "resolved",
     "assumptions": [
-      "Instruction-managed delivery, not execution through the runtime under refactor; bounded sequential writers with moderate scaffolding and writer-owned verified commits.",
+      "Bounded sequential delivery with moderate scaffolding and verified task commits.",
       "Owner-selected exact implementation binding is separate from Sol/medium planning and the unchanged Sol/medium monitor configuration; callable readiness is verified before later dispatch."
     ],
     "provenance": "This conversation: actual owner ask_user answer “Yes — gpt-5.6-terra / medium”; retained in TinySpec Acceptance and remaining gates. Planning producer selected and observed openai-codex/gpt-6.1-sol, medium.",

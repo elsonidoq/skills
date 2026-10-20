@@ -93,14 +93,19 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 4.1.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-20
+**Version**: 4.1.1 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-20
+
+Amendment 4.1.1 removes the one-time restriction on delivery through the runtime
+being changed, at the owner's explicit direction. It is not a general workflow
+constraint. Sole-writer ownership, scoped authority, verified task checkpoints and
+independent review remain unchanged. PATCH corrects an overgeneralized delivery rule.
 
 Amendment 4.1.0 records the owner's approved lean-runtime decision for the reviewed
 `workflow-runtime-lean` TinySpec/tasks: deletion-first usable coding retains five readiness
 facts (valid work, usable configuration, scoped approval, safe ownership and runnable
 verification), scoped authority, real REQUIRED/manual gates, focused commits and independent
 final review. It permits the bounded instruction-managed Terra writer checkpoints for this
-refactor without bootstrapping through the runtime under change. Optional telemetry is
+refactor. Optional telemetry is
 observed rather than an execution veto; current settlement, custody and external-action
 safeguards remain mandatory. MINOR reflects this material operational simplification.
 Rationale: remove duplicate proof protocols without creating another workflow mode.
@@ -122,7 +127,7 @@ MAJOR reflects incompatible verifier/committer responsibility changes. Affected 
 this constitution, shared task-commit contract, planning/task adapters and executable-entry
 consumers/templates. No receipt ID or final production acceptance is invented. The current
 instruction-managed migration continues its worker-owned verified checkpoints; the runner
-clause governs authorized executable runs, not recursive migration cutover mid-session.
+clause governs authorized executable runs.
 
 Amendment 3.0.0 records the explicit owner decision in the
 [approved review](../../docs/plans/reviews/coordinator-no-bookkeeping-planning-review.md):

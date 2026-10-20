@@ -214,7 +214,7 @@ authorized and must not be smuggled into task execution.
 Excluded: wholesale documentation migration, retrospective ADR backfill without explicit
 scope, runtime enforcement/receipts/read attestations, new approval stages, automatic
 installs/auth/reload/restart, unrelated resume/cached-agent/paid-permission fixes, running
-workflow edits, and adoption refresh in unrelated projects. Preserve operational/spec
+workflow control changes, and adoption refresh in unrelated projects. Preserve operational/spec
 owners, history, existing checks and unrelated concurrent work. In Paseo activation later
 requires a **fresh-session handoff**, not instructions to run `/reload` or an automatic
 restart; the fresh agent verifies the checkout and loaded capabilities.

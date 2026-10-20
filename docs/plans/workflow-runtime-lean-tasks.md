@@ -15,15 +15,15 @@ not registered runtime oracles or old-runtime dispatch eligibility. No new test 
 - **resolution**: resolved
 - **provenance**: This conversation: actual owner ask_user answer “Yes — gpt-5.6-terra / medium”; retained in TinySpec Acceptance and remaining gates. Planning producer selected and observed openai-codex/gpt-6.1-sol, medium.
 - **decomposition_rationale**: Three production outcomes: usable configured task/check/commit path; compatible durable attempts/history; simpler product review/owner input. Terra gets explicit interfaces and moderate scaffolding. Focused actual-helper tests and one early A2 live exercise, not historical migration/fault programmes. Independent full-range delivery acceptance follows writer checkpoints.
-- **assumptions**: Instruction-managed delivery, not execution through the runtime under refactor; bounded sequential writers with moderate scaffolding and writer-owned verified commits. Owner-selected exact implementation binding is separate from Sol/medium planning and the unchanged Sol/medium monitor configuration; callable readiness is verified before later dispatch.
+- **assumptions**: Bounded sequential delivery with moderate scaffolding and verified task commits. Owner-selected exact implementation binding is separate from Sol/medium planning and the unchanged Sol/medium monitor configuration; callable readiness is verified before later dispatch.
 - **compatible_bindings**: provider `openai-codex`, model `gpt-5.6-terra`, effort `medium`. Assessment: Owner-selected compatible target for these bounded interfaces and moderate scaffolding; not a claim of current callable SDK readiness or implementation authority. Provenance: Actual owner answer in this conversation and retained TinySpec delivery direction.
 
 All tasks inherit envelope `lean-delivery-draft`; its observer label records owner selection,
 not SDK observation. Monitor/base Sol/medium YAML stays unchanged for delivery; future PRODUCT
 bindings come from selected config, requested/observed distinct. No runtime dispatch claim.
 
-Bounded sequential writers deliver manually, not through this runtime or retired skills. Each
-writer verifies/focused-commits before later writes; coordinator inspects diff/SHA/item proof.
+Bounded sequential delivery verifies and focused-commits before later writes;
+the checkpoint owner inspects diff/SHA/item proof.
 A2's PRODUCT runner commit is distinct. Shared protections: one writer, scoped paths/private data/
 external authority, unrelated staged/unstaged/ignored/nested material, real REQUIRED/manual gates,
 hooks/signing, inspected retry/no uncertain replay and independent acceptance. The

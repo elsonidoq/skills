@@ -45,7 +45,7 @@ that workflow.
 For authorized executable Coordinate Implementation runs, workers may propose/produce owned task changes but do not stage, commit, select work or own workflow persistence. The runner establishes baseline/ownership, runs actual specified project checks and manual gates, inspects actual owned diffs, and creates one focused verified owned-path task or repair commit before subsequent mutation or handoff. Never blindly replay Git after interruption: inspect the actual commit and partial work. Unknown/live work, missing verification/Git authority, failed hooks/checks/signing or ownership conflict block the affected operation; no configure-around, broad staging, reset, history rewrite or discard. Read-only/no-change creates no empty commit. Planning/standalone retained artifacts continue to use their authorized writer's existing focused task-checkpoint contract. Ordinary SQLite task progress is permitted; no agent-written narrative STATE, routine summaries/indexes, reflection or inferred guidance. Preserve independent review, existing STATE/custom content, technical gotchas, historical rows, unrelated dirty work and explicit scope/permission approvals. Six task-linter checks govern task validity; no graph, cgroup, manifest, original-session, intent-settlement or evidence-receipt eligibility is required.
 
 This scope is specific to authorized executable runs. Instruction-managed bootstrap work
-continues its existing writer checkpoints; do not recursively transfer an ongoing migration.
+continues its existing writer checkpoints.
 The following coordinator/implementer duties apply to instruction-managed execution only.
 
 ## Coordinator and fresh implementer duties

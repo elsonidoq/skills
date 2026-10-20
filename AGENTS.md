@@ -109,8 +109,8 @@ rules above for reusable skills and commands.
   recent context, selective artifact/Git/check reconstruction and active-child reconciliation
   under the executable interface's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
   Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
-- Execution delivery uses a single instruction-managed writer and one verified focused checkpoint,
-  not recursive execution through the runtime being changed. Planning must produce granular,
+- Execution delivery uses a single writer and verified focused task checkpoints.
+  Planning must produce granular,
   independently verifiable tasks sized for Terra workers, regardless of the planning model.
   Split independently testable concerns rather than bundling milestones into implementation tasks.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.

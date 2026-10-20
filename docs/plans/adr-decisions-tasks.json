@@ -145,7 +145,7 @@
       "acceptance": [
         {"id": "A5/T010", "check": "Extend/run existing offline engine prompt-capture fixtures, asserting the actual worker and read-only reviewer strings, including usable file-discovery instructions despite disabled reviewer skills.", "pass": "Both emitted prompts receive the shared-contract discovery/accepted-constraint instruction with existing task/range context; known constraints cannot be ignored for unavailable packaging. Existing independence/read-only assertions remain green. No new required fields or runtime redesign. Completion uses T001 and actual engine captures, not unfinished skill consumers.", "evidence": "Captured prompt assertions and actual focused engine command output/environment; static/offline wiring only, not model-obedience or provider success."}
       ],
-      "permissions": "Implementation later must wait for current running work to finish, then recheck fresh path/sole-writer ownership. Never recursively execute through the runtime being edited. Verify and focus-checkpoint this prompt interface."
+      "permissions": "Implementation later must wait for current running work to finish, then recheck fresh path/sole-writer ownership. Verify and focus-checkpoint this prompt interface."
     },
     {
       "id": "T011",

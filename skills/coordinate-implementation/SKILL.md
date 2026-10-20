@@ -78,7 +78,7 @@ cleanup or history rewrite. Read-only/no-change makes no empty commit. No extra 
 Dependencies release after the producer's real focused checkpoint, not an approval envelope.
 Never blindly replay a Git commit after interruption; inspect the actual resulting commit first.
 See the canonical [task-commit contract](../memory-handling/references/task-commit-contract.md).
-Planning/standalone/bootstrap writers retain their existing checkpoint duties, not recursive runtime execution.
+Planning/standalone/bootstrap writers retain their existing checkpoint duties.
 
 ## Review and Acceptance
 

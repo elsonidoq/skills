@@ -112,8 +112,8 @@ rules. Relevant source constraints must reach each actual worker brief, not only
     `PYTHONPATH=runtime:runtime/tests`; retain independence/read-only assertions. Skill
     consumer changes are not prerequisites for this local emitted-prompt oracle.
   - **Real boundary**: implementation waits for current running work to finish and a fresh
-    sole-writer/path ownership inspection. Never recursively execute through the runtime
-    being edited. No host, intake, sessions/recovery, SQL/state or configuration changes.
+    sole-writer/path ownership inspection. No host, intake, sessions/recovery, SQL/state
+    or configuration changes.
 
 - [ ] T011 Publish bounded discovery/managed instructions with composed continuity evidence.
   - **Depends**: T002, T003, T004, T005, T006, T007, T008, T009, T010
@@ -167,7 +167,7 @@ scope; no shared index, source, AGENTS, skill or runtime is edited by this task 
 
 No prototype, new framework/dependency/install, mandatory live/provider evaluation, metadata
 registry/read attestation/receipt, unrelated permission/cache/resume repair, settings/memory/STATE
-write, fleet migration, running-workflow edit or host redesign. Static/scenario/fixture PASS is
+write, fleet migration or host redesign. Static/scenario/fixture PASS is
 instruction/prompt-wiring evidence, **not model obedience**. Future feature checks are NOT RUN
 in planning. Paseo activation later uses a fresh-session checkout/capability-verification handoff,
 not /reload or automatic restart. Parent review, combined approval and the separate implementation

@@ -5,8 +5,8 @@
 Planner-owned review, not an independent implementation review. Owner selected
 TinySpec, Sol/medium planning producers, and granular outcomes suitable for intended
 Terra/medium implementation. Exact implementation binding remains for later selection.
-**Planning only: combined artifact approval and a separate explicit instruction to
-start implementation remain outstanding. Approval of planning alone cannot launch work.**
+**Planning was approved and implementation was subsequently authorized by the owner;
+see Approval below. This record does not claim implementation has started or finished.**
 
 Owner permits planning in this concurrently edited checkout confined to our created
 files. A temporary no-commit instruction has now been lifted. No unrelated files,
@@ -18,9 +18,9 @@ SHA-256 of complete UTF-8 file bytes (approval applies to these contents):
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `docs/plans/adr-decisions-tinyspec.md` | `f2d9e2cb6ed1dba8fc37ece57d7ab83377032df4c7df110e599f5a7457c676ce` |
-| `docs/plans/adr-decisions-tasks.md` | `9e169cf50f05c063b2e11dad80727b6647e3ab7b494fd1d68357f85b1b4e474f` |
-| `docs/plans/adr-decisions-tasks.json` | `27bcdb6196d7b667ec7498085f2a979cbd27fbdc75c59a25c6a6b48a34a54f68` |
+| `docs/plans/adr-decisions-tinyspec.md` | `46cf0345aa87853abd92351635b7a50d0a09998e7215cce7edd6d5d50ad8d35b` |
+| `docs/plans/adr-decisions-tasks.md` | `90042a3b3c08e92e6b84730451892254651615e808b1812c42fdbc602501c449` |
+| `docs/plans/adr-decisions-tasks.json` | `b4612ad05521a861affd4463167c95716757e4c9d6939dc06cfded56a966a568` |
 
 Source checkpoint: `4207aba5461c8c400b99f1c85516a3e0ac3db2c3`.
 Task checkpoint: `728da6060233ab82e4543a426f0da9d0109cdc44`.
@@ -47,8 +47,8 @@ Unrelated HEAD advancement is expected; approval comparison uses these scoped co
   Missing storage alone does not block unrelated legacy work.
 - Runtime scope is justified by the final reviewer's disabled automatic skill loading.
   T010 changes only two existing prompts and their tests, not the host/runtime design.
-  It cannot run underneath current work: fresh sole-writer/path checks and completion
-  of the running workflow remain explicit future implementation boundaries.
+  Fresh sole-writer/path checks still prevent overlap with another running workflow;
+  there is no prohibition on this workflow delivering its own runtime changes.
 - No separate prototype or external research is justified for these known local seams.
   Pressure/contract scenarios and actual prompt captures are proportional; they do not
   prove unrestricted model obedience. No mandatory paid/provider/live test is introduced.
@@ -79,8 +79,14 @@ claimed satisfied by planning syntax or scenario descriptions.
 
 Owner answered **“Approve planning only”** through `ask_user` after the full task brief.
 This approves the combined source/task contents identified by the SHA-256 values above,
-not implementation. **Implementation remains stopped until the owner's separate explicit
-go-ahead.** Intended implementation family/effort remains Terra/medium; exact binding and
-usable configuration are unresolved until later preflight. Any future material source/task
+not implementation. The owner subsequently authorized implementation: “launch the workflow,
+you will be the only one doing an implementation in this worktree”. They then explicitly
+removed the one-time restriction on executing through the runtime being changed:
+“Forget about that rule. That was a one-time thing. Remove that rule at all.
+Whatever that rule is written, delete it.” The content identities above reflect only
+that bounded removal from the reviewed source/tasks; all A1–A6 criteria and eleven
+outcomes remain unchanged. This owner direction renews approval for that removal,
+not unrelated scope changes. Intended implementation family/effort remains Terra/medium;
+exact binding and usable configuration remain for preflight. Any future material source/task
 change requires affected review and renewed approval; current runtime/path state must be
 inspected again before implementation.
