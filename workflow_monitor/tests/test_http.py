@@ -1,5 +1,6 @@
 """Local HTTP boundary tests; fixtures are offline and no writer is started."""
 import copy
+import json
 from pathlib import Path
 import socket
 import tempfile
@@ -109,6 +110,33 @@ class HttpTests(unittest.TestCase):
                 self.assertEqual(sum(item.get("source_seq") is None for item in retained), 55)
                 bad = self.client.get(f"/api/monitor/v1/runs/{run}/history?snapshot={first['snapshot_ref']}&cursor=cursor_unknown_not_this_run", headers=self.api_headers)
                 self.assertEqual(bad.status_code, 400)
+
+    def test_pre_page_execution_summary_uses_return_and_answer_after_page_50(self):
+        raw = snapshot()
+        raw['runs'] = [row for row in raw['runs'] if row['run_id'] == 'run-a']
+        rows = [{'seq': number, 'run_id': 'run-a', 'occurrence_id': f'noise-{number}', 'phase': 'check',
+                 'task_id': 'one', 'kind': 'started', 'recorded_at': number, 'facts': json.dumps({'ordinal': number})}
+                for number in range(1, 51)]
+        rows.extend([
+            {'seq': 51, 'run_id': 'run-a', 'occurrence_id': 'worker', 'phase': 'worker', 'task_id': 'one',
+             'kind': 'started', 'recorded_at': 51, 'facts': json.dumps({'role': 'worker'})},
+            {'seq': 52, 'run_id': 'run-a', 'occurrence_id': 'question', 'phase': 'worker', 'task_id': 'one',
+             'kind': 'question_requested', 'recorded_at': 52, 'facts': json.dumps({'parent_occurrence_id': 'worker'})},
+            {'seq': 53, 'run_id': 'run-a', 'occurrence_id': 'question', 'phase': 'worker', 'task_id': 'one',
+             'kind': 'answer_returned', 'recorded_at': 53, 'facts': json.dumps({'parent_occurrence_id': 'worker'})},
+            {'seq': 54, 'run_id': 'run-a', 'occurrence_id': 'worker', 'phase': 'worker', 'task_id': 'one',
+             'kind': 'returned', 'recorded_at': 54, 'facts': json.dumps({'role': 'worker'})},
+        ])
+        raw['observations'] = rows
+        self.reader.value = raw
+        run = self.client.get('/api/monitor/v1/runs', headers=self.api_headers).json()['runs'][0]['ref']
+        first = self.client.get(f'/api/monitor/v1/runs/{run}/snapshot', headers=self.api_headers).json()
+        later = self.client.get(f"/api/monitor/v1/runs/{run}/history?snapshot={first['snapshot_ref']}&cursor={first['next_cursor']}", headers=self.api_headers).json()
+        worker = next(item for item in first['occurrences'] if item['role'] == 'worker')
+        self.assertEqual(worker['execution_summary'], {'state': 'success', 'qualification': None})
+        self.assertEqual(first['runs'][0]['acceptance_summary'], later['runs'][0]['acceptance_summary'])
+        self.assertEqual(worker['execution_summary'], next(item for item in later['occurrences'] if item['role'] == 'worker')['execution_summary'])
+        self.assert_safe(self.client.get(f'/api/monitor/v1/runs/{run}/history?snapshot={first["snapshot_ref"]}&cursor={first["next_cursor"]}', headers=self.api_headers))
 
     def test_snapshot_scopes_graph_entities_to_selected_root(self):
         runs = self.client.get("/api/monitor/v1/runs", headers=self.api_headers).json()["runs"]

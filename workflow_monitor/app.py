@@ -172,7 +172,7 @@ def _page(data: dict[str, Any], reference: str, after: int | str, size: int) -> 
 
 
 def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
-    """Add closed execution presentation facts from recorded ownership, never payloads.
+    """Add closed execution and acceptance facts from recorded ownership, never payloads.
 
     Sequence means recorded order, not proven causality. A preparation failure can
     wrap a more specific check/worker failure; show only that specific stopping step.
@@ -190,6 +190,7 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
         item["parent_ref"] = next(iter(parents)) if len(parents) == 1 else None
         item["stopping"] = False
         item["support_ref"] = None
+    runner_states = {run["ref"]: run.get("runner_state", {"state": "unknown"}) for run in public["runs"]}
     for run in public["runs"]:
         scoped = [item for _, item in pairs if item["run_ref"] == run["ref"]]
         agents = [item for item in scoped if item["role"] != "non_model"]
@@ -208,6 +209,55 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
                 if parent is None:
                     parent = max(preceding, key=lambda agent: agent["first_seq"], default=None)
             item["support_ref"] = parent["ref"] if parent else None
+
+        # Summaries deliberately use the full normalized snapshot, before HTTP paging.
+        # They are execution facts, not task/check/review acceptance verdicts.
+        for item in agents:
+            rows = next(row["observations"] for row, candidate in pairs if candidate is item)
+            kinds = [row["kind"] for row in rows]
+            terminal = {kind for kind in kinds if kind in {"returned", "passed", "failed", "interrupted", "abandoned"}}
+            typed_reviewer_result = item["role"] == "reviewer" and any(
+                type(row["facts"].get("approved")) is bool and type(row["facts"].get("finding_count")) is int
+                and row["facts"]["finding_count"] >= 0 for row in rows)
+            questions = [candidate for candidate in scoped if candidate["parent_ref"] == item["ref"]]
+            outstanding = any(next((row["kind"] for row in reversed(next(source["observations"] for source, candidate in pairs if candidate is question))), None)
+                              == "question_requested" for question in questions)
+            if typed_reviewer_result:
+                state, qualification = "success", None
+            elif len(terminal & {"returned", "passed", "failed", "interrupted", "abandoned"}) > 1:
+                state, qualification = "unknown", "conflicting_terminal_evidence"
+            elif terminal & {"returned", "passed"}:
+                state, qualification = "success", None
+            elif "failed" in terminal:
+                state, qualification = "failure", None
+            elif terminal & {"interrupted", "abandoned"}:
+                state, qualification = "unknown", "incomplete_terminal"
+            elif outstanding:
+                state, qualification = "waiting", "outstanding_input"
+            elif "started" in kinds and runner_states[run["ref"]].get("state") == "live":
+                state, qualification = "running", "recorded_running"
+            else:
+                state, qualification = "unknown", "incomplete_history"
+            item["execution_summary"] = {"state": state, "qualification": qualification}
+
+        checks, checkpoints, reviews = [], [], []
+        for item in scoped:
+            rows = next(row["observations"] for row, candidate in pairs if candidate is item)
+            terminal_row = next((row for row in reversed(rows) if row["kind"] in {"passed", "failed", "interrupted", "abandoned"}), None)
+            if item["phase"] == "check" and terminal_row:
+                checks.append({"occurrence_ref": item["ref"], "state": terminal_row["kind"],
+                               "ordinal": terminal_row["facts"].get("ordinal"), "exit_code": terminal_row["facts"].get("exit_code")})
+            elif item["phase"] == "checkpoint" and terminal_row:
+                checkpoints.append({"occurrence_ref": item["ref"], "state": terminal_row["kind"],
+                                    "baseline": terminal_row["facts"].get("baseline"), "head": terminal_row["facts"].get("head"),
+                                    "no_change": terminal_row["facts"].get("no_change")})
+            elif item["role"] == "reviewer" and terminal_row:
+                reviews.append({"occurrence_ref": item["ref"], "state": terminal_row["kind"],
+                                "approved": terminal_row["facts"].get("approved") if type(terminal_row["facts"].get("approved")) is bool else None,
+                                "finding_count": terminal_row["facts"].get("finding_count") if type(terminal_row["facts"].get("finding_count")) is int else None,
+                                "base": terminal_row["facts"].get("review_base"), "head": terminal_row["facts"].get("review_head")})
+        run["acceptance_summary"] = {"checks": checks, "checkpoints": checkpoints, "reviews": reviews,
+                                     "full_range": run["review_acceptance"]}
         terminals = [item for item in scoped if item["phase"] == "terminal" and item["outcome"] in {"failed", "interrupted", "abandoned"}]
         for terminal in terminals:
             failures = [item for item in scoped if item is not terminal and item["outcome"] in {"failed", "interrupted", "abandoned"}
@@ -256,8 +306,6 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
             raw = reader.open_snapshot()
             graph = normalize(raw)
             result = minimize(graph)
-            if result.get("state") == "ok":
-                _execution_details(graph, result)
             if result.get("state") != "ok":
                 if last_safe is None:
                     return None, _state_response(result)
@@ -270,6 +318,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
                 raw_id = next((row.get("run_id") for row in raw.get("runs", []) if isinstance(row, dict)
                                and isinstance(row.get("run_id"), str) and item["ref"] == run_ref(row["run_id"])), None)
                 item["runner_state"] = qualify(identities.get(raw_id))
+            _execution_details(graph, result)
             last_success_at = time.time()
             last_safe = observed(result, read_state="current")
             return last_safe, None

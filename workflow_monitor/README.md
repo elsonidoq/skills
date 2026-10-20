@@ -33,7 +33,22 @@ A confirmed internal step that stops a recorded failed run appears as a red node
 its recorded parent or preceding agent in that run/task scope. A failure before any
 agent starts remains visible without an invented agent. Recovered check observations
 remain in Details/history, not extra stopping nodes. Sequence edges mean recorded order,
-not proven causality. The status legend distinguishes green success, red failure, amber
+not proven causality.
+
+Snapshot occurrence `execution_summary` is derived from the full normalized snapshot
+before history paging. A worker or fixing-worker `returned` is execution success; its
+own established failure is execution failure. Checks, checkpoints, questions and review
+acceptance never recolor that worker. Outstanding input is waiting; a start-only agent is
+only *recorded running* with a compatible live recorded runner, otherwise it is
+unknown/incomplete. Interrupted, abandoned, or conflicting terminal evidence stays
+qualified unknown. Terminal evidence beats stale waiting/running and attempts remain
+distinct. A reviewer with typed `approved` and `finding_count` returned successfully even
+when it rejected the work; malformed/transport reviewer failure does not imply success.
+
+Each run also exposes a separate full-snapshot `acceptance_summary`: checks,
+checkpoints, reviewer approval/findings/ranges, and the existing full-range acceptance
+qualification. These facts are retained independently of the loaded history page. The
+status legend distinguishes green execution success, red execution failure, amber
 waiting and neutral recorded/incomplete/unknown. Worker return is **not acceptance**.
 
 Click a node or edge to highlight it and update the visible Details panel next to the
