@@ -38,7 +38,11 @@ New runs may additionally retain a closed `execution_monitor_runs` descriptor an
 append failures warn safely and never alter normal progress, checks, Git, or errors. Descriptors
 retain only declared task IDs/dependencies and explicitly supplied public presentation; observations
 retain closed phase/kind/fact fields, never prompts, answers, commands, output, findings, or errors.
-Existing progress and historical rows are neither converted nor inferred. Engine emissions include
+Existing progress and historical rows are neither converted nor inferred. The retained closed descriptor has a
+distinct description version, phase labels with possible branches and pre-recording markers, task IDs and
+safe optional presentation, requested executor, revision-or-unknown, declared correction, and private
+runner identity in its dedicated column. Descriptor/identity collection and warning output are best effort.
+Engine emissions include
 per-command check start/outcome and checkpoint start/outcome; command text and output remain private.
 A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.
 Facts are validated by phase and milestone before append: Git fields are hashes, roles and error categories

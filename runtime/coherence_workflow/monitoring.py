@@ -16,6 +16,16 @@ KINDS = frozenset({"started", "returned", "passed", "failed", "interrupted", "qu
 _HASH = re.compile(r"^[0-9a-f]{40,64}$")
 _ROLES = frozenset({"worker", "fixing_worker", "reviewer"})
 _ERRORS = frozenset({"blocked", "check", "git", "malformed", "transport", "interrupted", "unknown"})
+PHASE_DESCRIPTORS = (
+    {"id": "intake", "label": "Task intake", "possible_branches": ["prepare", "terminal"], "pre_recording": True},
+    {"id": "prepare", "label": "Task preparation", "possible_branches": ["gate", "worker", "terminal"], "pre_recording": False},
+    {"id": "gate", "label": "Manual gate", "possible_branches": ["worker", "terminal"], "pre_recording": False},
+    {"id": "worker", "label": "Task worker", "possible_branches": ["check", "terminal"], "pre_recording": False},
+    {"id": "check", "label": "Project checks", "possible_branches": ["checkpoint", "terminal"], "pre_recording": False},
+    {"id": "checkpoint", "label": "Focused checkpoint", "possible_branches": ["review", "terminal"], "pre_recording": False},
+    {"id": "review", "label": "Independent review", "possible_branches": ["terminal"], "pre_recording": False},
+    {"id": "terminal", "label": "Run terminal", "possible_branches": [], "pre_recording": False},
+)
 
 
 def _warn(message):
@@ -68,6 +78,16 @@ def _closed_facts(phase, kind, facts):
 
 def descriptor(contract, executor, revision=None):
     """Return a closed retained description; private task prose is never copied."""
+    try:
+        return _descriptor(contract, executor, revision)
+    except Exception:
+        _warn("recording description unavailable")
+        return {"version": RECORDING_VERSION, "description_version": 1, "phases": list(PHASE_DESCRIPTORS),
+                "tasks": [], "requested_executor": {}, "correction_of": None,
+                "runtime_revision": None, "runtime_revision_reason": "unknown"}
+
+
+def _descriptor(contract, executor, revision=None):
     tasks = []
     monitor = contract.get("monitor") if isinstance(contract, dict) else None
     presentation = monitor.get("tasks", {}) if isinstance(monitor, dict) and isinstance(monitor.get("tasks"), dict) else {}
@@ -81,7 +101,7 @@ def descriptor(contract, executor, revision=None):
     if not (isinstance(correction, dict) and isinstance(correction.get("run_id"), str) and isinstance(correction.get("review_execution_id"), str)):
         correction = None
     requested = {k: executor.get(k) for k in ("provider", "model", "effort")} if isinstance(executor, dict) else {}
-    return {"version": RECORDING_VERSION, "phases": ["prepare", "gate", "worker", "check", "checkpoint", "review", "terminal"],
+    return {"version": RECORDING_VERSION, "description_version": 1, "phases": list(PHASE_DESCRIPTORS),
             "tasks": tasks, "requested_executor": requested, "correction_of": correction,
             "runtime_revision": revision if _sha(revision) else None,
             "runtime_revision_reason": None if _sha(revision) else "unknown"}
@@ -91,9 +111,9 @@ class Recorder:
     """Optional append-only recorder. Every public method is safe to call on errors."""
     def __init__(self, store, run): self.store, self.run, self.registered = store, run, False
 
-    def register(self, description):
+    def register(self, description, runner_identity=None):
         try:
-            self.store.register_monitor_run(self.run, description)
+            self.store.register_monitor_run(self.run, description, runner_identity)
             self.registered = True
             return True
         except Exception:

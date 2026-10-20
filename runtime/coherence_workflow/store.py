@@ -87,7 +87,13 @@ class Store:
             PRIMARY KEY(run_id, task_id));
         CREATE TABLE IF NOT EXISTS execution_monitor_runs(
             run_id TEXT PRIMARY KEY, recording_version INTEGER NOT NULL,
-            description TEXT NOT NULL, started_at REAL NOT NULL);
+            description TEXT NOT NULL, started_at REAL NOT NULL, runner_identity TEXT);
+        """)
+        try:
+            self.db.execute('ALTER TABLE execution_monitor_runs ADD COLUMN runner_identity TEXT')
+        except sqlite3.OperationalError:
+            pass
+        self.db.executescript("""
         CREATE TABLE IF NOT EXISTS execution_observations(
             seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
             recording_version INTEGER NOT NULL, occurrence_id TEXT NOT NULL,
@@ -117,12 +123,12 @@ class Store:
             self.db.execute("INSERT INTO execution_runs VALUES(?,'running',?,NULL,NULL)", (run,baseline))
         except sqlite3.IntegrityError:
             raise Blocked('run ID already exists; inspect its progress and choose a fresh run ID, never replay it') from None
-    def register_monitor_run(self, run, description):
+    def register_monitor_run(self, run, description, runner_identity=None):
         """Add recording metadata without touching ordinary progress rows."""
         from .monitoring import RECORDING_VERSION
         self.authority.assert_held()
-        self.db.execute('INSERT INTO execution_monitor_runs(run_id,recording_version,description,started_at) VALUES(?,?,?,?)',
-                        (run, RECORDING_VERSION, canonical(description), time.time()))
+        self.db.execute('INSERT INTO execution_monitor_runs(run_id,recording_version,description,started_at,runner_identity) VALUES(?,?,?,?,?)',
+                        (run, RECORDING_VERSION, canonical(description), time.time(), canonical(runner_identity) if runner_identity else None))
 
     def append_monitor_observation(self, run, occurrence_id, phase, task_id, kind, facts):
         """One short append; a caller treats all errors as optional warnings."""

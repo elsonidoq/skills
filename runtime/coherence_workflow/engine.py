@@ -1,9 +1,11 @@
 """Sequential task/check/Git execution, with one fresh read-only final reviewer."""
 import json
+import os
 
 from .git_effects import FocusedGit
 from .monitoring import Recorder, descriptor
 from .pi_adapter import PiAdapter, terminal_question
+from .processes import process_identity
 from .store import Blocked, canonical, git
 from .verification import manual_gates, run_checks
 
@@ -18,7 +20,11 @@ class Engine:
         base = git(project, 'rev-parse', 'HEAD').decode().strip()
         store.start(self.run, base)
         recorder = Recorder(store, self.run)
-        recorder.register(descriptor(self.contract, self.executor, base))
+        try:
+            identity = process_identity(os.getpid(), self.run)
+        except Exception:
+            identity = None
+        recorder.register(descriptor(self.contract, self.executor, base), identity)
         terminal = recorder.occurrence()
         recorder.emit(terminal, 'terminal', 'started', facts={'baseline': base})
         checkpoints = []

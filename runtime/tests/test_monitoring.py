@@ -23,7 +23,11 @@ class MonitoringStorageTests(ProjectTest):
             record = owner.store.monitor('run')
             self.assertEqual([row['kind'] for row in record['observations']], ['started', 'returned'])
             self.assertEqual(record['observations'][0]['occurrence_id'], occurrence)
-            self.assertEqual(json.loads(record['run']['description'])['tasks'][0]['label'], 'Public')
+            retained = json.loads(record['run']['description'])
+            self.assertEqual(retained['tasks'][0]['label'], 'Public')
+            self.assertEqual(retained['description_version'], 1)
+            self.assertTrue(any(phase['pre_recording'] for phase in retained['phases']))
+            self.assertTrue(any(phase['possible_branches'] for phase in retained['phases']))
             self.assertEqual(dict(owner.store.db.execute('SELECT * FROM execution_tasks').fetchone()), before)
 
     def test_invalid_optional_metadata_and_append_failure_do_not_veto_progress(self):
