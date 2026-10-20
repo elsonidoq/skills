@@ -100,6 +100,42 @@ preparation and routine teardown normally stay inside that outcome. Do not split
 noun or task-count quota; preserve real dependencies and gates rather than mechanically merging
 independent work.
 
+### Executor-sized outcomes
+
+A delivery milestone groups related capabilities; an execution task implements **one bounded
+outcome** that can be verified and checkpointed before later work. A coherent milestone is
+not automatically an executor-sized assignment, even when an advanced model could finish it.
+
+During authoring and review:
+
+1. Name the outcome, owned change paths, scope/exclusions, consumed interfaces and earlier
+   producer dependencies. Give a concrete observable and the smallest sufficient verification;
+   keep its ordinary tests, relevant docs and routine teardown with the outcome. Express these
+   in the work description or existing fields, not new mandatory metadata.
+2. If the assignment bundles independently testable interfaces or behaviors and requires the
+   configured executor to carry multiple unfinished concerns, split at those real seams.
+   Consider context loss, compaction and drift across implementation, debugging and verification,
+   not just whether the author understands the whole milestone. Tailor boundaries and needed
+   scaffolding to the selected executor/effort and observed capabilities, not a model-family
+   hierarchy; unknown capability calls for explicit boundaries, not an invented model binding.
+3. Check that each task's acceptance can finish using available predecessor contracts and its
+   own result, without unfinished downstream work or future final acceptance. Put composed
+   acceptance at the first boundary where its prerequisites exist. Review both coarse bundles
+   and gratuitous splits: no universal task count or file/line/token/time ceiling; more prose
+   or reading executor configuration alone does not make a task bounded.
+
+**Before:** “Deliver the read-only graph viewer: snapshot reader, privacy mapping, HTTP
+service and usable browser; verify the complete app.” This is a milestone with several
+independently testable contracts, not one execution task.
+
+**After:** First deliver the snapshot reader against the existing storage contract, owning
+only reader code, readback tests and its contract docs; verify snapshot consistency and no
+writes with actual storage. Exclude mapping, HTTP and browser work. Then deliver the mapper
+against that reader, HTTP against the public mapped contract, and browser against HTTP,
+each with its local tests/docs and concrete checks. Reader acceptance does not wait for the
+browser. Keep a simple reader fix and its regression test together; do not force this example's
+number of tasks onto other work.
+
 State shared constraints once in their authoritative context. Task entries contain
 outcome-specific scope, interfaces, acceptance and verification, not repeated specification
 prose or administrative reports. Keep the human document a concise presentation, not a prose
@@ -112,8 +148,10 @@ runtime restrictions and agent-selected design choices in existing task fields. 
 or agreement to a narrowly explained remedy must not become a broader owner requirement.
 
 Each task needs an ID and work description. Include dependencies when work needs a producer.
-Likely files, interfaces, acceptance checks and shared context are useful optional details. Cover all in-scope work, integration/acceptance checks, and
-lockstep documentation whose evidence compares documentation with implemented behavior.
+Dedicated fields for paths, interfaces, acceptance checks and shared context remain optional;
+the work description can carry the outcome boundaries above. Cover all in-scope work,
+integration/acceptance checks, and lockstep documentation whose evidence compares documentation
+with implemented behavior.
 Record exclusions so tasking cannot reintroduce them.
 
 Use practical observables, not generic green output: an ordinary wiring task might require
@@ -181,7 +219,8 @@ production acceptance, disproof/renewal and feasibility through both adapters/di
 Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks
 without weakening acceptance or original gates. Return only necessary producer/consumer
 dependencies, applicable evidence/limits and blocked reliance to the existing producing review
-and coordinator handoff; syntax/order validation alone cannot prove consumption.
+and coordinator handoff; syntax/order validation alone cannot prove consumption or appropriate
+task granularity. Apply the executor-sized outcome recipe above at this review boundary.
 
 Carry work-specific checks, exclusions and genuinely material permission boundaries into
 the worker brief. Verify the dependency graph with

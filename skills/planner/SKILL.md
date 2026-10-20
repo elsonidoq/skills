@@ -141,7 +141,10 @@ schedules proofs, not execution without separate authority; the shared risk owne
 applicability and lifetime.
 
 At both TinySpec and Standard reviews, challenge proposed task boundaries using the shared
-task-generation outcome rule; see the [task-generation contract](../task-generation/SKILL.md).
+task-generation outcome rule and
+[executor-sized outcome recipe](../task-generation/SKILL.md#executor-sized-outcomes): reject
+milestones disguised as tasks and assess compaction/drift for the configured executor/effort,
+even when an advanced author could deliver the whole milestone.
 A workflow or phase noun is not a reason to split; keep tests, evidence, review preparation
 and routine teardown with the supported delivery unless a concrete independent outcome,
 prerequisite, gate, resource or context boundary warrants separation.
@@ -262,14 +265,11 @@ never infer a substitute from the planner/producer/reviewer profile. Executor se
 to actual runtime configuration. Task handoffs follow the shared `task-generation` six-check
 contract, not mandatory execution-intent, compatibility-assessment or provenance metadata.
 
-Use owner-guided qualitative scaffolding, not universal rankings or fixed thresholds:
-Luna: narrow coherent outcomes, named interfaces/invariants, context/edge-case pointers and
-ordered guidance where useful. Terra: clear boundaries, non-obvious decisions and moderate
-scaffolding. Sol: outcome-oriented instructions may leave routine choices open when justified.
-Effort and verified guidance refine assumptions; unknown/unlisted classes default to explicit
-instructions without unnecessary micro-tasks. A more capable planner must not leave architecture
-implicit for a smaller executor. Record what is explicit/bounded, what choices remain open and
-uncertainty. REQUIRED acceptance, dependencies, safety and approval gates never shrink.
+Apply task-generation's executor-sized outcome recipe using selected configuration and
+verified capability guidance, not a model-family hierarchy or a substitute model. Make
+interfaces and non-obvious decisions explicit where the executor needs them; configuration
+alone does not establish granularity. Record bounded scope, choices left open and uncertainty.
+REQUIRED acceptance, dependencies, safety and approval gates never shrink.
 
 Preserve the selected executor and effort without silent substitution. Revise guidance when
 a real change affects the work, but do not require model assessments, approval/source receipts

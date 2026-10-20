@@ -172,6 +172,31 @@ class TaskGenerationContractTests(unittest.TestCase):
             with self.subTest(clause=clause):
                 self.assertIn(" ".join(clause.split()), " ".join(review.split()))
 
+    def test_executor_sized_recipe_and_planner_review_reference(self):
+        """Instruction coverage only; realistic boundary judgments need manual pressure checks."""
+        recipe = TEXT.split("### Executor-sized outcomes", 1)[1].split(
+            "State shared constraints once", 1)[0]
+        for clause in (
+            "A delivery milestone groups related capabilities",
+            "one bounded outcome", "owned change paths", "scope/exclusions",
+            "consumed interfaces and earlier producer dependencies",
+            "multiple unfinished concerns", "context loss, compaction and drift",
+            "selected executor/effort and observed capabilities",
+            "not a model-family hierarchy", "without unfinished downstream work",
+            "no universal task count or file/line/token/time ceiling",
+            "ordinary tests, relevant docs and routine teardown",
+            "Before:", "After:", "Reader acceptance does not wait for the browser",
+            "Keep a simple reader fix and its regression test together",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, " ".join(recipe.replace("**", "").split()))
+        planner = (Path(__file__).parents[2] / "planner" / "SKILL.md").read_text()
+        review = planner.split("## Proportionate validation", 1)[1].split(
+            "## Before selection", 1)[0]
+        self.assertIn("../task-generation/SKILL.md#executor-sized-outcomes", review)
+        self.assertIn("milestones disguised as tasks", review)
+        self.assertIn("configured executor/effort", review)
+
     def assert_prototype_adapter_fixture(self, source):
         tasks = re.findall(r"(?m)^- \[ \] (T\d+) (.+)$", source)
         self.assertEqual([task_id for task_id, _ in tasks], ["T001", "T002"])
