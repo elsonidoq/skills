@@ -57,8 +57,10 @@ and original-baseline reconciliation must still validate preserved partial work 
 dispatch. Read-only `preflight` and pending-task selection retain owned-path cleanliness;
 there is no worker-facing bypass flag.
 
-Internal snapshot file maps include expanded ignored nested-repository descendants and
-directory entries, not just Git-emitted leaf paths. Entry values retain mode/UID/device/inode;
+Internal snapshot file maps enumerate the real filesystem through the shared non-following
+descriptor traversal, independently of Git's omissions of untracked/ignored special entries
+or empty directories. Git supplies tracked deletions plus current index/HEAD identity. Maps
+include expanded ignored nested-repository descendants and directory entries, not just Git-emitted paths. Entry values retain mode/UID/device/inode;
 `kind` is `file`, `symlink` or `directory`. File hashes cover content, symlink hashes cover
 link text (no following), directories are audited by identity **and** recursive descendants.
 Missing tracked entries retain null. Root `.git` and `.coherence/workflow` alone are excluded.

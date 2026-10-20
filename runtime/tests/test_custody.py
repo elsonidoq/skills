@@ -207,8 +207,17 @@ sys.exit(0)
         git(self.project,'add','--','other.txt')
         (self.project/'other.txt').write_text('unstaged unrelated too')
         (self.project/'untracked.txt').write_text('user untracked')
-        before=snapshot(self.project,['owned.txt'])
+        before_authority=snapshot(self.project,['owned.txt'])
         with Authority(self.project) as authority:
+            # A custody baseline follows trusted authority initialization, as in
+            # production. Prove its ONLY visible effect is the authority parent;
+            # do not exclude that parent from real inventory/drift checks.
+            before=snapshot(self.project,['owned.txt'])
+            self.assertEqual(before['head'],before_authority['head'])
+            self.assertEqual(before['index'],before_authority['index'])
+            self.assertNotIn('.coherence',before_authority['files'])
+            self.assertEqual(before['files']['.coherence']['kind'],'directory')
+            self.assertEqual({k:v for k,v in before['files'].items() if k!='.coherence'},before_authority['files'])
             gateway,op,proc=self.launch(authority)
             self.assertFalse(authority.store.db.in_transaction)
             self.assertEqual(proc.wait(timeout=5),0)

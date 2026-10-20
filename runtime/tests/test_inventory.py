@@ -81,6 +81,68 @@ class InventoryTests(unittest.TestCase):
         with self.assertRaisesRegex(Blocked, r'retained/toy/pipe \(fifo\)'):
             snapshot(self.root, [])
 
+    def test_root_and_ordinary_untracked_ignored_fifos_fail_closed(self):
+        for relative in ('root-pipe', 'untracked/pipe', 'retained/ordinary/pipe'):
+            with self.subTest(relative=relative):
+                path = self.root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                os.mkfifo(path)
+                try:
+                    with self.assertRaisesRegex(Blocked, relative + r' \(fifo\)'):
+                        snapshot(self.root, [])
+                finally:
+                    path.unlink()
+
+    def test_root_socket_and_unreadable_file_fail_closed(self):
+        sock = socket.socket(socket.AF_UNIX)
+        self.addCleanup(sock.close)
+        sock.bind(str(self.root / 'root-socket'))
+        with self.assertRaisesRegex(Blocked, r'root-socket \(socket\)'):
+            snapshot(self.root, [])
+        (self.root / 'root-socket').unlink()
+        unreadable = self.root / 'unreadable'
+        unreadable.write_text('must not silently omit')
+        unreadable.chmod(0)
+        self.addCleanup(unreadable.chmod, 0o600)
+        with self.assertRaisesRegex(Blocked, r'unreadable \(PermissionError\)'):
+            snapshot(self.root, [])
+
+    def test_ordinary_empty_directory_and_owned_ancestor_drift(self):
+        owned = ['ordinary/owned']
+        baseline = snapshot(self.root, owned)
+        parent = self.root / 'ordinary'
+        parent.mkdir()
+        (parent / 'owned').write_text('allowed')
+        now = reconcile(self.root, owned, baseline)
+        (parent / 'unrelated-empty').mkdir()
+        with self.assertRaisesRegex(Blocked, 'ordinary/unrelated-empty'):
+            reconcile(self.root, owned, now)
+
+    def test_tracked_deletion_and_current_index_still_audited(self):
+        path = self.root / 'tracked'
+        path.write_text('tracked')
+        git(self.root, 'add', '--', 'tracked')
+        git(self.root, 'commit', '-qm', 'tracked deletion fixture')
+        baseline = snapshot(self.root, [])
+        path.unlink()
+        self.assertIsNone(snapshot(self.root, [])['files']['tracked'])
+        with self.assertRaisesRegex(Blocked, 'unrelated file drift: tracked'):
+            reconcile(self.root, [], baseline)
+        git(self.root, 'add', '-A', '--', 'tracked')
+        with self.assertRaisesRegex(Blocked, 'HEAD/index drift'):
+            reconcile(self.root, [], baseline)
+
+    def test_root_links_and_git_admin_exclusion_do_not_follow(self):
+        (self.root / 'external-link').symlink_to('/nonexistent-inventory-target')
+        (self.root / 'directory-link').symlink_to(self.nested, target_is_directory=True)
+        os.mkfifo(self.root / '.git/excluded-pipe')
+        files = snapshot(self.root, [])['files']
+        self.assertEqual(files['external-link']['kind'], 'symlink')
+        self.assertEqual(files['directory-link']['kind'], 'symlink')
+        self.assertNotIn('directory-link/data', files)
+        self.assertNotIn('.git', files)
+        self.assertNotIn('.git/excluded-pipe', files)
+
     def test_socket_and_empty_directory_drift(self):
         sock = socket.socket(socket.AF_UNIX)
         self.addCleanup(sock.close)
@@ -274,6 +336,14 @@ class ResumeInventoryTests(unittest.TestCase):
         self.assertIn('unrelated file drift: other.txt', reason)
         self.assertEqual(calls, 0)
         self.assertEqual((self.project / 'other.txt').read_text(), 'unrelated drift')
+
+    def test_partial_resume_root_fifo_fails_before_recovery(self):
+        os.mkfifo(self.project / 'root-pipe')
+        reason, calls = self.resume()
+        self.assertIn('root-pipe (fifo)', reason)
+        self.assertEqual(calls, 0)
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.db.execute("SELECT COUNT(*) FROM wf_events WHERE kind='recovery_authorized'").fetchone()[0], 0)
 
     def test_partial_resume_unsupported_kind_fails_before_recovery(self):
         nested = self.project / 'untracked-repo'

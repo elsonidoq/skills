@@ -104,8 +104,10 @@ task selection and the gateway recheck before dispatch/release. No worker cleanl
 flag is exposed. A failing entry reports its
 relative path and kind (for example `retained/toy/pipe (fifo)`), never its contents.
 
-Ignored nested repositories are expanded recursively, including their nested Git data;
-no retained ignored user material is deleted, adopted or broadly excluded. Inventory reads
+Inventory enumerates the actual filesystem recursively, independently of Git's untracked/
+ignored listing omissions (such as FIFOs and empty directories); Git still supplies tracked
+deletions and current index/HEAD identity. Ignored nested repositories include their nested
+Git data; no retained ignored user material is deleted, adopted or broadly excluded. Inventory reads
 regular-file content and file identity through held directory descriptors, fingerprints
 symlink text (including external/broken links) without following it, and records directory
 identity plus descendants. Root Git administration and root private workflow storage remain

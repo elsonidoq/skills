@@ -116,47 +116,33 @@ def unrelated_drift(name, before, after, owned):
 def snapshot(project, owned):
     for name in owned:
         owned_file(project, name)
+    # Git omits some filesystem kinds (e.g. untracked FIFOs) and empty
+    # directories. It supplies tracked-deletion identities, not enumeration.
     names = set(git(project, 'ls-files', '-z').decode().split('\0'))
-    names.update(git(project, 'ls-files', '--others', '--exclude-standard', '-z').decode().split('\0'))
-    # Include ignored user data as well; runtime's private subtree alone is excluded.
-    names.update(git(project, 'ls-files', '--others', '--ignored', '--exclude-standard', '-z').decode().split('\0'))
     files = {}
     root = Path(project).absolute()
     if root != root.resolve(strict=True) or Path(git(root, 'rev-parse', '--show-toplevel').decode().strip()) != root:
         raise Blocked('inventory project must be canonical worktree root')
     fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
-        for raw in sorted(names - {''}):
-            name = raw.rstrip('/')
-            parts = name.split('/')
-            if any(p in ('', '.', '..') for p in parts):
-                raise Blocked('unsafe inventory relative path: ' + name)
-            if parts[0] == '.git' or parts[:2] == ['.coherence', 'workflow']:
-                continue
-            parent = os.dup(fd)
-            try:
-                for part in parts[:-1]:
-                    child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
-                    os.close(parent)
-                    parent = child
-                try:
-                    os.stat(parts[-1], dir_fd=parent, follow_symlinks=False)
-                except FileNotFoundError:
-                    files[name] = None
-                    continue
-                _entry(parent, parts[-1], name, files)
-            except FileNotFoundError:
-                # A missing parent is legitimate only for an absent tracked file;
-                # disappearance while recursively reading must fail closed.
-                if os.path.lexists(root / name):
-                    raise Blocked('inventory entry changed: ' + name) from None
-                files[name] = None
-            except OSError as exc:
-                raise Blocked('inventory unavailable: ' + name + ' (' + type(exc).__name__ + ')') from None
-            finally:
-                os.close(parent)
+        before = os.fstat(fd)
+        for name in sorted(os.listdir(fd)):
+            _entry(fd, name, name, files)
+        if _stable(os.fstat(fd)) != _stable(before) or _identity(root.lstat()) != _identity(before):
+            raise Blocked('worktree root changed during inventory: .')
+    except OSError as exc:
+        raise Blocked('inventory unavailable: . (' + type(exc).__name__ + ')') from None
     finally:
         os.close(fd)
+    for name in sorted(names - {''}):
+        parts = name.split('/')
+        if any(p in ('', '.', '..') for p in parts):
+            raise Blocked('unsafe inventory relative path: ' + name)
+        if parts[0] == '.git' or parts[:2] == ['.coherence', 'workflow']:
+            continue
+        # Do not dereference a missing tracked path or symlink ancestor. Its
+        # deletion/replacement remains visible alongside the actual full tree.
+        files.setdefault(name, None)
     return {'head': git(project,'rev-parse','HEAD').decode().strip(),
             'index': hashlib.sha256(git(project,'ls-files','--stage','-z')).hexdigest(),
             'files': files,
