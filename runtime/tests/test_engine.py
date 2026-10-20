@@ -38,7 +38,10 @@ class SequentialExecutionTests(ProjectTest):
                 return 'offline operation fixture'
         result = self.execute([
             {'id': 'consumer', 'description': 'Consume', 'depends': ['producer'],
-             'checks': [['python3', '-B', '-c', "assert open('new.txt').read() == 'consumer\\n'"]]},
+             'checks': [['python3', '-B', '-c', "assert open('new.txt').read() == 'consumer\\n'"],
+                        ['python3', '-B', '-c',
+                         "import os; assert os.path.realpath('.git/coherence-workflow.lock') in "
+                         "[os.path.realpath('/proc/self/fd/'+fd) for fd in os.listdir('/proc/self/fd')]"]]},
             {'id': 'producer', 'description': 'Produce'}], OfflineOperations)
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(len(sessions), 3)

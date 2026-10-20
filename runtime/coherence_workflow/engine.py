@@ -37,7 +37,7 @@ class Engine:
                         'Pre-existing dirty paths (do not edit): ' + canonical(sorted(focused.dirty)) + '\n'
                         'Task: ' + canonical(task), claim=focused.claim, command=focused.command)
                     focused.command('start', 'runner-checks')
-                    checks = run_checks(project, task)
+                    checks = run_checks(project, task, lock_fd=self.authority.lock.fileno())
                     focused.command('end', 'runner-checks')
                     checkpoint = focused.checkpoint()
                     checkpoints.append(checkpoint)
