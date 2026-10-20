@@ -10,6 +10,10 @@ handoffs:
     send: true
 ---
 
+Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimony.md)
+at this stage. Preserve Standard stages and approved acceptance; source-backed requirements,
+necessary choices and optional hardening are distinct.
+
 ## User Input
 
 ```text
@@ -120,7 +124,7 @@ Given that feature description, do this:
     2. Extract key concepts from description
        Identify: actors, actions, data, constraints
     3. For unclear aspects:
-       - Make informed guesses based on context and industry standards
+       - Use established patterns for inconsequential choices; do not invent requirements
        - Only mark with [NEEDS CLARIFICATION: specific question] if:
          - The choice significantly impacts feature scope or user experience
          - Multiple reasonable interpretations exist with different implications
@@ -131,10 +135,10 @@ Given that feature description, do this:
        If no clear user flow: ERROR "Cannot determine user scenarios"
     5. Generate Functional Requirements
        Each requirement must be testable
-       Use reasonable defaults for unspecified details (document assumptions in Assumptions section)
+       Record revisitable assumptions and necessary choices with their basis, separate from original requirements
     6. Define Success Criteria
        Create measurable, technology-agnostic outcomes
-       Include both quantitative metrics (time, performance, volume) and qualitative measures (user satisfaction, task completion)
+       Use observable qualitative outcomes; quantitative targets only when source-backed
        Each criterion must be verifiable without implementation details
     7. Identify Key Entities (if data involved)
     8. Return: SUCCESS (spec ready for planning)
@@ -294,7 +298,7 @@ Report completion to the user with:
 
 When creating this spec from a user prompt:
 
-1. **Make informed guesses**: Use context, industry standards, and common patterns to fill gaps
+1. **Use the smallest working solution**: Omit unnecessary optional behavior; surface consequential unresolved trade-offs
 2. **Document assumptions**: Record reasonable defaults in the Assumptions section
 3. **Limit clarifications**: Maximum 3 [NEEDS CLARIFICATION] markers - use only for critical decisions that:
    - Significantly impact feature scope or user experience
@@ -309,27 +313,25 @@ When creating this spec from a user prompt:
 
 **Examples of reasonable defaults** (don't ask about these):
 
-- Data retention: Industry-standard practices for the domain
-- Performance targets: Standard web/mobile app expectations unless specified
+- Retention/performance targets: Include only when source-backed or concretely necessary; otherwise omit
 - Error handling: User-friendly messages with appropriate fallbacks
-- Authentication method: Standard session-based or OAuth2 for web apps
+- Authentication: Reuse existing protections where applicable; a new method needs a concrete requirement/risk
 - Integration patterns: Use project-appropriate patterns (REST/GraphQL for web services, function calls for libraries, CLI args for tools, etc.)
 
 ### Success Criteria Guidelines
 
 Success criteria must be:
 
-1. **Measurable**: Include specific metrics (time, percentage, count, rate)
+1. **Observable**: Use verifiable outcomes, not invented numeric goals
 2. **Technology-agnostic**: No mention of frameworks, languages, databases, or tools
 3. **User-focused**: Describe outcomes from user/business perspective, not system internals
 4. **Verifiable**: Can be tested/validated without knowing implementation details
 
 **Good examples**:
 
-- "Users can complete checkout in under 3 minutes"
-- "System supports 10,000 concurrent users"
-- "95% of searches return results in under 1 second"
-- "Task completion rate improves by 40%"
+- "Users can save and reopen their selected view"
+- "Unauthorized users cannot export another tenant's data"
+- Numeric goals are appropriate only with an actual source basis.
 
 **Bad examples** (implementation-focused):
 

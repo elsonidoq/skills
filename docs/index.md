@@ -35,6 +35,7 @@ legacy port retain their own documentation and memory boundaries.
 - [Project Constitution](../.specify/memory/constitution.md): Portable global assets, feedback-only coordination memory and current-content approval and pragmatic verification.
 - [Initialize Coherence](../skills/initialize-coherence/SKILL.md): Proposal-first suite adoption/memory and bounded documentation structural readiness.
 - [Planner](../skills/planner/SKILL.md): Single coordination entry point, scope assessment, user-selected depth, fresh delegated artifact creation, bounded mechanical correction, complete approval briefs and handoff.
+- [Parsimony and Actionable Checks](../skills/planner/references/parsimony.md): Canonical planning/review policy and managed project-copy fragment; adoption/refresh belongs to initialize-coherence.
 - [TinySpec](../skills/tiny-spec/SKILL.md): Compact what/how source with separate tasks.
 - [Task Generation](../skills/task-generation/SKILL.md): Shared dependency-aware task standards and validation.
 - [Planning Brainstorming](../skills/planning-brainstorming/SKILL.md): Shared bounded owner dialogue and read-only preselection mode.

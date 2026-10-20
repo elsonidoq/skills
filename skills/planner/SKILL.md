@@ -192,6 +192,8 @@ mandated independent reviews or honest PASS/FAIL/NOT RUN reporting.
 
 ## Before selection: understand → brainstorm → assess → ask
 
+Apply [Parsimony and Actionable Checks](references/parsimony.md). Apply during understanding and scope assessment.
+
 Fresh planning is read-only until the owner selects depth: no source edits, decision
 files, TinySpec, specification, plan, or tasks. Session history carries request bounds,
 evidence, answers/rationale, and deferrals. If interrupted, recover those records;

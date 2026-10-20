@@ -49,6 +49,8 @@ the planner's mandatory user choice.
 
 ## 1. Gate assessment
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply before raising material owner questions.
+
 Have bounded work using the preflight's shared routing selection return a first line
 that is exactly one of:
 

@@ -1,5 +1,9 @@
 # Implementation Plan: [FEATURE]
 
+Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimony.md).
+Use source-backed requirements and necessary choices; omit inapplicable examples rather
+than inventing constraints to fill fields. Assumptions remain revisitable.
+
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
@@ -30,11 +34,11 @@
 
 **Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
 
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
+**Performance Goals**: [source-backed observable goals if applicable; otherwise omit]
 
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
+**Constraints**: [actual source/interface/platform constraints or concrete material risks; otherwise omit]
 
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Scale/Scope**: [observed/required scope; no invented scale targets]
 
 ## Constitution Check
 

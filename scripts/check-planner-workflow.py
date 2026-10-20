@@ -6,6 +6,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PATHS = {
+    "parsimony": "skills/planner/references/parsimony.md",
     "planner": "skills/planner/SKILL.md",
     "tiny": "skills/tiny-spec/SKILL.md",
     "brainstorm": "skills/planning-brainstorming/SKILL.md",
@@ -132,6 +133,19 @@ def check_contracts(texts):
         for phrase in phrases:
             if phrase.lower() in text.lower():
                 errors.append(f"{label}: contradictory {phrase!r}")
+
+    require("parsimony-policy", texts.get("parsimony", ""),
+            "smallest working solution", "legitimate behavior prevented",
+            "serious exposed security/data-loss risk", "smaller/paginated read",
+            "target drift stops affected continuation", "existing gates",
+            "not application startup")
+    for key, heading in (("planner", "## Before selection"),
+                         ("tiny", "## Compact source contract"),
+                         ("brainstorm", "## 1. Gate assessment"),
+                         ("helper", "## Preflight"),
+                         ("helper", "## Planner Standard adapter contract"),
+                         ("tasks", "## Preconditions and adapters")):
+        require("parsimony-consumer", section(texts[key], heading), "parsimony.md")
 
     for label, key, heading in ROUTING_CARRIERS:
         body = section(texts[key], heading)

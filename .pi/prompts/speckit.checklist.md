@@ -2,6 +2,10 @@
 description: Generate a custom checklist for the current feature based on user requirements.
 ---
 
+Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimony.md)
+at this stage. Preserve Standard stages and approved acceptance; source-backed requirements,
+necessary choices and optional hardening are distinct.
+
 ## Checklist Purpose: "Unit Tests for English"
 
 **CRITICAL CONCEPT**: Checklists are **UNIT TESTS FOR REQUIREMENTS WRITING** - they validate the quality, clarity, and completeness of requirements in a given domain.
@@ -96,11 +100,11 @@ You **MUST** consider the user input before proceeding (if not empty).
    4. Detect missing dimensions: scope breadth, depth/rigor, risk emphasis, exclusion boundaries, measurable acceptance criteria.
    5. Formulate questions chosen from these archetypes:
       - Scope refinement (e.g., "Should this include integration touchpoints with X and Y or stay limited to local module correctness?")
-      - Risk prioritization (e.g., "Which of these potential risk areas should receive mandatory gating checks?")
+      - Risk prioritization only for concrete material exposure or source-required protections, not speculative gates
       - Depth calibration (e.g., "Is this a lightweight pre-commit sanity list or a formal release gate?")
       - Audience framing (e.g., "Will this be used by the author only or peers during PR review?")
-      - Boundary exclusion (e.g., "Should we explicitly exclude performance tuning items this round?")
-      - Scenario class gap (e.g., "No recovery flows detected—are rollback / partial failure paths in scope?")
+      - Do not ask to exclude unrequested optional hardening; omit it
+      - Scenario gaps warrant questions only when concrete state/data risk or source scope makes them consequential
 
    Question formatting rules:
    - If presenting options, generate a compact table with columns: Option | Candidate | Why It Matters
@@ -151,7 +155,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Measurability**: Can requirements be objectively verified?
    - **Coverage**: Are all scenarios/edge cases addressed?
 
-   **Category Structure** - Group items by requirement quality dimensions:
+   **Category Structure** - Use only relevant dimensions below. Absence of optional hardening is not a gap. Review source basis and legitimate-behavior costs of added safeguards too:
    - **Requirement Completeness** (Are all necessary requirements documented?)
    - **Requirement Clarity** (Are requirements specific and unambiguous?)
    - **Requirement Consistency** (Do requirements align without conflicts?)
@@ -214,8 +218,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    **Scenario Classification & Coverage** (Requirements Quality Focus):
    - Check if requirements exist for: Primary, Alternate, Exception/Error, Recovery, Non-Functional scenarios
    - For each scenario class, ask: "Are [scenario type] requirements complete, clear, and consistent?"
-   - If scenario class missing: "Are [scenario type] requirements intentionally excluded or missing? [Gap]"
-   - Include resilience/rollback when state mutation occurs: "Are rollback requirements defined for migration failures? [Gap]"
+   - If a source-required or concretely necessary scenario class is missing, flag its specific impact; do not invent coverage obligations
+   - For concrete migration/data-loss risk, include necessary recovery requirements: "Are rollback requirements defined for migration failures? [Gap]"
 
    **Traceability Requirements**:
    - MINIMUM: ≥80% of items MUST include at least one traceability reference
@@ -269,6 +273,9 @@ To avoid clutter, use descriptive types and clean up obsolete checklists when do
 
 ## Example Checklist Types & Sample Items
 
+Conditional examples only: select source-backed concerns or concrete material risks.
+Do not turn this catalog into mandatory limits, recovery mechanisms or framework gates.
+
 **UX Requirements Quality:** `ux.md`
 
 Sample items (testing the requirements, NOT the implementation):
@@ -285,17 +292,17 @@ Sample items (testing the requirements, NOT the implementation):
 Sample items:
 
 - "Are error response formats specified for all failure scenarios? [Completeness]"
-- "Are rate limiting requirements quantified with specific thresholds? [Clarity]"
+- "If rate limiting is required, is its actual constraint and legitimate-use impact clear? [Clarity]"
 - "Are authentication requirements consistent across all endpoints? [Consistency]"
-- "Are retry/timeout requirements defined for external dependencies? [Coverage, Gap]"
+- "Where concrete dependency risk requires retry/timeout behavior, is its basis clear without duplicating SDK behavior? [Coverage]"
 - "Is versioning strategy documented in requirements? [Gap]"
 
-**Performance Requirements Quality:** `performance.md`
+**Performance Requirements Quality (only source-backed targets):** `performance.md`
 
 Sample items:
 
 - "Are performance requirements quantified with specific metrics? [Clarity]"
-- "Are performance targets defined for all critical user journeys? [Coverage]"
+- "Do defined targets match the source-backed journeys without invented thresholds? [Coverage]"
 - "Are performance requirements under different load conditions specified? [Completeness]"
 - "Can performance requirements be objectively measured? [Measurability]"
 - "Are degradation requirements defined for high-load scenarios? [Edge Case, Gap]"

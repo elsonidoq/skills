@@ -11,6 +11,8 @@ Convert review feedback into verified technical decisions. Treat each comment as
 
 ## Evaluate Feedback
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Challenge unnecessary safeguards as well as omissions; preserve binding acceptance through existing gates.
+
 For each item:
 
 1. Identify the requested outcome and cited evidence.

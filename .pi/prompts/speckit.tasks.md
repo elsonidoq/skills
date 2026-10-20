@@ -11,6 +11,10 @@ handoffs:
     send: true
 ---
 
+Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimony.md)
+at this stage. Preserve Standard stages and approved acceptance; source-backed requirements,
+necessary choices and optional hardening are distinct.
+
 ## User Input
 
 ```text
@@ -78,10 +82,10 @@ You **MUST** consider the user input before proceeding (if not empty).
 4. **Generate tasks.md**: Use TASKS_TEMPLATE_CONTENT (from the JSON output above) as the structure. For compatibility with older setup scripts that omit TASKS_TEMPLATE_CONTENT, read TASKS_TEMPLATE instead. Fill with:
    - Correct feature name from plan.md
    - Phase 1: Setup tasks (project initialization)
-   - Phase 2: Foundational tasks (blocking prerequisites for all user stories)
+   - Phase 2: Applicable shared prerequisites only; block actual consumers, omit if none
    - Phase 3+: One phase per user story (in priority order from spec.md)
-   - Each phase includes: story goal, independent test criteria, tests (if requested), implementation tasks
-   - Final Phase: Polish & cross-cutting concerns
+   - Each phase includes: story goal, independent test criteria, tests (source-required or concretely necessary; optional otherwise), implementation tasks
+   - Final Phase: Only approved cross-cutting outcomes, if any; verification/docs stay with delivery
    - All tasks must follow the strict checklist format (see Task Generation Rules below)
    - Clear file paths for each task
    - Dependencies section showing story completion order
@@ -140,7 +144,7 @@ The tasks.md should be immediately executable - each task must be specific enoug
 
 **CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
 
-**Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
+**Tests**: Preserve owner/source-required checks and necessary security, persistence and integration evidence. Broader hardening is optional, not an acceptance blocker.
 
 ### Checklist Format (REQUIRED)
 
@@ -182,12 +186,12 @@ Every task MUST strictly follow this format:
      - Models needed for that story
      - Services needed for that story
      - Interfaces/UI needed for that story
-     - If tests requested: Tests specific to that story
+     - For required/necessary tests: Tests specific to that story
    - Mark story dependencies (most stories should be independent)
 
 2. **From Contracts**:
    - Map each interface contract → to the user story it serves
-   - If tests requested: Each interface contract → contract test task [P] before implementation in that story's phase
+   - For required/necessary tests: Each interface contract → contract test task [P] before implementation in that story's phase
 
 3. **From Data Model**:
    - Map each entity to the user story(ies) that need it
@@ -203,9 +207,9 @@ Every task MUST strictly follow this format:
 ### Phase Structure
 
 - **Phase 1**: Setup (project initialization)
-- **Phase 2**: Foundational (blocking prerequisites - MUST complete before user stories)
+- **Phase 2**: Applicable prerequisites (only genuine dependencies block consumers)
 - **Phase 3+**: User Stories in priority order (P1, P2, P3...)
-  - Within each story: Tests (if requested) → Models → Services → Endpoints → Integration
+  - Within each story: Required/necessary tests and implementation follow actual dependencies, not mandatory layer-shaped splits
   - Each phase should be a complete, independently testable increment
 - **Final Phase**: Polish & Cross-Cutting Concerns
 

@@ -11,6 +11,8 @@ create a plan, or execute tasks.
 
 ## Preconditions and adapters
 
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Both direct and SpecKit adapters apply it to requirements, choices and checks.
+
 Read repository instructions, the source and supporting artifacts, existing task format,
 governing principles, and applicable project memory before tasking. Confirm authorization to
 **prepare** tasks and that already-applicable upstream owner decisions and approvals apply to
