@@ -16,6 +16,8 @@ runtime/.venv/
 runtime/build/
 runtime/dist/
 runtime/*.egg-info/
+workflow_monitor/.venv/
+workflow_monitor/build/
 
 # The ported plugin under opencode-claude-memory-v2-port/ is tracked as source.
 # Track its manifest and lockfile so `bun install && bun run build` reproduces it;

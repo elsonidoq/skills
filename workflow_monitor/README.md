@@ -1,40 +1,43 @@
-# Workflow monitor reader
+# Workflow monitor
 
-`workflow_monitor.reader.Reader` opens short, read-only SQLite snapshots for exactly one
-canonical Git worktree. It reads only recording-contract version 1 rows from
-`.coherence/workflow/workflow.sqlite`; it does not import or invoke the workflow writer.
+`workflow_monitor` is a local, read-only presentation of recording-contract version 1
+workflow snapshots. It imports no workflow writer, never creates or migrates a store,
+and has no execution or control routes.
 
-The reader uses SQLite `mode=ro`, `query_only`, a SELECT/READ authorizer, parameterized
-explicit-column queries, and normal SQLite locking. It never creates a database, copies a
-database, checkpoints WAL, signals a process, or falls back to legacy history.
-
-```python
-from workflow_monitor.reader import Reader
-
-snapshot = Reader("/canonical/worktree").open_snapshot()
-```
-
-Snapshots return `ok`, `no_store`, `no_monitored_runs`, `unsupported`, or `unavailable`.
-The private rows returned at this boundary are for the later mapper, not public browser DTOs.
-
-`workflow_monitor.mapping.normalize(snapshot)` turns only recording-contract rows into
-phase/task anchors, distinct occurrences, ordered milestones, typed graph edges and
-explicit unsupported records. `workflow_monitor.public.minimize(graph)` then constructs
-closed browser DTOs: all refs are opaque and run-scoped; hashes are shown only when
-valid; optional labels and summaries fall back to fixed text. Raw IDs, descriptions,
-facts, errors and unknown payloads are never serialized.
-
-Run the mapper and public-DTO checks without installing dependencies:
+Install the exact dependencies from `requirements.lock` in a prepared isolated Python
+environment; starting the viewer never installs or builds anything. From the repository
+root, use the prepared interpreter explicitly so neither launch nor checks accidentally
+use the system Python. With a fixed production asset directory containing `index.html`:
 
 ```sh
-python3 -B -m unittest -v workflow_monitor.tests.test_mapping workflow_monitor.tests.test_public
+workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/worktree --assets /path/to/production-assets --port 8765
 ```
-The reader binds the selected worktree's Git admin directory and database device/inode, and
-rechecks them when reopening so symlink, ownership, worktree, and substitution changes are
-not read.
 
-Run the focused check without installing dependencies:
+The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
+asset-building overrides. It serves only the fixed startup asset inventory (not
+sourcemaps, symlinks, directories, or arbitrary files) and exposes closed GET routes:
+
+- `/api/monitor/v1/runs`
+- `/api/monitor/v1/runs/{run_ref}/snapshot`
+- `/api/monitor/v1/runs/{run_ref}/history`
+- `/api/monitor/v1/runs/{run_ref}/records/{record_ref}`
+
+`followups` is deliberately unavailable until its separately owned implementation.
+API requests require the exact loopback `Host`, same-origin Fetch Metadata, and the
+`X-Workflow-Monitor: 1` request header. All responses use no-store, CSP, nosniff,
+no-referrer, and frame-denial protections; errors use fixed closed codes/messages.
+
+Run the focused checks with the prepared environment:
 
 ```sh
-python3 -B -m unittest -v workflow_monitor.tests.test_reader
+workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_http workflow_monitor.tests.test_launch
 ```
+
+When these checks are run by `scripts/coordinate-implementation`, use this same explicit
+interpreter in task check commands. Setting `COHERENCE_PYTHON` selects the runner's own
+Python; it does not change which `python3` a shell check resolves. No global Python
+configuration changes are needed.
+
+The reader opens short SQLite `mode=ro` snapshots for exactly one canonical Git
+worktree and does not import or invoke the workflow writer. It never copies a database,
+checkpoints WAL, signals a process, or falls back to legacy history.

@@ -7,7 +7,7 @@ name = "workflow-monitor"
 version = "0.1.0"
 description = "Read-only snapshots for recorded Coherence workflow runs"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["starlette==0.46.2", "uvicorn==0.34.0"]
 
 [tool.setuptools]
 packages = ["workflow_monitor"]

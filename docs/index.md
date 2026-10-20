@@ -24,6 +24,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
 | Coordinate Implementation executable operation and focused Git safety | [Runtime operating guide](coordinate-implementation.md); optional explicit runtime setup, thin executable interface |
 | Current task progress, historical SQLite and SDK interfaces | [Runtime schema owner](coordinate-implementation-schema.md) |
+| Local read-only workflow monitor launch and HTTP boundary | [Workflow monitor README](../workflow_monitor/README.md) |
 
 This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
 [gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
