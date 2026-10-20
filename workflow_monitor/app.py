@@ -4,7 +4,9 @@ from __future__ import annotations
 import copy
 import hashlib
 import mimetypes
+import os
 from pathlib import Path
+import stat
 import time
 from typing import Any, Protocol
 
@@ -46,7 +48,7 @@ def _state_response(data: dict[str, Any]) -> JSONResponse | None:
     return _error("unavailable", 503, retryable=True)
 
 
-def _assets(root: str | Path) -> dict[str, Path]:
+def _assets(root: str | Path) -> tuple[int, dict[str, tuple[str, ...]]]:
     root = Path(root)
     try:
         if root.is_symlink() or (root.exists() and not root.is_dir()):
@@ -54,9 +56,10 @@ def _assets(root: str | Path) -> dict[str, Path]:
         if not root.exists():
             raise ValueError("assets directory is missing or unreadable")
         root = root.resolve(strict=True)
+        root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
     except OSError as exc:
         raise ValueError("assets directory is missing or unreadable") from exc
-    files: dict[str, Path] = {}
+    files: dict[str, tuple[str, ...]] = {}
     for candidate in root.rglob("*"):
         if not candidate.is_file():
             continue
@@ -64,10 +67,40 @@ def _assets(root: str | Path) -> dict[str, Path]:
         if (candidate.is_symlink() or candidate.suffix not in _ASSET_SUFFIXES or
                 any(part.startswith(".") for part in relative.parts)):
             continue
-        files["/" + relative.as_posix()] = candidate
+        files["/" + relative.as_posix()] = relative.parts
     if "/index.html" not in files:
+        os.close(root_fd)
         raise ValueError("assets must contain index.html")
-    return files
+    return root_fd, files
+
+
+def _read_asset(root_fd: int, parts: tuple[str, ...]) -> bytes:
+    """Open an inventoried regular asset below its pinned directory descriptor."""
+    directory_fd = os.dup(root_fd)
+    try:
+        for part in parts[:-1]:
+            next_fd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                              dir_fd=directory_fd)
+            os.close(directory_fd)
+            directory_fd = next_fd
+        asset_fd = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory_fd)
+        try:
+            size = os.fstat(asset_fd).st_size
+            if not stat.S_ISREG(os.fstat(asset_fd).st_mode):
+                raise OSError("asset is not regular")
+            chunks: list[bytes] = []
+            remaining = size
+            while remaining:
+                chunk = os.read(asset_fd, remaining)
+                if not chunk:
+                    raise OSError("asset changed while reading")
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            return b"".join(chunks)
+        finally:
+            os.close(asset_fd)
+    finally:
+        os.close(directory_fd)
 
 
 def _token(run_ref: str, records: list[dict[str, Any]], unknown: list[dict[str, Any]]) -> str:
@@ -117,7 +150,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
     """Create an application bound to one reader, fixed asset inventory, and port."""
     if type(port) is not int or not 1 <= port <= 65535:
         raise ValueError("port must be a valid TCP port")
-    fixed_assets = _assets(assets)
+    assets_fd, fixed_assets = _assets(assets)
     expected_host = f"127.0.0.1:{port}"
 
     last_safe: dict[str, Any] | None = None
@@ -256,7 +289,11 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         asset = fixed_assets.get(path)
         if asset is None:
             return _error("not_found", 404)
-        return Response(asset.read_bytes(), media_type=mimetypes.guess_type(asset.name)[0] or "application/octet-stream")
+        try:
+            content = _read_asset(assets_fd, asset)
+        except OSError:
+            return _error("not_found", 404)
+        return Response(content, media_type=mimetypes.guess_type(path)[0] or "application/octet-stream")
 
     def secure(response: Response) -> Response:
         response.headers.update({"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",

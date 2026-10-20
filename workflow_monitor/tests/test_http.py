@@ -79,6 +79,23 @@ class HttpTests(unittest.TestCase):
             self.assertEqual(response.status, 200)
             self.assertEqual(response.headers["Cache-Control"], "no-store")
 
+    def test_startup_asset_inventory_rejects_later_symlink_substitutions(self):
+        assets = Path(self.tmp.name) / "assets"
+        private = Path(self.tmp.name) / "PRIVATE-SENTINEL"
+        private.write_text("PRIVATE-SENTINEL")
+        (assets / "app.js").unlink()
+        (assets / "app.js").symlink_to(private)
+        response = self.client.get("/app.js")
+        self.assertEqual(response.status_code, 404)
+        self.assert_safe(response)
+        nested = assets / "nested"; nested.mkdir()
+        (nested / "safe.js").write_text("safe")
+        nested_client = TestClient(create_app(self.reader, assets, 8765), base_url="http://127.0.0.1:8765")
+        (nested / "safe.js").unlink(); nested.rmdir(); nested.symlink_to(private.parent)
+        response = nested_client.get("/nested/safe.js")
+        self.assertEqual(response.status_code, 404)
+        self.assert_safe(response)
+
     def test_host_origin_method_and_raw_paths_are_rejected(self):
         bad = self.client.get("/api/monitor/v1/runs", headers={"host": "localhost:8765", **self.api_headers})
         self.assertEqual((bad.status_code, bad.json()["code"]), (400, "bad_request"))
