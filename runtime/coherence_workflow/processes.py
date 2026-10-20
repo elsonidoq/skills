@@ -1,4 +1,4 @@
-"""Read actual recorded process identity for explicit historical abandon; never signal."""
+"""Inspect recorded writers and scopes to avoid live overlap; never signal."""
 import os
 import json
 from pathlib import Path
@@ -45,3 +45,36 @@ def inspect_recorded_writers(db, operation):
             if row['identity'] and recorded_writer_live(json.loads(row['identity'])):
                 kind = 'controller' if table == 'wf_controllers' else 'child'
                 raise Blocked(operation + ' refused: live ' + kind + '; wait for its writer and inspect again')
+    inspect_recorded_scopes(db, operation)
+
+
+def inspect_recorded_scopes(db, operation):
+    """Inspect only retained scopes; missing scopes do not require replacement."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_processes'").fetchone():
+        return
+    for process in db.execute('SELECT containment FROM wf_processes'):
+        if not process['containment']:
+            continue
+        receipt = json.loads(process['containment'])
+        parent = Path(receipt['parent'])
+        path = parent / receipt['name']
+        try:
+            if (parent != parent.resolve() or not parent.is_relative_to('/sys/fs/cgroup') or
+                    path.parent != parent or path != path.resolve()):
+                raise Blocked(operation + ' cannot inspect recorded scope path; inspect its location and membership before replacing a writer')
+            try:
+                path.stat()
+            except FileNotFoundError:
+                continue
+            # Replaced scopes with live members still conflict; stale metadata
+            # alone, or a removed/empty scope, does not.
+            events = dict(line.split() for line in (path / 'cgroup.events').read_text().splitlines())
+            members = (path / 'cgroup.procs').read_text().strip()
+        except OSError:
+            raise Blocked(operation + ' cannot read recorded scope; inspect its membership before replacing a writer') from None
+        except ValueError:
+            raise Blocked(operation + ' cannot determine scope membership; inspect before replacing a writer') from None
+        if events.get('populated') not in ('0', '1'):
+            raise Blocked(operation + ' cannot determine scope membership; inspect before replacing a writer')
+        if events['populated'] == '1' or members:
+            raise Blocked(operation + ' refused: populated child scope; wait for its writer to stop and inspect again')

@@ -135,25 +135,6 @@ class Store:
             if not row['reservation']:
                 raise Blocked('run already released; only a reserved run can be abandoned')
             inspect_recorded_writers(db, 'abandon')
-            for process in db.execute('SELECT containment FROM wf_processes'):
-                if not process['containment']:continue
-                receipt=json.loads(process['containment'])
-                parent=Path(receipt['parent']);path=parent/receipt['name']
-                if (parent != parent.resolve() or not parent.is_relative_to('/sys/fs/cgroup') or
-                        path.parent != parent or path != path.resolve()):
-                    raise Blocked('abandon cannot inspect recorded scope path; inspect custody before release')
-                if not path.exists():continue
-                # Even a replaced scope with live members is a conflict; stale
-                # identity metadata alone, or a removed empty scope, is not.
-                try:
-                    events=dict(line.split() for line in (path/'cgroup.events').read_text().splitlines())
-                    members=(path/'cgroup.procs').read_text().strip()
-                except OSError:
-                    raise Blocked('abandon cannot read recorded scope; inspect its membership before release') from None
-                if events.get('populated') not in ('0','1'):
-                    raise Blocked('abandon cannot determine scope membership; inspect before release')
-                if events['populated']=='1' or members:
-                    raise Blocked('abandon refused: populated child scope; wait for its writer to stop and inspect again')
             db.execute("UPDATE wf_runs SET state='ABANDONED',reservation=0 WHERE run_id=?",(run,))
             self.event(db,run,None,'abandoned',{'reason':'explicit operator abandon; partial work and incomplete effects retained'})
             return dict(db.execute('SELECT * FROM wf_runs WHERE run_id=?',(run,)).fetchone())

@@ -72,6 +72,8 @@ class HistoricalProgressTests(ProjectTest):
             db.execute('INSERT INTO wf_processes VALUES(?,?,NULL)', ('uncertain', canonical(process_identity(os.getpid(), 'child'))))
             with self.assertRaisesRegex(Blocked, 'live child'):
                 owner.store.abandon('old')
+            with self.assertRaisesRegex(Blocked, 'start refused: live child'):
+                owner.store.start('new', self.base)
 
     def test_abandon_unknown_run_reports_operation_error(self):
         with Authority(self.project) as owner:
@@ -123,26 +125,65 @@ class HistoricalProgressTests(ProjectTest):
             if not owner.lock.closed: owner.close()
         with Authority(self.project): pass
 
-    def test_recorded_populated_scope_refuses_abandon_without_provisioning_or_signalling(self):
+    def test_recorded_scope_membership_guards_start_and_abandon_with_absent_leader(self):
         from pathlib import Path
         with Authority(self.project) as owner:
             db = self.legacy(owner)
-            scope = Path('/sys/fs/cgroup/coherence-simplification-03-offline-fixture')
-            db.execute('INSERT INTO wf_processes VALUES(?,NULL,?)', ('uncertain', canonical(
+            scope = Path('/sys/fs/cgroup/coherence-fix02-offline-fixture')
+            leader = process_identity(os.getpid(), 'absent-leader')
+            leader['pid'] = 999999999
+            db.execute('INSERT INTO wf_processes VALUES(?,?,?)', ('uncertain', canonical(leader), canonical(
                 {'parent': str(scope.parent), 'name': scope.name})))
-            original_exists, original_read = Path.exists, Path.read_text
-            populated = True
-            def exists(path): return True if path == scope else original_exists(path)
+            before = list(db.iterdump())
+            original_exists, original_stat, original_read = Path.exists, Path.stat, Path.read_text
+            def exists(path):
+                if path == Path('/proc/999999999'): return False
+                return original_exists(path)
+            def stat(path, *args, **kwargs):
+                if path == scope:
+                    if state == 'missing': raise FileNotFoundError(str(path))
+                    if state == 'unreadable-stat': raise PermissionError(str(path))
+                    return original_stat(scope.parent, *args, **kwargs)
+                return original_stat(path, *args, **kwargs)
             def read(path, *args, **kwargs):
-                if path == scope/'cgroup.events': return 'populated 1\n' if populated else 'populated 0\n'
-                if path == scope/'cgroup.procs': return '123\n' if populated else ''
+                if path == scope/'cgroup.events':
+                    if state == 'unreadable-events': raise PermissionError(str(path))
+                    if state == 'invalid-events': return 'malformed event data\n'
+                    return 'populated 1\n' if state == 'populated' else 'populated 0\n'
+                if path == scope/'cgroup.procs':
+                    if state == 'unreadable-members': raise PermissionError(str(path))
+                    return '123\n' if state == 'members' else ''
                 return original_read(path, *args, **kwargs)
-            with patch.object(Path, 'exists', exists), patch.object(Path, 'read_text', read):
-                with self.assertRaisesRegex(Blocked, 'populated child scope'):
-                    owner.store.abandon('old')
-                self.assertEqual(db.execute('SELECT reservation FROM wf_runs').fetchone()[0], 1)
-                populated = False
+            with patch.object(Path, 'exists', exists), patch.object(Path, 'stat', stat), patch.object(Path, 'read_text', read):
+                for state, message in (
+                        ('populated', 'refused: populated child scope'),
+                        ('members', 'refused: populated child scope'),
+                        ('unreadable-stat', 'cannot read recorded scope'),
+                        ('unreadable-events', 'cannot read recorded scope'),
+                        ('unreadable-members', 'cannot read recorded scope'),
+                        ('invalid-events', 'cannot determine scope membership')):
+                    for operation in ('start', 'abandon'):
+                        with self.subTest(state=state, operation=operation):
+                            with self.assertRaisesRegex(Blocked, operation + ' ' + message):
+                                if operation == 'start': owner.store.start('new', self.base)
+                                else: owner.store.abandon('old')
+                            self.assertEqual(list(db.iterdump()), before)
+                for state in ('empty', 'missing'):
+                    with self.subTest(state=state):
+                        owner.store.start('new-' + state, self.base)
+                        self.assertEqual(db.execute('SELECT reservation FROM wf_runs').fetchone()[0], 1)
+                        self.assertEqual(db.execute('SELECT phase FROM wf_operations').fetchone()[0], 'intent')
                 owner.store.abandon('old')
+            self.assertEqual(db.execute('SELECT phase FROM wf_operations').fetchone()[0], 'intent')
+
+    def test_reused_recorded_pid_does_not_veto_fresh_start(self):
+        with Authority(self.project) as owner:
+            db = self.legacy(owner)
+            identity = process_identity(os.getpid(), 'reused-pid')
+            identity['start'] = 'different-start'
+            db.execute('INSERT INTO wf_processes VALUES(?,?,NULL)', ('uncertain', canonical(identity)))
+            owner.store.start('new', self.base)
+            self.assertEqual(db.execute('SELECT reservation FROM wf_runs').fetchone()[0], 1)
             self.assertEqual(db.execute('SELECT phase FROM wf_operations').fetchone()[0], 'intent')
 
     def test_old_run_id_not_shadowed_by_new_history(self):
