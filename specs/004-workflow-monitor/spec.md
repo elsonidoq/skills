@@ -152,7 +152,8 @@ Current sources are `store.py`, `engine.py`, `verification.py`, `pi_adapter.py`,
 runtime operating/schema guides, not historical proposals. Existing rows do not provide this contract.
 Only new recording-contract runs are in scope. No historical adapters or mass conversions.
 
-Owner-selected future executor remains `openai-codex/gpt-6.1-sol`, effort `medium`; no substitution,
+Latest owner direction selects Terra class, effort `medium`; concrete provider/model binding is unresolved.
+Do not invent it or change active configuration. No substitution,
 install, activation, launch, merge or push is authorized. Current session authorizes preparing these
 revised artifacts. Current-content review and explicit implementation approval, especially for the
 recording seam and bounded correction-review range support, remain necessary before execution.

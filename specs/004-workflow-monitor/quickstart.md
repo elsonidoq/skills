@@ -6,24 +6,25 @@ and approvals are not current prerequisites or execution permission.
 
 ## Before implementation
 
-Review the revised spec/tasks and explicitly approve T001 recording plus bounded original-range review
-support. Future executor stays `openai-codex/gpt-6.1-sol`, effort `medium`. Verify actual available Python,
+Review the revised spec/tasks and explicitly approve T001–T006 recording plus bounded original-range review
+support. Future executor is Terra class, effort `medium`; no concrete provider/model ID was supplied.
+Do not invent a binding or change active configuration; resolve it before approved launch. Verify actual available Python,
 Git/SQLite, Node/Pi SDK and relevant project tools; do not install, refresh auth, reload or substitute a
 model automatically. Preserve unrelated work, existing writer ownership and normal Git configuration.
 
-T001 adds the small recording seam, focused tests and actual runtime operating/schema documentation.
+T001–T006 add the small recording seam, focused tests and actual runtime operating/schema documentation.
 It is delivered and validated **before** the new application-build run. Do not expect existing
 `execution_runs`/`execution_tasks` or legacy `wf_*` rows to supply new history.
 
 ## Application build
 
-After T001 acceptance and separate application execution approval, execute T002/T003 as one fresh run
+After T001–T006 acceptance and separate application execution approval, execute T007–T016 as one fresh run
 through `scripts/coordinate-implementation`, using the ordinary tasks object, `--tasks`, `--executor`,
 `--project` and a fresh `--run`. Root proposal metadata is not an execution envelope. For the application
-build, select only those approved task records; do not rerun T001 inside the same build. The runtime
-CLI has no task-subset flag: prepare a separate ordinary task file containing T002/T003, with T002's
-already-satisfied T001 dependency removed and its prerequisite checkpoint noted as context. Copy the
-matching T002/T003 safe entries from `monitor-presentation.json` into root `monitor.tasks`; the future
+build, select only those approved task records; do not rerun T001–T006 inside the same build. The runtime
+CLI has no task-subset flag: prepare a separate ordinary task file containing T007–T016, with T007's
+already-satisfied T006 dependency removed and its accepted foundation SHA/recording version in T007's own description. Copy the
+matching T007–T016 safe entries from `monitor-presentation.json` into root `monitor.tasks`; the future
 recorder retains those brief labels/summaries, not the private task work descriptions.
 
 Use ordinary application `pyproject.toml`/lock and web `package.json`/package-lock. No external frozen
@@ -47,7 +48,7 @@ locations. Generated assets are not committed; manifests/locks/source/tests are.
 
 ## Early usable viewer and own-build observation
 
-After the T002 focused checkpoint, the operator may separately authorize a read-only viewer launch
+After the T010 focused checkpoint, the operator may separately authorize a read-only viewer launch
 using the delivered app environment and production assets. Proposed interface, confirmed by the future
 application README before use:
 
@@ -58,10 +59,10 @@ python -B -m workflow_monitor --project /absolute/viewed-worktree \
 
 Use the actual numeric `127.0.0.1:PORT` origin. No dev server, reload, remote binding, public service or
 execution controls. Viewer startup neither builds assets nor starts/resumes execution. An independently
-operator-owned viewer can remain open while the runner performs genuine T003 work; task/check-owned
+operator-owned viewer can remain open while the runner performs genuine T011–T016 work; task/check-owned
 servers/browsers must close normally before their checks end.
 
-Select **that same application run**: inspect earlier T002 records retrospectively and later T003
+Select **that same application run**: inspect earlier T007–T010 records retrospectively and later T011–T016
 work live. Retain safe run/occurrence references and record/read/display timing in ordinary acceptance
 output. No fixture/different-run replacement or artificial work to extend the live interval. Missing
 same-run observation is SC-006 NOT VERIFIED.
@@ -82,7 +83,7 @@ file may include root context:
 }
 ```
 
-These are proposed T001 interfaces, not current CLI capabilities. The reference declares the review
+These are proposed T001–T006 interfaces, not current CLI capabilities. The reference declares the review
 relationship; it never grants permission. `review_base` must actually drive the independent review's
 range; it is not a cosmetic monitor field. Default review still covers only that run's baseline→head.
 Get actual occurrence IDs via the delivered script status/history interface; browser opaque refs are
@@ -100,7 +101,7 @@ reader checks supplement deterministic fixtures; real browser tests cover graph 
 output exclusion. Offline adapters are not live-provider evidence. Report missing capabilities or
 permissions exactly, without turning setup into an owner-question courier or execution gate.
 
-After T003, fresh independent review checks the full application range. Observe its final result
+After T016, fresh independent review checks the full application range. Observe its final result
 separately; no task check depends on a future review result. Keep all actual failures and any explicitly
 linked corrections. No application completion/acceptance is claimed by this guide.
 

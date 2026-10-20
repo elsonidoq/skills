@@ -11,7 +11,7 @@ Proposal quality only, not implementation acceptance or renewed historical appro
 - [x] Retired-runtime acceptance changes are explicit in the spec reconciliation table.
 - [x] SC-001–006 remain required under revised meanings, including same-build retrospective/live observation.
 - [x] Ordinary focused tests, real isolated script readback and browser checks accompany coherent outcomes.
-- [x] Three delivery outcomes reflect recording-before-app and early-usable-viewer sequencing, not a task quota.
+- [x] Sixteen bounded delivery outcomes retain recording-before-app and early-usable-viewer sequencing; tests/docs stay with each outcome, not a rigid task quota.
 - [x] Privacy/read-only/origin protections, writer ownership, permissions and independent review remain intact.
 - [x] No new generic telemetry, proof system, frozen environment protocol, payload ceiling or observation gate.
 - [x] Historical approval/review records remain historical; implementation and setup/launch need separate approval.

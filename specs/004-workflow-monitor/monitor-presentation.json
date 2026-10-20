@@ -2,16 +2,68 @@
   "monitor_version": 1,
   "tasks": {
     "T001": {
-      "label": "Recording foundation",
-      "executive_summary": "Retain script milestones and actual review ranges before the application build."
+      "label": "Closed additive recording storage and retained description",
+      "executive_summary": "Closed additive recording storage and retained description."
     },
     "T002": {
-      "label": "Usable run graph",
-      "executive_summary": "Select a run and inspect its workflow, model executions and recorded progress safely."
+      "label": "Task, worker and terminal execution observations",
+      "executive_summary": "Task, worker and terminal execution observations."
     },
     "T003": {
-      "label": "Review, fixes and live history",
-      "executive_summary": "Connect review and fixing executions, validate private live history and document operation."
+      "label": "Per-check and focused-checkpoint milestones",
+      "executive_summary": "Per-check and focused-checkpoint milestones."
+    },
+    "T004": {
+      "label": "Coarse owner-question delivery observations",
+      "executive_summary": "Coarse owner-question delivery observations."
+    },
+    "T005": {
+      "label": "Actual original-range independent review and review observations",
+      "executive_summary": "Actual original-range independent review and review observations."
+    },
+    "T006": {
+      "label": "Script recording identity lookup and explicit abandon history",
+      "executive_summary": "Script recording identity lookup and explicit abandon history."
+    },
+    "T007": {
+      "label": "Worktree-scoped read-only SQLite snapshot reader",
+      "executive_summary": "Worktree-scoped read-only SQLite snapshot reader."
+    },
+    "T008": {
+      "label": "Faithful graph mapping and minimized public identities",
+      "executive_summary": "Faithful graph mapping and minimized public identities."
+    },
+    "T009": {
+      "label": "Guarded loopback production HTTP and local launch",
+      "executive_summary": "Guarded loopback production HTTP and local launch."
+    },
+    "T010": {
+      "label": "Early usable selected-run browser graph",
+      "executive_summary": "Early usable selected-run browser graph."
+    },
+    "T011": {
+      "label": "Stable live graph navigation and organized layout",
+      "executive_summary": "Stable live graph navigation and organized layout."
+    },
+    "T012": {
+      "label": "Complete snapshot-bound history navigation",
+      "executive_summary": "Complete snapshot-bound history navigation."
+    },
+    "T013": {
+      "label": "Explicit local correction resolution and range acceptance",
+      "executive_summary": "Explicit local correction resolution and range acceptance."
+    },
+    "T014": {
+      "label": "Navigable reviewer\u2013fixing-agent\u2013rereviewer lineage",
+      "executive_summary": "Navigable reviewer\u2013fixing-agent\u2013rereviewer lineage."
+    },
+    "T015": {
+      "label": "Honest runner liveness and resilient read recovery",
+      "executive_summary": "Honest runner liveness and resilient read recovery."
+    },
+    "T016": {
+      "label": "Shippable local package and same-build operating acceptance",
+      "executive_summary": "Shippable local package and same-build operating acceptance."
     }
   }
 }

@@ -25,17 +25,18 @@ old-run conversion or restoration of retired execution machinery.
 
 ## Future approval boundary
 
-T001 proposes additive best-effort recording and a bounded operational `review_base` option for actual
+T001–T006 propose additive best-effort recording and a bounded operational `review_base` option for actual
 full-original-range rereview. That option is necessary because current fresh correction runs review
 only their own baseline→head. It does not launch a correction loop or alter task ownership. Both the
 recording seam and this review-range behavior need explicit implementation approval before execution.
 
-After T001 acceptance, separately approve a fresh application run of T002/T003, actual dependency setup
+After T001–T006 acceptance, separately approve a fresh application run of T007–T016, actual dependency setup
 if needed, and independently owned read-only observer launch. Original-range independent final review,
 privacy/read-only protection, focused checkpoints and same-build retrospective/live acceptance remain
 required. No missing evidence is silently waived.
 
-Future executor remains owner-selected `openai-codex/gpt-6.1-sol`, effort `medium`; no substitution or
+Future executor is owner-selected Terra class, effort `medium`; concrete provider/model binding remains
+unresolved. Do not invent it or change active configuration. No substitution or
 permission inferred from the selection. Use ordinary project tools, current terminal authority and the
 existing sole writer. No retired external catalog/manifest/custody/receipt admission is required.
 
@@ -44,5 +45,5 @@ existing sole writer. No retired external catalog/manifest/custody/receipt admis
 `specification-approval.md`, `runtime-prerequisite-approval.md`, `prerequisite-tasks.md`/`.json` and
 `overall-review.md` retain their historical bytes. Prior four-task launch approvals, archived run IDs,
 external dependency descriptors and receipt chains apply to their historical scope, not this revised
-three-outcome proposal. Previous `app-scope.md` content remains in Git history; it is not renewed here.
+16-outcome proposal. Previous `app-scope.md` content remains in Git history; it is not renewed here.
 No current implementation approval or application acceptance is claimed by this file.

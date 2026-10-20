@@ -61,38 +61,32 @@ Keep modules small as needed; this is a seam map, not a mandate to create every 
 manifests/locks; runtime dependency/SDK changes are not needed. No new dependencies solely for recording.
 Existing ignore rules may need a narrow application-manifest exception, never blanket ignore removal.
 
-## Outcome-based delivery
+## Bounded outcome delivery
 
-### T001 — Recording and correction-review foundation, before the app run
+The owner rejected three coarse milestones because long-agent compaction/drift risk needs smaller
+verifiable work units. [Tasks](tasks.md) and matching [JSON](tasks.json) now define 16 bounded outcomes;
+this is not a quota or a new Standard planning ceremony. Tests and relevant docs remain with each outcome.
 
-Deliver additive metadata/observations at existing execution boundaries, explicit correction relation
-and bounded actual original-range review support. Include emission/readback, failed-check retention,
-review findings, question delivery/error paths, recording failure noninterference and existing runtime
-regressions; update operating/schema owners for actual delivered behavior. No application launch or
-automatic review/fix loop. This is separately approved implementation work, not authorized now.
+- **T001–T006, separate foundation:** additive closed storage/description; engine task/worker/terminal
+  boundaries; actual checks/checkpoints; question delivery; real original-range review; CLI ID lookup and
+  abandon retention. Accept this foundation before starting the application run. No future app result is
+  required to verify these producers. Runtime changes remain separately approval-gated.
+- **T007–T010, early usable app:** read-only snapshot reader, faithful minimized mapping, guarded production
+  HTTP/launcher and usable browser graph. At T010 checkpoint the operator can inspect THIS application's
+  earlier records and keep a separately authorized independently owned observer open.
+- **T011–T016, genuine later work in that SAME app run:** stable layout/polls, snapshot-bound history
+  navigation, explicit correction resolver/range acceptance, lineage graph, honest liveness/read recovery,
+  and shippable local package/operating acceptance. No artificial work to extend observation.
 
-After validation and a focused checkpoint, record the delivered recording-version/runtime revision.
-Only then start a fresh run containing **T002 and T003**. T001 is not retroactively part of that
-recorded application build; its history is not substituted for self-history.
+Prepared split: ordinary foundation input T001–T006, then fresh ordinary app input T007–T016. Remove
+only T007's satisfied T006 dependency, placing accepted foundation SHA/recording version in T007's own
+brief. Retain internal dependencies/owned paths/checks/REQUIRED items and copy matching public-safe
+presentation to root monitor.tasks. No unsupported subset flag or automatic run orchestrator.
 
-### T002 — Early usable selected-run monitor
-
-Deliver safe reader/mapping, local production API/assets and graph/details/polling together with
-focused reader/browser/concurrent-writer checks. Already expose recorded occurrences, failure history,
-unknowns and review nodes; not a disposable task-status UI. Normal app manifests/locks accompany source.
-At its focused checkpoint the operator can inspect that same application's earlier steps and keep an
-independently owned read-only viewer open during genuine T003 work.
-
-### T003 — Complete review/fix history, composed acceptance and operation
-
-Complete correction-lineage expansion/reveal, adversarial privacy/error checks, stale/liveness behavior
-and composed review→fixing-worker→checks/checkpoint→rereview tests. Include actual same-build live
-observation and operating documentation. Tests/docs remain with this coherent faithful-observation
-outcome, not a separate evidence/cleanup task. Do not create artificial work to keep the run alive.
-
-Final fresh independent review follows task delivery. T003 cannot require the future final review to
-have passed before it can finish. Operator acceptance observes that final outcome afterward; unresolved
-findings require separately authorized linked corrections and full-range rereview, not auto-retry.
+Final fresh independent review follows T016, covering the full application baseline→head. T016 does
+not require that future result to finish. Operator then inspects its actual recorded outcome; findings
+require separately authorized linked correction executions and actual full-original-range rereview.
+No task/checkpoint/worker success alone establishes application acceptance.
 
 ## Validation and operation
 
@@ -113,13 +107,14 @@ Reader failures preserve last safe state with warnings, never repair or restart 
 
 ## Approval, ownership and rollback
 
-Future executor remains owner-selected `openai-codex/gpt-6.1-sol`, effort `medium`. Verify actual usable
+Future executor is owner-selected Terra class, effort `medium`; no concrete provider/model ID was
+supplied. Resolve the actual binding before approved launch; do not invent it or edit active configuration. Verify actual usable
 capabilities before their stage, preserving current terminal authority, sole-writer lock, unrelated work,
 normal hooks/signing, explicit path checkpoints and fresh independent read-only final review. No
 catalog/manifest/receipt/containment/binding admission is revived.
 
 Current scope is artifacts only. Review revised sources/tasks and explicitly approve recording plus
-review-range changes before T001; approve app execution/setup/observer launch before applicable work.
+review-range changes before T001–T006; approve app execution/setup/observer launch before applicable work.
 Historical `specification-approval.md`, prerequisite tasks/approval and overall review stay historical.
 
 Stopping the viewer disables observation only. Preserve progress/history/Git/partial work. No downgrade,

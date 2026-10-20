@@ -1,115 +1,702 @@
 {
   "status": "proposal-only; implementation not authorized",
   "source": "specs/004-workflow-monitor/spec.md",
-  "contracts": [
-    "specs/004-workflow-monitor/plan.md",
-    "specs/004-workflow-monitor/data-model.md",
-    "specs/004-workflow-monitor/contracts/monitor-v1.md",
-    "specs/004-workflow-monitor/contracts/validation.md",
-    "specs/004-workflow-monitor/quickstart.md",
-    "specs/004-workflow-monitor/tasks.md"
-  ],
   "executor_intent": {
-    "provider": "openai-codex",
-    "model": "gpt-6.1-sol",
+    "class": "Terra",
     "effort": "medium",
-    "provenance": "Existing owner selection, retained; not dispatch permission"
+    "binding": "unresolved: no concrete provider/model ID supplied; do not change active configuration",
+    "provenance": "Latest owner direction supersedes prior Sol intent for this proposal, not dispatch permission"
   },
   "delivery": {
-    "foundation": ["T001"],
-    "application_build": ["T002", "T003"],
-    "handoff": "After separately approving, delivering and accepting T001, prepare a fresh ordinary application input containing T002/T003 only. Remove T002's satisfied T001 dependency and note its checkpoint as context. Keep T003 depending on T002. Copy the matching safe T002/T003 entries from monitor-presentation.json into root monitor.tasks for retained brief details. No automatic launch or unsupported CLI subset flag.",
-    "final_acceptance": "Fresh independent full-application-range review follows T003. Operator inspects its recorded actual result afterward. Same-build retrospective/live observation is required; missing evidence is NOT VERIFIED. Findings require separately authorized linked fixing execution and original-range rereview, not automatic retries."
+    "foundation": [
+      "T001",
+      "T002",
+      "T003",
+      "T004",
+      "T005",
+      "T006"
+    ],
+    "application_build": [
+      "T007",
+      "T008",
+      "T009",
+      "T010",
+      "T011",
+      "T012",
+      "T013",
+      "T014",
+      "T015",
+      "T016"
+    ],
+    "early_usable_checkpoint": "T010",
+    "handoff": "Read tasks.md Mapping and prepared split-run handoff; preserve task-local briefs/REQUIRED items. Remove only satisfied T007\u2192T006 in app input and insert accepted foundation SHA/version into T007 description. Final full-app-range independent review follows T016; same-run operator observation required."
   },
-  "constraints": [
-    "Proposal artifacts only in this session; no runtime/monitor implementation, installation, application/model launch, global activation, merge or push.",
-    "One existing script writer, actual project checks, explicit owned-path task checkpoints, unrelated-work preservation, normal hooks/signing and fresh independent read-only final review.",
-    "Recording failures warn but never gate execution or replace original errors; missing records are incomplete, never fabricated or reconstructed from private transcripts.",
-    "Each actual worker, fixing worker and reviewer execution is a distinct graph node; declarations, recorded sequence and prerequisites are different relationships.",
-    "No retired runtime/YAML execution, catalog/manifest/custody/receipt admission, PythonAnswer/deadline workaround, frozen descriptor/tree attestation or universal payload ceiling.",
-    "No dependency install/download, auth refresh, external operation or observer launch without separate applicable authority; tests and startup do not install."
-  ],
   "tasks": [
     {
       "id": "T001",
-      "description": "First read specs/004-workflow-monitor/tasks.md and its linked spec/plan/data/API/validation sources; obey its shared constraints and this task's required pass conditions. Deliver and separately accept the minimal recording and original-range correction-review foundation BEFORE the application build. Add retained descriptive phase/task metadata and closed append-only observations in the existing DB, preserving current progress and legacy rows. Emit at task preparation/manual gates, every actual worker/reviewer call, each runner check before failure propagation, checkpoint/no-change, coarse terminal/host question delivery, terminal results and explicit abandon. Record distinct model occurrence identities/roles and actual review base/head/approval/finding count without private content. Accept optional monitor.correction_of as declared context, not authority; expose actual recording occurrence IDs through script status/history. Add bounded optional review_base so a separately approved fixing run's fresh reviewer actually sees the full original range; normal Git commit/ancestor validation, default review and task ownership unchanged. No automatic fixes/retries, legacy adapters, new dependency or telemetry gate. Include focused tests and runtime operating/schema documentation.",
+      "outcome": "Closed additive recording storage and retained description",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Deliver the two additive monitoring tables, closed phase/task descriptor and safe best-effort append/read helpers. Capture explicit public presentation, requested identity and declared correction context only; generic labels replace invalid optional input. Retain runtime revision or unknown reason. Recorder initialization and writes cannot veto ordinary progress. Interfaces/predecessors: Existing Store progress schema; data-model minimal storage, emission optionality and correction metadata; helpers consumed by T002\u2013T006. Exclusions: No engine instrumentation, review selection, private text, new dependencies, legacy conversion or UI. REQUIRED T001/V1: Use actual disposable SQLite Store: old progress/legacy rows remain unchanged, descriptor survives code/presentation changes, occurrence identity/end reuse and append order survive reopen. Closed facts reject private sentinel/arbitrary payload; invalid optional metadata degrades safely. Inject setup/append failure and show ordinary Store progress still succeeds, safe warnings only. Missing registration is not fabricated history. Capability/permission: Prepared local Python/Git/SQLite; no install or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
       "depends": [],
       "owned_paths": [
         "runtime/coherence_workflow/monitoring.py",
         "runtime/coherence_workflow/store.py",
-        "runtime/coherence_workflow/engine.py",
-        "runtime/coherence_workflow/verification.py",
-        "runtime/coherence_workflow/pi_adapter.py",
-        "runtime/coherence_workflow/cli.py",
         "runtime/tests/test_monitoring.py",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_monitoring"
+      ],
+      "required": [
+        {
+          "id": "T001/V1",
+          "criteria": [
+            "SC-001",
+            "SC-004",
+            "SC-005"
+          ],
+          "pass_condition": "Use actual disposable SQLite Store: old progress/legacy rows remain unchanged, descriptor survives code/presentation changes, occurrence identity/end reuse and append order survive reopen. Closed facts reject private sentinel/arbitrary payload; invalid optional metadata degrades safely. Inject setup/append failure and show ordinary Store progress still succeeds, safe warnings only. Missing registration is not fabricated history.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared local Python/Git/SQLite; no install or external action."
+        }
+      ],
+      "interfaces": "Existing Store progress schema; data-model minimal storage, emission optionality and correction metadata; helpers consumed by T002\u2013T006.",
+      "exclusions": "No engine instrumentation, review selection, private text, new dependencies, legacy conversion or UI.",
+      "notes": ""
+    },
+    {
+      "id": "T002",
+      "outcome": "Task, worker and terminal execution observations",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Wire retained registration, preparation/manual-gate, worker and run terminal boundaries into Engine. Allocate one identity per actual prompt call; label explicitly declared correction workers without heuristic reclassification. Preserve interrupted/failed preparation, worker return distinct from acceptance, and terminal failures before propagation. Interfaces/predecessors: T001 recorder; actual Engine.invoke and manual_gates; reviewer-specific outcome/range is delivered by T005. Exclusions: No check/checkpoint internals, answer content, automatic retry or reviewer result changes. REQUIRED T002/V1: Real Engine with labelled offline adapters and disposable Git emits preparation/gate/worker/terminal rows in observed order. Repeated calls get distinct IDs; denied gate has no invented worker; failure/interruption remains failed/incomplete. Recorder failures at registration/mid/end do not prevent actual worker/check/Git/default review or replace original errors. Capability/permission: Prepared local Python/Git/SQLite; no install or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T001"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/monitoring.py",
         "runtime/tests/test_engine.py",
-        "runtime/tests/test_pi_adapter.py",
-        "runtime/tests/test_recovery.py",
+        "runtime/tests/test_monitoring.py",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_engine test_monitoring"
+      ],
+      "required": [
+        {
+          "id": "T002/V1",
+          "criteria": [
+            "SC-001",
+            "SC-002",
+            "SC-004",
+            "SC-006"
+          ],
+          "pass_condition": "Real Engine with labelled offline adapters and disposable Git emits preparation/gate/worker/terminal rows in observed order. Repeated calls get distinct IDs; denied gate has no invented worker; failure/interruption remains failed/incomplete. Recorder failures at registration/mid/end do not prevent actual worker/check/Git/default review or replace original errors.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared local Python/Git/SQLite; no install or external action."
+        }
+      ],
+      "interfaces": "T001 recorder; actual Engine.invoke and manual_gates; reviewer-specific outcome/range is delivered by T005.",
+      "exclusions": "No check/checkpoint internals, answer content, automatic retry or reviewer result changes.",
+      "notes": ""
+    },
+    {
+      "id": "T003",
+      "outcome": "Per-check and focused-checkpoint milestones",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Instrument each actual runner command and focused checkpoint boundary, including failure before raise, interruption, no requested checks, no-change and uncertain Git failure. Preserve existing runner ownership, command cancellation and check semantics. Interfaces/predecessors: T002 engine occurrence context; run_checks and FocusedGit.checkpoint results; no git_effects behavior change. Exclusions: No raw commands/output/paths, receipt protocol, invented success, check deadlines or Git repair. REQUIRED T003/V1: Actual successful/failing subprocess checks and disposable Git checkpoint/no-change produce start/outcome rows with correct ordinal/exit/base/head/no_change. Failed command is durable before exception; uncertain checkpoint is not a commit claim. Inject recorder exceptions and prove original check/Git outcomes and errors unchanged; no-check is not verified-check success. Capability/permission: Prepared local Python/Git/SQLite; no install or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T002"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/verification.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/monitoring.py",
         "runtime/tests/test_verification.py",
+        "runtime/tests/test_engine.py",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_verification test_engine"
+      ],
+      "required": [
+        {
+          "id": "T003/V1",
+          "criteria": [
+            "SC-002",
+            "SC-004",
+            "SC-005",
+            "SC-006"
+          ],
+          "pass_condition": "Actual successful/failing subprocess checks and disposable Git checkpoint/no-change produce start/outcome rows with correct ordinal/exit/base/head/no_change. Failed command is durable before exception; uncertain checkpoint is not a commit claim. Inject recorder exceptions and prove original check/Git outcomes and errors unchanged; no-check is not verified-check success.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared local Python/Git/SQLite; no install or external action."
+        }
+      ],
+      "interfaces": "T002 engine occurrence context; run_checks and FocusedGit.checkpoint results; no git_effects behavior change.",
+      "exclusions": "No raw commands/output/paths, receipt protocol, invented success, check deadlines or Git repair.",
+      "notes": ""
+    },
+    {
+      "id": "T004",
+      "outcome": "Coarse owner-question delivery observations",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Wrap manual-gate and SDK questions with parent occurrence references; distinguish requested, terminal answer returned, host answer sent and delivery failure. Preserve ordinary interactive/noninteractive behavior. Interfaces/predecessors: T002 gate/worker identity; actual PiAdapter question callback and stdin send boundaries; test_host.mjs regression. Exclusions: No question/answer text, mailbox, consumed claim, SDK stream mining or host protocol rewrite. REQUIRED T004/V1: Exercise real PiAdapter framed transport with labelled local fake host and terminal callback: requested/returned/sent/failure states link to gate or model execution correctly. Noninteractive refusal and broken send do not claim delivery/consumption. Synthetic private content enters no rows/warnings; callback recorder failure cannot block actual answer send or replace its error. Capability/permission: Prepared Python/Node and local fake transport; no live provider or interactive approval simulation claimed. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T002"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/monitoring.py",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_engine.py",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_pi_adapter test_engine",
+        [
+          "node",
+          "--test",
+          "runtime/tests/test_host.mjs"
+        ]
+      ],
+      "required": [
+        {
+          "id": "T004/V1",
+          "criteria": [
+            "SC-002",
+            "SC-004",
+            "SC-005"
+          ],
+          "pass_condition": "Exercise real PiAdapter framed transport with labelled local fake host and terminal callback: requested/returned/sent/failure states link to gate or model execution correctly. Noninteractive refusal and broken send do not claim delivery/consumption. Synthetic private content enters no rows/warnings; callback recorder failure cannot block actual answer send or replace its error.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared Python/Node and local fake transport; no live provider or interactive approval simulation claimed."
+        }
+      ],
+      "interfaces": "T002 gate/worker identity; actual PiAdapter question callback and stdin send boundaries; test_host.mjs regression.",
+      "exclusions": "No question/answer text, mailbox, consumed claim, SDK stream mining or host protocol rewrite.",
+      "notes": ""
+    },
+    {
+      "id": "T005",
+      "outcome": "Actual original-range independent review and review observations",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Add optional review_base to the actual independent review diff/prompt. Resolve normal Git commit and require ancestor of run baseline; reject invalid/unrelated range at affected review. Record distinct reviewer occurrence, actual base/head, parsed approval/finding count or malformed/interrupted outcome before raise. Default review/run baseline/ownership remain unchanged. Interfaces/predecessors: T003 checkpoint head, T004 reviewer question support; data-model review coverage contract; Engine currently uses run baseline. Exclusions: No auto-fix/retry, supplied reviewer verdict, full finding ledger, default range change or telemetry admission gate. REQUIRED T005/V1: Run actual isolated Engine/check/Git original rejection then separately declared local fixing run using labelled offline adapters. Inspect distinct reviewer/fixing-worker/rereviewer calls and DB rows; rereviewer prompt/diff really contains original-base\u2192new-head including original commits. Original remains failed. Default prompt unchanged; invalid/nonancestor base fails review without rewriting work. Malformed/rejected response retains honest outcome, no private findings; recorder failure does not alter review. Capability/permission: Prepared local Python/Git/SQLite; no install or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T003",
+        "T004"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/monitoring.py",
+        "runtime/tests/test_engine.py",
+        "runtime/tests/test_monitoring.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_engine test_monitoring"
+      ],
+      "required": [
+        {
+          "id": "T005/V1",
+          "criteria": [
+            "SC-002",
+            "SC-004",
+            "SC-006"
+          ],
+          "pass_condition": "Run actual isolated Engine/check/Git original rejection then separately declared local fixing run using labelled offline adapters. Inspect distinct reviewer/fixing-worker/rereviewer calls and DB rows; rereviewer prompt/diff really contains original-base\u2192new-head including original commits. Original remains failed. Default prompt unchanged; invalid/nonancestor base fails review without rewriting work. Malformed/rejected response retains honest outcome, no private findings; recorder failure does not alter review.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared local Python/Git/SQLite; no install or external action."
+        }
+      ],
+      "interfaces": "T003 checkpoint head, T004 reviewer question support; data-model review coverage contract; Engine currently uses run baseline.",
+      "exclusions": "No auto-fix/retry, supplied reviewer verdict, full finding ledger, default range change or telemetry admission gate.",
+      "notes": ""
+    },
+    {
+      "id": "T006",
+      "outcome": "Script recording identity lookup and explicit abandon history",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Extend actual status/history to expose recording occurrence IDs and safe recorded review ranges for operator correction references; preserve ordinary progress/legacy interfaces. Append explicit abandon observation for registered new runs without erasing prior failure. Complete foundation operating/schema guide and validate composed recording seam before the app run. Interfaces/predecessors: T001\u2013T005 implemented recorder and review range; existing CLI status/history/abandon. Script output is not browser DTO. Exclusions: No browser API, old-run mutation/adaptation, automatic abandon, new task linter rules or transcripts. REQUIRED T006/V1: Actual CLI lookup returns the emitted review occurrence ID used to resolve a declared correction; abandon retains prior observations and actual failure. Absent/corrupt monitoring remains unknown, recorder failure does not veto abandon. Full runtime/host regression checks pass with no legacy row rewrite. Docs flags/examples match actual CLI and expose recording version/occurrence IDs; docs identify the separate post-checkpoint foundation acceptance boundary before app build. Capability/permission: Prepared local Python/Node/Git/SQLite and local fake SDK transport; no install, live provider or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T005"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/monitoring.py",
         "runtime/tests/test_cli.py",
+        "runtime/tests/test_recovery.py",
+        "runtime/tests/test_monitoring.py",
         "docs/coordinate-implementation.md",
         "docs/coordinate-implementation-schema.md"
       ],
       "checks": [
         "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest discover -v -s runtime/tests",
-        ["node", "--test", "runtime/tests/test_host.mjs"]
+        [
+          "node",
+          "--test",
+          "runtime/tests/test_host.mjs"
+        ]
       ],
-      "acceptance": [
+      "required": [
         {
-          "criteria": ["SC-001", "SC-002", "SC-004", "SC-005", "SC-006"],
-          "pass_condition": "Real engine/check/Git paths with labelled offline adapters emit/read back complete supported boundaries. Distinct worker/reviewer/fixing occurrences, rejected/invalid reviews, failed checks before raise, interruption, gate/question send/error, no-change/uncertain checkpoint and abandon retain honest history. Privacy sentinels never enter monitoring rows; default review unchanged; explicit valid original-base range actually reaches rereviewer and records, invalid range fails the affected review. No auto-retry or legacy mutation.",
-          "evidence": "Focused monitoring tests in the discovered runtime suite, actual disposable Git/check/DB results, adapter call/range assertions and ordinary test output. Offline fixtures do not claim live-provider success."
-        },
-        {
-          "criteria": ["SC-004", "SC-005"],
-          "pass_condition": "Injected recorder failures at start/mid/end and callbacks never prevent real SDK/check/Git/review, replace original exceptions or invent completion. Missing history stays unavailable/incomplete; no private text fallback. Docs describe delivered interfaces, status IDs and recording non-guarantees.",
-          "evidence": "Failure injection and noninterference regressions, default execution regression suite and documentation/interface checks."
+          "id": "T006/V1",
+          "criteria": [
+            "SC-001",
+            "SC-002",
+            "SC-004",
+            "SC-005",
+            "SC-006"
+          ],
+          "pass_condition": "Actual CLI lookup returns the emitted review occurrence ID used to resolve a declared correction; abandon retains prior observations and actual failure. Absent/corrupt monitoring remains unknown, recorder failure does not veto abandon. Full runtime/host regression checks pass with no legacy row rewrite. Docs flags/examples match actual CLI and expose recording version/occurrence IDs; docs identify the separate post-checkpoint foundation acceptance boundary before app build.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared local Python/Node/Git/SQLite and local fake SDK transport; no install, live provider or external action."
         }
       ],
-      "permission": "Explicit implementation approval for recording and bounded review_base support is required before execution. Current authorization is artifact revision only."
+      "interfaces": "T001\u2013T005 implemented recorder and review range; existing CLI status/history/abandon. Script output is not browser DTO.",
+      "exclusions": "No browser API, old-run mutation/adaptation, automatic abandon, new task linter rules or transcripts.",
+      "notes": "Foundation completion gate: separately review/accept recording and review_base implementation before approving the fresh app run; no future app acceptance is a check here. Full runtime suite is justified by cross-cutting Engine/Store/adapter changes."
     },
     {
-      "id": "T002",
-      "description": "First read specs/004-workflow-monitor/tasks.md and its linked spec/plan/data/API/validation sources; obey its shared constraints and this task's required pass conditions. Deliver the early usable safe selected-run monitor as the first task of a fresh recorded application build after T001 acceptance. Implement short mode=ro reader snapshots, mapping/minimization, numeric-loopback production API/assets, left run list, one graph and brief details. Retained phases, declared task prerequisites and observed occurrences are distinct; every model execution is a node. Include recorded failure/milestone history, core review ranges, unknowns, stable polling/navigation and complete inventory/reveal, not a status-only UI. No writer/SDK/control imports or private raw text/path output. Use conventional app manifests/locks and separately approved existing tools/setup, narrow ignore changes, focused tests and early usable launch README. At checkpoint the operator can inspect this same build retrospectively before genuine T003 work.",
-      "depends": ["T001"],
-      "owned_paths": [".gitignore", "workflow_monitor", "docs/index.md"],
-      "checks": [
-        ["python3", "-B", "-m", "unittest", "discover", "-v", "-s", "workflow_monitor/tests"],
-        ["npm", "--prefix", "workflow_monitor/web", "run", "build"],
-        ["npm", "--prefix", "workflow_monitor/web", "test"]
+      "id": "T007",
+      "outcome": "Worktree-scoped read-only SQLite snapshot reader",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Deliver app Python manifest/lock and fixed-worktree reader using short thread-owned snapshots, parameterized explicit SELECT columns, mode=ro/query_only/SELECT authorizer and normal SQLite locking. Bind canonical Git-admin/database identity and safe ownership; recheck on reopen/substitution. Read only new supported recording-contract runs, retain unavailable/unsupported states. Interfaces/predecessors: Accepted T006 recording version/checkpoint; data-model tables and API reader boundary; no runtime writer imports. Exclusions: No Authority/Store/SDK imports, DDL/ATTACH/extensions/write pragma, immutable/nolock, copied main DB, legacy fallback or process signalling. REQUIRED T007/V1: Actual T006-compatible isolated database read sees WAL updates and preserves authoritative rows; actual script writer progresses while reader opens/closes snapshots. Attempt forbidden SQL, symlink/ownership/cross-worktree substitution and missing store/version cases; safely reject or report closed unavailable state without creating/mutating DB. Compare authoritative rows at quiescent points, not active database bytes. Capability/permission: Accepted foundation; prepared Python/SQLite and separately authorized manifest/lock resolution if needed; no install from tests. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T006"
       ],
-      "acceptance": [
+      "owned_paths": [
+        "workflow_monitor/pyproject.toml",
+        "workflow_monitor/requirements.lock",
+        "workflow_monitor/__init__.py",
+        "workflow_monitor/reader.py",
+        "workflow_monitor/tests/__init__.py",
+        "workflow_monitor/tests/test_reader.py",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        "python3 -B -m unittest -v workflow_monitor.tests.test_reader"
+      ],
+      "required": [
         {
-          "criteria": ["SC-001", "SC-003", "SC-004", "SC-005", "SC-006"],
-          "pass_condition": "Production mapper inventory/IDs/typed edges match retained description and real emitted history including unsupported/missing/null/zero/no-change cases. Actual isolated script writer plus read-only production reader progresses without viewer authoritative mutations. Browser node/edge/details selection, run switching, pan/zoom/history reveal and stable polling work with normally about-two-second observed updates, no invented percentile. Host/Origin/method/path and actual error routes reject unsafe input; malicious labels do not execute and private sentinels are excluded. No viewer control/execution effects.",
-          "evidence": "Reader/mapper/HTTP unit and composed tests, real browser DOM/network assertions, record/read/display timing and ordinary test output; conventional locks and usable instructions accompany source. Same-run retrospective load becomes possible at focused checkpoint; operator launch remains separately authorized, not a hidden execution gate."
+          "id": "T007/V1",
+          "criteria": [
+            "SC-004",
+            "SC-005",
+            "SC-006"
+          ],
+          "pass_condition": "Actual T006-compatible isolated database read sees WAL updates and preserves authoritative rows; actual script writer progresses while reader opens/closes snapshots. Attempt forbidden SQL, symlink/ownership/cross-worktree substitution and missing store/version cases; safely reject or report closed unavailable state without creating/mutating DB. Compare authoritative rows at quiescent points, not active database bytes.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Accepted foundation; prepared Python/SQLite and separately authorized manifest/lock resolution if needed; no install from tests."
         }
       ],
-      "permission": "Explicit application execution approval after T001 acceptance; dependency setup and independent operator viewer launch require separate applicable permission."
+      "interfaces": "Accepted T006 recording version/checkpoint; data-model tables and API reader boundary; no runtime writer imports.",
+      "exclusions": "No Authority/Store/SDK imports, DDL/ATTACH/extensions/write pragma, immutable/nolock, copied main DB, legacy fallback or process signalling.",
+      "notes": ""
     },
     {
-      "id": "T003",
-      "description": "First read specs/004-workflow-monitor/tasks.md and its linked spec/plan/data/API/validation sources; obey its shared constraints and this task's required pass conditions. Complete faithful review/fix lineage, live acceptance and operating guidance during genuinely later work of that SAME recorded application build. Expand explicit local correction references in the one graph: rejected reviewer, declared follow-up, distinct fixing-agent execution, checks/checkpoint and rereviewer, with source-run attribution and actual reviewed ranges. Preserve original failure after later linked success; dangling/conflicting/cyclic references cannot fabricate acceptance and all hidden/unsupported history remains reachable. Complete composed privacy/error/stale/liveness/gap regressions and docs for actual setup, launch, correction context, trust/permissions/limits and rollback. Include actual isolated shipped engine/check/Git review-fix-rereview tests with labelled offline adapters plus actual same-build retrospective/live observation under explicit operator authority. No production fault injection, busywork, clean-demo substitute or automatic retry.",
-      "depends": ["T002"],
-      "owned_paths": ["workflow_monitor", "docs/index.md"],
-      "checks": [
-        ["python3", "-B", "-m", "unittest", "discover", "-v", "-s", "workflow_monitor/tests"],
-        ["npm", "--prefix", "workflow_monitor/web", "run", "build"],
-        ["npm", "--prefix", "workflow_monitor/web", "test"]
+      "id": "T008",
+      "outcome": "Faithful graph mapping and minimized public identities",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Deliver production mapper and closed public DTO construction for phase anchors, tasks/prerequisites, all occurrences/model roles, typed edges, milestones and inventory. Include opaque scoped refs, validated hashes, safe optional brief text and honest incomplete/unsupported/unknown states. No raw-row serialization. Interfaces/predecessors: T007 snapshot rows; data model graph/public identity and monitor-v1 DTO schema; followup expansion comes in T013. Exclusions: No SQL/control routes, private description/error fallback, inferred causal execution or correction heuristics. REQUIRED T008/V1: Feed actual emitted T006-compatible records and focused fixtures through actual mapper/minimizer. Compare complete phase/occurrence/observation IDs/counts and edge types including repeats/run-level/unvisited/unknown records. Zero/null/no-change/question sent/requested identity remain distinct; unsupported payload/name and synthetic private sentinel never appear. Scope opaque refs so another run cannot address records; retained first failure stays red after success. Capability/permission: Prepared local Python/Git/SQLite; no install or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T007"
       ],
-      "acceptance": [
+      "owned_paths": [
+        "workflow_monitor/mapping.py",
+        "workflow_monitor/public.py",
+        "workflow_monitor/tests/test_mapping.py",
+        "workflow_monitor/tests/test_public.py",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        "python3 -B -m unittest -v workflow_monitor.tests.test_mapping workflow_monitor.tests.test_public"
+      ],
+      "required": [
         {
-          "criteria": ["SC-001", "SC-002", "SC-003", "SC-004", "SC-005", "SC-006"],
-          "pass_condition": "All revised criteria complete: distinct reviewer/fixing-worker/rereviewer model nodes and actual original-range review navigable together; first failure retained; correction-only review not full acceptance. Complete reveal/cycle/unresolved cases; private sentinels escape nowhere, no viewer writes/control effects; measured freshness/last-success and liveness/incomplete labels honest. Docs commands/flags match delivery. Missing capabilities/evidence are FAIL/NOT VERIFIED, not skipped passes.",
-          "evidence": "Expanded actual production-helper/composed/browser tests and ordinary outputs, real isolated run/range/readback references, adversarial output scans and command/interface documentation checks."
-        },
-        {
-          "criteria": ["SC-006"],
-          "pass_condition": "Operator observes retrospective T002 and genuine live T003 work of the SAME application run; record/read/display timing and safe occurrence references retained. Missing interval is NOT VERIFIED; fixtures/another run cannot replace it. Actual build failures, if any, remain visible. Future final reviewer result is not a prerequisite for T003 completion: after checkpoint, runner performs fresh independent full-range review and operator inspects actual recorded outcome separately.",
-          "evidence": "Actual same-build run ID and observation interval, baseline/checkpoint references and later final review outcome/range. Observation is a required application acceptance step, never a new optional-telemetry execution gate."
+          "id": "T008/V1",
+          "criteria": [
+            "SC-001",
+            "SC-002",
+            "SC-004",
+            "SC-005"
+          ],
+          "pass_condition": "Feed actual emitted T006-compatible records and focused fixtures through actual mapper/minimizer. Compare complete phase/occurrence/observation IDs/counts and edge types including repeats/run-level/unvisited/unknown records. Zero/null/no-change/question sent/requested identity remain distinct; unsupported payload/name and synthetic private sentinel never appear. Scope opaque refs so another run cannot address records; retained first failure stays red after success.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared local Python/Git/SQLite; no install or external action."
         }
       ],
-      "permission": "Same approved application scope; independently owned observer launch needs explicit operator authority. Review findings require separately approved linked corrections and actual original-range rereview."
+      "interfaces": "T007 snapshot rows; data model graph/public identity and monitor-v1 DTO schema; followup expansion comes in T013.",
+      "exclusions": "No SQL/control routes, private description/error fallback, inferred causal execution or correction heuristics.",
+      "notes": ""
+    },
+    {
+      "id": "T009",
+      "outcome": "Guarded loopback production HTTP and local launch",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Deliver Starlette/Uvicorn closed GET snapshot/run/history/details routes and initial trusted python -m workflow_monitor launcher serving fixed production assets. Enforce numeric loopback, exact Host/port, API same-origin headers/Fetch Metadata, no CORS/control methods, safe errors/logs and CSP. Add narrowly needed manifest/output ignore rules. Interfaces/predecessors: T007 reader/T008 public DTO; monitor-v1 routes/assets/errors; followups route remains unavailable until T013, no invented lineage. Exclusions: No dev server/reload/proxy/debug, raw file routes, writer SDK imports, install/build-at-startup, external bind or automatic observer launch. REQUIRED T009/V1: Actual local HTTP/CLI tests with controlled assets exercise allowed reads and denied Host/Origin/method/traversal/symlink/sourcemap/raw-ref paths, all response/header/log surfaces including actual500. Sentinels never escape; exact closed error codes and no-store/CSP protections hold. Viewer startup creates no store, invokes no runner and performs no builds/installs; README/help flags agree. Capability/permission: Prepared locked Python web dependencies; local test servers only and normal teardown; dependency/network setup separately authorized. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T008"
+      ],
+      "owned_paths": [
+        "workflow_monitor/app.py",
+        "workflow_monitor/__main__.py",
+        "workflow_monitor/pyproject.toml",
+        "workflow_monitor/requirements.lock",
+        "workflow_monitor/tests/test_http.py",
+        "workflow_monitor/tests/test_launch.py",
+        "workflow_monitor/README.md",
+        ".gitignore",
+        "docs/index.md"
+      ],
+      "checks": [
+        "python3 -B -m unittest -v workflow_monitor.tests.test_http workflow_monitor.tests.test_launch"
+      ],
+      "required": [
+        {
+          "id": "T009/V1",
+          "criteria": [
+            "SC-004",
+            "SC-005"
+          ],
+          "pass_condition": "Actual local HTTP/CLI tests with controlled assets exercise allowed reads and denied Host/Origin/method/traversal/symlink/sourcemap/raw-ref paths, all response/header/log surfaces including actual500. Sentinels never escape; exact closed error codes and no-store/CSP protections hold. Viewer startup creates no store, invokes no runner and performs no builds/installs; README/help flags agree.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared locked Python web dependencies; local test servers only and normal teardown; dependency/network setup separately authorized."
+        }
+      ],
+      "interfaces": "T007 reader/T008 public DTO; monitor-v1 routes/assets/errors; followups route remains unavailable until T013, no invented lineage.",
+      "exclusions": "No dev server/reload/proxy/debug, raw file routes, writer SDK imports, install/build-at-startup, external bind or automatic observer launch.",
+      "notes": ""
+    },
+    {
+      "id": "T010",
+      "outcome": "Early usable selected-run browser graph",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Deliver conventional web manifest/lock, React/React Flow production UI with left run selector, one graph, brief node/edge details, typed edge legend, pan/zoom and simple polling. Distinct worker/reviewer nodes and all existing inventory/history are accessible, not just task status. Deliver usable build/launch instructions now, so an independently owned observer can inspect this very app run before T011\u2013T016. Interfaces/predecessors: T009 production HTTP/CLI + T008 DTO. Initial history can be fully loaded; inventory must disclose/offer existing page retrieval, no silent omission. Later T012 improves history navigation. Exclusions: No lineage inferred from name/time, editing/control affordances, CDN/HTML execution, browser install/download or same-build evidence claimed from fixtures. REQUIRED T010/V1: Build production assets and use actual installed local browser against production HTTP: switch same-spec runs, select real DOM nodes/edges/details, pan/zoom and reach every current inventory record. Compare distinct model nodes/ranges and retained failures with DB. Malicious labels remain inert. Poll actual isolated writer and retain record/read/display timing normally about2s, deviations explicit. Usable README command opens this app; this check does not require future live work or final review. Capability/permission: Prepared Node/web dependencies/local browser and T009 server environment; setup and independent operator observer launch need separate permission. No test-side downloads. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T009"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/package.json",
+        "workflow_monitor/web/package-lock.json",
+        "workflow_monitor/web/index.html",
+        "workflow_monitor/web/vite.config.ts",
+        "workflow_monitor/web/tsconfig.json",
+        "workflow_monitor/web/src/",
+        "workflow_monitor/web/tests/",
+        "workflow_monitor/web/playwright.config.ts",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test"
+        ]
+      ],
+      "required": [
+        {
+          "id": "T010/V1",
+          "criteria": [
+            "SC-001",
+            "SC-003",
+            "SC-004",
+            "SC-005",
+            "SC-006"
+          ],
+          "pass_condition": "Build production assets and use actual installed local browser against production HTTP: switch same-spec runs, select real DOM nodes/edges/details, pan/zoom and reach every current inventory record. Compare distinct model nodes/ranges and retained failures with DB. Malicious labels remain inert. Poll actual isolated writer and retain record/read/display timing normally about2s, deviations explicit. Usable README command opens this app; this check does not require future live work or final review.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared Node/web dependencies/local browser and T009 server environment; setup and independent operator observer launch need separate permission. No test-side downloads."
+        }
+      ],
+      "interfaces": "T009 production HTTP/CLI + T008 DTO. Initial history can be fully loaded; inventory must disclose/offer existing page retrieval, no silent omission. Later T012 improves history navigation.",
+      "exclusions": "No lineage inferred from name/time, editing/control affordances, CDN/HTML execution, browser install/download or same-build evidence claimed from fixtures.",
+      "notes": "Early usable checkpoint. After it, an explicitly authorized independent observer can remain open while genuinely later tasks execute in the SAME application run; observation is not a task execution gate."
+    },
+    {
+      "id": "T011",
+      "outcome": "Stable live graph navigation and organized layout",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Add organized local ELK layout and generation-safe polling/run switching. Preserve IDs, selection, viewport and positions on status-only updates; topology changes can be organized without changing semantic endpoints/types. Discard old-run fetch/layout completions. Interfaces/predecessors: T010 usable graph and polls; research React Flow/ELK guidance, monitor UI invariants. Exclusions: No edge semantic rewriting, remote layout/telemetry or extra execution effects. REQUIRED T011/V1: Real browser selects node/edge, pans/zooms, polls changed status and switches runs while old responses/layout finish. Assert selected identity/viewport/unchanged positions survive and stale generations cannot replace new root. Organize changes coordinates only; loops/typed edges/model nodes remain complete. Assets/worker remain local and navigation has no write/control requests. Capability/permission: Prepared locked web build and local browser; local servers closed normally. Optional broad runtime regression is not required for UI-only change. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T010"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/",
+        "workflow_monitor/web/tests/test_navigation.spec.ts",
+        "workflow_monitor/web/package.json",
+        "workflow_monitor/web/package-lock.json",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test"
+        ]
+      ],
+      "required": [
+        {
+          "id": "T011/V1",
+          "criteria": [
+            "SC-001",
+            "SC-003",
+            "SC-005"
+          ],
+          "pass_condition": "Real browser selects node/edge, pans/zooms, polls changed status and switches runs while old responses/layout finish. Assert selected identity/viewport/unchanged positions survive and stale generations cannot replace new root. Organize changes coordinates only; loops/typed edges/model nodes remain complete. Assets/worker remain local and navigation has no write/control requests.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared locked web build and local browser; local servers closed normally. Optional broad runtime regression is not required for UI-only change."
+        }
+      ],
+      "interfaces": "T010 usable graph and polls; research React Flow/ELK guidance, monitor UI invariants.",
+      "exclusions": "No edge semantic rewriting, remote layout/telemetry or extra execution effects.",
+      "notes": ""
+    },
+    {
+      "id": "T012",
+      "outcome": "Complete snapshot-bound history navigation",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Deliver incremental history browsing/reveal and detail lookup at a consistent watermark, with inventory loaded/hidden/unsupported counts and accessible collapsed failure/wait badges. Add expiry/conflict refresh behavior without mixing old/new snapshot pages or silently dropping records. Interfaces/predecessors: T007\u2013T010 existing snapshot/history routes and complete baseline inventory; T011 stable selections. Exclusions: No fixed universal byte cap, whole-store merge, payload exposure, fake executed branches or inaccessible hidden model nodes. REQUIRED T012/V1: Actual DB plus browser with multi-page repeated/failed/unsupported observations: total/loaded/hidden counts reconcile and every retained item is revealable with correct details/identity. Append while paging; pages either keep original watermark or explicitly refresh on409, never mix. Collapse retains distinct discoverable model executions/failure badges. Corrupt cursor/other-run detail is safely rejected; no private text leaks. Capability/permission: Prepared Python/Git/SQLite, locked web dependencies and installed local browser; local servers use normal teardown. No install/download or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T011"
+      ],
+      "owned_paths": [
+        "workflow_monitor/reader.py",
+        "workflow_monitor/mapping.py",
+        "workflow_monitor/public.py",
+        "workflow_monitor/app.py",
+        "workflow_monitor/tests/test_history.py",
+        "workflow_monitor/web/src/",
+        "workflow_monitor/web/tests/test_history.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        "python3 -B -m unittest -v workflow_monitor.tests.test_history",
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test"
+        ]
+      ],
+      "required": [
+        {
+          "id": "T012/V1",
+          "criteria": [
+            "SC-001",
+            "SC-002",
+            "SC-004",
+            "SC-005"
+          ],
+          "pass_condition": "Actual DB plus browser with multi-page repeated/failed/unsupported observations: total/loaded/hidden counts reconcile and every retained item is revealable with correct details/identity. Append while paging; pages either keep original watermark or explicitly refresh on409, never mix. Collapse retains distinct discoverable model executions/failure badges. Corrupt cursor/other-run detail is safely rejected; no private text leaks.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared Python/Git/SQLite, locked web dependencies and installed local browser; local servers use normal teardown. No install/download or external action."
+        }
+      ],
+      "interfaces": "T007\u2013T010 existing snapshot/history routes and complete baseline inventory; T011 stable selections.",
+      "exclusions": "No fixed universal byte cap, whole-store merge, payload exposure, fake executed branches or inaccessible hidden model nodes.",
+      "notes": ""
+    },
+    {
+      "id": "T013",
+      "outcome": "Explicit local correction resolution and range acceptance",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Deliver bounded local ancestor/descendant correction traversal, followups endpoint and review-coverage summaries. Resolve only explicit supported reviewer references with cycle detection/source-run attribution. Full-range acceptance requires an actual approving findings-free independent review covering original base through displayed current head; newer linked work/incomplete review invalidates current acceptance, not historical success. Interfaces/predecessors: T005 actual review range, T006 raw ID lookup, T012 snapshot/paging; monitor-v1 followups route/data-model correction rules. Exclusions: No automatic fixing, cross-worktree search, authorization by link, ancestry/name/time inference or correction-only acceptance. REQUIRED T013/V1: Real isolated shipped Engine/check/Git original rejected review and separately declared fixing run/rereview with labelled offline adapters flow through production reader/mapper/HTTP. Assert original failed state retained; distinct calls/rows, source runs and actual full-original-range prompt/records. Test dangling/wrong-worktree/conflicting/cyclic refs and later linked changes: bounded unresolved/unknown, never fabricated acceptance; correction-only range labelled honestly. Sentinels withheld. Capability/permission: Prepared local Python/Git/SQLite; no install or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T012"
+      ],
+      "owned_paths": [
+        "workflow_monitor/reader.py",
+        "workflow_monitor/lineage.py",
+        "workflow_monitor/mapping.py",
+        "workflow_monitor/public.py",
+        "workflow_monitor/app.py",
+        "workflow_monitor/tests/test_lineage.py",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        "python3 -B -m unittest -v workflow_monitor.tests.test_lineage"
+      ],
+      "required": [
+        {
+          "id": "T013/V1",
+          "criteria": [
+            "SC-001",
+            "SC-002",
+            "SC-004",
+            "SC-005",
+            "SC-006"
+          ],
+          "pass_condition": "Real isolated shipped Engine/check/Git original rejected review and separately declared fixing run/rereview with labelled offline adapters flow through production reader/mapper/HTTP. Assert original failed state retained; distinct calls/rows, source runs and actual full-original-range prompt/records. Test dangling/wrong-worktree/conflicting/cyclic refs and later linked changes: bounded unresolved/unknown, never fabricated acceptance; correction-only range labelled honestly. Sentinels withheld.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared local Python/Git/SQLite; no install or external action."
+        }
+      ],
+      "interfaces": "T005 actual review range, T006 raw ID lookup, T012 snapshot/paging; monitor-v1 followups route/data-model correction rules.",
+      "exclusions": "No automatic fixing, cross-worktree search, authorization by link, ancestry/name/time inference or correction-only acceptance.",
+      "notes": ""
+    },
+    {
+      "id": "T014",
+      "outcome": "Navigable reviewer\u2013fixing-agent\u2013rereviewer lineage",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Expand explicit followups within the one selected-root graph, showing original reviewer, declared relation, distinct fixing-agent execution, checks/checkpoint and subsequent reviewer with source-run badges and actual ranges. Preserve original failures and historical review success independently of current lineage acceptance. Interfaces/predecessors: T013 minimized followup graph and acceptance; T011\u2013T012 stable selection/history. Root is never replaced by a merged project graph. Exclusions: No launch/fix controls, heuristic relations, hidden first rejection or green task completion equated with final acceptance. REQUIRED T014/V1: Actual browser loads production emitted isolated linked histories from T013 fixture setup, navigates first rejection\u2192fixing model\u2192checks/checkpoint\u2192rereviewer with all source refs/ranges. Assert original remains failed after full-range success; correction-only, unresolved and cyclic lineages cannot display accepted current head. All hidden/unsupported records remain reachable and separate model executions survive collapse. Capability/permission: Prepared Python/Git/SQLite, locked web dependencies and installed local browser; local servers use normal teardown. No install/download or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T013"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/",
+        "workflow_monitor/web/tests/test_lineage.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test"
+        ]
+      ],
+      "required": [
+        {
+          "id": "T014/V1",
+          "criteria": [
+            "SC-001",
+            "SC-002",
+            "SC-004",
+            "SC-005"
+          ],
+          "pass_condition": "Actual browser loads production emitted isolated linked histories from T013 fixture setup, navigates first rejection\u2192fixing model\u2192checks/checkpoint\u2192rereviewer with all source refs/ranges. Assert original remains failed after full-range success; correction-only, unresolved and cyclic lineages cannot display accepted current head. All hidden/unsupported records remain reachable and separate model executions survive collapse.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared Python/Git/SQLite, locked web dependencies and installed local browser; local servers use normal teardown. No install/download or external action."
+        }
+      ],
+      "interfaces": "T013 minimized followup graph and acceptance; T011\u2013T012 stable selection/history. Root is never replaced by a merged project graph.",
+      "exclusions": "No launch/fix controls, heuristic relations, hidden first rejection or green task completion equated with final acceptance.",
+      "notes": ""
+    },
+    {
+      "id": "T015",
+      "outcome": "Honest runner liveness and resilient read recovery",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Add read-only local recorded-process identity liveness, explicit read/last-success/last-recorded time, stopped/unknown qualification and recoverable unavailable/incomplete warnings. Preserve last sanitized view on failed reads and correctly refresh after recovery; recording gaps never trigger repair. Interfaces/predecessors: T007 recorded identity/private reader and T014 graph; data-model unknowns/liveness; never import runtime processes/controller. Exclusions: No signal/lock/reconcile, guessed heartbeat, process-alive means progress, private error display or reconstructed missing events. REQUIRED T015/V1: Actual concurrent isolated script writer/reader/browser shows record/read/display timing normally about2s (retain deviations). Force read failure/stale response, process exit/unverifiable identity, missing end and recording gap; assert last safe view/last-success and incomplete/live/stopped/unknown remain distinct, no mutation or writer stall. Test zero vs unknown and no durable gap marker; scan all HTTP/browser/log surfaces for synthetic private sentinels. Capability/permission: Prepared Python/Git/SQLite, locked web dependencies and installed local browser; local servers use normal teardown. No install/download or external action. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T014"
+      ],
+      "owned_paths": [
+        "workflow_monitor/reader.py",
+        "workflow_monitor/liveness.py",
+        "workflow_monitor/public.py",
+        "workflow_monitor/app.py",
+        "workflow_monitor/tests/test_observation.py",
+        "workflow_monitor/web/src/",
+        "workflow_monitor/web/tests/test_observation.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "checks": [
+        "python3 -B -m unittest -v workflow_monitor.tests.test_observation",
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test"
+        ]
+      ],
+      "required": [
+        {
+          "id": "T015/V1",
+          "criteria": [
+            "SC-003",
+            "SC-004",
+            "SC-005",
+            "SC-006"
+          ],
+          "pass_condition": "Actual concurrent isolated script writer/reader/browser shows record/read/display timing normally about2s (retain deviations). Force read failure/stale response, process exit/unverifiable identity, missing end and recording gap; assert last safe view/last-success and incomplete/live/stopped/unknown remain distinct, no mutation or writer stall. Test zero vs unknown and no durable gap marker; scan all HTTP/browser/log surfaces for synthetic private sentinels.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared Python/Git/SQLite, locked web dependencies and installed local browser; local servers use normal teardown. No install/download or external action."
+        }
+      ],
+      "interfaces": "T007 recorded identity/private reader and T014 graph; data-model unknowns/liveness; never import runtime processes/controller.",
+      "exclusions": "No signal/lock/reconcile, guessed heartbeat, process-alive means progress, private error display or reconstructed missing events.",
+      "notes": ""
+    },
+    {
+      "id": "T016",
+      "outcome": "Shippable local package and same-build operating acceptance",
+      "description": "Before editing read specs/004-workflow-monitor/tasks.md Shared constraints and this task entry, spec.md (FR/SC), data-model.md, contracts/monitor-v1.md and contracts/validation.md; paths are relative to specs/004-workflow-monitor unless repository-root paths are given. Read predecessor interfaces/tests and relevant actual source before relying on them. Root JSON context is not handed to the worker. Finish reproducible production package/resource discovery and actionable safe launch diagnostics using existing manifests/locks and local assets. Deliver actual setup/launch/trust/permissions/correction lookup/rollback operating guide and docs routing. Exercise delivered build-to-serve interface and finish same-build retrospective/live acceptance using genuine later T011\u2013T016 work, never synthetic busywork. Interfaces/predecessors: T009 launcher/T010 usable checkpoint and T011\u2013T015 later genuine work; quickstart and validation SC006. Final reviewer executes only AFTER this checkpoint. Exclusions: No setup at startup, hidden installs, external bind, task-owned daemon left alive, final review as task predecessor, demo replacement, runtime edits or global config. REQUIRED T016/V1: Actual production build/local package launch from documented command serves locked local assets, rejects missing/unsafe assets with safe actionable diagnostics and performs no install/build/runtime control. Docs/help/route tests agree, viewer stop leaves authoritative rows/Git/writer intact. Full focused app/build/browser checks pass; compare docs to delivered interfaces. Under separately explicit operator authority retain SAME app run ID with retrospective T010 and genuine later live T011\u2013T016 interval/timing; absent interval is SC006 NOT VERIFIED, not passed. No future final-review success is required here. Capability/permission: Prepared locked Python/Node/local browser; separately authorized operator observer launch and actual approved app SDK run. Missing observation/permission is NOT VERIFIED, not an optional-recording execution veto. Include focused tests and update the owned documentation to match implemented behavior. Missing required evidence is NOT VERIFIED, never a pass.",
+      "depends": [
+        "T015"
+      ],
+      "owned_paths": [
+        "workflow_monitor/pyproject.toml",
+        "workflow_monitor/requirements.lock",
+        "workflow_monitor/__main__.py",
+        "workflow_monitor/app.py",
+        "workflow_monitor/tests/test_launch.py",
+        "workflow_monitor/tests/test_delivery.py",
+        "workflow_monitor/README.md",
+        "docs/index.md"
+      ],
+      "checks": [
+        "python3 -B -m unittest discover -v -s workflow_monitor/tests",
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test"
+        ]
+      ],
+      "required": [
+        {
+          "id": "T016/V1",
+          "criteria": [
+            "SC-001",
+            "SC-002",
+            "SC-003",
+            "SC-004",
+            "SC-005",
+            "SC-006"
+          ],
+          "pass_condition": "Actual production build/local package launch from documented command serves locked local assets, rejects missing/unsafe assets with safe actionable diagnostics and performs no install/build/runtime control. Docs/help/route tests agree, viewer stop leaves authoritative rows/Git/writer intact. Full focused app/build/browser checks pass; compare docs to delivered interfaces. Under separately explicit operator authority retain SAME app run ID with retrospective T010 and genuine later live T011\u2013T016 interval/timing; absent interval is SC006 NOT VERIFIED, not passed. No future final-review success is required here.",
+          "evidence": "Actual output of the listed focused commands and the bounded source/DB/browser assertions described here; label offline adapters. No future-task result is required.",
+          "permission": "Prepared locked Python/Node/local browser; separately authorized operator observer launch and actual approved app SDK run. Missing observation/permission is NOT VERIFIED, not an optional-recording execution veto."
+        }
+      ],
+      "interfaces": "T009 launcher/T010 usable checkpoint and T011\u2013T015 later genuine work; quickstart and validation SC006. Final reviewer executes only AFTER this checkpoint.",
+      "exclusions": "No setup at startup, hidden installs, external bind, task-owned daemon left alive, final review as task predecessor, demo replacement, runtime edits or global config.",
+      "notes": "Full app suite is proportionate here because packaging serves all graph/privacy boundaries. Fresh independent full-application-range final review and inspection of its recorded outcome follow this task checkpoint, distinct from task completion."
     }
   ]
 }
