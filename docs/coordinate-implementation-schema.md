@@ -97,6 +97,19 @@ abandoned without rewriting their error/task history. No legacy execution stack 
 
 ## SDK transport
 
+Private `worker_invocation` history records each dispatched call's prompt, stable reuse key,
+saved-session identity and terminal outcome/cause. Explicit resume supplies that prior context,
+not an unchanged original assignment. A missing terminal outcome or legacy invocation data
+cannot authorize replay. A terminal expensive failure requires inspection of the saved call/session
+and an explicit diagnosed, targeted correction through current owner input before continuation;
+unknown cause or absent saved identity stops that launch. Genuine interrupted unfinished work
+may continue with the retained context and compatible saved identity when available.
+Worker-only `cleanup_artifact` transports one path to the runner's selective known-file cleanup;
+errors return to the SDK tool, and reviewer tools remain read/search-only. Boundary headroom uses
+the SDK's effective model-specific reserve, context occupancy/window and compaction enabled/applicable
+facts; unavailable observations select fresh. Each check's combined stdout/stderr and actual
+exit/interruption outcome is retained before the next command, including earlier passes in failed lists.
+
 `pi_adapter.py` and `pi-host/host.mjs` exchange newline-delimited JSON for a prompt, local
 edit/write path checks, current owner questions, optional event observations and final text/error.
 When explicitly launched by the project parent-session bridge, the adapter uses one private

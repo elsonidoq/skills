@@ -175,6 +175,46 @@ class SameRunResumeTests(ProjectTest):
 
 
 class UnfinishedTaskResumeTests(ProjectTest):
+    def test_terminal_failure_requires_inspection_and_targeted_saved_continuation(self):
+        from coherence_workflow.store import Blocked
+        project = self.project
+        contract = {'tasks': [{'id': 'tiny', 'description': 'tiny failure fixture'}]}
+        identity = {'id': 'private-session', 'file': '/private/fixture.jsonl'}
+        class Failed:
+            def __init__(self, *args, **kwargs): self.saved_session = identity
+            def prompt(self, prompt, **kwargs): raise Blocked('terminal unknown transport cause')
+        with Authority(project) as owner:
+            with self.assertRaisesRegex(Blocked, 'terminal unknown'):
+                Engine(owner, 'terminal', contract, EXECUTOR, adapter=Failed).invoke()
+            owner.store.resume('terminal')
+            calls = []
+            class Continued:
+                def __init__(self, *args, **kwargs): pass
+                def prompt(self, prompt, **kwargs):
+                    calls.append(prompt)
+                    if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                    self_test.assertIn('terminal unknown transport cause', prompt)
+                    self_test.assertIn('diagnosed fixture disconnected pipe; repaired fixture transport', prompt)
+                    self_test.assertEqual(kwargs['saved_session'], identity)
+                    return 'continued targeted work'
+            self_test = self
+            with self.assertRaisesRegex(Blocked, 'remains unknown'):
+                Engine(owner, 'terminal', contract, EXECUTOR, adapter=Continued, resume=True,
+                       question=lambda text: 'unknown').invoke()
+            self.assertEqual(calls, [])
+            owner.store.resume('terminal')
+            inspected = []
+            def inspect(text):
+                inspected.append(text)
+                return 'diagnosed fixture disconnected pipe; repaired fixture transport'
+            result = Engine(owner, 'terminal', contract, EXECUTOR, adapter=Continued, resume=True,
+                            question=inspect).invoke()
+            self.assertEqual(result['status'], 'complete')
+            self.assertEqual(len(inspected), 1)
+            self.assertIn('private-session', inspected[0])
+            self.assertEqual(len(calls), 2)
+
+
     def test_resume_continues_saved_partial_task_without_adopting_unrelated_work(self):
         project = self.project
         contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [
@@ -189,7 +229,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"findings":[]}'
-                if 'Actual failed attempt:' in prompt:
+                if 'Actual failed attempt:' in prompt and not prompt.startswith('Continue only'):
                     raise KeyboardInterrupt
                 if 'first synthetic task' in prompt:
                     kwargs['claim']('one.txt')
@@ -222,7 +262,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"findings":[]}'
-                if 'Actual failed attempt:' in prompt:
+                if 'Actual failed attempt:' in prompt and not prompt.startswith('Continue only'):
                     project.joinpath('ready').write_text('ready\n')
                     return 'corrected setup'
                 assert 'cleanup' in kwargs

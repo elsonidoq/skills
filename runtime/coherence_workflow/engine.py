@@ -474,6 +474,59 @@ class Engine:
                     })
                     worker = self.adapter(project, self.executor, question=self.question, observe_question=worker_question)
                     worker.lock_fd = self.authority.lock.fileno()
+                    continuation = None
+                    if self.resume:
+                        row = store.db.execute(
+                            "SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? "
+                            "AND kind='worker_invocation' ORDER BY seq DESC LIMIT 1", (self.run, task['id'])).fetchone()
+                        if row:
+                            continuation = {'state': row['state'], **json.loads(row['details'])}
+                            if row['state'] == 'started':
+                                raise Blocked('unfinished worker invocation has no terminal outcome; inspect its saved call before continuation')
+                            if row['state'] == 'failed':
+                                if not continuation.get('saved_session'):
+                                    raise Blocked('terminal worker failure has no saved session; inspect the failed invocation/cause before any relaunch: '
+                                                  + str(continuation.get('invocation_id', 'unknown')))
+                                correction = self.question(
+                                    'Inspect this terminal worker invocation and its saved session before continuing. '
+                                    'Provide the diagnosed cause and a targeted correction justifying safe continuation '
+                                    '(not an unchanged retry); leave empty if unknown. Actual invocation: ' + canonical(continuation))
+                                if not correction.strip() or correction.strip().lower() in ('unknown', 'retry', 'yes'):
+                                    raise Blocked('terminal worker cause/targeted correction remains unknown; no worker relaunched')
+                                continuation['targeted_correction'] = correction
+                            if continuation.get('saved_session'):
+                                if continuation.get('reuse_key') != reuse_key:
+                                    raise Blocked('saved unfinished worker authority/resources are incompatible; inspect before continuation')
+                                worker.saved_session = continuation['saved_session']
+                        else:
+                            prior = store.db.execute(
+                                "SELECT 1 FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker' LIMIT 1",
+                                (self.run, task['id'])).fetchone()
+                            if prior:
+                                raise Blocked('unfinished worker lacks retained invocation/cause; inspect legacy history before any relaunch')
+                    def invoke_worker(prompt, **kwargs):
+                        nonlocal continuation
+                        if continuation is not None:
+                            prompt = ('Continue only the unfinished same-task work. Inspect the prior invocation/cause below; '
+                                      'do not replay completed effects. Apply only the justified targeted correction; '
+                                      'unknown terminal causes are not retry permission.\nRetained invocation: '
+                                      + canonical(continuation) + '\n' + prompt)
+                            continuation = None
+                        invocation_id = uuid.uuid4().hex
+                        facts = {'invocation_id': invocation_id, 'prompt': prompt, 'reuse_key': reuse_key,
+                                 'saved_session': getattr(worker, 'saved_session', None)}
+                        store.history(self.run, task['id'], 'worker_invocation', 'started', facts)
+                        try:
+                            result = self._prompt_worker(worker, prompt, **kwargs)
+                        except BaseException as exc:
+                            store.history(self.run, task['id'], 'worker_invocation',
+                                'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
+                                {**facts, 'error': str(exc) or type(exc).__name__,
+                                 'saved_session': getattr(worker, 'saved_session', None)})
+                            raise
+                        store.history(self.run, task['id'], 'worker_invocation', 'returned',
+                                      {**facts, 'saved_session': getattr(worker, 'saved_session', None)})
+                        return result
                     claimed_paths = set()
                     def claim(name):
                         if name not in claimed_paths:
@@ -486,7 +539,7 @@ class Engine:
                                       'started' if phase == 'start' else 'returned',
                                       {'call': call})
                     try:
-                        text = self._prompt_worker(worker,
+                        text = invoke_worker(
                             'Execute this one requested task in the current project. Read the relevant files, '
                             'make the smallest correct edits, run relevant actual project checks and fix ordinary '
                             'tool/read/argument/check errors in this conversation. Never stage or commit: the runner '
@@ -499,7 +552,8 @@ class Engine:
                             'Select source edit and commit paths explicitly; preserve unknown and pre-existing bytes. '
                             'Generated outputs are cleanup guidance, never a registration or command prerequisite.\n'
                             'Task: ' + canonical(task), claim=claim, command=command,
-                            cleanup=focused.cleanup_artifact, saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
+                            cleanup=focused.cleanup_artifact, saved_session=(continuation.get('saved_session') if continuation else
+                                selected['saved_session'] if selected else None), reuse_key=reuse_key)
                     except BaseException as exc:
                         state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                         recorder.emit(worker_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
@@ -532,7 +586,7 @@ class Engine:
                                 corrective_occurrence = recorder.occurrence()
                                 recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                                 try:
-                                    text = self._prompt_worker(worker,
+                                    text = invoke_worker(
                                         'A runner-owned REQUIRED check for this same task failed. Make a reasoned, '
                                         'authorized scoped source or local-setup correction if one is safe, then return. '
                                         'Do not claim success, skip the command, or ask merely because files changed. '
@@ -572,7 +626,7 @@ class Engine:
                             corrective_occurrence = recorder.occurrence()
                             recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                             try:
-                                text = self._prompt_worker(worker,
+                                text = invoke_worker(
                                     'A runner-owned checkpoint for this same task failed. Make a reasoned, authorized '
                                     'scoped correction if one is safe. Do not bypass hooks or signing, reset, rebase, '
                                     'or adopt unrelated work. The runner will rerun affected REQUIRED checks and the '
