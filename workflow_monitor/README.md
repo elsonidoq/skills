@@ -24,8 +24,7 @@ rebuild to a regular local `dist/` directory and retry.
 
 Then open `http://127.0.0.1:8765/` in a local browser. The left selector and persistent
 selected-run banner show the recorded run ID as inert text, so identically labelled runs remain
-distinguishable during loading or a read error. Opaque references still route API requests; the
-recorded task and occurrence IDs are also visible in Details as inert text. When a retained descriptor is complete, the
+distinguishable during loading or a read error. Opaque references still route API requests. The default Details view leads with recorded title, progress or execution outcome, blocker, findings and acceptance; full task, occurrence, source and edge IDs remain inert text in expandable technical references. When a retained descriptor is complete, the
 compact graph also exposes every declared task with stable run-scoped anchors and declared
 prerequisite edges, including pending work. Its final stage is separately defined as
 **“Planned independent review — not an agent call.”**; actual implementation, review,
@@ -36,12 +35,9 @@ recorded history remains available. Unsupported stores and read failures remain 
 or errors, never empty completed runs. Short labels use recorded roles and public task
 presentation; missing task labels fall back to the recorded task ID. Retained labels and summaries are displayed without monitor-side length exclusions.
 
-A confirmed internal step that stops a recorded failed run appears as a red node after
-its recorded parent or preceding agent in that run/task scope. A failure before any
+A confirmed internal step that stops a recorded failed run appears as a red node with its recorded support relation. A failure before any
 agent starts remains visible without an invented agent. Recovered check observations
-remain in Details/history, not extra stopping nodes. Declared prerequisite, recorded attachment,
-recorded-sequence, and declared-correction edges are visibly distinct. Sequence edges mean recorded order,
-not proven causality; no generic possible-flow edge claims scheduled work.
+remain in Details/history, not extra stopping nodes. The default graph shows declared prerequisites and only state-essential recorded stop/correction relations; attachment and recorded sequence arrows are omitted. A concise legend and selected-edge Details explain each relation's semantic type, endpoints and qualification. Recorded sequence remains accessible as history, not causal proof.
 
 Snapshot occurrence `execution_summary` is derived from the full normalized snapshot
 before history paging. A worker or fixing-worker `returned` is green execution success;
@@ -81,9 +77,9 @@ are opaque public task or occurrence refs, not task prose.
 
 Click a plan task, planned review definition, execution, or edge to highlight it and
 update the visible Details panel next to the graph (below it on narrow screens). Plan
-Details distinguish progress, prerequisites, reasons and annotations from execution.
-Execution Details include loaded lifecycle evidence and source references. Every Details
-selection also shows the full retained acceptance summary—checks, checkpoints, review
+Details distinguish plain-language progress and current blocker from execution and acceptance.
+Execution Details keep outcome, what happened, blocker and actionable recorded findings separate from acceptance. Edge Details use semantic relation metadata rather than a rendered arrow label. Expand technical references to inspect full IDs, endpoints, qualifications, source references and retained history. Every Details
+selection retains the full acceptance summary—checks, checkpoints, review
 approval/findings/ranges and current full-range qualification—separately from paged
 loaded history. The legend makes this separation explicit; `skipped` and `cancelled`
 are unsupported and never inferred. **Loaded history and technical references** exposes
@@ -94,7 +90,7 @@ and does not expose arbitrary payload/credential fields, runner identity interna
 history** retrieve further pages at their snapshot watermarks. Inventory counts disclose
 unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 
-The graph uses ELK's layered RIGHT layout and initially fits the recorded graph into the
+The graph currently uses ELK's layered RIGHT layout and initially fits the recorded graph into the
 available graph panel after the run selector and Details panel take their space, so its main
 branches and any recorded review/fix chain are visible without initial hunting or panning.
 Pan, zoom and selection remain available for detail; status-only polling preserves a deliberate

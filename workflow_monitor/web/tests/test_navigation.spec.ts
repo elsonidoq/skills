@@ -8,7 +8,7 @@ let runTwoSnapshots = 0
 let writes = 0
 const requests: string[] = []
 
-const runs = [{ ref: 'run_one', display_id: '<old-run>', label: 'Recorded run', completeness: 'recorded', started_at: 1 }, { ref: 'run_two', display_id: '<img src=x onerror=alert(1)>', label: 'Recorded run', completeness: 'recorded', started_at: 2 }]
+const runs = [{ ref: 'run_one', display_id: '<old-run>', label: 'Recorded run', completeness: 'recorded', started_at: 1, plan_availability: 'complete' }, { ref: 'run_two', display_id: '<img src=x onerror=alert(1)>', label: 'Recorded run', completeness: 'recorded', started_at: 2, plan_availability: 'complete' }]
 
 function snapshot(run: string, changed = false) {
   const current = run === 'run_two'
@@ -18,7 +18,10 @@ function snapshot(run: string, changed = false) {
   const outcome = current && changed ? 'failed' : 'passed'
   return {
     runs,
-    phases: [{ ref: phase, run_ref: run, label: current ? 'Review' : 'Worker' }], tasks: [],
+    phases: [{ ref: phase, run_ref: run, label: current ? 'Review' : 'Worker' }], tasks: [
+      { ref: `task_${run}_a`, run_ref: run, task_id: 'T001', label: 'Task', summary: 'Synthetic prerequisite', prerequisite_refs: [], progress: { state: 'completed', qualification: null } },
+      { ref: `task_${run}_b`, run_ref: run, task_id: 'T002', label: 'Task', summary: 'Synthetic dependent', prerequisite_refs: [`task_${run}_a`], progress: { state: 'running', qualification: null } }
+    ],
     occurrences: [...(current ? [{ ref: 'preceding_worker', run_ref: run, phase_ref: phase, task_ref: null, role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [], first_seq: 0 }] : []), { ref: occurrence, run_ref: run, phase_ref: phase, task_ref: null, role: current ? 'reviewer' : 'worker', outcome, completeness: 'complete', record_refs: [record] }],
     records: [{ ref: record, run_ref: run, occurrence_ref: occurrence, kind: outcome, source_seq: 1, recorded_at: 1, exit_code: outcome === 'failed' ? 1 : 0, finding_count: null, review_base: null, review_head: null }],
     edges: [{ ref: `edge_${run}`, run_ref: run, type: 'phase_occurrence', from_ref: phase, to_ref: occurrence, resolution: 'recorded' }, { ref: `milestone_${run}`, run_ref: run, type: 'execution_milestone', from_ref: occurrence, to_ref: record, resolution: 'recorded' }],
@@ -64,15 +67,16 @@ test('keeps live navigation stable and ignores an old selected-run response', as
   await expect(old).toBeVisible()
   await expect(current).toBeVisible()
   await expect(page.locator('.run-list img')).toHaveCount(0)
-  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <old-run>')
+  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <old-run> · ID: run_one')
   await current.click()
-  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <img src=x onerror=alert(1)>')
+  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <img src=x onerror=alert(1)> · ID: run_two')
   await expect(page.getByLabel('Selected run').locator('img')).toHaveCount(0)
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toBeVisible()
   await page.locator('.react-flow__node[data-id="occ_reviewer"]').click()
-  await expect(page.getByLabel('Selected execution details').getByText(/reviewer; passed/)).toBeVisible()
-  await page.locator('.react-flow__edge[data-id="sequence_preceding_worker_occ_reviewer"] .react-flow__edge-path').click({ force: true })
-  await expect(page.getByLabel('Selected execution details').getByText(/Recorded relation:/)).toBeVisible()
+  await expect(page.getByLabel('Selected execution details')).toContainText('Execution outcome: passed')
+  await page.locator('.react-flow__edge[data-id="dependency_task_run_two_a_task_run_two_b"] .react-flow__edge-path').click({ force: true })
+  await expect(page.getByLabel('Selected execution details')).toContainText('Declared prerequisite')
+  await expect(page.getByLabel('Selected execution details')).toContainText('task_run_two_a → task_run_two_b')
   await page.getByTitle('Zoom In').click()
   await page.waitForTimeout(600)
   const pane = await page.locator('.react-flow__pane').boundingBox()
@@ -83,15 +87,15 @@ test('keeps live navigation stable and ignores an old selected-run response', as
   const position = await page.locator('.react-flow__node[data-id="occ_reviewer"]').getAttribute('style')
   await page.clock.fastForward(60_000)
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toHaveClass(/failed/)
-  await expect(page.getByLabel('Selected execution details').getByText(/Recorded relation:/)).toBeVisible()
+  await expect(page.getByLabel('Selected execution details')).toContainText('Declared prerequisite')
   await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', viewport ?? '')
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toHaveAttribute('style', position ?? '')
   await page.locator('.react-flow__node[data-id="occ_reviewer"]').click()
   await page.clock.fastForward(60_000)
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toHaveClass(/selected/)
-  await expect(page.getByLabel('Selected execution details')).toContainText('reviewer; failed')
+  await expect(page.getByLabel('Selected execution details')).toContainText('Execution outcome: failed')
   await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', viewport ?? '')
-  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <img src=x onerror=alert(1)>')
+  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <img src=x onerror=alert(1)> · ID: run_two')
   await expect(page.getByRole('status')).toHaveText('The monitor snapshot is unavailable.')
   expect(requests).toContain('/api/monitor/v1/runs/run_two/snapshot')
   expect(requests.some(path => path.includes('<img'))).toBe(false)

@@ -165,7 +165,7 @@ test('switches selected production graph, selects details, and provides graph co
   await expect(page.locator('.react-flow__edge.dependency-edge')).toHaveCount(1)
   await expect(page.locator('.planned-review-node')).toContainText('Planned independent review — not an agent call.')
   await page.locator('.react-flow__node[data-id="occ_failed"]').click()
-  await expect(page.getByLabel('Selected execution details').getByText(/worker; failed/)).toBeVisible()
+  await expect(page.getByLabel('Selected execution details')).toContainText('Execution outcome: failed')
   await page.getByRole('button', { name: /Second run/ }).click()
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toBeVisible()
   await expect(page.getByText('Complete graph unavailable')).toBeVisible()

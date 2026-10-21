@@ -9,7 +9,7 @@ export type ReviewDefinition = { ref: string; run_ref: string; label: string }
 export type GraphSnapshot = { runs: Array<{ ref: string; plan_availability?: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; edges?: GraphEdge[]; chain?: ChainExecution[] }
 export type Followup = { run_ref: string; source_run_ref: string; review_occurrence_ref: string; resolution: string }
 const genericTitle = (value: string | undefined, taskId?: string) => !value || /^task(?:\s|$)/i.test(value.trim()) || (taskId != null && value.trim() === taskId)
-function taskTitle(task: PlannedTask) {
+export function taskTitle(task: PlannedTask) {
   const summary = task.summary.trim()
   const title = genericTitle(task.label, task.task_id) && summary ? summary : task.label || summary || 'Unknown task title'
   return title.length > 80 ? `${title.slice(0, 79)}…` : title
@@ -88,8 +88,7 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relation
     edges.push({ id: `stop_${stop.ref}`, source: stop.support_ref!, target: stop.ref, type: 'smoothstep', className: 'secondary-edge stop-edge', data: { classification: 'secondary', relation: 'recorded-stop-support', resolution: 'recorded', identity: { runRef: stop.run_ref, supportRef: stop.support_ref, stopRef: stop.ref } } })
   }
   for (const edge of recordedEdges.filter(edge => edge.type.startsWith('chain_') && nodeFor(edge.run_ref, edge.from_ref) && nodeFor(edge.run_ref, edge.to_ref))) {
-    const label = edge.type === 'chain_trigger' ? 'Recorded trigger' : edge.type === 'chain_predecessor' ? 'Recorded predecessor' : edge.type === 'chain_check' ? 'Fixer check' : 'Fixer checkpoint'
-    edges.push({ id: edge.ref, source: edge.from_ref, target: edge.to_ref, label, type: 'smoothstep', className: 'secondary-edge chain-edge', data: { classification: 'secondary', relation: edge.type, resolution: edge.resolution, identity: { ref: edge.ref, runRef: edge.run_ref, fromRef: edge.from_ref, toRef: edge.to_ref } } })
+    edges.push({ id: edge.ref, source: edge.from_ref, target: edge.to_ref, type: 'smoothstep', className: 'secondary-edge chain-edge', data: { classification: 'secondary', relation: edge.type, resolution: edge.resolution, identity: { ref: edge.ref, runRef: edge.run_ref, fromRef: edge.from_ref, toRef: edge.to_ref } } })
   }
   for (const relation of relations.filter(item => item.resolution === 'resolved' && nodeFor(item.source_run_ref, item.review_occurrence_ref))) {
     const fixes = [
