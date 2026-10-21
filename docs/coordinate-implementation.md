@@ -88,7 +88,10 @@ registration, allowlist, permission prerequisite, or automatic commit target.
 ## Real execution and safety
 
 An exclusive Git-worktree writer lock prevents overlapping cooperating runners. The SDK host
-inherits that lock while active. At an actual SDK edit/write, the runner protects unsafe/symlink,
+inherits that lock while active. A CLI entry waits transparently for that existing lock and may be
+cancelled while waiting without creating a failed task/run or replacing its live writer; a platform
+that cannot wait returns concrete busy. This is lock entry only, not a queue, watchdog, polling
+service, or cancellation-drain claim. At an actual SDK edit/write, the runner protects unsafe/symlink,
 out-of-scope, and already-modified target paths. Commands remain ordinary SDK tools, not an
 adversarial sandbox: new, modified, deleted, ignored, Git-visible, or undeclared output never
 stops a later command or check. The runner stages only explicitly selected source/deliverable

@@ -40,7 +40,7 @@ def git(project, *args):
 
 class Authority:
     """An exclusive ordinary writer lock; old bindings are not launch eligibility."""
-    def __init__(self, project):
+    def __init__(self, project, *, wait=False):
         self.project = Path(project).resolve(strict=True)
         if Path(git(self.project, 'rev-parse', '--show-toplevel').decode().strip()).resolve() != self.project:
             raise Blocked('project must be the Git worktree root')
@@ -48,7 +48,9 @@ class Authority:
         fd = os.open(admin / 'coherence-workflow.lock', os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
         self.lock = os.fdopen(fd, 'r+')
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            # CLI entry waits on the kernel lock so a cooperating live writer is never
+            # replaced.  Direct callers retain the old concrete-busy behavior.
+            fcntl.flock(fd, fcntl.LOCK_EX if wait else fcntl.LOCK_EX | fcntl.LOCK_NB)
             root = safe_path(self.project, '.coherence/workflow')
             root.mkdir(mode=0o700, parents=True, exist_ok=True)
             self.database = safe_path(self.project, '.coherence/workflow/workflow.sqlite')
@@ -58,6 +60,11 @@ class Authority:
         except BlockingIOError:
             self.lock.close()
             raise Blocked('worktree writer lock already held; wait for its writer') from None
+        except OSError as exc:
+            self.lock.close()
+            if wait:
+                raise Blocked('worktree writer lock is busy and this platform cannot wait: ' + str(exc)) from None
+            raise
         except BaseException:
             self.lock.close()
             raise

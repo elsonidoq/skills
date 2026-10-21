@@ -125,6 +125,8 @@ export default function coordinateImplementationBridge(pi) {
           child.once('exit', (...result) => resolve(result));
           child.once('error', () => resolve());
         });
+        // This also cleanly interrupts a runner waiting on its inherited worktree lock;
+        // it never replaces or signals the lock holder.
         bridge.abort = () => { void close(bridge, true); };
         signal?.addEventListener('abort', bridge.abort, {once: true});
         if (signal?.aborted) bridge.abort();

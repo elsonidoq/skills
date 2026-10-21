@@ -123,13 +123,14 @@ def main(argv=None):
             sub.add_argument('--run', required=True)
     args = parser.parse_args(argv)
     run_id = None
+    writer_entered = False
     previous_term = signal.signal(signal.SIGTERM, cancel)
     try:
         if args.command in ('status', 'history'):
             print(canonical(status(args.project, args.run)))
             return 0
         if args.command == 'abandon':
-            with Authority(args.project) as authority:
+            with Authority(args.project, wait=True) as authority:
                 print(canonical(authority.store.abandon(args.run)))
             return 0
         contract = load_contract(args.tasks)
@@ -158,7 +159,8 @@ def main(argv=None):
             parent_question(None, ready=True)
             question = parent_question
         paid_scope = settle_paid_scope(contract, executor, question or terminal_question)
-        with Authority(args.project) as authority:
+        with Authority(args.project, wait=True) as authority:
+            writer_entered = True
             result = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
                             paid_scope=paid_scope, **({'question': question} if question else {})).invoke()
             print(canonical(result))
@@ -167,7 +169,9 @@ def main(argv=None):
         print(canonical({'status': 'failed', 'reason': str(exc), **({'run_id': run_id} if run_id else {})}))
         return 2
     except KeyboardInterrupt:
-        print(canonical({'status': 'interrupted', 'reason': 'cancelled; partial work retained'}))
+        reason = ('cancelled while waiting for implementation writer; no task/run started'
+                  if run_id and not writer_entered else 'cancelled; partial work retained')
+        print(canonical({'status': 'interrupted', 'reason': reason}))
         return 130
     finally:
         signal.signal(signal.SIGTERM, previous_term)

@@ -58,7 +58,7 @@ reviewer prompts without repetitive questions; a changed scope needs a new decis
 
 Questions use current terminal owner input when needed, without external receipt files or
 Paseo/session proofs. Noninteractive questions stop with the actual question and retain partial
-work; never invent an answer. No automatic resume, replay, control-mailbox or background daemon.
+work; never invent an answer. No automatic resume, replay, control-mailbox or background daemon. If another cooperating implementation writer holds the existing worktree lock, CLI entry waits transparently and cancellation exits cleanly without fabricating a failed task/run or replacing that writer; platforms that cannot wait report concrete busy.
 
 ## Recover Context
 
