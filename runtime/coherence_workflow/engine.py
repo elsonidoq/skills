@@ -187,7 +187,7 @@ class Engine:
                       'applicable required checks. Never stage or commit: the runner owns the focused repair checkpoint.\n'
                       + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
                       'Original task contracts: ' + canonical(original_tasks) + '\nActionable findings: ' + canonical(findings))
-            text = prompt_fix( prompt, claim=claim, command=focused.command,
+            text = prompt_fix(prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
                                        saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
             recorder.emit(execution_id, 'worker', 'returned', task_id=fix_task['id'], facts={
                 'role': 'fixing_worker', 'execution_id': execution_id,
@@ -218,7 +218,7 @@ class Engine:
                             'authorized scoped correction, then return; the runner will rerun the affected command '
                             'before checkpointing. Do not skip it, claim success, start another fixing round, or adopt '
                             'unrelated work. Actual failed attempt: ' + canonical(failure.attempt),
-                            claim=claim, command=focused.command, reuse_key=reuse_key)
+                            claim=claim, command=focused.command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
             check_results = correct_checks()
             checkpoint_error = None
             while True:
@@ -242,7 +242,7 @@ class Engine:
                         'A runner-owned focused repair checkpoint failed. Make a reasoned authorized scoped correction; '
                         'do not bypass hooks/signing or adopt unrelated work. The runner will rerun affected required '
                         'checks and checkpoint. Actual checkpoint error: ' + str(exc),
-                        claim=claim, command=focused.command, reuse_key=reuse_key)
+                        claim=claim, command=focused.command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
                     check_results = correct_checks()
                     continue
                 break

@@ -68,7 +68,7 @@ class PiAdapter:
         self.last_observation = None
         self.last_interval = None
 
-    def prompt(self, prompt, *, claim=None, command=None, read_only=False, saved_session=None, reuse_key=None):
+    def prompt(self, prompt, *, claim=None, command=None, cleanup=None, read_only=False, saved_session=None, reuse_key=None):
         """Run one prompt, optionally reopening only a runner-provided private session."""
         self.last_interval = None
         self.last_observation = None
@@ -125,6 +125,14 @@ class PiAdapter:
                             command(value['phase'], value['call'])
                             send({'ok': True})
                         except (Blocked, ValueError, KeyError) as exc:
+                            send({'error': str(exc)})
+                    elif kind == 'cleanup':
+                        try:
+                            if cleanup is None or read_only:
+                                raise Blocked('this session cannot clean generated artifacts')
+                            cleanup(value['path'])
+                            send({'ok': True})
+                        except (Blocked, ValueError, KeyError, OSError) as exc:
                             send({'error': str(exc)})
                     elif kind == 'question':
                         def observe_question(state):

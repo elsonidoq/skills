@@ -121,6 +121,16 @@ export async function createWorkflowSession({project, executor, readOnly = false
         }
       });
       if (!readOnly) pi.registerTool({
+        name: 'cleanup_artifact', label: 'Clean known task artifact',
+        description: 'Selectively remove one runner-known generated file; never a directory or unknown output.',
+        parameters: {type: 'object', properties: {path: {type: 'string'}}, required: ['path']},
+        execute: async (_id, args) => {
+          const answer = await ask({type: 'cleanup', path: args.path});
+          if (answer.error) throw new Error(answer.error);
+          return {content: [{type: 'text', text: 'Removed known task artifact: ' + args.path}], details: {}};
+        },
+      });
+      if (!readOnly) pi.registerTool({
         name: 'ask_owner', label: 'Ask owner',
         description: 'Ask a material scope or permission question; do not invent an answer.',
         parameters: {type: 'object', properties: {question: {type: 'string'}}, required: ['question']},
@@ -135,7 +145,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
   await resourceLoader.reload();
   const {session} = await createAgentSession({
     cwd: project, modelRuntime, model, thinkingLevel: executor.effort,
-    tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner'],
+    tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner', 'cleanup_artifact'],
     sessionManager, resourceLoader,
   });
   await session.bindExtensions({});
