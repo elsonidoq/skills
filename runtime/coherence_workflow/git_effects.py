@@ -4,6 +4,56 @@ from pathlib import Path
 from .store import Blocked, git, safe_path
 
 
+def _commit_result(project, sha, parent, path):
+    if git(project, 'rev-list', '--parents', '-n', '1', sha).decode().split() != [sha, parent]:
+        raise Blocked('unexpected metric artifact commit parent; inspect actual commit')
+    actual = set(filter(None, git(project, 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', sha).decode().split('\0')))
+    if actual != {path}:
+        raise Blocked('metric artifact commit changed unexpected paths; inspect actual commit')
+    return {'sha': sha, 'parent': parent, 'path': path, 'no_change': False}
+
+
+class MetricArtifactFinalizer:
+    """One runner-only end-of-run commit for an already-reserved metric artifact."""
+    def __init__(self, project, relative, validate):
+        self.project, self.relative, self.validate = Path(project), relative, validate
+        self.parent = None
+
+    def commit(self):
+        path = safe_path(self.project, self.relative)
+        if not path.is_file():
+            raise Blocked('metric artifact is not a regular file; retain bytes and inspect it')
+        self.validate()
+        if not path.read_bytes():
+            return {'sha': git(self.project, 'rev-parse', 'HEAD').decode().strip(), 'parent': None,
+                    'path': self.relative, 'no_change': True}
+        status = git(self.project, 'status', '--porcelain=v1', '-z', '--', self.relative).decode('utf-8', 'replace')
+        if not status.startswith('?? ' + self.relative + '\0'):
+            raise Blocked('metric artifact is not a new unstaged owned file; retain bytes and inspect it')
+        self.parent = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        git(self.project, 'diff', '--check', '--', self.relative)
+        git(self.project, 'add', '--', self.relative)
+        staged = set(filter(None, git(self.project, 'diff', '--cached', '--name-only', '-z', '--', self.relative).decode().split('\0')))
+        if staged != {self.relative}:
+            raise Blocked('metric artifact index differs from the exact owned path; retain bytes and inspect it')
+        self.validate()
+        if git(self.project, 'show', ':' + self.relative) != path.read_bytes():
+            raise Blocked('metric artifact bytes changed before commit; retain bytes and inspect it')
+        git(self.project, 'commit', '--only', '-m', 'workflow: metrics', '--', self.relative)
+        return _commit_result(self.project, git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.parent, self.relative)
+
+    def reconcile(self):
+        if not self.parent:
+            return None
+        sha = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        if sha == self.parent:
+            return None
+        try:
+            return _commit_result(self.project, sha, self.parent, self.relative)
+        except Blocked:
+            return None
+
+
 def path_has_preexisting_changes(project, name):
     """Check only a requested mutation target, never the worktree as admission."""
     return bool(git(project, 'status', '--porcelain=v1', '-z', '--', name))

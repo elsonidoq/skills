@@ -159,10 +159,11 @@ class MetricArtifact:
 
     def append(self, record):
         value = validate_record(record, self.run_id)
+        # Prefer a concrete malformed-tail diagnostic; identity still prevents any write
+        # after a replacement or concurrent append.
+        prior = read_artifact(self.project, self.run_id, strict=True)
         if not _same_file(self.path, self.identity):
             raise MetricArtifactError('metric artifact changed before append')
-        # Refuse to append behind malformed/incomplete bytes rather than repairing them.
-        prior = read_artifact(self.project, self.run_id, strict=True)
         if prior['records'] and any(row['invocation_id'] == value['invocation_id'] for row in prior['records']):
             raise MetricArtifactError('metric invocation already recorded')
         encoded = (json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False) + '\n').encode('utf-8')

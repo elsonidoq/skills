@@ -5,8 +5,9 @@ import math
 import os
 import uuid
 
-from .git_effects import FocusedGit
-from .metric_artifacts import MetricArtifactError, create_artifact, summarize_artifact
+from .git_effects import FocusedGit, MetricArtifactFinalizer
+from .metric_artifacts import (MetricArtifactError, artifact_relative, create_artifact,
+                               read_artifact, summarize_artifact)
 from .metrics import interval_record
 from .monitoring import Recorder, descriptor
 from .pi_adapter import PiAdapter, terminal_question
@@ -157,6 +158,38 @@ class Engine:
 
     def usage_summary(self):
         return usage_summary(self.authority.project, self.run, self.metric_invocation_ids)
+
+    def _finalize_metric_artifact(self, result=None):
+        """Commit only this run's closed JSONL after every worker/reviewer call drained."""
+        artifact = {'status': 'not_created'}
+        if self.metric_artifact is not None:
+            finalizer = MetricArtifactFinalizer(
+                self.authority.project, artifact_relative(self.run),
+                lambda: read_artifact(self.authority.project, self.run, strict=True))
+            try:
+                committed = finalizer.commit()
+            except BaseException as exc:
+                # A hook may have committed before reporting failure. Inspect once, never retry.
+                try:
+                    committed = finalizer.reconcile()
+                except BaseException as reconcile_error:
+                    committed = None
+                    exc = reconcile_error
+                if committed is None:
+                    artifact = {'status': 'failed', 'path': artifact_relative(self.run),
+                                'error': str(exc) or type(exc).__name__}
+                else:
+                    artifact = {'status': 'committed_after_reported_error', **committed}
+            else:
+                artifact = {'status': 'committed' if not committed['no_change'] else 'no_content', **committed}
+        try:
+            self.authority.store.history(self.run, None, 'metric_artifact', artifact['status'], artifact)
+        except BaseException:
+            # Metric reporting remains optional and must not replace the original result.
+            pass
+        if result is not None:
+            return {**result, 'metric_artifact': artifact}
+        return artifact
 
     def _session_request(self, task, role='worker'):
         authority = canonical({'paid_scope': self.paid_scope, 'routine_authority': True,
@@ -868,8 +901,9 @@ class Engine:
                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': str(exc)})
                     raise
-            return self._finish_reviews(recorder=recorder, terminal=terminal, checkpoints=checkpoints,
-                                        base=base, review_base=review_base, terminal_stop=terminal_stop)
+            result = self._finish_reviews(recorder=recorder, terminal=terminal, checkpoints=checkpoints,
+                                          base=base, review_base=review_base, terminal_stop=terminal_stop)
+            return self._finalize_metric_artifact(result)
         except BaseException as exc:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, str(exc))
@@ -877,4 +911,5 @@ class Engine:
             if terminal_stop[0] is not None:
                 terminal_facts['stopped_by_invocation_id'] = terminal_stop[0]
             recorder.emit(terminal, 'terminal', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts=terminal_facts)
+            self._finalize_metric_artifact()
             raise

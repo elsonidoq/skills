@@ -1,6 +1,9 @@
 """Real-file contract tests for the optional closed metrics artifact."""
 import os
 
+from coherence_workflow.engine import Engine
+from coherence_workflow.git_effects import MetricArtifactFinalizer
+from coherence_workflow.intake import admit
 from coherence_workflow.metric_artifacts import (MetricArtifactError, artifact_relative,
                                                   create_artifact, read_artifact,
                                                   summarize_artifact)
@@ -103,6 +106,64 @@ class MetricArtifactTests(ProjectTest):
             with self.assertRaises(MetricArtifactError):
                 artifact.append(record(run, 'later'))
             self.assertEqual(artifact.path.read_text(), 'replacement\\n')
+
+    def test_runner_finalizer_commits_only_metric_file_and_preserves_unrelated_index(self):
+        run = 'finalize'
+        # The production rule ignores only private workflow state; metrics stay trackable.
+        self.write('.gitignore', '.coherence/workflow/\n')
+        git(self.project, 'add', '--', '.gitignore')
+        git(self.project, 'commit', '-qm', 'track metrics')
+        self.write('other.txt', 'unrelated staged bytes\n')
+        git(self.project, 'add', '--', 'other.txt')
+        staged = git(self.project, 'show', ':other.txt')
+        with Authority(self.project) as authority:
+            artifact = create_artifact(self.project, run, authority=authority)
+            artifact.append(record(run))
+            result = MetricArtifactFinalizer(
+                self.project, artifact_relative(run),
+                lambda: read_artifact(self.project, run, strict=True)).commit()
+        self.assertFalse(result['no_change'])
+        self.assertEqual(git(self.project, 'rev-parse', result['sha'] + '^').decode().strip(), result['parent'])
+        self.assertEqual(git(self.project, 'show', '--name-only', '--format=', result['sha']).decode().splitlines(),
+                         [artifact_relative(run)])
+        self.assertEqual(git(self.project, 'show', ':other.txt'), staged)
+
+    def test_engine_commits_metrics_after_final_reviewer_without_changing_reviewed_sha(self):
+        self.write('.gitignore', '.coherence/workflow/\n')
+        git(self.project, 'add', '--', '.gitignore')
+        git(self.project, 'commit', '-qm', 'track metrics')
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
+
+        with Authority(self.project) as authority:
+            result = Engine(authority, 'terminal-calls', admit([{'id': 'metric', 'description': 'fixture'}]),
+                            {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=Adapter).invoke()
+        artifact = result['metric_artifact']
+        self.assertEqual(artifact['status'], 'committed')
+        self.assertNotEqual(result['sha'], artifact['sha'])
+        self.assertEqual(artifact['parent'], result['sha'])
+        self.assertEqual([row['role'] for row in read_artifact(self.project, 'terminal-calls')['records']],
+                         ['worker', 'reviewer'])
+
+    def test_controlled_worker_failure_still_finalizes_its_terminal_metric(self):
+        self.write('.gitignore', '.coherence/workflow/\n')
+        git(self.project, 'add', '--', '.gitignore')
+        git(self.project, 'commit', '-qm', 'track metrics')
+        class FailingAdapter:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **_kwargs):
+                raise RuntimeError('controlled worker failure')
+
+        with Authority(self.project) as authority:
+            with self.assertRaisesRegex(RuntimeError, 'controlled worker failure'):
+                Engine(authority, 'failed-terminal-call', admit([{'id': 'metric', 'description': 'fixture'}]),
+                       {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=FailingAdapter).invoke()
+        rows = read_artifact(self.project, 'failed-terminal-call')['records']
+        self.assertEqual([(row['role'], row['outcome']) for row in rows], [('worker', 'failed')])
+        self.assertEqual(git(self.project, 'show', '--name-only', '--format=', 'HEAD').decode().splitlines(),
+                         [artifact_relative('failed-terminal-call')])
 
     def test_staged_collision_and_expected_coverage_are_qualified(self):
         run = 'staged'
