@@ -24,7 +24,7 @@
           "procedure": "Before ANY performance edit, use affected interactive browser on production view; record environment/input/symptom and focused trace. Repeat after smallest supported correction, same environment/action. Retain traces and visible comparison for T005 and owner inspection.",
           "pass": "Reproduced symptom is explained by observed seam and same-environment after interaction is visibly smooth with correlated trace change; unavailable or unreproduced is NOT VERIFIED, not fixed.",
           "evidence": "Before/after traces, revision/environment/action and visible result; no headless-only acceptance.",
-          "permission": "Affected browser access and authorized monitor preview only; build before preview start/restart or use separate frozen assets. Never restart worker. Owner visual approval is post-run T006 gate, not automated success."
+          "permission": "Affected browser access and authorized monitor preview only; build before preview start/restart or use separate frozen assets. Never restart worker. Owner visual approval is post-run T013 gate including metric Details, not automated success."
         }
       ]
     },
@@ -102,7 +102,7 @@
     },
     {
       "id": "T005",
-      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver flat measured ELK layered DOWN rendering consuming T004 projection and T001 interaction evidence/correction. Replace group footprints/parent-relative placement with actual-call measured dimensions and validated edges; no groups/plan anchors/new graph library. Fit initial overview, preserve drag positions/viewport/selection on unchanged topology while statuses refresh. Content-size/topology changes may relayout without arbitrary viewport loss; retain fetch/layout generation guards and OI-8 sensitivity. Reuse ONE meaningful existing production graph/chain fixture with actual-shaped branches/joins, supported review/fix links and essential stop, and source middleware; adapt obsolete counts/group selectors while preserving failure/privacy assertions. Exclude Details content redesign (T006), routing and steering. Verify real rendered bounds/edges, not merely allocated boxes. Recheck T001 same-environment interaction after rendering changes; preserve screenshots/trace for T006 owner gate. Guide describes implemented flat layout/preview procedure only.",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver flat measured ELK layered DOWN rendering consuming T004 projection and T001 interaction evidence/correction. Replace group footprints/parent-relative placement with actual-call measured dimensions and validated edges; no groups/plan anchors/new graph library. Fit initial overview, preserve drag positions/viewport/selection on unchanged topology while statuses refresh. Content-size/topology changes may relayout without arbitrary viewport loss; retain fetch/layout generation guards and OI-8 sensitivity. Reuse ONE meaningful existing production graph/chain fixture with actual-shaped branches/joins, supported review/fix links and essential stop, and source middleware; adapt obsolete counts/group selectors while preserving failure/privacy assertions. Exclude Details content redesign (T006), routing and steering. Verify real rendered bounds/edges, not merely allocated boxes. Recheck T001 same-environment interaction after rendering changes; preserve screenshots/trace for T013 final owner gate including T006/T013 Details. Guide describes implemented flat layout/preview procedure only.",
       "depends": [
         "T001",
         "T004"
@@ -129,7 +129,7 @@
           "procedure": "Repeat T001 affected-browser action on the representative production view after layout integration, using comparable environment/trace; retain overview and interaction evidence for owner presentation with T006 Details.",
           "pass": "Same-environment response remains visibly smooth; any invalidated before/after comparison is renewed or explicitly NOT VERIFIED, never inferred from green tests.",
           "evidence": "Applicable T001 trace plus current revision/environment/after trace and visible behavior.",
-          "permission": "Authorized monitor preview only; build BEFORE restart or use separately frozen assets. No worker restart; owner visual gate in T006."
+          "permission": "Authorized monitor preview only; build BEFORE restart or use separately frozen assets. No worker restart; owner visual gate in T013 including metric Details."
         }
       ]
     },
@@ -156,14 +156,6 @@
           "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_execution.spec.ts tests/test_history.spec.ts tests/test_chain.spec.ts tests/test_lineage.spec.ts --output=\"$(mktemp -d)\"",
           "pass": "Production panels lead with meaningful authorized action/outcome/finding/reason, or explicit unknown; IDs secondary yet complete on expansion. Original failures/rejection, booleans/ranges and full-snapshot status remain across paging/later success. Invalid relations explain exact endpoints/reason without arrows. Hostile retained text is inert and no private text introduced. Same representative production view includes useful selected Details.",
           "evidence": "Rendered text/order/expansion and paging/inertness assertions, overview+inspection screenshots, command/exit."
-        },
-        {
-          "id": "T006/V2",
-          "source": "R3/A3; R6/A6",
-          "procedure": "POST-RUN parent presents T001/T005 before/after findings and same representative production overview plus selected Details; owner inspects drag/pan/zoom, readability, flat DOWN branches/joins, review/fix and essential stop and explicitly approves visual/responsiveness completion.",
-          "pass": "Explicit owner approval of actual presented revision/view and affected-browser responsiveness. Until then delivery may checkpoint/review but feature visual completion remains NOT VERIFIED.",
-          "evidence": "Owner response with presented revision/screenshots and applicable trace limits; preserve rejection for scoped correction/revalidation.",
-          "permission": "Owner visual decision after evidence exists, not a runner pre-dispatch gate or worker wait. Independent final read-only review does not substitute for approval."
         }
       ]
     },
@@ -267,6 +259,86 @@
           "pass": "Actual parent tool relays to exact active worker at next SDK opportunity, without tool preemption; pending owner question remains gate. Observed consumed means delivery only. Missing capability/authority/event leaves live claim NOT VERIFIED/unknown, never fabricated or automatically retried.",
           "evidence": "Authorized fresh-session context, selected configuration, exact recipient/message correlation and actual status/event observations with message text confined to authorized conversations.",
           "permission": "Post-delivery fresh-session activation and separately authorized live selected-model invocation; parent schedules this after tools exist, not pre-dispatch ceremonial gate. No extra paid API authority, historical launch, automatic Pi restart/reload, worker restart, install/auth/deploy/push. Final feature acceptance waits for this evidence; ordinary code checkpoint/independent review need not masquerade as live proof."
+        }
+      ]
+    },
+    {
+      "id": "T011",
+      "description": "Read the shared task brief and authoritative TinySpec R7/A7 inventory, with R1/R2/R6 preservation. Deliver future-run exact invocation metric attribution and optional retention, consuming T002 actual dispatch IDs. Reuse existing metrics.interval_record, adapter before/after observations and usage_interval storage; link each worker/corrective-worker/fixer/reviewer interval to the same actual invocation, with known task/role/fixer-round context. Do not infer linkage from session/time/task label, or count reused session totals as call usage. Retain the already collected before/after cumulative token categories/total and estimated USD, context occupancy/window/effective reserve and enabled/applicable booleans in a small closed optional snapshot addition. Aliased context fields are one measurement. Preserve available before-only data when a call fails, with missing after unavailable; reset per-call optional state before prompt so failed corrections cannot reuse prior metrics. Keep interval field provenance/reasons, distinct new compaction entry accounting and available summary subset fields from R7; validate known numeric/boolean fields, not arbitrary payload passthrough. No new host metrics/model reporting, sampler, historical backfill or global recovery repair. All optional retention failures remain nonblocking and honest unknowns. Existing usage_summary/OI-11 is not declared fixed; reader coverage qualification is T012. Update schema/runtime metric semantics only. Acceptance ends at retained records; no monitor/UI dependency.",
+      "depends": ["T002"],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/metrics.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/tests/test_metrics.py",
+        "runtime/tests/test_usage_reporting.py",
+        "runtime/tests/test_saved_sessions.py",
+        "runtime/tests/test_review_chain.py",
+        "docs/coordinate-implementation-schema.md",
+        "docs/coordinate-implementation.md"
+      ],
+      "required": [{
+        "id": "T011/V1",
+        "source": "R7/A7 producer; R1/A1; R6/A6",
+        "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests .pi/workflow-validation/venv/bin/python -B -m unittest -v test_metrics test_usage_reporting test_saved_sessions test_review_chain",
+        "pass": "Production engine/adapter/interval/store tests retain exact per-call IDs and observed numeric snapshots for worker, correction, fixer and reviewer without duplicate or session-wide charging. R7 retained fields preserve categories/total/estimated USD, compaction subset/count, context snapshots/booleans and reasons; reused sessions and a failed correction with before-only observation cannot inherit previous after/interval values. Optional write loss does not change execution outcome. Current uncollected SDK message/tool counts remain out of scope; no private arbitrary payload/history rewrite. No UI is needed for this checkpoint.",
+        "evidence": "Actual retained IDs/field values from production record paths, known zero versus unavailable, call-state reset and nonblocking-loss assertions, command/exit and schema diff. Synthetic recorded values are not provider-obedience or complete real-run spend proof."
+      }]
+    },
+    {
+      "id": "T012",
+      "description": "Read shared brief and authoritative R7/A7 inventory. Deliver closed full-snapshot metrics reader→mapper→public projection consuming T011 retained records and T003 actual activity DTO. Extend existing read-only SQLite table/column authorizer minimally for optional usage fields; no write API or broad execution_history export. Map every R7 inventory family to typed numeric/boolean fields plus bounded provenance/availability reasons and exact invocation attribution. Summary usage is an explicit allowlist, including available optional reasoning/cacheWrite1h and cost breakdown, never arbitrary JSON. Preserve per-field known zero, invalid/missing unknown, not-applicable context and signed valid effective_headroom. Distinguish invocation deltas, before/after session/context snapshots, same-task dispatch aggregates, run worker/fixer totals and separate reviewer totals plus interval/distinct-membership counts. Deduplicate actual interval IDs; do not add summary overhead to spend, sum context snapshots, allocate reviewer/fixer-round costs to every reviewed task, or infer missing associations. Derive partial/unknown coverage from retained exact dispatch versus interval evidence where available; incomplete dispatch evidence means unverified completeness. OI-11 existing summary labels/empty numeric zeros are not authority: full totals with missing intervals unavailable, known subtotal explicitly labelled; absent all rows is not zero. Exclude conflicting/unattributed intervals from node/task totals while qualifying any safe run-level known data. Preserve original rows, optional/non-admitting behavior and page-independent metrics; no broad CLI/runner repair. Document the closed DTO/coverage contract, not a claim OI-11 is solved. Add ChainMappingTests.test_activity_metrics_readback_without_graph for actual producer/reader/public metric assertions, with no graph-helper dependency. Acceptance ends at public projection without frontend changes.",
+      "depends": ["T003", "T011"],
+      "owned_paths": [
+        "workflow_monitor/reader.py",
+        "workflow_monitor/mapping.py",
+        "workflow_monitor/public.py",
+        "workflow_monitor/app.py",
+        "workflow_monitor/tests/test_reader.py",
+        "workflow_monitor/tests/test_mapping.py",
+        "workflow_monitor/tests/test_public.py",
+        "workflow_monitor/tests/test_history.py",
+        "workflow_monitor/tests/test_chain_mapping.py",
+        "workflow_monitor/README.md"
+      ],
+      "required": [{
+        "id": "T012/V1",
+        "source": "R7/A7 closed metrics and coverage; R2/A2; R6/A6",
+        "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -c 'import sys,unittest; sys.path.append(\"/usr/lib/python3/dist-packages\"); unittest.main(module=None, argv=[\"unittest\", \"-v\", \"workflow_monitor.tests.test_reader\", \"workflow_monitor.tests.test_mapping\", \"workflow_monitor.tests.test_public\", \"workflow_monitor.tests.test_history\", \"workflow_monitor.tests.test_chain_mapping.ChainMappingTests.test_activity_metrics_readback_without_graph\"])'",
+        "pass": "Actual retained T011 records traverse production Reader/normalize/minimize and HTTP snapshot paging with every R7 field family correctly scoped/typed and no raw payload. Representative reused-session corrections, a reviewer and fixer remain separate; exact interval deduplication and summary subsets avoid double counting. Missing optional interval after a surviving one and absent/ambiguous attribution show partial/unknown, not complete zero; independently known values stay visible. Snapshots/aggregates are clearly separate; numeric sentinels match expected units, invalid values become unknown and private nested payload/path/credential sentinels are absent. Read-only safety and full-snapshot paging invariance hold.",
+        "evidence": "Field-to-DTO assertions for each R7 inventory row using actual stored records, exact invocation/task/run totals and coverage reasons, privacy sentinels and read-only/paging checks; command/exit. No selected-browser or OI-11 closure claim."
+      }]
+    },
+    {
+      "id": "T013",
+      "description": "Read shared brief and authoritative R7/A7 inventory. Deliver all collected metric families in selected actual activity Details, consuming T012 public metrics and T006 human-first Details. Keep graph nodes/labels compact and no metric nodes. Label selected invocation usage separately from same-task dispatch totals and run worker/fixer versus reviewer context. Show input/output/cache-read/cache-write/total tokens, estimated USD and per-field availability; expand session cumulative before/after counters/cost, context occupancy/window/reserve/usable headroom and compaction booleans; expose invocation compaction count/references and available summary subset token fields (including optional reasoning/cacheWrite1h) and cost categories/total with already-included warning. Show interval/distinct-membership counts, scope/provenance and partial/unknown/not-applicable explanations. Never present shared session totals or reviewer spend as selected task spend, or unknown as zero; failed/rejected activity can have usage without acceptance, and non-agent stop usage is not applicable. Reuse existing execution fixture to create representative T011 recorded metrics and serve actual production Reader/mapper/public/app to the browser. Click the matching invocation and assert exact recorded values/units/scope and missing/partial case in production Details; unrelated arithmetic plus mocked browser JSON is not composed proof. Preserve page-independent metrics on history load and refresh/navigation, compact graph interactions and private boundary. Update monitor guide only to verified behavior, include metric Details in the SAME representative production visual example and final owner gate. No new visualization dashboard, telemetry, historical scraping or model-generated explanation.",
+      "depends": ["T006", "T012"],
+      "owned_paths": [
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/style.css",
+        "workflow_monitor/web/tests/execution_fixture.py",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/web/tests/test_history.spec.ts",
+        "workflow_monitor/web/tests/test_chain.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T013/V1",
+          "source": "R7/A7 selected Details composed coverage; R2/A2; R3/A3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_execution.spec.ts tests/test_history.spec.ts tests/test_chain.spec.ts --output=\"$(mktemp -d)\"",
+          "pass": "Composed retained-record→production reader/mapper/public/app→clicked actual node Details assertions cover every R7 inventory row using known recorded values including zero and partial/missing-attribution case. Invocation/task/run scope, tokens/USD/context units, subset warnings, coverage/reasons, safe expanded provenance and non-agent not-applicable are visible without cross-task/session charging or changed graph topology. Missing optional intervals never become complete zero totals; paging/status refresh retain values, private nested payloads/paths/credentials do not appear, recorded text stays inert. Graph interactions/status versus acceptance remain unchanged; representative overview and selected metric Details are usable for owner inspection.",
+          "evidence": "Exact fixture stored IDs/values tied to production HTTP and selected rendered fields (all R7 inventory rows), partial-case assertions and build/test exits; same-view overview/metric Details screenshots, not mock payload or screenshot-existence-only evidence."
+        },
+        {
+          "id": "T013/V2",
+          "source": "R3/A3; R7/A7; R6/A6",
+          "procedure": "POST-RUN parent presents T001/T005 applicable before/after findings and the same representative production overview with T006 human-first and T013 metric Details. Owner inspects flat DOWN branches/joins, supported review/fix and stop, drag/pan/zoom/readability, and useful correctly labelled metric values/coverage; explicitly approves visual/responsiveness completion of the presented revision.",
+          "pass": "Explicit owner approval of actual presented view/revision including metric Details and affected-browser responsiveness. Until then delivery can checkpoint/review but visual feature completion is NOT VERIFIED.",
+          "evidence": "Owner response tied to revision/screenshots and applicable trace limits; preserve rejection for scoped correction/revalidation, renewing only invalidated proof.",
+          "permission": "This preserves the original visual gate at the final Details boundary, not another approval ceremony or pre-dispatch gate. Independent read-only final review is not owner visual approval; build before authorized preview restart/frozen-copy serving, never restart a worker."
         }
       ]
     }
