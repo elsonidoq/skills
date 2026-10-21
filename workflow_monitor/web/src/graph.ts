@@ -1,7 +1,10 @@
 import type { Edge, Node } from '@xyflow/react'
 export type Observation = { ref: string; run_ref: string; occurrence_ref: string; kind: string; source_seq: number; recorded_at: number | null; ordinal?: number | null; exit_code: number | null; finding_count: number | null; approved?: boolean | null; no_change?: boolean | null; baseline?: string | null; head?: string | null; review_base: string | null; review_head: string | null }
-export type Occurrence = { ref: string; run_ref: string; phase_ref: string; task_ref: string | null; role: string; outcome: string | null; completeness: string; record_refs: string[]; phase?: string; first_seq?: number; last_seq?: number; parent_ref?: string | null; support_ref?: string | null; stopping?: boolean }
-export type GraphSnapshot = { tasks: Array<{ ref: string; run_ref: string; label: string; summary: string }>; occurrences: Occurrence[]; records: Observation[] }
+export type ExecutionSummary = { state: 'success' | 'failure' | 'waiting' | 'running' | 'unknown'; qualification: string | null }
+export type Occurrence = { ref: string; run_ref: string; phase_ref: string; task_ref: string | null; role: string; outcome: string | null; completeness: string; record_refs: string[]; phase?: string; first_seq?: number; last_seq?: number; parent_ref?: string | null; support_ref?: string | null; stopping?: boolean; execution_summary?: ExecutionSummary }
+export type PlannedTask = { ref: string; run_ref: string; label: string; summary: string; prerequisite_refs: string[]; progress?: { state: string; qualification: string | null }; reason?: { code: string } | null; annotation?: { label?: string } | null }
+export type ReviewDefinition = { ref: string; run_ref: string; label: string }
+export type GraphSnapshot = { runs: Array<{ ref: string; plan_availability?: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[] }
 export type Followup = { run_ref: string; source_run_ref: string; review_occurrence_ref: string; resolution: string }
 export function action(item: Occurrence, snapshots: GraphSnapshot[]) {
   const verb = item.role === 'worker' ? 'Implement' : item.role === 'fixing_worker' ? 'Fix' : item.role === 'reviewer' ? 'Review' : ({ check: 'Check', checkpoint: 'Checkpoint', prepare: 'Prepare', gate: 'Gate', terminal: 'Stop' }[item.phase ?? ''] ?? 'Stop')
@@ -9,35 +12,47 @@ export function action(item: Occurrence, snapshots: GraphSnapshot[]) {
   return `${verb}${task ? ` ${task.label.length > 24 ? task.label.slice(0, 23) + '…' : task.label}` : ''}`
 }
 export function status(item: Occurrence, records: Observation[]) {
+  if (item.execution_summary) return item.execution_summary.state === 'failure' ? 'failed' : item.execution_summary.state === 'success' ? 'success' : item.execution_summary.state
   const own = records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref)
   if (item.outcome === 'failed' || own.some(record => record.kind === 'failed' || record.kind === 'delivery_failed')) return 'failed'
   if (item.outcome === 'passed') return 'success'
-  // An answer may be on an unloaded history page. Only complete question evidence
-  // can establish a pending question; missing observations remain neutral/unknown.
   const allOwnRecordsLoaded = item.record_refs.every(ref => own.some(record => record.ref === ref))
   if (allOwnRecordsLoaded && own.some(record => record.kind === 'question_requested') && !own.some(record => record.kind === 'answer_sent' || record.kind === 'answer_returned')) return 'waiting'
   return 'neutral'
 }
 export function outcomeText(item: Occurrence, records: Observation[]) {
+  if (item.execution_summary) return item.execution_summary.state === 'success' ? 'returned — acceptance not established' : item.execution_summary.state === 'failure' ? 'failed' : `${item.execution_summary.state} — ${item.execution_summary.qualification ?? 'recorded qualification'}`
   if (item.outcome) return item.outcome
   const own = records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref)
   if (own.some(record => record.kind === 'returned')) return 'returned — acceptance not established'
   return item.completeness === 'incomplete' ? 'incomplete — outcome unknown' : 'recorded — outcome unknown'
 }
+const seq = (item: Occurrence, records: Observation[]) => item.first_seq ?? Math.min(...records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => record.source_seq), Number.MAX_SAFE_INTEGER)
 export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relations: Followup[]) {
   const snapshots = [root, ...lineage], occurrences = snapshots.flatMap(item => item.occurrences), records = snapshots.flatMap(item => item.records)
+  const planAvailable = root.runs.some(run => run.plan_availability === 'complete')
+  const planned = planAvailable ? root.tasks : []
+  const planRuns = new Set(planned.map(task => task.run_ref))
+  const reviews = planAvailable ? (root.review_definitions ?? []).filter(review => planRuns.has(review.run_ref)) : []
   const visible = occurrences.filter(item => ['worker', 'fixing_worker', 'reviewer'].includes(item.role) || item.stopping)
-  const nodes: Node[] = visible.map(item => {
-    const ownStatus = status(item, records)
-    const pendingQuestion = occurrences.some(child => child.run_ref === item.run_ref && child.parent_ref === item.ref && status(child, records) === 'waiting')
-    const color = item.stopping ? 'failed' : ownStatus === 'neutral' && pendingQuestion ? 'waiting' : ownStatus
-    return { id: item.ref, position: { x: 0, y: 0 }, data: { label: action(item, snapshots), status: color === 'waiting' ? 'waiting — recorded question' : outcomeText(item, records) }, className: `execution-node ${color}` }
-  })
+  const nodes: Node[] = [
+    ...planned.map(task => ({ id: task.ref, position: { x: 0, y: 0 }, data: { label: task.label, status: `Plan progress: ${task.progress?.state ?? 'pending'}${task.annotation?.label ? ` — ${task.annotation.label}` : ''}` }, className: `planned-node progress-${task.progress?.state ?? 'pending'}` })),
+    ...reviews.map(review => ({ id: review.ref, position: { x: 0, y: 0 }, data: { label: review.label, status: 'Declared stage' }, className: 'planned-review-node' })),
+    ...visible.map(item => {
+      const ownStatus = status(item, records)
+      const color = item.stopping ? 'failed' : ownStatus === 'neutral' && occurrences.some(child => child.run_ref === item.run_ref && child.parent_ref === item.ref && status(child, records) === 'waiting') ? 'waiting' : ownStatus
+      return { id: item.ref, position: { x: 0, y: 0 }, data: { label: action(item, snapshots), status: color === 'waiting' ? 'waiting — recorded question' : outcomeText(item, records) }, className: `execution-node ${color}` }
+    })
+  ]
   const edges: Edge[] = []
-  const seq = (item: Occurrence) => item.first_seq ?? Math.min(...records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => record.source_seq))
+  for (const task of planned) for (const prerequisite of task.prerequisite_refs) edges.push({ id: `dependency_${prerequisite}_${task.ref}`, source: prerequisite, target: task.ref, label: 'Declared prerequisite', type: 'smoothstep', className: 'dependency-edge' })
+  for (const item of visible) {
+    const parent = item.role === 'reviewer' ? reviews.find(review => review.run_ref === item.run_ref) : planned.find(task => task.ref === item.task_ref)
+    if (parent) edges.push({ id: `attachment_${parent.ref}_${item.ref}`, source: parent.ref, target: item.ref, label: 'Recorded attachment', type: 'smoothstep', className: 'attachment-edge' })
+  }
   for (const run of new Set(visible.map(item => item.run_ref))) {
-    const agents = visible.filter(item => item.run_ref === run && item.role !== 'non_model').sort((a, b) => seq(a) - seq(b))
-    for (let index = 1; index < agents.length; index++) edges.push({ id: `sequence_${agents[index - 1].ref}_${agents[index].ref}`, source: agents[index - 1].ref, target: agents[index].ref, label: 'Recorded sequence', type: 'smoothstep' })
+    const agents = visible.filter(item => item.run_ref === run && item.role !== 'non_model').sort((a, b) => seq(a, records) - seq(b, records))
+    for (let index = 1; index < agents.length; index++) edges.push({ id: `sequence_${agents[index - 1].ref}_${agents[index].ref}`, source: agents[index - 1].ref, target: agents[index].ref, label: 'Recorded sequence', type: 'smoothstep', className: 'sequence-edge' })
     for (const stop of visible.filter(item => item.run_ref === run && item.stopping)) {
       const parent = agents.find(item => item.ref === stop.support_ref)
       if (parent) edges.push({ id: `stop_${stop.ref}`, source: parent.ref, target: stop.ref, label: 'Stopping step', type: 'smoothstep' })
@@ -45,9 +60,8 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relation
   }
   for (const relation of relations.filter(item => item.resolution === 'resolved')) {
     if (!visible.some(item => item.ref === relation.review_occurrence_ref && item.run_ref === relation.source_run_ref)) continue
-    // One declared link enters the first actual fixing call; later calls remain distinct.
-    const fix = visible.filter(item => item.run_ref === relation.run_ref && item.role === 'fixing_worker').sort((a, b) => seq(a) - seq(b))[0]
-    if (fix) edges.push({ id: `followup_${relation.review_occurrence_ref}_${fix.ref}`, source: relation.review_occurrence_ref, target: fix.ref, label: 'Declared correction', type: 'smoothstep' })
+    const fix = visible.filter(item => item.run_ref === relation.run_ref && item.role === 'fixing_worker').sort((a, b) => seq(a, records) - seq(b, records))[0]
+    if (fix) edges.push({ id: `followup_${relation.review_occurrence_ref}_${fix.ref}`, source: relation.review_occurrence_ref, target: fix.ref, label: 'Declared correction', type: 'smoothstep', className: 'correction-edge' })
   }
   return { nodes, edges, topology: JSON.stringify({ nodes: nodes.map(node => node.id).sort(), edges: edges.map(edge => [edge.id, edge.source, edge.target]).sort() }) }
 }

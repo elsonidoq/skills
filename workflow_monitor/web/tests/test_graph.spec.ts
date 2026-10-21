@@ -7,7 +7,12 @@ let server: Server
 const snapshot = {
   runs: [{ ref: 'run_one', label: '<img src=x onerror=alert(1)> retained failure', completeness: 'recorded', started_at: 1 }, { ref: 'run_two', label: 'Second run', completeness: 'recorded', started_at: 2 }],
   phases: [{ ref: 'phase_one', run_ref: 'run_one', label: 'Worker' }, { ref: 'phase_two', run_ref: 'run_two', label: 'Review' }],
-  tasks: [],
+  tasks: [
+    { ref: 'task_one', run_ref: 'run_one', label: 'T001', summary: 'First', prerequisite_refs: [], progress: { state: 'completed', qualification: null } },
+    { ref: 'task_two', run_ref: 'run_one', label: 'T002', summary: 'Second', prerequisite_refs: ['task_one'], progress: { state: 'running', qualification: null } },
+    { ref: 'task_three', run_ref: 'run_one', label: 'T003', summary: 'Pending', prerequisite_refs: [], progress: { state: 'pending', qualification: null } }
+  ],
+  review_definitions: [{ ref: 'review_definition', run_ref: 'run_one', label: 'Planned independent review — not an agent call.' }],
   occurrences: [{ ref: 'occ_failed', run_ref: 'run_one', phase_ref: 'phase_one', task_ref: null, role: 'worker', outcome: 'failed', completeness: 'complete', record_refs: ['record_one'] }, { ref: 'occ_reviewer', run_ref: 'run_two', phase_ref: 'phase_two', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: ['record_two'] }],
   records: [{ ref: 'record_one', run_ref: 'run_one', occurrence_ref: 'occ_failed', kind: 'failed', source_seq: 1, recorded_at: 1, exit_code: 1, finding_count: null, review_base: null, review_head: null }, { ref: 'record_two', run_ref: 'run_two', occurrence_ref: 'occ_reviewer', kind: 'passed', source_seq: 2, recorded_at: 2, exit_code: null, finding_count: 0, review_base: 'a'.repeat(40), review_head: 'b'.repeat(40) }],
   edges: [{ ref: 'edge_one', run_ref: 'run_one', type: 'phase_occurrence', from_ref: 'phase_one', to_ref: 'occ_failed', resolution: 'recorded' }, { ref: 'edge_two', run_ref: 'run_one', type: 'execution_milestone', from_ref: 'occ_failed', to_ref: 'record_one', resolution: 'recorded' }, { ref: 'edge_three', run_ref: 'run_two', type: 'phase_occurrence', from_ref: 'phase_two', to_ref: 'occ_reviewer', resolution: 'recorded' }],
@@ -15,7 +20,7 @@ const snapshot = {
 }
 
 function selected(run: string) {
-  return { ...snapshot, phases: snapshot.phases.filter(item => item.run_ref === run), occurrences: snapshot.occurrences.filter(item => item.run_ref === run), records: snapshot.records.filter(item => item.run_ref === run), edges: snapshot.edges.filter(item => item.run_ref === run), inventory: { phase_count: 1, occurrence_count: 1, observation_count: 1, hidden_count: 0 } }
+  return { ...snapshot, runs: snapshot.runs.filter(item => item.ref === run).map(item => ({ ...item, plan_availability: run === 'run_one' ? 'complete' : 'unavailable' })), phases: snapshot.phases.filter(item => item.run_ref === run), tasks: snapshot.tasks.filter(item => item.run_ref === run), review_definitions: snapshot.review_definitions.filter(item => item.run_ref === run), occurrences: snapshot.occurrences.filter(item => item.run_ref === run), records: snapshot.records.filter(item => item.run_ref === run), edges: snapshot.edges.filter(item => item.run_ref === run), inventory: { phase_count: 1, occurrence_count: 1, observation_count: 1, hidden_count: 0 } }
 }
 
 test.beforeAll(async () => {
@@ -41,10 +46,15 @@ test('switches selected production graph, selects details, and provides graph co
   await page.goto('/')
   await expect(page.getByRole('button', { name: /retained failure/ })).toBeVisible()
   await expect(page.locator('img')).toHaveCount(0)
+  await expect(page.locator('.planned-node')).toHaveCount(3)
+  await expect(page.locator('.planned-review-node')).toHaveCount(1)
+  await expect(page.locator('.react-flow__edge.dependency-edge')).toHaveCount(1)
+  await expect(page.locator('.planned-review-node')).toContainText('Planned independent review — not an agent call.')
   await page.locator('.react-flow__node[data-id="occ_failed"]').click()
   await expect(page.getByLabel('Selected execution details').getByText(/worker; failed/)).toBeVisible()
   await page.getByRole('button', { name: /Second run/ }).click()
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toBeVisible()
+  await expect(page.getByText('Complete graph unavailable')).toBeVisible()
   await page.getByTitle('Zoom In').click()
   await expect(page.getByText('Inventory: 1 records, 1 occurrences, 1 phases; 0 hidden.')).toBeVisible()
 })

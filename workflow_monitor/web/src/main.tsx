@@ -4,16 +4,16 @@ import ELK from 'elkjs/lib/elk.bundled.js'
 import { Background, Controls, ReactFlow, type Edge, type Node, type Viewport, type ReactFlowInstance } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import './style.css'
-import { graphFor, action, status, outcomeText, recordText, type Observation, type Occurrence, type Followup } from './graph'
+import { graphFor, action, status, outcomeText, recordText, type Observation, type Occurrence, type Followup, type PlannedTask, type ReviewDefinition } from './graph'
 
 type Acceptance = { state: string; base: string | null; head: string | null }
 type RunnerState = { state: 'live' | 'stopped' | 'unknown'; reason: string | null }
-type Run = { ref: string; display_id: string; label: string; started_at: number | null; completeness: string; runner_state?: RunnerState; review_acceptance?: Acceptance }
+type Run = { ref: string; display_id: string; label: string; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance }
 type Unknown = { ref: string; run_ref: string; source_seq: number | null; code: string }
 type GraphEdge = { ref: string; run_ref: string; type: string; from_ref: string; to_ref: string; resolution: string }
 type Inventory = { phase_count: number; occurrence_count: number; observation_count: number; total_count: number; loaded_count: number; hidden_count: number; unsupported_count: number }
 type Freshness = { read_at: number; last_success_at: number | null; last_recorded_at: number | null; read_state: 'current' | 'unavailable'; warnings: string[] }
-type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: Array<{ ref: string; run_ref: string; label: string; summary: string }>; occurrences: Occurrence[]; records: Observation[]; unknown_records: Unknown[]; edges: GraphEdge[]; inventory: Inventory; snapshot_ref: string; next_cursor: string | null; observation?: Freshness }
+type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; unknown_records: Unknown[]; edges: GraphEdge[]; inventory: Inventory; snapshot_ref: string; next_cursor: string | null; observation?: Freshness }
 const POLL_INTERVAL_MS = 60_000
 const headers = { 'X-Workflow-Monitor': '1' }
 const elk = new ELK()
@@ -73,7 +73,9 @@ function App() {
     <span className="failed">Failure / stopping step</span>
     <span className="waiting">Waiting / blocked</span>
     <span className="neutral">Recorded / incomplete / unknown</span>
-    <span>Recorded sequence · Declared correction</span>
+    <span className="plan">Plan progress (not execution outcome)</span>
+    <span>Declared prerequisite · Recorded attachment · Recorded sequence · Declared correction</span>
+    {snapshot && selectedRunInfo?.plan_availability !== 'complete' && <span className="unavailable">Complete graph unavailable</span>}
     </div>
     <div className="execution-view">
     <div className="graph" aria-label="Workflow graph">
@@ -96,7 +98,7 @@ function App() {
     <p>{relations.length ? `Declared followups: ${relations.map(item => `${item.resolution}: ${item.source_run_ref} → ${item.run_ref}`).join('; ')}` : 'No declared followups.'}</p>
     <p>{snapshot ? `Inventory: ${snapshot.inventory.total_count ?? snapshot.inventory.observation_count} total, ${snapshot.inventory.loaded_count ?? snapshot.records.length} loaded, ${snapshot.inventory.hidden_count} hidden, ${snapshot.inventory.unsupported_count ?? 0} unsupported.` : 'Inventory unavailable.'}</p>{snapshot && <p>Inventory: {snapshot.inventory.observation_count} records, {snapshot.inventory.occurrence_count} occurrences, {snapshot.inventory.phase_count} phases; {snapshot.inventory.hidden_count} hidden.</p>}<p aria-label="Collapsed history badges">{failures} failed; {waiting} waiting; {incomplete} incomplete.</p>{snapshot && <details>
     <summary>Loaded history and technical references</summary>{[snapshot, ...lineage].map(item => <section key={item.snapshot_ref ?? item.runs[0]?.ref}>
-    <h3>Source {item.records[0]?.run_ref ?? 'selected snapshot'}</h3>{item.phases.map(phase => <p key={phase.ref}>{phase.label}; definition {phase.ref}</p>)}{item.tasks.map(task => <p key={task.ref}>{task.label}: {task.summary}; {task.ref}</p>)}{item.occurrences.map(occurrence => <p key={occurrence.ref}>{action(occurrence, [item])}; {outcomeText(occurrence, item.records)}; {occurrence.ref}</p>)}{item.records.map(record => <p key={record.ref}>{recordText(record)}; source {record.run_ref}</p>)}{item.unknown_records?.map(record => <p key={record.ref}>unsupported {record.code}; {record.ref}; source {record.run_ref}; sequence {record.source_seq ?? 'unknown'}</p>)}</section>)}</details>}{lineage.filter(item => item.next_cursor).map(item => <button key={item.snapshot_ref} onClick={() => void loadLinkedMore(item)}>Load correction history {item.occurrences[0]?.run_ref}</button>)}{snapshot?.next_cursor && <button onClick={() => void loadMore()}>Load more history</button>}</section>
+    <h3>Source {item.records[0]?.run_ref ?? 'selected snapshot'}</h3>{item.phases.map(phase => <p key={phase.ref}>{phase.label}; definition {phase.ref}</p>)}{item.tasks.map(task => <p key={task.ref}>{task.label}: {task.summary}; plan progress {task.progress?.state ?? 'unavailable'}; {task.ref}</p>)}{item.occurrences.map(occurrence => <p key={occurrence.ref}>{action(occurrence, [item])}; {outcomeText(occurrence, item.records)}; {occurrence.ref}</p>)}{item.records.map(record => <p key={record.ref}>{recordText(record)}; source {record.run_ref}</p>)}{item.unknown_records?.map(record => <p key={record.ref}>unsupported {record.code}; {record.ref}; source {record.run_ref}; sequence {record.source_seq ?? 'unknown'}</p>)}</section>)}</details>}{lineage.filter(item => item.next_cursor).map(item => <button key={item.snapshot_ref} onClick={() => void loadLinkedMore(item)}>Load correction history {item.occurrences[0]?.run_ref}</button>)}{snapshot?.next_cursor && <button onClick={() => void loadMore()}>Load more history</button>}</section>
     </section>
     </main>
 }

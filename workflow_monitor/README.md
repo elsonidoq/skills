@@ -39,8 +39,9 @@ presentation; missing public task labels remain generic, never guessed from priv
 A confirmed internal step that stops a recorded failed run appears as a red node after
 its recorded parent or preceding agent in that run/task scope. A failure before any
 agent starts remains visible without an invented agent. Recovered check observations
-remain in Details/history, not extra stopping nodes. Sequence edges mean recorded order,
-not proven causality.
+remain in Details/history, not extra stopping nodes. Declared prerequisite, recorded attachment,
+recorded-sequence, and declared-correction edges are visibly distinct. Sequence edges mean recorded order,
+not proven causality; no generic possible-flow edge claims scheduled work.
 
 Snapshot occurrence `execution_summary` is derived from the full normalized snapshot
 before history paging. A worker or fixing-worker `returned` is execution success; its

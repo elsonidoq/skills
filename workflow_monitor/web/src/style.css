@@ -10,7 +10,18 @@
 .failed { background: #ffe5e5 !important; border-color: #ad3030 !important; }
 .waiting { background: #fff0c2 !important; border-color: #9a6900 !important; }
 .neutral { background: #eef2f6 !important; border-color: #64748b !important; }
+.plan { background: #e9e4ff !important; border-color: #5f4bb6 !important; }
+.unavailable { background: #fff0c2 !important; border-color: #9a6900 !important; }
+.planned-node, .planned-review-node { width: 180px; min-height: 70px; border: 2px solid #5f4bb6; border-radius: .4rem; padding: .6rem; background: #e9e4ff; }
+.planned-review-node { border-style: dashed; }
+.progress-completed { background: #dcecff; }
+.progress-failed, .progress-blocked { background: #ffe5e5; }
+.progress-running { background: #fff0c2; }
 .execution-node.selected { outline: 3px solid #1769aa; outline-offset: 3px; box-shadow: 0 0 0 6px #dcecff; }
+.dependency-edge .react-flow__edge-path { stroke: #5f4bb6; stroke-dasharray: 5 3; }
+.attachment-edge .react-flow__edge-path { stroke: #1769aa; }
+.sequence-edge .react-flow__edge-path { stroke: #64748b; }
+.correction-edge .react-flow__edge-path { stroke: #9a6900; stroke-dasharray: 2 3; }
 .react-flow__edge.selected .react-flow__edge-path { stroke: #1769aa; stroke-width: 3; }
 .details { overflow-wrap: anywhere; }
 @media (max-width: 1000px) { .execution-view { grid-template-columns: 1fr; } .selection-details { height: 15rem; min-height: 0; } }
