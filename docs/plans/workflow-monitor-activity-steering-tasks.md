@@ -10,6 +10,18 @@ Current correction is **main-only** at `/home/dev/projects/skills`, baseline `bc
 
 [Executable JSON](workflow-monitor-activity-steering-tasks.json) owns exact task descriptions, path boundaries, dependencies and task-local **REQUIRED** `source/check/pass/evidence/permission` mappings. Manual procedures use `procedure`, not shell `check`; existing runner checks execute `check` strings, while existing runner gates are pre-dispatch. Consequently post-delivery visual/live acceptance is explicitly scheduled below, not encoded as an impossible pre-dispatch approval or a fake executable command. Delivery checkpoints and independent review never imply those manual criteria passed.
 
+## Current combined approval
+
+The owner explicitly approved the current TinySpec, all 17 tasks and implementation scope in the parent conversation after the session-provenance amendment at `4050b47cd0d3e4dcf2873f2523ae924acd66d5fc` (answer: **“I approve”**). This supersedes preparation/pending wording above for this exact content; historical approvals remain historical. The reviewed human task presentation is the file at that revision, unchanged except this approval record.
+
+Approved content SHA-256:
+- `workflow-monitor-activity-steering-tinyspec.md`: `35cabc9bfdf691767e272edd39b15a7019861770c788eae58038e3be4d9561f0`.
+- `workflow-monitor-activity-steering-tasks.json`: `7769fed916227c0605e6870899feb0d066478dc9a5518626207c8792127f9887`.
+
+Planner review confirmed task coverage and Terra/medium outcome boundaries, actual six-rule intake/dependencies, human/machine consistency and focused check syntax. The narrow host-before-adapter compatibility finding was corrected before this approval. Source/task production and review are not application verification: browser performance, composed SDK/live steering, JSONL/Git behavior and visual acceptance remain unverified until their required checks/gates pass.
+
+Approval authorizes implementation preflight and execution of this scope **only in `/home/dev/projects/skills` on main**, with unchanged `.pi/workflow-executor.json`, focused runner-owned task commits and fresh independent read-only final review. Preserve the affected-browser before/after proof, separately gated fresh-session live steering check and final owner visual approval. No historical run replay, automatic install/auth/reload/restart, deployment or push is authorized. No implementation worker had launched when this approval was recorded.
+
 ## Shared worker brief
 
 Read this brief plus the whole source with each assignment; use its applicable R/A mappings in the worker return. Source proposals distinguish derived mechanics from owner requirements; preserve that distinction. The owner directions are:
