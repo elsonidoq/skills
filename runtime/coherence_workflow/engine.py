@@ -9,7 +9,7 @@ from .pi_adapter import PiAdapter, terminal_question
 from .processes import process_identity
 from .sessions import select_session
 from .store import Blocked, canonical, git
-from .verification import CheckFailure, manual_gates, run_checks
+from .verification import CheckFailure, commands, manual_gates, run_checks
 
 
 def _failure(exc):
@@ -107,6 +107,151 @@ class Engine:
                 ', '.join(self.paid_scope['agent_providers']) + '; application/test APIs: ' +
                 (', '.join(self.paid_scope['apis']) if self.paid_scope['apis'] else 'none declared') +
                 '. Do not expand this scope or ask again while it is unchanged. ')
+
+    def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id):
+        """Run the one already-authorized review repair without routing another workflow.
+
+        The caller supplies the actual first-review execution and fixer identity.  This
+        method deliberately leaves original task rows/checkpoints alone: it records a
+        distinct fixer execution, its scoped checks, and its focused repair checkpoint.
+        """
+        if (not isinstance(findings, list) or not findings or any(not isinstance(item, str) or not item for item in findings)
+                or not isinstance(trigger_execution_id, str) or not trigger_execution_id
+                or not isinstance(execution_id, str) or not execution_id):
+            raise Blocked('fixing execution needs actionable findings and explicit execution IDs')
+        project, store = self.authority.project, self.authority.store
+        original_tasks = self.contract['tasks']
+        paths = []
+        artifacts = []
+        checks = []
+        gates = []
+        for task in original_tasks:
+            paths.extend(task.get('owned_paths', []))
+            artifacts.extend(task.get('generated_outputs', []))
+            checks.extend(commands(task))
+            gates.extend(task.get('gates', []))
+        fix_task = {'id': 'fix-' + execution_id, 'description': 'Correct actionable independent review findings.',
+                    'checks': checks, 'gates': gates, 'generated_outputs': sorted(set(artifacts)),
+                    'context_group': 'review-fix'}
+        if any('owned_paths' in task for task in original_tasks):
+            fix_task['owned_paths'] = sorted(set(paths))
+        head = git(project, 'rev-parse', 'HEAD').decode().strip()
+        store.review_dispatch(self.run, execution_id, role='fixer', review_ordinal=1, fixing_round=1,
+                              trigger_execution_id=trigger_execution_id, predecessor_execution_id=trigger_execution_id,
+                              review_base=review_base, review_head=head)
+        recorder.emit(execution_id, 'worker', 'started', task_id=fix_task['id'], facts={
+            'role': 'fixing_worker', 'execution_id': execution_id,
+            'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
+        })
+        focused = FocusedGit(project, fix_task)
+        claimed_paths = set()
+        def claim(name):
+            if name not in claimed_paths:
+                focused.claim(name)
+                claimed_paths.add(name)
+        def gate_question(text):
+            return self.question(text)
+        try:
+            manual_gates(fix_task, gate_question)
+            request, reuse_key = self._session_request(fix_task, 'fixing_worker')
+            selection = select_session(request, self.session_candidates)
+            selected = next((candidate for candidate in self.session_candidates
+                             if candidate['id'] == selection['session_id']), None)
+            store.history(self.run, None, 'fixer', 'selected', {'execution_id': execution_id,
+                          'trigger_execution_id': trigger_execution_id, 'session_id': selection['session_id'],
+                          'reason': selection['reason'], 'rejected': selection['rejected']})
+            worker = self.adapter(project, self.executor, question=self.question)
+            worker.lock_fd = self.authority.lock.fileno()
+            prompt = ('Correct the actionable findings from one independent review within the original approved '
+                      'task contracts. This is the one assigned fixing round, not a new task, routing operation, '
+                      'or permission expansion. Keep the configured executor and authority. Select only explicit '
+                      'source/artifact paths from those contracts; preserve unrelated and pre-existing bytes. Run '
+                      'applicable required checks. Never stage or commit: the runner owns the focused repair checkpoint.\n'
+                      + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
+                      'Original task contracts: ' + canonical(original_tasks) + '\nActionable findings: ' + canonical(findings))
+            text = self._prompt_worker(worker, prompt, claim=claim, command=focused.command,
+                                       saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
+            recorder.emit(execution_id, 'worker', 'returned', task_id=fix_task['id'], facts={
+                'role': 'fixing_worker', 'execution_id': execution_id,
+                'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
+            })
+            store.usage_interval(self.run, execution_id, role='fixing_worker', outcome='settled',
+                                 interval=getattr(worker, 'last_interval', None))
+            check_occurrences = {}
+            def observe(kind, ordinal, code):
+                occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
+                facts = {'ordinal': ordinal, 'execution_id': execution_id}
+                if code is not None:
+                    facts['exit_code'] = code
+                recorder.emit(occurrence, 'check', kind, task_id=fix_task['id'], facts=facts)
+            def correct_checks():
+                nonlocal text
+                previous = None
+                while True:
+                    try:
+                        results = run_checks(project, fix_task, lock_fd=self.authority.lock.fileno(), observe=observe)
+                        for attempt in results:
+                            store.history(self.run, None, 'fixer_check', 'passed', {'execution_id': execution_id, **attempt})
+                        return results
+                    except CheckFailure as failure:
+                        if failure.attempt == previous:
+                            raise Blocked('fixing required check remains unchanged after scoped correction: ' + canonical(failure.attempt))
+                        previous = failure.attempt
+                        store.history(self.run, None, 'fixer_check', 'failed', {'execution_id': execution_id, **failure.attempt})
+                        text = self._prompt_worker(worker,
+                            'A runner-owned REQUIRED check in this assigned fixing round failed. Make a reasoned, '
+                            'authorized scoped correction, then return; the runner will rerun the affected command '
+                            'before checkpointing. Do not skip it, claim success, start another fixing round, or adopt '
+                            'unrelated work. Actual failed attempt: ' + canonical(failure.attempt),
+                            claim=claim, command=focused.command, reuse_key=reuse_key)
+            check_results = correct_checks()
+            checkpoint_error = None
+            while True:
+                checkpoint_occurrence = recorder.occurrence()
+                recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=fix_task['id'], facts={
+                    'baseline': focused.base, 'execution_id': execution_id})
+                try:
+                    checkpoint = focused.checkpoint()
+                except BaseException as exc:
+                    store.history(self.run, None, 'fixer_checkpoint', 'failed',
+                                  {'execution_id': execution_id, 'error': str(exc)})
+                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'failed', task_id=fix_task['id'], facts={
+                        'baseline': focused.base, 'execution_id': execution_id, 'error_category': _failure(exc)})
+                    checkpoint = focused.reconcile_checkpoint()
+                    if checkpoint is not None:
+                        break
+                    if isinstance(exc, (KeyboardInterrupt, SystemExit)) or str(exc) == checkpoint_error:
+                        raise
+                    checkpoint_error = str(exc)
+                    text = self._prompt_worker(worker,
+                        'A runner-owned focused repair checkpoint failed. Make a reasoned authorized scoped correction; '
+                        'do not bypass hooks/signing or adopt unrelated work. The runner will rerun affected required '
+                        'checks and checkpoint. Actual checkpoint error: ' + str(exc),
+                        claim=claim, command=focused.command, reuse_key=reuse_key)
+                    check_results = correct_checks()
+                    continue
+                break
+            checkpoint['parent'] = (None if checkpoint['no_change'] else
+                                    git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
+            store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
+            recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=fix_task['id'], facts={
+                'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change'],
+                'execution_id': execution_id})
+            head = git(project, 'rev-parse', 'HEAD').decode().strip()
+            store.review_outcome(self.run, execution_id, 'approved', findings=[],
+                                 references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
+            self._settle_session(fix_task, worker, request, reuse_key, checkpoint)
+            return {'execution_id': execution_id, 'checkpoint': checkpoint, 'checks': check_results, 'summary': text}
+        except BaseException as exc:
+            outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+            store.review_outcome(self.run, execution_id, outcome, findings=[], uncertainty=False,
+                                 references={'base': review_base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip()})
+            recorder.emit(execution_id, 'worker', outcome, task_id=fix_task['id'], facts={
+                'role': 'fixing_worker', 'execution_id': execution_id,
+                'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
+                'error_category': _failure(exc),
+            })
+            raise
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store

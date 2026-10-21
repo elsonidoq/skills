@@ -179,3 +179,52 @@ class ChainHistoryTests(ProjectTest):
         rendered = json.dumps(observed)
         self.assertNotIn('PRIVATE-TASK-TEXT', rendered)
         self.assertNotIn('PRIVATE-WORKER-ANSWER', rendered)
+
+
+class FixExecutionTests(ProjectTest):
+    def test_fixer_corrects_a_required_check_and_records_its_own_checkpoint(self):
+        project = self.project
+        class Fixer:
+            prompts = []
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                self.prompts.append(prompt)
+                if len(self.prompts) == 1:
+                    kwargs['claim']('owned.txt')
+                    project.joinpath('owned.txt').write_text('broken\n')
+                else:
+                    project.joinpath('owned.txt').write_text('fixed\n')
+                return 'fixed'
+
+        contract = {'tasks': [{
+            'id': 'original', 'description': 'synthetic original work', 'owned_paths': ['owned.txt'],
+            'checks': [['/bin/sh', '-c', 'test "$(cat owned.txt)" = fixed']],
+        }]}
+        self.project.joinpath('other.txt').write_text('unrelated dirty bytes\n')
+        with Authority(project) as owner:
+            owner.store.start('fix-run', self.base, contract=contract, executor=EXECUTOR,
+                              authority={}, review_base=self.base)
+            recorder = Recorder(owner.store, 'fix-run')
+            self.assertTrue(recorder.register(descriptor(contract, EXECUTOR, self.base)))
+            result = Engine(owner, 'fix-run', contract, EXECUTOR, adapter=Fixer,
+                            paid_scope={'agent_providers': ['fixture'], 'apis': []}).run_fix(
+                                ['owned.txt:1 - synthetic defect'], trigger_execution_id='review-1',
+                                review_base=self.base, recorder=recorder, execution_id='fix-1')
+            chain = owner.store.review_chain('fix-run', private=True)
+            history = [dict(row) for row in owner.store.db.execute(
+                "SELECT kind,state,details FROM execution_history WHERE run_id='fix-run' ORDER BY seq")]
+            observations = [(row['phase'], json.loads(row['facts']))
+                            for row in owner.store.monitor('fix-run')['observations']]
+
+        self.assertEqual(result['checkpoint']['paths'], ['owned.txt'])
+        self.assertEqual(self.project.joinpath('other.txt').read_text(), 'unrelated dirty bytes\n')
+        self.assertEqual([(item['role'], item['state']) for item in chain['executions']], [('fixer', 'approved')])
+        self.assertEqual(chain['executions'][0]['trigger_execution_id'], 'review-1')
+        self.assertTrue(any(item['kind'] == 'fixer_check' and item['state'] == 'failed' for item in history))
+        self.assertTrue(any(item['kind'] == 'fixer_checkpoint' and item['state'] == 'passed' for item in history))
+        self.assertTrue(any(phase == 'check' and facts.get('execution_id') == 'fix-1' and facts.get('exit_code') == 1
+                            for phase, facts in observations))
+        self.assertTrue(any(phase == 'checkpoint' and facts.get('execution_id') == 'fix-1' and facts.get('head') == result['checkpoint']['sha']
+                            for phase, facts in observations))
+        self.assertIn('Actionable findings', Fixer.prompts[0])
+        self.assertIn('Actual failed attempt', Fixer.prompts[1])
