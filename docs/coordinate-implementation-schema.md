@@ -104,7 +104,9 @@ that compatibility; a changed key rejects reuse. The host creates or opens that 
 `.coherence/workflow/sessions`, rebuilds the current resource loader and task callbacks/tools on
 every open, and rejects an identity/resource mismatch rather than adopting an ambient session.
 A result retains text plus fresh before/after observations (session/branch/epoch/entry, available
-counters, and context fields). It emits the opened identity before invocation, so a terminal
+counters, and context fields). An adapter explicitly sends `sessionObservations: true` before the
+host emits the optional standalone opened-identity record; without that opt-in, the host emits only
+legacy record kinds. On opted-in calls, the opened identity precedes invocation, so a terminal
 transport failure retains its existing session and actual cause for inspected targeted resumption;
 it never authorizes a blind relaunch. Unknown optional observations remain unknown; they are not a
 transport failure or evidence that reuse is safe. The host waits for both prompt completion and

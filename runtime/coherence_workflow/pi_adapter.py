@@ -69,7 +69,11 @@ class PiAdapter:
     def prompt(self, prompt, *, claim=None, command=None, read_only=False, saved_session=None, reuse_key=None):
         """Run one prompt, optionally reopening only a runner-provided private session."""
         request = {'project': str(self.project), 'executor': self.executor,
-                   'prompt': prompt, 'readOnly': read_only}
+                   'prompt': prompt, 'readOnly': read_only,
+                   # A standalone session record is a newer host extension.
+                   # Explicit opt-in keeps an updated host compatible with
+                   # controllers that predate this transport record.
+                   'sessionObservations': True}
         if reuse_key is not None:
             if not isinstance(reuse_key, str):
                 raise Blocked('saved session reuse key must be a stable runner string')

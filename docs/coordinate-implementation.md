@@ -113,8 +113,10 @@ scope, rerun affected checks, and obtain independent review. SDK compaction/retr
 workflow fatal condition. SDK tools truncate long output with their normal continuation
 instructions; the transport has no size cap. A runner may reuse only a returned private saved
 session identity with unchanged effective project/profile/read-only resources; each reopen
-rebuilds the current task's callbacks, tools and mutation scope. The host returns fresh boundary
-observations and waits for SDK idle before disposal. Missing optional observations select a fresh
+rebuilds the current task's callbacks, tools and mutation scope. An adapter that understands the
+standalone pre-invocation `session` transport record explicitly requests it with
+`sessionObservations: true`; absent opt-in keeps the legacy record kinds. The host returns fresh
+boundary observations and waits for SDK idle before disposal. Missing optional observations select a fresh
 session at the routing layer; they do not stop ordinary SDK/tool correction.
 
 Material questions, including missing paid scope before provider launch, use actual current terminal input.

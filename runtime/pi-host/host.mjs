@@ -164,12 +164,20 @@ function observation(session) {
   };
 }
 
+export function sessionObservationRecord(request, session) {
+  // Old controllers accept only event/question/result/error records. Newer
+  // adapters opt in before the host emits this standalone recovery record.
+  if (request.sessionObservations !== true) return null;
+  return {type: 'session', session: session.coherenceSavedSession, before: observation(session)};
+}
+
 export async function execute(request, emit, ask) {
   const session = await createWorkflowSession(request, ask);
   session.coherenceEpoch = crypto.randomUUID();
   // Preserve the existing session identity before an invocation can fail. The
   // adapter can then expose that failed call/cause for inspection, never retry it.
-  emit({type: 'session', session: session.coherenceSavedSession, before: observation(session)});
+  const sessionRecord = sessionObservationRecord(request, session);
+  if (sessionRecord) emit(sessionRecord);
   const cancel = () => { void session.abort(); };
   process.on('SIGTERM', cancel);
   process.on('SIGINT', cancel);

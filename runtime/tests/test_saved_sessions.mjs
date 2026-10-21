@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {test} from 'node:test';
 import {SessionManager} from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
-import {promptSession} from '../pi-host/host.mjs';
+import {promptSession, sessionObservationRecord} from '../pi-host/host.mjs';
 
 test('official SessionManager create/open retains a private identity without ambient discovery', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-saved-session-'));
@@ -26,6 +26,23 @@ test('official SessionManager create/open retains a private identity without amb
   } finally {
     await fs.rm(root, {recursive: true, force: true});
   }
+});
+
+test('new host omits standalone session observations unless the adapter opts in', () => {
+  const session = {
+    coherenceSavedSession: {id: 'session-1', file: '/private/session-1.jsonl'},
+    coherenceEpoch: 'opened',
+    sessionId: 'session-1',
+    getContextUsage() { return {tokens: 1, contextWindow: 2}; },
+    getSessionStats() { return {tokens: {input: 1}}; },
+    _coherenceSessionManager: {getLeafId() { return 'entry-1'; }},
+  };
+  assert.equal(sessionObservationRecord({}, session), null);
+  assert.deepEqual(sessionObservationRecord({sessionObservations: true}, session), {
+    type: 'session', session: session.coherenceSavedSession,
+    before: {session_id: 'session-1', branch: 'session-1', epoch: 'opened', entry: 'entry-1',
+      counters: {input: 1}, context_tokens: 1, context_window: 2},
+  });
 });
 
 test('prompt waits for SDK idle and reports actual compaction event names', async () => {

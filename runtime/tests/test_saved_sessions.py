@@ -29,6 +29,22 @@ print(json.dumps({"type":"result", "text":"ok", "session":{"id":"session-1", "fi
         self.assertEqual(adapter.last_observation['before']['entry'], 'before')
         self.assertEqual(adapter.last_observation['after']['entry'], 'after')
 
+    def test_updated_adapter_opts_into_standalone_saved_session_observations(self):
+        host = self.root / 'observing_host.py'
+        host.write_text('''import json
+request = json.loads(input())
+assert request["sessionObservations"] is True
+session = {"id":"session-1", "file":"/private/session-1.jsonl"}
+print(json.dumps({"type":"session", "session":session, "before":{"entry":"opened"}}), flush=True)
+print(json.dumps({"type":"result", "text":"ok", "session":session, "before":{"entry":"opened"}, "after":{"entry":"settled"}}), flush=True)
+''')
+        adapter = PiAdapter(self.project, {})
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(
+                'os.environ', {'COHERENCE_NODE': sys.executable}):
+            self.assertEqual(adapter.prompt('fixture'), 'ok')
+        self.assertEqual(adapter.saved_session['id'], 'session-1')
+        self.assertEqual(adapter.last_observation['after']['entry'], 'settled')
+
     def test_invalid_saved_identity_is_not_sent_to_the_host(self):
         with self.assertRaisesRegex(Exception, 'runner-provided'):
             PiAdapter(self.project, {}).prompt('fixture', saved_session='ambient-session')
