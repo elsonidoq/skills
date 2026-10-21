@@ -124,3 +124,26 @@ test('a question answered beyond the history page boundary does not falsely mark
   await worker.click()
   await expect(page.getByLabel('Selected execution details')).toContainText('answer_sent')
 })
+
+for (const value of [true, false]) test(`Details render approved/no-change ${value} before and after loading page-hidden evidence`, async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: `Recorded run · booleans-${value} · recorded`, exact: true }).click()
+  const view = await page.evaluate(async (id) => {
+    const headers = { 'X-Workflow-Monitor': '1' }
+    const runs = (await (await fetch('/api/monitor/v1/runs', { headers })).json()).runs
+    const run = runs.find((item: any) => item.display_id === id)
+    return (await fetch(`/api/monitor/v1/runs/${run.ref}/snapshot`, { headers })).json()
+  }, `booleans-${value}`)
+  expect(view.records).toHaveLength(50)
+  expect(view.records.some((item: any) => item.no_change !== null || item.approved !== null)).toBe(false)
+  expect(view.runs.find((item: any) => item.display_id === `booleans-${value}`).acceptance_summary.checkpoints[0].no_change).toBe(value)
+  await page.locator('.planned-node').first().click()
+  const details = page.getByLabel('Selected execution details')
+  const acceptance = details.locator('section').filter({ has: page.getByRole('heading', { name: 'Acceptance (full retained summary)', exact: true }) })
+  await expect(acceptance).toContainText(`no change ${value}`)
+  await expect(acceptance).toContainText(`approved ${value}; findings ${value ? 0 : 1}`)
+  const before = await acceptance.textContent()
+  await page.getByRole('button', { name: 'Load more history', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Load more history', exact: true })).toHaveCount(0)
+  await expect(acceptance).toHaveText(before ?? '')
+})

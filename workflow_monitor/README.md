@@ -58,7 +58,9 @@ success.
 
 Each run also exposes a separate full-snapshot `acceptance_summary`: checks,
 checkpoints, reviewer approval/findings/ranges, and the existing full-range acceptance
-qualification. These facts are retained independently of the loaded history page. The
+qualification. These facts are retained independently of the loaded history page;
+Details explicitly display `true`/`false` for approval and no-change (or `unknown`
+when absent), including when the evidence is beyond the first 50 records. The
 status legend distinguishes green execution success, red execution failure, amber
 waiting and neutral recorded/incomplete/unknown. Worker return is **not acceptance**.
 

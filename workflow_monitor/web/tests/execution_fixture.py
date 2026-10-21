@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     # Simulate already-retained prose; no producer behavior is changed.
     presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
     with Authority(project) as owner:
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged', 'booleans-true', 'booleans-false'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(presentation)
@@ -41,6 +41,15 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                 emit(recorder, 'worker', 'worker', 'started', role='worker')
                 if run == 'waiting':
                     emit(recorder, 'question', 'worker', 'question_requested', parent_occurrence_id='worker')
+                elif run.startswith('booleans-'):
+                    value = run == 'booleans-true'
+                    for ordinal in range(48):
+                        emit(recorder, f'check-{ordinal}', 'check', 'passed', ordinal=ordinal, exit_code=0)
+                    emit(recorder, 'worker', 'worker', 'returned', role='worker')
+                    emit(recorder, 'checkpoint', 'checkpoint', 'passed', baseline=base, head=base, no_change=value)
+                    emit(recorder, 'review', 'review', 'passed' if value else 'failed', task=None, role='reviewer',
+                         approved=value, finding_count=0 if value else 1, review_base=base, review_head=base)
+                    emit(recorder, 'terminal', 'terminal', 'passed', task=None, head=base)
                 elif run == 'answered-paged':
                     # The request is the 50th retained record; its answers are on page two.
                     for ordinal in range(47):
