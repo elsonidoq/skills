@@ -167,6 +167,15 @@ class Recorder:
             _warn("recording registration unavailable")
             return False
 
+    def resume(self):
+        """Continue an existing optional recording without rewriting its description."""
+        try:
+            self.registered = self.store.monitor(self.run) is not None
+            return self.registered
+        except Exception:
+            _warn("recording resume unavailable")
+            return False
+
     def occurrence(self):
         try:
             return uuid.uuid4().hex

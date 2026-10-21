@@ -107,6 +107,67 @@ class MonitoringStorageTests(ProjectTest):
         self.assertTrue(all(facts['correction_chain'][-1] == facts['invocation_id']
                             for facts in started.values()))
 
+    def test_resumed_interrupted_correction_retains_recorded_invocation_lineage(self):
+        project = self.project
+        task = {
+            'id': 'resume', 'description': 'resume one interrupted correction',
+            'owned_paths': ['effect.txt', 'ready.txt'],
+            'required': [{'id': 'ready', 'check': [
+                'python3', '-B', '-c',
+                "from pathlib import Path; assert Path('effect.txt').read_text() == 'complete\\n'; assert Path('ready.txt').read_text() == 'ready\\n'",
+            ]}],
+        }
+        calls = []
+
+        class InterruptedWorker:
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
+                if read_only:
+                    return '{"approved":true,"findings":[]}'
+                calls.append('initial' if len(calls) == 0 else 'interrupted-correction')
+                if len(calls) == 1:
+                    claim('effect.txt')
+                    (project / 'effect.txt').write_text('complete\n')
+                    return 'completed effect once'
+                raise KeyboardInterrupt
+
+        with Authority(project) as owner:
+            with self.assertRaises(KeyboardInterrupt):
+                Engine(owner, 'resume-lineage', admit([task]),
+                       {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'},
+                       adapter=InterruptedWorker).invoke()
+            owner.store.resume('resume-lineage')
+
+            class ResumedWorker:
+                def __init__(self, *args, **kwargs): pass
+                def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
+                    if read_only:
+                        return '{"approved":true,"findings":[]}'
+                    self_case.assertIn('Continue only the unfinished same-task work.', prompt)
+                    calls.append('resumed-correction')
+                    claim('ready.txt')
+                    (project / 'ready.txt').write_text('ready\n')
+                    return 'continued without replaying completed effect'
+
+            self_case = self
+            result = Engine(owner, 'resume-lineage', admit([task]),
+                            {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'},
+                            adapter=ResumedWorker, resume=True).invoke()
+            observations = owner.store.monitor('resume-lineage')['observations']
+
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(calls, ['initial', 'interrupted-correction', 'resumed-correction'])
+        workers = [json.loads(row['facts']) for row in observations
+                   if row['phase'] == 'worker' and row['kind'] == 'started']
+        self.assertEqual([facts['invocation_kind'] for facts in workers],
+                         ['task_worker', 'corrective_worker', 'corrective_worker'])
+        self.assertEqual(workers[2]['predecessor_invocation_id'], workers[1]['invocation_id'])
+        self.assertEqual(workers[2]['correction_chain'], [facts['invocation_id'] for facts in workers])
+        checkpoint = next(json.loads(row['facts']) for row in observations
+                          if row['phase'] == 'checkpoint' and row['kind'] == 'passed')
+        self.assertEqual(checkpoint['producer_invocation_id'], workers[2]['invocation_id'])
+        self.assertEqual(checkpoint['correction_chain'], workers[2]['correction_chain'])
+
     def test_failed_invocation_records_exact_terminal_stop(self):
         class FailingWorker:
             def __init__(self, *args, **kwargs): pass

@@ -429,6 +429,8 @@ class Engine:
             identity = None
         if not self.resume:
             recorder.register(descriptor(self.contract, self.executor, base), identity)
+        else:
+            recorder.resume()
         checkpoints = list(recovered.values())
         terminal = recorder.occurrence()
         terminal_stop = [None]
@@ -510,6 +512,26 @@ class Engine:
                                 if continuation.get('reuse_key') != reuse_key:
                                     raise Blocked('saved unfinished worker authority/resources are incompatible; inspect before continuation')
                                 worker.saved_session = continuation['saved_session']
+                            # Retain only the recorded terminal invocation sequence for this
+                            # same task. It is the evidence for a resumed correction's direct
+                            # predecessor; malformed or incomplete optional history stays unknown.
+                            retained = []
+                            for prior in store.db.execute(
+                                "SELECT details FROM execution_history WHERE run_id=? AND task_id=? "
+                                "AND kind='worker_invocation' AND state IN ('returned','failed','interrupted') ORDER BY seq",
+                                (self.run, task['id'])):
+                                try:
+                                    invocation_id = json.loads(prior['details']).get('invocation_id')
+                                except (TypeError, ValueError):
+                                    retained = []
+                                    break
+                                if not isinstance(invocation_id, str) or not invocation_id or invocation_id in retained:
+                                    retained = []
+                                    break
+                                retained.append(invocation_id)
+                            if retained and retained[-1] == continuation.get('invocation_id'):
+                                invocation_chain[:] = retained
+                                last_invocation[0] = retained[-1]
                         else:
                             prior = store.db.execute(
                                 "SELECT 1 FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker' LIMIT 1",
