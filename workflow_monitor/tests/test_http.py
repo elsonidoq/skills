@@ -88,7 +88,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(len({item["ref"] for item in retained}), 55)
         self.assertTrue(any(item["source_seq"] is None for item in retained))
 
-    def test_multiple_null_unknowns_cross_page_boundaries(self):
+    def test_invalid_descriptor_is_a_single_null_sequence_unknown(self):
         for mixed in (False, True):
             with self.subTest(mixed=mixed):
                 raw = copy.deepcopy(snapshot())
@@ -112,7 +112,9 @@ class HttpTests(unittest.TestCase):
                 retained = [item for page in pages for item in page["records"] + page["unknown_records"]]
                 self.assertEqual(len(retained), expected)
                 self.assertEqual(len({item["ref"] for item in retained}), expected)
-                self.assertEqual(sum(item.get("source_seq") is None for item in retained), 55)
+                # Invalid descriptors are retained as one unavailable-plan record;
+                # their untrusted nested entries are not projected individually.
+                self.assertEqual(sum(item.get("source_seq") is None for item in retained), 1)
                 bad = self.client.get(f"/api/monitor/v1/runs/{run}/history?snapshot={first['snapshot_ref']}&cursor=cursor_unknown_not_this_run", headers=self.api_headers)
                 self.assertEqual(bad.status_code, 400)
 

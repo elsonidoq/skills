@@ -101,7 +101,7 @@ class ExecutionPresentationTests(unittest.TestCase):
         acceptance = first['runs'][0]['acceptance_summary']
         self.assertEqual(acceptance['checks'][0]['state'], 'failed')
         self.assertEqual((acceptance['reviews'][0]['approved'], acceptance['reviews'][0]['finding_count']), (False, 2))
-        self.assertNotIn('run-a', json.dumps(first))
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(first))
 
     def test_waiting_terminal_and_runner_qualification_are_distinct(self):
         rows = [
