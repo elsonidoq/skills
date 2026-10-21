@@ -156,8 +156,7 @@ processes or provisions/signals cgroups.
 
 `status` and `history` are read-only SQLite readers. New runs privately retain their original parsed contract/order, selected executor, settled authority and resolved initial review base before dependent mutation. Append-only operation history preserves actual invocation, check and checkpoint outcomes; a corrected check does not replace its failed command/exit/output, and checkpoint facts retain only task-local paths/artifacts and available SHA/parent. CLI output is a safe projection (task IDs, review base and operation facts), never original task text, prompts, answers or check output. This is not a resume policy or a filesystem/Git snapshot.
 
-Ordinary task/run progress is useful history, not dispatch or completion proof. Old tables/rows remain in place, including incomplete intents;
-new tasks neither reconcile nor replay them. Malformed optional history cannot veto new coding.
+Ordinary task/run progress is useful history, not dispatch or completion proof. Required original-input, operation-history, and progress writes are made before their dependent mutation. If one reports a SQLite failure, the runner re-reads that specific operation: a known completed write is retained without replay, otherwise it makes one safe local correction; an unreadable or unrecoverable result stops only that affected action with its actual persistence limit. It never reruns task tools or commits to repair progress or invents missing history. Optional monitoring, metrics, and telemetry persistence remains a reported gap and does not block task/check/Git/provider work. Old tables/rows remain in place, including incomplete intents; new tasks neither reconcile nor replay them. Malformed optional history cannot veto new coding.
 There is no automatic schema migration, drop, mass conversion or invented successful effect.
 
 After inspecting actual writers and partial work, an operator may explicitly abandon an old run:

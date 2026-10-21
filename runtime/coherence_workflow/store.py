@@ -116,6 +116,31 @@ class Store:
     def event(self, db, run, op, kind, payload):
         return db.execute('INSERT INTO wf_events(event_id,run_id,op_id,kind,payload) VALUES(?,?,?,?,?)',
                           (uuid.uuid4().hex, run, op, kind, canonical(payload))).lastrowid
+    def _required_write(self, operation, write, completed):
+        """Correct one failed required write only after reconciling its actual result.
+
+        Each supplied write is an atomic local operation.  A storage exception may be
+        raised after SQLite accepted it, so inspect its operation-local result before
+        replaying the write.  This deliberately has no timer, retry loop, or effect
+        replay: a second failed write is an actionable limit for that operation.
+        """
+        try:
+            return write()
+        except sqlite3.Error as first_error:
+            try:
+                if completed():
+                    return None
+            except sqlite3.Error as reconcile_error:
+                raise Blocked('required ' + operation + ' persistence is uncertain; reread failed: ' + str(reconcile_error)) from reconcile_error
+            try:
+                return write()
+            except sqlite3.Error as retry_error:
+                raise Blocked('required ' + operation + ' persistence failed after safe correction: ' + str(retry_error)) from retry_error
+
+    def _history_insert(self, db, run, task, kind, state, details, recorded_at):
+        db.execute('INSERT INTO execution_history(run_id,task_id,kind,state,details,recorded_at) VALUES(?,?,?,?,?,?)',
+                   (run, task, kind, state, details, recorded_at))
+
     def start(self, run, baseline, *, contract=None, executor=None, authority=None, review_base=None):
         """Persist private original inputs before the run can mutate dependent work."""
         from .processes import inspect_recorded_writers
@@ -123,22 +148,43 @@ class Store:
         if (self.db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_runs'").fetchone() and
                 self.db.execute('SELECT 1 FROM wf_runs WHERE run_id=?', (run,)).fetchone()):
             raise Blocked('historical run ID already exists; choose a fresh run ID, never replay it')
-        try:
+        saved_contract = canonical(contract if contract is not None else {})
+        saved_executor = canonical(executor if executor is not None else {})
+        saved_authority = canonical(authority if authority is not None else {})
+        saved_base = review_base or baseline
+        details = canonical({'baseline': baseline, 'review_base': saved_base})
+        def write():
             with self.transaction() as db:
                 db.execute("INSERT INTO execution_runs VALUES(?,'running',?,NULL,NULL)", (run, baseline))
-                db.execute('INSERT INTO execution_run_inputs VALUES(?,?,?,?,?)', (
-                    run, canonical(contract if contract is not None else {}),
-                    canonical(executor if executor is not None else {}),
-                    canonical(authority if authority is not None else {}), review_base or baseline))
-                self.history(run, None, 'invocation', 'started', {'baseline': baseline, 'review_base': review_base or baseline}, db=db)
+                db.execute('INSERT INTO execution_run_inputs VALUES(?,?,?,?,?)',
+                           (run, saved_contract, saved_executor, saved_authority, saved_base))
+                self._history_insert(db, run, None, 'invocation', 'started', details, time.time())
+        def completed():
+            row = self.db.execute('SELECT baseline FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+            saved = self.input(run)
+            return row is not None and row['baseline'] == baseline and saved == {
+                'contract': json.loads(saved_contract), 'executor': json.loads(saved_executor),
+                'authority': json.loads(saved_authority), 'review_base': saved_base}
+        try:
+            self._required_write('run input', write, completed)
         except sqlite3.IntegrityError:
             raise Blocked('run ID already exists; inspect its progress and choose a fresh run ID, never replay it') from None
 
     def history(self, run, task, kind, state, details=None, *, db=None):
         """Append operation-local facts; never replace a prior failed attempt."""
-        target = db or self.db
-        target.execute('INSERT INTO execution_history(run_id,task_id,kind,state,details,recorded_at) VALUES(?,?,?,?,?,?)',
-                       (run, task, kind, state, canonical(details or {}), time.time()))
+        details = canonical(details or {})
+        recorded_at = time.time()
+        if db is not None:
+            self._history_insert(db, run, task, kind, state, details, recorded_at)
+            return
+        def write():
+            with self.transaction() as tx:
+                self._history_insert(tx, run, task, kind, state, details, recorded_at)
+        def completed():
+            return bool(self.db.execute(
+                'SELECT 1 FROM execution_history WHERE run_id=? AND task_id IS ? AND kind=? AND state=? AND details=? AND recorded_at=?',
+                (run, task, kind, state, details, recorded_at)).fetchone())
+        self._required_write('operation history', write, completed)
 
     def input(self, run):
         row = self.db.execute('SELECT contract,executor,authority,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
@@ -167,12 +213,29 @@ class Store:
 
     def task(self, run, task, state, baseline, result=None, details=None):
         details = details or {}
-        self.db.execute('INSERT INTO execution_tasks VALUES(?,?,?,?,?,?) ON CONFLICT(run_id,task_id) DO UPDATE SET state=excluded.state,result=excluded.result,details=excluded.details',
-                        (run, task, state, baseline, result, canonical(details)))
-        self.history(run, task, 'task', state, {'baseline': baseline, 'result': result, **details})
+        saved_details = canonical(details)
+        history = canonical({'baseline': baseline, 'result': result, **details})
+        def write():
+            with self.transaction() as db:
+                db.execute('INSERT INTO execution_tasks VALUES(?,?,?,?,?,?) ON CONFLICT(run_id,task_id) DO UPDATE SET state=excluded.state,result=excluded.result,details=excluded.details',
+                           (run, task, state, baseline, result, saved_details))
+                self._history_insert(db, run, task, 'task', state, history, time.time())
+        def completed():
+            row = self.db.execute('SELECT state,baseline,result,details FROM execution_tasks WHERE run_id=? AND task_id=?',
+                                  (run, task)).fetchone()
+            return row is not None and tuple(row) == (state, baseline, result, saved_details)
+        self._required_write('task progress for ' + task, write, completed)
+
     def finish(self, run, state, result=None, error=None):
-        self.db.execute('UPDATE execution_runs SET state=?,result=?,error=? WHERE run_id=?', (state,result,error,run))
-        self.history(run, None, 'invocation', state, {'result': result, 'error': error} if error else {'result': result})
+        details = canonical({'result': result, 'error': error} if error else {'result': result})
+        def write():
+            with self.transaction() as db:
+                db.execute('UPDATE execution_runs SET state=?,result=?,error=? WHERE run_id=?', (state, result, error, run))
+                self._history_insert(db, run, None, 'invocation', state, details, time.time())
+        def completed():
+            row = self.db.execute('SELECT state,result,error FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+            return row is not None and tuple(row) == (state, result, error)
+        self._required_write('run progress', write, completed)
     def abandon(self, run):
         """Release an explicitly abandoned run, never replay or complete its effects.
 
