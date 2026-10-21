@@ -7,6 +7,7 @@ import tempfile
 import threading
 import time
 import unittest
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from starlette.testclient import TestClient
@@ -171,6 +172,18 @@ class HttpTests(unittest.TestCase):
         with urlopen(request, timeout=2) as response:
             self.assertEqual(response.status, 200)
             self.assertEqual(response.headers["Cache-Control"], "no-store")
+        # urllib preserves this encoded slash, exercising the ASGI raw-path boundary
+        # rather than only Starlette's decoded route parameters.
+        with urlopen(f"http://127.0.0.1:{port}/runs/id-run%2Fpart", timeout=2) as response:
+            self.assertEqual(response.status, 200)
+            self.assertEqual(response.read(), b"<main>safe asset</main>")
+            self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        for path in ("/runs/id-bad%GG", "/runs/id-one/two", "/missing.js"):
+            with self.subTest(path=path):
+                with self.assertRaises(HTTPError) as raised:
+                    urlopen(f"http://127.0.0.1:{port}{path}", timeout=2)
+                self.assertEqual(raised.exception.code, 404)
+                self.assertEqual(raised.exception.headers["Content-Security-Policy"], self.client.get("/").headers["content-security-policy"])
 
     def test_startup_asset_inventory_rejects_later_symlink_substitutions(self):
         assets = Path(self.tmp.name) / "assets"
@@ -188,6 +201,34 @@ class HttpTests(unittest.TestCase):
         response = nested_client.get("/nested/safe.js")
         self.assertEqual(response.status_code, 404)
         self.assert_safe(response)
+
+    def test_run_shell_accepts_one_percent_encoded_actual_id_component(self):
+        for path in (
+            "/runs/id-plain",
+            "/runs/id-reserved%2Fpart%3Fquery%23fragment",
+            "/runs/id-%E6%9D%B1%E4%BA%AC",
+            "/runs/id-percent%2525",
+            "/runs/id-...",
+            "/runs/id-unknown.js",
+        ):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.text, "<main>safe asset</main>")
+                self.assert_safe(response)
+        for path in (
+            "/runs/id-bad%",
+            "/runs/id-bad%2",
+            "/runs/id-bad%GG",
+            "/runs/id-%FF",
+            "/runs/id-one/two",
+            "/runs/id-",
+            "/runs/not-an-id",
+        ):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual((response.status_code, response.json()["code"]), (404, "not_found"))
+                self.assert_safe(response)
 
     def test_host_origin_method_and_raw_paths_are_rejected(self):
         bad = self.client.get("/api/monitor/v1/runs", headers={"host": "localhost:8765", **self.api_headers})

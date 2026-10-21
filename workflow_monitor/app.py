@@ -9,6 +9,7 @@ from pathlib import Path
 import stat
 import time
 from typing import Any, Protocol
+from urllib.parse import unquote_to_bytes
 
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -72,6 +73,32 @@ def _assets(root: str | Path) -> tuple[int, dict[str, tuple[str, ...]]]:
         os.close(root_fd)
         raise ValueError("assets must contain index.html")
     return root_fd, files
+
+
+def _encoded_run_id(raw_path: bytes) -> bool:
+    """Accept only the one raw URL component used by the run shell route."""
+    prefix = b"/runs/id-"
+    if not raw_path.startswith(prefix):
+        return False
+    component = raw_path[len(prefix):]
+    if not component or b"/" in component:
+        return False
+    safe = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~*'"
+    index = 0
+    while index < len(component):
+        byte = component[index]
+        if byte in safe:
+            index += 1
+            continue
+        if byte != ord("%") or index + 2 >= len(component) or any(
+                digit not in b"0123456789abcdefABCDEF" for digit in component[index + 1:index + 3]):
+            return False
+        index += 3
+    try:
+        unquote_to_bytes(component).decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return True
 
 
 def _read_asset(root_fd: int, parts: tuple[str, ...]) -> bytes:
@@ -523,9 +550,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         item = next((value for value in records + unknown if value["ref"] == request.path_params["record_ref"]), None)
         return JSONResponse(item) if item else _error("not_found", 404)
 
-    async def static(request: Request) -> Response:
-        name = request.path_params.get("path", "")
-        path = "/index.html" if name == "" else "/" + name
+    def asset_response(path: str) -> Response:
         asset = fixed_assets.get(path)
         if asset is None:
             return _error("not_found", 404)
@@ -534,6 +559,16 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         except OSError:
             return _error("not_found", 404)
         return Response(content, media_type=mimetypes.guess_type(path)[0] or "application/octet-stream")
+
+    async def run_shell(request: Request) -> Response:
+        raw_path = request.scope.get("raw_path")
+        if not isinstance(raw_path, bytes) or not _encoded_run_id(raw_path):
+            return _error("not_found", 404)
+        return asset_response("/index.html")
+
+    async def static(request: Request) -> Response:
+        name = request.path_params.get("path", "")
+        return asset_response("/index.html" if name == "" else "/" + name)
 
     def secure(response: Response) -> Response:
         response.headers.update({"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
@@ -562,6 +597,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         Route("/api/monitor/v1/runs/{run_ref}/history", history, methods=["GET"]),
         Route("/api/monitor/v1/runs/{run_ref}/records/{record_ref}", record, methods=["GET"]),
         Route("/api/monitor/v1/runs/{run_ref}/followups", followups, methods=["GET"]),
+        Route("/runs/{run_path:path}", run_shell, methods=["GET", "HEAD"]),
         Route("/{path:path}", static, methods=["GET", "HEAD"]),
     ])
     app.add_middleware(BaseHTTPMiddleware, dispatch=protected)

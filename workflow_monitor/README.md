@@ -135,8 +135,9 @@ asset-building overrides. Stopping it is the rollback: it closes observation onl
 Git, authoritative SQLite rows, and any writer untouched. It serves only the fixed startup asset inventory (not
 sourcemaps, symlinks, directories, or arbitrary files). Rebuilding the active asset directory replaces hashed JS/CSS filenames but does not refresh that startup inventory: the HTML can load while its assets return JSON 404 responses and browser MIME errors. Finish the build before starting/restarting the monitor, or serve a separate copy of the built assets for a stable preview while another process rebuilds. Restart only the monitor, not the workflow worker or Pi session.
 
-It exposes closed GET routes:
+It exposes closed GET routes. A direct run shell uses `/runs/id-<percent-encoded actual run ID>`: the server validates one raw encoded component before routing can decode a slash, then serves only the fixed startup `index.html`. Unknown IDs are resolved by the client against its inventory; malformed IDs, extra path segments, APIs, and assets receive closed errors rather than an HTML fallback.
 
+- `/runs/id-<percent-encoded actual run ID>`
 - `/api/monitor/v1/runs`
 - `/api/monitor/v1/runs/{run_ref}/snapshot`
 - `/api/monitor/v1/runs/{run_ref}/history`
