@@ -10,12 +10,10 @@ applicable accepted records and their supersession links. Accepted decisions con
 outcomes; they do not authorize implementation or prove it complete. Proposed decisions
 are not binding. Preserve superseded decisions and their rationale.
 
-Records use `ADR-NNNN-short-title.md`, consecutive identifiers, and sections for status,
+Records use `ADR-NNNN-short-title.md`, increasing identifiers (do not renumber or reuse removed IDs), and sections for status,
 decision, context/rationale, consequences, provenance and supersession. Map every direct
 record here with its status and a short purpose. Do not duplicate specifications or
 Git-owned completion inventories.
 
-- [ADR-0001: Dependency-first, top-to-bottom workflow graph](ADR-0001-dependency-first-top-to-bottom-graph.md) — **accepted** owner direction; readability integrates after completed T017/T018. Implementation approval remains pending.
-- [ADR-0002: Human-first workflow-monitor panels](ADR-0002-human-first-monitor-panels.md) — **accepted** owner direction; useful recorded explanations precede accessible technical references. Implementation approval remains pending.
 - [ADR-0003: Current launch authority and authorization-neutral tasks](ADR-0003-current-launch-authority-and-neutral-tasks.md) — **accepted** owner direction; historical planning-only wording does not block owner-authorized task execution; final planning review keeps task instructions neutral.
 - [ADR-0004: Shared routine worker permissions without repeated approval](ADR-0004-shared-routine-worker-permissions.md) — **accepted** owner direction; small isolated tests/databases and ordinary scoped fixes use shared defaults, with resource, data and external-action boundaries preserved.
