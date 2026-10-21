@@ -16,12 +16,14 @@ def editable_path(project, name):
 
 
 class FocusedGit:
-    def __init__(self, project, task):
+    def __init__(self, project, task, resume_facts=None):
         self.project, self.task = Path(project), task
         # This is history for reporting, not a continuation-admission baseline.
         self.base = git(project, 'rev-parse', 'HEAD').decode().strip()
-        self.task_edited = set()
-        self.known_artifacts = set()
+        facts = resume_facts if isinstance(resume_facts, dict) else {}
+        self.resumed_paths = set(facts.get('paths', []))
+        self.task_edited = set(self.resumed_paths)
+        self.known_artifacts = set(facts.get('artifacts', []))
 
     def command(self, phase, call):
         """Commands are never filesystem/Git admission points."""
@@ -33,16 +35,28 @@ class FocusedGit:
         editable_path(self.project, name)
         # This is an actual write boundary, not a worktree snapshot: do not overwrite
         # bytes that were already modified when the task selected this path.
-        if path_has_preexisting_changes(self.project, name):
-            raise Blocked('pre-existing dirty path is not task-owned: ' + name)
         limits = self.task.get('owned_paths')
         artifact = self._matches(name, self.task.get('generated_outputs', []))
+        known = name in (self.known_artifacts if artifact else self.resumed_paths)
+        if path_has_preexisting_changes(self.project, name) and not known:
+            raise Blocked('pre-existing dirty path is not task-owned: ' + name)
         if limits is not None and not self._matches(name, limits) and not artifact:
             raise Blocked('path outside optional owned_paths: ' + name)
         if artifact:
             self.known_artifacts.add(name)
         else:
             self.task_edited.add(name)
+
+    def cleanup_artifact(self, name):
+        """Delete only one task-known generated file, never an output tree."""
+        path = safe_path(self.project, name)
+        if (name not in self.known_artifacts or not self._matches(name, self.task.get('generated_outputs', []))
+                or not path.is_file()):
+            raise Blocked('unsafe generated-artifact cleanup target: ' + name)
+        path.unlink()
+
+    def facts(self):
+        return {'paths': sorted(self.task_edited), 'artifacts': sorted(self.known_artifacts)}
 
     def _checkpoint_result(self, sha, parent, owned):
         if git(self.project, 'rev-list', '--parents', '-n', '1', sha).decode().split() != [sha, parent]:

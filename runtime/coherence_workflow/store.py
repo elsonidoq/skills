@@ -210,6 +210,21 @@ class Store:
                 (run, task, kind, state, details, recorded_at)).fetchone())
         self._required_write('operation history', write, completed)
 
+    def task_facts(self, run, task):
+        """Return only paths/artifacts recorded before an unfinished task interruption."""
+        paths, artifacts = set(), set()
+        for row in self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='mutation' AND state='claimed' ORDER BY seq", (run, task)):
+            try:
+                facts = json.loads(row['details'])
+            except (TypeError, ValueError):
+                raise Blocked('resume cannot continue task ' + task + ': saved mutation facts are unreadable') from None
+            for key, target in (('paths', paths), ('artifacts', artifacts)):
+                values = facts.get(key, [])
+                if not isinstance(values, list) or any(not isinstance(value, str) or not value for value in values):
+                    raise Blocked('resume cannot continue task ' + task + ': saved mutation facts are invalid')
+                target.update(values)
+        return {'paths': sorted(paths), 'artifacts': sorted(artifacts)}
+
     def input(self, run):
         row = self.db.execute('SELECT contract,executor,authority,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
         if not row:

@@ -410,7 +410,7 @@ class Engine:
                 recorder.emit(preparation, 'prepare', 'started', task_id=task['id'])
                 focused = None
                 try:
-                    focused = FocusedGit(project, task)
+                    focused = FocusedGit(project, task, store.task_facts(self.run, task['id']) if self.resume else None)
                     store.task(self.run, task['id'], 'running', focused.base)
                     recorder.emit(preparation, 'prepare', 'passed', task_id=task['id'])
                     gate_number = [0]
@@ -460,6 +460,7 @@ class Engine:
                     def claim(name):
                         if name not in claimed_paths:
                             focused.claim(name)
+                            store.history(self.run, task['id'], 'mutation', 'claimed', focused.facts())
                             claimed_paths.add(name)
                     try:
                         text = self._prompt_worker(worker,
@@ -475,7 +476,7 @@ class Engine:
                             'Select source edit and commit paths explicitly; preserve unknown and pre-existing bytes. '
                             'Generated outputs are cleanup guidance, never a registration or command prerequisite.\n'
                             'Task: ' + canonical(task), claim=claim, command=focused.command,
-                            saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
+                            cleanup=focused.cleanup_artifact, saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
                     except BaseException as exc:
                         state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                         recorder.emit(worker_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
@@ -517,7 +518,7 @@ class Engine:
                                         'If no safe correction remains or a material decision is needed, state that blocker. '
                                         'The runner will rerun the affected required command before checkpointing.\n'
                                         'Actual failed attempt: ' + canonical(failure.attempt),
-                                        claim=claim, command=focused.command, reuse_key=reuse_key)
+                                        claim=claim, command=focused.command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
                                 except BaseException as exc:
                                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                                     recorder.emit(corrective_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
@@ -555,7 +556,7 @@ class Engine:
                                     'scoped correction if one is safe. Do not bypass hooks or signing, reset, rebase, '
                                     'or adopt unrelated work. The runner will rerun affected REQUIRED checks and the '
                                     'checkpoint with normal Git configuration intact.\nActual checkpoint error: ' + str(exc),
-                                    claim=claim, command=focused.command, reuse_key=reuse_key)
+                                    claim=claim, command=focused.command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
                             except BaseException as correction_error:
                                 correction_state = 'interrupted' if isinstance(correction_error, (KeyboardInterrupt, SystemExit)) else 'failed'
                                 recorder.emit(corrective_occurrence, 'worker', correction_state, task_id=task['id'], facts={'role': role, 'error_category': _failure(correction_error)})
