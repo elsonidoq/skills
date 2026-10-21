@@ -393,6 +393,8 @@ gate for affected review and renewed approval, never fabricated historical requi
    inline/local fallback. No independent planning
    reviewer is required for this path; implementation's independent review is unchanged.
    Apply the dependency evidence/permission review above before combined approval.
+   Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
+   temporary phase/approval status belongs in the approval record, not executable task instructions.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries.
    Source carries needs; separate tasks carry only independently necessary work units.
@@ -482,6 +484,8 @@ an independent reviewer before assigning their work.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries
    in direct Standard and managed/helper plans.
+   Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
+   temporary phase/approval status belongs in the approval record, not executable task instructions.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
    Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)

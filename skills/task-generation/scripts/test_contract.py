@@ -140,6 +140,23 @@ class TaskGenerationContractTests(unittest.TestCase):
         self.assertIn("Do not require final task/implementation approval", TEXT)
 
 
+    def test_authorization_neutral_authoring_and_final_planning_review(self):
+        guidance = ' '.join(TEXT.split('### Authorization-neutral tasks', 1)[1].split(
+            '## Structured executable handoff', 1)[0].split())
+        for clause in ('authorization-neutral work instructions', 'in the approval record, not task',
+                       'Preserve genuine action-specific permission boundaries and manual gates',
+                       'small isolated tests and local test databases without an extra owner question',
+                       'avoid exhausting machine resources or affecting unrelated data/services'):
+            self.assertIn(clause, guidance)
+        review = ' '.join(TEXT.split('## Review and handoff', 1)[1].split())
+        self.assertIn('At final planning review, check that executable tasks are authorization-neutral', review)
+        planner = (Path(__file__).parents[2] / 'planner' / 'SKILL.md').read_text()
+        for start, end in (('3. **Review — planner-owned', '4. **Combined approval'),
+                           ('4. **`overall_review`', '5. **')):
+            stage = planner.split(start, 1)[1].split(end, 1)[0]
+            self.assertIn('../task-generation/SKILL.md#authorization-neutral-tasks', stage)
+            self.assertIn('temporary phase/approval status belongs in the approval record', stage)
+
     def test_adapter_legacy_and_checkpoint_boundaries_remain(self):
         self.assertIn("Existing task-embedded requirements remain valid for legacy", TEXT)
         self.assertIn("Keep the stage create-only", TEXT)

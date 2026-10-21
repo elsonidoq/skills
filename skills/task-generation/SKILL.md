@@ -183,6 +183,15 @@ When a check is specified, run it after the relevant work and report its real ou
 or failed checks are not passes. Keep owner-required checks and actual permission boundaries;
 do not impose generic acceptance boilerplate or manual gates on ordinary coding.
 
+### Authorization-neutral tasks
+
+Write executable tasks as authorization-neutral work instructions. Keep temporary phase status
+such as "planning only" or "implementation awaiting approval" in the approval record, not task
+descriptions or check permissions. Preserve genuine action-specific permission boundaries and
+manual gates. Routine verification may use small isolated tests and local test databases without
+an extra owner question; keep data and execution bounded to avoid exhausting machine resources
+or affecting unrelated data/services.
+
 ## Structured executable handoff (both adapters)
 
 For executable intake, emit JSON or YAML as a task list or an object containing `tasks`.
@@ -220,6 +229,9 @@ For a [PROTOTYPE] task, preserve the marker and bounded informational
 scope in the handoff and worker brief. Reuse unchanged applicable proof once with all mappings;
 keep routine teardown inside its task. A separate cleanup task needs an
 actual independently consequential resource or outcome.
+
+At final planning review, check that executable tasks are authorization-neutral and temporary
+approval status is confined to the approval record; retain real action-specific permission gates.
 
 Review selection/omission, real-runtime evidence, applicable dependencies, proof lifetime,
 production acceptance, disproof/renewal and feasibility through both adapters/direct entry.
