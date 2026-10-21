@@ -1,6 +1,7 @@
 // SDK transport only. SDK owns tools, retries, compaction and conversation state.
 import crypto from 'node:crypto';
 import path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { constants } from 'node:fs';
 import { access, mkdir, readFile, writeFile, realpath } from 'node:fs/promises';
 import readline from 'node:readline';
@@ -83,7 +84,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
   let sessionManager;
   if (savedSession) {
     if (typeof savedSession !== 'object' || typeof savedSession.id !== 'string' ||
-        typeof savedSession.file !== 'string' || JSON.stringify(savedSession.compatibility) !== JSON.stringify(compatibility)) {
+        typeof savedSession.file !== 'string' || !isDeepStrictEqual(savedSession.compatibility, compatibility)) {
       throw new Error('saved session identity or effective resources mismatch');
     }
     const sessionFile = await realpath(savedSession.file);

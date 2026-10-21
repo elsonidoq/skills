@@ -29,6 +29,31 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 
+test('saved worker reopens after Python-style key sorting but rejects changed resources', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-session-order-'));
+  const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'};
+  const request = {project, executor, reuseKey: 'same-task'};
+  try {
+    const created = await createWorkflowSession(request, async () => ({}));
+    let savedSession;
+    try {
+      created._coherenceSessionManager.appendMessage({role: 'assistant', content: [], stopReason: 'stop',
+        api: 'test', provider: 'fixture', model: 'fixture', usage: {}});
+      savedSession = JSON.parse(JSON.stringify(created.coherenceSavedSession));
+    } finally { created.dispose(); }
+    savedSession.compatibility = Object.fromEntries(Object.entries(savedSession.compatibility).sort());
+    const reopened = await createWorkflowSession({...request, savedSession}, async () => ({}));
+    try { assert.equal(reopened.coherenceSavedSession.id, savedSession.id); }
+    finally { reopened.dispose(); }
+    for (const [key, value] of Object.entries({project: '/different', provider: 'different', model: 'different',
+      effort: 'low', readOnly: true, reuseKey: 'different', extra: true})) {
+      await assert.rejects(createWorkflowSession({...request,
+        savedSession: {...savedSession, compatibility: {...savedSession.compatibility, [key]: value}}},
+      async () => ({})), /saved session identity or effective resources mismatch/);
+    }
+  } finally { await fs.rm(project, {recursive: true, force: true}); }
+});
+
 test('provider-bound routine authority reaches the SDK prompt without sending a provider request', async () => {
   let received;
   const session = {
