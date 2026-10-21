@@ -59,9 +59,12 @@ test.afterAll(async () => {
 
 test('keeps live navigation stable and ignores an old selected-run response', async ({ page }) => {
   await page.clock.install(); await page.goto('/')
+  const old = page.getByRole('button', { name: 'Recorded run · <old-run> · recorded' })
   const current = page.getByRole('button', { name: 'Recorded run · <img src=x onerror=alert(1)> · recorded' })
+  await expect(old).toBeVisible()
   await expect(current).toBeVisible()
   await expect(page.locator('.run-list img')).toHaveCount(0)
+  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <old-run>')
   await current.click()
   await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <img src=x onerror=alert(1)>')
   await expect(page.getByLabel('Selected run').locator('img')).toHaveCount(0)
