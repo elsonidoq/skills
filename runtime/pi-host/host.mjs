@@ -153,6 +153,19 @@ export async function createWorkflowSession({project, executor, readOnly = false
 function observation(session) {
   const usage = session.getContextUsage?.();
   const stats = session.getSessionStats?.();
+  // Resolve reserve through the SDK's model-specific precedence, not a parallel
+  // workflow default. Missing optional settings remain unknown (fresh routing).
+  let compaction;
+  try { compaction = session.settingsManager?.getCompactionSettings(session.model); }
+  catch { /* optional observation only */ }
+  const headroom = {
+    context_window: usage?.contextWindow ?? null,
+    effective_reserve: compaction?.reserveTokens ?? null,
+    occupancy: usage?.tokens ?? null,
+    compaction_enabled: compaction?.enabled ?? null,
+    compaction_applicable: session.model && Number.isFinite(usage?.contextWindow)
+      ? usage.contextWindow > 0 : null,
+  };
   const entries = session._coherenceSessionManager?.getEntries?.() ?? [];
   // Persisted compaction entries, rather than start/end events, are the only
   // accounting evidence: an aborted compaction never creates an entry here.
@@ -167,6 +180,7 @@ function observation(session) {
     counters: stats?.tokens ?? null,
     costs: {estimated_usd: stats?.cost ?? null},
     compaction_entries: compactionEntries,
+    headroom,
     context_tokens: usage?.tokens ?? null,
     context_window: usage?.contextWindow ?? null,
   };

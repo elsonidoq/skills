@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {test} from 'node:test';
 import {SessionManager} from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
-import {promptSession, sessionObservationRecord} from '../pi-host/host.mjs';
+import {createWorkflowSession, promptSession, sessionObservationRecord} from '../pi-host/host.mjs';
 
 test('official SessionManager create/open retains a private identity without ambient discovery', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-saved-session-'));
@@ -42,6 +42,8 @@ test('new host omits standalone session observations unless the adapter opts in'
     type: 'session', session: session.coherenceSavedSession,
     before: {session_id: 'session-1', branch: 'session-1', epoch: 'opened', entry: 'entry-1',
       counters: {input: 1}, costs: {estimated_usd: null}, compaction_entries: [],
+      headroom: {context_window: 2, effective_reserve: null, occupancy: 1,
+        compaction_enabled: null, compaction_applicable: null},
       context_tokens: 1, context_window: 2},
   });
 });
@@ -76,4 +78,37 @@ test('prompt waits for SDK idle and reports actual compaction event names', asyn
   assert.equal(await promptSession(session, 'dummy work', event => events.push(event)), 'done');
   assert.equal(idle, true);
   assert.deepEqual(events.map(event => event.event), ['compaction_start', 'compaction_end']);
+});
+
+test('production SDK observations include effective model reserve and applicable headroom', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-headroom-'));
+  try {
+    const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
+    process.env.PI_CODING_AGENT_DIR = path.join(project, 'private-agent');
+    try {
+    await fs.mkdir(path.join(project, '.pi'));
+    await fs.writeFile(path.join(project, '.pi/settings.json'), JSON.stringify({
+      compaction: {enabled: true, reserveTokens: 1234,
+        modelOverrides: {'openai/gpt-4.1': {reserveTokens: 2345}}},
+    }));
+    const session = await createWorkflowSession({project,
+      executor: {provider: 'openai', model: 'gpt-4.1', effort: 'medium'}}, async () => ({}));
+    try {
+      const measured = sessionObservationRecord({sessionObservations: true}, session).before.headroom;
+      const usage = session.getContextUsage();
+      assert.equal(measured.effective_reserve, 2345);
+      assert.equal(measured.context_window, usage.contextWindow);
+      assert.equal(measured.occupancy, usage.tokens);
+      assert.equal(measured.compaction_enabled, true);
+      assert.equal(measured.compaction_applicable, true);
+      assert.ok(measured.context_window - measured.effective_reserve - measured.occupancy >= 150000);
+      await fs.writeFile(path.join(project, '.pi/settings.json'), JSON.stringify({compaction: {enabled: false}}));
+      await session.settingsManager.reload();
+      assert.equal(sessionObservationRecord({sessionObservations: true}, session).before.headroom.compaction_enabled, false);
+    } finally { session.dispose(); }
+    } finally {
+      if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
+      else process.env.PI_CODING_AGENT_DIR = previousAgentDir;
+    }
+  } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
