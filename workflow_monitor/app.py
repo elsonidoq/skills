@@ -171,6 +171,12 @@ def _page(data: dict[str, Any], reference: str, after: int | str, size: int) -> 
     return result
 
 
+def _outstanding_question(row: dict[str, Any]) -> bool:
+    latest = next((item["kind"] for item in reversed(row["observations"])
+                   if item["kind"] in {"question_requested", "answer_returned", "answer_sent", "delivery_failed"}), None)
+    return latest == "question_requested"
+
+
 def _task_progress(graph: dict[str, Any], public: dict[str, Any]) -> None:
     """Attach closed descriptor-task facts using the complete, unpaged snapshot."""
     occurrence_rows = {(row["run_id"], row["occurrence_id"]): row for row in graph.get("occurrences", [])}
@@ -206,8 +212,23 @@ def _task_progress(graph: dict[str, Any], public: dict[str, Any]) -> None:
         agents = [occurrences[_ref_occurrence(row["run_id"], row["occurrence_id"])] for row in rows
                   if _ref_occurrence(row["run_id"], row["occurrence_id"]) in occurrences and
                   occurrences[_ref_occurrence(row["run_id"], row["occurrence_id"])]["role"] != "non_model"]
-        waiting = next((item for item in reversed(agents)
-                        if item.get("execution_summary", {}).get("state") == "waiting"), None)
+        # Manual-gate questions precede the worker and belong to a non-model gate.
+        # Resolve each question independently using all task evidence, not agent summaries.
+        terminal_kinds = {"returned", "passed", "failed", "interrupted", "abandoned"}
+        run_stopped = any(run_id == run["display_id"] and row["phase"] == "terminal" and
+                          any(item["kind"] in terminal_kinds for item in row["observations"])
+                          for (run_id, _), row in occurrence_rows.items())
+        waiting = None
+        for row in reversed(rows):
+            if run_stopped or not _outstanding_question(row):
+                continue
+            parent_ids = {item["facts"].get("parent_occurrence_id") for item in row["observations"]
+                          if isinstance(item["facts"].get("parent_occurrence_id"), str)}
+            parents = [occurrence_rows.get((row["run_id"], parent_id)) for parent_id in parent_ids]
+            if any(parent and any(item["kind"] in terminal_kinds for item in parent["observations"]) for parent in parents):
+                continue
+            waiting = occurrences[_ref_occurrence(row["run_id"], row["occurrence_id"])]
+            break
         active = next((item for item in reversed(agents)
                        if item.get("execution_summary", {}).get("state") == "running"), None)
         uncertain = next((item for item in reversed(agents)
@@ -218,7 +239,7 @@ def _task_progress(graph: dict[str, Any], public: dict[str, Any]) -> None:
                         if any(item["kind"] == "started" for item in row["observations"])), None)
         if waiting:
             task["progress"] = {"state": "running", "qualification": "waiting_for_input"}
-            task["annotation"] = {"code": "waiting_for_input", "occurrence_ref": waiting["ref"]}
+            task["annotation"] = {"code": "waiting_for_input", "label": "Waiting for input", "occurrence_ref": waiting["ref"]}
         elif active:
             task["progress"] = {"state": "running", "qualification": active["execution_summary"]["qualification"]}
             task["reason"] = {"code": "task_started", "occurrence_ref": active["ref"]}
@@ -304,8 +325,7 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
                 type(row["facts"].get("approved")) is bool and type(row["facts"].get("finding_count")) is int
                 and row["facts"]["finding_count"] >= 0 for row in rows)
             questions = [candidate for candidate in scoped if candidate["parent_ref"] == item["ref"]]
-            outstanding = any(next((row["kind"] for row in reversed(next(source["observations"] for source, candidate in pairs if candidate is question))), None)
-                              == "question_requested" for question in questions)
+            outstanding = any(_outstanding_question(source) for source, candidate in pairs if candidate in questions)
             if typed_reviewer_result:
                 state, qualification = "success", None
             elif len(terminal & {"returned", "passed", "failed", "interrupted", "abandoned"}) > 1:

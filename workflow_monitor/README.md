@@ -68,7 +68,11 @@ For a complete retained descriptor, each public task also has pre-page `progress
 `reason`, and `annotation` facts. Pending means no task work or impediment; running is
 qualified; completion requires a successful focused checkpoint, never a worker return.
 A task-scoped failed step is failed, while an unstarted dependent is blocked with its
-public prerequisite reference. Outstanding input is a separate waiting annotation.
+public prerequisite reference. Outstanding input is a separate waiting annotation,
+including task-scoped manual-gate questions before any worker starts. Each question
+is resolved only by its own recorded answer or delivery failure; terminal task/parent
+or run evidence takes precedence over stale requests. Task waiting labels and the
+waiting count use full-snapshot evidence, not the loaded history page.
 An independent task never started when the run stopped remains pending with **“Not
 started; run stopped”**. Incomplete evidence stays qualified, and a later final-review
 rejection does not erase an earlier checkpoint. Missing or partial plans expose no task

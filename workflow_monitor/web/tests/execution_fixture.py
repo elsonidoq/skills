@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     # Simulate already-retained prose; no producer behavior is changed.
     presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
     with Authority(project) as owner:
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged', 'booleans-true', 'booleans-false'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(presentation)
@@ -37,6 +37,19 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                 emit(recorder, 'prepare', 'prepare', 'started')
                 emit(recorder, 'prepare', 'prepare', 'failed', error_category='blocked')
                 emit(recorder, 'terminal', 'terminal', 'failed', task=None)
+            elif run.startswith('manual-'):
+                for ordinal in range(49):
+                    emit(recorder, f'noise-{ordinal}', 'check', 'started', task=None, ordinal=ordinal)
+                emit(recorder, 'gate', 'gate', 'started', ordinal=1)
+                emit(recorder, 'gate-question', 'gate', 'question_requested', ordinal=1, parent_occurrence_id='gate')
+                if run == 'manual-answered':
+                    emit(recorder, 'gate-question', 'gate', 'answer_returned', ordinal=1, parent_occurrence_id='gate')
+                    emit(recorder, 'gate', 'gate', 'passed', ordinal=1)
+                elif run == 'manual-delivery':
+                    emit(recorder, 'gate-question', 'gate', 'delivery_failed', ordinal=1, parent_occurrence_id='gate', error_category='blocked')
+                    emit(recorder, 'gate', 'gate', 'failed', ordinal=1, error_category='blocked')
+                elif run == 'manual-stopped':
+                    emit(recorder, 'terminal', 'terminal', 'failed', task=None)
             else:
                 emit(recorder, 'worker', 'worker', 'started', role='worker')
                 if run == 'waiting':

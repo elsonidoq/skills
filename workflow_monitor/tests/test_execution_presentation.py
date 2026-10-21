@@ -195,6 +195,50 @@ class ExecutionPresentationTests(unittest.TestCase):
         self.assertEqual(dependent["progress"]["state"], "blocked")
         self.assertEqual(waiting["annotation"]["code"], "waiting_for_input")
 
+    def test_manual_gate_waiting_uses_full_task_questions_and_matching_resolution(self):
+        noise = [('run-a', f'noise-{i}', 'check', None, 'started', {}) for i in range(50)]
+        gate = [
+            ('run-a', 'gate', 'gate', 'one', 'started', {'ordinal': 1}),
+            ('run-a', 'question', 'gate', 'one', 'question_requested', {'parent_occurrence_id': 'gate'}),
+            # A different question's answer cannot clear the outstanding request.
+            ('run-a', 'other-question', 'gate', 'two', 'answer_returned', {'parent_occurrence_id': 'other-gate'}),
+        ]
+        for resolution in (None, 'answer_returned', 'answer_sent', 'delivery_failed'):
+            with self.subTest(resolution=resolution):
+                rows = noise + gate
+                if resolution:
+                    rows += [('run-a', 'question', 'gate', 'one', resolution, {'parent_occurrence_id': 'gate'})]
+                first, _ = self.view(rows)
+                task = first['tasks'][0]
+                if resolution is None:
+                    self.assertEqual(task['progress'], {'state': 'running', 'qualification': 'waiting_for_input'})
+                    self.assertEqual(task['annotation']['code'], 'waiting_for_input')
+                    question = next(item for item in first['occurrences'] if item['occurrence_id'] == 'question')
+                    self.assertEqual(task['annotation']['occurrence_ref'], question['ref'])
+                else:
+                    self.assertIsNone(task['annotation'])
+                    self.assertNotEqual(task['progress'].get('qualification'), 'waiting_for_input')
+                self.assertFalse(any(item['role'] == 'worker' for item in first['occurrences']))
+                self.assertEqual(len(first['records']), 50)
+                reference = first['runs'][0]['ref']
+                later = self.client.get(f"/api/monitor/v1/runs/{reference}/history?snapshot={first['snapshot_ref']}&cursor={first['next_cursor']}", headers=self.api_headers).json()
+                self.assertEqual(first['tasks'], later['tasks'])
+
+        # Resolving one of two same-task questions does not clear the other.
+        first, _ = self.view(noise + gate + [
+            ('run-a', 'second', 'gate', 'one', 'question_requested', {'parent_occurrence_id': 'gate'}),
+            ('run-a', 'second', 'gate', 'one', 'answer_returned', {'parent_occurrence_id': 'gate'}),
+        ])
+        self.assertEqual(first['tasks'][0]['annotation']['code'], 'waiting_for_input')
+
+        for phase, kind, expected in [('gate', 'failed', 'failed'), ('gate', 'passed', 'unknown'),
+                                       ('terminal', 'failed', 'unknown'), ('checkpoint', 'passed', 'completed')]:
+            with self.subTest(terminal=(phase, kind)):
+                first, _ = self.view(noise + gate + [
+                    ('run-a', 'gate' if phase == 'gate' else phase, phase, None if phase == 'terminal' else 'one', kind, {})])
+                self.assertEqual(first['tasks'][0]['progress']['state'], expected)
+                self.assertIsNone(first['tasks'][0]['annotation'])
+
     def test_incomplete_history_is_qualified_and_unavailable_plan_has_no_progress(self):
         with patch('workflow_monitor.app.qualify', return_value={'state': 'stopped', 'reason': None}):
             first, _ = self.view([('run-a', 'one', 'worker', 'one', 'started', {'role': 'worker'})])

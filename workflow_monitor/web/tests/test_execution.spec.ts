@@ -147,3 +147,27 @@ for (const value of [true, false]) test(`Details render approved/no-change ${val
   await expect(page.getByRole('button', { name: 'Load more history', exact: true })).toHaveCount(0)
   await expect(acceptance).toHaveText(before ?? '')
 })
+
+for (const state of ['waiting', 'answered', 'delivery', 'stopped']) test(`manual gate ${state} has pagination-independent task status before worker launch`, async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: `Recorded run · manual-${state} · recorded`, exact: true }).click()
+  await expect(page.locator('.planned-node')).toHaveCount(3)
+  const task = page.locator('.planned-node').filter({ hasText: 'T001' })
+  await expect(task).toContainText(`Plan progress: ${state === 'waiting' ? 'running' : state === 'delivery' ? 'blocked' : 'unknown'}`)
+  await task.click()
+  const details = page.getByLabel('Selected execution details')
+  if (state === 'waiting') {
+    await expect(task).toContainText('Waiting for input')
+    await expect(details).toContainText('waiting_for_input')
+  } else {
+    await expect(task).not.toContainText('Waiting for input')
+    await expect(details).not.toContainText('waiting_for_input')
+  }
+  await expect(page.getByLabel('Collapsed history badges')).toContainText(`${state === 'waiting' ? 1 : 0} waiting;`)
+  await expect(page.locator('.execution-node').filter({ hasText: /^Implement/ })).toHaveCount(0)
+  const before = await task.textContent()
+  await page.getByRole('button', { name: 'Load more history', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Load more history', exact: true })).toHaveCount(0)
+  await expect(task).toHaveText(before ?? '')
+  await expect(page.getByLabel('Collapsed history badges')).toContainText(`${state === 'waiting' ? 1 : 0} waiting;`)
+})
