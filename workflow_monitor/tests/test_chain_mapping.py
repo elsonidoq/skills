@@ -101,6 +101,30 @@ class ChainMappingTests(ProjectTest):
                          [("reviewer", "rejected"), ("fixer", "approved"), ("reviewer", "rejected")])
         self.assertEqual([(item["role"], item["outcome"]) for item in dto["chain"] if item["run_ref"] == by_run["fixer-failure"]],
                          [("reviewer", "rejected"), ("fixer", "failed")])
+        # The selected HTTP boundary must scope newly added chain data as well as
+        # occurrences/edges, even when several runs share one underlying reader.
+        from starlette.testclient import TestClient
+        from workflow_monitor.app import create_app
+        assets = self.root / 'dummy-assets'
+        assets.mkdir()
+        (assets/'index.html').write_text('<main>fixture</main>')
+        client = TestClient(create_app(Reader(self.project), assets, 8765), base_url='http://127.0.0.1:8765')
+        for reference in by_run.values():
+            response = client.get('/api/monitor/v1/runs/' + reference + '/snapshot',
+                                  headers={'sec-fetch-site': 'same-origin', 'x-workflow-monitor': '1'})
+            self.assertEqual(response.status_code, 200)
+            selected = response.json()
+            self.assertEqual({item['run_ref'] for item in selected['chain']}, {reference})
+            self.assertEqual(set(selected['chain_acceptance']), {reference})
+            selected_view = json.loads(subprocess.check_output([
+                'node', '--experimental-strip-types', '--input-type=module', '-e',
+                "import {graphFor} from './workflow_monitor/web/src/graph.ts'; "
+                "let data=''; for await (const chunk of process.stdin) data+=chunk; "
+                "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
+                input=json.dumps(selected).encode(), cwd=ROOT))
+            rendered_chain = {node['id'] for node in selected_view['nodes'] if 'chain-node' in node.get('className', '')}
+            self.assertEqual(rendered_chain, {item['ref'] for item in selected['chain']})
+
         # Consume actual producer IDs/relations in the production source module,
         # not a browser-only occurrence-targeted approximation.
         view = json.loads(subprocess.check_output([
