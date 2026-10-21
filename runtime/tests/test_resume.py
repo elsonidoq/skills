@@ -17,6 +17,40 @@ EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}
 
 
 class SameRunResumeTests(ProjectTest):
+    def test_persisted_approval_never_accepts_incoming_commits(self):
+        for ordinal in (1, 2):
+            with self.subTest(ordinal=ordinal), Authority(self.project) as owner:
+                run = 'approved-' + str(ordinal)
+                reviewed = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+                contract = {'tasks': []}
+                store = owner.store
+                store.start(run, reviewed, contract=contract, executor=EXECUTOR,
+                            authority={}, review_base=self.base)
+                store.review_dispatch(run, 'r1', review_base=self.base, review_head=reviewed)
+                store.review_outcome(run, 'r1', 'approved' if ordinal == 1 else 'rejected',
+                    findings=[] if ordinal == 1 else ['work.txt:1 - defect'],
+                    references={'base': self.base, 'head': reviewed})
+                if ordinal == 2:
+                    store.review_dispatch(run, 'fix', role='fixer', fixing_round=1,
+                        trigger_execution_id='r1', predecessor_execution_id='r1',
+                        review_base=self.base, review_head=reviewed)
+                    store.review_outcome(run, 'fix', 'approved', findings=[], references={'head': reviewed})
+                    store.review_dispatch(run, 'r2', review_ordinal=2, fixing_round=1,
+                        trigger_execution_id='fix', predecessor_execution_id='fix',
+                        review_base=self.base, review_head=reviewed)
+                    store.review_outcome(run, 'r2', 'approved', findings=[], references={'head': reviewed})
+                store.finish(run, 'interrupted', reviewed, 'after review outcome')
+                (self.project/'incoming.txt').write_text(str(ordinal))
+                git(self.project, 'add', '--', 'incoming.txt')
+                git(self.project, 'commit', '-m', 'unreviewed incoming')
+                store.resume(run)
+                def forbidden(*args, **kwargs):
+                    self.fail('persisted approval must not launch another session')
+                result = Engine(owner, run, contract, EXECUTOR, resume=True, adapter=forbidden).invoke()
+                self.assertEqual(result['sha'], reviewed)
+                self.assertNotEqual(result['sha'], git(self.project, 'rev-parse', 'HEAD').decode().strip())
+                self.assertEqual(store.db.execute('SELECT result FROM execution_runs WHERE run_id=?', (run,)).fetchone()[0], reviewed)
+
     def test_cli_resume_skips_recovered_checkpoint_and_retains_original_range(self):
         project, initial_calls, resumed_calls = self.project, [], []
         contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [

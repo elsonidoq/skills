@@ -347,6 +347,9 @@ class Engine:
         if state == 'approved':
             if len(reviews) != 1:
                 raise Blocked('review chain has no eligible completion stage')
+            head = reviews[0]['references'].get('head')
+            if not isinstance(head, str) or not head:
+                raise Blocked('approved review is missing its actually reviewed head; inspect retained review history')
             store.finish(self.run, 'complete', head)
             recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
             return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
@@ -371,6 +374,10 @@ class Engine:
                 'findings': reviews[1]['findings'][-1] if reviews[1].get('findings') else []}, reviews[1]['state']
         if final_state != 'approved':
             raise Blocked('independent final review findings (commits retained): ' + canonical(final_review))
+        if len(reviews) > 1:
+            head = reviews[1]['references'].get('head')
+            if not isinstance(head, str) or not head:
+                raise Blocked('approved final review is missing its actually reviewed head; inspect retained review history')
         store.finish(self.run, 'complete', head)
         recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
         return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
