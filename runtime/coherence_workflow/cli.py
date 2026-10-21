@@ -11,7 +11,7 @@ import uuid
 from .engine import Engine
 from .intake import load_contract
 from .pi_adapter import PiAdapter, parent_question, terminal_question
-from .store import Authority, Blocked, canonical, read_history
+from .store import Authority, Blocked, Store, canonical, read_history
 
 
 def _selected_providers(executor):
@@ -75,10 +75,10 @@ def status(project, run):
                         {'task_id': item['task_id'], 'kind': item['kind'], 'state': item['state'],
                          'details': _safe_history_details(item['details'])}
                         for item in db.execute('SELECT task_id,kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
+                result['usage'] = Store.usage_summary(type('Reader', (), {'db': db})(), run)
                 if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_review_executions'").fetchone():
                     # This is the safe owner result: parsed actionable findings and range/commit
                     # references, never raw reviewer payloads, prompts, or answers.
-                    from .store import Store
                     result['review_chain'] = Store.review_chain(type('Reader', (), {'db': db})(), run)
                     if result['review_chain']['executions'] and result['run']['error']:
                         result['run']['error'] = 'review outcome recorded; see review_chain'

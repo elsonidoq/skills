@@ -159,6 +159,13 @@ class Engine:
                     worker_occurrence = recorder.occurrence()
                     role = 'fixing_worker' if isinstance(self.contract.get('monitor'), dict) and self.contract['monitor'].get('correction_of') else 'worker'
                     recorder.emit(worker_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
+                    # Membership is one dispatched (run, task) pair, independent of
+                    # corrective prompts and never inferred from review references.
+                    store.usage_membership(self.run, task['id'])
+                    def record_usage(occurrence, outcome):
+                        # Optional telemetry must not replace the task/check/Git outcome.
+                        store.usage_interval(self.run, occurrence, task=task['id'], role=role,
+                                             outcome=outcome, interval=getattr(worker, 'last_interval', None))
                     question_occurrence = [None]
                     def worker_question(state):
                         mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
@@ -199,8 +206,10 @@ class Engine:
                         state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                         recorder.emit(worker_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
                         store.history(self.run, task['id'], 'worker', state, {'role': role, 'error': str(exc)})
+                        record_usage(worker_occurrence, state)
                         raise
                     recorder.emit(worker_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
+                    record_usage(worker_occurrence, 'settled')
                     store.history(self.run, task['id'], 'worker', 'returned', {'role': role})
                     check_occurrences = {}
                     def check_observe(kind, ordinal, code):
@@ -239,8 +248,10 @@ class Engine:
                                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                                     recorder.emit(corrective_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
                                     store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': str(exc)})
+                                    record_usage(corrective_occurrence, state)
                                     raise
                                 recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
+                                record_usage(corrective_occurrence, 'settled')
                                 store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
 
                     checks = correct_required_checks()
@@ -275,8 +286,10 @@ class Engine:
                                 correction_state = 'interrupted' if isinstance(correction_error, (KeyboardInterrupt, SystemExit)) else 'failed'
                                 recorder.emit(corrective_occurrence, 'worker', correction_state, task_id=task['id'], facts={'role': role, 'error_category': _failure(correction_error)})
                                 store.history(self.run, task['id'], 'worker', correction_state, {'role': role, 'correction': True, 'error': str(correction_error)})
+                                record_usage(corrective_occurrence, correction_state)
                                 raise
                             recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
+                            record_usage(corrective_occurrence, 'settled')
                             store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
                             checks = correct_required_checks()
                             continue
@@ -306,6 +319,10 @@ class Engine:
                 'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
                 'review_base': review_base, 'review_head': head,
             })
+            def record_reviewer_usage(outcome):
+                # Reviews have distinct run totals and never create task membership.
+                store.usage_interval(self.run, reviewer_occurrence, role='reviewer', outcome=outcome,
+                                     interval=getattr(reviewer, 'last_interval', None))
             review_question_occurrence = [None]
             def review_question(state):
                 mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
@@ -325,7 +342,9 @@ class Engine:
                     'outcome': 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
                     'error_category': _failure(exc),
                 })
+                record_reviewer_usage('interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed')
                 raise
+            record_reviewer_usage('settled')
             try:
                 value = json.loads(review)
             except ValueError:
@@ -354,7 +373,8 @@ class Engine:
                 raise Blocked('independent review findings (commits retained): ' + canonical(value))
             store.finish(self.run, 'complete', head)
             recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
-            return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head, 'checkpoints': checkpoints, 'review': value}
+            return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head, 'checkpoints': checkpoints,
+                    'review': value, 'usage': store.usage_summary(self.run)}
         except BaseException as exc:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, str(exc))

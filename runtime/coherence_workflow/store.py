@@ -111,6 +111,14 @@ class Store:
             seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
             execution_id TEXT NOT NULL, state TEXT NOT NULL, uncertainty INTEGER NOT NULL,
             findings TEXT, reference_json TEXT NOT NULL, recorded_at REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS execution_usage_memberships(
+            run_id TEXT NOT NULL, task_id TEXT NOT NULL, dispatched_at REAL NOT NULL,
+            PRIMARY KEY(run_id, task_id));
+        CREATE TABLE IF NOT EXISTS execution_usage_intervals(
+            seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
+            occurrence_id TEXT NOT NULL, task_id TEXT, role TEXT NOT NULL,
+            outcome TEXT NOT NULL, session_id TEXT, interval TEXT, unknown_reason TEXT,
+            recorded_at REAL NOT NULL, UNIQUE(run_id, occurrence_id, role));
         """)
         self.db.executescript("""
         CREATE TABLE IF NOT EXISTS execution_observations(
@@ -321,6 +329,76 @@ class Store:
         return {'executions': executions, 'review_count': sum(item['role'] == 'reviewer' for item in executions),
                 'fixing_round_count': sum(item['role'] == 'fixer' for item in executions),
                 'uncertain': any(item['uncertain'] for item in executions)}
+
+    def usage_membership(self, run, task):
+        """Best-effort distinct task dispatch membership, never an attempt counter."""
+        try:
+            self.authority.assert_held()
+            self.db.execute('INSERT OR IGNORE INTO execution_usage_memberships VALUES(?,?,?)',
+                            (run, task, time.time()))
+            return True
+        except (sqlite3.Error, Blocked):
+            return False
+
+    def usage_interval(self, run, occurrence_id, *, task=None, role, outcome, interval=None):
+        """Append one optional prompt interval without affecting workflow control flow."""
+        try:
+            self.authority.assert_held()
+            if not isinstance(occurrence_id, str) or not occurrence_id or not isinstance(role, str) or not role:
+                raise ValueError('usage interval needs occurrence and role')
+            if interval is not None and not isinstance(interval, dict):
+                raise ValueError('usage interval must be a record or unavailable')
+            session_id = interval.get('session_id') if interval else None
+            if not isinstance(session_id, str):
+                session_id = None
+            self.db.execute('INSERT OR IGNORE INTO execution_usage_intervals(run_id,occurrence_id,task_id,role,outcome,session_id,interval,unknown_reason,recorded_at) VALUES(?,?,?,?,?,?,?,?,?)',
+                            (run, occurrence_id, task, role, outcome, session_id,
+                             canonical(interval) if interval is not None else None,
+                             None if interval is not None else 'usage_observation_unavailable', time.time()))
+            return True
+        except (sqlite3.Error, Blocked, ValueError):
+            return False
+
+    def usage_summary(self, run):
+        """Safe optional accounting projection; legacy/missing data is unknown, never zero."""
+        try:
+            members = [row['task_id'] for row in self.db.execute(
+                'SELECT task_id FROM execution_usage_memberships WHERE run_id=? ORDER BY task_id', (run,))]
+            rows = [dict(row) for row in self.db.execute(
+                'SELECT * FROM execution_usage_intervals WHERE run_id=? ORDER BY seq', (run,))]
+        except sqlite3.Error:
+            return {'state': 'unknown', 'reason': 'usage_storage_unavailable'}
+        if not members and not rows:
+            return {'state': 'unknown', 'reason': 'usage_unavailable'}
+        def totals(items):
+            values = {'input': 0, 'output': 0, 'cache_read': 0, 'cache_write': 0, 'total_tokens': 0, 'estimated_usd': 0}
+            complete = {key: True for key in values}
+            for item in items:
+                record = json.loads(item['interval']) if item['interval'] else None
+                for key, source in (('input', ('tokens', 'input')), ('output', ('tokens', 'output')),
+                                    ('cache_read', ('tokens', 'cache_read')), ('cache_write', ('tokens', 'cache_write')),
+                                    ('total_tokens', ('total_tokens',)), ('estimated_usd', ('estimated_usd',))):
+                    value = record
+                    for part in source:
+                        value = value.get(part) if isinstance(value, dict) else None
+                    value = value.get('value') if isinstance(value, dict) else None
+                    if isinstance(value, (int, float)) and not isinstance(value, bool):
+                        values[key] += value
+                    else:
+                        complete[key] = False
+            return {key: values[key] if complete[key] else None for key in values}
+        try:
+            worker_rows = [row for row in rows if row['role'] != 'reviewer']
+            reviewer_rows = [row for row in rows if row['role'] == 'reviewer']
+            worker_totals, reviewer_totals = totals(worker_rows), totals(reviewer_rows)
+        except (TypeError, ValueError):
+            return {'state': 'unknown', 'reason': 'usage_record_unreadable'}
+        known_tasks = {row['task_id'] for row in worker_rows if row['task_id'] is not None}
+        return {'state': 'partial' if len(known_tasks) < len(members) or any(row['interval'] is None for row in rows) else 'available',
+                'memberships': members, 'interval_count': len(rows),
+                'worker_totals': worker_totals, 'reviewer_totals': reviewer_totals,
+                'unknown_reason': None if len(known_tasks) == len(members) and all(row['interval'] for row in rows)
+                                  else 'incomplete_optional_usage_coverage'}
 
     def finish(self, run, state, result=None, error=None):
         details = canonical({'result': result, 'error': error} if error else {'result': result})
