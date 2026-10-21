@@ -1,4 +1,4 @@
-"""T012/V2 synthetic usage persistence and safe CLI reporting."""
+"""T017 terminal-call JSONL attribution and safe CLI reporting."""
 import json
 import sqlite3
 from unittest.mock import patch
@@ -6,6 +6,7 @@ from unittest.mock import patch
 from coherence_workflow.cli import status
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
+from coherence_workflow.metric_artifacts import read_artifact
 from coherence_workflow.store import Authority
 from fixtures.support import ProjectTest
 
@@ -27,7 +28,7 @@ def interval(session, input_tokens, usd):
 
 
 class UsageReportingTests(ProjectTest):
-    def test_engine_store_and_cli_keep_distinct_membership_and_reviewer_totals_private(self):
+    def test_terminal_calls_append_exact_jsonl_ids_and_cli_reads_it_not_sqlite(self):
         project = self.project
 
         class Adapter:
@@ -51,32 +52,34 @@ class UsageReportingTests(ProjectTest):
                                      'checks': [["python3", "-B", "-c", "from pathlib import Path; assert Path('ready').exists()"]]}]})
         with Authority(project) as owner:
             result = Engine(owner, 'usage', contract, EXECUTOR, adapter=Adapter).invoke()
-        self.assertEqual(result['usage']['memberships'], ['usage'])
-        self.assertEqual(result['usage']['interval_count'], 3)
+        rows = read_artifact(project, 'usage')['records']
+        self.assertEqual(len(rows), 3)
+        self.assertEqual([row['role'] for row in rows], ['worker', 'corrective_worker', 'reviewer'])
+        self.assertEqual([row['task_id'] for row in rows], ['usage', 'usage', None])
+        self.assertEqual(result['usage']['invocation_count'], 3)
+        self.assertEqual(result['usage']['token_subtotal']['input'], 15)
         self.assertEqual(result['usage']['worker_totals']['input'], 8)
         self.assertEqual(result['usage']['reviewer_totals']['input'], 7)
-        self.assertEqual(result['usage']['worker_totals']['estimated_usd'], .08)
         observed = status(project, 'usage')
+        self.assertEqual(observed['usage']['token_subtotal']['input'], 15)
         self.assertEqual(observed['usage']['reviewer_totals']['estimated_usd'], .07)
         self.assertNotIn('PRIVATE TASK TEXT', json.dumps(observed))
         self.assertNotIn('PRIVATE-ANSWER', json.dumps(observed))
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        self.assertEqual(db.execute("SELECT count(*) FROM execution_usage_memberships WHERE run_id='usage'").fetchone()[0], 1)
-        self.assertEqual(db.execute("SELECT count(*) FROM execution_usage_intervals WHERE run_id='usage' AND role='reviewer' AND task_id IS NULL").fetchone()[0], 1)
+        self.assertEqual(db.execute("SELECT count(*) FROM execution_usage_memberships WHERE run_id='usage'").fetchone()[0], 0)
+        self.assertEqual(db.execute("SELECT count(*) FROM execution_usage_intervals WHERE run_id='usage'").fetchone()[0], 0)
         db.close()
 
-    def test_optional_usage_failure_keeps_actual_task_outcome_and_legacy_is_unknown(self):
+    def test_metric_append_failure_keeps_actual_task_outcome_and_is_partial(self):
         project = self.project
         class Adapter:
             def __init__(self, *_args, **_kwargs): self.last_interval = interval('worker', 1, .01)
             def prompt(self, _prompt, **kwargs):
                 return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
         with Authority(project) as owner:
-            with patch.object(owner.store, 'usage_interval', return_value=False):
+            with patch('coherence_workflow.engine.create_artifact', side_effect=OSError('optional gap')):
                 result = Engine(owner, 'gap', admit([{'id': 'task', 'description': 'synthetic'}]),
                                 EXECUTOR, adapter=Adapter).invoke()
         self.assertEqual(result['status'], 'complete')
-        self.assertEqual(result['usage']['state'], 'partial')
-        with Authority(project) as owner:
-            owner.store.start('legacy', 'legacy-base')
-        self.assertEqual(status(project, 'legacy')['usage'], {'state': 'unknown', 'reason': 'usage_unavailable'})
+        self.assertEqual(result['usage']['coverage'], 'partial')
+        self.assertIn('missing_expected_invocations', result['usage']['reasons'])

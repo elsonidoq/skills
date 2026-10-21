@@ -78,6 +78,7 @@ print(json.dumps({"type":"result", "text":"ok", "session":session, "before":{"en
                 'os.environ', {'COHERENCE_NODE': sys.executable}):
             self.assertEqual(adapter.prompt('fixture'), 'ok')
         self.assertEqual(adapter.saved_session['id'], 'session-1')
+        self.assertEqual(adapter.opened_session['id'], 'session-1')
         self.assertEqual(adapter.last_observation['after']['entry'], 'settled')
 
     def test_invalid_saved_identity_is_not_sent_to_the_host(self):

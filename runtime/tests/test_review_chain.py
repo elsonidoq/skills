@@ -300,9 +300,10 @@ class BoundedChainTests(ProjectTest):
             with self.assertRaisesRegex(Blocked, 'synthetic fixer failure'):
                 Engine(owner, 'fixer-failure', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
                        EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
-            usage = owner.store.db.execute(
-                "SELECT outcome,unknown_reason FROM execution_usage_intervals WHERE run_id='fixer-failure' AND role='fixing_worker'").fetchall()
-            self.assertEqual([tuple(row) for row in usage], [('failed', 'usage_observation_unavailable')])
+            from coherence_workflow.metric_artifacts import read_artifact
+            usage = [row for row in read_artifact(self.project, 'fixer-failure')['records']
+                     if row['role'] == 'fixing_worker']
+            self.assertEqual([(row['outcome'], row['after']) for row in usage], [('failed', None)])
             chain = owner.store.review_chain('fixer-failure')
             observations = owner.store.monitor('fixer-failure')['observations']
         self.assertEqual(Adapter.reviews, 1)
@@ -344,10 +345,11 @@ class FixExecutionTests(ProjectTest):
                             paid_scope={'agent_providers': ['fixture'], 'apis': []}).run_fix(
                                 ['owned.txt:1 - synthetic defect'], trigger_execution_id='review-1',
                                 review_base=self.base, recorder=recorder, execution_id='fix-1')
-            usage = [dict(row) for row in owner.store.db.execute(
-                "SELECT * FROM execution_usage_intervals WHERE run_id='fix-run'")]
+            from coherence_workflow.metric_artifacts import read_artifact
+            usage = [row for row in read_artifact(self.project, 'fix-run')['records']
+                     if row['role'] == 'fixing_worker']
             self.assertEqual(len(usage), 2)
-            self.assertEqual(len({row['occurrence_id'] for row in usage}), 2)
+            self.assertEqual(len({row['invocation_id'] for row in usage}), 2)
             self.assertTrue(all(row['role'] == 'fixing_worker' for row in usage))
             chain = owner.store.review_chain('fix-run', private=True)
             history = [dict(row) for row in owner.store.db.execute(

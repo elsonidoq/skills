@@ -147,6 +147,8 @@ class PiAdapter:
         self.saved_session = None
         self.last_observation = None
         self.last_interval = None
+        # Only the current host's explicit opened-session record confirms opening.
+        self.opened_session = None
         # These are invocation-local and intentionally never persist a session
         # identity, direction text, or a target for a later prompt.
         self.active_target = None
@@ -199,6 +201,7 @@ class PiAdapter:
         """Run one prompt, optionally reopening only a runner-provided private session."""
         self.last_interval = None
         self.last_observation = None
+        self.opened_session = None
         if steering is not None and not isinstance(steering, dict):
             raise Blocked('steering target must be runner-provided')
         request = {'project': str(self.project), 'executor': self.executor,
@@ -353,6 +356,7 @@ class PiAdapter:
                                     and isinstance(session.get('file'), str)):
                                 raise Blocked('SDK session record has an invalid saved session identity')
                             self.saved_session = session
+                            self.opened_session = session
                             self.last_observation = {'before': value.get('before'), 'after': None}
                         elif kind == 'result':
                             if not isinstance(value.get('text'), str):

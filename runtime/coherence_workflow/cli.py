@@ -8,7 +8,7 @@ import signal
 import sys
 import uuid
 
-from .engine import Engine
+from .engine import Engine, usage_summary
 from .intake import load_contract
 from .pi_adapter import PiAdapter, parent_question, terminal_question
 from .store import Authority, Blocked, Store, canonical, read_history
@@ -50,6 +50,24 @@ def _safe_history_details(value):
             if key in details}
 
 
+def _metric_invocation_ids(db, run):
+    """Read exact dispatch identities from ordinary history, never usage tables."""
+    identifiers = []
+    for kind in ('worker_invocation', 'fixer_invocation'):
+        for row in db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind=? ORDER BY seq", (run, kind)):
+            try:
+                invocation_id = json.loads(row['details']).get('invocation_id')
+            except (TypeError, ValueError):
+                continue
+            if isinstance(invocation_id, str) and invocation_id and invocation_id not in identifiers:
+                identifiers.append(invocation_id)
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_review_executions'").fetchone():
+        for row in db.execute("SELECT execution_id FROM execution_review_executions WHERE run_id=? AND role='reviewer' ORDER BY dispatched_at, execution_id", (run,)):
+            if row['execution_id'] not in identifiers:
+                identifiers.append(row['execution_id'])
+    return identifiers
+
+
 def status(project, run):
     database = Path(project).resolve() / '.coherence/workflow/workflow.sqlite'
     db = sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)
@@ -73,7 +91,7 @@ def status(project, run):
                         {'task_id': item['task_id'], 'kind': item['kind'], 'state': item['state'],
                          'details': _safe_history_details(item['details'])}
                         for item in db.execute('SELECT task_id,kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
-                result['usage'] = Store.usage_summary(type('Reader', (), {'db': db})(), run)
+                result['usage'] = usage_summary(project, run, _metric_invocation_ids(db, run))
                 if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_review_executions'").fetchone():
                     # This is the safe owner result: parsed actionable findings and range/commit
                     # references, never raw reviewer payloads, prompts, or answers.

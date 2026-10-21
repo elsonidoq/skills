@@ -1,10 +1,13 @@
 """Sequential task/check/Git execution, with one fresh read-only final reviewer."""
 import inspect
 import json
+import math
 import os
 import uuid
 
 from .git_effects import FocusedGit
+from .metric_artifacts import MetricArtifactError, create_artifact, summarize_artifact
+from .metrics import interval_record
 from .monitoring import Recorder, descriptor
 from .pi_adapter import PiAdapter, terminal_question
 from .processes import process_identity
@@ -20,6 +23,31 @@ class _ReviewFormat(Blocked):
 def _failure(exc):
     if isinstance(exc, (KeyboardInterrupt, SystemExit)): return 'interrupted'
     return 'transport' if isinstance(exc, Blocked) else 'unknown'
+
+
+def usage_summary(project, run, expected_invocation_ids=()):
+    """Project JSONL-only totals; unknown fields never become zero."""
+    summary = summarize_artifact(project, run, expected_invocation_ids=expected_invocation_ids)
+    fields = {'input': ('tokens', 'input'), 'output': ('tokens', 'output'),
+              'cache_read': ('tokens', 'cache_read'), 'cache_write': ('tokens', 'cache_write'),
+              'total_tokens': ('total_tokens',), 'estimated_usd': ('estimated_usd',)}
+    def totals(rows):
+        values, complete = {key: 0 for key in fields}, {key: True for key in fields}
+        for row in rows:
+            for key, path in fields.items():
+                value = row['interval']
+                for part in path:
+                    value = value.get(part) if isinstance(value, dict) else None
+                value = value.get('value') if isinstance(value, dict) else None
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    values[key] += value
+                else:
+                    complete[key] = False
+        return {key: values[key] if complete[key] else None for key in fields}
+    rows = summary['records']
+    return {**summary, 'memberships': sorted({row['task_id'] for row in rows if row['task_id'] is not None}),
+            'worker_totals': totals([row for row in rows if row['role'] != 'reviewer']),
+            'reviewer_totals': totals([row for row in rows if row['role'] == 'reviewer'])}
 
 
 _DECISION_CONSTRAINTS = (
@@ -65,6 +93,70 @@ class Engine:
         # Private, run-local facts only. A failed or unfinished worker is never added.
         self.session_candidates = []
         self.session_settlement_sequence = 0
+        self.metric_artifact = None
+        self.metric_invocation_ids = []
+
+    @staticmethod
+    def _snapshot(observation):
+        """Project only the closed metric snapshot vocabulary."""
+        if not isinstance(observation, dict):
+            return None
+        def number(value):
+            return value if (isinstance(value, (int, float)) and not isinstance(value, bool)
+                             and math.isfinite(value) and value >= 0) else None
+        def boolean(value):
+            return value if type(value) is bool else None
+        counters = observation.get('counters') if isinstance(observation.get('counters'), dict) else {}
+        headroom = observation.get('headroom') if isinstance(observation.get('headroom'), dict) else {}
+        entries = observation.get('compaction_entries') if isinstance(observation.get('compaction_entries'), list) else []
+        return {'counters': {name: number(counters.get(name)) for name in ('input', 'output', 'cacheRead', 'cacheWrite', 'total')},
+                'estimated_usd': number((observation.get('costs') or {}).get('estimated_usd')),
+                'context': {name: (boolean(headroom.get(name)) if name in ('compaction_enabled', 'compaction_applicable')
+                                    else number(headroom.get(name)))
+                            for name in ('context_window', 'effective_reserve', 'occupancy',
+                                         'compaction_enabled', 'compaction_applicable')},
+                'compaction_entry_ids': sorted(entry['id'] for entry in entries
+                                                if isinstance(entry, dict) and isinstance(entry.get('id'), str) and entry['id'])}
+
+    @staticmethod
+    def _selected_session(selection, *, continued=False):
+        if continued:
+            return 'continued_same_task', selection.get('reason')
+        return ('reused_from_earlier_task' if selection.get('session_id') else 'fresh', selection.get('reason'))
+
+    def _append_metric(self, worker, *, invocation_id, task_id, role, outcome, selection, continued=False,
+                       expected_session_id=None, fixing_round=None, review_ordinal=None):
+        """Best-effort terminal-call JSONL; never changes the execution result."""
+        self.metric_invocation_ids.append(invocation_id)
+        selected_mode, reason = self._selected_session(selection, continued=continued)
+        observation = getattr(worker, 'last_observation', None)
+        before = observation.get('before') if isinstance(observation, dict) else None
+        after = observation.get('after') if isinstance(observation, dict) else None
+        interval = interval_record(before, after, outcome=outcome)
+        if not isinstance(before, dict) and not isinstance(after, dict):
+            # Offline adapters may provide the already-derived closed interval only.
+            interval = getattr(worker, 'last_interval', None) or interval
+        opened = getattr(worker, 'opened_session', None)
+        actual_id = opened.get('id') if isinstance(opened, dict) and isinstance(opened.get('id'), str) else None
+        expected = expected_session_id if continued else selection.get('session_id')
+        actual_mode = (selected_mode if actual_id is not None and
+                       ((selected_mode == 'fresh' and expected is None) or
+                        (selected_mode != 'fresh' and actual_id == expected)) else 'unknown')
+        record = {'version': 1, 'run_id': self.run, 'invocation_id': invocation_id, 'task_id': task_id,
+                  'role': role, 'outcome': outcome, 'fixing_round': fixing_round,
+                  'review_ordinal': review_ordinal, 'interval': interval,
+                  'before': self._snapshot(before), 'after': self._snapshot(after),
+                  'selected_session_mode': selected_mode, 'session_selection_reason': reason,
+                  'actual_session_mode': actual_mode, 'actual_session_id': actual_id}
+        try:
+            if self.metric_artifact is None:
+                self.metric_artifact = create_artifact(self.authority.project, self.run, authority=self.authority)
+            self.metric_artifact.append(record)
+        except (MetricArtifactError, OSError, ValueError):
+            pass
+
+    def usage_summary(self):
+        return usage_summary(self.authority.project, self.run, self.metric_invocation_ids)
 
     def _session_request(self, task, role='worker'):
         authority = canonical({'paid_scope': self.paid_scope, 'routine_authority': True,
@@ -189,10 +281,15 @@ class Engine:
                 }
                 if predecessor:
                     public['predecessor_invocation_id'] = predecessor
+                store.history(self.run, fix_task['id'], 'fixer_invocation', 'started',
+                              {'invocation_id': invocation_id, 'execution_id': execution_id})
                 recorder.emit(occurrence, 'worker', 'started', task_id=fix_task['id'], facts=public)
                 outcome = 'settled'
-                # Do not attribute the previous prompt's interval to a failed call.
+                expected_session_id = (getattr(worker, 'saved_session', {}) or {}).get('id')
+                # Do not attribute the previous prompt's observations to a failed call.
                 worker.last_interval = None
+                worker.last_observation = None
+                worker.opened_session = None
                 steering = {'run_id': self.run, 'task_id': fix_task['id'], 'invocation_id': invocation_id,
                             'role': 'fixer'}
                 if getattr(worker, 'parent_steering_available', lambda: False)():
@@ -204,17 +301,23 @@ class Engine:
                     outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     if terminal_stop is not None:
                         terminal_stop[0] = invocation_id
+                    store.history(self.run, fix_task['id'], 'fixer_invocation', outcome,
+                                  {'invocation_id': invocation_id, 'execution_id': execution_id})
                     recorder.emit(occurrence, 'worker', outcome, task_id=fix_task['id'], facts={
                         **public, 'stopped_by_invocation_id': invocation_id, 'error_category': _failure(exc)})
                     raise
                 else:
+                    store.history(self.run, fix_task['id'], 'fixer_invocation', 'returned',
+                                  {'invocation_id': invocation_id, 'execution_id': execution_id})
                     recorder.emit(occurrence, 'worker', 'returned', task_id=fix_task['id'], facts=public)
                     fixer_chain[:] = chain
                     last_fixer_invocation[0] = invocation_id
                     return result
                 finally:
-                    store.usage_interval(self.run, invocation_id, role='fixing_worker', outcome=outcome,
-                                         interval=getattr(worker, 'last_interval', None))
+                    self._append_metric(worker, invocation_id=invocation_id, task_id=fix_task['id'],
+                                        role='fixing_worker', outcome=outcome, selection=selection,
+                                        continued=predecessor is not None, expected_session_id=expected_session_id,
+                                        fixing_round=1)
             prompt = ('Correct the actionable findings from one independent review within the original approved '
                       'task contracts. This is the one assigned fixing round, not a new task, routing operation, '
                       'or permission expansion. Keep the configured executor and authority. Select only explicit '
@@ -375,11 +478,13 @@ class Engine:
                 'review_base': review_base, 'review_head': head, 'outcome': state,
                 'error_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc),
             })
-            store.usage_interval(self.run, execution_id, role='reviewer', outcome=state,
-                                 interval=getattr(reviewer, 'last_interval', None))
+            self._append_metric(reviewer, invocation_id=execution_id, task_id=None, role='reviewer',
+                                outcome=state, selection={'session_id': None, 'reason': 'reviewer_fresh'},
+                                review_ordinal=ordinal)
             raise
-        store.usage_interval(self.run, execution_id, role='reviewer', outcome='settled',
-                             interval=getattr(reviewer, 'last_interval', None))
+        self._append_metric(reviewer, invocation_id=execution_id, task_id=None, role='reviewer',
+                            outcome='settled', selection={'session_id': None, 'reason': 'reviewer_fresh'},
+                            review_ordinal=ordinal)
         state = 'approved' if value['approved'] and not value['findings'] else 'rejected'
         store.review_outcome(self.run, execution_id, state, findings=value['findings'],
                              references={'base': review_base, 'head': head})
@@ -414,7 +519,7 @@ class Engine:
             store.finish(self.run, 'complete', head)
             recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
             return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
-                    'checkpoints': checkpoints, 'review': review, 'usage': store.usage_summary(self.run)}
+                    'checkpoints': checkpoints, 'review': review, 'usage': self.usage_summary()}
         if state != 'rejected' or review['approved'] or not review['findings']:
             raise Blocked('independent review was not an actionable rejection (commits retained): ' + canonical(review))
         if not fixers:
@@ -442,7 +547,7 @@ class Engine:
         store.finish(self.run, 'complete', head)
         recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
         return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
-                'checkpoints': checkpoints, 'review': final_review, 'usage': store.usage_summary(self.run)}
+                'checkpoints': checkpoints, 'review': final_review, 'usage': self.usage_summary()}
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store
@@ -501,9 +606,6 @@ class Engine:
                         return answer
                     manual_gates(task, gate_question)
                     role = 'fixing_worker' if isinstance(self.contract.get('monitor'), dict) and self.contract['monitor'].get('correction_of') else 'worker'
-                    # Membership is one dispatched (run, task) pair, independent of
-                    # corrective prompts and never inferred from review references.
-                    store.usage_membership(self.run, task['id'])
                     active_occurrence, invocation_chain, last_invocation = [None], [], [None]
                     question_occurrence = [None]
                     def worker_question(state):
@@ -613,6 +715,11 @@ class Engine:
                         if getattr(worker, 'parent_steering_available', lambda: False)():
                             worker.enable_parent_steering(steering)
                             kwargs['steering'] = steering
+                        expected_session_id = (getattr(worker, 'saved_session', {}) or {}).get('id')
+                        # Clear every optional observation before this actual call.
+                        worker.last_interval = None
+                        worker.last_observation = None
+                        worker.opened_session = None
                         try:
                             result = self._prompt_worker(worker, prompt, **kwargs)
                         except BaseException as exc:
@@ -624,14 +731,18 @@ class Engine:
                             recorder.emit(occurrence, 'worker', state, task_id=task['id'],
                                           facts={**public, 'stopped_by_invocation_id': invocation_id,
                                                  'error_category': _failure(exc)})
-                            store.usage_interval(self.run, invocation_id, task=task['id'], role=role,
-                                                 outcome=state, interval=getattr(worker, 'last_interval', None))
+                            self._append_metric(worker, invocation_id=invocation_id, task_id=task['id'],
+                                                role=('corrective_worker' if predecessor else 'worker'), outcome=state,
+                                                selection=selection, continued=predecessor is not None,
+                                                expected_session_id=expected_session_id)
                             raise
                         store.history(self.run, task['id'], 'worker_invocation', 'returned',
                                       {**facts, 'saved_session': getattr(worker, 'saved_session', None)})
                         recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)
-                        store.usage_interval(self.run, invocation_id, task=task['id'], role=role,
-                                             outcome='settled', interval=getattr(worker, 'last_interval', None))
+                        self._append_metric(worker, invocation_id=invocation_id, task_id=task['id'],
+                                            role=('corrective_worker' if predecessor else 'worker'), outcome='settled',
+                                            selection=selection, continued=predecessor is not None,
+                                            expected_session_id=expected_session_id)
                         invocation_chain[:] = chain
                         last_invocation[0] = invocation_id
                         return result
