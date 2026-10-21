@@ -1,0 +1,74 @@
+# Workflow monitor actual activity, navigation and worker steering — tasks
+
+## Provenance / approval record
+
+Direct TinySpec adapter from the **entire** [source](workflow-monitor-activity-steering-tinyspec.md), R1–R6/A1–A6, at baseline `61ac078e7707d669d1b7b24a3fe1128b8b178279` on `follow-attached-workflow-migration-instructions`. Requirements truth is that source, not the historical SDD/task records. Planning binding remains `openai-codex/gpt-6-astra:medium`. Preparation and verified focused planning checkpoint are authorized; planner source/task review and explicit combined owner approval remain pending. This artifact does not authorize implementation or attest readiness/visual acceptance.
+
+[Executable JSON](workflow-monitor-activity-steering-tasks.json) owns exact task descriptions, path boundaries, dependencies and task-local **REQUIRED** `source/check/pass/evidence/permission` mappings. Manual procedures use `procedure`, not shell `check`; existing runner checks execute `check` strings, while existing runner gates are pre-dispatch. Consequently post-delivery visual/live acceptance is explicitly scheduled below, not encoded as an impossible pre-dispatch approval or a fake executable command. Delivery checkpoints and independent review never imply those manual criteria passed.
+
+## Shared worker brief
+
+Read this brief plus the whole source with each assignment; use its applicable R/A mappings in the worker return. Source proposals distinguish derived mechanics from owner requirements; preserve that distinction. The owner directions are:
+
+> Smooth, responsive graph dragging and panning.
+>
+> A flat, top-to-bottom DAG of actual agent activity, preserving branches and joins—no groups or planning nodes.
+>
+> Non-agent nodes only for unrecoverable failures explaining why execution stopped.
+>
+> Human-readable labels and Details, with technical IDs secondary and no invented causal edges.
+>
+> Run-specific URLs supporting direct opening, refresh and browser navigation.
+>
+> Runs sorted newest first, with simple browser-side filtering by run ID.
+>
+> Messages to running workers, with honest delivery/queue/failure status.
+>
+> Pragmatic planning, focused verification and owner visual approval before completion.
+
+Settled narrowing: **“Don't guess arrows (recommended)”**, **“forget about old runs” / “This is just being developed. I don't care about old runs.”** No historical compatibility/reconstruction/migration/replay/relabeling or acceptance-recovery programme; preserve old rows, failed attempts, diagnostics and approvals. OI-16 ambiguous membership is a focused data-loss regression, not permission to reconstruct old runs. OI-5 and unrelated open issues remain unresolved.
+
+Steering direction: **“A message is directed to an actual worker that is running now. So the agent must relay that message to the agent. the actual worker.”** Next SDK opportunity, no running-command preemption or obedience claim. Worker/fixer-only is the smallest derived path preserving independent reviewers. No pi-subagents substitution, monitor control API, daemon, generalized messaging platform or persistent cross-task mailbox. Bind run/task/invocation/session; never silently route to successor or restart. Accepted, queued, observed consumed, failed/unavailable and unknown are distinct. A pending question remains its own gate. Unique correlated envelopes distinguish identical text; neither queue removal nor `steer()` return proves consumption. Message text stays in authorized conversations, never public monitor DTO/SQLite prose.
+
+The future recording contract describes **runner-selected input/dispatch relations**, not model reading/obedience. Sequential scheduling remains; branches mean selected inputs. Actual starts alone create worker/reviewer/fixer/re-review calls. Approval adds no fixer; rejection alone adds no placeholder. No fixed sequence/count, inferred time/plan-only edges, nearest-agent `support_ref`, or broad cross-run correction arrows. Optional recording remains non-admitting and gaps honest. Closed typed provenance and authorized safe metadata/findings only: no private prompts/errors/worker summaries/tool output/private paths/transcripts, no summarizers/model-generated descriptions/report duties. Execution success and acceptance remain separate.
+
+### Authority and operating constraints
+
+Applicable [ADR-0003](../decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md) and [ADR-0004](../decisions/ADR-0004-shared-routine-worker-permissions.md) were read with the whole [decision index](../decisions/index.md). Current launch authority reaches initial/corrective briefs; historical proposal wording is not an independent veto after current authorization. Executable instructions stay neutral. Shared routine scoped fixes, small isolated tests/local databases and fixture-owned servers do not require repeated permission; preserve resource/data boundaries, required checks/manual gates and global-install/credentials/external-paid/deploy/push/unrelated-deletion restrictions. T002/V1 and T010/V1 make these outcomes observable, not merely linked. No feedback, memory, STATE or guideline writes. Whole memory index and coordination guidelines contain no applicable entries.
+
+Every future start, continuation and correction uses unchanged [.pi/workflow-executor.json](../../.pi/workflow-executor.json): Terra/medium workers, fresh `openai-codex/gpt-6.1-sol`/medium reviewers. Astra planning is not an implementation assignment. Preserve task-owned changes, runner-owned [focused verified checkpoints](../../skills/memory-handling/references/task-commit-contract.md) and fresh independent read-only final review. Shared path tasks are sequential; dependencies denote actual producers, not permission for concurrent overlapping writes. Owned paths are limits, not a requirement to touch every file. Necessary ownership/source/acceptance changes return for affected review, not unowned edits.
+
+Changed bridge tools require a **fresh Paseo-session handoff** verifying checkout/trust and loaded capabilities. No `/reload` instruction, automatic Pi restart or historical workflow resume. Build monitor assets **before** starting/restarting an authorized preview, or serve a separate frozen copy; never rebuild active inventory and expect new hashes, and never restart a worker for preview. Prepared tools are reused; missing capability is unavailable, not authority to install/auth/retry. No blind expensive retries or extra paid API authority.
+
+Commands in JSON run from repository root. Runtime tests use prepared `.pi/workflow-validation/venv/bin/python`, monitor tests use `workflow_monitor/.venv/bin/python` with system dist-packages appended only for yaml (not prepended over venv packages), browser tests use existing web dependencies/local Chrome. The listed focused suites are task-local checks, not workflow admission ceremony. Add assertions to the actual production seams/existing fixtures; do not replace them with mock implementations or introduce a parallel harness. Source inspection established command locations, not successful execution. Builds/tests/interactive profiling/live SDK calls are **NOT RUN during planning**.
+
+Keep commands/results, correlation observations, traces and screenshots in normal returns/attachments until dependent validation and owner inspection. Reuse only still-applicable evidence; rerun changed boundaries. No evidence manifests, quotas, exhaustive matrix, arbitrary timing/resource limits or new enforcement subsystem. Failed/unrun/inconclusive evidence blocks affected reliance/claim, not unrelated safe seams; material disproof returns for source/task review and approval renewal without weakening acceptance.
+
+## Bounded outcomes and dependencies
+
+The JSON contains complete local acceptance. This table is intentionally not a duplicate of it.
+
+| ID | Outcome / consumed producer | Boundary and REQUIRED mapping |
+| --- | --- | --- |
+| T001 | Evidence-based drag/pan correction; no predecessor | `main.tsx`, style, existing graph spec, monitor guide. Affected interactive **before** trace before choosing fix; same-environment after proof. R3/A3: V1 focused regression, V2 manual measurement. No graph redesign. |
+| T002 | Future invocation/input/stop recording; no predecessor | Engine/recorder/store, existing recording/review/check tests, schema owner. R1/R2/A1/A2 + R6/A6: V1 actual producer identities, selected inputs, dynamic calls, optional gaps and authority defaults. No reader/UI dependency. |
+| T003 | Closed reader/mapper/public DTO; T002 | Reader/mapping/public and app execution-details seam plus focused tests. R1/R2/A1/A2 + R6/A6: V1 exact readback/history/privacy and no inferred support. No graph/UI dependency. |
+| T004 | Truthful flat `graphFor` projection; T003 | Graph helper/spec and existing chain mapping test. R1/R2/A1/A2: V1 **first composed recording→reader→mapper→public→actual graphFor proof**, including OI-16. No rendered layout dependency. |
+| T005 | Measured flat DOWN rendering; T001, T004 | Layout/main/style, existing graph/chain specs, monitor guide. R1/R3/A1/A3: V1 actual DOM/ELK/refresh behavior, V2 affected-browser recheck. Consumes existing performance proof, not a second speculative fix programme. |
+| T006 | Human-first Details and inspectable history; T005 | Main/graph/style, existing execution/history/chain/lineage specs, guide. R2/A2: V1 panel/privacy/history; R3/A3 + R6/A6: V2 **post-run owner visual approval** using T001/T005 evidence and the same meaningful production example. |
+| T007 | Closed actual-ID HTML-shell route; no predecessor | App HTTP boundary/spec and guide. R4/A4 + R6/A6: V1 actual raw HTTP encoded-slash/security handling. No client dependency. |
+| T008 | URL/history selection and sorted/filterable inventory; T006, T007 | Main/style and existing navigation/execution fixture/specs, guide. R4/A4 + R3/A3: V1 **first composed production-server/browser navigation proof**, including stale graph guards. No server search. |
+| T009 | Correlated adapter↔host SDK steering transport; no predecessor | Host/adapter and existing tests, one bounded fixture if needed, schema owner. R5/A5 + R6/A6: V1 **installed-SDK real queue/message event** through adapter/host, including pending callbacks. No parent tool dependency or paid-provider claim. |
+| T010 | Exact-active-worker parent relay; T002, T009 | Bridge/engine/adapter and existing tests, runtime/schema guides. R5/A5 + R6/A6: V1 **first composed parent-tool delivery and authority/defaults preservation**; V2 fresh-session, separately authorized tiny live selected-worker check. No monitor API. |
+
+T001's before measurement is an early necessary prerequisite to affected rendering/performance work, not a benchmark task or speculative prototype. Start that investigation before altering the affected production interaction. T002/T003 and T007/T009 can be prepared independently if affected-browser access is unavailable; do not assert T001/T005 responsiveness completion. The listed producer/consumer boundaries fit Terra/medium: recording, minimized readback, projection, rendering, Details, HTTP, client inventory and transport/parent interfaces each finish local acceptance without unfinished downstream implementation. Tests, evidence and operative docs stay with their delivering outcome. No task-count quota or tests-only milestone.
+
+[Early risk](../../skills/planner/references/early-risk-reduction.md) and [parsimony](../../skills/planner/references/parsimony.md): permanent production-helper/composed tests are sufficient for known bounded projection, URL and correlation behavior. T009 proves the consequential multiplexing/real SDK queue boundary **before** parent claims in T010; no separate prototype platform. Performance cannot be proven by isolated helper or old headless rAF figures. One representative production fixture supplies branches/joins, actual review/fix links, essential stop, framed overview and useful selected Details—not another screenshot matrix.
+
+## Manual acceptance and handoff
+
+- **T001/T005:** affected interactive browser before/after proof at those actual change boundaries. Unavailable environment/no reproduction is a genuine evidence gap, not a fix or new performance quota. Keep approved 60-second cadence.
+- **T006/V2:** after produced view/evidence and independent review, parent presents the actual revision to the owner. Explicit visual/responsiveness approval is required before feature completion. Ordinary code delivery may checkpoint without pretending this post-run gate passed. Later T008 changes invalidate and renew only affected visual/navigation evidence.
+- **T010/V2:** after bridge delivery, a fresh loaded Paseo parent verifies tools and obtains the source-required separately authorized tiny live selected-worker check. Relays through the real parent tool and observes exact-target message event/status. Offline SDK fixtures do not satisfy actual-provider proof. No historical run, new paid API assumption or model substitution. Lack of capability/authorization means NOT VERIFIED, not fabricated delivery.
+
+Planner reviews source/tasks, then explicit combined owner approval releases implementation preflight only. The coordinator carries task-local REQUIRED checks, shared constraints and true manual gates into briefs. Post-run parent presentation/owner decisions remain explicit; a generic green suite or final reviewer is not composed delivery proof or visual approval. This planning artifact closes no open issue and makes no application acceptance claim.

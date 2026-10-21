@@ -1,0 +1,274 @@
+{
+  "tasks": [
+    {
+      "id": "T001",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver the smallest evidence-based correction for affected-browser dragging/panning (R3), before replacing the rendering seam. FIRST capture an interactive before trace of the current production graph in the affected browser/environment; inspect main-thread/render/layout/GPU/compositor, viewport and React updates with exact action and visible symptom. The old two-node jerk and headless rAF figures are not a diagnosis. Choose a fix only from this evidence, keep 60-second polling and existing ownership/security semantics; add a focused regression to the existing graph spec for the implicated behavior. Repeat the same-environment interaction after the correction. Exclude graph redesign, speculative memoization, bundle replacement, arbitrary quotas and exhaustive benchmarks. If unavailable/no repro, return that limit and do not claim fixed or select a speculative performance remedy. T005 consumes the trace and correction, rechecking only invalidated evidence. Update only verified responsiveness procedure/limits in the monitor guide.",
+      "depends": [],
+      "owned_paths": [
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/style.css",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T001/V1",
+          "source": "R3/A3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_graph.spec.ts --output=\"$(mktemp -d)\"",
+          "pass": "The changed interaction seam retains its focused regression and existing graph behavior; build succeeds. This is not smoothness proof.",
+          "evidence": "Command/exit and named regression observing the implicated production behavior."
+        },
+        {
+          "id": "T001/V2",
+          "source": "R3/A3",
+          "procedure": "Before ANY performance edit, use affected interactive browser on production view; record environment/input/symptom and focused trace. Repeat after smallest supported correction, same environment/action. Retain traces and visible comparison for T005 and owner inspection.",
+          "pass": "Reproduced symptom is explained by observed seam and same-environment after interaction is visibly smooth with correlated trace change; unavailable or unreproduced is NOT VERIFIED, not fixed.",
+          "evidence": "Before/after traces, revision/environment/action and visible result; no headless-only acceptance.",
+          "permission": "Affected browser access and authorized monitor preview only; build before preview start/restart or use separate frozen assets. Never restart worker. Owner visual approval is post-run T006 gate, not automated success."
+        }
+      ]
+    },
+    {
+      "id": "T002",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver minimal closed future-run invocation/input/stop recording at actual dispatch and return. Consume existing Recorder, selected task checkpoints, invoke/run_fix/_review/_finish_reviews and retained review history, not viewer guesses. Each actual worker/corrective-worker/fixer/reviewer call gets its own run-scoped invocation identity; fixer corrective calls retain round context but not shared call identity. Record exact selected input checkpoint plus producing invocation/retained correction chain, actual first-review completed-output membership/range, selected trigger/predecessor, and explicit stopped-by/support. External range contribution stays unknown. A branch is runner-selected input, not concurrency or proof of model reading/obedience. Optional recording failures remain gaps, never admission. Preserve original attempts/diagnostics, no row rewrite or scheduler redesign. Keep existing storage mechanism unless a bounded additive field is necessary. Update schema owner with closed vocabulary and consumer interface; no arbitrary prompt/error/summary/output prose.",
+      "depends": [],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/monitoring.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/tests/test_monitoring.py",
+        "runtime/tests/test_review_chain.py",
+        "runtime/tests/test_check_correction.py",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T002/V1",
+          "source": "R1/R2/A1/A2; R6/A6",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests .pi/workflow-validation/venv/bin/python -B -m unittest -v test_monitoring test_review_chain test_check_correction test_worker_authority",
+          "pass": "Actual engine/recorder tests retain distinct calls, selected multi-input branches/joins, exact checkpoint producer, correction chains, first-review membership and explicit stops. Approval skips fixer; rejection alone starts none; calls appear only at actual start. Recording loss leaves ordinary execution intact. Closed validation rejects arbitrary payloads; no history rewrite. Authority/default permission tests still pass.",
+          "evidence": "Exact new invocation/input/stop facts and existing scenarios/assertions; schema diff; command/exit. Producer contract is sufficient without reader/UI."
+        }
+      ]
+    },
+    {
+      "id": "T003",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver closed reader→mapper→public activity/input/stop DTO from T002 facts. Reader must retain authorized per-invocation diagnostic/review history rather than latest-only loss; mapper resolves exact identities and qualifications. Remove nearest-agent/sequence support and stop inference in app._execution_details for this actual-activity contract. Explicit stopped-by selects essential internal failure; missing cause remains terminal cause unknown. Preserve full-snapshot status/acceptance independent of paging and private snapshot/HTTP security. Export only typed safe phase/exit/error-category facts and already authorized presentation/findings; no raw execution_history or arbitrary finding-shaped prose. Missing metadata stays unknown. No historical reconstruction, graph projection, new endpoint or UI changes. Add ChainMappingTests.test_activity_readback_without_graph to existing chain mapping tests for producer readback only, leaving graph integration and its existing composed scenario adaptation to T004.",
+      "depends": [
+        "T002"
+      ],
+      "owned_paths": [
+        "workflow_monitor/reader.py",
+        "workflow_monitor/mapping.py",
+        "workflow_monitor/public.py",
+        "workflow_monitor/app.py",
+        "workflow_monitor/tests/test_reader.py",
+        "workflow_monitor/tests/test_mapping.py",
+        "workflow_monitor/tests/test_public.py",
+        "workflow_monitor/tests/test_execution_presentation.py",
+        "workflow_monitor/tests/test_history.py",
+        "workflow_monitor/tests/test_chain_mapping.py"
+      ],
+      "required": [
+        {
+          "id": "T003/V1",
+          "source": "R1/R2/A1/A2; R6/A6",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=\"runtime:runtime/tests\" workflow_monitor/.venv/bin/python -B -c 'import sys,unittest; sys.path.append(\"/usr/lib/python3/dist-packages\"); unittest.main(module=None, argv=[\"unittest\", \"-v\", '\"'\"'workflow_monitor.tests.test_reader'\"'\"', '\"'\"'workflow_monitor.tests.test_mapping'\"'\"', '\"'\"'workflow_monitor.tests.test_public'\"'\"', '\"'\"'workflow_monitor.tests.test_execution_presentation'\"'\"', '\"'\"'workflow_monitor.tests.test_history'\"'\"', '\"'\"'workflow_monitor.tests.test_chain_mapping.ChainMappingTests.test_activity_readback_without_graph'\"'\"'])'",
+          "pass": "New producer facts round-trip with exact invocation/input/support identities, separate failed attempts/first rejection and diagnostic/range/boolean history. Misleading adjacency never supplies support/stopped-by. Full status/acceptance survives pagination; selected public fields exclude private prompt/error/summary/tool-output/path/credential sentinels, including accidental arbitrary payload forwarding. Old rows are untouched; gaps remain explicit.",
+          "evidence": "Actual producer→reader→minimized DTO assertions, sentinel exclusions and paging equality; command/exit. No claim of universal secret scrubbing."
+        }
+      ]
+    },
+    {
+      "id": "T004",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver graphFor flat actual-call projection from T003 DTO, independent of rendering. No plan/review-definition/groups, routine check/checkpoint/success nodes or predicted fixer/re-review. Retain every actual call and only distinct essential unrecoverable non-agent stops; failed call is not duplicated by a wrapper failure. Empty run has no calls and missing plan presentation never hides calls. Exact explicit input, correction, review-membership and support endpoints alone make edges; combine same-pair facts without losing meanings. Reject/qualify dangling, conflicting and cyclic relations with endpoints/reasons, no repair/reversal/time/dependency-only arrows or broad cross-run correction expansion. Cross-run edge requires explicit exact reference. Chain aliasing must denote same invocation unambiguously; OI-16 shared membership leaves occurrence visible/unassigned with explicit stop support, without metadata-created duplicates. Keep action/title/code/attempt metadata human-readable and IDs secondary. Extend existing producer→reader→mapper→public→actual graphFor composed regression here, the first boundary with all interfaces; no duplicate scenario platform. Name the permanent helper cases actual activity projection and run that focused selection here; rendered group/DOM assertions are adapted in T005, not prerequisites for this projection checkpoint. Exclude layout/DOM.",
+      "depends": [
+        "T003"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/tests/test_chain_mapping.py"
+      ],
+      "required": [
+        {
+          "id": "T004/V1",
+          "source": "R1/R2/A1/A2",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_graph.spec.ts --grep \"actual activity projection\" --output=\"$(mktemp -d)\" && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=\"runtime:runtime/tests\" workflow_monitor/.venv/bin/python -B -c 'import sys,unittest; sys.path.append(\"/usr/lib/python3/dist-packages\"); unittest.main(module=None, argv=[\"unittest\", \"-v\", '\"'\"'workflow_monitor.tests.test_chain_mapping'\"'\"'])'",
+          "pass": "Actual graphFor and composed production pipeline assert exact branches/joins, dynamic approval/rejection/actual-fixer/re-review membership and distinct corrective calls. No plan/group/routine-success nodes or guessed edges. Invalid/cyclic links excluded with reasons; OI-16 ambiguous member and stop support retained. Pre-agent stop visible, recovered failures history only; no private prose leakage.",
+          "evidence": "Exact node/edge IDs and semantic facts from recorded producer inputs through actual graphFor; OI-16 regression result; build/test exits. Projection is not visual acceptance."
+        }
+      ]
+    },
+    {
+      "id": "T005",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver flat measured ELK layered DOWN rendering consuming T004 projection and T001 interaction evidence/correction. Replace group footprints/parent-relative placement with actual-call measured dimensions and validated edges; no groups/plan anchors/new graph library. Fit initial overview, preserve drag positions/viewport/selection on unchanged topology while statuses refresh. Content-size/topology changes may relayout without arbitrary viewport loss; retain fetch/layout generation guards and OI-8 sensitivity. Reuse ONE meaningful existing production graph/chain fixture with actual-shaped branches/joins, supported review/fix links and essential stop, and source middleware; adapt obsolete counts/group selectors while preserving failure/privacy assertions. Exclude Details content redesign (T006), routing and steering. Verify real rendered bounds/edges, not merely allocated boxes. Recheck T001 same-environment interaction after rendering changes; preserve screenshots/trace for T006 owner gate. Guide describes implemented flat layout/preview procedure only.",
+      "depends": [
+        "T001",
+        "T004"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/layout.ts",
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/style.css",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/web/tests/test_chain.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T005/V1",
+          "source": "R1/R3/A1/A3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_graph.spec.ts tests/test_chain.spec.ts --output=\"$(mktemp -d)\"",
+          "pass": "Production ELK input is layered DOWN with validated exact edges and measured node dimensions; rendered nodes are flat, legible, nonoverlapping along dependency flow with traceable branches/joins. Initial fit usable; select/drag/pan/zoom and unchanged-topology refresh retain deliberate positions/viewport/selection while status changes. Stale navigation/layout completions cannot overwrite selection. Existing failure/security assertions retained.",
+          "evidence": "Production-view rendered content/bounds/edges, framed overview screenshot, interaction assertions, command/exit; no helper-only geometry claim."
+        },
+        {
+          "id": "T005/V2",
+          "source": "R3/A3",
+          "procedure": "Repeat T001 affected-browser action on the representative production view after layout integration, using comparable environment/trace; retain overview and interaction evidence for owner presentation with T006 Details.",
+          "pass": "Same-environment response remains visibly smooth; any invalidated before/after comparison is renewed or explicitly NOT VERIFIED, never inferred from green tests.",
+          "evidence": "Applicable T001 trace plus current revision/environment/after trace and visible behavior.",
+          "permission": "Authorized monitor preview only; build BEFORE restart or use separately frozen assets. No worker restart; owner visual gate in T006."
+        }
+      ]
+    },
+    {
+      "id": "T006",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver human-first selected activity/edge Details consuming T003 closed history, T004 qualifications and T005 rendering. Lead with recorded action/task code/role/distinguishable attempt, execution result, safe authorized finding and stopping reason; unknown/not recorded otherwise. Expand exact identities, source records, relation endpoints/reasons, ranges, checks, checkpoints/no-change and retained failed attempts/first rejection. Keep returned execution distinct from task acceptance/full-range review; recorded running is not liveness, waiting/conflicts/gaps are qualified. Keep unloaded-history disclosure and access, paging-independent status and inert text. Reuse same T005 representative view, capture useful selected Details and overview for explicit post-run owner inspection. Exclude invented model-generated descriptions/report duties, private prompt extraction and old-run recovery. Update only verified meaning/Details guidance.",
+      "depends": [
+        "T005"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/src/style.css",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/web/tests/test_history.spec.ts",
+        "workflow_monitor/web/tests/test_chain.spec.ts",
+        "workflow_monitor/web/tests/test_lineage.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T006/V1",
+          "source": "R2/A2; R3/A3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_execution.spec.ts tests/test_history.spec.ts tests/test_chain.spec.ts tests/test_lineage.spec.ts --output=\"$(mktemp -d)\"",
+          "pass": "Production panels lead with meaningful authorized action/outcome/finding/reason, or explicit unknown; IDs secondary yet complete on expansion. Original failures/rejection, booleans/ranges and full-snapshot status remain across paging/later success. Invalid relations explain exact endpoints/reason without arrows. Hostile retained text is inert and no private text introduced. Same representative production view includes useful selected Details.",
+          "evidence": "Rendered text/order/expansion and paging/inertness assertions, overview+inspection screenshots, command/exit."
+        },
+        {
+          "id": "T006/V2",
+          "source": "R3/A3; R6/A6",
+          "procedure": "POST-RUN parent presents T001/T005 before/after findings and same representative production overview plus selected Details; owner inspects drag/pan/zoom, readability, flat DOWN branches/joins, review/fix and essential stop and explicitly approves visual/responsiveness completion.",
+          "pass": "Explicit owner approval of actual presented revision/view and affected-browser responsiveness. Until then delivery may checkpoint/review but feature visual completion remains NOT VERIFIED.",
+          "evidence": "Owner response with presented revision/screenshots and applicable trace limits; preserve rejection for scoped correction/revalidation.",
+          "permission": "Owner visual decision after evidence exists, not a runner pre-dispatch gate or worker wait. Independent final read-only review does not substitute for approval."
+        }
+      ]
+    },
+    {
+      "id": "T007",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver bounded GET run HTML-shell route using inventoried index asset: /runs/id-<percent-encoded entire actual ID>. Consume existing create_app/frozen asset/security boundary, not a new filesystem path resolver or generic SPA fallback. Validate raw path as one encoded component before framework slash decoding; malformed encoding and unsupported paths closed errors. Preserve root/assets/closed APIs Host, methods, Fetch Metadata/header, CSP/no-store/nosniff protections. Exclude client selection/sorting and server search. Add actual Starlette/HTTP encoded-slash boundary tests; document verified route/asset operation.",
+      "depends": [],
+      "owned_paths": [
+        "workflow_monitor/app.py",
+        "workflow_monitor/tests/test_http.py",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T007/V1",
+          "source": "R4/A4; R6/A6",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=\"runtime:runtime/tests\" workflow_monitor/.venv/bin/python -B -c 'import sys,unittest; sys.path.append(\"/usr/lib/python3/dist-packages\"); unittest.main(module=None, argv=[\"unittest\", \"-v\", '\"'\"'workflow_monitor.tests.test_http'\"'\"'])'",
+          "pass": "Actual HTTP shell handles reserved/Unicode/percent/slash/dot-only encoded ID component and direct refresh; malformed encoding, extra raw segments and unknown API/assets do not receive unsafe HTML fallback. Fixed inventory, GET/method/Host/headers/security remain enforced.",
+          "evidence": "Actual raw-path Starlette HTTP requests/responses including encoded slash, status/content/security assertions; command/exit."
+        }
+      ]
+    },
+    {
+      "id": "T008",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver actual-ID URL/history selection and browser-only sorted/filterable inventory consuming T007 shell and existing display_id/ref API plus T006 view. Derive /runs/id-<encodeURIComponent(actual ID)>; strip prefix/decode exactly once, exact inventory display_id lookup then opaque ref API. Root successful nonempty inventory selects newest via replaceState; empty root stays honest. Different selection pushState, repeated selection no entry; popstate applies without push and clears obsolete Details/graph and invalidates requests/layout. Unknown/removed/unavailable route remains address-bar target without substitution; stale data only for same selected ID. Sort finite epoch-second started_at descending, unknown/nonfinite last and deterministic actual-ID lexical ties. Case-insensitive substring ID-only filter changes list only; selected-outside-filter/no-match states and clear restore sorting. Poll/newer row never steals selection; retain 60-second cadence. Extend existing browser fixture to serve actual production app route, not permissive catch-all, for composed route/navigation check. No persistent filter/server search or historical inventory programme.",
+      "depends": [
+        "T006",
+        "T007"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/style.css",
+        "workflow_monitor/web/tests/test_navigation.spec.ts",
+        "workflow_monitor/web/tests/execution_fixture.py",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T008/V1",
+          "source": "R4/A4; R3/A3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_navigation.spec.ts tests/test_execution.spec.ts --output=\"$(mktemp -d)\" && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=\"runtime:runtime/tests\" workflow_monitor/.venv/bin/python -B -c 'import sys,unittest; sys.path.append(\"/usr/lib/python3/dist-packages\"); unittest.main(module=None, argv=[\"unittest\", \"-v\", '\"'\"'workflow_monitor.tests.test_http'\"'\"'])'",
+          "pass": "Real production-route browser direct open/refresh/Back/Forward and reserved/Unicode/slash/percent/dot-only IDs round-trip exactly. Root replace vs push, empty/unknown/removed/unavailable states, stale same-ID warning and navigation request/layout races work without fallback selection. Numeric ordering/ties/unknowns and ID-only filtering do not change selection/URL/history; newer poll does not steal selection. Existing selected Details and viewport guards survive.",
+          "evidence": "Browser URLs/history/selected API refs/list assertions against production Starlette boundary; commands/exits; README behavior comparison."
+        }
+      ]
+    },
+    {
+      "id": "T009",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver run-local adapter↔SDK-host targeted steering transport, independent of parent tool. Consume installed SDK 0.87.1 steer/user message_start/agent_settled behavior and existing host/adapter callbacks. One correlated host stdin dispatcher handles initial request, callback replies and unsolicited control; Python remains control-serviceable while synchronous owner question callback waits, writes serialized and callbacks correlated. Expose minimal adapter active-target/control hook for T010 with run/task/invocation/session identity (session privately advertised after creation); no daemon or persistent mailbox. Host accepts only exact active worker/fixer target, queues inert plain-text owner-direction envelope with unique correlation preserving instruction text; leading slash never executes a command. Same request ID idempotent, identical text with new IDs distinct. Report accepted/queued/observed consumed/failed-unavailable/unknown distinctly; steer resolution/queue removal are not consumption. Observe matching actual SDK user message_start, validate input transformations; never inspect private steering queue API. Target closes on settlement/cancel/EOF/disposal, not agent_end during retry/compaction; no successor/session-reuse retarget, preemption or compliance claim. Keep question gate separate. Add smallest composed adapter→actual host→installed SDK queue/event test with controlled local provider seam in existing tests before T010 reliance; fake steer-called assertion insufficient. Exclude bridge tool, paid-provider calls and public DTO/message-text SQLite recording.",
+      "depends": [],
+      "owned_paths": [
+        "runtime/pi-host/host.mjs",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/tests/test_host.mjs",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/fixtures/steering_adapter_fixture.mjs",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T009/V1",
+          "source": "R5/A5; R6/A6",
+          "check": "node --test runtime/tests/test_host.mjs && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests .pi/workflow-validation/venv/bin/python -B -m unittest -v test_pi_adapter",
+          "pass": "Composed adapter/host installed-SDK test observes queue insertion before matching actual user message_start and retained exact target through pending command/claim/question. Question reply cannot be stolen or deadlock control; identical text/new IDs distinguish and same ID does not enqueue twice. Closure/race/mismatch/reviewer/EOF cases never route successor; lost event/ack is unknown. Retry/compaction agent_end not premature close. Independent reviewer and existing callbacks remain intact.",
+          "evidence": "Actual SDK version, production-path queue/event ordering and identities, deterministic provider seam limits, callback interleaving results and command exits; not provider success or obedience proof.",
+          "permission": "Prepared local SDK and small isolated fixtures/tests only. Separate paid API calls require explicit authority; no new infrastructure/install or live call needed for this offline boundary."
+        }
+      ]
+    },
+    {
+      "id": "T010",
+      "description": "Read docs/plans/workflow-monitor-activity-steering-tasks.md shared worker brief and the authoritative TinySpec R1–R6/A1–A6. Deliver minimal parent relay tool on existing authenticated Unix bridge consuming T009 proven control hook and T002 actual invocation identity. Runner advertises private active target before accepting requests; bridge validates run/parent session/token and exact run/task/invocation/session, keeping tokens/session paths private. Parent resolves intended currently running worker/fixer (e.g. C003), never task-ID-only successor binding; reviewers unavailable. Return immediate known status, then correlated parent notification for observed consumption/failure/unknown; no indefinite compliance wait, automatic resend/restart or silent retarget. Keep pending owner-question reply independently correlated and serviceable. Compose actual parent tool→adapter→host SDK path here, first complete interface boundary, retaining T009 real queue/event proof. No pi-subagents substitution, monitor write/control API, generalized platform, mailbox or text in public DTO/SQLite prose. Preserve ADR-0003 current authority in initial/corrective prompts and neutral task checks; ADR-0004 shared routine scoped fix/test/local DB defaults without repeated approval, task-owned mutations, runner checkpoints and independent read-only reviewer. Keep selected config Terra/medium and fresh Sol 6.1/medium for every future start/continuation/correction. Update runtime guidance only to verified semantics, fresh Paseo activation, target/status usage and live-proof limits. Actual parent live selected-worker proof follows fresh activation as below; do not claim delivery from only mocks.",
+      "depends": [
+        "T002",
+        "T009"
+      ],
+      "owned_paths": [
+        ".pi/extensions/coordinate-implementation-bridge.js",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/tests/test_bridge.mjs",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_worker_authority.py",
+        "runtime/tests/test_review_chain.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T010/V1",
+          "source": "R5/A5; R6/A6",
+          "check": "node --test runtime/tests/test_bridge.mjs runtime/tests/test_host.mjs && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests .pi/workflow-validation/venv/bin/python -B -m unittest -v test_pi_adapter test_worker_authority test_review_chain",
+          "pass": "Actual registered parent tool composed through adapter/host observes authenticated exact-target accepted→queued→matching SDK consumed, unique IDs/idempotence and callback interleaving. Rejection/races/closed bridge/ack loss honest, never successor/reviewer/restart. Inspect diff/prompt and authority tests: initial/corrective current authority, shared scoped defaults, independent read-only review, checkpoints and unchanged selected executor preserved. No message text public/SQLite or new control API.",
+          "evidence": "Composed correlation/event/notification results, authority test output, prompt/bridge/config diff inspection and docs comparison. Offline proof remains distinct from live provider delivery."
+        },
+        {
+          "id": "T010/V2",
+          "source": "R5/A5; R6/A6",
+          "procedure": "After changed tool activation in a fresh Paseo parent session, verify checkout/trust and loaded bridge capabilities. Obtain separate authorization for one tiny disposable selected-worker check (no historical run); use unchanged .pi/workflow-executor.json, relay “Be pragmatic on C003” or equivalent actual task through parent tool while exact worker runs. Observe target, queued and matching SDK user event/status notification.",
+          "pass": "Actual parent tool relays to exact active worker at next SDK opportunity, without tool preemption; pending owner question remains gate. Observed consumed means delivery only. Missing capability/authority/event leaves live claim NOT VERIFIED/unknown, never fabricated or automatically retried.",
+          "evidence": "Authorized fresh-session context, selected configuration, exact recipient/message correlation and actual status/event observations with message text confined to authorized conversations.",
+          "permission": "Post-delivery fresh-session activation and separately authorized live selected-model invocation; parent schedules this after tools exist, not pre-dispatch ceremonial gate. No extra paid API authority, historical launch, automatic Pi restart/reload, worker restart, install/auth/deploy/push. Final feature acceptance waits for this evidence; ordinary code checkpoint/independent review need not masquerade as live proof."
+        }
+      ]
+    }
+  ]
+}
