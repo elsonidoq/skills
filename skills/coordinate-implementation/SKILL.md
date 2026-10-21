@@ -36,10 +36,12 @@ feedback-only ownership for manual/planning work.
 Read actual `scripts/coordinate-implementation --help` and the [operating guide](../../docs/coordinate-implementation.md).
 Supply project, task file and executor JSON containing the owner-selected executor/effort
 (provider, model, effort), without silent substitutions. There is no owner catalog or binding
-assessment. SDK/dependency/authentication errors report the actual failed operation. No automatic
-install, auth refresh, global settings changes, deployment or legacy restart is authorized.
-Ordinary approved model tokens need no financial receipt. Obtain narrow permission for
-separately chargeable or irreversible external actions outside requested coding.
+assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical
+fixes, isolated tests/servers, necessary local/in-project dependency setup, and current-task artifact
+lifecycle need no owner question; this authority does not prove checks passed. No global install, auth
+refresh, credential change, deployment, push or unrelated-work deletion is authorized. Ordinary approved
+model tokens need no financial receipt. A separately supplied paid scope applies only as supplied; obtain
+narrow permission for separately chargeable or irreversible external actions outside requested coding.
 
 ## Interface Actions
 
@@ -106,9 +108,11 @@ Do not relabel findings as resolved, substitute the writer as reviewer or claim 
 ## Runner-configured worker role
 
 Do NOT launch this CLI recursively, delegate, stage/commit or manage workflow state.
-Implement only the selected task with normal SDK tools; correct harmless local errors in the
-same conversation. Preserve unrelated work, use `ask_owner` only for material scope/permission
-questions, and leave the independent review read-only in a fresh context.
+Implement only the selected task with normal SDK tools; correct ordinary scoped technical errors in the
+same conversation, including isolated test/server and necessary local setup issues. Preserve unrelated
+work; use `ask_owner` only for product decisions, substantial complexity increases, separately scoped
+paid usage, or actions outside authority. Authority never proves a check passed. Leave the independent
+review read-only in a fresh context.
 
 ## Maintaining this contract
 

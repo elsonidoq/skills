@@ -80,14 +80,18 @@ to preserve unrelated work and not stage/commit. The runner refuses changed HEAD
 modified pre-existing work, and inspects actual edits before staging only explicit owned paths.
 Ignored/nested data is not recursively inventoried, adopted or cleaned.
 
-Each task runs in a fresh coding conversation, fixes ordinary no-effect tool errors in that
-conversation, runs requested project checks, and yields a real focused commit before dependents.
-Normal Git configuration, hooks and signing are honored. Failures retain partial work and report
-the actual operation error. No empty commit for no-change work. No intent settlement or operation
-trailers, hook/filter admission, hidden repair quotas, arbitrary timers or process receipts.
+Each task runs in a fresh coding conversation. Ordinary scoped technical fixes, isolated tests/servers,
+necessary local/in-project dependency setup, and current-task artifact lifecycle need no owner question;
+this authority is not proof that checks passed. Product decisions, substantial complexity increases,
+separately scoped paid usage, and actions outside authority still ask. No global install, credential change,
+deployment, push, or unrelated-work deletion is implied. It runs requested project checks and yields a real
+focused commit before dependents. Normal Git configuration, hooks and signing are honored. Failures retain
+partial work and report the actual operation error. No empty commit for no-change work. No intent settlement
+or operation trailers, hook/filter admission, hidden repair quotas, arbitrary timers or process receipts.
 
 The final reviewer is a fresh, read-only SDK session, not the worker context. It receives the
-actual full committed range and tasks, with read/search tools for source continuation. Findings
+actual full committed range, tasks, and the same routine-authority defaults/exclusions, with only
+read/search tools for source continuation. Authority does not prove checks or acceptance. Findings
 stop acceptance and are reported honestly with commits retained; there is no SQL disposition
 prerequisite or automatic expensive repair/retry loop. Address actual findings within requested
 scope, rerun affected checks, and obtain independent review. SDK compaction/retries follow SDK

@@ -29,6 +29,19 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 
+test('provider-bound routine authority reaches the SDK prompt without sending a provider request', async () => {
+  let received;
+  const session = {
+    messages: [{role: 'assistant', stopReason: 'stop'}],
+    subscribe() { return () => {}; },
+    async prompt(value) { received = value; },
+    getLastAssistantText() { return 'offline'; },
+  };
+  const authority = 'Routine authority: isolated tests and local servers need no owner question.';
+  assert.equal(await promptSession(session, authority, () => {}), 'offline');
+  assert.equal(received, authority);
+});
+
 test('SDK compaction events continue to actual prompt completion without telemetry or deadline', async () => {
   let callback, removed = false;
   const events = [];
