@@ -138,6 +138,32 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                           "terminal_execution_ref": _ref("execution", run_id, value["execution_id"]) if isinstance(value.get("execution_id"), str) else None,
                           "range": {"base": _sha(value.get("base")), "head": _sha(value.get("head"))}}
                          for run_id, value in graph.get("chain_acceptance", {}).items() if isinstance(run_id, str) and isinstance(value, dict)}
+    def metric_projection(metric: object, coverage: object, reasons: object) -> dict[str, Any]:
+        result: dict[str, Any] = {"availability": coverage if coverage in {"complete", "partial", "unavailable"} else "unavailable",
+                                  "reasons": [reason for reason in reasons if isinstance(reason, str)] if isinstance(reasons, list) else []}
+        if not isinstance(metric, dict):
+            return result
+        interval = metric.get("interval") if isinstance(metric.get("interval"), dict) else {}
+        tokens = interval.get("tokens") if isinstance(interval.get("tokens"), dict) else {}
+        def field(value: object) -> dict[str, Any]:
+            if not isinstance(value, dict):
+                return {"value": None, "availability": "unknown"}
+            number = value.get("value")
+            return {"value": number if type(number) in (int, float) else None,
+                    "availability": "known" if type(number) in (int, float) else "unknown",
+                    "unknown_reason": _text(value.get("unknown_reason")) or None,
+                    "provenance": _text(value.get("provenance")) or None}
+        result.update({"outcome": metric.get("outcome") if metric.get("outcome") in {"settled", "failed", "interrupted", "approved", "rejected"} else "unknown",
+                       "role": metric.get("role") if metric.get("role") in {"worker", "corrective_worker", "fixing_worker", "reviewer"} else "unknown",
+                       "task_id": _text(metric.get("task_id")) or None,
+                       "fixing_round": metric.get("fixing_round") if type(metric.get("fixing_round")) is int else None,
+                       "review_ordinal": metric.get("review_ordinal") if type(metric.get("review_ordinal")) is int else None,
+                       "tokens": {name: field(tokens.get(name)) for name in ("input", "output", "cache_read", "cache_write")},
+                       "total_tokens": field(interval.get("total_tokens")), "estimated_usd": field(interval.get("estimated_usd")),
+                       "selected_session": {"mode": metric.get("selected_session_mode") if metric.get("selected_session_mode") in {"fresh", "reused_from_earlier_task", "continued_same_task", "unknown"} else "unknown", "reason": _text(metric.get("session_selection_reason")) or None},
+                       "actual_session": {"mode": metric.get("actual_session_mode") if metric.get("actual_session_mode") in {"fresh", "reused_from_earlier_task", "continued_same_task", "unknown"} else "unknown", "identity": _text(metric.get("actual_session_id")) or None}})
+        return result
+
     activities = []
     for item in graph.get("activities", []):
         if not isinstance(item, dict) or not isinstance(item.get("run_id"), str) or not isinstance(item.get("invocation_id"), str):
@@ -156,14 +182,17 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                     "correction_chain": [_ref("activity", item["run_id"], value) for value in item.get("correction_chain", []) if isinstance(value, str)],
                     "support_ref": _ref("activity", item["run_id"], item["support_invocation_id"]) if isinstance(item.get("support_invocation_id"), str) else None,
                     "stopped_by_ref": _ref("activity", item["run_id"], item["stopped_by_invocation_id"]) if isinstance(item.get("stopped_by_invocation_id"), str) else None,
-                    "record_refs": [_ref("record", item["run_id"], value) for value in item.get("record_refs", []) if type(value) is int]}
+                    "record_refs": [_ref("record", item["run_id"], value) for value in item.get("record_refs", []) if type(value) is int],
+                    "metrics": metric_projection(item.get("metric"), item.get("metric_coverage"), item.get("metric_reasons"))}
         activities.append(activity)
     inventory = {"phase_count": len(phases), "occurrence_count": len(occurrences), "observation_count": len(records),
                  "supported_count": len(records), "unsupported_count": len(unknown) + len(graph.get("unsupported_run_ids", [])), "hidden_count": 0}
     return {"monitor_version": 1, "state": "ok", "runs": public_runs, "phases": phases, "tasks": tasks,
             "review_definitions": review_definitions, "occurrences": occurrences, "records": records, "edges": edges,
             "unknown_records": unknown, "inventory": inventory, "followups": followups, "chain": chain,
-            "chain_acceptance": chain_acceptance, "activities": activities}
+            "chain_acceptance": chain_acceptance, "activities": activities,
+            "metric_coverage": {_ref("run", run_id): {"availability": value.get("coverage") if value.get("coverage") in {"complete", "partial", "unavailable"} else "unavailable", "reasons": [reason for reason in value.get("reasons", []) if isinstance(reason, str)]}
+                                for run_id, value in graph.get("metrics", {}).items() if isinstance(run_id, str) and isinstance(value, dict)}}
 
 
 __all__ = ["minimize", "run_ref"]

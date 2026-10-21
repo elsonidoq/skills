@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "runtime"))
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
 from coherence_workflow.monitoring import Recorder, descriptor
+from coherence_workflow.metric_artifacts import create_artifact
 from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
 from workflow_monitor.mapping import normalize
@@ -34,7 +35,7 @@ class ChainMappingTests(ProjectTest):
             else:
                 engine.invoke()
 
-    def test_activity_readback_without_graph(self):
+    def test_activity_metrics_readback_without_graph(self):
         """The producer's closed invocation facts survive without graph projection."""
         base = subprocess.check_output(['git', '-C', str(self.project), 'rev-parse', 'HEAD']).decode().strip()
         with Authority(self.project) as owner:
@@ -53,12 +54,30 @@ class ChainMappingTests(ProjectTest):
             recorder.emit(second, 'worker', 'started', task_id='two', facts=second_facts)
             recorder.emit(second, 'worker', 'failed', task_id='two', facts={**second_facts,
                           'stopped_by_invocation_id': 'invoke-two', 'error_category': 'check'})
+            field = lambda value: {'value': value, 'unknown_reason': None, 'provenance': 'fixture'}
+            snapshot = {'counters': {'input': 1, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'total': 3},
+                        'estimated_usd': 0, 'context': {'context_window': 10, 'effective_reserve': 2, 'occupancy': 3,
+                        'compaction_enabled': True, 'compaction_applicable': True}, 'compaction_entry_ids': []}
+            interval = {'session_id': None, 'branch': None, 'epoch': None, 'outcome': 'settled',
+                        'tokens': {'input': field(1), 'output': field(2), 'cache_read': field(0), 'cache_write': field(0)},
+                        'total_tokens': field(3), 'estimated_usd': field(0),
+                        'compactions': {'entry_ids': [], 'count': 0, 'unknown_reason': None},
+                        'summary_overhead': {'entries': [], 'unknown_reason': None, 'included_in_sdk_deltas': False}}
+            artifact = create_artifact(self.project, 'activity', authority=owner)
+            artifact.append({'version': 1, 'run_id': 'activity', 'invocation_id': 'invoke-one', 'task_id': 'one',
+                             'role': 'worker', 'outcome': 'settled', 'fixing_round': None, 'review_ordinal': None,
+                             'interval': interval, 'before': snapshot, 'after': snapshot, 'selected_session_mode': 'fresh',
+                             'session_selection_reason': 'fixture', 'actual_session_mode': 'fresh', 'actual_session_id': 'session-fixture'})
         dto = minimize(normalize(Reader(self.project).open_snapshot('activity')))
         activities = {item['invocation_id']: item for item in dto['activities']}
         self.assertEqual(activities['invoke-two']['input_refs'], [activities['invoke-one']['ref']])
         self.assertEqual(activities['invoke-two']['outcome'], 'failed')
         self.assertEqual(activities['invoke-two']['error_category'], 'check')
         self.assertEqual(activities['invoke-two']['stopped_by_ref'], activities['invoke-two']['ref'])
+        self.assertEqual(activities['invoke-one']['metrics']['tokens']['input']['value'], 1)
+        self.assertEqual(activities['invoke-one']['metrics']['actual_session']['mode'], 'fresh')
+        self.assertEqual(activities['invoke-two']['metrics']['availability'], 'partial')
+        self.assertIn('missing_expected_invocations', activities['invoke-two']['metrics']['reasons'])
         self.assertNotIn('execution_history', repr(dto))
 
     def test_four_engine_scenarios_project_only_actual_closed_chain_facts(self):

@@ -5,9 +5,13 @@ workflow writer and opens a fresh, short-lived SQLite connection for each snapsh
 """
 from __future__ import annotations
 
+import hashlib
+import json
+import math
 import os
 from pathlib import Path
 import sqlite3
+import stat
 import subprocess
 import threading
 from typing import Any
@@ -17,6 +21,9 @@ SUPPORTED_RECORDING_VERSION = 1
 _SAFE_FINDING = __import__("re").compile(r"^[A-Za-z0-9_./-]+(?::[1-9][0-9]*)? - [^\r\n]+$")
 _HASH = __import__("re").compile(r"^[0-9a-f]{40,64}$")
 _DATABASE_PARTS = (".coherence", "workflow", "workflow.sqlite")
+_METRIC_ROLES = frozenset({"worker", "corrective_worker", "fixing_worker", "reviewer"})
+_METRIC_OUTCOMES = frozenset({"settled", "failed", "interrupted", "approved", "rejected"})
+_METRIC_MODES = frozenset({"fresh", "reused_from_earlier_task", "continued_same_task", "unknown"})
 _GIT_ENV = (
     "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR",
     "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
@@ -103,6 +110,97 @@ class Reader:
     @staticmethod
     def _authorizer(action: int, arg1: str | None, arg2: str | None, database: str | None, source: str | None) -> int:
         return sqlite3.SQLITE_OK if action in (sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ) else sqlite3.SQLITE_DENY
+
+    def _metric_file(self, run_id: str) -> Path:
+        digest = hashlib.sha256(run_id.encode("utf-8")).hexdigest()
+        return self.project / ".coherence" / "metrics" / f"run-{digest}.jsonl"
+
+    @staticmethod
+    def _metric_record(value: object, run_id: str) -> dict[str, Any] | None:
+        """Validate the T011 closed schema without admitting its arbitrary input JSON."""
+        if not isinstance(value, dict) or set(value) != {"version", "run_id", "invocation_id", "task_id", "role", "outcome", "fixing_round", "review_ordinal", "interval", "before", "after", "selected_session_mode", "session_selection_reason", "actual_session_mode", "actual_session_id"}:
+            return None
+        if value.get("version") != 1 or value.get("run_id") != run_id or not isinstance(value.get("invocation_id"), str) or not value["invocation_id"]:
+            return None
+        if value.get("role") not in _METRIC_ROLES or value.get("outcome") not in _METRIC_OUTCOMES or value.get("selected_session_mode") not in _METRIC_MODES or value.get("actual_session_mode") not in _METRIC_MODES:
+            return None
+        if value.get("task_id") is not None and not isinstance(value["task_id"], str):
+            return None
+        if any(value.get(key) is not None and (type(value[key]) is not int or value[key] < 1) for key in ("fixing_round", "review_ordinal")):
+            return None
+        if any(value.get(key) is not None and (not isinstance(value[key], str) or not value[key]) for key in ("session_selection_reason", "actual_session_id")):
+            return None
+        interval = value.get("interval")
+        if not isinstance(interval, dict) or set(interval) != {"session_id", "branch", "epoch", "outcome", "tokens", "total_tokens", "estimated_usd", "compactions", "summary_overhead"}:
+            return None
+        tokens = interval.get("tokens")
+        if interval.get("outcome") not in {"settled", "failed", "interrupted"} or not isinstance(tokens, dict) or set(tokens) != {"input", "output", "cache_read", "cache_write"}:
+            return None
+        def field(item: object) -> bool:
+            return isinstance(item, dict) and set(item) == {"value", "unknown_reason", "provenance"} and (item["value"] is None or (type(item["value"]) in (int, float) and math.isfinite(item["value"]) and item["value"] >= 0)) and (item["unknown_reason"] is None or isinstance(item["unknown_reason"], str)) and (item["provenance"] is None or isinstance(item["provenance"], str))
+        if not all(field(item) for item in tokens.values()) or not field(interval.get("total_tokens")) or not field(interval.get("estimated_usd")):
+            return None
+        # The remaining nested fields are deliberately not projected, but their closed
+        # top-level shapes must be present before this row can affect availability.
+        if not isinstance(interval.get("compactions"), dict) or not isinstance(interval.get("summary_overhead"), dict):
+            return None
+        for snapshot in (value.get("before"), value.get("after")):
+            if snapshot is not None and (not isinstance(snapshot, dict) or set(snapshot) != {"counters", "estimated_usd", "context", "compaction_entry_ids"}):
+                return None
+        return value
+
+    def _read_metrics(self, run_ids: set[str], expected: dict[str, set[str]]) -> dict[str, dict[str, Any]]:
+        result: dict[str, dict[str, Any]] = {}
+        for run_id in run_ids:
+            path = self._metric_file(run_id)
+            try:
+                _owned_directory(self.project / ".coherence")
+                parent = path.parent
+                _owned_directory(parent)
+                info = path.lstat()
+                if path.is_symlink() or not stat.S_ISREG(info.st_mode):
+                    raise ReaderError("unsafe metric artifact")
+                identity = (info.st_dev, info.st_ino, info.st_ctime_ns)
+                fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+                try:
+                    chunks = []
+                    while chunk := os.read(fd, 65536):
+                        chunks.append(chunk)
+                    opened = os.fstat(fd)
+                finally:
+                    os.close(fd)
+                current = path.lstat()
+                if identity != (opened.st_dev, opened.st_ino, opened.st_ctime_ns) or identity != (current.st_dev, current.st_ino, current.st_ctime_ns):
+                    raise ReaderError("metric artifact changed during read")
+                data = b"".join(chunks)
+            except FileNotFoundError:
+                result[run_id] = {"coverage": "unavailable", "reasons": ["metric_artifact_missing"], "records": []}
+                continue
+            except (OSError, ReaderError):
+                result[run_id] = {"coverage": "unavailable", "reasons": ["metric_artifact_unavailable"], "records": []}
+                continue
+            reasons: list[str] = []
+            if data and not data.endswith(b"\n"):
+                reasons.append("incomplete_tail")
+                data = data.rsplit(b"\n", 1)[0]
+            unique: dict[str, dict[str, Any]] = {}
+            for line in data.splitlines():
+                try:
+                    record = self._metric_record(json.loads(line.decode("utf-8")), run_id)
+                except (UnicodeDecodeError, ValueError):
+                    record = None
+                if record is None:
+                    reasons.append("invalid_record")
+                    continue
+                prior = unique.get(record["invocation_id"])
+                if prior is not None and prior != record:
+                    reasons.append("conflicting_duplicate_invocation")
+                    continue
+                unique[record["invocation_id"]] = record
+            if expected.get(run_id, set()) - set(unique):
+                reasons.append("missing_expected_invocations")
+            result[run_id] = {"coverage": "complete" if not reasons else "partial", "reasons": sorted(set(reasons)), "records": list(unique.values())}
+        return result
 
     def open_snapshot(self, run_ref: str | None = None, cursor: int | None = None) -> dict[str, Any]:
         """Read a short consistent snapshot, closing it before returning.
@@ -191,8 +289,18 @@ class Reader:
                                 "commit_refs": {key: value for key, value in references.items()
                                                 if key in {"base", "head", "commit"} and isinstance(value, str) and _HASH.fullmatch(value)},
                             })
+            expected: dict[str, set[str]] = {}
+            for row in observations:
+                try:
+                    facts = json.loads(row["facts"])
+                except (TypeError, ValueError):
+                    continue
+                invocation_id = facts.get("invocation_id") if isinstance(facts, dict) else None
+                if isinstance(invocation_id, str) and invocation_id:
+                    expected.setdefault(row["run_id"], set()).add(invocation_id)
+            metrics = self._read_metrics({row["run_id"] for row in supported}, expected)
             return {"state": "ok", "runs": supported, "unsupported_run_ids": unsupported,
-                    "observations": observations, "review_details": review_details}
+                    "observations": observations, "review_details": review_details, "metrics": metrics}
         except (sqlite3.Error, OSError, ValueError):
             return {"state": "unavailable", "code": "read_failed"}
         finally:

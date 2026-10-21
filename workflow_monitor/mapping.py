@@ -260,7 +260,19 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             continue
         by_invocation[(occurrence["run_id"], invocation_id)] = activity
         activities.append(activity)
+    metric_sets = snapshot.get("metrics") if isinstance(snapshot.get("metrics"), dict) else {}
     for activity in activities:
+        metric_set = metric_sets.get(activity["run_id"])
+        if isinstance(metric_set, dict):
+            records = metric_set.get("records") if isinstance(metric_set.get("records"), list) else []
+            matches = [record for record in records if isinstance(record, dict) and record.get("invocation_id") == activity["invocation_id"]]
+            activity["metric"] = matches[0] if len(matches) == 1 else None
+            activity["metric_coverage"] = metric_set.get("coverage") if metric_set.get("coverage") in {"complete", "partial", "unavailable"} else "unavailable"
+            activity["metric_reasons"] = [reason for reason in metric_set.get("reasons", []) if isinstance(reason, str)]
+        else:
+            activity["metric"] = None
+            activity["metric_coverage"] = "unavailable"
+            activity["metric_reasons"] = ["metric_artifact_unavailable"]
         inputs = activity["selected_input_checkpoints"]
         if not isinstance(inputs, list):
             activity["input_qualification"] = "unknown"
@@ -280,7 +292,9 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             "observations": observations, "edges": edges, "unknown_records": unknown,
             "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", [])), "followups": followups,
             "review_acceptance": review_acceptance, "chain": chain, "chain_acceptance": chain_acceptance,
-            "activities": activities}
+            "activities": activities,
+            "metrics": {run_id: {"coverage": value.get("coverage"), "reasons": value.get("reasons", [])}
+                        for run_id, value in metric_sets.items() if isinstance(run_id, str) and isinstance(value, dict)}}
 
 
 __all__ = ["normalize"]
