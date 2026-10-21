@@ -46,7 +46,8 @@ test('readable backbone projection preserves declared topology and recorded owne
       { ref: 'chain_missing', run_ref: 'run_readable', execution_id: 'task_d', role: 'unknown', review_ordinal: null, fixing_round: null, outcome: 'unknown', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['not_loaded'], review_range: { base: null, head: null }, findings: [], commit_refs: {} }
     ]
   }
-  const initial = graphFor(root, [], [{ run_ref: 'run_readable', source_run_ref: 'run_readable', review_occurrence_ref: 'unknown_attempt', resolution: 'resolved' }])
+  const relations = [{ run_ref: 'run_readable', source_run_ref: 'run_readable', review_occurrence_ref: 'unknown_attempt', resolution: 'resolved' }]
+  const initial = graphFor(root, [], relations)
   const dependencies = initial.edges.filter(edge => edge.data?.relation === 'declared-prerequisite')
   expect(dependencies.map(edge => [edge.id, edge.source, edge.target]).sort()).toEqual([
     ['dependency_task_a_task_b', 'task_a', 'task_b'],
@@ -56,7 +57,8 @@ test('readable backbone projection preserves declared topology and recorded owne
     ['dependency_task_c_task_d', 'task_c', 'task_d']
   ])
   expect(initial.nodes.filter(node => node.className?.includes('planned-node')).map(node => node.id).sort()).toEqual(['task_a', 'task_b', 'task_c', 'task_d', 'task_pending'])
-  expect(initial.edges.some(edge => edge.id.startsWith('attachment_') || edge.id.startsWith('sequence_') || edge.id.startsWith('followup_'))).toBeFalsy()
+  expect(initial.edges.some(edge => edge.id.startsWith('attachment_') || edge.id.startsWith('sequence_'))).toBeFalsy()
+  expect(initial.edges.find(edge => edge.id === 'followup_unknown_attempt_chain_b')).toMatchObject({ data: { classification: 'secondary', qualification: 'declared cross-run correction; not recorded exact execution causality' } })
   expect(dependencies.every(edge => edge.label == null && edge.data?.relation === 'declared-prerequisite')).toBeTruthy()
   expect(initial.nodes.find(node => node.id === 'task_a')?.data).toMatchObject({ label: 'Design branch', taskCode: 'T001' })
   expect(initial.nodes.find(node => node.id === 'task_pending')?.data).toMatchObject({ label: 'Independent pending work', taskCode: 'Unknown task ID' })
@@ -72,10 +74,63 @@ test('readable backbone projection preserves declared topology and recorded owne
   expect(initial.nodes.find(node => node.id === 'unknown_attempt')?.data.label).toContain('Reviewer attempt unknown')
 
   for (const state of ['pending', 'running', 'returned', 'checkpoint', 'failed']) {
-    const transitioned = graphFor({ ...root, tasks: root.tasks.map(task => task.ref === 'task_b' ? { ...task, progress: { state, qualification: null } } : task) }, [], [])
+    const transitioned = graphFor({ ...root, tasks: root.tasks.map(task => task.ref === 'task_b' ? { ...task, progress: { state, qualification: null } } : task) }, [], relations)
     expect(transitioned.topology).toBe(initial.topology)
     expect(transitioned.nodes.find(node => node.id === 'task_b')?.data.status).toBe(`Plan progress: ${state}`)
   }
+})
+
+test('readable state relations retain only qualified recorded stops and corrections', () => {
+  const root: GraphSnapshot = {
+    runs: [{ ref: 'original', plan_availability: 'complete' }], tasks: [], review_definitions: [], records: [],
+    occurrences: [
+      { ref: 'returned_worker', occurrence_id: '1', run_ref: 'original', phase_ref: 'work', task_ref: null, role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [], execution_summary: { state: 'success', qualification: null } },
+      { ref: 'current_stop', run_ref: 'original', phase_ref: 'check', task_ref: null, role: 'check', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: 'returned_worker' },
+      { ref: 'before_agent_stop', run_ref: 'original', phase_ref: 'prepare', task_ref: null, role: 'prepare', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: null },
+      { ref: 'recovered_check', run_ref: 'original', phase_ref: 'check', task_ref: null, role: 'check', outcome: 'failed', completeness: 'complete', record_refs: [] },
+      { ref: 'review_occurrence', run_ref: 'original', phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: [] }
+    ],
+    chain: [{ ref: 'review_execution', run_ref: 'original', execution_id: 'review', role: 'reviewer', review_ordinal: 1, fixing_round: null, outcome: 'rejected', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['review_occurrence'], review_range: { base: null, head: null }, findings: ['recorded rejection'], commit_refs: {} }]
+  }
+  const correction: GraphSnapshot = {
+    runs: [{ ref: 'correction' }], tasks: [], records: [],
+    occurrences: [
+      { ref: 'correction_review_occurrence', run_ref: 'correction', phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'failed', completeness: 'complete', record_refs: [] },
+      { ref: 'fix_occurrence', run_ref: 'correction', phase_ref: 'work', task_ref: null, role: 'fixing_worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
+      { ref: 'check_occurrence', run_ref: 'correction', phase_ref: 'check', task_ref: null, role: 'non_model', outcome: 'passed', completeness: 'complete', record_refs: ['check_record'] },
+      { ref: 'checkpoint_occurrence', run_ref: 'correction', phase_ref: 'checkpoint', task_ref: null, role: 'non_model', outcome: 'passed', completeness: 'complete', record_refs: ['checkpoint_record'] }
+    ],
+    edges: [
+      { ref: 'trigger_edge', run_ref: 'correction', type: 'chain_trigger', from_ref: 'correction_review_execution', to_ref: 'fix_execution', resolution: 'recorded' },
+      { ref: 'predecessor_edge', run_ref: 'correction', type: 'chain_predecessor', from_ref: 'fix_execution', to_ref: 'rereview_execution', resolution: 'recorded' },
+      { ref: 'check_edge', run_ref: 'correction', type: 'chain_check', from_ref: 'fix_execution', to_ref: 'check_record', resolution: 'recorded' },
+      { ref: 'checkpoint_edge', run_ref: 'correction', type: 'chain_checkpoint', from_ref: 'fix_execution', to_ref: 'checkpoint_record', resolution: 'recorded' }
+    ],
+    chain: [
+      { ref: 'correction_review_execution', run_ref: 'correction', execution_id: 'correction-review', role: 'reviewer', review_ordinal: 1, fixing_round: null, outcome: 'rejected', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['correction_review_occurrence'], review_range: { base: null, head: null }, findings: ['still distinct'], commit_refs: {} },
+      { ref: 'fix_execution', run_ref: 'correction', execution_id: 'fix', role: 'fixer', review_ordinal: null, fixing_round: 1, outcome: 'approved', trigger_ref: 'correction_review_execution', predecessor_ref: null, occurrence_refs: ['fix_occurrence'], review_range: { base: null, head: null }, findings: [], commit_refs: {} }
+    ]
+  }
+  const graph = graphFor(root, [correction], [
+    { run_ref: 'correction', source_run_ref: 'original', review_occurrence_ref: 'review_execution', resolution: 'resolved' },
+    { run_ref: 'missing', source_run_ref: 'original', review_occurrence_ref: 'review_execution', resolution: 'unresolved' },
+    { run_ref: 'correction', source_run_ref: 'original', review_occurrence_ref: 'missing_review', resolution: 'cyclic' }
+  ])
+  const edge = (id: string) => graph.edges.find(item => item.id === id)
+  expect(graph.nodes.find(node => node.id === 'returned_worker')?.className).toContain('success')
+  expect(graph.nodes.find(node => node.id === 'current_stop')?.className).toContain('failed')
+  expect(graph.nodes.find(node => node.id === 'recovered_check')).toBeUndefined()
+  expect(edge('stop_current_stop')).toMatchObject({ source: 'returned_worker', target: 'current_stop', data: { classification: 'secondary', relation: 'recorded-stop-support' } })
+  expect(graph.edges.some(item => item.target === 'before_agent_stop')).toBeFalsy()
+  expect(graph.nodes.find(node => node.id === 'before_agent_stop')).toBeDefined()
+  expect(edge('trigger_edge')).toMatchObject({ source: 'correction_review_execution', target: 'fix_execution', data: { classification: 'secondary', relation: 'chain_trigger' } })
+  expect(edge('check_edge')).toMatchObject({ source: 'fix_execution', target: 'check_occurrence', data: { identity: { ref: 'check_edge', toRef: 'check_occurrence' } } })
+  expect(edge('checkpoint_edge')).toMatchObject({ source: 'fix_execution', target: 'checkpoint_occurrence', data: { identity: { ref: 'checkpoint_edge', toRef: 'checkpoint_occurrence' } } })
+  expect(edge('predecessor_edge')).toBeUndefined()
+  expect(edge('followup_review_execution_fix_execution')).toMatchObject({ source: 'review_execution', target: 'fix_execution', data: { classification: 'secondary', relation: 'declared-cross-run-correction', qualification: 'declared cross-run correction; not recorded exact execution causality' } })
+  expect(graph.edges.some(item => item.id.includes('missing') || item.data?.resolution === 'unresolved' || item.data?.resolution === 'cyclic')).toBeFalsy()
+  expect(graph.edges.filter(item => item.data?.classification === 'backbone')).toEqual([])
+  expect(graph.edges.every(item => item.data?.classification === 'secondary')).toBeTruthy()
 })
 
 function selected(run: string) {
