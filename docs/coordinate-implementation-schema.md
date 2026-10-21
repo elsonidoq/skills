@@ -97,6 +97,20 @@ cap, pressure protocol, watchdog, telemetry prerequisite or closed host manifest
 SDK tools handle normal read/edit/write/search/command errors and output continuation.
 SDK prompt completion, retries and compaction retain their standard behavior.
 
+For runner-owned saved-session reuse, the adapter may pass back only the host result's private
+`session` identity (`id`, private file, and effective resource compatibility) on a later prompt.
+The runner supplies a stable `reuseKey` when instructions/settings/authority need to be part of
+that compatibility; a changed key rejects reuse. The host creates or opens that exact `SessionManager` file under
+`.coherence/workflow/sessions`, rebuilds the current resource loader and task callbacks/tools on
+every open, and rejects an identity/resource mismatch rather than adopting an ambient session.
+A result retains text plus fresh before/after observations (session/branch/epoch/entry, available
+counters, and context fields). It emits the opened identity before invocation, so a terminal
+transport failure retains its existing session and actual cause for inspected targeted resumption;
+it never authorizes a blind relaunch. Unknown optional observations remain unknown; they are not a
+transport failure or evidence that reuse is safe. The host waits for both prompt completion and
+SDK idle before returning or disposing. `compaction_start`/`compaction_end` are forwarded when
+emitted by the SDK; old auto-compaction event spelling remains observable for compatibility.
+
 Independent review uses a fresh session restricted to read/search tools and an ordinary
 `{approved: boolean, findings: string[]}` result. That is a small communication interface, not
 provenance/evidence attestation. Findings are honestly reported; no SQL dispositions, repair

@@ -109,9 +109,13 @@ actual full committed range, tasks, and the same routine-authority defaults/excl
 read/search tools for source continuation. Authority does not prove checks or acceptance. Findings
 stop acceptance and are reported honestly with commits retained; there is no SQL disposition
 prerequisite or automatic expensive repair/retry loop. Address actual findings within requested
-scope, rerun affected checks, and obtain independent review. SDK compaction/retries follow SDK
-behavior; compaction/optional telemetry never creates a workflow fatal condition. SDK tools
-truncate long output with their normal continuation instructions; the transport has no size cap.
+scope, rerun affected checks, and obtain independent review. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
+workflow fatal condition. SDK tools truncate long output with their normal continuation
+instructions; the transport has no size cap. A runner may reuse only a returned private saved
+session identity with unchanged effective project/profile/read-only resources; each reopen
+rebuilds the current task's callbacks, tools and mutation scope. The host returns fresh boundary
+observations and waits for SDK idle before disposal. Missing optional observations select a fresh
+session at the routing layer; they do not stop ordinary SDK/tool correction.
 
 Material questions, including missing paid scope before provider launch, use actual current terminal input.
 Without an interactive terminal the run stops with the question and does not fabricate an answer. A loaded project

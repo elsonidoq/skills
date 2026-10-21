@@ -63,10 +63,21 @@ class PiAdapter:
         self.question = question or terminal_question
         self.observe = observe or (lambda value: print(canonical(value), file=sys.stderr, flush=True))
         self.observe_question = observe_question or (lambda state: None)
+        self.saved_session = None
+        self.last_observation = None
 
-    def prompt(self, prompt, *, claim=None, command=None, read_only=False):
+    def prompt(self, prompt, *, claim=None, command=None, read_only=False, saved_session=None, reuse_key=None):
+        """Run one prompt, optionally reopening only a runner-provided private session."""
         request = {'project': str(self.project), 'executor': self.executor,
                    'prompt': prompt, 'readOnly': read_only}
+        if reuse_key is not None:
+            if not isinstance(reuse_key, str):
+                raise Blocked('saved session reuse key must be a stable runner string')
+            request['reuseKey'] = reuse_key
+        if saved_session is not None:
+            if not isinstance(saved_session, dict):
+                raise Blocked('saved session identity must be runner-provided')
+            request['savedSession'] = saved_session
         with tempfile.TemporaryFile(mode='w+t') as errors:
             proc = subprocess.Popen([os.environ.get('COHERENCE_NODE', 'node'), str(host_path())],
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors,
@@ -124,9 +135,24 @@ class PiAdapter:
                             observe_question('delivery_failed')
                             raise
                         observe_question('sent')
+                    elif kind == 'session':
+                        session = value.get('session')
+                        if not (isinstance(session, dict) and isinstance(session.get('id'), str)
+                                and isinstance(session.get('file'), str)):
+                            raise Blocked('SDK session record has an invalid saved session identity')
+                        self.saved_session = session
+                        self.last_observation = {'before': value.get('before'), 'after': None}
                     elif kind == 'result':
                         if not isinstance(value.get('text'), str):
                             raise Blocked('SDK result text must be a string')
+                        session = value.get('session')
+                        if session is not None:
+                            if not (isinstance(session, dict) and isinstance(session.get('id'), str)
+                                    and isinstance(session.get('file'), str)):
+                                raise Blocked('SDK result has an invalid saved session identity')
+                            self.saved_session = session
+                        observations = {'before': value.get('before'), 'after': value.get('after')}
+                        self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
                         result = value['text']
                     elif kind == 'error':
                         raise Blocked('SDK operation failed: ' + str(value.get('message')))

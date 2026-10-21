@@ -1,0 +1,45 @@
+// T008: official persisted sessions and SDK-idle/compaction observations, offline.
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {test} from 'node:test';
+import {SessionManager} from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
+import {promptSession} from '../pi-host/host.mjs';
+
+test('official SessionManager create/open retains a private identity without ambient discovery', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-saved-session-'));
+  try {
+    const sessions = path.join(root, 'private-sessions');
+    const created = SessionManager.create(root, sessions);
+    // Persistence begins with an actual assistant turn, as it does after host
+    // prompt completion; state-only custom entries intentionally stay transient.
+    created.appendMessage({role: 'assistant', content: [], stopReason: 'stop',
+      api: 'test', provider: 'fixture', model: 'fixture', usage: {}});
+    const id = created.getSessionId();
+    const file = created.getSessionFile();
+    assert.ok(file);
+    const reopened = SessionManager.open(file, sessions, root);
+    assert.equal(reopened.getSessionId(), id);
+    assert.equal(reopened.getEntries().at(-1).type, 'message');
+    assert.equal(SessionManager.findById(root, id, sessions), file);
+  } finally {
+    await fs.rm(root, {recursive: true, force: true});
+  }
+});
+
+test('prompt waits for SDK idle and reports actual compaction event names', async () => {
+  let idle = false;
+  let listener;
+  const events = [];
+  const session = {
+    messages: [{role: 'assistant', stopReason: 'stop'}],
+    subscribe(fn) { listener = fn; return () => {}; },
+    async prompt() { listener({type: 'compaction_start'}); listener({type: 'compaction_end'}); },
+    async waitForIdle() { idle = true; },
+    getLastAssistantText() { return 'done'; },
+  };
+  assert.equal(await promptSession(session, 'dummy work', event => events.push(event)), 'done');
+  assert.equal(idle, true);
+  assert.deepEqual(events.map(event => event.event), ['compaction_start', 'compaction_end']);
+});

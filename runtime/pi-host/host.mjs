@@ -1,7 +1,8 @@
 // SDK transport only. SDK owns tools, retries, compaction and conversation state.
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { constants } from 'node:fs';
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile, realpath } from 'node:fs/promises';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { createAgentSession, createEditToolDefinition, createWriteToolDefinition,
@@ -10,14 +11,16 @@ import { createAgentSession, createEditToolDefinition, createWriteToolDefinition
 
 export async function promptSession(session, prompt, emit) {
   const unsubscribe = session.subscribe(event => {
-    if (['tool_execution_start', 'tool_execution_end', 'auto_compaction_start',
-      'auto_compaction_end', 'auto_retry_start', 'auto_retry_end'].includes(event.type)) {
+    if (['tool_execution_start', 'tool_execution_end', 'compaction_start', 'compaction_end',
+      'auto_compaction_start', 'auto_compaction_end', 'auto_retry_start', 'auto_retry_end'].includes(event.type)) {
       emit({type: 'event', event: event.type, tool: event.toolName,
         isError: event.isError});
     }
   });
   try {
     await session.prompt(prompt);
+    // A resolved prompt alone is not a reusable/disposable boundary.
+    if (typeof session.waitForIdle === 'function') await session.waitForIdle();
     const last = [...session.messages].reverse().find(m => m.role === 'assistant');
     if (last?.stopReason === 'error' || last?.stopReason === 'aborted') {
       throw new Error(last.errorMessage || last.stopReason);
@@ -70,7 +73,26 @@ export function mutationTools(project, ask) {
   ];
 }
 
-export async function createWorkflowSession({project, executor, readOnly = false}, ask) {
+export async function createWorkflowSession({project, executor, readOnly = false, savedSession, reuseKey = null}, ask) {
+  const sessionDir = path.join(project, '.coherence', 'workflow', 'sessions');
+  await mkdir(sessionDir, {recursive: true});
+  const canonicalSessionDir = await realpath(sessionDir);
+  if (reuseKey !== null && typeof reuseKey !== 'string') throw new Error('saved session reuse key must be a string');
+  const compatibility = {project: path.resolve(project), provider: executor.provider,
+    model: executor.model, effort: executor.effort, readOnly, reuseKey};
+  let sessionManager;
+  if (savedSession) {
+    if (typeof savedSession !== 'object' || typeof savedSession.id !== 'string' ||
+        typeof savedSession.file !== 'string' || JSON.stringify(savedSession.compatibility) !== JSON.stringify(compatibility)) {
+      throw new Error('saved session identity or effective resources mismatch');
+    }
+    const sessionFile = await realpath(savedSession.file);
+    if (path.dirname(sessionFile) !== canonicalSessionDir) throw new Error('saved session file is outside runner-private storage');
+    sessionManager = SessionManager.open(sessionFile, canonicalSessionDir, project);
+    if (sessionManager.getSessionId() !== savedSession.id) throw new Error('saved session identity mismatch');
+  } else {
+    sessionManager = SessionManager.create(project, canonicalSessionDir);
+  }
   const modelRuntime = await ModelRuntime.create({
     ...(process.env.COHERENCE_AUTH_PATH ? {authPath: process.env.COHERENCE_AUTH_PATH} : {}),
     ...(process.env.COHERENCE_CATALOG_PATH ? {modelsStorePath: process.env.COHERENCE_CATALOG_PATH} : {}),
@@ -114,23 +136,49 @@ export async function createWorkflowSession({project, executor, readOnly = false
   const {session} = await createAgentSession({
     cwd: project, modelRuntime, model, thinkingLevel: executor.effort,
     tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner'],
-    sessionManager: SessionManager.inMemory(project), resourceLoader,
+    sessionManager, resourceLoader,
   });
   await session.bindExtensions({});
   if (!readOnly && !session.getActiveToolNames().includes('ask_owner')) {
     session.dispose();
     throw new Error('Worker ask_owner tool unavailable; enable it in the SDK worker tool list before execution');
   }
+  // Only runner-private identity is retained. Every open above recreated the
+  // current task's resource loader, callbacks, tools, and mutation scope.
+  session.coherenceSavedSession = {id: sessionManager.getSessionId(), file: sessionManager.getSessionFile(), compatibility};
+  session._coherenceSessionManager = sessionManager;
   return session;
+}
+
+function observation(session) {
+  const usage = session.getContextUsage?.();
+  const stats = session.getSessionStats?.();
+  return {
+    session_id: session.coherenceSavedSession?.id ?? null,
+    branch: session.sessionId ?? session.coherenceSavedSession?.id ?? null,
+    epoch: session.coherenceEpoch,
+    entry: session._coherenceSessionManager?.getLeafId() ?? null,
+    counters: stats?.tokens ?? null,
+    context_tokens: usage?.tokens ?? null,
+    context_window: usage?.contextWindow ?? null,
+  };
 }
 
 export async function execute(request, emit, ask) {
   const session = await createWorkflowSession(request, ask);
+  session.coherenceEpoch = crypto.randomUUID();
+  // Preserve the existing session identity before an invocation can fail. The
+  // adapter can then expose that failed call/cause for inspection, never retry it.
+  emit({type: 'session', session: session.coherenceSavedSession, before: observation(session)});
   const cancel = () => { void session.abort(); };
   process.on('SIGTERM', cancel);
   process.on('SIGINT', cancel);
   try {
-    return await promptSession(session, request.prompt, emit);
+    const before = observation(session);
+    const text = await promptSession(session, request.prompt, emit);
+    session.coherenceSavedSession = {...session.coherenceSavedSession,
+      file: session._coherenceSessionManager.getSessionFile()};
+    return {text, session: session.coherenceSavedSession, before, after: observation(session)};
   } finally {
     process.off('SIGTERM', cancel);
     process.off('SIGINT', cancel);
@@ -150,7 +198,8 @@ async function main() {
   const ask = async value => { emit(value); return receive(); };
   try {
     const request = await receive();
-    emit({type: 'result', text: await execute(request, emit, ask)});
+    const result = await execute(request, emit, ask);
+    emit({type: 'result', ...result});
   } catch (error) {
     emit({type: 'error', message: error.message});
     process.exitCode = 1;

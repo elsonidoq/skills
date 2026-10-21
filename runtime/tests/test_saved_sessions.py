@@ -1,0 +1,34 @@
+"""T008 offline transport seam: private saved identity is reopened, not ambiently adopted."""
+import json
+import sys
+from unittest.mock import patch
+
+from coherence_workflow.pi_adapter import PiAdapter
+from fixtures.support import ProjectTest
+
+
+class SavedSessionTransportTests(ProjectTest):
+    def test_reopen_retains_only_identity_and_fresh_observations(self):
+        host = self.root / 'saved_host.py'
+        host.write_text('''import json, sys
+request = json.loads(input())
+if request.get("savedSession"):
+    assert request["savedSession"] == {"id":"session-1", "file":"/private/session-1.jsonl"}
+    assert request["prompt"] == "second"
+else:
+    assert request["prompt"] == "first"
+print(json.dumps({"type":"result", "text":"ok", "session":{"id":"session-1", "file":"/private/session-1.jsonl"}, "before":{"session_id":"session-1", "branch":"session-1", "epoch":"fresh", "entry":"before", "counters":{"input":1}}, "after":{"session_id":"session-1", "branch":"session-1", "epoch":"fresh", "entry":"after", "counters":{"input":2}}}), flush=True)
+''')
+        adapter = PiAdapter(self.project, {})
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(
+                'os.environ', {'COHERENCE_NODE': sys.executable}):
+            self.assertEqual(adapter.prompt('first'), 'ok')
+            first = adapter.saved_session
+            self.assertEqual(adapter.prompt('second', saved_session=first), 'ok')
+        self.assertEqual(adapter.saved_session, first)
+        self.assertEqual(adapter.last_observation['before']['entry'], 'before')
+        self.assertEqual(adapter.last_observation['after']['entry'], 'after')
+
+    def test_invalid_saved_identity_is_not_sent_to_the_host(self):
+        with self.assertRaisesRegex(Exception, 'runner-provided'):
+            PiAdapter(self.project, {}).prompt('fixture', saved_session='ambient-session')
