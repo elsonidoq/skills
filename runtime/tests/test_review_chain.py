@@ -271,6 +271,9 @@ class BoundedChainTests(ProjectTest):
             with self.assertRaisesRegex(Blocked, 'synthetic fixer failure'):
                 Engine(owner, 'fixer-failure', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
                        EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
+            usage = owner.store.db.execute(
+                "SELECT outcome,unknown_reason FROM execution_usage_intervals WHERE run_id='fixer-failure' AND role='fixing_worker'").fetchall()
+            self.assertEqual([tuple(row) for row in usage], [('failed', 'usage_observation_unavailable')])
             chain = owner.store.review_chain('fixer-failure')
         self.assertEqual(Adapter.reviews, 1)
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
@@ -306,6 +309,11 @@ class FixExecutionTests(ProjectTest):
                             paid_scope={'agent_providers': ['fixture'], 'apis': []}).run_fix(
                                 ['owned.txt:1 - synthetic defect'], trigger_execution_id='review-1',
                                 review_base=self.base, recorder=recorder, execution_id='fix-1')
+            usage = [dict(row) for row in owner.store.db.execute(
+                "SELECT * FROM execution_usage_intervals WHERE run_id='fix-run'")]
+            self.assertEqual(len(usage), 2)
+            self.assertEqual(len({row['occurrence_id'] for row in usage}), 2)
+            self.assertTrue(all(row['role'] == 'fixing_worker' for row in usage))
             chain = owner.store.review_chain('fix-run', private=True)
             history = [dict(row) for row in owner.store.db.execute(
                 "SELECT kind,state,details FROM execution_history WHERE run_id='fix-run' ORDER BY seq")]

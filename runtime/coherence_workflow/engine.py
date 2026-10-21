@@ -167,6 +167,19 @@ class Engine:
                           'reason': selection['reason'], 'rejected': selection['rejected']})
             worker = self.adapter(project, self.executor, question=self.question)
             worker.lock_fd = self.authority.lock.fileno()
+            def prompt_fix(prompt, **kwargs):
+                occurrence = uuid.uuid4().hex
+                outcome = 'settled'
+                # Do not attribute the previous prompt's interval to a failed call.
+                worker.last_interval = None
+                try:
+                    return self._prompt_worker(worker, prompt, **kwargs)
+                except BaseException as exc:
+                    outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                    raise
+                finally:
+                    store.usage_interval(self.run, occurrence, role='fixing_worker', outcome=outcome,
+                                         interval=getattr(worker, 'last_interval', None))
             prompt = ('Correct the actionable findings from one independent review within the original approved '
                       'task contracts. This is the one assigned fixing round, not a new task, routing operation, '
                       'or permission expansion. Keep the configured executor and authority. Select only explicit '
@@ -174,14 +187,12 @@ class Engine:
                       'applicable required checks. Never stage or commit: the runner owns the focused repair checkpoint.\n'
                       + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
                       'Original task contracts: ' + canonical(original_tasks) + '\nActionable findings: ' + canonical(findings))
-            text = self._prompt_worker(worker, prompt, claim=claim, command=focused.command,
+            text = prompt_fix( prompt, claim=claim, command=focused.command,
                                        saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
             recorder.emit(execution_id, 'worker', 'returned', task_id=fix_task['id'], facts={
                 'role': 'fixing_worker', 'execution_id': execution_id,
                 'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
             })
-            store.usage_interval(self.run, execution_id, role='fixing_worker', outcome='settled',
-                                 interval=getattr(worker, 'last_interval', None))
             check_occurrences = {}
             def observe(kind, ordinal, code):
                 occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
@@ -202,7 +213,7 @@ class Engine:
                         if failure.attempt == previous:
                             raise Blocked('fixing required check remains unchanged after scoped correction: ' + canonical(failure.attempt))
                         previous = failure.attempt
-                        text = self._prompt_worker(worker,
+                        text = prompt_fix(
                             'A runner-owned REQUIRED check in this assigned fixing round failed. Make a reasoned, '
                             'authorized scoped correction, then return; the runner will rerun the affected command '
                             'before checkpointing. Do not skip it, claim success, start another fixing round, or adopt '
@@ -227,7 +238,7 @@ class Engine:
                     if isinstance(exc, (KeyboardInterrupt, SystemExit)) or str(exc) == checkpoint_error:
                         raise
                     checkpoint_error = str(exc)
-                    text = self._prompt_worker(worker,
+                    text = prompt_fix(
                         'A runner-owned focused repair checkpoint failed. Make a reasoned authorized scoped correction; '
                         'do not bypass hooks/signing or adopt unrelated work. The runner will rerun affected required '
                         'checks and checkpoint. Actual checkpoint error: ' + str(exc),

@@ -70,6 +70,8 @@ class PiAdapter:
 
     def prompt(self, prompt, *, claim=None, command=None, read_only=False, saved_session=None, reuse_key=None):
         """Run one prompt, optionally reopening only a runner-provided private session."""
+        self.last_interval = None
+        self.last_observation = None
         request = {'project': str(self.project), 'executor': self.executor,
                    'prompt': prompt, 'readOnly': read_only,
                    # A standalone session record is a newer host extension.
