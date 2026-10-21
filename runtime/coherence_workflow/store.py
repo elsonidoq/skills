@@ -15,6 +15,16 @@ class Blocked(RuntimeError):
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
+def _review_input(value):
+    if not isinstance(value, dict) or set(value) != {'checkpoint_occurrence_id', 'task_id', 'producer_invocation_id', 'correction_chain'}:
+        return False
+    if any(not isinstance(value[key], str) or not value[key] for key in
+           ('checkpoint_occurrence_id', 'task_id', 'producer_invocation_id')):
+        return False
+    chain = value['correction_chain']
+    return (isinstance(chain, list) and chain and all(isinstance(part, str) and part for part in chain)
+            and chain[-1] == value['producer_invocation_id'])
+
 def safe_path(root, relative):
     if not isinstance(relative, str) or not relative or "\\" in relative or "\x00" in relative:
         raise Blocked("invalid relative path")
@@ -111,6 +121,9 @@ class Store:
             seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
             execution_id TEXT NOT NULL, state TEXT NOT NULL, uncertainty INTEGER NOT NULL,
             findings TEXT, reference_json TEXT NOT NULL, recorded_at REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS execution_review_inputs(
+            run_id TEXT NOT NULL, execution_id TEXT NOT NULL, input_checkpoints TEXT NOT NULL,
+            PRIMARY KEY(run_id, execution_id));
         CREATE TABLE IF NOT EXISTS execution_usage_memberships(
             run_id TEXT NOT NULL, task_id TEXT NOT NULL, dispatched_at REAL NOT NULL,
             PRIMARY KEY(run_id, task_id));
@@ -322,7 +335,7 @@ class Store:
 
     def review_dispatch(self, run, execution_id, *, role='reviewer', review_ordinal=1,
                         fixing_round=0, trigger_execution_id=None, predecessor_execution_id=None,
-                        review_base, review_head):
+                        input_checkpoints=None, review_base, review_head):
         """Persist a real review/fixing dispatch before its dependent invocation.
 
         Dispatch identity, rather than monitoring callbacks, consumes the bounded chain slot.
@@ -330,6 +343,10 @@ class Store:
         """
         if role not in ('reviewer', 'fixer') or not isinstance(execution_id, str) or not execution_id:
             raise Blocked('review execution needs a concrete reviewer/fixer identity')
+        if input_checkpoints is not None and (role != 'reviewer' or review_ordinal != 1 or
+                                              not isinstance(input_checkpoints, list) or
+                                              not all(_review_input(item) for item in input_checkpoints)):
+            raise Blocked('only the first reviewer may retain explicit selected input checkpoints')
         if review_ordinal not in (1, 2) or fixing_round not in (0, 1):
             raise Blocked('review chain exceeds two reviews or one fixing round')
         if role == 'reviewer' and fixing_round != review_ordinal - 1:
@@ -342,16 +359,24 @@ class Store:
         if sum(item['role'] == 'reviewer' for item in prior['executions']) >= 2 or (role == 'fixer' and any(item['role'] == 'fixer' for item in prior['executions'])):
             raise Blocked('review chain limit already consumed; do not dispatch another review/fixing round')
         references = canonical({'base': review_base, 'head': review_head})
+        saved_inputs = canonical(input_checkpoints) if input_checkpoints is not None else None
         def write():
             with self.transaction() as db:
                 db.execute('INSERT INTO execution_review_executions VALUES(?,?,?,?,?,?,?,?,?,?)',
                            (run, execution_id, role, review_ordinal, fixing_round, trigger_execution_id,
                             predecessor_execution_id, review_base, review_head, time.time()))
+                if saved_inputs is not None:
+                    db.execute('INSERT INTO execution_review_inputs VALUES(?,?,?)', (run, execution_id, saved_inputs))
                 db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
                            (run, execution_id, 'dispatched', 0, None, references, time.time()))
         def completed():
-            return bool(self.db.execute('SELECT 1 FROM execution_review_executions WHERE run_id=? AND execution_id=?',
-                                        (run, execution_id)).fetchone())
+            dispatched = bool(self.db.execute('SELECT 1 FROM execution_review_executions WHERE run_id=? AND execution_id=?',
+                                               (run, execution_id)).fetchone())
+            if saved_inputs is None:
+                return dispatched
+            row = self.db.execute('SELECT input_checkpoints FROM execution_review_inputs WHERE run_id=? AND execution_id=?',
+                                  (run, execution_id)).fetchone()
+            return dispatched and row is not None and row['input_checkpoints'] == saved_inputs
         self._required_write('review dispatch history', write, completed)
 
     def review_outcome(self, run, execution_id, state, *, findings=None, uncertainty=False, references=None):
@@ -383,6 +408,10 @@ class Store:
                     'predecessor_execution_id': row['predecessor_execution_id'], 'state': latest['state'],
                     'uncertain': bool(latest['uncertainty']), 'references': json.loads(latest['reference_json']),
                     'attempt_count': len(attempts)}
+            inputs = self.db.execute('SELECT input_checkpoints FROM execution_review_inputs WHERE run_id=? AND execution_id=?',
+                                     (run, row['execution_id'])).fetchone()
+            if inputs is not None:
+                item['input_checkpoints'] = json.loads(inputs['input_checkpoints'])
             if private:
                 item['findings'] = [json.loads(attempt['findings']) for attempt in attempts if attempt['findings'] is not None]
             else:

@@ -34,8 +34,10 @@ class ChainRecordingTests(ProjectTest):
             store.review_dispatch('recorded', 'fix-1', role='fixer', review_ordinal=1, fixing_round=1,
                                   trigger_execution_id='review-1', predecessor_execution_id='review-1',
                                   review_base=self.base, review_head=self.base)
-            recorder.emit('fix-1', 'worker', 'started', task_id='fix', facts={
-                'role': 'fixing_worker', 'execution_id': 'fix-1',
+            recorder.emit('fix-call-1', 'worker', 'started', task_id='fix', facts={
+                'role': 'fixing_worker', 'execution_id': 'fix-1', 'invocation_id': 'fix-call-1',
+                'invocation_kind': 'task_worker', 'selected_input_checkpoints': [],
+                'correction_chain': ['fix-call-1'], 'fixing_round': 1,
                 'trigger_execution_id': 'review-1', 'predecessor_execution_id': 'review-1',
             })
             recorder.emit('check-1', 'check', 'passed', task_id='fix', facts={
@@ -43,6 +45,7 @@ class ChainRecordingTests(ProjectTest):
             })
             recorder.emit('checkpoint-1', 'checkpoint', 'passed', task_id='fix', facts={
                 'baseline': self.base, 'head': self.base, 'no_change': False, 'execution_id': 'fix-1',
+                'producer_invocation_id': 'fix-call-1', 'correction_chain': ['fix-call-1'],
             })
             store.review_outcome('recorded', 'fix-1', 'approved', findings=[],
                                  references={'base': self.base, 'head': self.base, 'commit': self.base})
@@ -230,6 +233,7 @@ class BoundedChainTests(ProjectTest):
             result = Engine(owner, 'repaired', contract, EXECUTOR, adapter=Adapter,
                             paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
             chain = owner.store.review_chain('repaired')
+            observations = owner.store.monitor('repaired')['observations']
         self.assertEqual(result['status'], 'complete')
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
                          [('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
@@ -237,6 +241,31 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(len(calls), 2)
         self.assertNotEqual(calls[0][1], calls[1][1])
         self.assertTrue(all(call[2]['read_only'] for call in calls))
+
+        if any(row['phase'] == 'review' and row['kind'] == 'started' and
+               'selected_input_checkpoints' in json.loads(row['facts']) for row in observations):
+            # Optional recording loss cannot alter the required chain.
+            checkpoint = next(row for row in observations
+                              if row['phase'] == 'checkpoint' and row['kind'] == 'passed' and row['task_id'] == 'dummy')
+            first_review = next(row for row in observations
+                                if row['phase'] == 'review' and row['kind'] == 'started'
+                                and json.loads(row['facts'])['review_ordinal'] == 1)
+            first_facts = json.loads(first_review['facts'])
+            self.assertEqual(first_facts['selected_input_checkpoints'], [{
+                'checkpoint_occurrence_id': checkpoint['occurrence_id'], 'task_id': 'dummy',
+                'producer_invocation_id': json.loads(checkpoint['facts'])['producer_invocation_id'],
+                'correction_chain': json.loads(checkpoint['facts'])['correction_chain'],
+            }])
+            self.assertEqual(chain['executions'][0]['input_checkpoints'], first_facts['selected_input_checkpoints'])
+            fixer_calls = [json.loads(row['facts']) for row in observations
+                           if row['phase'] == 'worker' and row['kind'] == 'started'
+                           and json.loads(row['facts']).get('role') == 'fixing_worker']
+            self.assertEqual(len(fixer_calls), 2)
+            self.assertNotEqual(fixer_calls[0]['invocation_id'], fixer_calls[1]['invocation_id'])
+            self.assertEqual(fixer_calls[0]['trigger_execution_id'], chain['executions'][0]['execution_id'])
+            self.assertEqual(fixer_calls[1]['predecessor_invocation_id'], fixer_calls[0]['invocation_id'])
+            self.assertEqual(fixer_calls[1]['correction_chain'], [call['invocation_id'] for call in fixer_calls])
+            self.assertTrue(all(call['fixing_round'] == 1 for call in fixer_calls))
 
     def test_final_rejection_stops_after_two_reviews_and_one_fixer(self):
         class Adapter:
@@ -275,9 +304,15 @@ class BoundedChainTests(ProjectTest):
                 "SELECT outcome,unknown_reason FROM execution_usage_intervals WHERE run_id='fixer-failure' AND role='fixing_worker'").fetchall()
             self.assertEqual([tuple(row) for row in usage], [('failed', 'usage_observation_unavailable')])
             chain = owner.store.review_chain('fixer-failure')
+            observations = owner.store.monitor('fixer-failure')['observations']
         self.assertEqual(Adapter.reviews, 1)
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
                          [('reviewer', 'rejected'), ('fixer', 'failed')])
+        failed = next(json.loads(row['facts']) for row in observations
+                      if row['phase'] == 'worker' and row['kind'] == 'failed')
+        terminal = next(json.loads(row['facts']) for row in observations
+                        if row['phase'] == 'terminal' and row['kind'] == 'failed')
+        self.assertEqual(terminal['stopped_by_invocation_id'], failed['invocation_id'])
 
 
 class FixExecutionTests(ProjectTest):

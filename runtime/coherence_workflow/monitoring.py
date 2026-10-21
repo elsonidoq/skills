@@ -67,11 +67,11 @@ def _closed_facts(phase, kind, facts):
         "gate": {"ordinal", "parent_occurrence_id", "error_category"},
         "worker": {"role", "execution_id", "trigger_execution_id", "predecessor_execution_id", "parent_occurrence_id", "error_category",
                    "invocation_id", "invocation_kind", "selected_input_checkpoints", "correction_chain",
-                   "predecessor_invocation_id", "stopped_by_invocation_id", "support_invocation_id"},
+                   "predecessor_invocation_id", "stopped_by_invocation_id", "support_invocation_id", "fixing_round"},
         "check": {"ordinal", "exit_code", "execution_id", "parent_occurrence_id", "error_category"},
         "checkpoint": {"baseline", "head", "no_change", "execution_id", "parent_occurrence_id", "error_category",
                        "producer_invocation_id", "correction_chain"},
-        "review": {"role", "execution_id", "review_ordinal", "trigger_execution_id", "predecessor_execution_id", "review_base", "review_head", "approved", "outcome", "finding_count", "parent_occurrence_id", "error_category"},
+        "review": {"role", "execution_id", "review_ordinal", "trigger_execution_id", "predecessor_execution_id", "review_base", "review_head", "approved", "outcome", "finding_count", "parent_occurrence_id", "error_category", "selected_input_checkpoints"},
         "terminal": {"baseline", "head", "error_category", "stopped_by_invocation_id", "support_invocation_id"},
     }[phase]
     if set(facts) - allowed:
@@ -82,7 +82,7 @@ def _closed_facts(phase, kind, facts):
         if key == "invocation_kind" and value not in _INVOCATION_KINDS: return False
         if key == "selected_input_checkpoints" and (not isinstance(value, list) or not all(_task_input(item) for item in value)): return False
         if key == "correction_chain" and (not isinstance(value, list) or not value or any(not isinstance(item, str) or not item for item in value)): return False
-        if key in {"ordinal", "review_ordinal", "finding_count"} and (type(value) is not int or value < 0): return False
+        if key in {"ordinal", "review_ordinal", "finding_count", "fixing_round"} and (type(value) is not int or value < 0): return False
         if key == "exit_code" and type(value) is not int: return False
         if key == "no_change" and type(value) is not bool: return False
         if key == "approved" and type(value) is not bool: return False

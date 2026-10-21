@@ -34,21 +34,25 @@ class MonitoringStorageTests(ProjectTest):
             self.assertTrue(any(phase['possible_branches'] for phase in retained['phases']))
             self.assertEqual(dict(owner.store.db.execute('SELECT * FROM execution_tasks').fetchone()), before)
 
-    def test_legacy_fixer_lifecycle_remains_recordable_until_t015(self):
+    def test_fixer_calls_use_closed_distinct_invocation_facts(self):
         with Authority(self.project) as owner:
-            owner.store.start('legacy-fixer', self.base)
-            rec = Recorder(owner.store, 'legacy-fixer')
+            owner.store.start('fixer-calls', self.base)
+            rec = Recorder(owner.store, 'fixer-calls')
             self.assertTrue(rec.register(descriptor({'tasks': []}, {})))
-            facts = {
-                'role': 'fixing_worker', 'execution_id': 'fix-1',
+            first = {
+                'role': 'fixing_worker', 'execution_id': 'fix-1', 'invocation_id': 'call-1',
+                'invocation_kind': 'task_worker', 'selected_input_checkpoints': [],
+                'correction_chain': ['call-1'], 'fixing_round': 1,
                 'trigger_execution_id': 'review-1', 'predecessor_execution_id': 'review-1',
             }
-            rec.emit('fix-1', 'worker', 'started', task_id='fix-fix-1', facts=facts)
-            rec.emit('fix-1', 'worker', 'returned', task_id='fix-fix-1', facts=facts)
+            second = {**first, 'invocation_id': 'call-2', 'invocation_kind': 'corrective_worker',
+                      'correction_chain': ['call-1', 'call-2'], 'predecessor_invocation_id': 'call-1'}
+            rec.emit('call-1', 'worker', 'started', task_id='fix-fix-1', facts=first)
+            rec.emit('call-2', 'worker', 'started', task_id='fix-fix-1', facts=second)
             rows = [(row['kind'], json.loads(row['facts']))
-                    for row in owner.store.monitor('legacy-fixer')['observations']]
+                    for row in owner.store.monitor('fixer-calls')['observations']]
 
-        self.assertEqual(rows, [('started', facts), ('returned', facts)])
+        self.assertEqual(rows, [('started', first), ('started', second)])
 
     def test_invalid_optional_metadata_and_append_failure_do_not_veto_progress(self):
         contract = {'tasks': [{'id': 'one'}], 'monitor': {'tasks': {'one': {'label': ['private']}}}}

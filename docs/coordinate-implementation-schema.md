@@ -105,10 +105,13 @@ final producing invocation and chain, so a later task consumes an exact producer
 latest attempt. Failed/interrupted worker calls and the enclosing terminal boundary may name the explicit
 `stopped_by_invocation_id`; `support_invocation_id` is reserved for separately recorded explicit support, never
 inferred from timing, dependency declarations, or a shared session. These typed relations are producer facts
-for later consumers, not model-reading/obedience or concurrency proof. Review/fixer dispatch and first-review
-membership are outside this task-worker vocabulary's current production use. Invalid or unavailable optional
-facts are rejected or become recorder gaps without changing ordinary execution. No prompts, errors, summaries,
-output, paths, or arbitrary payload fields enter monitoring facts.
+for later consumers, not model-reading/obedience or concurrency proof. The actual first reviewer additionally
+records its exact selected completed task outputs using the same checkpoint shape and its reviewed range; an
+unrecordable output leaves membership unknown rather than substituting every plan task or commit in that range.
+Each actual fixer prompt has its own invocation ID and correction chain while retaining its fixing-round and
+review trigger/predecessor identities. Re-review has no first-review membership claim. Invalid or unavailable
+optional facts are rejected or become recorder gaps without changing ordinary execution. No prompts, errors,
+summaries, output, paths, or arbitrary payload fields enter monitoring facts.
 The read-only monitor may correlate an actually recorded execution ID with its required chain row: it exposes only explicit reviewer/fixer predecessor relations, typed outcome/range, SHA references, and findings matching the review protocol's inert `path:line - issue` form. Raw reviewer payloads, arbitrary findings, prompts, answers, errors, and secrets remain private; absent/dangling IDs remain unknown and are never inferred from order, labels, timestamps, or `correction_of`.
 A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.
 Facts are validated by phase and milestone before append: Git fields are hashes, roles and error categories

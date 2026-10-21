@@ -125,7 +125,7 @@ class Engine:
                 '. Ask before using any additional paid application/test API, including one discovered '
                 'during execution; do not ask again for unchanged scope. ')
 
-    def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id):
+    def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id, terminal_stop=None):
         """Run the one already-authorized review repair without routing another workflow.
 
         The caller supplies the actual first-review execution and fixer identity.  This
@@ -156,10 +156,6 @@ class Engine:
         store.review_dispatch(self.run, execution_id, role='fixer', review_ordinal=1, fixing_round=1,
                               trigger_execution_id=trigger_execution_id, predecessor_execution_id=trigger_execution_id,
                               review_base=review_base, review_head=head)
-        recorder.emit(execution_id, 'worker', 'started', task_id=fix_task['id'], facts={
-            'role': 'fixing_worker', 'execution_id': execution_id,
-            'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
-        })
         focused = FocusedGit(project, fix_task)
         claimed_paths = set()
         def claim(name):
@@ -179,18 +175,40 @@ class Engine:
                           'reason': selection['reason'], 'rejected': selection['rejected']})
             worker = self.adapter(project, self.executor, question=self.question)
             worker.lock_fd = self.authority.lock.fileno()
+            fixer_chain, last_fixer_invocation = [], [None]
             def prompt_fix(prompt, **kwargs):
-                occurrence = uuid.uuid4().hex
+                invocation_id = uuid.uuid4().hex
+                predecessor = last_fixer_invocation[0]
+                chain = [*fixer_chain, invocation_id]
+                occurrence = recorder.occurrence()
+                public = {
+                    'role': 'fixing_worker', 'execution_id': execution_id, 'invocation_id': invocation_id,
+                    'invocation_kind': 'corrective_worker' if predecessor else 'task_worker',
+                    'selected_input_checkpoints': [], 'correction_chain': chain, 'fixing_round': 1,
+                    'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
+                }
+                if predecessor:
+                    public['predecessor_invocation_id'] = predecessor
+                recorder.emit(occurrence, 'worker', 'started', task_id=fix_task['id'], facts=public)
                 outcome = 'settled'
                 # Do not attribute the previous prompt's interval to a failed call.
                 worker.last_interval = None
                 try:
-                    return self._prompt_worker(worker, prompt, **kwargs)
+                    result = self._prompt_worker(worker, prompt, **kwargs)
                 except BaseException as exc:
                     outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                    if terminal_stop is not None:
+                        terminal_stop[0] = invocation_id
+                    recorder.emit(occurrence, 'worker', outcome, task_id=fix_task['id'], facts={
+                        **public, 'stopped_by_invocation_id': invocation_id, 'error_category': _failure(exc)})
                     raise
+                else:
+                    recorder.emit(occurrence, 'worker', 'returned', task_id=fix_task['id'], facts=public)
+                    fixer_chain[:] = chain
+                    last_fixer_invocation[0] = invocation_id
+                    return result
                 finally:
-                    store.usage_interval(self.run, occurrence, role='fixing_worker', outcome=outcome,
+                    store.usage_interval(self.run, invocation_id, role='fixing_worker', outcome=outcome,
                                          interval=getattr(worker, 'last_interval', None))
             prompt = ('Correct the actionable findings from one independent review within the original approved '
                       'task contracts. This is the one assigned fixing round, not a new task, routing operation, '
@@ -201,10 +219,6 @@ class Engine:
                       'Original task contracts: ' + canonical(original_tasks) + '\nActionable findings: ' + canonical(findings))
             text = prompt_fix(prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
                                        saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
-            recorder.emit(execution_id, 'worker', 'returned', task_id=fix_task['id'], facts={
-                'role': 'fixing_worker', 'execution_id': execution_id,
-                'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
-            })
             check_occurrences = {}
             def observe(kind, ordinal, code):
                 occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
@@ -261,9 +275,12 @@ class Engine:
             checkpoint['parent'] = (None if checkpoint['no_change'] else
                                     git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
             store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
-            recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=fix_task['id'], facts={
-                'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change'],
-                'execution_id': execution_id})
+            checkpoint_facts = {'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change'],
+                                'execution_id': execution_id}
+            if last_fixer_invocation[0] is not None:
+                checkpoint_facts.update({'producer_invocation_id': last_fixer_invocation[0],
+                                         'correction_chain': list(fixer_chain)})
+            recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=fix_task['id'], facts=checkpoint_facts)
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.review_outcome(self.run, execution_id, 'approved', findings=[],
                                  references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
@@ -273,11 +290,6 @@ class Engine:
             outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
             store.review_outcome(self.run, execution_id, outcome, findings=[], uncertainty=False,
                                  references={'base': review_base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip()})
-            recorder.emit(execution_id, 'worker', outcome, task_id=fix_task['id'], facts={
-                'role': 'fixing_worker', 'execution_id': execution_id,
-                'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
-                'error_category': _failure(exc),
-            })
             raise
 
     @staticmethod
@@ -299,14 +311,31 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved and a nonempty-string list of findings')
         return value
 
+    @staticmethod
+    def _review_inputs(checkpoints):
+        """Retain all-and-only runner-selected completed task outputs, or no claim."""
+        selected = []
+        for item in checkpoints:
+            value = {key: item.get(key) for key in
+                     ('checkpoint_occurrence_id', 'task_id', 'producer_invocation_id', 'correction_chain')}
+            if (not all(isinstance(value[key], str) and value[key] for key in
+                        ('checkpoint_occurrence_id', 'task_id', 'producer_invocation_id')) or
+                    not isinstance(value['correction_chain'], list) or not value['correction_chain'] or
+                    any(not isinstance(part, str) or not part for part in value['correction_chain']) or
+                    value['correction_chain'][-1] != value['producer_invocation_id']):
+                return None
+            selected.append(value)
+        return selected
+
     def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
-                trigger_execution_id=None, predecessor_execution_id=None):
+                trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
         execution_id = uuid.uuid4().hex
         store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
                               fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
                               predecessor_execution_id=predecessor_execution_id,
+                              input_checkpoints=input_checkpoints,
                               review_base=review_base, review_head=head)
         review_facts = {
             'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
@@ -315,6 +344,8 @@ class Engine:
         if trigger_execution_id is not None:
             review_facts['trigger_execution_id'] = trigger_execution_id
             review_facts['predecessor_execution_id'] = predecessor_execution_id
+        if input_checkpoints is not None:
+            review_facts['selected_input_checkpoints'] = input_checkpoints
         recorder.emit(execution_id, 'review', 'started', facts=review_facts)
         reviewer = self.adapter(self.authority.project, self.reviewer_executor, question=self.question)
         reviewer.lock_fd = self.authority.lock.fileno()
@@ -352,7 +383,7 @@ class Engine:
         recorder.emit(execution_id, 'review', 'passed' if state == 'approved' else 'failed', facts=review_facts)
         return execution_id, value, state
 
-    def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base):
+    def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base, terminal_stop=None):
         """Continue the one persisted review/fix chain without consuming a new slot."""
         store = self.authority.store
         chain = store.review_chain(self.run, private=True)
@@ -362,7 +393,8 @@ class Engine:
         fixers = [item for item in chain['executions'] if item['role'] == 'fixer']
         head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
         if not reviews:
-            review_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1)
+            review_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1,
+                                                    input_checkpoints=self._review_inputs(checkpoints))
         else:
             review_id, review, state = reviews[0]['execution_id'], {'approved': reviews[0]['state'] == 'approved',
                 'findings': reviews[0]['findings'][-1] if reviews[0].get('findings') else []}, reviews[0]['state']
@@ -383,7 +415,7 @@ class Engine:
         if not fixers:
             fix_id = uuid.uuid4().hex
             self.run_fix(review['findings'], trigger_execution_id=review_id, review_base=review_base,
-                         recorder=recorder, execution_id=fix_id)
+                         recorder=recorder, execution_id=fix_id, terminal_stop=terminal_stop)
             fixers = [item for item in store.review_chain(self.run, private=True)['executions'] if item['role'] == 'fixer']
         fixer = fixers[0]
         if fixer['state'] != 'approved':
@@ -716,7 +748,7 @@ class Engine:
                     store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': str(exc)})
                     raise
             return self._finish_reviews(recorder=recorder, terminal=terminal, checkpoints=checkpoints,
-                                        base=base, review_base=review_base)
+                                        base=base, review_base=review_base, terminal_stop=terminal_stop)
         except BaseException as exc:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, str(exc))
