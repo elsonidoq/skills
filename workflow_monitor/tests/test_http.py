@@ -205,6 +205,7 @@ class HttpTests(unittest.TestCase):
     def test_run_shell_accepts_one_percent_encoded_actual_id_component(self):
         for path in (
             "/runs/id-plain",
+            "/runs/id-actual(run)!~*'",
             "/runs/id-reserved%2Fpart%3Fquery%23fragment",
             "/runs/id-%E6%9D%B1%E4%BA%AC",
             "/runs/id-percent%2525",

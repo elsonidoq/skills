@@ -83,7 +83,7 @@ def _encoded_run_id(raw_path: bytes) -> bool:
     component = raw_path[len(prefix):]
     if not component or b"/" in component:
         return False
-    safe = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~*'"
+    safe = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~*'()"
     index = 0
     while index < len(component):
         byte = component[index]

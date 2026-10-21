@@ -50,6 +50,11 @@ test('uses actual production routes for display-ID direct opens, history, sortin
 
   await page.goto('/runs/id-...')
   await expect(page.getByLabel('Selected run')).toContainText('...')
+  await page.goto('/runs/id-actual(run)')
+  await expect(page.getByLabel('Selected run')).toContainText('actual(run)')
+  await page.reload()
+  await expect(page).toHaveURL('/runs/id-actual(run)')
+  await expect(page.getByLabel('Selected run')).toContainText('actual(run)')
   await page.goto('/runs/id-missing')
   await expect(page).toHaveURL('/runs/id-missing')
   await expect(page.getByRole('status')).toContainText('Run missing is unavailable.')
