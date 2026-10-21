@@ -1,6 +1,7 @@
 """Task-file parsing and the six executable intake checks."""
 import copy
 import hashlib
+import heapq
 import json
 from pathlib import Path
 
@@ -36,20 +37,22 @@ def admit(contract):
         for dep in task.get('depends', []):
             if dep not in by_id:
                 raise Blocked('task '+task['id']+' references missing dependency: '+dep)
-    # Iterative topological ordering also handles long, ordinary task lists.
+    # Topological order, choosing the lowest ready ID (numbered IDs use zero padding).
     remaining = {key: set(task.get('depends', [])) for key, task in by_id.items()}
     consumers = {key: [] for key in by_id}
     for key, deps in remaining.items():
         for dep in deps:
             consumers[dep].append(key)
     ready = [key for key in by_id if not remaining[key]]
+    heapq.heapify(ready)
     ordered = []
-    for key in ready:
+    while ready:
+        key = heapq.heappop(ready)
         ordered.append(by_id[key])
         for consumer in consumers[key]:
             remaining[consumer].discard(key)
             if not remaining[consumer]:
-                ready.append(consumer)
+                heapq.heappush(ready, consumer)
     if len(ordered) != len(tasks):
         raise Blocked('dependency cycle involving: '+', '.join(key for key, deps in remaining.items() if deps))
     result['tasks'] = ordered

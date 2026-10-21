@@ -86,6 +86,18 @@ class TaskLinterTests(unittest.TestCase):
         self.assertEqual(result['tasks'][1], value['tasks'][0])
         self.assertEqual(value, before)
 
+    def test_lowest_ready_id_is_reselected_after_each_task(self):
+        tasks = [
+            {'id': 'T008', 'outcome': 'Eight', 'depends': ['T002']},
+            {'id': 'T005', 'outcome': 'Five', 'depends': ['T004']},
+            {'id': 'T004', 'outcome': 'Four', 'depends': ['T002', 'T003']},
+            {'id': 'T003', 'outcome': 'Three', 'depends': ['T001']},
+            {'id': 'T002', 'outcome': 'Two', 'depends': ['T001']},
+            {'id': 'T001', 'outcome': 'One'},
+        ]
+        self.assertEqual([task['id'] for task in admit(tasks)['tasks']],
+                         ['T001', 'T002', 'T003', 'T004', 'T005', 'T008'])
+
     def test_empty_start_has_no_storage_reservation_or_worker(self):
         self.path.write_text('[]')
         project = Path(self.temp.name) / 'project'
