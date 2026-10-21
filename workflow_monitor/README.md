@@ -90,11 +90,14 @@ and does not expose arbitrary payload/credential fields, runner identity interna
 history** retrieve further pages at their snapshot watermarks. Inventory counts disclose
 unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 
-The graph currently uses ELK's layered RIGHT layout and initially fits the recorded graph into the
-available graph panel after the run selector and Details panel take their space, so its main
-branches and any recorded review/fix chain are visible without initial hunting or panning.
-Pan, zoom and selection remain available for detail; status-only polling preserves a deliberate
-viewport, positions and selection. The closed snapshot API is polled every **60 seconds**; this
+The graph uses measured task and history-group footprints with ELK's layered top-to-bottom
+prerequisite backbone. Task headers and their distinct recorded attempts share a visible owner
+area; run review/execution and unassigned recorded history have named areas instead of guessed
+ownership. Only declared prerequisites set ranks; recorded stops and qualified corrections are
+secondary overlays. The initial view fits the recorded graph into the available graph panel after
+the run selector and Details panel take their space. Pan, zoom and selection remain available for
+detail; unchanged-topology status polling preserves a deliberate viewport, positions, group
+ownership and selection while updating visible status. The closed snapshot API is polled every **60 seconds**; this
 is not a claim that polling alone caused previous slowness. Stale old-run fetch/layout results
 are discarded. Read freshness, last successful read and last recorded activity remain separate.
 Failed reads retain sanitized evidence with a warning. Recorded runner `live`/`stopped`/`unknown`

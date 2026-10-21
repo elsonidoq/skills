@@ -4,7 +4,7 @@
 .selection-details { height: 64vh; min-height: 24rem; overflow: auto; padding: .8rem; border: 2px solid #486783; background: #fff; overflow-wrap: anywhere; }
 .selection-details h3 { margin-top: .2rem; }
 .selection-details p { font-size: .85rem; }
-.execution-node { width: 180px; min-height: 70px; border: 2px solid #64748b; border-radius: .4rem; padding: .6rem; background: #eef2f6; }
+.execution-node { width: 180px; min-height: 70px; box-sizing: border-box; border: 2px solid #64748b; border-radius: .4rem; padding: .6rem; background: #eef2f6; }
 .execution-node small { display: block; margin-top: .3rem; font-size: .7rem; }
 .success { background: #dcf5e4 !important; border-color: #247342 !important; }
 .failed { background: #ffe5e5 !important; border-color: #ad3030 !important; }
@@ -13,7 +13,12 @@
 .plan { background: #e9e4ff !important; border-color: #5f4bb6 !important; }
 .acceptance { background: #e7f1ff !important; border-color: #1769aa !important; }
 .unavailable { background: #fff0c2 !important; border-color: #9a6900 !important; }
-.planned-node, .planned-review-node { width: 180px; min-height: 70px; border: 2px solid #5f4bb6; border-radius: .4rem; padding: .6rem; background: #e9e4ff; }
+.owner-group { border: 2px solid #7890aa; border-radius: .6rem; padding: 0; background: #f8fbff; pointer-events: none; }
+.owner-group.task { border-color: #5f4bb6; background: #f3f0ff; }
+.owner-group.run-review { border-style: dashed; background: #eef7ff; }
+.owner-group.unassigned { border-color: #9a6900; background: #fff9ea; }
+.group-header { padding: .55rem .7rem; font-size: .8rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.planned-node, .planned-review-node { width: 180px; min-height: 70px; box-sizing: border-box; border: 2px solid #5f4bb6; border-radius: .4rem; padding: .6rem; background: #e9e4ff; }
 .planned-review-node { border-style: dashed; }
 .progress-completed { background: #dcecff; }
 .progress-failed, .progress-blocked { background: #ffe5e5; }
