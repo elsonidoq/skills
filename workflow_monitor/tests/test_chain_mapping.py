@@ -134,12 +134,20 @@ class ChainMappingTests(ProjectTest):
             "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
             input=json.dumps(dto).encode(), cwd=ROOT))
         nodes = {node['id'] for node in view['nodes']}
+        represented = {}
+        for execution in dto['chain']:
+            for occurrence_ref in execution['occurrence_refs']:
+                represented.setdefault((execution['run_ref'], occurrence_ref), []).append(execution['ref'])
         for edge in dto['edges']:
             if edge['type'] not in ('chain_check', 'chain_checkpoint'): continue
             target = next(item for item in dto['occurrences'] if edge['to_ref'] in item['record_refs'])
-            self.assertIn(target['ref'], nodes)
+            replacements = represented.get((target['run_ref'], target['ref']), [])
+            expected_target = replacements[0] if len(replacements) == 1 else target['ref']
+            self.assertIn(expected_target, nodes)
+            if len(replacements) == 1:
+                self.assertNotIn(target['ref'], nodes)
             rendered = next(item for item in view['edges'] if item['id'] == edge['ref'])
-            self.assertEqual((rendered['source'], rendered['target']), (edge['from_ref'], target['ref']))
+            self.assertEqual((rendered['source'], rendered['target']), (edge['from_ref'], expected_target))
         self.assertNotIn("PRIVATE-SENTINEL", repr(dto))
         self.assertNotIn("PRIVATE-WORKER-ANSWER", repr(dto))
 
