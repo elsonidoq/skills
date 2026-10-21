@@ -1,98 +1,41 @@
 import ELK from 'elkjs/lib/elk.bundled.js'
 
 export type LayoutSize = { width: number; height: number }
-export type LayoutMember = { id: string; size: LayoutSize }
-export type LayoutGroup = {
-  id: string
-  kind: 'task' | 'run-review' | 'unassigned'
-  header: LayoutSize
-  members: LayoutMember[]
-}
-export type Prerequisite = { source: string; target: string }
-export type FootprintLayoutInput = {
-  groups: LayoutGroup[]
-  prerequisites: Prerequisite[]
-  // Secondary relations are intentionally not ELK rank constraints.
-  secondaryRelations?: ReadonlyArray<unknown>
-}
+export type LayoutNode = { id: string; size: LayoutSize }
+export type LayoutEdge = { source: string; target: string }
 type ElkInput = {
   id: string
   layoutOptions: Record<string, string>
   children: Array<{ id: string; width: number; height: number }>
   edges: Array<{ id: string; sources: string[]; targets: string[] }>
 }
-export type LayoutBounds = LayoutSize & { x: number; y: number }
-export type PositionedGroup = {
-  id: string
-  kind: LayoutGroup['kind']
-  bounds: LayoutBounds
-  header: LayoutBounds
-  children: Array<{ id: string; bounds: LayoutBounds }>
-}
-export type FootprintLayout = { elkInput: ElkInput; groups: PositionedGroup[] }
+export type PositionedNode = { id: string; width: number; height: number; x: number; y: number }
+export type FlatLayout = { elkInput: ElkInput; nodes: PositionedNode[] }
 
 const elk = new ELK()
-const padding = 16
-const spacing = 12
-const ownerBorderWidth = 4
 
-function nonNegative(size: LayoutSize): LayoutSize {
-  return { width: Math.max(0, size.width), height: Math.max(0, size.height) }
+function measured(size: LayoutSize): LayoutSize {
+  return { width: Math.max(1, size.width), height: Math.max(1, size.height) }
 }
 
-function footprint(group: LayoutGroup): LayoutSize {
-  const header = nonNegative(group.header)
-  const members = group.members.map(member => nonNegative(member.size))
-  return {
-    // React Flow renders owner-group's two 2px vertical borders outside its styled
-    // content width, so reserve them in the graph-coordinate footprint.
-    width: Math.max(header.width, ...members.map(member => member.width)) + padding * 2 + ownerBorderWidth,
-    height: padding * 2 + header.height + (members.length ? spacing + members.reduce((total, member) => total + member.height, 0) + spacing * Math.max(0, members.length - 1) : 0)
-  }
-}
-
-/**
- * Lays out owner footprints in absolute graph coordinates. Header and child bounds are
- * absolute too, so a renderer can convert each one to parent-relative coordinates by
- * subtracting its group's bounds.x/y. Only declared prerequisites enter ELK.
- */
-export async function layoutFootprints(input: FootprintLayoutInput): Promise<FootprintLayout> {
-  const sizes = new Map(input.groups.map(group => [group.id, footprint(group)]))
+/** Lay out the rendered activity calls themselves. Only validated graph edges rank them. */
+export async function layoutNodes(nodes: LayoutNode[], edges: LayoutEdge[]): Promise<FlatLayout> {
+  const sizes = new Map(nodes.map(node => [node.id, measured(node.size)]))
   const elkInput: ElkInput = {
-    id: 'workflow-monitor-footprints',
+    id: 'workflow-monitor-activity',
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'DOWN',
       'elk.spacing.nodeNode': '25',
       'elk.layered.spacing.nodeNodeBetweenLayers': '60'
     },
-    children: input.groups.map(group => ({ id: group.id, ...sizes.get(group.id)! })),
-    edges: input.prerequisites.map((prerequisite, index) => ({
-      id: `prerequisite_${index}`,
-      sources: [prerequisite.source],
-      targets: [prerequisite.target]
-    }))
+    children: nodes.map(node => ({ id: node.id, ...sizes.get(node.id)! })),
+    edges: edges.map((edge, index) => ({ id: `relation_${index}`, sources: [edge.source], targets: [edge.target] }))
   }
   const layout = await elk.layout(elkInput)
-  const positioned = new Map((layout.children ?? []).map(child => [child.id, child]))
+  const positioned = new Map((layout.children ?? []).map(node => [node.id, node]))
   return {
     elkInput,
-    groups: input.groups.map(group => {
-      const size = sizes.get(group.id)!
-      const positionedGroup = positioned.get(group.id)
-      const bounds = { x: positionedGroup?.x ?? 0, y: positionedGroup?.y ?? 0, ...size }
-      const headerSize = nonNegative(group.header)
-      let y = bounds.y + padding
-      const header = { x: bounds.x + padding, y, ...headerSize }
-      y += header.height
-      if (group.members.length) y += spacing
-      const children = group.members.map(member => {
-        const size = nonNegative(member.size)
-        const child = { id: member.id, bounds: { x: bounds.x + padding, y, ...size } }
-        y += size.height + spacing
-        return child
-      })
-      return { id: group.id, kind: group.kind, bounds, header, children }
-    })
+    nodes: nodes.map(node => ({ id: node.id, ...sizes.get(node.id)!, x: positioned.get(node.id)?.x ?? 0, y: positioned.get(node.id)?.y ?? 0 }))
   }
 }
