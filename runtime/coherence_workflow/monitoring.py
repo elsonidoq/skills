@@ -15,6 +15,7 @@ PHASES = frozenset({"prepare", "gate", "worker", "check", "checkpoint", "review"
 KINDS = frozenset({"started", "returned", "passed", "failed", "interrupted", "question_requested", "answer_returned", "answer_sent", "delivery_failed", "abandoned", "gap"})
 _HASH = re.compile(r"^[0-9a-f]{40,64}$")
 _ROLES = frozenset({"worker", "fixing_worker", "reviewer"})
+_INVOCATION_KINDS = frozenset({"task_worker", "corrective_worker"})
 _ERRORS = frozenset({"blocked", "check", "git", "malformed", "transport", "interrupted", "unknown"})
 PHASE_DESCRIPTORS = (
     {"id": "intake", "label": "Task intake", "possible_branches": ["prepare", "terminal"], "pre_recording": True},
@@ -43,6 +44,18 @@ def _sha(value):
     return isinstance(value, str) and bool(_HASH.fullmatch(value))
 
 
+def _task_input(value):
+    """One runner-selected checkpoint, never a viewer-inferred relation."""
+    if not isinstance(value, dict) or set(value) != {"checkpoint_occurrence_id", "task_id", "producer_invocation_id", "correction_chain"}:
+        return False
+    if any(not isinstance(value[key], str) or not value[key] for key in
+           ("checkpoint_occurrence_id", "task_id", "producer_invocation_id")):
+        return False
+    chain = value["correction_chain"]
+    return (isinstance(chain, list) and chain and all(isinstance(item, str) and item for item in chain)
+            and chain[-1] == value["producer_invocation_id"])
+
+
 def _closed_facts(phase, kind, facts):
     """Validate the small phase/kind vocabulary before it reaches SQLite."""
     if not isinstance(facts, dict):
@@ -52,22 +65,28 @@ def _closed_facts(phase, kind, facts):
     allowed = {
         "prepare": {"error_category"},
         "gate": {"ordinal", "parent_occurrence_id", "error_category"},
-        "worker": {"role", "execution_id", "trigger_execution_id", "predecessor_execution_id", "parent_occurrence_id", "error_category"},
+        "worker": {"role", "execution_id", "trigger_execution_id", "predecessor_execution_id", "parent_occurrence_id", "error_category",
+                   "invocation_id", "invocation_kind", "selected_input_checkpoints", "correction_chain",
+                   "predecessor_invocation_id", "stopped_by_invocation_id", "support_invocation_id"},
         "check": {"ordinal", "exit_code", "execution_id", "parent_occurrence_id", "error_category"},
-        "checkpoint": {"baseline", "head", "no_change", "execution_id", "parent_occurrence_id", "error_category"},
+        "checkpoint": {"baseline", "head", "no_change", "execution_id", "parent_occurrence_id", "error_category",
+                       "producer_invocation_id", "correction_chain"},
         "review": {"role", "execution_id", "review_ordinal", "trigger_execution_id", "predecessor_execution_id", "review_base", "review_head", "approved", "outcome", "finding_count", "parent_occurrence_id", "error_category"},
-        "terminal": {"baseline", "head", "error_category"},
+        "terminal": {"baseline", "head", "error_category", "stopped_by_invocation_id", "support_invocation_id"},
     }[phase]
     if set(facts) - allowed:
         return False
     for key, value in facts.items():
         if key in {"baseline", "head", "review_base", "review_head"} and not _sha(value): return False
         if key == "role" and value not in _ROLES: return False
+        if key == "invocation_kind" and value not in _INVOCATION_KINDS: return False
+        if key == "selected_input_checkpoints" and (not isinstance(value, list) or not all(_task_input(item) for item in value)): return False
+        if key == "correction_chain" and (not isinstance(value, list) or not value or any(not isinstance(item, str) or not item for item in value)): return False
         if key in {"ordinal", "review_ordinal", "finding_count"} and (type(value) is not int or value < 0): return False
-        if key == "exit_code" and (type(value) is not int): return False
+        if key == "exit_code" and type(value) is not int: return False
         if key == "no_change" and type(value) is not bool: return False
         if key == "approved" and type(value) is not bool: return False
-        if key in {"execution_id", "trigger_execution_id", "predecessor_execution_id", "parent_occurrence_id"} and (not isinstance(value, str) or not value): return False
+        if key in {"execution_id", "trigger_execution_id", "predecessor_execution_id", "parent_occurrence_id", "invocation_id", "predecessor_invocation_id", "stopped_by_invocation_id", "support_invocation_id", "producer_invocation_id"} and (not isinstance(value, str) or not value): return False
         if key == "outcome" and value not in {"approved", "rejected", "failed", "interrupted"}: return False
         if key == "error_category" and value not in _ERRORS: return False
     if kind in {"question_requested", "answer_returned", "answer_sent", "delivery_failed"}:
@@ -78,7 +97,23 @@ def _closed_facts(phase, kind, facts):
                 (("execution_id" not in facts and "review_ordinal" not in facts) or
                  (isinstance(facts.get("execution_id"), str) and type(facts.get("review_ordinal")) is int and facts["review_ordinal"] > 0)))
     if phase == "worker" and kind in {"started", "returned", "failed", "interrupted"}:
-        return facts.get("role") in {"worker", "fixing_worker"}
+        if facts.get("role") not in {"worker", "fixing_worker"}:
+            return False
+        if not isinstance(facts.get("invocation_id"), str) or facts.get("invocation_kind") not in _INVOCATION_KINDS:
+            return False
+        chain = facts.get("correction_chain")
+        if not isinstance(chain, list) or not chain or chain[-1] != facts["invocation_id"]:
+            return False
+        if "predecessor_invocation_id" in facts and (len(chain) < 2 or chain[-2] != facts["predecessor_invocation_id"]):
+            return False
+        if kind == "started":
+            return "selected_input_checkpoints" in facts and "stopped_by_invocation_id" not in facts
+        return "selected_input_checkpoints" in facts and (kind == "returned" or facts.get("stopped_by_invocation_id") == facts["invocation_id"])
+    if phase == "checkpoint" and kind == "passed" and "producer_invocation_id" in facts:
+        return isinstance(facts.get("correction_chain"), list) and facts["correction_chain"][-1] == facts["producer_invocation_id"]
+    if phase == "terminal" and kind in {"failed", "interrupted"} and "stopped_by_invocation_id" in facts:
+        return isinstance(facts["stopped_by_invocation_id"], str) and bool(facts["stopped_by_invocation_id"])
+    return True
     return True
 
 

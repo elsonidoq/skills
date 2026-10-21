@@ -431,6 +431,7 @@ class Engine:
             recorder.register(descriptor(self.contract, self.executor, base), identity)
         checkpoints = list(recovered.values())
         terminal = recorder.occurrence()
+        terminal_stop = [None]
         recorder.emit(terminal, 'terminal', 'started', facts={'baseline': base})
         try:
             for task in self.contract['tasks']:
@@ -460,22 +461,16 @@ class Engine:
                         recorder.emit(gate_occurrence, 'gate', 'passed' if answer.strip().lower() in ('yes', 'y') else 'failed', task_id=task['id'], facts=facts)
                         return answer
                     manual_gates(task, gate_question)
-                    worker_occurrence = recorder.occurrence()
                     role = 'fixing_worker' if isinstance(self.contract.get('monitor'), dict) and self.contract['monitor'].get('correction_of') else 'worker'
-                    recorder.emit(worker_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                     # Membership is one dispatched (run, task) pair, independent of
                     # corrective prompts and never inferred from review references.
                     store.usage_membership(self.run, task['id'])
-                    def record_usage(occurrence, outcome):
-                        # Optional telemetry must not replace the task/check/Git outcome.
-                        store.usage_interval(self.run, occurrence, task=task['id'], role=role,
-                                             outcome=outcome, interval=getattr(worker, 'last_interval', None))
-                    question_occurrence = [None]
+                    active_occurrence, invocation_chain, last_invocation = [None], [], [None]
                     def worker_question(state):
                         mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
-                        if state == 'requested' or question_occurrence[0] is None:
-                            question_occurrence[0] = recorder.occurrence()
-                        recorder.emit(question_occurrence[0], 'worker', mapping[state], task_id=task['id'], facts={'parent_occurrence_id': worker_occurrence})
+                        if active_occurrence[0] is not None:
+                            recorder.emit(recorder.occurrence(), 'worker', mapping[state], task_id=task['id'],
+                                          facts={'parent_occurrence_id': active_occurrence[0]})
                     session_request, reuse_key = self._session_request(task, role)
                     selection = select_session(session_request, self.session_candidates)
                     selected = next((candidate for candidate in self.session_candidates
@@ -516,6 +511,16 @@ class Engine:
                                 (self.run, task['id'])).fetchone()
                             if prior:
                                 raise Blocked('unfinished worker lacks retained invocation/cause; inspect legacy history before any relaunch')
+                    def selected_inputs():
+                        # Only checkpoints the sequential runner selected from declared prerequisites
+                        # are relations; absent recording remains absent rather than guessed.
+                        return [{'checkpoint_occurrence_id': item['checkpoint_occurrence_id'], 'task_id': item['task_id'],
+                                 'producer_invocation_id': item['producer_invocation_id'],
+                                 'correction_chain': item['correction_chain']}
+                                for item in checkpoints if item.get('task_id') in task.get('depends', [])
+                                and isinstance(item.get('checkpoint_occurrence_id'), str)
+                                and isinstance(item.get('producer_invocation_id'), str)]
+
                     def invoke_worker(prompt, **kwargs):
                         nonlocal continuation
                         prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + prompt
@@ -526,19 +531,40 @@ class Engine:
                                       + canonical(continuation) + '\n' + prompt)
                             continuation = None
                         invocation_id = uuid.uuid4().hex
+                        predecessor = last_invocation[0]
+                        chain = [*invocation_chain, invocation_id]
+                        invocation_kind = 'corrective_worker' if predecessor else 'task_worker'
+                        occurrence = recorder.occurrence()
+                        active_occurrence[0] = occurrence
+                        public = {'role': role, 'invocation_id': invocation_id, 'invocation_kind': invocation_kind,
+                                  'selected_input_checkpoints': selected_inputs(), 'correction_chain': chain}
+                        if predecessor:
+                            public['predecessor_invocation_id'] = predecessor
                         facts = {'invocation_id': invocation_id, 'prompt': prompt, 'reuse_key': reuse_key,
                                  'saved_session': getattr(worker, 'saved_session', None)}
                         store.history(self.run, task['id'], 'worker_invocation', 'started', facts)
+                        recorder.emit(occurrence, 'worker', 'started', task_id=task['id'], facts=public)
                         try:
                             result = self._prompt_worker(worker, prompt, **kwargs)
                         except BaseException as exc:
-                            store.history(self.run, task['id'], 'worker_invocation',
-                                'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
+                            state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                            store.history(self.run, task['id'], 'worker_invocation', state,
                                 {**facts, 'error': str(exc) or type(exc).__name__,
                                  'saved_session': getattr(worker, 'saved_session', None)})
+                            terminal_stop[0] = invocation_id
+                            recorder.emit(occurrence, 'worker', state, task_id=task['id'],
+                                          facts={**public, 'stopped_by_invocation_id': invocation_id,
+                                                 'error_category': _failure(exc)})
+                            store.usage_interval(self.run, invocation_id, task=task['id'], role=role,
+                                                 outcome=state, interval=getattr(worker, 'last_interval', None))
                             raise
                         store.history(self.run, task['id'], 'worker_invocation', 'returned',
                                       {**facts, 'saved_session': getattr(worker, 'saved_session', None)})
+                        recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)
+                        store.usage_interval(self.run, invocation_id, task=task['id'], role=role,
+                                             outcome='settled', interval=getattr(worker, 'last_interval', None))
+                        invocation_chain[:] = chain
+                        last_invocation[0] = invocation_id
                         return result
                     claimed_paths = set()
                     def claim(name):
@@ -569,12 +595,8 @@ class Engine:
                                 selected['saved_session'] if selected else None), reuse_key=reuse_key)
                     except BaseException as exc:
                         state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                        recorder.emit(worker_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
                         store.history(self.run, task['id'], 'worker', state, {'role': role, 'error': str(exc)})
-                        record_usage(worker_occurrence, state)
                         raise
-                    recorder.emit(worker_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
-                    record_usage(worker_occurrence, 'settled')
                     store.history(self.run, task['id'], 'worker', 'returned', {'role': role})
                     check_occurrences = {}
                     def check_observe(kind, ordinal, code):
@@ -596,8 +618,6 @@ class Engine:
                                 if failure.attempt == previous_failed_attempt:
                                     raise Blocked('required check failed and remains unchanged after same-task correction: ' + canonical(failure.attempt))
                                 previous_failed_attempt = failure.attempt
-                                corrective_occurrence = recorder.occurrence()
-                                recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                                 try:
                                     text = invoke_worker(
                                         'A runner-owned REQUIRED check for this same task failed. Make a reasoned, '
@@ -609,12 +629,8 @@ class Engine:
                                         claim=claim, command=command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
                                 except BaseException as exc:
                                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                                    recorder.emit(corrective_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
                                     store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': str(exc)})
-                                    record_usage(corrective_occurrence, state)
                                     raise
-                                recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
-                                record_usage(corrective_occurrence, 'settled')
                                 store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
 
                     checks = correct_required_checks()
@@ -636,8 +652,6 @@ class Engine:
                             if str(exc) == previous_checkpoint_error:
                                 raise Blocked('checkpoint failed and remains unchanged after same-task correction: ' + str(exc))
                             previous_checkpoint_error = str(exc)
-                            corrective_occurrence = recorder.occurrence()
-                            recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                             try:
                                 text = invoke_worker(
                                     'A runner-owned checkpoint for this same task failed. Make a reasoned, authorized '
@@ -647,19 +661,22 @@ class Engine:
                                     claim=claim, command=command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
                             except BaseException as correction_error:
                                 correction_state = 'interrupted' if isinstance(correction_error, (KeyboardInterrupt, SystemExit)) else 'failed'
-                                recorder.emit(corrective_occurrence, 'worker', correction_state, task_id=task['id'], facts={'role': role, 'error_category': _failure(correction_error)})
                                 store.history(self.run, task['id'], 'worker', correction_state, {'role': role, 'correction': True, 'error': str(correction_error)})
-                                record_usage(corrective_occurrence, correction_state)
                                 raise
-                            recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
-                            record_usage(corrective_occurrence, 'settled')
                             store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
                             checks = correct_required_checks()
                             continue
                         break
                     checkpoint['parent'] = (None if checkpoint['no_change'] else
                                             git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
-                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts={'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']})
+                    checkpoint.update({'task_id': task['id'], 'checkpoint_occurrence_id': checkpoint_occurrence,
+                                       'producer_invocation_id': last_invocation[0],
+                                       'correction_chain': list(invocation_chain)})
+                    checkpoint_facts = {'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']}
+                    if last_invocation[0] is not None:
+                        checkpoint_facts.update({'producer_invocation_id': last_invocation[0],
+                                                 'correction_chain': list(invocation_chain)})
+                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts=checkpoint_facts)
                     store.history(self.run, task['id'], 'checkpoint', 'passed', checkpoint)
                     checkpoints.append(checkpoint)
                     self._settle_session(task, worker, session_request, reuse_key, checkpoint)
@@ -676,5 +693,8 @@ class Engine:
         except BaseException as exc:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, str(exc))
-            recorder.emit(terminal, 'terminal', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'head': head, 'error_category': _failure(exc)})
+            terminal_facts = {'head': head, 'error_category': _failure(exc)}
+            if terminal_stop[0] is not None:
+                terminal_facts['stopped_by_invocation_id'] = terminal_stop[0]
+            recorder.emit(terminal, 'terminal', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts=terminal_facts)
             raise

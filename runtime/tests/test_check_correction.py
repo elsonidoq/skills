@@ -59,9 +59,14 @@ class RequiredCheckCorrectionTests(ProjectTest):
         self.assertNotIn('web/dist/build.js', git(project, 'show', '--name-only', '--format=', 'HEAD').decode())
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
         facts = [json.loads(row[0]) for row in db.execute("SELECT facts FROM execution_observations WHERE phase='check'")]
+        workers = [json.loads(row[0]) for row in db.execute(
+            "SELECT facts FROM execution_observations WHERE phase='worker' AND kind='started'")]
         db.close()
         self.assertIn(1, [fact.get('exit_code') for fact in facts])
         self.assertIn(0, [fact.get('exit_code') for fact in facts])
+        self.assertEqual([fact['invocation_kind'] for fact in workers], ['task_worker', 'corrective_worker'])
+        self.assertEqual(workers[1]['predecessor_invocation_id'], workers[0]['invocation_id'])
+        self.assertEqual(workers[1]['correction_chain'], [workers[0]['invocation_id'], workers[1]['invocation_id']])
 
     def test_unavailable_correction_returns_the_actual_blocker(self):
         project = self.project

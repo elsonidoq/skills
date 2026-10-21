@@ -69,6 +69,21 @@ runner identity in its dedicated column. Descriptor/identity collection and warn
 recording failure, the recorder appends a closed `gap` marker; it never reconstructs missing events.
 Engine emissions include
 per-command check start/outcome and checkpoint start/outcome; command text and output remain private.
+
+Task-worker recording has a closed, future-run-only invocation vocabulary. Each actual prompt call emits one
+run-scoped `invocation_id` at its real start and terminal return/failure, with `invocation_kind` of
+`task_worker` or `corrective_worker`. A corrective call names its exact selected predecessor and retains its
+ordered `correction_chain`. At task dispatch, `selected_input_checkpoints` records only the completed declared
+prerequisite checkpoints selected by the sequential runner: each value contains its checkpoint occurrence ID,
+task ID, producing invocation ID, and that producer's correction chain. A passed task checkpoint records the
+final producing invocation and chain, so a later task consumes an exact producer rather than a viewer-selected
+latest attempt. Failed/interrupted worker calls and the enclosing terminal boundary may name the explicit
+`stopped_by_invocation_id`; `support_invocation_id` is reserved for separately recorded explicit support, never
+inferred from timing, dependency declarations, or a shared session. These typed relations are producer facts
+for later consumers, not model-reading/obedience or concurrency proof. Review/fixer dispatch and first-review
+membership are outside this task-worker vocabulary's current production use. Invalid or unavailable optional
+facts are rejected or become recorder gaps without changing ordinary execution. No prompts, errors, summaries,
+output, paths, or arbitrary payload fields enter monitoring facts.
 The read-only monitor may correlate an actually recorded execution ID with its required chain row: it exposes only explicit reviewer/fixer predecessor relations, typed outcome/range, SHA references, and findings matching the review protocol's inert `path:line - issue` form. Raw reviewer payloads, arbitrary findings, prompts, answers, errors, and secrets remain private; absent/dangling IDs remain unknown and are never inferred from order, labels, timestamps, or `correction_of`.
 A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.
 Facts are validated by phase and milestone before append: Git fields are hashes, roles and error categories
