@@ -3,6 +3,7 @@ import { createServer, type Server } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { extname, join, normalize } from 'node:path'
 import { graphFor, type GraphSnapshot } from '../src/graph'
+import { layoutFootprints, type FootprintLayoutInput } from '../src/layout'
 
 let server: Server
 const snapshot = {
@@ -131,6 +132,56 @@ test('readable state relations retain only qualified recorded stops and correcti
   expect(graph.edges.some(item => item.id.includes('missing') || item.data?.resolution === 'unresolved' || item.data?.resolution === 'cyclic')).toBeFalsy()
   expect(graph.edges.filter(item => item.data?.classification === 'backbone')).toEqual([])
   expect(graph.edges.every(item => item.data?.classification === 'secondary')).toBeTruthy()
+})
+
+test('readable footprint layout uses DOWN prerequisite footprints and preserves contained members', async () => {
+  const input: FootprintLayoutInput = {
+    groups: [
+      { id: 'task_a', kind: 'task', header: { width: 160, height: 32 }, members: [{ id: 'attempt_a', size: { width: 130, height: 48 } }] },
+      { id: 'task_b', kind: 'task', header: { width: 220, height: 44 }, members: [{ id: 'attempt_b_1', size: { width: 140, height: 38 } }, { id: 'attempt_b_2', size: { width: 180, height: 64 } }] },
+      { id: 'task_c', kind: 'task', header: { width: 130, height: 28 }, members: [] },
+      { id: 'task_d', kind: 'task', header: { width: 190, height: 36 }, members: [{ id: 'attempt_d', size: { width: 210, height: 40 } }] },
+      { id: 'task_pending', kind: 'task', header: { width: 150, height: 30 }, members: [] },
+      { id: 'run_review', kind: 'run-review', header: { width: 170, height: 34 }, members: [{ id: 'review_execution', size: { width: 150, height: 52 } }] },
+      { id: 'unassigned_history', kind: 'unassigned', header: { width: 175, height: 34 }, members: [{ id: 'unknown_attempt', size: { width: 165, height: 46 } }] }
+    ],
+    prerequisites: [
+      { source: 'task_a', target: 'task_b' },
+      { source: 'task_a', target: 'task_c' },
+      { source: 'task_a', target: 'task_d' },
+      { source: 'task_b', target: 'task_d' },
+      { source: 'task_c', target: 'task_d' }
+    ],
+    secondaryRelations: [{ source: 'review_execution', target: 'attempt_b_2' }]
+  }
+  const layout = await layoutFootprints(input)
+  expect(layout.elkInput.layoutOptions).toMatchObject({ 'elk.algorithm': 'layered', 'elk.direction': 'DOWN' })
+  expect(layout.elkInput.edges.map(edge => [edge.sources[0], edge.targets[0]])).toEqual(input.prerequisites.map(edge => [edge.source, edge.target]))
+  expect(layout.groups.map(group => group.id)).toEqual(input.groups.map(group => group.id))
+  const byId = new Map(layout.groups.map(group => [group.id, group]))
+  const contains = (outer: { x: number; y: number; width: number; height: number }, inner: { x: number; y: number; width: number; height: number }) =>
+    inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.width <= outer.x + outer.width && inner.y + inner.height <= outer.y + outer.height
+  for (const group of layout.groups) {
+    expect(contains(group.bounds, group.header)).toBeTruthy()
+    for (const child of group.children) expect(contains(group.bounds, child.bounds)).toBeTruthy()
+  }
+  for (const prerequisite of input.prerequisites) {
+    const source = byId.get(prerequisite.source)!.bounds
+    const target = byId.get(prerequisite.target)!.bounds
+    expect(target.y).toBeGreaterThanOrEqual(source.y + source.height)
+  }
+  expect(byId.get('unassigned_history')).toMatchObject({ kind: 'unassigned', children: [{ id: 'unknown_attempt' }] })
+
+  const withoutSecondary = await layoutFootprints({ ...input, secondaryRelations: [] })
+  expect(withoutSecondary.groups.filter(group => group.kind === 'task')).toEqual(layout.groups.filter(group => group.kind === 'task'))
+  const enlarged = await layoutFootprints({
+    ...input,
+    groups: input.groups.map(group => group.id === 'task_b'
+      ? { ...group, header: { width: 280, height: 70 }, members: [...group.members, { id: 'attempt_b_3', size: { width: 240, height: 80 } }] }
+      : group)
+  })
+  expect(enlarged.groups.find(group => group.id === 'task_b')!.bounds.width).toBeGreaterThan(byId.get('task_b')!.bounds.width)
+  expect(enlarged.groups.find(group => group.id === 'task_b')!.bounds.height).toBeGreaterThan(byId.get('task_b')!.bounds.height)
 })
 
 function selected(run: string) {
