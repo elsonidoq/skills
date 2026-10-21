@@ -95,6 +95,15 @@ class Store:
             seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL, task_id TEXT,
             kind TEXT NOT NULL, state TEXT NOT NULL, details TEXT NOT NULL,
             recorded_at REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS execution_review_executions(
+            run_id TEXT NOT NULL, execution_id TEXT NOT NULL, role TEXT NOT NULL,
+            review_ordinal INTEGER, fixing_round INTEGER, trigger_execution_id TEXT,
+            predecessor_execution_id TEXT, review_base TEXT NOT NULL, review_head TEXT NOT NULL,
+            dispatched_at REAL NOT NULL, PRIMARY KEY(run_id, execution_id));
+        CREATE TABLE IF NOT EXISTS execution_review_attempts(
+            seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
+            execution_id TEXT NOT NULL, state TEXT NOT NULL, uncertainty INTEGER NOT NULL,
+            findings TEXT, reference_json TEXT NOT NULL, recorded_at REAL NOT NULL);
         """)
         self.db.executescript("""
         CREATE TABLE IF NOT EXISTS execution_observations(
@@ -214,6 +223,10 @@ class Store:
     def task(self, run, task, state, baseline, result=None, details=None):
         details = details or {}
         saved_details = canonical(details)
+        existing = self.db.execute('SELECT state,baseline,result FROM execution_tasks WHERE run_id=? AND task_id=?',
+                                   (run, task)).fetchone()
+        if existing and existing['state'] == 'complete' and (state != 'complete' or baseline != existing['baseline'] or result != existing['result']):
+            raise Blocked('completed task checkpoint is immutable; retain its original task identity')
         history = canonical({'baseline': baseline, 'result': result, **details})
         def write():
             with self.transaction() as db:
@@ -225,6 +238,79 @@ class Store:
                                   (run, task)).fetchone()
             return row is not None and tuple(row) == (state, baseline, result, saved_details)
         self._required_write('task progress for ' + task, write, completed)
+
+    def review_dispatch(self, run, execution_id, *, role='reviewer', review_ordinal=1,
+                        fixing_round=0, trigger_execution_id=None, predecessor_execution_id=None,
+                        review_base, review_head):
+        """Persist a real review/fixing dispatch before its dependent invocation.
+
+        Dispatch identity, rather than monitoring callbacks, consumes the bounded chain slot.
+        An uncertain invocation remains a retained limit and is never silently replayed.
+        """
+        if role not in ('reviewer', 'fixer') or not isinstance(execution_id, str) or not execution_id:
+            raise Blocked('review execution needs a concrete reviewer/fixer identity')
+        if review_ordinal not in (1, 2) or fixing_round not in (0, 1):
+            raise Blocked('review chain exceeds two reviews or one fixing round')
+        if role == 'reviewer' and fixing_round != review_ordinal - 1:
+            raise Blocked('review ordinal and fixing round are inconsistent')
+        if role == 'fixer' and fixing_round != 1:
+            raise Blocked('fixer must consume the one fixing round')
+        prior = self.review_chain(run, private=True)
+        if prior['uncertain']:
+            raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
+        if sum(item['role'] == 'reviewer' for item in prior['executions']) >= 2 or (role == 'fixer' and any(item['role'] == 'fixer' for item in prior['executions'])):
+            raise Blocked('review chain limit already consumed; do not dispatch another review/fixing round')
+        references = canonical({'base': review_base, 'head': review_head})
+        def write():
+            with self.transaction() as db:
+                db.execute('INSERT INTO execution_review_executions VALUES(?,?,?,?,?,?,?,?,?,?)',
+                           (run, execution_id, role, review_ordinal, fixing_round, trigger_execution_id,
+                            predecessor_execution_id, review_base, review_head, time.time()))
+                db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
+                           (run, execution_id, 'dispatched', 0, None, references, time.time()))
+        def completed():
+            return bool(self.db.execute('SELECT 1 FROM execution_review_executions WHERE run_id=? AND execution_id=?',
+                                        (run, execution_id)).fetchone())
+        self._required_write('review dispatch history', write, completed)
+
+    def review_outcome(self, run, execution_id, state, *, findings=None, uncertainty=False, references=None):
+        if state not in ('approved', 'rejected', 'failed', 'interrupted'):
+            raise Blocked('invalid review execution outcome')
+        if not isinstance(findings, list) or any(not isinstance(item, str) for item in findings):
+            raise Blocked('review findings must be a list of strings')
+        refs = canonical(references or {})
+        saved_findings = canonical(findings)
+        def write():
+            with self.transaction() as db:
+                if not db.execute('SELECT 1 FROM execution_review_executions WHERE run_id=? AND execution_id=?',
+                                  (run, execution_id)).fetchone():
+                    raise Blocked('review outcome has no recorded dispatch')
+                db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
+                           (run, execution_id, state, int(uncertainty), saved_findings, refs, time.time()))
+        def completed():
+            return bool(self.db.execute('SELECT 1 FROM execution_review_attempts WHERE run_id=? AND execution_id=? AND state=? AND uncertainty=? AND findings=? AND reference_json=?',
+                                        (run, execution_id, state, int(uncertainty), saved_findings, refs)).fetchone())
+        self._required_write('review outcome history', write, completed)
+
+    def review_chain(self, run, *, private=False):
+        executions = []
+        for row in self.db.execute('SELECT * FROM execution_review_executions WHERE run_id=? ORDER BY dispatched_at,execution_id', (run,)):
+            attempts = [dict(item) for item in self.db.execute('SELECT state,uncertainty,findings,reference_json FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (run, row['execution_id']))]
+            latest = attempts[-1] if attempts else {'state': 'unknown', 'uncertainty': 1, 'findings': None, 'reference_json': '{}'}
+            item = {'execution_id': row['execution_id'], 'role': row['role'], 'review_ordinal': row['review_ordinal'],
+                    'fixing_round': row['fixing_round'], 'trigger_execution_id': row['trigger_execution_id'],
+                    'predecessor_execution_id': row['predecessor_execution_id'], 'state': latest['state'],
+                    'uncertain': bool(latest['uncertainty']), 'references': json.loads(latest['reference_json']),
+                    'attempt_count': len(attempts)}
+            if private:
+                item['findings'] = [json.loads(attempt['findings']) for attempt in attempts if attempt['findings'] is not None]
+            else:
+                # Parsed actionable findings are safe owner output; raw reviewer JSON stays private.
+                item['findings'] = json.loads(latest['findings']) if latest['findings'] is not None else []
+            executions.append(item)
+        return {'executions': executions, 'review_count': sum(item['role'] == 'reviewer' for item in executions),
+                'fixing_round_count': sum(item['role'] == 'fixer' for item in executions),
+                'uncertain': any(item['uncertain'] for item in executions)}
 
     def finish(self, run, state, result=None, error=None):
         details = canonical({'result': result, 'error': error} if error else {'result': result})

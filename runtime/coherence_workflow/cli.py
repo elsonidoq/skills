@@ -75,6 +75,13 @@ def status(project, run):
                         {'task_id': item['task_id'], 'kind': item['kind'], 'state': item['state'],
                          'details': _safe_history_details(item['details'])}
                         for item in db.execute('SELECT task_id,kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
+                if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_review_executions'").fetchone():
+                    # This is the safe owner result: parsed actionable findings and range/commit
+                    # references, never raw reviewer payloads, prompts, or answers.
+                    from .store import Store
+                    result['review_chain'] = Store.review_chain(type('Reader', (), {'db': db})(), run)
+                    if result['review_chain']['executions'] and result['run']['error']:
+                        result['run']['error'] = 'review outcome recorded; see review_chain'
                 try:
                     monitored = db.execute('SELECT recording_version FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
                     if monitored:

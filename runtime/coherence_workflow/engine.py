@@ -233,6 +233,10 @@ class Engine:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
             reviewer_occurrence = recorder.occurrence()
+            # Required ordinary chain history, not optional monitoring, records the actual
+            # invocation before launch so an uncertain reviewer cannot be replayed.
+            store.review_dispatch(self.run, reviewer_occurrence, role='reviewer', review_ordinal=1,
+                                  fixing_round=0, review_base=review_base, review_head=head)
             recorder.emit(reviewer_occurrence, 'review', 'started', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head})
             review_question_occurrence = [None]
             def review_question(state):
@@ -245,17 +249,24 @@ class Engine:
             try:
                 review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. ' + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
             except BaseException as exc:
+                store.review_outcome(self.run, reviewer_occurrence, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
+                                     findings=[], uncertainty=True, references={'base': review_base, 'head': head})
                 recorder.emit(reviewer_occurrence, 'review', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': _failure(exc)})
                 raise
             try:
                 value = json.loads(review)
             except ValueError:
+                store.review_outcome(self.run, reviewer_occurrence, 'failed', findings=[], references={'base': review_base, 'head': head})
                 recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': 'malformed'})
                 raise Blocked('reviewer returned invalid JSON; review remains incomplete: ' + review) from None
             if (not isinstance(value, dict) or type(value.get('approved')) is not bool or not isinstance(value.get('findings'), list) or any(not isinstance(f, str) for f in value['findings'])):
+                store.review_outcome(self.run, reviewer_occurrence, 'failed', findings=[], references={'base': review_base, 'head': head})
                 recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': 'malformed'})
                 raise Blocked('reviewer result needs boolean approved and a list of findings')
-            recorder.emit(reviewer_occurrence, 'review', 'passed' if value['approved'] and not value['findings'] else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'approved': value['approved'], 'finding_count': len(value['findings'])})
+            review_state = 'approved' if value['approved'] and not value['findings'] else 'rejected'
+            store.review_outcome(self.run, reviewer_occurrence, review_state, findings=value['findings'],
+                                 references={'base': review_base, 'head': head})
+            recorder.emit(reviewer_occurrence, 'review', 'passed' if review_state == 'approved' else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'approved': value['approved'], 'finding_count': len(value['findings'])})
             if not value['approved'] or value['findings']:
                 raise Blocked('independent review findings (commits retained): ' + canonical(value))
             store.finish(self.run, 'complete', head)
