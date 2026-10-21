@@ -150,6 +150,31 @@ interpreter in task check commands. Setting `COHERENCE_PYTHON` selects the runne
 Python; it does not change which `python3` a shell check resolves. No global Python
 configuration changes are needed.
 
+## Graph layout technical guidance
+
+Local dependency evidence checked for readability planning (2026-10-21), not a
+feature-completion claim: `web/package.json` declares ReactFlow `^12.8.5` and ELK
+`^0.11.1`; `web/package-lock.json` resolves 12.12.0 and 0.11.1. Read-only inspection
+of matching prepared package types found `@xyflow/system`'s
+`dist/esm/types/nodes.d.ts` (`NodeBase`, lines 45–61) exposes dimensions, `parentId`
+for sub-flows, parent extent and expansion. ELK's `lib/elk-api.d.ts` (`ElkShape`,
+`ElkNode`, `ElkExtendedEdge`, lines 26–39 and 70–74) exposes dimensions, children
+and explicit source/target IDs. These are local package API evidence, not a claim
+that any particular nested-routing recipe has been tested or officially recommended.
+Upstream source owners: [React Flow](https://github.com/xyflow/xyflow) and
+[elkjs](https://github.com/kieler/elkjs); no remote documentation was consulted.
+
+Repository-derived constraint for future graph changes: reuse these mechanisms,
+keep semantic edge selection separate from layout input, and account for rendered
+label/group dimensions rather than assuming every node fits the current fixed
+180×70 ELK box. Parent/child coordinate conversion, containment and secondary-edge
+routing still require a representative production-view check; type availability
+alone proves none of them. Preserve stable IDs, status-only layout/viewport reuse
+and stale-result guards. The [readability proposal](../docs/plans/workflow-monitor-readable-graph-tinyspec.md)
+owns proposed behavior/acceptance; current behavior above is not changed by this note.
+Verify prepared versions before future execution; this evidence grants no setup,
+installation or application-build permission.
+
 The reader opens short SQLite `mode=ro` snapshots for exactly one canonical Git
 worktree and does not import or invoke the workflow writer. It never copies a database,
 checkpoints WAL, signals a process, repairs recording gaps, or falls back to legacy history.
