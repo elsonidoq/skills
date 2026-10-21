@@ -159,13 +159,16 @@ A caller that explicitly supplies an initial worker/fixer `steering` target (`ru
 `task_id`, `invocation_id`, and closed worker/fixer `role`) selects the multiplexed host protocol: the host privately advertises the
 created session identity in an active target record; callback replies are `reply` records
 correlated to host callback IDs; and `steer` control records carry an exact target, request ID
-and inert owner-direction text. The host reports accepted, queued, consumed, failed-unavailable
-or unknown separately. It validates consumption only from the matching SDK user `message_start`;
-queue insertion/removal is not consumption. Same request IDs are idempotent, new IDs remain
-distinct, and settlement, cancellation, EOF or disposal closes the target without retargeting.
-Without this explicit opt-in, the original uncorrelated callback/reply vocabulary remains the
-only transport vocabulary; `sessionObservations` alone does not select steering. When explicitly
-launched by the project parent-session bridge, the adapter uses one private
+and inert owner-direction text. The Python adapter is the sole initial-request opt-in: it has one
+stdout decoder, serializes stdin writes, exposes the active target only for that host invocation,
+and sends controls through its `steer` hook. It continues decoding target/status records while a
+callback waits; a callback reply remains correlated and cannot be supplied by a control record.
+The host reports accepted, queued, consumed, failed-unavailable or unknown separately. It
+validates consumption only from the matching SDK user `message_start`; queue insertion/removal
+is not consumption. Same request IDs are idempotent, new IDs remain distinct, and settlement,
+cancellation, EOF or disposal closes the target without retargeting. Without this explicit opt-in,
+the original uncorrelated callback/reply vocabulary remains the only transport vocabulary;
+`sessionObservations` alone does not select steering. When explicitly launched by the project parent-session bridge, the adapter uses one private
 Unix-socket request/reply connection with a token, parent session, run and request identity; EOF,
 unavailable endpoints and uncorrelated replies stop with the actual bridge error. The bridge keeps
 its pending request only in memory and never stores question or answer text in monitoring SQLite.

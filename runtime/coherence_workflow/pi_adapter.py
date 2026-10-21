@@ -6,6 +6,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import uuid
 
 from .metrics import interval_record
@@ -58,26 +59,64 @@ def parent_question(question, *, ready=False):
 
 
 class PiAdapter:
-    def __init__(self, project, executor, *, question=None, observe=None, observe_question=None):
+    def __init__(self, project, executor, *, question=None, observe=None, observe_question=None,
+                 steering_status=None):
         self.project, self.executor = Path(project), executor
         self.lock_fd = None
         self.question = question or terminal_question
         self.observe = observe or (lambda value: print(canonical(value), file=sys.stderr, flush=True))
         self.observe_question = observe_question or (lambda state: None)
+        self.steering_status = steering_status or (lambda value: None)
         self.saved_session = None
         self.last_observation = None
         self.last_interval = None
+        # These are invocation-local and intentionally never persist a session
+        # identity, direction text, or a target for a later prompt.
+        self.active_target = None
+        self.steering_states = {}
+        self._send_control = None
+        self._control_lock = threading.Lock()
 
-    def prompt(self, prompt, *, claim=None, command=None, cleanup=None, read_only=False, saved_session=None, reuse_key=None):
+    def steer(self, request_id, instruction, *, target=None):
+        """Send one exact-target direction to the currently active host only."""
+        with self._control_lock:
+            active, send = self.active_target, self._send_control
+        if not isinstance(request_id, str) or not request_id:
+            raise Blocked('steering request ID must be a nonempty string')
+        if not isinstance(instruction, str):
+            raise Blocked('steering instruction must be text')
+        if target is None:
+            target = active
+        if not isinstance(target, dict) or target != active or send is None:
+            raise Blocked('steering target is unavailable')
+        try:
+            send({'type': 'steer', 'request_id': request_id, 'target': target, 'instruction': instruction})
+        except (BrokenPipeError, OSError, ValueError) as exc:
+            # Input loss cannot prove that the host did not receive the control.
+            self.steering_states[request_id] = 'unknown'
+            try:
+                self.steering_status({'request_id': request_id, 'status': 'unknown'})
+            except Exception:
+                pass
+            raise Blocked('steering target is unavailable: ' + str(exc)) from None
+
+    def prompt(self, prompt, *, claim=None, command=None, cleanup=None, read_only=False, saved_session=None,
+               reuse_key=None, steering=None):
         """Run one prompt, optionally reopening only a runner-provided private session."""
         self.last_interval = None
         self.last_observation = None
+        if steering is not None and not isinstance(steering, dict):
+            raise Blocked('steering target must be runner-provided')
         request = {'project': str(self.project), 'executor': self.executor,
                    'prompt': prompt, 'readOnly': read_only,
                    # A standalone session record is a newer host extension.
                    # Explicit opt-in keeps an updated host compatible with
                    # controllers that predate this transport record.
                    'sessionObservations': True}
+        if steering is not None:
+            # This is deliberately independent from sessionObservations: only
+            # this adapter opts into the multiplexed callback/control protocol.
+            request['steering'] = steering
         if reuse_key is not None:
             if not isinstance(reuse_key, str):
                 raise Blocked('saved session reuse key must be a stable runner string')
@@ -93,47 +132,51 @@ class PiAdapter:
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors,
                                     text=True, encoding='utf-8', cwd=self.project,
                                     pass_fds=() if self.lock_fd is None else (self.lock_fd,))
-            try:
-                def send(value):
+            write_lock = threading.Lock()
+            workers = []
+            worker_error = []
+            worker_error_lock = threading.Lock()
+            result = []
+
+            def send(value):
+                with write_lock:
                     proc.stdin.write(canonical(value) + '\n')
                     proc.stdin.flush()
-                send(request)
-                result = None
-                for line in proc.stdout:
+
+            def close_input():
+                with write_lock:
                     try:
-                        value = json.loads(line)
-                    except ValueError as exc:
-                        raise Blocked('invalid SDK transport JSON: ' + str(exc)) from None
-                    kind = value.get('type') if isinstance(value, dict) else None
-                    if kind == 'event':
-                        try:
-                            self.observe(value)
-                        except Exception:
-                            pass  # Optional display must not interrupt coding or SDK compaction.
-                    elif kind == 'claim':
-                        try:
-                            if claim is None or read_only:
-                                raise Blocked('this session cannot edit files')
-                            claim(value['path'])
-                            send({'ok': True})
-                        except (Blocked, ValueError, KeyError) as exc:
-                            send({'error': str(exc)})
+                        proc.stdin.close()
+                    except (BrokenPipeError, OSError):
+                        pass
+
+            def response(record, value):
+                if steering is not None:
+                    request_id = record.get('request_id')
+                    if not isinstance(request_id, str):
+                        raise Blocked('SDK callback lacks a correlation ID')
+                    send({'type': 'reply', 'request_id': request_id, 'reply': value})
+                else:
+                    send(value)
+
+            def callback(record):
+                try:
+                    kind = record['type']
+                    if kind == 'claim':
+                        if claim is None or read_only:
+                            raise Blocked('this session cannot edit files')
+                        claim(record['path'])
+                        response(record, {'ok': True})
                     elif kind == 'command':
-                        try:
-                            if command is None or read_only:
-                                raise Blocked('this session cannot run commands')
-                            command(value['phase'], value['call'])
-                            send({'ok': True})
-                        except (Blocked, ValueError, KeyError) as exc:
-                            send({'error': str(exc)})
+                        if command is None or read_only:
+                            raise Blocked('this session cannot run commands')
+                        command(record['phase'], record['call'])
+                        response(record, {'ok': True})
                     elif kind == 'cleanup':
-                        try:
-                            if cleanup is None or read_only:
-                                raise Blocked('this session cannot clean generated artifacts')
-                            cleanup(value['path'])
-                            send({'ok': True})
-                        except (Blocked, ValueError, KeyError, OSError) as exc:
-                            send({'error': str(exc)})
+                        if cleanup is None or read_only:
+                            raise Blocked('this session cannot clean generated artifacts')
+                        cleanup(record['path'])
+                        response(record, {'ok': True})
                     elif kind == 'question':
                         def observe_question(state):
                             try:
@@ -142,58 +185,127 @@ class PiAdapter:
                                 pass  # Recording is never transport control flow.
                         observe_question('requested')
                         try:
-                            answer = self.question(value['question'])
+                            answer = self.question(record['question'])
                         except BaseException:
                             observe_question('delivery_failed')
                             raise
                         observe_question('returned')
                         try:
-                            send({'answer': answer})
+                            response(record, {'answer': answer})
                         except BaseException:
                             observe_question('delivery_failed')
                             raise
                         observe_question('sent')
-                    elif kind == 'session':
-                        session = value.get('session')
-                        if not (isinstance(session, dict) and isinstance(session.get('id'), str)
-                                and isinstance(session.get('file'), str)):
-                            raise Blocked('SDK session record has an invalid saved session identity')
-                        self.saved_session = session
-                        self.last_observation = {'before': value.get('before'), 'after': None}
-                    elif kind == 'result':
-                        if not isinstance(value.get('text'), str):
-                            raise Blocked('SDK result text must be a string')
-                        session = value.get('session')
-                        if session is not None:
+                except (Blocked, ValueError, KeyError, OSError) as exc:
+                    # A failed owner question has no safe synthetic answer. Close
+                    # the host input so its pending callback rejects rather than
+                    # leaving the one decoder waiting forever.
+                    if record.get('type') == 'question':
+                        with worker_error_lock:
+                            worker_error.append(exc)
+                        close_input()
+                        return
+                    try:
+                        response(record, {'error': str(exc)})
+                    except BaseException as send_error:
+                        with worker_error_lock:
+                            worker_error.append(send_error)
+                except BaseException as exc:
+                    with worker_error_lock:
+                        worker_error.append(exc)
+
+            def decode():
+                try:
+                    for line in proc.stdout:
+                        try:
+                            value = json.loads(line)
+                        except ValueError as exc:
+                            raise Blocked('invalid SDK transport JSON: ' + str(exc)) from None
+                        kind = value.get('type') if isinstance(value, dict) else None
+                        if kind == 'event':
+                            try:
+                                self.observe(value)
+                            except Exception:
+                                pass
+                        elif kind in ('claim', 'command', 'cleanup', 'question'):
+                            thread = threading.Thread(target=callback, args=(value,))
+                            workers.append(thread)
+                            thread.start()
+                        elif kind == 'target':
+                            target = value.get('target')
+                            if value.get('status') != 'active' or not isinstance(target, dict):
+                                raise Blocked('SDK host returned an invalid steering target')
+                            with self._control_lock:
+                                self.active_target = target
+                                self._send_control = send
+                        elif kind == 'steer':
+                            request_id = value.get('request_id')
+                            status = value.get('status')
+                            if not isinstance(request_id, str) or not isinstance(status, str):
+                                raise Blocked('SDK host returned an invalid steering status')
+                            self.steering_states[request_id] = status
+                            try:
+                                self.steering_status({'request_id': request_id, 'status': status})
+                            except Exception:
+                                pass
+                        elif kind == 'session':
+                            session = value.get('session')
                             if not (isinstance(session, dict) and isinstance(session.get('id'), str)
                                     and isinstance(session.get('file'), str)):
-                                raise Blocked('SDK result has an invalid saved session identity')
+                                raise Blocked('SDK session record has an invalid saved session identity')
                             self.saved_session = session
-                        observations = {'before': value.get('before'), 'after': value.get('after')}
-                        self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
-                        self.last_interval = (interval_record(**observations)
-                                              if self.last_observation is not None else None)
-                        result = value['text']
-                    elif kind == 'error':
-                        raise Blocked('SDK operation failed: ' + str(value.get('message')))
-                    else:
-                        raise Blocked('unknown SDK transport record: ' + str(kind))
+                            self.last_observation = {'before': value.get('before'), 'after': None}
+                        elif kind == 'result':
+                            if not isinstance(value.get('text'), str):
+                                raise Blocked('SDK result text must be a string')
+                            session = value.get('session')
+                            if session is not None:
+                                if not (isinstance(session, dict) and isinstance(session.get('id'), str)
+                                        and isinstance(session.get('file'), str)):
+                                    raise Blocked('SDK result has an invalid saved session identity')
+                                self.saved_session = session
+                            observations = {'before': value.get('before'), 'after': value.get('after')}
+                            self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
+                            self.last_interval = (interval_record(**observations)
+                                                  if self.last_observation is not None else None)
+                            result.append(value['text'])
+                            # Multiplexed host input intentionally remains open
+                            # for controls; the result is its terminal boundary.
+                            close_input()
+                        elif kind == 'error':
+                            raise Blocked('SDK operation failed: ' + str(value.get('message')))
+                        else:
+                            raise Blocked('unknown SDK transport record: ' + str(kind))
+                except BaseException as exc:
+                    with worker_error_lock:
+                        worker_error.append(exc)
+
+            with self._control_lock:
+                self.active_target = None
+                self.steering_states = {}
+                self._send_control = send if steering is not None else None
+            reader = threading.Thread(target=decode)
+            try:
+                send(request)
+                reader.start()
+                reader.join()
+                for thread in workers:
+                    thread.join()
+                with worker_error_lock:
+                    if worker_error:
+                        raise worker_error[0]
                 code = proc.wait()
-                if code or result is None:
+                if code or not result:
                     errors.seek(0)
                     raise Blocked('SDK host exited without a result (exit ' + str(code) + '): ' + errors.read())
-                return result
+                return result[0]
             finally:
-                # Release an unanswered UI/tool request before awaiting SDK abort.
-                # Otherwise an ask_owner waiting on stdin could keep the host alive.
-                try:
-                    proc.stdin.close()
-                except BrokenPipeError:
-                    pass
+                # An active target is valid only for this host invocation.
+                with self._control_lock:
+                    self.active_target = None
+                    self._send_control = None
+                close_input()
                 if proc.poll() is None:
-                    # Only our Popen child. SIGTERM makes the host abort its active
-                    # SDK tools; wait for that host to exit before releasing our
-                    # inherited writer lock to a same-run continuation.
                     proc.terminate()
                     proc.wait()
                 proc.stdout.close()

@@ -6,6 +6,7 @@ import socket
 import subprocess
 import sys
 import threading
+import time
 from unittest.mock import patch
 
 from coherence_workflow.pi_adapter import PiAdapter, parent_question, terminal_question
@@ -67,6 +68,40 @@ class SDKTransportTests(ProjectTest):
                 proc.wait(timeout=10)
             proc.stdout.close()
             proc.stderr.close()
+
+    def test_adapter_multiplexes_steering_while_correlated_question_waits(self):
+        host = Path(__file__).resolve().parents[1] / 'pi-host' / 'host.mjs'
+        preload = Path(__file__).parent / 'fixtures' / 'steering_adapter_fixture.mjs'
+        target = {'run_id': 'run', 'task_id': 'T016', 'invocation_id': 'invocation', 'role': 'task_worker'}
+        entered, release = threading.Event(), threading.Event()
+        statuses = []
+        adapter = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'medium'},
+                            question=lambda question: (entered.set(), release.wait(5), 'ordinary callback')[-1],
+                            steering_status=lambda status: statuses.append(status))
+        outcome = []
+        env = {'COHERENCE_HOST_PRELOAD': '1', 'NODE_OPTIONS': '--import=' + str(preload),
+               'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, env, clear=False):
+            thread = threading.Thread(target=lambda: outcome.append(adapter.prompt('fixture', steering=target)))
+            thread.start()
+            deadline = time.monotonic() + 10
+            while (adapter.active_target is None or not entered.is_set()) and time.monotonic() < deadline:
+                time.sleep(.01)
+            self.assertTrue(entered.is_set(), 'the owner callback must be pending before control is sent')
+            self.assertEqual(adapter.active_target['run_id'], target['run_id'])
+            self.assertEqual(adapter.active_target['task_id'], target['task_id'])
+            self.assertEqual(adapter.active_target['invocation_id'], target['invocation_id'])
+            self.assertEqual(adapter.active_target['role'], target['role'])
+            adapter.steer('direction-1', '/inert direction')
+            while adapter.steering_states.get('direction-1') != 'queued' and time.monotonic() < deadline:
+                time.sleep(.01)
+            self.assertEqual(adapter.steering_states.get('direction-1'), 'queued')
+            self.assertNotIn('consumed', [status['status'] for status in statuses])
+            release.set()
+            thread.join(10)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(outcome, ['steering complete'])
+        self.assertEqual(adapter.steering_states.get('direction-1'), 'consumed')
 
     def test_local_path_error_can_be_corrected_same_host_conversation(self):
         body = '''print(json.dumps({'type':'claim','path':'bad.txt'}),flush=True)
