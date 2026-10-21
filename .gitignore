@@ -18,6 +18,9 @@ runtime/dist/
 runtime/*.egg-info/
 workflow_monitor/.venv/
 workflow_monitor/build/
+# Generated monitor web build and Playwright output; not retained source.
+workflow_monitor/web/dist/
+workflow_monitor/web/test-results/
 
 # The ported plugin under opencode-claude-memory-v2-port/ is tracked as source.
 # Track its manifest and lockfile so `bun install && bun run build` reproduces it;
