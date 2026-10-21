@@ -110,9 +110,16 @@ stop acceptance and are reported honestly with commits retained; there is no SQL
 prerequisite or automatic expensive repair/retry loop. Address actual findings within requested
 scope, rerun affected checks, and obtain independent review. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
 workflow fatal condition. SDK tools truncate long output with their normal continuation
-instructions; the transport has no size cap. A runner may reuse only a returned private saved
-session identity with unchanged effective project/profile/read-only resources; each reopen
-rebuilds the current task's callbacks, tools and mutation scope. An adapter that understands the
+instructions; the transport has no size cap. A runner may reuse only a returned private saved session identity from the same run after a
+successful idle settlement and preceding verified checkpoint. Reuse also requires an explicit
+nonempty matching `context_group` and unchanged role, worktree, executor, resources,
+instructions, settings and authority; task text or callback identity alone are not mismatches.
+`fresh_only` and every reviewer select fresh. Candidates sort by latest successful settlement then
+stable ID. Reuse needs measured effective headroom (context window minus effective reserve minus
+occupancy) at least `min_free_tokens_before_compaction`, whose configurable default is 150000.
+Unknown, invalid, disabled or inapplicable compaction/headroom facts select fresh rather than
+inventing capacity or blocking safe fresh execution. There is no age expiry or file-change routing
+rule. Each reopen rebuilds the current task's callbacks, tools and mutation scope. An adapter that understands the
 standalone pre-invocation `session` transport record explicitly requests it with
 `sessionObservations: true`; absent opt-in keeps the legacy record kinds. The host returns fresh
 boundary observations and waits for SDK idle before disposal. Missing optional observations select a fresh
