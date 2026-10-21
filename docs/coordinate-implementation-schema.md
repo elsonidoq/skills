@@ -69,6 +69,7 @@ runner identity in its dedicated column. Descriptor/identity collection and warn
 recording failure, the recorder appends a closed `gap` marker; it never reconstructs missing events.
 Engine emissions include
 per-command check start/outcome and checkpoint start/outcome; command text and output remain private.
+The read-only monitor may correlate an actually recorded execution ID with its required chain row: it exposes only explicit reviewer/fixer predecessor relations, typed outcome/range, SHA references, and findings matching the review protocol's inert `path:line - issue` form. Raw reviewer payloads, arbitrary findings, prompts, answers, errors, and secrets remain private; absent/dangling IDs remain unknown and are never inferred from order, labels, timestamps, or `correction_of`.
 A no-change checkpoint is recorded explicitly, while an uncertain Git exception is only a failed boundary.
 Facts are validated by phase and milestone before append: Git fields are hashes, roles and error categories
 are closed enums, and counters/exit codes/booleans retain their actual types. Allowlisted names do not admit
@@ -77,7 +78,7 @@ parent occurrence ID. They never retain question or answer text; a send is not a
 Recorder callbacks are independently best effort at requested, returned, sent and delivery-failed points;
 their failures cannot prevent a terminal answer or replace a transport error.
 Read-only status/history exposes recording version, stable occurrence IDs and review base/head ranges when
-present; absent or corrupt monitoring is reported unknown. Explicit abandon preserves prior progress/error
+present; the monitor's public chain DTO identifies only executions with matching emitted occurrences and attaches acceptance only to its explicit terminal reviewer ID and recorded range. Absent or corrupt monitoring is reported unknown. Explicit abandon preserves prior progress/error
 history and appends an `abandoned` observation when the run was registered.
 
 ## Historical records

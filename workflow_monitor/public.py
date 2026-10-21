@@ -34,7 +34,7 @@ def _time(value: object) -> float | None:
 
 def _endpoint(run: str, endpoint: tuple[str, object]) -> str:
     kind, value = endpoint
-    return _ref({"phase": "phase", "task": "task", "occurrence": "occ", "observation": "record"}.get(kind, "unknown"), run, value)
+    return _ref({"phase": "phase", "task": "task", "occurrence": "occ", "observation": "record", "execution": "execution"}.get(kind, "unknown"), run, value)
 
 
 def minimize(graph: dict[str, Any]) -> dict[str, Any]:
@@ -84,7 +84,9 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                         "error_category": facts.get("error_category") if isinstance(facts.get("error_category"), str) and facts.get("error_category") in {"blocked", "check", "git", "malformed", "transport", "interrupted", "unknown"} else None,
                         "recording_gap": facts.get("recording_gap") is True,
                         "baseline": _sha(facts.get("baseline")), "head": _sha(facts.get("head")),
-                        "review_base": _sha(facts.get("review_base")), "review_head": _sha(facts.get("review_head"))})
+                        "review_base": _sha(facts.get("review_base")), "review_head": _sha(facts.get("review_head")),
+                        "execution_id": _text(facts.get("execution_id")),
+                        "review_ordinal": facts.get("review_ordinal") if type(facts.get("review_ordinal")) is int and facts["review_ordinal"] > 0 else None})
     occurrences = []
     for row in graph.get("occurrences", []):
         first = row["observations"][0] if row.get("observations") else {}
@@ -109,11 +111,33 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                   "review_occurrence_ref": _ref("occ", row["source_run_id"], row["review_occurrence_id"]),
                   "resolution": row["resolution"]}
                  for row in graph.get("followups", [])]
+    chain = []
+    for item in graph.get("chain", []):
+        if not isinstance(item, dict) or not isinstance(item.get("run_id"), str) or not isinstance(item.get("execution_id"), str):
+            continue
+        run_id, execution_id = item["run_id"], item["execution_id"]
+        chain.append({"ref": _ref("execution", run_id, execution_id), "run_ref": _ref("run", run_id),
+                      "execution_id": execution_id, "role": item.get("role") if item.get("role") in {"reviewer", "fixer"} else "unknown",
+                      "review_ordinal": item.get("review_ordinal") if type(item.get("review_ordinal")) is int else None,
+                      "fixing_round": item.get("fixing_round") if type(item.get("fixing_round")) is int else None,
+                      "outcome": item.get("outcome") if item.get("outcome") in {"approved", "rejected", "failed", "interrupted"} else "unknown",
+                      "trigger_ref": _ref("execution", run_id, item["trigger_execution_id"]) if isinstance(item.get("trigger_execution_id"), str) else None,
+                      "predecessor_ref": _ref("execution", run_id, item["predecessor_execution_id"]) if isinstance(item.get("predecessor_execution_id"), str) else None,
+                      "occurrence_refs": [_ref("occ", run_id, value) for value in item.get("occurrence_ids", []) if isinstance(value, str)],
+                      "review_range": {"base": _sha(item.get("review_base")), "head": _sha(item.get("review_head"))},
+                      "findings": [value for value in item.get("findings", []) if isinstance(value, str)],
+                      "commit_refs": {key: _sha(value) for key, value in item.get("commit_refs", {}).items()
+                                      if key in {"base", "head", "commit"} and _sha(value)}})
+    chain_acceptance = { _ref("run", run_id): {"state": value.get("state") if value.get("state") in {"accepted", "unknown"} else "unknown",
+                          "terminal_execution_ref": _ref("execution", run_id, value["execution_id"]) if isinstance(value.get("execution_id"), str) else None,
+                          "range": {"base": _sha(value.get("base")), "head": _sha(value.get("head"))}}
+                         for run_id, value in graph.get("chain_acceptance", {}).items() if isinstance(run_id, str) and isinstance(value, dict)}
     inventory = {"phase_count": len(phases), "occurrence_count": len(occurrences), "observation_count": len(records),
                  "supported_count": len(records), "unsupported_count": len(unknown) + len(graph.get("unsupported_run_ids", [])), "hidden_count": 0}
     return {"monitor_version": 1, "state": "ok", "runs": public_runs, "phases": phases, "tasks": tasks,
             "review_definitions": review_definitions, "occurrences": occurrences, "records": records, "edges": edges,
-            "unknown_records": unknown, "inventory": inventory, "followups": followups}
+            "unknown_records": unknown, "inventory": inventory, "followups": followups, "chain": chain,
+            "chain_acceptance": chain_acceptance}
 
 
 __all__ = ["minimize", "run_ref"]

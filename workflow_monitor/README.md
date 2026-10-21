@@ -102,10 +102,9 @@ activity remain separate. Failed reads retain sanitized evidence with a warning.
 runner `live`/`stopped`/`unknown` qualification is not proof of progress.
 
 Only explicitly declared local correction relations expand the selected-root graph.
-The original rejected reviewer, distinct fixing calls and subsequent reviewer remain
-visible; source-run refs and actual ranges are in Details rather than repeated in labels.
+For a same-run recorded review chain, Details also show only actually emitted reviewer/fixer IDs, explicit trigger/predecessor relations, fixer-owned check/checkpoint attempts, ordinal/outcome/range, and SHA references. A review issue is shown only when it matches the inert `path:line - issue` review form; raw reviewer payloads, arbitrary findings, prompts, answers, errors, and secrets remain private. The original rejected reviewer, distinct fixing calls and subsequent reviewer remain visible; source-run refs and actual ranges are in Details rather than repeated in labels.
 A valid rejecting reviewer remains a green returned execution while its rejection stays
-visible in Details and lineage acceptance. Correction-only, unresolved and cyclic
+visible in Details and lineage acceptance. Same-run acceptance identifies the explicit terminal reviewer and its recorded range, never temporal proximity. Missing/dangling chain links remain unknown. Correction-only, unresolved and cyclic
 relations do not establish current full-range acceptance. Supporting
 checks/checkpoints remain available in agent Details and paginated history.
 

@@ -14,6 +14,8 @@ from typing import Any
 
 
 SUPPORTED_RECORDING_VERSION = 1
+_SAFE_FINDING = __import__("re").compile(r"^[A-Za-z0-9_./-]+(?::[1-9][0-9]*)? - [^\r\n]+$")
+_HASH = __import__("re").compile(r"^[0-9a-f]{40,64}$")
 _DATABASE_PARTS = (".coherence", "workflow", "workflow.sqlite")
 _GIT_ENV = (
     "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR",
@@ -126,10 +128,10 @@ class Reader:
             connection.execute("BEGIN")
             connection.set_authorizer(self._authorizer)
             tables = {row["name"] for row in connection.execute(
-                "SELECT name FROM sqlite_master WHERE type=? AND name IN (?, ?)",
-                ("table", "execution_monitor_runs", "execution_observations"),
+                "SELECT name FROM sqlite_master WHERE type=? AND name IN (?, ?, ?, ?)",
+                ("table", "execution_monitor_runs", "execution_observations", "execution_review_executions", "execution_review_attempts"),
             )}
-            if tables != {"execution_monitor_runs", "execution_observations"}:
+            if not {"execution_monitor_runs", "execution_observations"} <= tables:
                 return {"state": "unavailable", "code": "monitor_schema_missing"}
             params: list[Any] = []
             where = ""
@@ -154,8 +156,37 @@ class Reader:
             observations = [dict(row) for row in connection.execute(
                 "SELECT seq, run_id, recording_version, occurrence_id, phase, task_id, kind, recorded_at, facts "
                 "FROM execution_observations WHERE " + observation_where + " ORDER BY seq", observation_params)]
+            review_details: list[dict[str, Any]] = []
+            if {"execution_review_executions", "execution_review_attempts"} <= tables:
+                for run in supported:
+                    for execution in connection.execute(
+                        "SELECT execution_id, role, review_ordinal, fixing_round, trigger_execution_id, "
+                        "predecessor_execution_id, review_base, review_head FROM execution_review_executions "
+                        "WHERE run_id=? ORDER BY dispatched_at, execution_id", (run["run_id"],)):
+                        attempt = connection.execute(
+                            "SELECT state, uncertainty, findings, reference_json FROM execution_review_attempts "
+                            "WHERE run_id=? AND execution_id=? ORDER BY seq DESC LIMIT 1",
+                            (run["run_id"], execution["execution_id"])).fetchone()
+                        if attempt is None:
+                            continue
+                        try:
+                            findings = __import__("json").loads(attempt["findings"]) if attempt["findings"] else []
+                            references = __import__("json").loads(attempt["reference_json"])
+                        except (TypeError, ValueError):
+                            findings, references = [], {}
+                        review_details.append({
+                            "run_id": run["run_id"], "execution_id": execution["execution_id"],
+                            "role": execution["role"], "review_ordinal": execution["review_ordinal"],
+                            "fixing_round": execution["fixing_round"], "trigger_execution_id": execution["trigger_execution_id"],
+                            "predecessor_execution_id": execution["predecessor_execution_id"],
+                            "review_base": execution["review_base"], "review_head": execution["review_head"],
+                            "outcome": attempt["state"], "uncertain": bool(attempt["uncertainty"]),
+                            "findings": [item for item in findings if isinstance(item, str) and _SAFE_FINDING.fullmatch(item)],
+                            "commit_refs": {key: value for key, value in references.items()
+                                            if key in {"base", "head", "commit"} and isinstance(value, str) and _HASH.fullmatch(value)},
+                        })
             return {"state": "ok", "runs": supported, "unsupported_run_ids": unsupported,
-                    "observations": observations}
+                    "observations": observations, "review_details": review_details}
         except (sqlite3.Error, OSError, ValueError):
             return {"state": "unavailable", "code": "read_failed"}
         finally:

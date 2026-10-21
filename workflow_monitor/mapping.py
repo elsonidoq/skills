@@ -27,13 +27,19 @@ def _object(value: Any) -> dict[str, Any] | None:
 
 def _valid_facts(facts: dict[str, Any]) -> bool:
     allowed = {"role", "parent_occurrence_id", "error_category", "ordinal", "exit_code", "baseline", "head",
-               "no_change", "review_base", "review_head", "approved", "finding_count", "recording_gap"}
+               "no_change", "review_base", "review_head", "approved", "outcome", "finding_count", "execution_id",
+               "review_ordinal", "trigger_execution_id", "predecessor_execution_id", "recording_gap"}
     if set(facts) - allowed:
         return False
     return (not isinstance(facts.get("role"), (list, dict)) and
             ("ordinal" not in facts or type(facts["ordinal"]) is int) and
             ("exit_code" not in facts or type(facts["exit_code"]) is int) and
             ("finding_count" not in facts or type(facts["finding_count"]) is int) and
+            ("review_ordinal" not in facts or type(facts["review_ordinal"]) is int) and
+            ("execution_id" not in facts or isinstance(facts["execution_id"], str)) and
+            ("trigger_execution_id" not in facts or isinstance(facts["trigger_execution_id"], str)) and
+            ("predecessor_execution_id" not in facts or isinstance(facts["predecessor_execution_id"], str)) and
+            ("outcome" not in facts or facts["outcome"] in {"approved", "rejected", "failed", "interrupted"}) and
             ("no_change" not in facts or type(facts["no_change"]) is bool) and
             ("approved" not in facts or type(facts["approved"]) is bool))
 
@@ -165,11 +171,51 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             if row["phase"] == "review" and "review_base" in row["facts"] and "review_head" in row["facts"]:
                 edges.append({"run_id": run_id, "type": "reviewed_range", "from": ("occurrence", occurrence_id),
                               "to": ("observation", row["seq"])})
+    # The review-chain table supplies safe details, but an execution exists publicly only
+    # when its matching monitoring occurrence was actually recorded.
+    execution_occurrences: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for observation in observations:
+        execution_id = observation["facts"].get("execution_id")
+        if isinstance(execution_id, str) and execution_id:
+            execution_occurrences[(observation["run_id"], execution_id)].append(observation)
+    chain = []
+    for detail in snapshot.get("review_details", []):
+        if not isinstance(detail, dict):
+            continue
+        run_id, execution_id = detail.get("run_id"), detail.get("execution_id")
+        rows = execution_occurrences.get((run_id, execution_id))
+        if not isinstance(run_id, str) or not isinstance(execution_id, str) or not rows:
+            continue
+        chain.append({**detail, "occurrence_ids": sorted({row["occurrence_id"] for row in rows})})
+    known_executions = {(row["run_id"], row["execution_id"]) for row in chain}
+    for item in chain:
+        run_id, execution_id = item["run_id"], item["execution_id"]
+        for relation in ("trigger_execution_id", "predecessor_execution_id"):
+            target = item.get(relation)
+            if isinstance(target, str) and (run_id, target) in known_executions:
+                edges.append({"run_id": run_id, "type": "chain_" + relation.removesuffix("_execution_id"),
+                              "from": ("execution", target), "to": ("execution", execution_id)})
+    for observation in observations:
+        execution_id = observation["facts"].get("execution_id")
+        if (observation["run_id"], execution_id) not in known_executions:
+            continue
+        if observation["phase"] in {"check", "checkpoint"}:
+            edges.append({"run_id": observation["run_id"], "type": "chain_" + observation["phase"],
+                          "from": ("execution", execution_id), "to": ("observation", observation["seq"])})
+    chain_acceptance = {}
+    for run_id in known_runs:
+        candidates = [item for item in chain if item["run_id"] == run_id and item.get("role") == "reviewer"]
+        terminal = max(candidates, key=lambda item: item.get("review_ordinal") or 0, default=None)
+        if terminal and terminal.get("outcome") == "approved" and not terminal.get("findings") and not terminal.get("uncertain"):
+            chain_acceptance[run_id] = {"state": "accepted", "execution_id": terminal["execution_id"],
+                                        "base": terminal.get("review_base"), "head": terminal.get("review_head")}
+        else:
+            chain_acceptance[run_id] = {"state": "unknown", "execution_id": None, "base": None, "head": None}
     followups, review_acceptance = resolve(runs, occurrences)
     return {"state": "ok", "runs": runs, "phases": phases, "tasks": tasks, "occurrences": occurrences,
             "observations": observations, "edges": edges, "unknown_records": unknown,
             "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", [])), "followups": followups,
-            "review_acceptance": review_acceptance}
+            "review_acceptance": review_acceptance, "chain": chain, "chain_acceptance": chain_acceptance}
 
 
 __all__ = ["normalize"]
