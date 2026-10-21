@@ -31,7 +31,15 @@ export function outcomeText(item: Occurrence, records: Observation[]) {
 }
 const seq = (item: Occurrence, records: Observation[]) => item.first_seq ?? Math.min(...records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => record.source_seq), Number.MAX_SAFE_INTEGER)
 export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relations: Followup[]) {
-  const snapshots = [root, ...lineage], occurrences = snapshots.flatMap(item => item.occurrences), records = snapshots.flatMap(item => item.records), chain = snapshots.flatMap(item => item.chain ?? []), recordedEdges = snapshots.flatMap(item => item.edges ?? [])
+  const snapshots = [root, ...lineage], occurrences = snapshots.flatMap(item => item.occurrences), records = snapshots.flatMap(item => item.records), chain = snapshots.flatMap(item => item.chain ?? []), rawEdges = snapshots.flatMap(item => item.edges ?? [])
+  // Producer chain support edges reference observations, not occurrence nodes.
+  // Resolve via explicit record membership, including records outside this page.
+  const recordedEdges = rawEdges.map(edge => {
+    if (edge.type !== 'chain_check' && edge.type !== 'chain_checkpoint') return edge
+    const target = occurrences.find(item => item.run_ref === edge.run_ref &&
+      (item.ref === edge.to_ref || item.record_refs.includes(edge.to_ref)))
+    return target ? { ...edge, to_ref: target.ref } : edge
+  })
   const planAvailable = root.runs.some(run => run.plan_availability === 'complete')
   const planned = planAvailable ? root.tasks : []
   const planRuns = new Set(planned.map(task => task.run_ref))

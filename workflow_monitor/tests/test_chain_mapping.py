@@ -1,6 +1,8 @@
 """Synthetic engine recordings prove the closed review-chain projection."""
 from pathlib import Path
 import sys
+import json
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "runtime"))
@@ -99,6 +101,21 @@ class ChainMappingTests(ProjectTest):
                          [("reviewer", "rejected"), ("fixer", "approved"), ("reviewer", "rejected")])
         self.assertEqual([(item["role"], item["outcome"]) for item in dto["chain"] if item["run_ref"] == by_run["fixer-failure"]],
                          [("reviewer", "rejected"), ("fixer", "failed")])
+        # Consume actual producer IDs/relations in the production source module,
+        # not a browser-only occurrence-targeted approximation.
+        view = json.loads(subprocess.check_output([
+            'node', '--experimental-strip-types', '--input-type=module', '-e',
+            "import {graphFor} from './workflow_monitor/web/src/graph.ts'; "
+            "let data=''; for await (const chunk of process.stdin) data+=chunk; "
+            "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
+            input=json.dumps(dto).encode(), cwd=ROOT))
+        nodes = {node['id'] for node in view['nodes']}
+        for edge in dto['edges']:
+            if edge['type'] not in ('chain_check', 'chain_checkpoint'): continue
+            target = next(item for item in dto['occurrences'] if edge['to_ref'] in item['record_refs'])
+            self.assertIn(target['ref'], nodes)
+            rendered = next(item for item in view['edges'] if item['id'] == edge['ref'])
+            self.assertEqual((rendered['source'], rendered['target']), (edge['from_ref'], target['ref']))
         self.assertNotIn("PRIVATE-SENTINEL", repr(dto))
         self.assertNotIn("PRIVATE-WORKER-ANSWER", repr(dto))
 
