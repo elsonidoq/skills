@@ -5,7 +5,7 @@ import { layoutFootprints, type FootprintLayoutInput } from '../src/layout'
 
 let server: Server
 let vite: ViteDevServer
-let fixtureStage: 'base' | 'overlay' | 'content' = 'base'
+let fixtureStage: 'base' | 'overlay' | 'content' | 'short' = 'base'
 const sha = (value: string) => value.repeat(40)
 const longHostileLabel = '<img src=x onerror=alert(1)> retained task label that is deliberately longer than eighty characters for Details'
 const refreshedTaskTitle = 'Repeated generic branch'
@@ -41,6 +41,7 @@ function snapshot() {
       { ref: 'fix_check', run_ref: run.ref, phase_ref: 'check', task_ref: 'task_d', role: 'non_model', outcome: 'passed', completeness: 'complete', record_refs: ['record_check'] },
       { ref: 'fix_checkpoint', run_ref: run.ref, phase_ref: 'checkpoint', task_ref: 'task_d', role: 'non_model', outcome: 'passed', completeness: 'complete', record_refs: ['record_checkpoint'] },
       { ref: 'occ_review_two', run_ref: run.ref, phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: [] },
+      { ref: 'qualified_stop', run_ref: run.ref, phase_ref: 'terminal', task_ref: 'task_d', role: 'terminal', outcome: 'passed', completeness: 'complete', record_refs: [], support_ref: 'occ_fix', stopping: true, execution_summary: { state: 'success', qualification: 'completed correction context' } },
       { ref: 'task_b_attempt_one', run_ref: run.ref, occurrence_id: '1', phase_ref: 'worker', task_ref: 'task_b', role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
       { ref: 'task_b_attempt_two', run_ref: run.ref, occurrence_id: '2', phase_ref: 'worker', task_ref: 'task_b', role: 'worker', outcome: 'failed', completeness: 'complete', record_refs: [] },
       { ref: 'task_c_attempt', run_ref: run.ref, phase_ref: 'worker', task_ref: 'task_c', role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
@@ -54,7 +55,7 @@ function snapshot() {
       ...(secondaryOverlay ? [{ ref: 'eligible_secondary_overlay', run_ref: run.ref, type: 'chain_predecessor', from_ref: 'review_one', to_ref: 'review_two', resolution: 'recorded' }] : []),
     ],
     snapshot_ref: 'chain_snapshot', next_cursor: null,
-    inventory: { phase_count: 0, occurrence_count: 9, observation_count: 0, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 1 },
+    inventory: { phase_count: 0, occurrence_count: 10, observation_count: 0, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 1 },
   }
 }
 
@@ -63,7 +64,7 @@ test.beforeAll(async () => {
   server = createServer((request, response) => {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1:4174')
     if (url.pathname === '/api/monitor/v1/runs') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ runs: [run] })); return }
-    if (url.pathname === '/fixture-stage') { fixtureStage = (url.searchParams.get('value') === 'overlay' ? 'overlay' : url.searchParams.get('value') === 'content' ? 'content' : 'base'); response.end('ok'); return }
+    if (url.pathname === '/fixture-stage') { fixtureStage = (url.searchParams.get('value') === 'overlay' ? 'overlay' : url.searchParams.get('value') === 'content' ? 'content' : url.searchParams.get('value') === 'short' ? 'short' : 'base'); response.end('ok'); return }
     if (url.pathname === `/api/monitor/v1/runs/${run.ref}/snapshot`) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify(snapshot())); return }
     if (url.pathname.endsWith('/followups')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ followups: [] })); return }
     vite.middlewares(request, response, () => { response.statusCode = 404; response.end() })
@@ -77,7 +78,7 @@ test('renders a measured multilevel recorded chain without changing its backbone
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/')
   const graph = page.getByLabel('Workflow graph')
-  const owners: Record<string, string> = { worker_a: 'task_a', task_b_attempt_one: 'task_b', task_b_attempt_two: 'task_b', task_c_attempt: 'task_c', fix_one: 'task_d', fix_check: 'task_d', fix_checkpoint: 'task_d', planned_review: 'run-review', review_one: 'run-review', review_two: 'run-review', dangling_review: 'unassigned-history', conflicting_fixer: 'unassigned-history' }
+  const owners: Record<string, string> = { worker_a: 'task_a', task_b_attempt_one: 'task_b', task_b_attempt_two: 'task_b', task_c_attempt: 'task_c', fix_one: 'task_d', fix_check: 'task_d', fix_checkpoint: 'task_d', qualified_stop: 'task_d', planned_review: 'run-review', review_one: 'run-review', review_two: 'run-review', dangling_review: 'unassigned-history', conflicting_fixer: 'unassigned-history' }
   const prerequisitePairs = [['task_a', 'task_b'], ['task_a', 'task_c'], ['task_a', 'task_e'], ['task_b', 'task_d'], ['task_c', 'task_d'], ['task_d', 'task_f'], ['task_e', 'task_f']] as const
   const readGeometry = () => page.evaluate((ownerMap) => {
     const position = (element: HTMLElement) => {
@@ -87,7 +88,7 @@ test('renders a measured multilevel recorded chain without changing its backbone
     return [...document.querySelectorAll<HTMLElement>('.react-flow__node[data-id]')].map(element => {
       const id = element.dataset.id!
       const bounds = position(element)
-      const measured = (item: HTMLElement) => { const horizontalBorder = item.offsetWidth - item.clientWidth; const verticalBorder = item.offsetHeight - item.clientHeight; return { width: Math.max(item.offsetWidth, item.scrollWidth + horizontalBorder), height: Math.ceil(Math.max(item.offsetHeight, item.scrollHeight + verticalBorder)) } }
+      const measured = (item: HTMLElement) => { const horizontalBorder = item.offsetWidth - item.clientWidth; const verticalBorder = item.offsetHeight - item.clientHeight; const retainedHeight = item.style.height; item.style.height = 'auto'; const height = Math.max(item.offsetHeight, item.scrollHeight + verticalBorder); item.style.height = retainedHeight; return { width: Math.max(item.offsetWidth, item.scrollWidth + horizontalBorder), height: Math.ceil(height) } }
       const header = element.querySelector<HTMLElement>('[data-group-header]')
       return { id, bounds, cssBounds: { x: bounds.x, y: bounds.y, width: Number.parseFloat(element.style.width), height: Number.parseFloat(element.style.height) }, measurement: measured(element), owner: ownerMap[id] ?? (id.startsWith('task_') ? id : null), header: header ? { x: bounds.x + header.offsetLeft, y: bounds.y + header.offsetTop, ...measured(header) } : null }
     })
@@ -116,8 +117,15 @@ test('renders a measured multilevel recorded chain without changing its backbone
         const observedChild = actual.find(item => item.id === child.id)!
         expectBounds(observedChild.cssBounds, child.bounds, `${child.id} CSS dimensions and graph-coordinate bounds`)
         expect(contains(observed.cssBounds, observedChild.cssBounds), `${child.id} fits ${group.id}`).toBeTruthy()
+        expect(observedChild.cssBounds.width, `${child.id} allocated width contains intrinsic content`).toBeGreaterThanOrEqual(observedChild.measurement.width)
+        expect(observedChild.cssBounds.height, `${child.id} allocated height contains intrinsic content`).toBeGreaterThanOrEqual(observedChild.measurement.height)
         expect(overlaps(observed.header!, observedChild.bounds), `${group.id} header does not overlap ${child.id}`).toBeFalsy()
       }
+      const contentBounds = group.children.map(child => {
+        const observedChild = actual.find(item => item.id === child.id)!
+        return { id: child.id, x: observedChild.bounds.x, y: observedChild.bounds.y, width: observedChild.measurement.width, height: observedChild.measurement.height }
+      })
+      for (let index = 0; index < contentBounds.length; index++) for (let other = index + 1; other < contentBounds.length; other++) expect(overlaps(contentBounds[index], contentBounds[other]), `${contentBounds[index].id} intrinsic content does not overlap ${contentBounds[other].id}`).toBeFalsy()
     }
     for (let index = 0; index < groups.length; index++) for (let other = index + 1; other < groups.length; other++) expect(overlaps(groups[index].cssBounds, groups[other].cssBounds), `${groups[index].id} and ${groups[other].id} do not overlap`).toBeFalsy()
     for (const [source, target] of prerequisitePairs) expect(actualGroups.get(target)!.cssBounds.y, `${target} is below ${source}`).toBeGreaterThanOrEqual(actualGroups.get(source)!.cssBounds.y + actualGroups.get(source)!.cssBounds.height)
@@ -135,11 +143,24 @@ test('renders a measured multilevel recorded chain without changing its backbone
   await expect(page.locator('.react-flow__node[data-id="fix_one"]')).toContainText('Fixing agent')
   await expect(page.locator('.react-flow__node[data-id="review_two"]')).toContainText('Review 2')
   await expect(page.locator('.react-flow__node[data-id="planned_review"]')).toContainText('Planned independent review definition')
+  await expect(page.locator('.react-flow__node[data-id="qualified_stop"]')).toContainText('Stop attempt')
+  await expect(page.getByTestId('rf__edge-stop_qualified_stop')).toHaveAttribute('aria-label', /Edge from fix_one to qualified_stop/)
   await expect(page.locator('.react-flow__node[data-id="group:run-review"]')).toContainText('Run review / execution history')
   await expect(page.locator('.react-flow__node[data-id="group:unassigned-history"]')).toContainText('Unassigned recorded history')
   await expect(page.getByTestId('rf__edge-trigger')).toBeVisible()
   for (const id of ['check', 'checkpoint']) await expect(page.getByTestId(`rf__edge-${id}`)).toHaveAttribute('aria-label', new RegExp(`Edge from fix_one to fix_${id}`))
+  await assertMeasuredLayout()
   const overviewGeometry = await readGeometry()
+  const graphBox = await graph.boundingBox()
+  if (!graphBox) throw new Error('Workflow graph is missing')
+  for (const node of await page.locator('.react-flow__node[data-id]').all()) {
+    const bounds = await node.boundingBox()
+    if (!bounds) throw new Error('Rendered graph node is missing bounds')
+    expect(bounds.x, 'overview node starts within the graph').toBeGreaterThanOrEqual(graphBox.x)
+    expect(bounds.y, 'overview node starts within the graph').toBeGreaterThanOrEqual(graphBox.y)
+    expect(bounds.x + bounds.width, 'overview node ends within the graph').toBeLessThanOrEqual(graphBox.x + graphBox.width)
+    expect(bounds.y + bounds.height, 'overview node ends within the graph').toBeLessThanOrEqual(graphBox.y + graphBox.height)
+  }
   const overview = testInfo.outputPath('readable-chain-overview.png')
   await page.screenshot({ path: overview })
   console.log(`Overview chain screenshot: ${overview}`)
@@ -160,20 +181,31 @@ test('renders a measured multilevel recorded chain without changing its backbone
   await page.locator('.react-flow__node[data-id="task_a"]').click()
   await expect(details).toContainText(longHostileLabel)
   await expect(details.locator('img')).toHaveCount(0)
+  await page.locator('.react-flow__node[data-id="qualified_stop"]').click()
+  await expect(details).toContainText('Recorded workflow stopping step.')
+  await expect(details).toContainText('completed correction context')
   await page.locator('.react-flow__node[data-id="task_b"]').click()
   await expect(details).toContainText('What happened: Repeated generic branch.')
   await expect(details).toContainText('Current blocker: not recorded.')
 
-  const initialNodeHeight = await page.locator('.react-flow__node[data-id="task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))
   const stablePositions = Object.fromEntries(overviewGeometry.filter(item => item.id.startsWith('group:') || tasks.some(task => task.ref === item.id)).map(item => [item.id, item.cssBounds]))
   await page.request.get('/fixture-stage?value=overlay')
-  await page.clock.fastForward(61_000)
+  // Reload this isolated production fixture so overlay geometry is tested without
+  // coupling the assertion to fake-clock scheduling of the polling interval.
+  await page.reload()
+  await page.clock.runFor(100)
   await expect(page.getByTestId('rf__edge-eligible_secondary_overlay')).toHaveCount(1)
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))))
+  await page.waitForTimeout(100)
   const overlayGeometry = await readGeometry()
   for (const item of overlayGeometry.filter(item => stablePositions[item.id])) expect(item.cssBounds, `${item.id} is unchanged by a secondary overlay`).toEqual(stablePositions[item.id])
+  await page.locator('.react-flow__node[data-id="task_b"]').click()
+  const initialNodeHeight = await page.locator('.react-flow__node[data-id="task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))
 
   const initialViewport = await page.locator('.react-flow__viewport').getAttribute('style')
-  await page.getByTitle('Zoom In').click()
+  const viewportScale = async () => Number((await page.locator('.react-flow__viewport').getAttribute('style'))?.match(/scale\(([^)]+)\)/)?.[1] ?? 0)
+  for (let clicks = 0; clicks < 10 && await viewportScale() < 1; clicks++) await page.getByTitle('Zoom In').click()
+  expect(await viewportScale(), 'inspection view uses at least one screen pixel per graph coordinate').toBeGreaterThanOrEqual(1)
   const pane = page.locator('.react-flow__pane')
   const paneBox = await pane.boundingBox()
   if (!paneBox) throw new Error('Graph pane is missing')
@@ -194,6 +226,12 @@ test('renders a measured multilevel recorded chain without changing its backbone
   await expect.poll(() => page.locator('.react-flow__node[data-id="task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))).toBeGreaterThan(initialNodeHeight)
   await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', beforeViewport ?? '')
   await expect(page.locator('.react-flow__node[data-id="task_b"]')).toHaveClass(/selected/)
+  const expandedNodeHeight = await page.locator('.react-flow__node[data-id="task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))
+  await page.request.get('/fixture-stage?value=short')
+  await page.clock.fastForward(61_000)
+  await expect.poll(() => page.locator('.react-flow__node[data-id="task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))).toBeLessThan(expandedNodeHeight)
+  await expect(page.locator('.react-flow__node[data-id="task_b"]')).toHaveClass(/selected/)
+  await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', beforeViewport ?? '')
   await page.waitForTimeout(100)
   await page.clock.fastForward(61_000)
   await assertMeasuredLayout()

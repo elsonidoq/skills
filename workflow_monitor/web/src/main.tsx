@@ -28,7 +28,7 @@ function mergePage(current: Snapshot | null, page: Snapshot): Snapshot {
 }
 function App() {
   const [runs, setRuns] = useState<Run[]>([]); const [selectedRun, setSelectedRun] = useState<string | null>(null); const [snapshot, setSnapshot] = useState<Snapshot | null>(null); const [lineage, setLineage] = useState<Snapshot[]>([]); const [relations, setRelations] = useState<Followup[]>([]); const [nodes, setNodes] = useState<Node[]>([]); const [edges, setEdges] = useState<Edge[]>([]); const [selected, setSelected] = useState<{ kind: 'node' | 'edge'; id: string } | null>(null); const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 }); const [message, setMessage] = useState('Loading monitor…')
-  const flow = useRef<ReactFlowInstance | null>(null); const fitPending = useRef(false);
+  const flow = useRef<ReactFlowInstance | null>(null); const fitPending = useRef(false); const initialFitComplete = useRef(false);
   const fetchGeneration = useRef(0); const layoutGeneration = useRef(0); const topology = useRef<string | null>(null); const positions = useRef<Record<string, { x: number; y: number }>>({}); const layoutStructure = useRef<string | null>(null); const measurementContent = useRef<string | null>(null); const measurePending = useRef(false); const measurements = useRef<Record<string, { width: number; height: number }>>({}); const [measurementGeneration, setMeasurementGeneration] = useState(0)
   useEffect(() => { let active = true; const loadRuns = async () => { try { const data = await getJson<{ runs: Run[] }>('/api/monitor/v1/runs'); if (!active) return; setRuns(data.runs); setSelectedRun(current => current && data.runs.some(run => run.ref === current) ? current : (data.runs[0]?.ref ?? null)) } catch (error) { if (active) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } }; void loadRuns(); const timer = window.setInterval(() => void loadRuns(), POLL_INTERVAL_MS); return () => { active = false; window.clearInterval(timer) } }, [])
   useEffect(() => { if (!selectedRun) return; const generation = ++fetchGeneration.current; let active = true; const loadSnapshot = async () => { try { const page = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/snapshot`); let followups: Followup[] = []; try { let cursor: string | null = null; do { const result: { followups: Followup[]; next_cursor?: string | null } = await getJson(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/followups?snapshot=${encodeURIComponent(page.snapshot_ref)}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`); followups.push(...result.followups); cursor = result.next_cursor ?? null } while (cursor) } catch { /* A snapshot remains usable when a prior closed fixture has no followup route. */ } const linkedRefs = [...new Set(followups.flatMap(item => [item.run_ref, item.source_run_ref]).filter(ref => ref !== selectedRun))]; const linked = (await Promise.all(linkedRefs.map(async ref => { try { return await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(ref)}/snapshot`) } catch { return null } }))).filter((item): item is Snapshot => item !== null); if (active && generation === fetchGeneration.current) { setSnapshot(current => mergePage(current, page)); setRelations(followups); setLineage(current => linked.map(item => mergePage(current.find(old => old.snapshot_ref === item.snapshot_ref) ?? null, item))); setMessage('Updated from the recorded snapshot.') } } catch (error) { if (active && generation === fetchGeneration.current) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } }; void loadSnapshot(); const timer = window.setInterval(() => void loadSnapshot(), POLL_INTERVAL_MS); return () => { active = false; window.clearInterval(timer); ++fetchGeneration.current } }, [selectedRun])
@@ -84,28 +84,51 @@ function App() {
     }
     // Content measurements can refine footprints after a user has panned or zoomed.
     // Reflow them, but reserve fitView for an initial or backbone/ownership change.
-    fitPending.current = layoutStructure.current !== structure; measurePending.current = contentChanged; const generation = ++layoutGeneration.current; let active = true
+    // Initial intrinsic measurement needs one fit after the measured layout. Later
+    // content reflows deliberately preserve a user's viewport.
+    if (layoutStructure.current !== structure && (!contentChanged || initialFitComplete.current)) fitPending.current = true
+    measurePending.current = contentChanged; const generation = ++layoutGeneration.current; let active = true
     void layoutFootprints({ groups, prerequisites, secondaryRelations: graph.edges.filter(edge => edge.data?.classification === 'secondary') }).then(layout => { if (!active || generation !== layoutGeneration.current) return; topology.current = layoutKey; layoutStructure.current = structure; const byGroup = new Map(layout.groups.map(group => [group.id, group])); const grouped: Node[] = layout.groups.map(group => ({ id: `group:${group.id}`, position: { x: group.bounds.x, y: group.bounds.y }, data: { label: <div className="group-header" data-group-header={group.id}>{groupTitle(group.id)}</div> }, className: `owner-group ${group.kind}`, style: { width: group.bounds.width, height: group.bounds.height }, draggable: false, selectable: false }))
       for (const node of graph.nodes) { const groupId = groupFor(node); const group = byGroup.get(groupId)!; const child = group.children.find(item => item.id === node.id)!; const position = { x: child.bounds.x - group.bounds.x, y: child.bounds.y - group.bounds.y }; positions.current[node.id] = position; grouped.push({ ...node, position: { x: child.bounds.x, y: child.bounds.y }, style: { width: child.bounds.width, height: child.bounds.height } }) }
       setNodes(grouped) })
     return () => { active = false }
   }, [selectedRun, snapshot, lineage, relations, measurementGeneration])
-  useEffect(() => { if (!nodes.length || !measurePending.current) return; measurePending.current = false; const next = { ...measurements.current }; let changed = false; document.querySelectorAll<HTMLElement>('.react-flow__node[data-id], .group-header[data-group-header]').forEach(element => {
-    const id = element.dataset.groupHeader ? `header:${element.dataset.groupHeader}` : element.dataset.id
-    if (!id || id.startsWith('group:')) return
-    // offset/scroll dimensions are CSS (graph) coordinates; unlike client rects they
-    // are not shrunk by the ReactFlow viewport transform. scroll dimensions include
-    // wrapped/overflowing content before the next footprint fixes the node size.
-    const horizontalBorder = element.offsetWidth - element.clientWidth
-    const verticalBorder = element.offsetHeight - element.clientHeight
-    // Group headers are positioned at the same 16px inset used by layoutFootprints;
-    // measure their own rendered footprint, not their enclosing owner box.
-    const width = Math.max(element.offsetWidth, element.scrollWidth + horizontalBorder)
-    const size = { width: Math.ceil(width), height: Math.ceil(Math.max(element.offsetHeight, element.scrollHeight + verticalBorder)) }
-    const previous = next[id]
-    if (size.width && size.height && (previous?.width !== size.width || previous.height !== size.height)) { next[id] = size; changed = true }
-  }); if (changed) { measurements.current = next; ++layoutGeneration.current; topology.current = null; setMeasurementGeneration(current => current + 1) } }, [nodes])
-  useEffect(() => { if (nodes.length && fitPending.current && flow.current) { fitPending.current = false; void flow.current.fitView({ padding: .12, maxZoom: 1 }) } }, [nodes])
+  useEffect(() => {
+    if (!nodes.length || !measurePending.current) return
+    // A content refresh first replaces node labels. Defer one frame so measurements see
+    // that committed DOM rather than a preceding cached node render.
+    const frame = requestAnimationFrame(() => {
+      if (!measurePending.current) return
+      measurePending.current = false
+      const next = { ...measurements.current }
+      let changed = false
+      document.querySelectorAll<HTMLElement>('.react-flow__node[data-id], .group-header[data-group-header]').forEach(element => {
+        const id = element.dataset.groupHeader ? `header:${element.dataset.groupHeader}` : element.dataset.id
+        if (!id || id.startsWith('group:')) return
+        // offset/scroll dimensions are CSS (graph) coordinates; unlike client rects they
+        // are not shrunk by the ReactFlow viewport transform. scroll dimensions include
+        // wrapped/overflowing content before the next footprint fixes the node size.
+        const horizontalBorder = element.offsetWidth - element.clientWidth
+        const verticalBorder = element.offsetHeight - element.clientHeight
+        // Group headers are positioned at the same 16px inset used by layoutFootprints;
+        // measure their own rendered footprint, not their enclosing owner box.
+        const width = Math.max(element.offsetWidth, element.scrollWidth + horizontalBorder)
+        // Node heights come from the prior layout. Clear that explicit constraint while
+        // reading intrinsic content so a shorter refreshed blocker/title can shrink too.
+        const retainedHeight = element.style.height
+        element.style.height = 'auto'
+        const height = Math.max(element.offsetHeight, element.scrollHeight + verticalBorder)
+        element.style.height = retainedHeight
+        const size = { width: Math.ceil(width), height: Math.ceil(height) }
+        const previous = next[id]
+        if (size.width && size.height && (previous?.width !== size.width || previous.height !== size.height)) { next[id] = size; changed = true }
+      })
+      if (!initialFitComplete.current) fitPending.current = true
+      if (changed) { measurements.current = next; ++layoutGeneration.current; topology.current = null; setMeasurementGeneration(current => current + 1) }
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [nodes])
+  useEffect(() => { if (nodes.length && fitPending.current && flow.current) { fitPending.current = false; initialFitComplete.current = true; void flow.current.fitView({ padding: .12, maxZoom: 1 }) } }, [nodes])
   const details = useMemo(() => {
     if (!snapshot || !selected) return null
     const all = [snapshot, ...lineage]
@@ -134,7 +157,7 @@ function App() {
     if (!occurrence) return null
     const own = all.flatMap(item => item.records).filter(item => item.occurrence_ref === occurrence.ref && item.run_ref === occurrence.run_ref)
     const supporting = all.flatMap(item => item.occurrences).filter(item => item.run_ref === occurrence.run_ref && item.role === 'non_model' && (item.support_ref === occurrence.ref || item.parent_ref === occurrence.ref))
-    return <><h3>{action(occurrence, all)}</h3><p>Execution outcome: {outcomeText(occurrence, own)}.</p><p>What happened: {own.length ? 'Recorded lifecycle evidence is available in technical references.' : 'not recorded'}.</p><p>Current blocker: {occurrence.stopping ? 'Recorded workflow stopping step.' : 'not recorded'}.</p>{technical(<><p>Occurrence ID: {occurrence.occurrence_id ?? 'unknown'}; execution {occurrence.ref}{occurrence.task_ref ? `; task ${occurrence.task_ref}` : ''}; {source(occurrence.run_ref)}.</p>{own.map(item => <p key={item.ref}>{recordText(item)}</p>)}{supporting.map(item => <section key={item.ref}><h4>{action(item, all)}: {outcomeText(item, all.flatMap(value => value.records))}</h4><p>{item.ref}; {item.stopping ? 'workflow stopping step' : 'supporting observation'}</p>{all.flatMap(value => value.records).filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => <p key={record.ref}>{recordText(record)}</p>)}</section>)}</>)}{acceptanceDetails(runFor(occurrence.run_ref))}<p>Only loaded observations are shown; use history below for retained evidence.</p></>
+    return <><h3>{action(occurrence, all)}</h3><p>Execution outcome: {outcomeText(occurrence, own)}.</p><p>What happened: {own.length ? 'Recorded lifecycle evidence is available in technical references.' : 'not recorded'}.</p><p>Current blocker: {occurrence.stopping ? 'Recorded workflow stopping step.' : 'not recorded'}.</p>{occurrence.execution_summary?.qualification && <p>Recorded execution qualification: {occurrence.execution_summary.qualification}.</p>}{technical(<><p>Occurrence ID: {occurrence.occurrence_id ?? 'unknown'}; execution {occurrence.ref}{occurrence.task_ref ? `; task ${occurrence.task_ref}` : ''}; {source(occurrence.run_ref)}.</p>{own.map(item => <p key={item.ref}>{recordText(item)}</p>)}{supporting.map(item => <section key={item.ref}><h4>{action(item, all)}: {outcomeText(item, all.flatMap(value => value.records))}</h4><p>{item.ref}; {item.stopping ? 'workflow stopping step' : 'supporting observation'}</p>{all.flatMap(value => value.records).filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => <p key={record.ref}>{recordText(record)}</p>)}</section>)}</>)}{acceptanceDetails(runFor(occurrence.run_ref))}<p>Only loaded observations are shown; use history below for retained evidence.</p></>
   }, [edges, lineage, selected, snapshot])
   const allOccurrences = snapshot ? [snapshot, ...lineage].flatMap(item => item.occurrences) : []; const failures = allOccurrences.filter(item => item.outcome === 'failed').length; const incomplete = allOccurrences.filter(item => item.completeness === 'incomplete').length; const allTasks = [snapshot, ...lineage].flatMap(value => value?.tasks ?? []); const waiting = allTasks.filter(task => task.annotation?.code === 'waiting_for_input').length + allOccurrences.filter(item => !allTasks.some(task => task.ref === item.task_ref) && status(item, [snapshot, ...lineage].flatMap(value => value?.records ?? [])) === 'waiting').length
   const selectedRunInfo = runs.find(run => run.ref === selectedRun); const acceptance = selectedRunInfo?.review_acceptance; const acceptanceText = acceptance?.state === 'accepted_full_range' ? `Full-range acceptance: ${acceptance.base} → ${acceptance.head}` : acceptance?.state === 'correction_only' ? 'Correction-only review; current head is not accepted.' : 'Current lineage acceptance is unknown.'
@@ -145,7 +168,7 @@ function App() {
     <h1>Workflow monitor</h1>
     <p className="status" role="status">{message}</p>
     <h2>Runs</h2>
-    <div className="run-list">{runs.map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun) return; setNodes([]); setEdges([]); ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; setSnapshot(null); setLineage([]); setRelations([]); setSelectedRun(run.ref); setSelected(null) }}>{run.label} · {run.display_id} · {run.completeness}</button>)}</div>
+    <div className="run-list">{runs.map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun) return; setNodes([]); setEdges([]); ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; initialFitComplete.current = false; setSnapshot(null); setLineage([]); setRelations([]); setSelectedRun(run.ref); setSelected(null) }}>{run.label} · {run.display_id} · {run.completeness}</button>)}</div>
     </aside>
     <section className="viewer">
     <header>
