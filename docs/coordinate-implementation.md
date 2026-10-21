@@ -113,6 +113,14 @@ scope, superseding historical planning-only wording without changing requirement
 manual gates or safety/permission boundaries. Final planning review checks authorization-neutral task
 instructions; temporary approval status stays in the approval record. See [ADR-0003](decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md).
 
+The receiving coordinator investigates and answers routine technical diagnosis, implementation
+choices, ordinary corrections and focused verification within approved authority. Missing technical
+evidence calls for investigation or an actionable blocker, not asking the owner to debug. Escalate
+only product decisions, consequential unresolved trade-offs, material scope/complexity/verification
+expansion, separately scoped spending, or actions outside authority. Autonomous answers never
+impersonate owner consent or bypass manual, paid or permission gates. Before continuing a failed
+expensive worker, inspect its recorded cause and invocation; never blindly retry.
+
 Each task runs in a fresh coding conversation. Ordinary scoped technical fixes, isolated tests/servers,
 necessary local/in-project dependency setup, and current-task artifact lifecycle need no owner question.
 Small isolated tests and local test databases are allowed for any task, using bounded data/execution

@@ -59,6 +59,16 @@ additional paid APIs, including those discovered during execution, require appro
   The writer lock and current recorded child/controller identities protect against overlap;
   historical process scopes are inspected, never provisioned or signalled.
 
+## Question triage
+
+The receiving coordinator investigates and answers routine technical diagnosis, implementation
+choices, ordinary corrections and focused verification within approved authority. Missing technical
+evidence calls for investigation or an actionable blocker, not asking the owner to debug. Escalate
+only product decisions, consequential unresolved trade-offs, material scope/complexity/verification
+expansion, separately scoped spending, or actions outside authority. Autonomous answers never
+impersonate owner consent or bypass manual, paid or permission gates. Before continuing a failed
+expensive worker, inspect its recorded cause and invocation; never blindly retry.
+
 Questions use current terminal owner input when needed, without external receipt files or
 Paseo/session proofs. Noninteractive questions stop with the actual question and retain partial
 work; never invent an answer. No automatic resume, replay, control-mailbox or background daemon. If another cooperating implementation writer holds the existing worktree lock, CLI entry waits transparently and cancellation exits cleanly without fabricating a failed task/run or replacing that writer; platforms that cannot wait report concrete busy.
