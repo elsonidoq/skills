@@ -34,6 +34,7 @@ export type FootprintLayout = { elkInput: ElkInput; groups: PositionedGroup[] }
 const elk = new ELK()
 const padding = 16
 const spacing = 12
+const ownerBorderWidth = 4
 
 function nonNegative(size: LayoutSize): LayoutSize {
   return { width: Math.max(0, size.width), height: Math.max(0, size.height) }
@@ -43,7 +44,9 @@ function footprint(group: LayoutGroup): LayoutSize {
   const header = nonNegative(group.header)
   const members = group.members.map(member => nonNegative(member.size))
   return {
-    width: Math.max(header.width, ...members.map(member => member.width)) + padding * 2,
+    // React Flow renders owner-group's two 2px vertical borders outside its styled
+    // content width, so reserve them in the graph-coordinate footprint.
+    width: Math.max(header.width, ...members.map(member => member.width)) + padding * 2 + ownerBorderWidth,
     height: padding * 2 + header.height + (members.length ? spacing + members.reduce((total, member) => total + member.height, 0) + spacing * Math.max(0, members.length - 1) : 0)
   }
 }

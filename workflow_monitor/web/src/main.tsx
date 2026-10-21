@@ -78,6 +78,7 @@ function App() {
       // content. Render first so the DOM measurement effect can feed its intrinsic graph
       // coordinates back through this same layoutFootprints input/output path.
       measurePending.current = contentChanged
+      if (contentChanged) topology.current = null
       refreshNodes()
       return
     }
@@ -97,15 +98,13 @@ function App() {
     // wrapped/overflowing content before the next footprint fixes the node size.
     const horizontalBorder = element.offsetWidth - element.clientWidth
     const verticalBorder = element.offsetHeight - element.clientHeight
-    // Group headers fill their owner box. Convert that rendered width back to the
-    // header width expected by layoutFootprints, whose footprint adds 16px per side.
-    const width = element.dataset.groupHeader
-      ? Math.max(0, element.scrollWidth - 32)
-      : Math.max(element.offsetWidth, element.scrollWidth + horizontalBorder)
+    // Group headers are positioned at the same 16px inset used by layoutFootprints;
+    // measure their own rendered footprint, not their enclosing owner box.
+    const width = Math.max(element.offsetWidth, element.scrollWidth + horizontalBorder)
     const size = { width: Math.ceil(width), height: Math.ceil(Math.max(element.offsetHeight, element.scrollHeight + verticalBorder)) }
     const previous = next[id]
     if (size.width && size.height && (previous?.width !== size.width || previous.height !== size.height)) { next[id] = size; changed = true }
-  }); if (changed) { measurements.current = next; setMeasurementGeneration(current => current + 1) } }, [nodes])
+  }); if (changed) { measurements.current = next; ++layoutGeneration.current; topology.current = null; setMeasurementGeneration(current => current + 1) } }, [nodes])
   useEffect(() => { if (nodes.length && fitPending.current && flow.current) { fitPending.current = false; void flow.current.fitView({ padding: .12, maxZoom: 1 }) } }, [nodes])
   const details = useMemo(() => {
     if (!snapshot || !selected) return null

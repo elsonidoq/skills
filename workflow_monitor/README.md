@@ -91,7 +91,10 @@ history** retrieve further pages at their snapshot watermarks. Inventory counts 
 unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 
 The graph uses measured task and history-group footprints with ELK's layered top-to-bottom
-prerequisite backbone. Task headers and their distinct recorded attempts share a visible owner
+prerequisite backbone. The representative production browser fixture measures rendered header,
+member and owner bounds against the same footprint function, prints those observed bounds, and
+retains overview and inspection-zoom screenshots as automated evidence; this is not human visual
+acceptance. Task headers and their distinct recorded attempts share a visible owner
 area; run review/execution and unassigned recorded history have named areas instead of guessed
 ownership. Only declared prerequisites set ranks; recorded stops and qualified corrections are
 secondary overlays. The initial view fits the recorded graph into the available graph panel after
