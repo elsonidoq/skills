@@ -44,6 +44,14 @@ def settle_paid_scope(contract, executor, question):
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def _safe_history_details(value):
+    """Project operation facts without private task text, prompts, answers, or output."""
+    details = json.loads(value)
+    return {key: details[key] for key in ('command', 'exit_code', 'baseline', 'result', 'sha', 'parent',
+                                           'paths', 'artifacts', 'generated_artifacts', 'no_change', 'error')
+            if key in details}
+
+
 def status(project, run):
     database = Path(project).resolve() / '.coherence/workflow/workflow.sqlite'
     db = sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)
@@ -53,8 +61,20 @@ def status(project, run):
         if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_runs'").fetchone():
             row = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if row:
-                result = {'run': dict(row), 'tasks': [dict(r) for r in db.execute(
-                    'SELECT * FROM execution_tasks WHERE run_id=? ORDER BY rowid', (run,))]}
+                has_inputs = db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_run_inputs'").fetchone()
+                inputs = (db.execute('SELECT contract,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
+                          if has_inputs else None)
+                result = {'run': dict(row), 'tasks': [
+                    {key: item[key] for key in ('run_id', 'task_id', 'state', 'baseline', 'result')}
+                    for item in db.execute('SELECT * FROM execution_tasks WHERE run_id=? ORDER BY rowid', (run,))]}
+                if inputs:
+                    contract = json.loads(inputs['contract'])
+                    result['input'] = {'task_ids': [task['id'] for task in contract.get('tasks', [])],
+                                       'review_base': inputs['review_base']}
+                    result['history'] = [
+                        {'task_id': item['task_id'], 'kind': item['kind'], 'state': item['state'],
+                         'details': _safe_history_details(item['details'])}
+                        for item in db.execute('SELECT task_id,kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
                 try:
                     monitored = db.execute('SELECT recording_version FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
                     if monitored:

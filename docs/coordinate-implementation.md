@@ -154,8 +154,9 @@ processes or provisions/signals cgroups.
 
 ## History and explicit abandon
 
-`status` and `history` are read-only SQLite readers. Ordinary task/run progress is useful history,
-not dispatch or completion proof. Old tables/rows remain in place, including incomplete intents;
+`status` and `history` are read-only SQLite readers. New runs privately retain their original parsed contract/order, selected executor, settled authority and resolved initial review base before dependent mutation. Append-only operation history preserves actual invocation, check and checkpoint outcomes; a corrected check does not replace its failed command/exit/output, and checkpoint facts retain only task-local paths/artifacts and available SHA/parent. CLI output is a safe projection (task IDs, review base and operation facts), never original task text, prompts, answers or check output. This is not a resume policy or a filesystem/Git snapshot.
+
+Ordinary task/run progress is useful history, not dispatch or completion proof. Old tables/rows remain in place, including incomplete intents;
 new tasks neither reconcile nor replay them. Malformed optional history cannot veto new coding.
 There is no automatic schema migration, drop, mass conversion or invented successful effect.
 

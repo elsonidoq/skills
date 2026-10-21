@@ -35,6 +35,7 @@ _ROUTINE_AUTHORITY = (
 class Engine:
     def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None):
         self.authority, self.run, self.contract = authority, run, contract
+        self.input_executor = executor
         self.executor = {key: value for key, value in executor.items() if key != 'reviewer'}
         self.reviewer_executor = executor.get('reviewer', self.executor)
         if not isinstance(self.reviewer_executor, dict) or any(
@@ -55,7 +56,16 @@ class Engine:
     def invoke(self):
         project, store = self.authority.project, self.authority.store
         base = git(project, 'rev-parse', 'HEAD').decode().strip()
-        store.start(self.run, base)
+        requested_review_base = self.contract.get('review_base', base)
+        if not isinstance(requested_review_base, str) or not requested_review_base:
+            raise Blocked('review_base must be a Git commit')
+        try:
+            review_base = git(project, 'rev-parse', '--verify', requested_review_base + '^{commit}').decode().strip()
+            git(project, 'merge-base', '--is-ancestor', review_base, base)
+        except Blocked:
+            raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
+        store.start(self.run, base, contract=self.contract, executor=self.input_executor,
+                    authority={'paid_scope': self.paid_scope, 'routine_authority': True}, review_base=review_base)
         recorder = Recorder(store, self.run)
         try:
             identity = process_identity(os.getpid(), self.run)
@@ -102,6 +112,11 @@ class Engine:
                         recorder.emit(question_occurrence[0], 'worker', mapping[state], task_id=task['id'], facts={'parent_occurrence_id': worker_occurrence})
                     worker = self.adapter(project, self.executor, question=self.question, observe_question=worker_question)
                     worker.lock_fd = self.authority.lock.fileno()
+                    claimed_paths = set()
+                    def claim(name):
+                        if name not in claimed_paths:
+                            focused.claim(name)
+                            claimed_paths.add(name)
                     try:
                         text = worker.prompt(
                             'Execute this one requested task in the current project. Read the relevant files, '
@@ -115,11 +130,14 @@ class Engine:
                             + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
                             'Select source edit and commit paths explicitly; preserve unknown and pre-existing bytes. '
                             'Generated outputs are cleanup guidance, never a registration or command prerequisite.\n'
-                            'Task: ' + canonical(task), claim=focused.claim, command=focused.command)
+                            'Task: ' + canonical(task), claim=claim, command=focused.command)
                     except BaseException as exc:
-                        recorder.emit(worker_occurrence, 'worker', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
+                        state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                        recorder.emit(worker_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
+                        store.history(self.run, task['id'], 'worker', state, {'role': role, 'error': str(exc)})
                         raise
                     recorder.emit(worker_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
+                    store.history(self.run, task['id'], 'worker', 'returned', {'role': role})
                     check_occurrences = {}
                     def check_observe(kind, ordinal, code):
                         occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
@@ -135,8 +153,9 @@ class Engine:
                             break
                         except CheckFailure as failure:
                             if failure.attempt == previous_failed_attempt:
-                                raise Blocked('required check remains unchanged after same-task correction: ' + canonical(failure.attempt))
+                                raise Blocked('required check failed and remains unchanged after same-task correction: ' + canonical(failure.attempt))
                             previous_failed_attempt = failure.attempt
+                            store.history(self.run, task['id'], 'check', 'failed', failure.attempt)
                             # A nonzero REQUIRED command is a real failed attempt, but
                             # ordinary scoped source/setup correction belongs to this
                             # same task before its checkpoint—not a later task/review.
@@ -150,11 +169,16 @@ class Engine:
                                     'If no safe correction remains or a material decision is needed, state that blocker. '
                                     'The runner will rerun the affected required command before checkpointing.\n'
                                     'Actual failed attempt: ' + canonical(failure.attempt),
-                                    claim=focused.claim, command=focused.command)
+                                    claim=claim, command=focused.command)
                             except BaseException as exc:
-                                recorder.emit(corrective_occurrence, 'worker', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
+                                state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                                recorder.emit(corrective_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
+                                store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': str(exc)})
                                 raise
                             recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
+                            store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
+                    for attempt in checks:
+                        store.history(self.run, task['id'], 'check', 'passed', attempt)
                     checkpoint_occurrence = recorder.occurrence()
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
                     try:
@@ -162,7 +186,10 @@ class Engine:
                     except BaseException as exc:
                         recorder.emit(checkpoint_occurrence, 'checkpoint', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'baseline': focused.base, 'error_category': _failure(exc)})
                         raise
+                    checkpoint['parent'] = (None if checkpoint['no_change'] else
+                                            git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts={'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']})
+                    store.history(self.run, task['id'], 'checkpoint', 'passed', checkpoint)
                     checkpoints.append(checkpoint)
                     store.task(self.run, task['id'], 'complete', focused.base, checkpoint['sha'],
                                {'summary': text, 'checks': checks, 'paths': checkpoint['paths'],
@@ -173,14 +200,6 @@ class Engine:
                     store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': str(exc)})
                     raise
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
-            review_base = self.contract.get('review_base', base)
-            if not isinstance(review_base, str) or not review_base:
-                raise Blocked('review_base must be a Git commit')
-            try:
-                review_base = git(project, 'rev-parse', '--verify', review_base + '^{commit}').decode().strip()
-                git(project, 'merge-base', '--is-ancestor', review_base, base)
-            except Blocked:
-                raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
             diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
             reviewer_occurrence = recorder.occurrence()
             recorder.emit(reviewer_occurrence, 'review', 'started', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head})

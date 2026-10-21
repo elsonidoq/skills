@@ -36,10 +36,13 @@ does not establish the reviewer's actual model or retrofit historical reviewer r
 The project database remains `.coherence/workflow/workflow.sqlite`. New execution uses:
 
 - `execution_runs(run_id, state, baseline, result, error)`;
-- `execution_tasks(run_id, task_id, state, baseline, result, details)`.
+- `execution_tasks(run_id, task_id, state, baseline, result, details)`;
+- private `execution_run_inputs(run_id, contract, executor, authority, review_base)` captured before task mutation; and
+- append-only private `execution_history(run_id, task_id, kind, state, details, recorded_at)`.
 
-Task details retain useful summary, actual command/exit/output results (including failed attempts), explicit task-edited checkpoint paths,
-and known generated-artifact facts. A failed required-check attempt is returned only to the same task's corrective worker context; a later real pass is required before checkpointing, while an unavailable safe correction retains its actual blocker. State is ordinary running/complete/failed/interrupted/abandoned history,
+Inputs preserve the parsed original contract/order, selected executor, settled authority and resolved initial review base. History retains actual invocation/task/check/checkpoint outcomes, so a failed required command/exit/output remains after correction. Checkpoint facts retain explicit task-edited paths, known generated artifacts, SHA and available actual parent. Latest task rows are a current projection only; they cannot erase failure/interruption history. The safe CLI projection exposes task IDs, review base and operation facts, never original task text, prompts, answers or check output. These are operation-local facts, not global HEAD/index/dirty/file snapshots, unchanged-tree proof, custody ledger, custom trailers, legacy backfill or resume policy.
+
+A failed required-check attempt is returned only to the same task's corrective worker context; a later real pass is required before checkpointing, while an unavailable safe correction retains its actual blocker. State is ordinary running/complete/failed/interrupted/abandoned history,
 not proof of liveness, effect settlement or dispatch eligibility. IDs distinguish new runs; existing runs are not replayed.
 SQLite errors report the actual operation. No graph saver, attempt selection or effect ledger
 is consumed to run new work. The writer lock is the ordinary per-worktree

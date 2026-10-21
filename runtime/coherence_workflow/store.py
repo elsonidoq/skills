@@ -88,6 +88,13 @@ class Store:
         CREATE TABLE IF NOT EXISTS execution_monitor_runs(
             run_id TEXT PRIMARY KEY, recording_version INTEGER NOT NULL,
             description TEXT NOT NULL, started_at REAL NOT NULL, runner_identity TEXT);
+        CREATE TABLE IF NOT EXISTS execution_run_inputs(
+            run_id TEXT PRIMARY KEY, contract TEXT NOT NULL, executor TEXT NOT NULL,
+            authority TEXT NOT NULL, review_base TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS execution_history(
+            seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL, task_id TEXT,
+            kind TEXT NOT NULL, state TEXT NOT NULL, details TEXT NOT NULL,
+            recorded_at REAL NOT NULL);
         """)
         self.db.executescript("""
         CREATE TABLE IF NOT EXISTS execution_observations(
@@ -109,16 +116,36 @@ class Store:
     def event(self, db, run, op, kind, payload):
         return db.execute('INSERT INTO wf_events(event_id,run_id,op_id,kind,payload) VALUES(?,?,?,?,?)',
                           (uuid.uuid4().hex, run, op, kind, canonical(payload))).lastrowid
-    def start(self, run, baseline):
+    def start(self, run, baseline, *, contract=None, executor=None, authority=None, review_base=None):
+        """Persist private original inputs before the run can mutate dependent work."""
         from .processes import inspect_recorded_writers
         inspect_recorded_writers(self.db, 'start')
         if (self.db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_runs'").fetchone() and
                 self.db.execute('SELECT 1 FROM wf_runs WHERE run_id=?', (run,)).fetchone()):
             raise Blocked('historical run ID already exists; choose a fresh run ID, never replay it')
         try:
-            self.db.execute("INSERT INTO execution_runs VALUES(?,'running',?,NULL,NULL)", (run,baseline))
+            with self.transaction() as db:
+                db.execute("INSERT INTO execution_runs VALUES(?,'running',?,NULL,NULL)", (run, baseline))
+                db.execute('INSERT INTO execution_run_inputs VALUES(?,?,?,?,?)', (
+                    run, canonical(contract if contract is not None else {}),
+                    canonical(executor if executor is not None else {}),
+                    canonical(authority if authority is not None else {}), review_base or baseline))
+                self.history(run, None, 'invocation', 'started', {'baseline': baseline, 'review_base': review_base or baseline}, db=db)
         except sqlite3.IntegrityError:
             raise Blocked('run ID already exists; inspect its progress and choose a fresh run ID, never replay it') from None
+
+    def history(self, run, task, kind, state, details=None, *, db=None):
+        """Append operation-local facts; never replace a prior failed attempt."""
+        target = db or self.db
+        target.execute('INSERT INTO execution_history(run_id,task_id,kind,state,details,recorded_at) VALUES(?,?,?,?,?,?)',
+                       (run, task, kind, state, canonical(details or {}), time.time()))
+
+    def input(self, run):
+        row = self.db.execute('SELECT contract,executor,authority,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
+        if not row:
+            return None
+        return {key: json.loads(row[key]) if key != 'review_base' else row[key]
+                for key in ('contract', 'executor', 'authority', 'review_base')}
     def register_monitor_run(self, run, description, runner_identity=None):
         """Add recording metadata without touching ordinary progress rows."""
         from .monitoring import RECORDING_VERSION
@@ -139,10 +166,13 @@ class Store:
         return {'run': dict(row), 'observations': [dict(r) for r in self.db.execute('SELECT * FROM execution_observations WHERE run_id=? ORDER BY seq', (run,))]}
 
     def task(self, run, task, state, baseline, result=None, details=None):
+        details = details or {}
         self.db.execute('INSERT INTO execution_tasks VALUES(?,?,?,?,?,?) ON CONFLICT(run_id,task_id) DO UPDATE SET state=excluded.state,result=excluded.result,details=excluded.details',
-                        (run,task,state,baseline,result,canonical(details)))
+                        (run, task, state, baseline, result, canonical(details)))
+        self.history(run, task, 'task', state, {'baseline': baseline, 'result': result, **details})
     def finish(self, run, state, result=None, error=None):
         self.db.execute('UPDATE execution_runs SET state=?,result=?,error=? WHERE run_id=?', (state,result,error,run))
+        self.history(run, None, 'invocation', state, {'result': result, 'error': error} if error else {'result': result})
     def abandon(self, run):
         """Release an explicitly abandoned run, never replay or complete its effects.
 
