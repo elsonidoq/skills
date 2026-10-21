@@ -1,0 +1,106 @@
+{
+  "tasks": [
+    {
+      "id": "T001",
+      "description": "Read docs/plans/workflow-monitor-readable-graph-tasks.md shared brief and T001, and authoritative TinySpec referenced there. Deliver the graphFor production projection contract for R1/R3: every selected complete-plan task and declared prerequisite (including transitive declarations/pending work) with stable run-scoped node/edge identities; separate individual occurrence and planned-review identities. Classify semantic edges independently of visible labels. Replace default sequence/attachment arrows with recorded same-run ownership/group metadata for the rendering consumer, never labels/timestamps as ownership. Preserve all distinct attempts, failures and unassigned history; unknown/dangling/cross-run task refs are explicitly unassigned, not guessed tasks. Provide task ID plus distinguishable short recorded label/summary fallback (generic Task/ID-only labels use summary; missing legacy ID uses qualified stable public ref), role/attempt identity labels and source-run context. Full inert text remains in existing DTOs for Details. Keep execution_summary/status/progress derivation unchanged. Define only local projection data needed by consumers, no public DTO/producer/schema changes. Add permanent actual graphFor imports/assertions in existing test_graph.spec.ts, named readable backbone projection; no mock reimplementation. Acceptance ends at this producer contract; final grouped geometry is T004.",
+      "depends": [],
+      "owned_paths": [
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/tests/test_graph.spec.ts"
+      ],
+      "required": [
+        {
+          "id": "T001/V1",
+          "source": "A1; R1/R3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_graph.spec.ts --grep \"readable backbone projection\" --output=\"$(mktemp -d)\"",
+          "pass": "Actual graphFor assertions compare exact planned node IDs and declared prerequisite source/target pairs for a branching/joining plan with redundant/transitive declarations, independent pending tasks and repeated generic labels, before/after pending→running→returned/checkpoint/failure. No default recorded-sequence or grouping-attachment edges; dependency metadata survives absent default labels. Distinct repeated worker/fixing attempt refs map only to their recorded same-run task; unassigned/unknown/dangling/other-run history remains distinct and explicitly unassigned. Planned review is a definition, not a call. ID/title/legacy fallback and role/attempt labels are distinguishable; no status inference changes.",
+          "evidence": "Command/exit and actual helper ID/endpoint/classification/owner assertions, including transition equality and label fallbacks; type-check/build result. This proves projection, not visual grouping/readability.",
+          "permission": "Under combined implementation approval: ordinary local build/type-check and focused existing synthetic helper/browser fixtures with prepared dependencies; no install/download/provider/live data or workflow replay. Only fixture-owned disposable servers/stores may be started/stopped; preserve unrelated processes. No pre-dispatch manual gate."
+        }
+      ]
+    },
+    {
+      "id": "T002",
+      "description": "Read docs/plans/workflow-monitor-readable-graph-tasks.md shared brief and T002, and authoritative TinySpec referenced there. Consume T001 semantic/ownership projection. Deliver R2 state-essential relation policy in graphFor using existing stopping/support_ref and resolved Followup fields. Show support→current stop only with recorded support; keep successful returned parent green. Preserve ordinary recovered checks in Details/history, not false stop nodes. Keep qualified resolved cross-run declaration navigable for visible fixing work including completed corrections; do not turn earliest-fixer order into exact internal review→fixer scheduling evidence. Preserve original rejection and distinct calls; include supporting check/checkpoint nodes only when explicit recorded chain evidence actually requires them. Missing/dangling/unresolved/cyclic links expose qualifications without fabricated edges/stages. Keep secondary edges classified separately from prerequisite layout input. Before touching relation seams inspect whether incoming T017/T018 actually exist, consume applicable explicit identities/qualifications and assertions if present; at this baseline no explicit chain DTO exists, so absent finer stages remain unknown. Do not implement chain producers, invent a new DTO or duplicate runtime chain scenarios. Permanent actual-helper cases named readable state relations belong in existing test_graph.spec.ts. Selection/Details rendering consumes metadata in T003; geometry consumes edge classes in T004.",
+      "depends": [
+        "T001"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/tests/test_graph.spec.ts"
+      ],
+      "required": [
+        {
+          "id": "T002/V1",
+          "source": "A2; R2/R3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_graph.spec.ts --grep \"readable backbone projection|readable state relations\" --output=\"$(mktemp -d)\"",
+          "pass": "Actual helper fixtures assert exact eligible secondary endpoints/classes and qualifiers, current supported stop versus recovered failure, pre-agent stop without invented parent, returned parent success, completed correction context and absent stages. Resolved cross-run declaration remains explicitly qualified, not recorded exact execution causality. Missing/dangling/unresolved/cyclic links create no fabricated causal edge; rejection and individual attempts remain available. Eligible secondary edges are excluded from backbone classification, with all T001 planned IDs/prerequisites/ownership preserved. Use synthetic currently available DTOs; consume applicable incoming chain assertions without a second engine matrix.",
+          "evidence": "Command/exit; asserted IDs/endpoints/edge classes, qualifiers, node status and available history; list actual DTO fields used and any unavailable explicit-chain portion. Helper evidence does not prove routing/geometry.",
+          "permission": "Under combined implementation approval: ordinary local build/type-check and focused existing synthetic helper/browser fixtures with prepared dependencies; no install/download/provider/live data or workflow replay. Only fixture-owned disposable servers/stores may be started/stopped; preserve unrelated processes. No pre-dispatch manual gate."
+        }
+      ]
+    },
+    {
+      "id": "T003",
+      "description": "Read docs/plans/workflow-monitor-readable-graph-tasks.md shared brief and T003, and authoritative TinySpec referenced there. Consume T001 identity/ownership and T002 qualified relation metadata. Deliver selected task/definition/execution/edge Details and concise relation legend independently of repeated default arrow labels. Edge Details must use semantic metadata, not String(edge.label), preserving relation identity/endpoints/qualification even with no default label. Remove semantic relation label repetition from all default arrows; use the concise legend and selected-edge Details/label, including stop/correction type and qualification. Show task full recorded ID/title/summary, owner refs and attempt/role/source identities; planned review definition explicitly not a call. Retain sequence order as history with noncausality wording; distinguish loaded history from full retained acceptance. Keep all rejection/failed checks/checkpoint/ranges, boolean true/false, page-independent colors/progress, qualifications and freshness. Invalid/unknown/partial plans keep valid unassigned history with Complete graph unavailable; empty valid history shows complete pending topology and review definition. Unsupported/read-error states never become empty success. Adapt existing graph/execution/lineage/history/navigation specs to semantic selection instead of obsolete attachment/sequence/label/count assertions, preserving every original failure/acceptance/security assertion. Navigation edge-selection fixture must use a real prerequisite/eligible secondary relation, not resurrect sequence arrows. Update relevant README meaning/Details/edge claims, including old preceding-agent wording. No geometry overhaul or producer changes.",
+      "depends": [
+        "T002"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/web/tests/test_lineage.spec.ts",
+        "workflow_monitor/web/tests/test_history.spec.ts",
+        "workflow_monitor/web/tests/test_navigation.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T003/V1",
+          "source": "A3; A1/A2 meaning; R1–R3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_graph.spec.ts tests/test_execution.spec.ts tests/test_lineage.spec.ts tests/test_history.spec.ts tests/test_navigation.spec.ts --output=\"$(mktemp -d)\"",
+          "pass": "Existing production UI assertions select task, planned definition, execution and genuine dependency/eligible secondary edge: Details retain full IDs/text/ownership, endpoints/type/qualification, source run and separate full acceptance. Sequence remains accessible as recorded order, not causal edge. Invalid/unknown/partial plans retain history plus Complete graph unavailable; empty valid plan history retains all pending topology/review definition; read errors retain honest warning. Original returned-success versus rejection/check failure, repeated attempts, approval/no-change booleans, ranges, pagination, hostile inert text, no writes, lineage qualifications and navigation/stale guards remain asserted. Default edge labels have no repeated semantic prose; README matches actual behavior without asserting visual acceptance.",
+          "evidence": "Build/test exits; selected Details text and semantic IDs/endpoints; first/full-page status/acceptance equality; no injected elements/writes; retained rejection and unresolved/cyclic history assertions; README diff. Counts may change only with explicit preserved semantic equivalents.",
+          "permission": "Under combined implementation approval: ordinary local build/type-check and focused existing synthetic helper/browser fixtures with prepared dependencies; no install/download/provider/live data or workflow replay. Only fixture-owned disposable servers/stores may be started/stopped; preserve unrelated processes. No pre-dispatch manual gate."
+        }
+      ]
+    },
+    {
+      "id": "T004",
+      "description": "Read docs/plans/workflow-monitor-readable-graph-tasks.md shared brief and T004, and authoritative TinySpec referenced there. Consume T001 ownership/labels, T002 secondary classes and T003 Details/legend. Deliver production task header plus each separate owned attempt using existing ReactFlow/ELK mechanisms in graph.ts/main.tsx/style.css. Lay out full task/group footprints from declared prerequisite edges only, retain layered RIGHT, then place eligible support/review history and overlay secondary connections without setting DAG ranks/reordering prerequisites. Match actual rendered label/child dimensions rather than fixed 180×70 boxes. Use containment/alignment with visible ownership; do not hide/merge failed/repeated attempts or pending tasks. Visibly named run review/execution and unassigned history areas keep no-task calls distinct; associate planned-review definition versus actual history without scheduling arrow. Preserve topology caching, stale fetch/layout-result guards, selection, stable IDs/positions/group ownership and deliberate viewport on unchanged-topology status refresh; highlights never remove prerequisites/refit backbone. Inspect/reconcile any actual incoming T017/T018 frontend changes and reuse applicable overview evidence, not a duplicate fit programme; missing unrelated chain delivery is not a prerequisite. Add ONE purpose-built multilevel/wide synthetic DTO production-view case to existing test_graph.spec.ts and use it for geometry/readability AND A5 interaction, not a new harness/mock/prototype. Adapt affected existing browser selectors/counts to grouped nodes without removing original assertions. Update only verified relevant README grouping/layout/interaction claims. Keep evidence in accessible test output/session return, not new repo ledgers; fixture teardown stops only its own resources, retaining screenshots for post-run owner review.",
+      "depends": [
+        "T003"
+      ],
+      "owned_paths": [
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/style.css",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/web/tests/test_lineage.spec.ts",
+        "workflow_monitor/web/tests/test_history.spec.ts",
+        "workflow_monitor/web/tests/test_navigation.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T004/V1",
+          "source": "A4; R1–R3",
+          "check": "npm --prefix workflow_monitor/web run build && npm --prefix workflow_monitor/web test -- tests/test_graph.spec.ts tests/test_execution.spec.ts tests/test_lineage.spec.ts tests/test_history.spec.ts tests/test_navigation.spec.ts --output=\"$(mktemp -d)\"",
+          "pass": "Automated delivery: the same multilevel/wide synthetic production graph has exact planned IDs/prerequisite endpoints, distinct generic-label task titles, repeated attempts (including failure), independent pending work, planned-review definition distinct from actual calls, qualified current stop/correction including completed context. Record graph-panel bounds, rendered/transformed node/group bounds and group footprints versus measured child/header dimensions; no overlapping group content at usable inspection zoom, no repeated long edge-label clutter. For unchanged task/group footprints, adding eligible secondary relations does not change main prerequisite ranks/positions. Retain screenshot(s) at overview and usable zoom with relevant selected Details; print accessible paths and observations. Human A4 PASS additionally requires explicit POST-RUN owner review: owner can identify task ID/title, attribute individual attempts, trace prerequisite branches/join, distinguish definition/history and explain shown qualified stop/correction. Automated green/task checkpoint is NOT human A4 acceptance; pending until that answer. No every-label-at-fit-all/zero-crossing/numeric quota.",
+          "evidence": "Actual build/browser commands/exits/assertions; retained accessible screenshot paths (for example testInfo.outputPath attachments, print actual location), viewport/panel/rendered bounds and measured footprint observations; source revision/environment limits. Parent presents produced screenshots/findings AFTER run and independent final read-only review for explicit owner acceptance; A4 human acceptance remains NOT VERIFIED until approval. Rejection returns focused correction/revalidation/review under approved scope; no full visual/feature completion claim before approval.",
+          "permission": "Under combined implementation approval: ordinary local build/type-check and focused existing synthetic helper/browser fixtures with prepared dependencies; no install/download/provider/live data or workflow replay. Only fixture-owned disposable servers/stores may be started/stopped; preserve unrelated processes. No pre-dispatch manual gate. REQUIRED manual gate is POST-RUN owner screenshot/readability acceptance, not executable gates (which run before dispatch). Runner may checkpoint verified task delivery and perform independent final read-only review normally; no in-worker screenshot-approval wait or new runtime mechanism."
+        },
+        {
+          "id": "T004/V2",
+          "source": "A5; A1–A3 regression; R2/R3",
+          "pass": "Reuse T004/V1 SAME representative case/run, not a second proof: select task/attempt/real edge and inspect Details, deliberately pan/zoom, apply unchanged-topology status refresh. Selected ID/Details, all prerequisite IDs/endpoints, positions/group ownership and deliberate viewport persist while visible progress/execution status actually changes. Supporting selection neither removes prerequisite nodes/edges nor refits/reorders. Preserve old-run fetch/layout-result guards and navigation; existing original status/acceptance/failure/paging/security checks stay green. Inspect actual diff: only permitted presentation/tests/README, no producers/schema/polling/HTTP/SQLite/security-policy changes. README claims match observed implementation.",
+          "evidence": "Reuse V1 browser invocation/output once for both items (no second executable check); capture selected IDs/Details, before/after positions/group ownership/viewport and visible status, diff/README inspection and own-fixture teardown. No live/runtime or human A4 acceptance inferred.",
+          "permission": "Under combined implementation approval: ordinary local build/type-check and focused existing synthetic helper/browser fixtures with prepared dependencies; no install/download/provider/live data or workflow replay. Only fixture-owned disposable servers/stores may be started/stopped; preserve unrelated processes. No pre-dispatch manual gate."
+        }
+      ]
+    }
+  ]
+}
