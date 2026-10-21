@@ -28,10 +28,21 @@ _DECISION_CONSTRAINTS = (
     'is unavailable; report the affected evidence gap without blocking unrelated legacy work. '
 )
 
+_IMPLEMENTATION_AUTHORITY = (
+    'Current execution authority: this owner-authorized workflow launch approves implementation '
+    'of the assigned task within its stated scope. Historical planning-only or awaiting-implementation-approval '
+    'wording in source/task artifacts is superseded for that scope, not a current prohibition. '
+    'Preserve task requirements, acceptance criteria, explicit manual gates and all safety/permission '
+    'boundaries; ask the owner if a material authority conflict remains.\n'
+)
+
+# Shared worker permission defaults. Edit here, not in individual task/correction prompts.
 _ROUTINE_AUTHORITY = (
     'Routine authority: make ordinary scoped technical fixes; run isolated tests and local servers; perform necessary '
     'local/in-project dependency setup; and generate, rebuild, or selectively clean up current-task artifacts without '
-    'an owner question. Do not ask merely because files changed. This authority is not proof that checks succeeded. '
+    'an owner question. Small isolated tests and local test databases are allowed for any task; keep test data and '
+    'execution bounded so they do not risk exhausting the machine\'s resources or affecting unrelated data/services. '
+    'Do not ask merely because files changed. This authority is not proof that checks succeeded. '
     'A separately supplied paid scope applies only as supplied and is never inferred from credentials or task text. '
     'Ask only for product decisions, substantial planned-complexity increases, separately scoped paid usage, or actions '
     'outside this authority. It never authorizes global installs, credential changes, deployment, pushing, or deletion '
@@ -506,6 +517,7 @@ class Engine:
                                 raise Blocked('unfinished worker lacks retained invocation/cause; inspect legacy history before any relaunch')
                     def invoke_worker(prompt, **kwargs):
                         nonlocal continuation
+                        prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + prompt
                         if continuation is not None:
                             prompt = ('Continue only the unfinished same-task work. Inspect the prior invocation/cause below; '
                                       'do not replay completed effects. Apply only the justified targeted correction; '
@@ -543,12 +555,12 @@ class Engine:
                             'Execute this one requested task in the current project. Read the relevant files, '
                             'make the smallest correct edits, run relevant actual project checks and fix ordinary '
                             'tool/read/argument/check errors in this conversation. Never stage or commit: the runner '
-                            'will inspect and create the focused commit. Do not install, refresh credentials, '
+                            'will inspect and create the focused commit. Do not install globally, refresh credentials, '
                             'change global settings, delegate, or perform unrequested external operations. '
                             'Preserve all unrelated and pre-existing dirty work. Ask the owner for material scope '
                             'or permission questions. No new planning/evidence artifacts. '
                             'Return an honest concise summary and check outcomes.\n'
-                            + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
+                            + _DECISION_CONSTRAINTS + self.paid_authority() + '\n'
                             'Select source edit and commit paths explicitly; preserve unknown and pre-existing bytes. '
                             'Generated outputs are cleanup guidance, never a registration or command prerequisite.\n'
                             'Task: ' + canonical(task), claim=claim, command=command,
