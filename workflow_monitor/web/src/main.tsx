@@ -4,7 +4,7 @@ import ELK from 'elkjs/lib/elk.bundled.js'
 import { Background, Controls, ReactFlow, type Edge, type Node, type Viewport, type ReactFlowInstance } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import './style.css'
-import { graphFor, action, status, outcomeText, recordText, type Observation, type Occurrence, type Followup, type PlannedTask, type ReviewDefinition } from './graph'
+import { graphFor, action, status, outcomeText, recordText, type Observation, type Occurrence, type Followup, type PlannedTask, type ReviewDefinition, type GraphEdge, type ChainExecution } from './graph'
 
 type Acceptance = { state: string; base: string | null; head: string | null }
 type AcceptanceItem = { occurrence_ref: string; state: string; ordinal?: number | null; exit_code?: number | null; baseline?: string | null; head?: string | null; no_change?: boolean | null; approved?: boolean | null; finding_count?: number | null; base?: string | null }
@@ -12,10 +12,9 @@ type AcceptanceSummary = { checks: AcceptanceItem[]; checkpoints: AcceptanceItem
 type RunnerState = { state: 'live' | 'stopped' | 'unknown'; reason: string | null }
 type Run = { ref: string; display_id: string; label: string; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance; acceptance_summary?: AcceptanceSummary }
 type Unknown = { ref: string; run_ref: string; source_seq: number | null; code: string }
-type GraphEdge = { ref: string; run_ref: string; type: string; from_ref: string; to_ref: string; resolution: string }
 type Inventory = { phase_count: number; occurrence_count: number; observation_count: number; total_count: number; loaded_count: number; hidden_count: number; unsupported_count: number }
 type Freshness = { read_at: number; last_success_at: number | null; last_recorded_at: number | null; read_state: 'current' | 'unavailable'; warnings: string[] }
-type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; unknown_records: Unknown[]; edges: GraphEdge[]; inventory: Inventory; snapshot_ref: string; next_cursor: string | null; observation?: Freshness }
+type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; unknown_records: Unknown[]; edges: GraphEdge[]; chain?: ChainExecution[]; chain_acceptance?: Record<string, { state: string; terminal_execution_ref: string | null; range: { base: string | null; head: string | null } }>; inventory: Inventory; snapshot_ref: string; next_cursor: string | null; observation?: Freshness }
 const POLL_INTERVAL_MS = 60_000
 const headers = { 'X-Workflow-Monitor': '1' }
 const elk = new ELK()
@@ -42,7 +41,7 @@ function App() {
     try { const page = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(ref)}/history?snapshot=${encodeURIComponent(linked.snapshot_ref)}&cursor=${encodeURIComponent(linked.next_cursor)}`); if (generation === fetchGeneration.current) setLineage(current => current.map(item => item.snapshot_ref === linked.snapshot_ref ? { ...mergePage(item, page), next_cursor: page.next_cursor } : item)) } catch (error) { if (generation === fetchGeneration.current) setMessage(error instanceof Error ? error.message : 'History unavailable.') }
   }
   useEffect(() => { if (!snapshot || !selectedRun) return; const graph = graphFor(snapshot, lineage, relations); const known = new Set([...graph.nodes.map(node => node.id), ...graph.edges.map(edge => edge.id)]); setSelected(current => current && known.has(current.id) ? current : null); setEdges(graph.edges); if (topology.current === graph.topology) { setNodes(graph.nodes.map(node => ({ ...node, position: positions.current[node.id] ?? node.position }))); return } fitPending.current = true; const generation = ++layoutGeneration.current; let active = true; void elk.layout({ id: 'monitor', layoutOptions: { 'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.spacing.nodeNode': '25', 'elk.layered.spacing.nodeNodeBetweenLayers': '60' }, children: graph.nodes.map(node => ({ id: node.id, width: 180, height: 70 })), edges: graph.edges.map(edge => ({ id: edge.id, sources: [edge.source], targets: [edge.target] })) }).then(layout => { if (!active || generation !== layoutGeneration.current) return; topology.current = graph.topology; setNodes(graph.nodes.map(node => { const result = layout.children?.find(child => child.id === node.id); const position = { x: result?.x ?? 0, y: result?.y ?? 0 }; positions.current[node.id] = position; return { ...node, position } })) }); return () => { active = false } }, [selectedRun, snapshot, lineage, relations])
-  useEffect(() => { if (nodes.length && fitPending.current && flow.current) { fitPending.current = false; void flow.current.fitView({ padding: .15, maxZoom: 1, minZoom: .25 }) } }, [nodes])
+  useEffect(() => { if (nodes.length && fitPending.current && flow.current) { fitPending.current = false; void flow.current.fitView({ padding: .12, maxZoom: 1 }) } }, [nodes])
   const details = useMemo(() => {
     if (!snapshot || !selected) return null
     const all = [snapshot, ...lineage]
@@ -58,6 +57,8 @@ function App() {
     if (task) return <><h3>{task.label}</h3><p>Task ID: {task.task_id ?? 'unknown'}</p><p>Plan task {task.ref}; {source(task.run_ref)}</p><p>Progress: {task.progress?.state ?? 'unavailable'}{task.progress?.qualification ? ` — ${task.progress.qualification}` : ''}.</p><p>Prerequisites: {task.prerequisite_refs.length ? task.prerequisite_refs.join(', ') : 'none'}.</p>{task.reason && <p>Reason: {task.reason.code}{task.reason.task_ref ? `; task ${task.reason.task_ref}` : ''}{task.reason.occurrence_ref ? `; occurrence ${task.reason.occurrence_ref}` : ''}.</p>}{task.annotation && <p>Annotation: {task.annotation.label ?? task.annotation.code ?? 'recorded'}{task.annotation.occurrence_ref ? `; occurrence ${task.annotation.occurrence_ref}` : ''}.</p>}<p>{task.summary}</p>{acceptanceDetails(runFor(task.run_ref))}</>
     const definition = all.flatMap(item => item.review_definitions ?? []).find(item => item.ref === selected.id)
     if (definition) return <><h3>{definition.label}</h3><p>Plan definition {definition.ref}; {source(definition.run_ref)}. This is not an agent call.</p>{acceptanceDetails(runFor(definition.run_ref))}</>
+    const chain = all.flatMap(item => item.chain ?? []).find(item => item.ref === selected.id)
+    if (chain) return <><h3>{chain.role === 'fixer' ? 'Fixing agent' : chain.role === 'reviewer' ? `Review ${chain.review_ordinal ?? 'unknown'}` : 'Recorded execution'}</h3><p>Recorded {chain.role}; outcome {chain.outcome}{chain.review_ordinal != null ? `; review ${chain.review_ordinal}` : ''}{chain.fixing_round != null ? `; fixing round ${chain.fixing_round}` : ''}.</p><p>Execution ID: {chain.execution_id}</p><p>Explicit trigger: {chain.trigger_ref ?? 'unknown'}; explicit predecessor: {chain.predecessor_ref ?? 'unknown'}.</p><p>Recorded occurrences: {chain.occurrence_refs.length ? chain.occurrence_refs.join(', ') : 'unknown'}.</p><p>Range: {chain.review_range.base ?? 'unknown'} → {chain.review_range.head ?? 'unknown'}.</p><p>Commit references: {Object.entries(chain.commit_refs).length ? Object.entries(chain.commit_refs).map(([name, value]) => `${name} ${value}`).join('; ') : 'unknown'}.</p>{chain.findings.length ? <section><h4>Safe findings</h4>{chain.findings.map((finding, index) => <p key={index}>{finding}</p>)}</section> : <p>Safe findings: none recorded.</p>}{acceptanceDetails(runFor(chain.run_ref))}</>
     const occurrence = all.flatMap(item => item.occurrences).find(item => item.ref === selected.id)
     if (!occurrence) return null
     const own = all.flatMap(item => item.records).filter(item => item.occurrence_ref === occurrence.ref && item.run_ref === occurrence.run_ref)
@@ -88,7 +89,7 @@ function App() {
     <span className="neutral">Recorded running / incomplete / unknown</span>
     <span className="plan">Plan progress (not execution outcome or acceptance)</span>
     <span className="acceptance">Acceptance is in Details; skipped/cancelled unsupported</span>
-    <span>Declared prerequisite · Recorded attachment · Recorded sequence · Declared correction</span>
+    <span>Declared prerequisite · Recorded attachment · Recorded sequence · Explicit chain relation · Declared correction</span>
     {snapshot && selectedRunInfo?.plan_availability !== 'complete' && <span className="unavailable">Complete graph unavailable</span>}
     </div>
     <div className="execution-view">

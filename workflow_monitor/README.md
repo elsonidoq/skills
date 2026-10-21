@@ -94,15 +94,25 @@ and does not expose arbitrary payload/credential fields, runner identity interna
 history** retrieve further pages at their snapshot watermarks. Inventory counts disclose
 unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 
-The graph fits locally with ELK layout and has pan/zoom controls. The closed snapshot API
-is polled every **60 seconds**; this is not a claim that polling alone caused previous
-slowness. Status-only refreshes preserve selection, positions and viewport; stale old-run
-fetch/layout results are discarded. Read freshness, last successful read and last recorded
-activity remain separate. Failed reads retain sanitized evidence with a warning. Recorded
-runner `live`/`stopped`/`unknown` qualification is not proof of progress.
+The graph uses ELK's layered RIGHT layout and initially fits the recorded graph into the
+available graph panel after the run selector and Details panel take their space, so its main
+branches and any recorded review/fix chain are visible without initial hunting or panning.
+Pan, zoom and selection remain available for detail; status-only polling preserves a deliberate
+viewport, positions and selection. The closed snapshot API is polled every **60 seconds**; this
+is not a claim that polling alone caused previous slowness. Stale old-run fetch/layout results
+are discarded. Read freshness, last successful read and last recorded activity remain separate.
+Failed reads retain sanitized evidence with a warning. Recorded runner `live`/`stopped`/`unknown`
+qualification is not proof of progress.
 
 Only explicitly declared local correction relations expand the selected-root graph.
-For a same-run recorded review chain, Details also show only actually emitted reviewer/fixer IDs, explicit trigger/predecessor relations, fixer-owned check/checkpoint attempts, ordinal/outcome/range, and SHA references. A review issue is shown only when it matches the inert `path:line - issue` review form; raw reviewer payloads, arbitrary findings, prompts, answers, errors, and secrets remain private. The original rejected reviewer, distinct fixing calls and subsequent reviewer remain visible; source-run refs and actual ranges are in Details rather than repeated in labels.
+For a same-run recorded review chain, the graph shows only actually emitted reviewer/fixer nodes
+and explicit trigger, predecessor, fixer-check, and fixer-checkpoint relations; it never derives
+those links from labels, timestamps, or correction fields. Details show the selected execution's
+ID, ordinal/outcome/range, explicit references, and SHA references. A review issue is shown only
+when it matches the inert `path:line - issue` review form; raw reviewer payloads, arbitrary
+findings, prompts, answers, errors, and secrets remain private. The original rejected reviewer,
+distinct fixing call and subsequent reviewer remain visible; missing legacy chain relations remain
+unknown rather than inferred.
 A valid rejecting reviewer remains a green returned execution while its rejection stays
 visible in Details and lineage acceptance. Same-run acceptance identifies the explicit terminal reviewer and its recorded range, never temporal proximity. Missing/dangling chain links remain unknown. Correction-only, unresolved and cyclic
 relations do not establish current full-range acceptance. Supporting

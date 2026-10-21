@@ -1,7 +1,7 @@
 :root { font-family: system-ui, sans-serif; color: #172033; background: #f3f6fa; } * { box-sizing: border-box; } body { margin: 0; } main { display: grid; grid-template-columns: 17rem 1fr; min-height: 100vh; } aside { padding: 1rem; border-right: 1px solid #c7d2e0; background: #fff; } h1 { font-size: 1.3rem; } h2 { font-size: 1rem; margin: .5rem 0; } .status { color: #45576d; font-size: .85rem; } .run-list { display: grid; gap: .45rem; } button { text-align: left; padding: .65rem; border: 1px solid #9aabc0; background: #fff; border-radius: .25rem; cursor: pointer; } button.selected { background: #dcecff; border-color: #1769aa; font-weight: 700; } .viewer { padding: 1rem; min-width: 0; } .viewer > header p { margin-top: 0; color: #45576d; } .legend { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .5rem; } .legend span { font-size: .75rem; border: 1px solid #b8c5d5; border-radius: 1rem; padding: .2rem .5rem; background: #fff; } .graph { border: 1px solid #b8c5d5; background: #fff; } .details { margin-top: 1rem; padding: .75rem; background: #fff; border: 1px solid #b8c5d5; } @media (max-width: 700px) { main { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid #c7d2e0; } .run-list { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); } }
 .execution-view { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); gap: .75rem; }
-.graph { height: 56vh; min-height: 22rem; }
-.selection-details { height: 56vh; min-height: 22rem; overflow: auto; padding: .8rem; border: 2px solid #486783; background: #fff; overflow-wrap: anywhere; }
+.graph { height: 64vh; min-height: 24rem; }
+.selection-details { height: 64vh; min-height: 24rem; overflow: auto; padding: .8rem; border: 2px solid #486783; background: #fff; overflow-wrap: anywhere; }
 .selection-details h3 { margin-top: .2rem; }
 .selection-details p { font-size: .85rem; }
 .execution-node { width: 180px; min-height: 70px; border: 2px solid #64748b; border-radius: .4rem; padding: .6rem; background: #eef2f6; }
@@ -23,6 +23,8 @@
 .attachment-edge .react-flow__edge-path { stroke: #1769aa; }
 .sequence-edge .react-flow__edge-path { stroke: #64748b; }
 .correction-edge .react-flow__edge-path { stroke: #9a6900; stroke-dasharray: 2 3; }
+.chain-edge .react-flow__edge-path { stroke: #1769aa; stroke-width: 2; }
+.chain-node { border-width: 3px; }
 .react-flow__edge.selected .react-flow__edge-path { stroke: #1769aa; stroke-width: 3; }
 .details { overflow-wrap: anywhere; }
 @media (max-width: 1000px) { .execution-view { grid-template-columns: 1fr; } .selection-details { height: 15rem; min-height: 0; } }
