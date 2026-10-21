@@ -26,6 +26,17 @@ class ProjectCheckTests(ProjectTest):
             run_checks(self.project, {'id': 'fix', 'checks': [[sys.executable, '-B', '-c',
                 'import os, signal; os.kill(os.getpid(), signal.SIGTERM)']]})
 
+    def test_outcomes_are_retained_before_later_failure_and_capture_both_streams(self):
+        from coherence_workflow.verification import CheckFailure
+        outcomes = []
+        with self.assertRaises(CheckFailure):
+            run_checks(self.project, {'id': 'tiny', 'checks': [
+                "printf stdout; printf stderr >&2", "printf failed; exit 7"]},
+                completed=lambda state, attempt: outcomes.append((state, attempt)))
+        self.assertEqual([state for state, _ in outcomes], ['passed', 'failed'])
+        self.assertEqual(outcomes[0][1]['output'], 'stdoutstderr')
+        self.assertEqual(outcomes[1][1]['output'], 'failed')
+
     def test_bad_command_reports_actual_operation(self):
         with self.assertRaises(FileNotFoundError):
             run_checks(self.project, {'id': 'fix', 'checks': [['/nonexistent/coherence-test']]})
@@ -55,7 +66,7 @@ if pid:
     os.waitpid(pid, 0)
     sys.exit(0)
 signal.signal(signal.SIGTERM, signal.SIG_IGN)
-print('child-ready', flush=True)
+Path('child-ready').touch()
 with open('release') as release:
     release.readline()
 Path('late.txt').write_text('old check wrote')
@@ -81,7 +92,8 @@ signal.signal(signal.SIGTERM, cancel)
 try:
     with Authority(sys.argv[1]) as owner:
         result = run_checks(owner.project, {'id':'check', 'checks':[json.loads(sys.argv[2])]},
-                            lock_fd=owner.lock.fileno())
+                            lock_fd=owner.lock.fileno(),
+                            completed=lambda state, attempt: print(json.dumps({'state': state, **attempt}), flush=True))
         print(json.dumps(result), flush=True)
 except KeyboardInterrupt:
     print('cancelled', flush=True)
@@ -99,6 +111,12 @@ except Blocked as exc:
                 proc.terminate()
             proc.communicate(timeout=10)
         self.addCleanup(cleanup)
+        import time
+        deadline = time.monotonic() + 10
+        while not (self.project/'child-ready').exists():
+            if time.monotonic() > deadline: self.fail('child did not start')
+            time.sleep(0.01)
+        (self.project/'child-ready').unlink()
         return proc, fd
 
     def line(self, proc):
@@ -114,11 +132,12 @@ except Blocked as exc:
             for sig in (signal.SIGINT, signal.SIGTERM):
                 with self.subTest(shell=shell, signal=sig):
                     proc, release = self.start_check(shell=shell)
-                    self.assertEqual(self.line(proc), 'child-ready')
                     proc.send_signal(sig)
                     output, errors = proc.communicate(timeout=10)
                     self.assertEqual(proc.returncode, 130, errors.decode())
                     self.assertIn(b'cancelled', output)
+                    self.assertIn(b'"state": "interrupted"', output)
+                    self.assertIn(b'"exit_code": -9', output)
                     with Authority(self.project):
                         os.write(release, b'write-now\n')
                         self.assertFalse((self.project/'late.txt').exists())
@@ -130,7 +149,7 @@ except Blocked as exc:
         for code in (0, 19):
             with self.subTest(exit_code=code):
                 proc, release = self.start_check(shell=True, background=True, exit_code=code)
-                self.assertEqual({self.line(proc), self.line(proc)}, {'child-ready', 'leader-exited'})
+                self.assertEqual(self.line(proc), 'leader-exited')
                 self.assertIsNone(proc.poll())
                 with self.assertRaisesRegex(Blocked, 'writer lock already held'):
                     Authority(self.project)
@@ -147,7 +166,7 @@ except Blocked as exc:
         import os
         from coherence_workflow.store import Authority
         proc, release = self.start_check(shell=True, background=True)
-        self.assertEqual({self.line(proc), self.line(proc)}, {'child-ready', 'leader-exited'})
+        self.assertEqual(self.line(proc), 'leader-exited')
         proc.terminate()
         _, errors = proc.communicate(timeout=10)
         self.assertEqual(proc.returncode, 130, errors.decode())
@@ -159,12 +178,22 @@ except Blocked as exc:
         import os
         from coherence_workflow.store import Authority
         proc, release = self.start_check(shell=True, background=True)
-        self.assertEqual({self.line(proc), self.line(proc)}, {'child-ready', 'leader-exited'})
+        self.assertEqual(self.line(proc), 'leader-exited')
         proc.kill()  # This fixture runner only, never an application/service.
         proc.wait(timeout=10)
         with self.assertRaisesRegex(Blocked, 'writer lock already held'):
             Authority(self.project)
         os.write(release, b'write-now\n')
-        proc.communicate(timeout=10)  # EOF observes the remaining check's exit.
-        with Authority(self.project):
+        proc.communicate(timeout=10)
+        # Captured check output no longer inherits the runner's stdout pipe.
+        import time
+        deadline = time.monotonic() + 10
+        while True:
+            try:
+                owner = Authority(self.project)
+                break
+            except Blocked:
+                if time.monotonic() > deadline: raise
+                time.sleep(0.01)
+        with owner:
             self.assertEqual((self.project/'late.txt').read_text(), 'old check wrote')

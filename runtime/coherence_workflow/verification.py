@@ -24,25 +24,29 @@ def commands(task):
     return values
 
 
-def _run_check(project, command, lock_fd):
+def _run_check(project, command, lock_fd, completed):
     # A private session makes cancellation specific to this check, not the runner
     # or its siblings. Keep its leader unreaped until cleanup so its PGID cannot
     # be reused. The inherited pipe also waits for ordinary shell descendants
     # after the shell exits; EOF is lifetime observation, not a check result.
     reader, writer = os.pipe()
     proc = None
+    error = None
     cancellation = {signal.SIGINT, signal.SIGTERM}
     with tempfile.TemporaryFile() as output:
         try:
             try:
                 proc = subprocess.Popen(command, cwd=project, shell=isinstance(command, str),
-                                        start_new_session=True, stderr=output,
+                                        start_new_session=True, stdout=output, stderr=output,
                                         pass_fds=(writer,) if lock_fd is None else (writer, lock_fd))
             finally:
                 os.close(writer)
             os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOWAIT)
             while os.read(reader, 4096):
                 pass
+        except BaseException as exc:
+            error = exc
+            raise
         finally:
             # No grace deadline/watchdog: stop only our group, even on normal exit
             # (a background descendant may have closed its inherited descriptors).
@@ -58,12 +62,21 @@ def _run_check(project, command, lock_fd):
                     proc.wait()
             finally:
                 os.close(reader)
-                signal.pthread_sigmask(signal.SIG_SETMASK, previous)
+                try:
+                    output.seek(0)
+                    attempt = {'command': command, 'exit_code': proc.returncode if proc else None,
+                               'output': output.read().decode(errors='replace')}
+                    if error is not None:
+                        attempt['error'] = str(error) or type(error).__name__
+                    completed('interrupted' if error is not None else
+                              ('passed' if proc.returncode == 0 else 'failed'), attempt)
+                finally:
+                    signal.pthread_sigmask(signal.SIG_SETMASK, previous)
         output.seek(0)
         return proc.returncode, output.read().decode(errors='replace')
 
 
-def run_checks(project, task, *, lock_fd=None, observe=None):
+def run_checks(project, task, *, lock_fd=None, observe=None, completed=None):
     results = []
     for ordinal, value in enumerate(commands(task), 1):
         command = value.get('command', value.get('argv')) if isinstance(value, dict) else value
@@ -73,7 +86,7 @@ def run_checks(project, task, *, lock_fd=None, observe=None):
         # No workflow deadline or output cap. Preserve normal shell/project behavior.
         if observe: observe('started', ordinal, None)
         try:
-            code, output = _run_check(project, command, lock_fd)
+            code, output = _run_check(project, command, lock_fd, completed or (lambda state, attempt: None))
         except BaseException:
             if observe: observe('interrupted', ordinal, None)
             raise

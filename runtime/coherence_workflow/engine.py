@@ -193,15 +193,14 @@ class Engine:
                 previous = None
                 while True:
                     try:
-                        results = run_checks(project, fix_task, lock_fd=self.authority.lock.fileno(), observe=observe)
-                        for attempt in results:
-                            store.history(self.run, None, 'fixer_check', 'passed', {'execution_id': execution_id, **attempt})
+                        results = run_checks(project, fix_task, lock_fd=self.authority.lock.fileno(), observe=observe,
+                            completed=lambda state, attempt: store.history(self.run, None, 'fixer_check', state,
+                                {'execution_id': execution_id, **attempt}))
                         return results
                     except CheckFailure as failure:
                         if failure.attempt == previous:
                             raise Blocked('fixing required check remains unchanged after scoped correction: ' + canonical(failure.attempt))
                         previous = failure.attempt
-                        store.history(self.run, None, 'fixer_check', 'failed', {'execution_id': execution_id, **failure.attempt})
                         text = self._prompt_worker(worker,
                             'A runner-owned REQUIRED check in this assigned fixing round failed. Make a reasoned, '
                             'authorized scoped correction, then return; the runner will rerun the affected command '
@@ -498,21 +497,19 @@ class Engine:
                         if code is not None: facts['exit_code'] = code
                         recorder.emit(occurrence, 'check', kind, task_id=task['id'], facts=facts)
                     def run_required_checks():
-                        return run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe)
+                        return run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe,
+                            completed=lambda state, attempt: store.history(self.run, task['id'], 'check', state, attempt))
                     def correct_required_checks():
                         nonlocal text
                         previous_failed_attempt = None
                         while True:
                             try:
                                 checks = run_required_checks()
-                                for attempt in checks:
-                                    store.history(self.run, task['id'], 'check', 'passed', attempt)
                                 return checks
                             except CheckFailure as failure:
                                 if failure.attempt == previous_failed_attempt:
                                     raise Blocked('required check failed and remains unchanged after same-task correction: ' + canonical(failure.attempt))
                                 previous_failed_attempt = failure.attempt
-                                store.history(self.run, task['id'], 'check', 'failed', failure.attempt)
                                 corrective_occurrence = recorder.occurrence()
                                 recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                                 try:
