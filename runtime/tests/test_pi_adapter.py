@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import sqlite3
 import subprocess
 import sys
 import threading
@@ -140,6 +141,27 @@ print(json.dumps({'type':'result','text':'complete'}),flush=True)
         self.assertFalse(thread.is_alive())
         self.assertEqual(received[0]['target'], target | {'session_id': 'host-session'})
         self.assertEqual([item['status'] for item in received[1:] if item['type'] == 'steering_status'], ['accepted', 'queued'])
+
+    def test_store_callbacks_keep_prompt_sqlite_thread_affinity(self):
+        body = """for kind, extra in [('claim', {'path':'owned.txt'}), ('command', {'phase':'check','call':'true'}), ('cleanup', {'path':'generated.txt'}), ('question', {'question':'continue?'})]:
+ print(json.dumps({'type':kind, **extra}), flush=True)
+ reply=json.loads(input()); assert 'error' not in reply, reply
+print(json.dumps({'type':'result','text':'complete'}),flush=True)
+"""
+        connection = sqlite3.connect(':memory:')
+        connection.execute('CREATE TABLE calls (kind TEXT)')
+        def record(kind):
+            connection.execute('INSERT INTO calls VALUES (?)', (kind,))
+        a, b = self.fixture(body)
+        try:
+            with a, b:
+                adapter = PiAdapter(self.project, {}, question=lambda _: (record('question'), 'yes')[1])
+                self.assertEqual(adapter.prompt('fixture', claim=lambda _: record('claim'),
+                    command=lambda *_: record('command'), cleanup=lambda _: record('cleanup')), 'complete')
+            self.assertEqual(connection.execute('SELECT kind FROM calls').fetchall(),
+                             [('claim',), ('command',), ('cleanup',), ('question',)])
+        finally:
+            connection.close()
 
     def test_local_path_error_can_be_corrected_same_host_conversation(self):
         body = '''print(json.dumps({'type':'claim','path':'bad.txt'}),flush=True)

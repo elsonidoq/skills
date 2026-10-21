@@ -1,6 +1,7 @@
 """Line-framed transport to the installed Pi SDK, not an execution proof gateway."""
 import json
 import os
+import queue
 from pathlib import Path
 import socket
 import subprocess
@@ -230,7 +231,7 @@ class PiAdapter:
                                     text=True, encoding='utf-8', cwd=self.project,
                                     pass_fds=() if self.lock_fd is None else (self.lock_fd,))
             write_lock = threading.Lock()
-            workers = []
+            callbacks = queue.Queue()
             worker_error = []
             worker_error_lock = threading.Lock()
             result = []
@@ -319,22 +320,11 @@ class PiAdapter:
                         except ValueError as exc:
                             raise Blocked('invalid SDK transport JSON: ' + str(exc)) from None
                         kind = value.get('type') if isinstance(value, dict) else None
-                        if kind == 'event':
-                            try:
-                                self.observe(value)
-                            except Exception:
-                                pass
-                        elif kind == 'question':
-                            # Questions may wait on the owner.  Keep the decoder free so
-                            # the correlated steering/control stream remains serviceable.
-                            thread = threading.Thread(target=callback, args=(value,))
-                            workers.append(thread)
-                            thread.start()
-                        elif kind in ('claim', 'command', 'cleanup'):
-                            # These callbacks mutate the runner/store.  Its SQLite
-                            # connection belongs to this prompt thread, so never move
-                            # them to an arbitrary callback thread.
-                            callback(value)
+                        if kind in ('event', 'question', 'claim', 'command', 'cleanup'):
+                            # Store-backed callbacks belong to the prompt caller. The
+                            # decoder remains free to service controls even while that
+                            # caller waits for an owner answer or a command.
+                            callbacks.put(value)
                         elif kind == 'target':
                             target = value.get('target')
                             if value.get('status') != 'active' or not isinstance(target, dict):
@@ -389,6 +379,8 @@ class PiAdapter:
                 except BaseException as exc:
                     with worker_error_lock:
                         worker_error.append(exc)
+                finally:
+                    callbacks.put(None)
 
             with self._control_lock:
                 self.active_target = None
@@ -398,9 +390,21 @@ class PiAdapter:
             try:
                 send(request)
                 reader.start()
+                while True:
+                    record = callbacks.get()
+                    if record is None:
+                        break
+                    if record['type'] == 'event':
+                        try:
+                            self.observe(record)
+                        except Exception:
+                            pass
+                    else:
+                        callback(record)
+                        if worker_error:
+                            close_input()
+                            break
                 reader.join()
-                for thread in workers:
-                    thread.join()
                 with worker_error_lock:
                     if worker_error:
                         raise worker_error[0]
