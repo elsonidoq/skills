@@ -6,9 +6,10 @@ let server: Server
 let vite: ViteDevServer
 let reads = 0
 const sha = (value: string) => value.repeat(40)
-const run = { ref: 'run_chain', display_id: 'chain-fixture', label: 'Synthetic recorded chain', completeness: 'recorded', started_at: 1, plan_availability: 'complete' }
+const longHostileLabel = '<img src=x onerror=alert(1)> retained task label that is deliberately longer than eighty characters for Details'
+const run = { ref: 'run_chain', display_id: 'chain-fixture', label: 'Synthetic recorded chain', completeness: 'recorded', started_at: 1, plan_availability: 'complete', acceptance_summary: { checks: [], checkpoints: [], reviews: [], full_range: { state: 'accepted_full_range', base: sha('a'), head: sha('c') } } }
 const tasks = [
-  { ref: 'task_a', run_ref: run.ref, task_id: 'A', label: 'A', summary: 'Synthetic branch root', prerequisite_refs: [], progress: { state: 'completed', qualification: null } },
+  { ref: 'task_a', run_ref: run.ref, task_id: 'A', label: longHostileLabel, summary: 'Synthetic branch root', prerequisite_refs: [], progress: { state: 'completed', qualification: null } },
   { ref: 'task_b', run_ref: run.ref, task_id: 'B', label: 'B', summary: 'Synthetic branch', prerequisite_refs: ['task_a'], progress: { state: 'completed', qualification: null } },
   { ref: 'task_c', run_ref: run.ref, task_id: 'C', label: 'C', summary: 'Synthetic branch', prerequisite_refs: ['task_a'], progress: { state: 'completed', qualification: null } },
   { ref: 'task_d', run_ref: run.ref, task_id: 'D', label: 'D', summary: 'Synthetic branch leaf', prerequisite_refs: ['task_b', 'task_c'], progress: { state: 'completed', qualification: null } },
@@ -17,12 +18,14 @@ const chain = [
   { ref: 'review_one', run_ref: run.ref, execution_id: 'review_one', role: 'reviewer', review_ordinal: 1, fixing_round: null, outcome: 'rejected', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['occ_review_one'], review_range: { base: sha('a'), head: sha('b') }, findings: ['src/example.ts:7 - synthetic rejection'], commit_refs: { base: sha('a'), head: sha('b') } },
   { ref: 'fix_one', run_ref: run.ref, execution_id: 'fix_one', role: 'fixer', review_ordinal: null, fixing_round: 1, outcome: 'approved', trigger_ref: 'review_one', predecessor_ref: 'review_one', occurrence_refs: ['occ_fix'], review_range: { base: sha('a'), head: sha('c') }, findings: [], commit_refs: { commit: sha('c') } },
   { ref: 'review_two', run_ref: run.ref, execution_id: 'review_two', role: 'reviewer', review_ordinal: 2, fixing_round: null, outcome: 'approved', trigger_ref: null, predecessor_ref: 'fix_one', occurrence_refs: ['occ_review_two'], review_range: { base: sha('a'), head: sha('c') }, findings: [], commit_refs: { head: sha('c') } },
+  { ref: 'dangling_review', run_ref: run.ref, execution_id: 'dangling_review', role: 'reviewer', review_ordinal: 3, fixing_round: null, outcome: 'unknown', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['missing_occurrence'], review_range: { base: null, head: null }, findings: [], commit_refs: {} },
+  { ref: 'conflicting_fixer', run_ref: run.ref, execution_id: 'conflicting_fixer', role: 'fixer', review_ordinal: null, fixing_round: 2, outcome: 'unknown', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['task_b_attempt', 'task_c_attempt'], review_range: { base: null, head: null }, findings: [], commit_refs: {} },
 ]
 function snapshot() {
   reads++
   const rereview = reads > 1 ? { ...chain[2], outcome: 'rejected' as const, findings: ['src/example.ts:9 - status refresh'] } : chain[2]
   return {
-    runs: [run], phases: [], tasks, review_definitions: [], chain: [chain[0], chain[1], rereview], chain_acceptance: {},
+    runs: [run], phases: [], tasks, review_definitions: [{ ref: 'planned_review', run_ref: run.ref, label: 'Planned independent review definition' }], chain: [chain[0], chain[1], rereview, chain[3], chain[4]], chain_acceptance: {},
     occurrences: [
       { ref: 'worker_a', run_ref: run.ref, phase_ref: 'worker', task_ref: 'task_a', role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
       { ref: 'occ_review_one', run_ref: run.ref, phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: [] },
@@ -30,6 +33,8 @@ function snapshot() {
       { ref: 'fix_check', run_ref: run.ref, phase_ref: 'check', task_ref: 'task_d', role: 'non_model', outcome: 'passed', completeness: 'complete', record_refs: ['record_check'] },
       { ref: 'fix_checkpoint', run_ref: run.ref, phase_ref: 'checkpoint', task_ref: 'task_d', role: 'non_model', outcome: 'passed', completeness: 'complete', record_refs: ['record_checkpoint'] },
       { ref: 'occ_review_two', run_ref: run.ref, phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: [] },
+      { ref: 'task_b_attempt', run_ref: run.ref, phase_ref: 'worker', task_ref: 'task_b', role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
+      { ref: 'task_c_attempt', run_ref: run.ref, phase_ref: 'worker', task_ref: 'task_c', role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
     ],
     records: [], unknown_records: [{ ref: 'legacy_unknown', run_ref: run.ref, source_seq: 99, code: 'unsupported_observation' }],
     edges: [
@@ -39,7 +44,7 @@ function snapshot() {
       { ref: 'predecessor', run_ref: run.ref, type: 'chain_predecessor', from_ref: 'fix_one', to_ref: 'review_two', resolution: 'recorded' },
     ],
     snapshot_ref: 'chain_snapshot', next_cursor: null,
-    inventory: { phase_count: 0, occurrence_count: 6, observation_count: 0, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 1 },
+    inventory: { phase_count: 0, occurrence_count: 8, observation_count: 0, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 1 },
   }
 }
 
@@ -64,6 +69,27 @@ test('shows a recorded chain overview, inert details, and preserves deliberate n
   await expect(page.locator('.react-flow__node[data-id="review_one"]')).toContainText('Review 1')
   await expect(page.locator('.react-flow__node[data-id="fix_one"]')).toContainText('Fixing agent')
   await expect(page.locator('.react-flow__node[data-id="review_two"]')).toContainText('Review 2')
+  await expect(page.locator('.react-flow__node[data-id="planned_review"]')).toContainText('Planned independent review definition')
+  await expect(page.locator('.react-flow__node[data-id="fix_one"]')).toBeVisible()
+  await expect(page.locator('.react-flow__node[data-id="dangling_review"]')).toBeVisible()
+  await expect(page.locator('.react-flow__node[data-id="conflicting_fixer"]')).toBeVisible()
+  await expect(page.locator('.react-flow__node[data-id="group:run-review"]')).toContainText('Run review / execution history')
+  await expect(page.locator('.react-flow__node[data-id="group:unassigned-history"]')).toContainText('Unassigned recorded history')
+  const expectNodeInGroup = async (nodeId: string, groupId: string) => {
+    const node = await page.locator(`.react-flow__node[data-id="${nodeId}"]`).boundingBox()
+    const group = await page.locator(`.react-flow__node[data-id="group:${groupId}"]`).boundingBox()
+    expect(node, `${nodeId} is missing`).not.toBeNull()
+    expect(group, `${groupId} is missing`).not.toBeNull()
+    expect(node!.x).toBeGreaterThanOrEqual(group!.x)
+    expect(node!.x + node!.width).toBeLessThanOrEqual(group!.x + group!.width)
+    expect(node!.y).toBeGreaterThanOrEqual(group!.y)
+    expect(node!.y + node!.height).toBeLessThanOrEqual(group!.y + group!.height)
+  }
+  await expectNodeInGroup('planned_review', 'run-review')
+  await expectNodeInGroup('review_one', 'run-review')
+  await expectNodeInGroup('fix_one', 'task_d')
+  await expectNodeInGroup('dangling_review', 'unassigned-history')
+  await expectNodeInGroup('conflicting_fixer', 'unassigned-history')
   await expect(page.locator('.react-flow__node[data-id="fix_check"]')).toHaveCount(1)
   await expect(page.getByTestId('rf__edge-trigger')).toBeVisible()
   for (const id of ['check', 'checkpoint']) await expect(page.getByTestId(`rf__edge-${id}`)).toHaveAttribute('aria-label', new RegExp(`Edge from fix_one to fix_${id}`))
@@ -88,6 +114,17 @@ test('shows a recorded chain overview, inert details, and preserves deliberate n
   await details.getByText('Technical references and retained history').click()
   await expect(details).toContainText('Edge ID: trigger')
   await expect(details).toContainText('Endpoints: review_one → fix_one')
+  await expect(details).toContainText(`Full-range qualification: accepted_full_range.`)
+  await expect(details).toContainText(`${sha('a')} → ${sha('c')}`)
+  for (const id of ['check', 'checkpoint', 'predecessor']) {
+    await page.getByTestId(`rf__edge-${id}`).dispatchEvent('click')
+    await expect(details).toContainText('Full-range qualification: accepted_full_range.')
+  }
+  await page.locator('.react-flow__node[data-id="planned_review"]').click()
+  await expect(details).toContainText('Planned review definition — not an agent call.')
+  await page.locator('.react-flow__node[data-id="task_a"]').click()
+  await expect(details).toContainText(longHostileLabel)
+  await expect(details.locator('img')).toHaveCount(0)
   await page.locator('.react-flow__node[data-id="review_one"]').click()
   await expect(details).toContainText('Execution outcome: rejected')
   await expect(details.locator('img')).toHaveCount(0)
