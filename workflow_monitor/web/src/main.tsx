@@ -60,7 +60,9 @@ function App() {
     // alter task ownership, footprints, ranks, or a deliberate viewport.
     const structure = JSON.stringify({ groups: groups.map(group => [group.id, group.kind, group.members.map(member => member.id)]), prerequisites })
     const layoutKey = JSON.stringify({ structure, groups: groups.map(group => [group.id, group.header, group.members]) })
-    const contentKey = JSON.stringify({ nodes: graph.nodes.map(node => [node.id, node.data.label]), headers: groupIds.map(id => [id, groupTitle(id)]) })
+    // Match the complete text rendered into each footprint. Labels cover titles, while
+    // statuses cover outcomes and task blocker annotations.
+    const contentKey = JSON.stringify({ nodes: graph.nodes.map(node => [node.id, node.data.label, node.data.status]), headers: groupIds.map(id => [id, groupTitle(id)]) })
     const refreshNodes = () => setNodes(current => current.map(node => {
       if (node.id.startsWith('group:')) {
         const id = node.id.slice('group:'.length)
@@ -69,10 +71,19 @@ function App() {
       const fresh = graph.nodes.find(item => item.id === node.id)
       return fresh ? { ...node, data: fresh.data, className: fresh.className } : node
     }))
-    if (topology.current === layoutKey) { refreshNodes(); return }
+    const contentChanged = measurementContent.current !== contentKey
+    measurementContent.current = contentKey
+    if (topology.current === layoutKey) {
+      // A cached layout describes the old footprint, not necessarily the freshly rendered
+      // content. Render first so the DOM measurement effect can feed its intrinsic graph
+      // coordinates back through this same layoutFootprints input/output path.
+      measurePending.current = contentChanged
+      refreshNodes()
+      return
+    }
     // Content measurements can refine footprints after a user has panned or zoomed.
     // Reflow them, but reserve fitView for an initial or backbone/ownership change.
-    fitPending.current = layoutStructure.current !== structure; measurePending.current = measurementContent.current !== contentKey; measurementContent.current = contentKey; const generation = ++layoutGeneration.current; let active = true
+    fitPending.current = layoutStructure.current !== structure; measurePending.current = contentChanged; const generation = ++layoutGeneration.current; let active = true
     void layoutFootprints({ groups, prerequisites, secondaryRelations: graph.edges.filter(edge => edge.data?.classification === 'secondary') }).then(layout => { if (!active || generation !== layoutGeneration.current) return; topology.current = layoutKey; layoutStructure.current = structure; const byGroup = new Map(layout.groups.map(group => [group.id, group])); const grouped: Node[] = layout.groups.map(group => ({ id: `group:${group.id}`, position: { x: group.bounds.x, y: group.bounds.y }, data: { label: <div className="group-header" data-group-header={group.id}>{groupTitle(group.id)}</div> }, className: `owner-group ${group.kind}`, style: { width: group.bounds.width, height: group.bounds.height }, draggable: false, selectable: false }))
       for (const node of graph.nodes) { const groupId = groupFor(node); const group = byGroup.get(groupId)!; const child = group.children.find(item => item.id === node.id)!; const position = { x: child.bounds.x - group.bounds.x, y: child.bounds.y - group.bounds.y }; positions.current[node.id] = position; grouped.push({ ...node, position: { x: child.bounds.x, y: child.bounds.y }, style: { width: child.bounds.width, height: child.bounds.height } }) }
       setNodes(grouped) })

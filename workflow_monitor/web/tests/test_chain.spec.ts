@@ -7,6 +7,8 @@ let vite: ViteDevServer
 let reads = 0
 const sha = (value: string) => value.repeat(40)
 const longHostileLabel = '<img src=x onerror=alert(1)> retained task label that is deliberately longer than eighty characters for Details'
+const refreshedTaskTitle = 'A refreshed task title that is deliberately long enough to require a taller measured graph footprint after the recorded content changes'
+const refreshedBlocker = 'A refreshed blocker annotation that is deliberately long enough to wrap in the graph node and require an intrinsic measurement'
 const run = { ref: 'run_chain', display_id: 'chain-fixture', label: 'Synthetic recorded chain', completeness: 'recorded', started_at: 1, plan_availability: 'complete', acceptance_summary: { checks: [], checkpoints: [], reviews: [], full_range: { state: 'accepted_full_range', base: sha('a'), head: sha('c') } } }
 const tasks = [
   { ref: 'task_a', run_ref: run.ref, task_id: 'A', label: longHostileLabel, summary: 'Synthetic branch root', prerequisite_refs: [], progress: { state: 'completed', qualification: null } },
@@ -23,9 +25,11 @@ const chain = [
 ]
 function snapshot() {
   reads++
-  const rereview = reads > 1 ? { ...chain[2], outcome: 'rejected' as const, findings: ['src/example.ts:9 - status refresh'] } : chain[2]
+  const refreshed = reads > 1
+  const refreshedTasks = refreshed ? tasks.map(task => task.ref === 'task_b' ? { ...task, summary: refreshedTaskTitle, annotation: { code: 'blocked', label: refreshedBlocker } } : task) : tasks
+  const rereview = refreshed ? { ...chain[2], outcome: 'rejected' as const, findings: ['src/example.ts:9 - refreshed outcome', 'src/example.ts:10 - refreshed outcome'] } : chain[2]
   return {
-    runs: [run], phases: [], tasks, review_definitions: [{ ref: 'planned_review', run_ref: run.ref, label: 'Planned independent review definition' }], chain: [chain[0], chain[1], rereview, chain[3], chain[4]], chain_acceptance: {},
+    runs: [run], phases: [], tasks: refreshedTasks, review_definitions: [{ ref: 'planned_review', run_ref: run.ref, label: 'Planned independent review definition' }], chain: [chain[0], chain[1], rereview, chain[3], chain[4]], chain_acceptance: {},
     occurrences: [
       { ref: 'worker_a', run_ref: run.ref, phase_ref: 'worker', task_ref: 'task_a', role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
       { ref: 'occ_review_one', run_ref: run.ref, phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: [] },
@@ -125,17 +129,25 @@ test('shows a recorded chain overview, inert details, and preserves deliberate n
   await page.locator('.react-flow__node[data-id="task_a"]').click()
   await expect(details).toContainText(longHostileLabel)
   await expect(details.locator('img')).toHaveCount(0)
-  await page.locator('.react-flow__node[data-id="review_one"]').click()
-  await expect(details).toContainText('Execution outcome: rejected')
+  await page.locator('.react-flow__node[data-id="task_b"]').click()
+  await expect(details).toContainText('Synthetic branch')
   await expect(details.locator('img')).toHaveCount(0)
+  const initialNodeHeight = await page.locator('.react-flow__node[data-id="task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))
+  const initialGroupHeight = await page.locator('.react-flow__node[data-id="group:task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))
   const initialViewport = await page.locator('.react-flow__viewport').getAttribute('style')
   await page.getByTitle('Zoom In').click()
   await expect(page.locator('.react-flow__viewport')).not.toHaveAttribute('style', initialViewport ?? '')
   const beforeViewport = await page.locator('.react-flow__viewport').getAttribute('style')
   await page.clock.fastForward(60_000)
-  await expect(page.locator('.react-flow__node[data-id="review_two"]')).toContainText('rejected — 1 finding')
+  await expect(page.locator('.react-flow__node[data-id="task_b"]')).toContainText(`${refreshedTaskTitle.slice(0, 79)}…`)
+  await expect(page.locator('.react-flow__node[data-id="task_b"]')).toContainText(refreshedBlocker)
+  await expect(page.locator('.react-flow__node[data-id="review_two"]')).toContainText('rejected — 2 findings')
+  await expect(details).toContainText(refreshedBlocker)
+  await expect.poll(() => page.locator('.react-flow__node[data-id="task_b"]').evaluate(element => Number.parseFloat((element as HTMLElement).style.height))).toBeGreaterThan(initialNodeHeight)
+  await expect(page.locator('.react-flow__node[data-id="group:task_b"]')).not.toHaveAttribute('style', new RegExp(`height: ${initialGroupHeight}px`))
+  await expectNodeInGroup('task_b', 'task_b')
   await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', beforeViewport ?? '')
-  await expect(page.locator('.react-flow__node[data-id="review_one"]')).toHaveClass(/selected/)
+  await expect(page.locator('.react-flow__node[data-id="task_b"]')).toHaveClass(/selected/)
   const screenshot = testInfo.outputPath('readable-chain-zoom.png')
   await page.screenshot({ path: screenshot })
   console.log(`Readable chain screenshot: ${screenshot}`)

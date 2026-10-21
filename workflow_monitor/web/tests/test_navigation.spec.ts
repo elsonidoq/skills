@@ -10,7 +10,7 @@ const requests: string[] = []
 
 const runs = [{ ref: 'run_one', display_id: '<old-run>', label: 'Recorded run', completeness: 'recorded', started_at: 1, plan_availability: 'complete' }, { ref: 'run_two', display_id: '<img src=x onerror=alert(1)>', label: 'Recorded run', completeness: 'recorded', started_at: 2, plan_availability: 'complete' }]
 
-function snapshot(run: string, changed = false) {
+function snapshot(run: string, changed = false, secondary = false) {
   const current = run === 'run_two'
   const phase = current ? 'phase_two' : 'phase_one'
   const occurrence = current ? 'occ_reviewer' : 'occ_worker'
@@ -22,9 +22,9 @@ function snapshot(run: string, changed = false) {
       { ref: `task_${run}_a`, run_ref: run, task_id: 'T001', label: 'Task', summary: 'Synthetic prerequisite', prerequisite_refs: [], progress: { state: 'completed', qualification: null } },
       { ref: `task_${run}_b`, run_ref: run, task_id: 'T002', label: 'Task', summary: 'Synthetic dependent', prerequisite_refs: [`task_${run}_a`], progress: { state: 'running', qualification: null } }
     ],
-    occurrences: [...(current ? [{ ref: 'preceding_worker', run_ref: run, phase_ref: phase, task_ref: null, role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [], first_seq: 0 }] : []), { ref: occurrence, run_ref: run, phase_ref: phase, task_ref: null, role: current ? 'reviewer' : 'worker', outcome, completeness: 'complete', record_refs: [record] }],
+    occurrences: [...(current ? [{ ref: 'preceding_worker', run_ref: run, phase_ref: phase, task_ref: null, role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [], first_seq: 0 }] : []), { ref: occurrence, run_ref: run, phase_ref: phase, task_ref: null, role: current ? 'reviewer' : 'worker', outcome, completeness: 'complete', record_refs: [record], stopping: current && changed }],
     records: [{ ref: record, run_ref: run, occurrence_ref: occurrence, kind: outcome, source_seq: 1, recorded_at: 1, exit_code: outcome === 'failed' ? 1 : 0, finding_count: null, review_base: null, review_head: null }],
-    edges: [{ ref: `edge_${run}`, run_ref: run, type: 'phase_occurrence', from_ref: phase, to_ref: occurrence, resolution: 'recorded' }, { ref: `milestone_${run}`, run_ref: run, type: 'execution_milestone', from_ref: occurrence, to_ref: record, resolution: 'recorded' }],
+    edges: [{ ref: `edge_${run}`, run_ref: run, type: 'phase_occurrence', from_ref: phase, to_ref: occurrence, resolution: 'recorded' }, { ref: `milestone_${run}`, run_ref: run, type: 'execution_milestone', from_ref: occurrence, to_ref: record, resolution: 'recorded' }, ...(secondary ? [{ ref: `secondary_${run}`, run_ref: run, type: 'chain_predecessor', from_ref: occurrence, to_ref: 'preceding_worker', resolution: 'recorded' }] : [])],
     inventory: { phase_count: 1, occurrence_count: 1, observation_count: 1, hidden_count: 0 }
   }
 }
@@ -40,8 +40,8 @@ test.beforeAll(async () => {
       response.setHeader('content-type', 'application/json')
       if (match[1] === 'run_one') { setTimeout(() => response.end(JSON.stringify(snapshot('run_one'))), 350); return }
       runTwoSnapshots++
-      if (runTwoSnapshots > 2) { response.statusCode = 500; response.end(); return }
-      response.end(JSON.stringify(snapshot('run_two', runTwoSnapshots > 1)))
+      if (runTwoSnapshots > 3) { response.statusCode = 500; response.end(); return }
+      response.end(JSON.stringify(snapshot('run_two', runTwoSnapshots > 1, runTwoSnapshots > 2)))
       return
     }
     const relative = normalize(url.pathname === '/' ? 'index.html' : url.pathname.slice(1)).replace(/^\.\.(?:[/\\]|$)/, '')
@@ -84,13 +84,21 @@ test('keeps live navigation stable and ignores an old selected-run response', as
   await page.mouse.move(pane.x + 25, pane.y + pane.height - 35)
   await page.mouse.down(); await page.mouse.move(pane.x + 65, pane.y + pane.height - 55, { steps: 5 }); await page.mouse.up()
   const reviewer = page.locator('.react-flow__node[data-id="occ_reviewer"]')
-  const viewport = await page.locator('.react-flow__viewport').getAttribute('style')
-  const position = await reviewer.getAttribute('style')
+  const viewportBeforeContentRefresh = await page.locator('.react-flow__viewport').getAttribute('style')
   await page.clock.fastForward(60_000)
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toHaveClass(/failed/)
   await expect(page.getByLabel('Selected execution details')).toContainText('Declared prerequisite')
+  await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', viewportBeforeContentRefresh ?? '')
+  const viewport = await page.locator('.react-flow__viewport').getAttribute('style')
+  const reviewerGeometry = () => reviewer.evaluate(element => {
+    const style = (element as HTMLElement).style
+    return `${style.transform};${style.width};${style.height}`
+  })
+  const position = await reviewerGeometry()
+  await page.clock.fastForward(60_000)
+  await expect(page.getByTestId('rf__edge-secondary_run_two')).toHaveCount(1)
   await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', viewport ?? '')
-  await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toHaveAttribute('style', position ?? '')
+  await expect.poll(reviewerGeometry).toBe(position)
   await page.locator('.react-flow__node[data-id="occ_reviewer"]').click()
   await page.clock.fastForward(60_000)
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toHaveClass(/selected/)
