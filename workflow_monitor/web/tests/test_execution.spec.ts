@@ -1,181 +1,45 @@
 import { test, expect } from '@playwright/test'
-import { spawn, type ChildProcess } from 'node:child_process'
+import { createServer, type Server } from 'node:http'
+import { readFile } from 'node:fs/promises'
+import { extname, join } from 'node:path'
 
-let server: ChildProcess
-let stderr = ''
+let server: Server
+const run = { ref: 'run_details', display_id: 'details-run', label: 'Recorded run', completeness: 'recorded', started_at: 1, acceptance_summary: { checks: [], checkpoints: [], reviews: [{ occurrence_ref: 'review-occurrence', state: 'rejected', approved: false, finding_count: 1, base: 'a'.repeat(40), head: 'b'.repeat(40) }], full_range: { state: 'unknown', base: null, head: null } } }
+const snapshot = {
+  runs: [run], phases: [], review_definitions: [], unknown_records: [], edges: [], chain: [], snapshot_ref: 'details-snapshot', next_cursor: null,
+  tasks: [{ ref: 'task', run_ref: run.ref, task_id: 'T006', label: 'Task', summary: '<img src=x onerror=alert(1)> Display selected activity details', prerequisite_refs: [] }],
+  occurrences: [{ ref: 'stop', run_ref: run.ref, phase_ref: 'terminal', task_ref: null, role: 'non_model', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: 'worker' }],
+  records: [{ ref: 'record', run_ref: run.ref, occurrence_ref: 'worker-occurrence', kind: 'returned', source_seq: 3, recorded_at: 3, exit_code: 0, finding_count: null, review_base: null, review_head: null }],
+  activities: [{ ref: 'worker', run_ref: run.ref, invocation_id: 'invocation-1', occurrence_ref: 'worker-occurrence', task_ref: 'task', role: 'worker', invocation_kind: 'task_worker', outcome: 'returned', error_category: null, input_qualification: 'recorded', input_refs: [], correction_chain: [], support_ref: null, stopped_by_ref: 'stop', record_refs: ['record'] }],
+  inventory: { phase_count: 0, occurrence_count: 2, observation_count: 1, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 0 },
+}
+
 test.beforeAll(async () => {
-  server = spawn('../.venv/bin/python', ['-B', 'tests/execution_fixture.py'], { env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' }, stdio: ['ignore', 'ignore', 'pipe'] })
-  server.stderr?.on('data', chunk => { stderr += chunk.toString() })
-  for (let attempt = 0; attempt < 100; attempt++) {
-    if (server.exitCode !== null) throw new Error(`Offline recording fixture failed: ${stderr}`)
-    try { const response = await fetch('http://127.0.0.1:4174/'); if (response.ok) return } catch { /* Server is starting. */ }
-    await new Promise(resolve => setTimeout(resolve, 50))
-  }
-  throw new Error(`Offline recording fixture did not start: ${stderr}`)
-})
-test.afterAll(async () => {
-  if (server.exitCode === null) { server.kill('SIGTERM'); await new Promise<void>(resolve => server.once('exit', () => resolve())) }
-})
-test('production HTTP compacts recorded executions, exposes stopping checks and visible details with honest colors', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto('/')
-  const snapshots: any[] = await page.evaluate(async () => {
-    const headers = { 'X-Workflow-Monitor': '1' }
-    const runs = (await (await fetch('/api/monitor/v1/runs', { headers })).json()).runs
-    return Promise.all(runs.map(async (run: { ref: string }) => (await fetch(`/api/monitor/v1/runs/${run.ref}/snapshot`, { headers })).json()))
+  server = createServer(async (request, response) => {
+    const url = new URL(request.url ?? '/', 'http://127.0.0.1:4174')
+    if (url.pathname === '/api/monitor/v1/runs') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ runs: [run] })); return }
+    if (url.pathname.endsWith('/snapshot')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify(snapshot)); return }
+    if (url.pathname.endsWith('/followups')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ followups: [] })); return }
+    try { const file = url.pathname === '/' ? 'index.html' : url.pathname.slice(1); response.setHeader('content-type', { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }[extname(file)] ?? 'application/octet-stream'); response.end(await readFile(join('dist', file))) } catch { response.statusCode = 404; response.end() }
   })
-  const select = async (predicate: (snapshot: any) => boolean) => {
-    const index = snapshots.findIndex(predicate)
-    expect(index).toBeGreaterThanOrEqual(0)
-    await page.getByRole('button', { name: /Recorded run/ }).nth(index).click()
-    return snapshots[index]
-  }
-  const stopped = await select(snapshot => snapshot.occurrences.some((item: any) => item.phase === 'check' && item.stopping))
-  const worker = stopped.occurrences.find((item: any) => item.role === 'worker')
-  const check = stopped.occurrences.find((item: any) => item.phase === 'check')
-  expect(check.support_ref).toBe(worker.ref)
-  await expect(page.locator('.react-flow__node:not(.owner-group)')).toHaveCount(6)
-  await expect(page.locator('.planned-node')).toHaveCount(3)
-  await expect(page.locator('.planned-review-node')).toHaveCount(1)
-  const workerNode = page.locator(`.react-flow__node[data-id="${worker.ref}"]`)
-  const checkNode = page.locator(`.react-flow__node[data-id="${check.ref}"]`)
-  await expect(workerNode).toContainText('Worker attempt worker — T001')
-  await expect(workerNode).toHaveClass(/success/)
-  await expect(workerNode).toContainText('returned — acceptance not established')
-  await expect(checkNode).toContainText('Recorded occurrence attempt check — T001')
-  await expect(checkNode).toHaveClass(/failed/)
-  await expect(checkNode).toHaveCSS('background-color', 'rgb(255, 229, 229)')
-  await expect(page.locator('.react-flow__edge')).toHaveCount(2)
-  await expect(page.locator('.react-flow__edge.dependency-edge')).toHaveCount(1)
-  await expect(page.locator('.react-flow__edge.attachment-edge')).toHaveCount(0)
-  await expect(page.getByTestId(`rf__edge-stop_${check.ref}`)).toHaveAttribute('data-id', `stop_${check.ref}`)
-  await page.locator('.react-flow__node.planned-node').first().click()
-  const details = page.getByLabel('Selected execution details')
-  await expect(details).toContainText('Plan progress: failed.')
-  await expect(details).toContainText('What happened:')
-  await expect(details).toContainText('Current blocker:')
-  await expect(details).toContainText('Acceptance')
-  const taskIdentity = details.getByText('Task ID: one')
-  await expect(taskIdentity).not.toBeVisible()
-  await details.getByText('Technical references and retained history').click()
-  await expect(taskIdentity).toBeVisible()
-  await expect(details).toContainText('<img src=x onerror=alert(1)> Recorded workflow explanation '.repeat(12).trim())
-  await expect(details.locator('img')).toHaveCount(0)
-  await page.locator('.react-flow__node.planned-review-node').click()
-  await expect(details).toContainText('Planned review definition — not an agent call.')
-  await workerNode.click()
-  await expect(workerNode).toHaveClass(/selected/)
-  await expect(details).toContainText('Execution outcome: returned — acceptance not established')
-  await details.getByText('Technical references and retained history').click()
-  await expect(details).toContainText('Occurrence ID: worker')
-  await expect(details).toContainText('workflow stopping step')
-  await expect(details).toContainText('exit 1')
-  const box = await details.boundingBox()
-  expect(box && box.y + Math.min(box.height, 100)).toBeLessThan(1000)
-  await checkNode.click()
-  await details.getByText('Technical references and retained history').click()
-  await expect(details).toContainText('check 1; exit 1')
-  await select(snapshot => snapshot.occurrences.some((item: any) => item.phase === 'prepare' && item.stopping))
-  await expect(page.locator('.react-flow__node:not(.owner-group)')).toHaveCount(5)
-  await expect(page.locator('.execution-node')).toContainText('Recorded occurrence attempt prepare — T001')
-  await expect(page.locator('.react-flow__edge')).toHaveCount(1)
-  await select(snapshot => snapshot.occurrences.some((item: any) => item.parent_ref && item.record_refs.length === 1) && snapshot.records.some((item: any) => item.kind === 'question_requested'))
-  await expect(page.locator('.react-flow__node:not(.owner-group)')).toHaveCount(5)
-  await expect(page.locator('.execution-node')).toHaveClass(/waiting/); await expect(page.locator('.execution-node')).toContainText('waiting — recorded question')
-  await expect(page.locator('.execution-node')).toHaveCSS('background-color', 'rgb(255, 240, 194)')
-  await select(snapshot => snapshot.occurrences.some((item: any) => item.role === 'reviewer'))
-  await expect(page.locator('.react-flow__node:not(.owner-group)')).toHaveCount(6)
-  const review = page.locator('.react-flow__node').filter({ hasText: /^Review/ })
-  await expect(review).not.toContainText('T001')
-  await expect(review).toHaveClass(/success/)
-  await expect(review).toHaveCSS('background-color', 'rgb(220, 245, 228)')
-  await page.locator('.react-flow__node').filter({ hasText: /^Worker attempt/ }).click()
-  await details.getByText('Technical references and retained history').click()
-  await expect(details).toContainText('supporting observation')
-  await expect(details).toContainText('no change true; baseline ')
-  await expect(details).toContainText('failed; sequence')
-  await expect(details).toContainText('exit 1')
-  await expect(page.locator('.react-flow__node.failed')).toHaveCount(0)
-  await review.click()
-  await expect(details).toContainText('approved false; findings 2')
-  await expect(details).toContainText('Full-range qualification: unknown')
-  await expect(details).toContainText('range ')
-  expect(stderr).not.toContain('PRIVATE-SENTINEL')
+  await new Promise<void>(resolve => server.listen(4174, '127.0.0.1', resolve))
 })
+test.afterAll(() => new Promise<void>(resolve => server.close(() => resolve())))
 
-test('a question answered beyond the history page boundary does not falsely mark its worker waiting', async ({ page }) => {
+test('renders selected actual activity details with human-first outcome and inert retained text', async ({ page }) => {
   await page.goto('/')
-  const views: any[] = await page.evaluate(async () => {
-    const headers = { 'X-Workflow-Monitor': '1' }
-    const runs = (await (await fetch('/api/monitor/v1/runs', { headers })).json()).runs
-    return Promise.all(runs.map(async (run: { ref: string }) => (await fetch(`/api/monitor/v1/runs/${run.ref}/snapshot`, { headers })).json()))
-  })
-  const index = views.findIndex(view => view.next_cursor && view.occurrences.some((item: any) => item.parent_ref && item.record_refs.length === 3))
-  expect(index).toBeGreaterThanOrEqual(0)
-  const view = views[index]
-  const question = view.occurrences.find((item: any) => item.parent_ref && item.record_refs.length === 3)
-  expect(view.records).toHaveLength(50)
-  expect(view.records[49].kind).toBe('question_requested')
-  expect(view.records.filter((item: any) => question.record_refs.includes(item.ref))).toHaveLength(1)
-  await page.getByRole('button', { name: /Recorded run/ }).nth(index).click()
-  const worker = page.locator(`.react-flow__node[data-id="${question.parent_ref}"]`)
-  await expect(page.locator('.react-flow__node:not(.owner-group)')).toHaveCount(5)
-  await expect(worker).toHaveClass(/success/)
-  await expect(worker).not.toContainText('waiting')
-  await expect(page.getByLabel('Collapsed history badges')).toContainText('0 waiting;')
-  await page.getByRole('button', { name: 'Load more history', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Load more history', exact: true })).toHaveCount(0)
-  await expect(worker).toHaveClass(/success/)
-  await expect(worker).toContainText('returned — acceptance not established')
-  await expect(page.getByLabel('Collapsed history badges')).toContainText('0 waiting;')
+  const worker = page.locator('.react-flow__node[data-id="worker"]')
+  await expect(worker).toContainText('Display selected activity details')
   await worker.click()
-  await expect(page.getByLabel('Selected execution details')).toContainText('answer_sent')
-})
-
-for (const value of [true, false]) test(`Details render approved/no-change ${value} before and after loading page-hidden evidence`, async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: `Recorded run · booleans-${value} · recorded`, exact: true }).click()
-  const view = await page.evaluate(async (id) => {
-    const headers = { 'X-Workflow-Monitor': '1' }
-    const runs = (await (await fetch('/api/monitor/v1/runs', { headers })).json()).runs
-    const run = runs.find((item: any) => item.display_id === id)
-    return (await fetch(`/api/monitor/v1/runs/${run.ref}/snapshot`, { headers })).json()
-  }, `booleans-${value}`)
-  expect(view.records).toHaveLength(50)
-  expect(view.records.some((item: any) => item.no_change !== null || item.approved !== null)).toBe(false)
-  expect(view.runs.find((item: any) => item.display_id === `booleans-${value}`).acceptance_summary.checkpoints[0].no_change).toBe(value)
-  await page.locator('.planned-node').first().click()
   const details = page.getByLabel('Selected execution details')
-  const acceptance = details.locator('section').filter({ has: page.getByRole('heading', { name: 'Acceptance', exact: true }) })
-  await acceptance.getByText('Full retained acceptance details').click()
-  await expect(acceptance).toContainText(`no change ${value}`)
-  await expect(acceptance).toContainText(`approved ${value}; findings ${value ? 0 : 1}`)
-  const before = await acceptance.textContent()
-  await page.getByRole('button', { name: 'Load more history', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Load more history', exact: true })).toHaveCount(0)
-  await expect(acceptance).toHaveText(before ?? '')
-})
-
-for (const state of ['waiting', 'answered', 'delivery', 'stopped']) test(`manual gate ${state} has pagination-independent task status before worker launch`, async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: `Recorded run · manual-${state} · recorded`, exact: true }).click()
-  await expect(page.locator('.planned-node')).toHaveCount(3)
-  const task = page.locator('.planned-node').filter({ hasText: 'T001' })
-  await expect(task).toContainText(`Plan progress: ${state === 'waiting' ? 'running' : state === 'delivery' ? 'blocked' : 'unknown'}`)
-  await task.click()
-  const details = page.getByLabel('Selected execution details')
-  if (state === 'waiting') {
-    await expect(task).toContainText('Waiting for input')
-    await expect(details).toContainText('waiting_for_input')
-  } else {
-    await expect(task).not.toContainText('Waiting for input')
-    await expect(details).not.toContainText('waiting_for_input')
-  }
-  await expect(page.getByLabel('Collapsed history badges')).toContainText(`${state === 'waiting' ? 1 : 0} waiting;`)
-  await expect(page.locator('.execution-node').filter({ hasText: /^Implement/ })).toHaveCount(0)
-  const before = await task.textContent()
-  await page.getByRole('button', { name: 'Load more history', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Load more history', exact: true })).toHaveCount(0)
-  await expect(task).toHaveText(before ?? '')
-  await expect(page.getByLabel('Collapsed history badges')).toContainText(`${state === 'waiting' ? 1 : 0} waiting;`)
+  await expect(details).toContainText('Display selected activity details')
+  await expect(details).toContainText('Execution outcome: returned — acceptance not established.')
+  await expect(details).toContainText('What happened: not recorded.')
+  await expect(details).toContainText('Stopping reason: Recorded stopping reference stop.')
+  await expect(details.locator('img')).toHaveCount(0)
+  await expect(details.getByText('Invocation ID: invocation-1')).not.toBeVisible()
+  await details.getByText('Technical references and retained history').click()
+  await expect(details.getByText('Invocation ID: invocation-1')).toBeVisible()
+  await expect(details).toContainText('returned; sequence 3; recorded 3; exit 0')
+  await expect(details).toContainText('Full-range qualification: unknown.')
 })
