@@ -21,6 +21,41 @@ const snapshot = {
   inventory: { phase_count: 1, occurrence_count: 1, observation_count: 1, hidden_count: 0 }
 }
 
+test('actual activity projection retains only explicit calls and relations', () => {
+  const root: GraphSnapshot = {
+    runs: [{ ref: 'run' }],
+    tasks: [{ ref: 'plan-only', run_ref: 'run', task_id: 'P001', label: 'Planned only', summary: 'must not render', prerequisite_refs: [] }],
+    review_definitions: [{ ref: 'declared-review', run_ref: 'run', label: 'must not render' }], records: [],
+    occurrences: [
+      { ref: 'occ_a', run_ref: 'run', phase_ref: 'worker', task_ref: null, role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
+      { ref: 'occ_b', run_ref: 'run', phase_ref: 'worker', task_ref: null, role: 'worker', outcome: 'passed', completeness: 'complete', record_refs: [] },
+      { ref: 'ambiguous', run_ref: 'run', phase_ref: 'worker', task_ref: null, role: 'worker', outcome: 'failed', completeness: 'complete', record_refs: [] },
+      { ref: 'stop', run_ref: 'run', phase_ref: 'terminal', task_ref: null, role: 'non_model', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: 'ambiguous' }
+    ],
+    activities: [
+      { ref: 'call_a', run_ref: 'run', invocation_id: 'a', occurrence_ref: 'occ_a', task_ref: null, role: 'worker', invocation_kind: 'task_worker', outcome: 'returned', error_category: null, input_qualification: 'recorded', input_refs: [], correction_chain: ['call_a'], support_ref: null, stopped_by_ref: null, record_refs: [] },
+      { ref: 'call_b', run_ref: 'run', invocation_id: 'b', occurrence_ref: 'occ_b', task_ref: null, role: 'fixing_worker', invocation_kind: 'corrective_worker', outcome: 'returned', error_category: null, input_qualification: 'recorded', input_refs: ['call_a'], correction_chain: ['call_a', 'call_b'], support_ref: null, stopped_by_ref: null, record_refs: [] },
+      { ref: 'call_ambiguous', run_ref: 'run', invocation_id: 'ambiguous', occurrence_ref: 'ambiguous', task_ref: null, role: 'worker', invocation_kind: 'task_worker', outcome: 'failed', error_category: 'check', input_qualification: 'unknown', input_refs: ['missing'], correction_chain: ['call_ambiguous', 'missing'], support_ref: null, stopped_by_ref: 'call_ambiguous', record_refs: [] }
+    ],
+    chain: [
+      { ref: 'review_one', run_ref: 'run', execution_id: 'review-1', role: 'reviewer', review_ordinal: 1, fixing_round: null, outcome: 'rejected', trigger_ref: null, predecessor_ref: 'review_two', occurrence_refs: ['ambiguous'], review_range: { base: null, head: null }, findings: [], commit_refs: {} },
+      { ref: 'review_two', run_ref: 'run', execution_id: 'review-2', role: 'reviewer', review_ordinal: 2, fixing_round: null, outcome: 'approved', trigger_ref: null, predecessor_ref: 'review_one', occurrence_refs: ['ambiguous'], review_range: { base: null, head: null }, findings: [], commit_refs: {} }
+    ]
+  }
+  const graph = graphFor(root, [], [])
+  expect(graph.nodes.map(node => node.id).sort()).toEqual(['call_a', 'call_ambiguous', 'call_b', 'review_one', 'review_two', 'stop'])
+  expect(graph.nodes.find(node => node.id === 'plan-only')).toBeUndefined()
+  expect(graph.nodes.find(node => node.id === 'declared-review')).toBeUndefined()
+  const joined = graph.edges.find(edge => edge.source === 'call_a' && edge.target === 'call_b')
+  expect(joined?.data).toMatchObject({ relations: ['recorded-input', 'recorded-correction'] })
+  expect(graph.edges.find(edge => edge.id === 'stop_stop')).toMatchObject({ source: 'call_ambiguous', target: 'stop', data: { relation: 'recorded-stop-support' } })
+  expect(graph.edges.find(edge => edge.source === 'review_two' && edge.target === 'review_one')).toMatchObject({ data: { relation: 'recorded-correction-predecessor' } })
+  expect(graph.edges.find(edge => edge.source === 'review_one' && edge.target === 'review_two')).toBeUndefined()
+  expect(graph.nodes.find(node => node.id === 'review_two')?.data.relationQualification).toContain('cyclic relation rejected')
+  expect(graph.edges.some(edge => edge.source === 'missing' || edge.target === 'missing')).toBeFalsy()
+  expect(graph.nodes.find(node => node.id === 'call_ambiguous')?.data.relationQualification).toContain('endpoint missing or ambiguous')
+})
+
 test('readable backbone projection preserves declared topology and recorded ownership', () => {
   const root: GraphSnapshot = {
     runs: [{ ref: 'run_readable', plan_availability: 'complete' }],

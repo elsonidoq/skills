@@ -153,8 +153,9 @@ class ChainMappingTests(ProjectTest):
             rendered_chain = {node['id'] for node in selected_view['nodes'] if 'chain-node' in node.get('className', '')}
             self.assertEqual(rendered_chain, {item['ref'] for item in selected['chain']})
 
-        # Consume actual producer IDs/relations in the production source module,
-        # not a browser-only occurrence-targeted approximation.
+        # The production helper consumes the closed DTO, rather than task-plan or
+        # routine-check records. Exact recorded worker input survives as an actual
+        # edge; checks/checkpoints remain history, not graph activity.
         view = json.loads(subprocess.check_output([
             'node', '--experimental-strip-types', '--input-type=module', '-e',
             "import {graphFor} from './workflow_monitor/web/src/graph.ts'; "
@@ -162,20 +163,19 @@ class ChainMappingTests(ProjectTest):
             "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
             input=json.dumps(dto).encode(), cwd=ROOT))
         nodes = {node['id'] for node in view['nodes']}
+        self.assertFalse(any('planned' in node.get('className', '') for node in view['nodes']))
+        self.assertFalse(any(edge['data']['relation'] in ('chain_check', 'chain_checkpoint') for edge in view['edges']))
         represented = {}
         for execution in dto['chain']:
             for occurrence_ref in execution['occurrence_refs']:
                 represented.setdefault((execution['run_ref'], occurrence_ref), []).append(execution['ref'])
-        for edge in dto['edges']:
-            if edge['type'] not in ('chain_check', 'chain_checkpoint'): continue
-            target = next(item for item in dto['occurrences'] if edge['to_ref'] in item['record_refs'])
-            replacements = represented.get((target['run_ref'], target['ref']), [])
-            expected_target = replacements[0] if len(replacements) == 1 else target['ref']
-            self.assertIn(expected_target, nodes)
-            if len(replacements) == 1:
-                self.assertNotIn(target['ref'], nodes)
-            rendered = next(item for item in view['edges'] if item['id'] == edge['ref'])
-            self.assertEqual((rendered['source'], rendered['target']), (edge['from_ref'], expected_target))
+        for activity in dto['activities']:
+            aliases = represented.get((activity['run_ref'], activity['occurrence_ref']), [])
+            if len(aliases) != 1:
+                self.assertIn(activity['ref'], nodes)
+            for producer in activity['input_refs']:
+                self.assertTrue(any(edge['source'] == producer and edge['target'] == activity['ref']
+                                    and 'recorded-input' in edge['data']['relations'] for edge in view['edges']))
         self.assertNotIn("PRIVATE-SENTINEL", repr(dto))
         self.assertNotIn("PRIVATE-WORKER-ANSWER", repr(dto))
 
