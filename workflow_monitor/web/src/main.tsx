@@ -191,7 +191,7 @@ function App() {
     <ReactFlow<Node, Edge> nodes={nodes.map(node => node.id.startsWith('group:') ? node : ({ ...node, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
     <strong>{String(node.data.label)}</strong>
     <small>{String(node.data.status)}</small>
-    </> } }))} edges={edges.map(edge => ({ ...edge, selected: selected?.kind === 'edge' && selected.id === edge.id }))} onInit={instance => { flow.current = instance }} minZoom={.15} viewport={viewport} onMoveEnd={(_, next) => setViewport(next)} onNodeClick={(_, node) => { if (!node.id.startsWith('group:')) setSelected({ kind: 'node', id: node.id }) }} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}>
+    </> } }))} edges={edges.map(edge => ({ ...edge, selected: selected?.kind === 'edge' && selected.id === edge.id }))} onInit={instance => { flow.current = instance }} minZoom={.15} viewport={viewport} onMove={(_, next) => setViewport(next)} onNodeClick={(_, node) => { if (!node.id.startsWith('group:')) setSelected({ kind: 'node', id: node.id }) }} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}>
     <Background />
     <Controls />
     </ReactFlow>

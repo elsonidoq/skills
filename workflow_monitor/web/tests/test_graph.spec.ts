@@ -228,3 +228,25 @@ test('switches selected production graph, selects details, and provides graph co
   await page.getByTitle('Zoom In').click()
   await expect(page.getByText('Inventory: 1 records, 1 occurrences, 1 phases; 0 hidden.')).toBeVisible()
 })
+
+test('updates the controlled viewport while background panning is held', async ({ page }) => {
+  await page.goto('/')
+  const pane = page.locator('.react-flow__pane')
+  await expect(pane).toBeVisible()
+  // Wait for the initial fit effect before capturing the user-controlled viewport.
+  await page.waitForTimeout(250)
+  const before = await page.locator('.react-flow__viewport').evaluate(element => element.style.transform)
+  const box = await pane.boundingBox()
+  if (!box) throw new Error('Graph pane has no bounds.')
+
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2 - 150, box.y + box.height / 2 - 100)
+  // A controlled graph must retain the moved transform while the pointer remains down,
+  // rather than only committing the internal transform from onMoveEnd on release.
+  await page.waitForTimeout(100)
+  const whileHeld = await page.locator('.react-flow__viewport').evaluate(element => element.style.transform)
+  expect(whileHeld).not.toBe(before)
+  await page.mouse.up()
+  await expect.poll(() => page.locator('.react-flow__viewport').evaluate(element => element.style.transform)).toBe(whileHeld)
+})

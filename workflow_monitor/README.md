@@ -100,8 +100,12 @@ ownership. Only declared prerequisites set ranks; recorded stops and qualified c
 secondary overlays. The initial view fits the recorded graph into the available graph panel after
 the run selector and Details panel take their space. Pan, zoom and selection remain available for
 detail; unchanged-topology status polling preserves a deliberate viewport, positions, group
-ownership and selection while updating visible status. The closed snapshot API is polled every **60 seconds**; this
-is not a claim that polling alone caused previous slowness. Stale old-run fetch/layout results
+ownership and selection while updating visible status. Because the viewport is controlled, its
+state is synchronized on every graph move, rather than only when a pan/drag ends; the focused
+browser regression holds a background pan and verifies the viewport transform changes before
+release and remains there afterward. The closed snapshot API is polled every **60 seconds**; this
+is not a claim that polling alone caused previous slowness. The owner’s same-Mac interactive
+acceptance remains a separate pending manual gate. Stale old-run fetch/layout results
 are discarded. Read freshness, last successful read and last recorded activity remain separate.
 Failed reads retain sanitized evidence with a warning. Recorded runner `live`/`stopped`/`unknown`
 qualification is not proof of progress.
