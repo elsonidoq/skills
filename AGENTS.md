@@ -106,9 +106,10 @@ rules above for reusable skills and commands.
   feedback authorizes guideline changes, never agent-inferred lessons or routine records.
 - Consequential decisions: before affected planning or changes, use `save-adr` to discover
   the decision owner from this project's routing, read its whole index and relevant accepted
-  records, and carry applicable accepted outcomes/source links into briefs and reviews. No
-  general ADR store is selected here; absent or ambiguous ownership stops only the affected
-  decision operation for owner confirmation.
+  records, and carry applicable accepted outcomes/source links into briefs and reviews.
+  This repository's canonical ADR store is `docs/decisions/`, indexed by
+  `docs/decisions/index.md` (owner-selected during bounded initialization on 2026-10-21).
+  Absent or ambiguous ownership stops only the affected decision operation for owner confirmation.
 - Recovery: no automatic STATE maintenance, summaries/index updates, evidence-only commits
   or reflection. Preserve existing STATE/custom content. Use available conversation summary/
   recent context, selective artifact/Git/check reconstruction and active-child reconciliation
