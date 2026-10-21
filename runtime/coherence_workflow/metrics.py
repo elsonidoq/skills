@@ -46,6 +46,24 @@ def _delta(before, after, field, continuity, *, source, label):
     return _value(end - start, 'sdk_cumulative_' + source + '.' + field)
 
 
+def _summary_usage(value):
+    """Project only the SDK summary fields that are safe metric data."""
+    if not isinstance(value, dict):
+        return None
+    result = {}
+    for name in ('input', 'output', 'cacheRead', 'cacheWrite', 'totalTokens',
+                 'cacheWrite1h', 'reasoning'):
+        if _number(value.get(name)):
+            result[name] = value[name]
+    costs = value.get('cost')
+    if isinstance(costs, dict):
+        safe_costs = {name: costs[name] for name in ('input', 'output', 'cacheRead', 'cacheWrite', 'total')
+                      if _number(costs.get(name))}
+        if safe_costs:
+            result['cost'] = safe_costs
+    return result or None
+
+
 def _entries(observation):
     entries = observation.get('compaction_entries') if isinstance(observation, dict) else None
     if not isinstance(entries, list):
@@ -89,11 +107,11 @@ def interval_record(before, after, *, exclusive=True, outcome='settled'):
         compactions = {'entry_ids': entry_ids, 'count': len(entry_ids), 'unknown_reason': None}
         overhead_entries = []
         for entry in sorted(new_entries, key=lambda item: item['id']):
-            usage = entry.get('summary_usage')
+            usage = _summary_usage(entry.get('summary_usage'))
             overhead_entries.append({
                 'entry_id': entry['id'],
-                'usage': usage if isinstance(usage, dict) else None,
-                'unknown_reason': None if isinstance(usage, dict) else 'summary_usage_unavailable',
+                'usage': usage,
+                'unknown_reason': None if usage is not None else 'summary_usage_unavailable',
             })
         overhead = {'entries': overhead_entries,
                     'unknown_reason': None if all(item['unknown_reason'] is None for item in overhead_entries)

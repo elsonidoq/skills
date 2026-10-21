@@ -70,6 +70,16 @@ class IntervalAccountingTests(unittest.TestCase):
         record = interval_record(before, after)
         self.assertEqual(record['compactions'], {'entry_ids': [], 'count': 0, 'unknown_reason': None})
 
+    def test_summary_usage_projects_only_closed_safe_numeric_fields(self):
+        after = observation(compaction_entries=[
+            {'id': 'old', 'summary_usage': {'input': 2}},
+            {'id': 'new', 'summary_usage': {'input': 3, 'reasoning': 1, 'private': 'omit',
+                                             'cost': {'total': .02, 'secret': 1}}},
+        ])
+        record = interval_record(observation(), after)
+        self.assertEqual(record['summary_overhead']['entries'][0]['usage'],
+                         {'input': 3, 'reasoning': 1, 'cost': {'total': .02}})
+
 
 if __name__ == '__main__':
     unittest.main()

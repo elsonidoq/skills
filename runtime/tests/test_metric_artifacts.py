@@ -1,0 +1,122 @@
+"""Real-file contract tests for the optional closed metrics artifact."""
+import os
+
+from coherence_workflow.metric_artifacts import (MetricArtifactError, artifact_relative,
+                                                  create_artifact, read_artifact,
+                                                  summarize_artifact)
+from coherence_workflow.metrics import interval_record
+from coherence_workflow.store import Authority, git
+from fixtures.support import ProjectTest
+
+
+def observation(input=10, *, output=5, cache_read=2, cache_write=1, usd=.1):
+    return {'session_id': 'private-session', 'branch': 'b', 'epoch': 'e',
+            'counters': {'input': input, 'output': output, 'cacheRead': cache_read, 'cacheWrite': cache_write},
+            'costs': {'estimated_usd': usd}, 'compaction_entries': []}
+
+
+def snapshot(value):
+    return {'counters': {'input': value, 'output': 5, 'cacheRead': 2, 'cacheWrite': 1, 'total': value + 8},
+            'estimated_usd': .1,
+            'context': {'context_window': 100, 'effective_reserve': 10, 'occupancy': 20,
+                        'compaction_enabled': True, 'compaction_applicable': True},
+            'compaction_entry_ids': []}
+
+
+def record(run='run/with unicode π', invocation='call-1', *, after=True):
+    return {'version': 1, 'run_id': run, 'invocation_id': invocation, 'task_id': 'T011',
+            'role': 'worker', 'outcome': 'settled', 'fixing_round': None, 'review_ordinal': None,
+            'interval': interval_record(observation(), observation(12)) if after else interval_record(observation(), None),
+            'before': snapshot(10), 'after': snapshot(12) if after else None,
+            'selected_session_mode': 'reused_from_earlier_task', 'session_selection_reason': 'latest_successful_settlement',
+            'actual_session_mode': 'unknown' if not after else 'reused_from_earlier_task',
+            'actual_session_id': None if not after else 'session-actual'}
+
+
+class MetricArtifactTests(ProjectTest):
+    def test_closed_jsonl_round_trip_preserves_exact_ids_unknown_failure_and_safe_values(self):
+        run = 'run/with unicode π'
+        self.assertTrue(artifact_relative(run).endswith('.jsonl'))
+        self.assertNotIn(run, artifact_relative(run))
+        with Authority(self.project) as authority:
+            artifact = create_artifact(self.project, run, authority=authority)
+            artifact.append(record(run))
+            artifact.append(record(run, 'call-2', after=False) | {'outcome': 'failed'})
+        data = read_artifact(self.project, run)
+        self.assertEqual([row['invocation_id'] for row in data['records']], ['call-1', 'call-2'])
+        self.assertEqual(data['records'][1]['after'], None)
+        self.assertEqual(data['records'][1]['actual_session_mode'], 'unknown')
+        self.assertEqual(data['records'][0]['interval']['tokens']['input']['value'], 2)
+        summary = summarize_artifact(self.project, run, expected_invocation_ids=['call-1', 'call-2'])
+        self.assertEqual(summary['token_subtotal']['input'], 2)
+        self.assertEqual(summary['coverage'], 'partial')
+
+    def test_rejects_arbitrary_nested_payload_and_does_not_upgrade_selected_mode(self):
+        with Authority(self.project) as authority:
+            artifact = create_artifact(self.project, 'closed', authority=authority)
+            bad = record('closed')
+            bad['before']['private_payload'] = {'credential': 'no'}
+            with self.assertRaisesRegex(MetricArtifactError, 'invalid metric fields'):
+                artifact.append(bad)
+            selected_only = record('closed')
+            selected_only['actual_session_mode'] = 'unknown'
+            selected_only['actual_session_id'] = None
+            artifact.append(selected_only)
+        row = read_artifact(self.project, 'closed')['records'][0]
+        self.assertEqual(row['selected_session_mode'], 'reused_from_earlier_task')
+        self.assertEqual(row['actual_session_mode'], 'unknown')
+
+    def test_collision_symlink_drift_and_incomplete_tail_preserve_existing_bytes(self):
+        run = 'safety'
+        path = self.project / artifact_relative(run)
+        path.parent.mkdir(parents=True)
+        path.write_text('preexisting\n')
+        with Authority(self.project) as authority:
+            with self.assertRaisesRegex(MetricArtifactError, 'already exists'):
+                create_artifact(self.project, run, authority=authority)
+            path.unlink()
+            outside = self.project / 'outside'
+            outside.write_text('x')
+            path.symlink_to(outside)
+            with self.assertRaisesRegex(MetricArtifactError, 'symlink'):
+                create_artifact(self.project, run, authority=authority)
+            path.unlink()
+            artifact = create_artifact(self.project, run, authority=authority)
+            artifact.append(record(run))
+            original = path.read_bytes()
+            with open(path, 'ab') as handle:
+                handle.write(b'{"partial":')
+            partial = read_artifact(self.project, run)
+            self.assertEqual(partial['coverage'], 'partial')
+            self.assertIn('incomplete_tail', partial['reasons'])
+            with self.assertRaisesRegex(MetricArtifactError, 'incomplete_tail'):
+                artifact.append(record(run, 'later'))
+            self.assertEqual(path.read_bytes(), original + b'{"partial":')
+
+    def test_replaced_artifact_is_refused_without_touching_replacement(self):
+        run = 'drift'
+        with Authority(self.project) as authority:
+            artifact = create_artifact(self.project, run, authority=authority)
+            artifact.append(record(run))
+            artifact.path.unlink()
+            artifact.path.write_text('replacement\\n')
+            with self.assertRaises(MetricArtifactError):
+                artifact.append(record(run, 'later'))
+            self.assertEqual(artifact.path.read_text(), 'replacement\\n')
+
+    def test_staged_collision_and_expected_coverage_are_qualified(self):
+        run = 'staged'
+        path = self.project / artifact_relative(run)
+        path.parent.mkdir(parents=True)
+        path.write_text('x')
+        git(self.project, 'add', '-f', '--', artifact_relative(run))
+        with Authority(self.project) as authority:
+            with self.assertRaisesRegex(MetricArtifactError, 'dirty or staged'):
+                create_artifact(self.project, run, authority=authority)
+            git(self.project, 'reset', '-q', '--', artifact_relative(run))
+            path.unlink()
+            artifact = create_artifact(self.project, run, authority=authority)
+            artifact.append(record(run))
+            summary = summarize_artifact(self.project, run, expected_invocation_ids=['call-1', 'missing'])
+            self.assertEqual(summary['coverage'], 'partial')
+            self.assertIn('missing_expected_invocations', summary['reasons'])

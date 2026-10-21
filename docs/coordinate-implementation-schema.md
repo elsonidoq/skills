@@ -50,6 +50,31 @@ SQLite errors report the actual operation. A review/fixer dispatch is persisted 
 is consumed to run new work. The writer lock is the ordinary per-worktree
 `coherence-workflow.lock`, held by the runner and inherited by its active SDK host.
 
+## Metric artifact JSONL v1
+
+`metric_artifacts.py` owns the independently callable, optional file contract for future
+per-terminal-invocation metrics. It creates only
+`.coherence/metrics/run-<sha256(UTF-8 run ID)>.jsonl` below the selected project root;
+the digest is filename encoding while every closed UTF-8 newline-framed object retains the
+exact run and invocation IDs. `version: 1` rows contain only run/invocation/task identity,
+closed worker/corrective/fixer/reviewer role and terminal outcome, optional positive
+fixing/review ordinals, `metrics.interval_record`'s typed token/USD/compaction/summary
+subset, typed before/after cumulative/context snapshots, and selected/actual session mode,
+safe selection reason and actual session ID. Modes are `fresh`,
+`reused_from_earlier_task`, `continued_same_task`, or `unknown`; selected mode never
+confirms actual opening. Prompts, errors, paths, credentials, raw SDK dictionaries and
+arbitrary nested payloads are rejected.
+
+The helper reserves a previously absent clean target under the existing writer authority,
+uses safe-path/no-symlink checks, serializes complete short-write-aware appends and closes
+before reporting success. Existing, staged/dirty, symlinked, replaced or incomplete-tail
+files are preserved and reported as optional gaps: no truncation, cleanup, fsync guarantee,
+per-append commit or workflow veto. Its read/summary API reads one complete-line prefix,
+deduplicates exact invocation IDs and reports missing expected dispatch IDs, conflicting
+records, invalid rows and unknown fields as partial/unavailable rather than zero or complete.
+This helper neither attributes calls nor writes SQLite metrics (T017), commits the artifact
+(T014), or projects it to the monitor (T012).
+
 ## Monitoring recording v1
 
 New runs may additionally retain a closed `execution_monitor_runs` descriptor and ordered
