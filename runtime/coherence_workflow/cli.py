@@ -101,6 +101,15 @@ def status(project, run):
         db.close()
 
 
+def attached_question(run_id):
+    if any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')):
+        if os.environ.get('COHERENCE_PARENT_BRIDGE_RUN') != run_id:
+            raise Blocked('parent owner bridge run mismatch; launch this run through its parent-session bridge')
+        parent_question(None, ready=True)
+        return parent_question
+    return None
+
+
 def cancel(signum, frame):
     raise KeyboardInterrupt
 
@@ -137,6 +146,7 @@ def main(argv=None):
                              'status': 'ready' if contract['tasks'] else 'no tasks'}))
             return 0
         if args.command == 'resume':
+            question = attached_question(args.run)
             with Authority(args.project, wait=True) as authority:
                 writer_entered = True
                 recovered = authority.store.resume(args.run)
@@ -145,7 +155,7 @@ def main(argv=None):
                 if not isinstance(paid_scope, dict):
                     raise Blocked('resume cannot continue: retained paid scope is missing')
                 result = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
-                                paid_scope=paid_scope, resume=True).invoke()
+                                paid_scope=paid_scope, resume=True, **({'question': question} if question else {})).invoke()
                 print(canonical(result))
             return 0
         if not contract['tasks']:
@@ -162,12 +172,7 @@ def main(argv=None):
                 for key in ('provider', 'model', 'effort'))):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
         run_id = args.run or uuid.uuid4().hex
-        question = None
-        if any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')):
-            if os.environ.get('COHERENCE_PARENT_BRIDGE_RUN') != run_id:
-                raise Blocked('parent owner bridge run mismatch; launch this run through its parent-session bridge')
-            parent_question(None, ready=True)
-            question = parent_question
+        question = attached_question(run_id)
         paid_scope = settle_paid_scope(contract, executor, question or terminal_question)
         with Authority(args.project, wait=True) as authority:
             writer_entered = True

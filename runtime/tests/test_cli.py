@@ -94,6 +94,35 @@ class CliTests(ProjectTest):
                 self.assertIn(error, json.loads(result.stdout)['reason'])
                 self.assertFalse((self.project/'.coherence').exists())
 
+    def test_attached_resume_uses_ready_parent_bridge_for_recovery_questions(self):
+        paid_scope = {'agent_providers': ['fixture'], 'apis': []}
+        with Authority(self.project) as owner:
+            owner.store.start('attached-resume', self.base, contract={'tasks': []},
+                              executor={'provider': 'fixture', 'model': 'offline', 'effort': 'medium'},
+                              authority={'paid_scope': paid_scope}, review_base=self.base)
+            owner.store.finish('attached-resume', 'failed', self.base, 'fixture interruption')
+        env = {f'COHERENCE_PARENT_BRIDGE_{key}': value for key, value in
+               {'SOCKET': '/fixture/socket', 'TOKEN': 'fixture', 'SESSION': 'parent', 'RUN': 'attached-resume'}.items()}
+        with patch.dict(os.environ, env), patch('coherence_workflow.cli.parent_question', return_value='diagnosed correction') as question, \
+             patch('coherence_workflow.cli.Engine') as engine, contextlib.redirect_stdout(io.StringIO()) as out:
+            engine.return_value.invoke.side_effect = lambda: engine.call_args.kwargs['question']('recovery diagnosis')
+            code = main(['resume', '--project', str(self.project), '--run', 'attached-resume'])
+        self.assertEqual(code, 0, out.getvalue())
+        self.assertEqual(question.call_args_list[0].args, (None,))
+        self.assertEqual(question.call_args_list[0].kwargs, {'ready': True})
+        self.assertEqual(question.call_args_list[1].args, ('recovery diagnosis',))
+        self.assertEqual(engine.call_args.kwargs['paid_scope'], paid_scope)
+        self.assertTrue(engine.call_args.kwargs['resume'])
+
+    def test_attached_resume_rejects_wrong_run_before_recovery(self):
+        with patch.dict(os.environ, {'COHERENCE_PARENT_BRIDGE_RUN': 'other-run'}), \
+             patch('coherence_workflow.cli.Engine') as engine, contextlib.redirect_stdout(io.StringIO()) as out:
+            code = main(['resume', '--project', str(self.project), '--run', 'requested-run'])
+        self.assertEqual(code, 2)
+        self.assertIn('parent owner bridge run mismatch', json.loads(out.getvalue())['reason'])
+        engine.assert_not_called()
+        self.assertFalse((self.project/'.coherence').exists())
+
     def test_actual_script_empty_task_does_not_create_storage(self):
         tasks = self.root/'empty.yaml'
         tasks.write_text('[]')
