@@ -1,12 +1,12 @@
 # Workflow monitor — complete planned graph TinySpec
 
-**Status:** Retained planning draft for parent review. Owner authorized source preparation and focused commits; separate tasks, source/task review and combined owner approval remain pending. This is not an approved execution handoff, implementation authorization or feature-completion claim.
+**Status:** Implementation authorized by the owner's workflow-monitor implementation request in this session, including local synthetic checks and focused task commits through the Coordinate Implementation runner. That request supersedes historical planning-only restrictions. Requirements and acceptance remain unchanged; authorization is not feature completion. Planning approval provenance is retained in the [tasks document](workflow-monitor-complete-graph-tasks.md#planning-review-and-owner-approval).
 
 ## Context and authority
 
 The owner needs a monitor that shows the complete recorded plan from launch, preserves planned identities through execution, identifies the selected run unmistakably, and separates **plan progress**, **execution outcome/color**, and **acceptance**.
 
-Source provenance: owner conversation selected TinySpec and requested persistent selected-run identity, the complete declared plan from launch, permanent planned nodes with distinct attached executions, factual status and a synthetic transition demonstration. The owner's subsequent correction explicitly requires successful execution returns (including workers) **GREEN**, execution failures **RED**, and acceptance separately in Details; later checks/review must not recolor a successful worker. The latest direction authorizes commits and continued planning, not implementation. These conversation requirements are preserved here without depending on temporary analysis files. Earlier neutral-worker/red-rejection presentation is superseded only where inconsistent with this execution-color contract; historical rejection evidence remains authoritative.
+Source provenance: owner conversation selected TinySpec and requested persistent selected-run identity, the complete declared plan from launch, permanent planned nodes with distinct attached executions, factual status and a synthetic transition demonstration. The owner's subsequent correction explicitly requires successful execution returns (including workers) **GREEN**, execution failures **RED**, and acceptance separately in Details; later checks/review must not recolor a successful worker. At source preparation, direction authorized commits and continued planning only; the subsequent owner implementation request now authorizes the referenced scope, local synthetic checks and focused runner commits. These conversation requirements are preserved here without depending on temporary analysis files. Earlier neutral-worker/red-rejection presentation is superseded only where inconsistent with this execution-color contract; historical rejection evidence remains authoritative.
 
 Preparation follows checkout-local [TinySpec](../../skills/tiny-spec/SKILL.md), [SDD guidance](../best_practices_spec_driven_development.md), [dependency research](../../skills/planner/references/dependency-research.md), [early risk reduction](../../skills/planner/references/early-risk-reduction.md) and [parsimony](../../skills/planner/references/parsimony.md). Applicable [repository instructions](../../AGENTS.md) and [constitution](../../.specify/memory/constitution.md) still govern. [Decision routing](../index.md) selects no general ADR store; this draft selects none and does not alter accepted ADR outcomes or the running ADR workflow.
 
@@ -20,7 +20,7 @@ Verified memory: whole `memory/MEMORY.md` index contains no gotchas; `memory/coo
 
 **Excluded:** runtime recording redesign, scheduler/retry engine, database migration, history rewrite, reconstructed plans from current task files, extra reviewer invocations, polling changes/budgets, standalone prototype, new dependencies, installs, signals, reloads, or interaction with the running ADR workflow.
 
-No tasks are generated here. This source and its minimal discovery entry are the only authorized repository changes, with a focused verified [planning checkpoint](../../skills/memory-handling/references/task-commit-contract.md). Separate task production, review and combined owner approval remain downstream gates; this checkpoint grants no execution authority.
+No tasks are generated here. The original source-preparation assignment authorized only this source and its minimal discovery entry, with a focused verified [planning checkpoint](../../skills/memory-handling/references/task-commit-contract.md). Task production and planning approval subsequently completed; current execution authority comes from the owner's implementation request, not the historical planning checkpoint.
 
 ## Evidence and bounded approach
 
@@ -108,7 +108,7 @@ Preserve existing stale-fetch/layout guards, status-only viewport/selection reus
 
 Synthetic browser checks must exercise production monitor helpers/UI with synthetic recorded facts, not a parallel mock implementation. They demonstrate composition and transitions, **not genuine live-workflow observation**.
 
-**Execution limits:** application tests/build/browser checks are **NOT RUN**, not yet authorized by this source-preparation assignment. Current authority permits source/index preparation, bounded planning validation and a focused commit only. Link/span checks, source-coherence review and `git diff --check` validate this document, not the feature. Separate tasks, current-content review and combined owner approval remain pending before an execution handoff. Future failed or unrun product checks cannot establish acceptance; failures block reliance on the affected behavior until corrected and rechecked. Source/scope changes return through existing review/approval gates. No running ADR workflow interaction is required or authorized.
+**Execution limits:** application tests/build/browser checks were **NOT RUN** during source preparation. They are now authorized as specified by the approved tasks and the owner's implementation request. Historical planning validation establishes no feature acceptance. Failed or unrun product checks cannot establish acceptance; failures block reliance on the affected behavior until corrected and rechecked. Source/scope changes return through existing review/approval gates. No running ADR workflow interaction is required or authorized.
 
 ## Residual risks
 
