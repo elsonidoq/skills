@@ -70,7 +70,10 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const outcome = activity.outcome === 'returned' ? 'returned — acceptance not established' : activity.outcome
     return { id: activity.ref, position: { x: 0, y: 0 }, data: { label: title, status: `${outcome}${activity.error_category ? ` — ${activity.error_category}` : ''}`, identity: { ref: activity.ref, runRef: activity.run_ref, invocationId: activity.invocation_id, taskId: task?.task_id ?? null }, relationQualification: activity.input_qualification === 'recorded' ? null : 'Input relations unknown/not recorded.' }, className: `execution-node actual-call ${activity.outcome === 'failed' ? 'failed' : activity.outcome === 'unknown' ? 'neutral' : 'success'}` } satisfies Node
   })
-  const chainNodes = chain.map(execution => {
+  // A fixing round is not another call. Multiple retained prompt occurrences
+  // are already represented by their distinct activities; do not invent a
+  // round-to-invocation endpoint for its aggregate relations.
+  const chainNodes = chain.filter(execution => execution.role !== 'fixer' || execution.occurrence_refs.length === 1).map(execution => {
     const title = execution.role === 'reviewer' ? `Review ${execution.review_ordinal ?? 'unknown'}` : execution.role === 'fixer' ? `Fixing worker${execution.fixing_round == null ? '' : ` round ${execution.fixing_round}`}` : 'Recorded execution'
     return { id: execution.ref, position: { x: 0, y: 0 }, data: { label: title, status: execution.outcome, identity: { ref: execution.ref, runRef: execution.run_ref, executionId: execution.execution_id, occurrenceRefs: execution.occurrence_refs } }, className: `execution-node chain-node actual-call ${execution.outcome === 'failed' || execution.outcome === 'interrupted' ? 'failed' : execution.outcome === 'unknown' ? 'neutral' : 'success'}` } satisfies Node
   })

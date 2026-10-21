@@ -2,6 +2,18 @@ import { test, expect } from '@playwright/test'
 import { graphFor, type GraphSnapshot } from '../src/graph'
 import { layoutNodes } from '../src/layout'
 
+test('multi-prompt fixing round is not an extra call or a guessed relation endpoint', () => {
+  const call = (id: string) => ({ ref: id, run_ref: 'run', invocation_id: id, occurrence_ref: `${id}-occ`, task_ref: null, role: 'fixing_worker' as const, invocation_kind: 'corrective_worker' as const, outcome: 'returned' as const, error_category: null, input_qualification: 'unknown' as const, input_refs: [], correction_chain: [], support_ref: null, stopped_by_ref: null, record_refs: [] })
+  const snapshot: GraphSnapshot = { runs: [{ ref: 'run' }], tasks: [], records: [], occurrences: [], activities: [call('fix-1'), call('fix-2')], chain: [
+    { ref: 'round', run_ref: 'run', execution_id: 'round', role: 'fixer', review_ordinal: null, fixing_round: 1, outcome: 'approved', trigger_ref: null, predecessor_ref: null, input_refs: [], occurrence_refs: ['fix-1-occ', 'fix-2-occ'], review_range: { base: null, head: null }, findings: [], commit_refs: {} },
+    { ref: 'review', run_ref: 'run', execution_id: 'review', role: 'reviewer', review_ordinal: 2, fixing_round: null, outcome: 'approved', trigger_ref: null, predecessor_ref: 'round', input_refs: [], occurrence_refs: ['review-occ'], review_range: { base: null, head: null }, findings: [], commit_refs: {} }
+  ] }
+  const graph = graphFor(snapshot, [], [])
+  expect(graph.nodes.map(node => node.id).sort()).toEqual(['fix-1', 'fix-2', 'review'])
+  expect(graph.edges).toEqual([])
+  expect(graph.nodes.find(node => node.id === 'review')?.data.relationQualification).toContain('endpoint missing or ambiguous')
+})
+
 test('actual activity projection: projects calls and lays measured boxes DOWN using only validated edges', async () => {
   const snapshot: GraphSnapshot = {
     runs: [{ ref: 'run' }], tasks: [{ ref: 'task', run_ref: 'run', task_id: 'T005', label: 'Task', summary: 'Render activity', prerequisite_refs: [] }], records: [],
