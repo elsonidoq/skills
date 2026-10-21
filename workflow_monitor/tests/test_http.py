@@ -50,8 +50,13 @@ class HttpTests(unittest.TestCase):
         runs = self.client.get("/api/monitor/v1/runs", headers=self.api_headers)
         self.assertEqual(runs.status_code, 200)
         self.assert_safe(runs)
-        run_ref = runs.json()["runs"][0]["ref"]
-        view = self.client.get(f"/api/monitor/v1/runs/{run_ref}/snapshot", headers=self.api_headers)
+        run = runs.json()["runs"][0]
+        self.assertEqual(run["display_id"], "run-a")
+        run_ref = run["ref"]
+        self.assertNotEqual(run_ref, run["display_id"])
+        snapshot_path = f"/api/monitor/v1/runs/{run_ref}/snapshot"
+        self.assertNotIn(run["display_id"], snapshot_path)
+        view = self.client.get(snapshot_path, headers=self.api_headers)
         self.assertEqual(view.status_code, 200)
         self.assert_safe(view)
         record = view.json()["records"][0]["ref"]

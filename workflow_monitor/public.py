@@ -50,7 +50,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
     for run in graph.get("runs", []):
         description = run.get("description") if isinstance(run.get("description"), dict) else {}
         requested = description.get("requested_executor") if isinstance(description.get("requested_executor"), dict) else {}
-        public_runs.append({"ref": _ref("run", run["run_id"]), "label": "Recorded run", "started_at": _time(run.get("started_at")),
+        public_runs.append({"ref": _ref("run", run["run_id"]), "display_id": run["run_id"], "label": "Recorded run", "started_at": _time(run.get("started_at")),
                             "description_version": description.get("description_version") if type(description.get("description_version")) is int else None,
                             "requested_executor": {key: _text(requested.get(key), "unknown", 80) for key in ("provider", "model", "effort")},
                             "completeness": "incomplete" if run.get("incomplete") else "recorded",

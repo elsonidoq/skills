@@ -15,7 +15,7 @@ class PublicTests(unittest.TestCase):
         self.assertEqual(result["records"][0]["exit_code"], None)
         self.assertFalse(result["records"][0]["no_change"])
         self.assertNotEqual(result["occurrences"][0]["ref"], result["occurrences"][-1]["ref"])
-        self.assertNotIn("run-a", repr(result))
+        self.assertEqual([run["display_id"] for run in result["runs"]], ["run-a", "run-b"])
         self.assertNotIn("PRIVATE-SENTINEL", repr(result))
         self.assertEqual(result["unknown_records"][0]["code"], "unsupported_observation")
 

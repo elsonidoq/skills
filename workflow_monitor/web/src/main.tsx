@@ -8,7 +8,7 @@ import { graphFor, action, status, outcomeText, recordText, type Observation, ty
 
 type Acceptance = { state: string; base: string | null; head: string | null }
 type RunnerState = { state: 'live' | 'stopped' | 'unknown'; reason: string | null }
-type Run = { ref: string; label: string; started_at: number | null; completeness: string; runner_state?: RunnerState; review_acceptance?: Acceptance }
+type Run = { ref: string; display_id: string; label: string; started_at: number | null; completeness: string; runner_state?: RunnerState; review_acceptance?: Acceptance }
 type Unknown = { ref: string; run_ref: string; source_seq: number | null; code: string }
 type GraphEdge = { ref: string; run_ref: string; type: string; from_ref: string; to_ref: string; resolution: string }
 type Inventory = { phase_count: number; occurrence_count: number; observation_count: number; total_count: number; loaded_count: number; hidden_count: number; unsupported_count: number }
@@ -60,11 +60,12 @@ function App() {
     <h1>Workflow monitor</h1>
     <p className="status" role="status">{message}</p>
     <h2>Runs</h2>
-    <div className="run-list">{runs.map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun) return; setNodes([]); setEdges([]); ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; setSnapshot(null); setLineage([]); setRelations([]); setSelectedRun(run.ref); setSelected(null) }}>{run.label} · {run.completeness}</button>)}</div>
+    <div className="run-list">{runs.map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun) return; setNodes([]); setEdges([]); ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; setSnapshot(null); setLineage([]); setRelations([]); setSelectedRun(run.ref); setSelected(null) }}>{run.label} · {run.display_id} · {run.completeness}</button>)}</div>
     </aside>
     <section className="viewer">
     <header>
     <h2>Selected run graph</h2>
+    <p aria-label="Selected run">Selected run: {selectedRunInfo?.display_id ?? 'unknown'}</p>
     <p>Pan and zoom the graph. Select a node or edge for its brief details.</p>
     </header>
     <div className="legend" aria-label="Status legend">

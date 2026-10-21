@@ -22,8 +22,10 @@ that isolated environment. A missing build root, missing `index.html`, symlinked
 or non-directory asset root stops before binding with a fixed actionable diagnostic;
 rebuild to a regular local `dist/` directory and retry.
 
-Then open `http://127.0.0.1:8765/` in a local browser. The left selector chooses one
-recorded run. The compact graph shows actual implementation, review, fixing and rereview
+Then open `http://127.0.0.1:8765/` in a local browser. The left selector and persistent
+selected-run banner show the recorded run ID as inert text, so identically labelled runs remain
+distinguishable during loading or a read error. Opaque references still route API requests; the
+run ID is the sole additional exposed identity. The compact graph shows actual implementation, review, fixing and rereview
 executions, not phase/task definitions or separate start/return/checkpoint events. Each
 call remains distinct. Short labels use recorded roles and public task presentation;
 a global review is simply **Review**. Missing public task labels remain generic, never

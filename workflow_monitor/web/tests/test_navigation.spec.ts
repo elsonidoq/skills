@@ -6,8 +6,9 @@ import { extname, join, normalize } from 'node:path'
 let server: Server
 let runTwoSnapshots = 0
 let writes = 0
+const requests: string[] = []
 
-const runs = [{ ref: 'run_one', label: 'Old run', completeness: 'recorded', started_at: 1 }, { ref: 'run_two', label: 'Current run', completeness: 'recorded', started_at: 2 }]
+const runs = [{ ref: 'run_one', display_id: '<old-run>', label: 'Recorded run', completeness: 'recorded', started_at: 1 }, { ref: 'run_two', display_id: '<img src=x onerror=alert(1)>', label: 'Recorded run', completeness: 'recorded', started_at: 2 }]
 
 function snapshot(run: string, changed = false) {
   const current = run === 'run_two'
@@ -28,6 +29,7 @@ function snapshot(run: string, changed = false) {
 test.beforeAll(async () => {
   server = createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1:4174')
+    requests.push(url.pathname)
     if (request.method !== 'GET') { writes++; response.statusCode = 405; response.end(); return }
     if (url.pathname === '/api/monitor/v1/runs') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ runs })); return }
     const match = url.pathname.match(/^\/api\/monitor\/v1\/runs\/(run_(?:one|two))\/snapshot$/)
@@ -35,6 +37,7 @@ test.beforeAll(async () => {
       response.setHeader('content-type', 'application/json')
       if (match[1] === 'run_one') { setTimeout(() => response.end(JSON.stringify(snapshot('run_one'))), 350); return }
       runTwoSnapshots++
+      if (runTwoSnapshots > 2) { response.statusCode = 500; response.end(); return }
       response.end(JSON.stringify(snapshot('run_two', runTwoSnapshots > 1)))
       return
     }
@@ -56,8 +59,12 @@ test.afterAll(async () => {
 
 test('keeps live navigation stable and ignores an old selected-run response', async ({ page }) => {
   await page.clock.install(); await page.goto('/')
-  await expect(page.getByRole('button', { name: /Current run/ })).toBeVisible()
-  await page.getByRole('button', { name: /Current run/ }).click()
+  const current = page.getByRole('button', { name: 'Recorded run · <img src=x onerror=alert(1)> · recorded' })
+  await expect(current).toBeVisible()
+  await expect(page.locator('.run-list img')).toHaveCount(0)
+  await current.click()
+  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <img src=x onerror=alert(1)>')
+  await expect(page.getByLabel('Selected run').locator('img')).toHaveCount(0)
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toBeVisible()
   await page.locator('.react-flow__node[data-id="occ_reviewer"]').click()
   await expect(page.getByLabel('Selected execution details').getByText(/reviewer; passed/)).toBeVisible()
@@ -81,6 +88,10 @@ test('keeps live navigation stable and ignores an old selected-run response', as
   await expect(page.locator('.react-flow__node[data-id="occ_reviewer"]')).toHaveClass(/selected/)
   await expect(page.getByLabel('Selected execution details')).toContainText('reviewer; failed')
   await expect(page.locator('.react-flow__viewport')).toHaveAttribute('style', viewport ?? '')
+  await expect(page.getByLabel('Selected run')).toHaveText('Selected run: <img src=x onerror=alert(1)>')
+  await expect(page.getByRole('status')).toHaveText('The monitor snapshot is unavailable.')
+  expect(requests).toContain('/api/monitor/v1/runs/run_two/snapshot')
+  expect(requests.some(path => path.includes('<img'))).toBe(false)
   await page.waitForTimeout(400)
   await expect(page.locator('.react-flow__node[data-id="occ_worker"]')).toHaveCount(0)
 })
