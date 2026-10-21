@@ -52,10 +52,10 @@ def _closed_facts(phase, kind, facts):
     allowed = {
         "prepare": {"error_category"},
         "gate": {"ordinal", "parent_occurrence_id", "error_category"},
-        "worker": {"role", "parent_occurrence_id", "error_category"},
-        "check": {"ordinal", "exit_code", "parent_occurrence_id", "error_category"},
-        "checkpoint": {"baseline", "head", "no_change", "parent_occurrence_id", "error_category"},
-        "review": {"role", "review_base", "review_head", "approved", "finding_count", "parent_occurrence_id", "error_category"},
+        "worker": {"role", "execution_id", "trigger_execution_id", "predecessor_execution_id", "parent_occurrence_id", "error_category"},
+        "check": {"ordinal", "exit_code", "execution_id", "parent_occurrence_id", "error_category"},
+        "checkpoint": {"baseline", "head", "no_change", "execution_id", "parent_occurrence_id", "error_category"},
+        "review": {"role", "execution_id", "review_ordinal", "trigger_execution_id", "predecessor_execution_id", "review_base", "review_head", "approved", "outcome", "finding_count", "parent_occurrence_id", "error_category"},
         "terminal": {"baseline", "head", "error_category"},
     }[phase]
     if set(facts) - allowed:
@@ -63,16 +63,20 @@ def _closed_facts(phase, kind, facts):
     for key, value in facts.items():
         if key in {"baseline", "head", "review_base", "review_head"} and not _sha(value): return False
         if key == "role" and value not in _ROLES: return False
-        if key in {"ordinal", "finding_count"} and (type(value) is not int or value < 0): return False
+        if key in {"ordinal", "review_ordinal", "finding_count"} and (type(value) is not int or value < 0): return False
         if key == "exit_code" and (type(value) is not int): return False
         if key == "no_change" and type(value) is not bool: return False
         if key == "approved" and type(value) is not bool: return False
-        if key == "parent_occurrence_id" and (not isinstance(value, str) or not value): return False
+        if key in {"execution_id", "trigger_execution_id", "predecessor_execution_id", "parent_occurrence_id"} and (not isinstance(value, str) or not value): return False
+        if key == "outcome" and value not in {"approved", "rejected", "failed", "interrupted"}: return False
         if key == "error_category" and value not in _ERRORS: return False
     if kind in {"question_requested", "answer_returned", "answer_sent", "delivery_failed"}:
         return phase in {"gate", "worker", "review"} and "parent_occurrence_id" in facts
     if phase == "review" and kind in {"started", "passed", "failed", "interrupted", "returned"}:
-        return facts.get("role") == "reviewer" and _sha(facts.get("review_base")) and _sha(facts.get("review_head"))
+        return (facts.get("role") == "reviewer" and _sha(facts.get("review_base")) and
+                _sha(facts.get("review_head")) and
+                (("execution_id" not in facts and "review_ordinal" not in facts) or
+                 (isinstance(facts.get("execution_id"), str) and type(facts.get("review_ordinal")) is int and facts["review_ordinal"] > 0)))
     if phase == "worker" and kind in {"started", "returned", "failed", "interrupted"}:
         return facts.get("role") in {"worker", "fixing_worker"}
     return True
@@ -84,7 +88,7 @@ def descriptor(contract, executor, revision=None):
         return _descriptor(contract, executor, revision)
     except Exception:
         _warn("recording description unavailable")
-        return {"version": RECORDING_VERSION, "description_version": 1, "phases": list(PHASE_DESCRIPTORS),
+        return {"version": RECORDING_VERSION, "description_version": 2, "phases": list(PHASE_DESCRIPTORS),
                 "tasks": [], "requested_executor": {}, "correction_of": None,
                 "runtime_revision": None, "runtime_revision_reason": "unknown"}
 
@@ -103,7 +107,8 @@ def _descriptor(contract, executor, revision=None):
     if not (isinstance(correction, dict) and isinstance(correction.get("run_id"), str) and isinstance(correction.get("review_execution_id"), str)):
         correction = None
     requested = {k: executor.get(k) for k in ("provider", "model", "effort")} if isinstance(executor, dict) else {}
-    return {"version": RECORDING_VERSION, "description_version": 1, "phases": list(PHASE_DESCRIPTORS),
+    # This declares a closed vocabulary, not an executed review/fixing stage.
+    return {"version": RECORDING_VERSION, "description_version": 2, "phases": list(PHASE_DESCRIPTORS),
             "tasks": tasks, "requested_executor": requested, "correction_of": correction,
             "runtime_revision": revision if _sha(revision) else None,
             "runtime_revision_reason": None if _sha(revision) else "unknown"}
@@ -126,6 +131,9 @@ class Recorder:
         try:
             return uuid.uuid4().hex
         except Exception:
+            # A later successful append records the missing optional boundary without
+            # inventing its execution identity.
+            self.gap_pending = True
             _warn("recording occurrence unavailable")
             return None
 

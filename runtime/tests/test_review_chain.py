@@ -5,12 +5,102 @@ from unittest.mock import patch
 from coherence_workflow.cli import status
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
+from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
 
 
 EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
             'reviewer': {'provider': 'fixture', 'model': 'offline-review', 'effort': 'medium'}}
+
+
+class ChainRecordingTests(ProjectTest):
+    def test_closed_recording_round_trips_actual_chain_ids_without_inventing_stages(self):
+        contract = {'tasks': [{'id': 'fix', 'depends': []}]}
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('recorded', self.base)
+            recorder = Recorder(store, 'recorded')
+            self.assertTrue(recorder.register(descriptor(contract, EXECUTOR, self.base)))
+
+            store.review_dispatch('recorded', 'review-1', review_base=self.base, review_head=self.base)
+            store.review_outcome('recorded', 'review-1', 'rejected', findings=['PRIVATE first rejection'],
+                                 references={'base': self.base, 'head': self.base, 'commit': self.base})
+            recorder.emit('review-1', 'review', 'failed', facts={
+                'role': 'reviewer', 'execution_id': 'review-1', 'review_ordinal': 1,
+                'review_base': self.base, 'review_head': self.base, 'approved': False,
+                'outcome': 'rejected', 'finding_count': 1,
+            })
+            store.review_dispatch('recorded', 'fix-1', role='fixer', review_ordinal=1, fixing_round=1,
+                                  trigger_execution_id='review-1', predecessor_execution_id='review-1',
+                                  review_base=self.base, review_head=self.base)
+            recorder.emit('fix-1', 'worker', 'started', task_id='fix', facts={
+                'role': 'fixing_worker', 'execution_id': 'fix-1',
+                'trigger_execution_id': 'review-1', 'predecessor_execution_id': 'review-1',
+            })
+            recorder.emit('check-1', 'check', 'passed', task_id='fix', facts={
+                'ordinal': 1, 'exit_code': 0, 'execution_id': 'fix-1',
+            })
+            recorder.emit('checkpoint-1', 'checkpoint', 'passed', task_id='fix', facts={
+                'baseline': self.base, 'head': self.base, 'no_change': False, 'execution_id': 'fix-1',
+            })
+            store.review_outcome('recorded', 'fix-1', 'approved', findings=[],
+                                 references={'base': self.base, 'head': self.base, 'commit': self.base})
+            store.review_dispatch('recorded', 'review-2', review_ordinal=2, fixing_round=1,
+                                  trigger_execution_id='fix-1', predecessor_execution_id='fix-1',
+                                  review_base=self.base, review_head=self.base)
+            recorder.emit('review-2', 'review', 'passed', facts={
+                'role': 'reviewer', 'execution_id': 'review-2', 'review_ordinal': 2,
+                'trigger_execution_id': 'fix-1', 'predecessor_execution_id': 'fix-1',
+                'review_base': self.base, 'review_head': self.base, 'approved': True,
+                'outcome': 'approved', 'finding_count': 0,
+            })
+            store.review_outcome('recorded', 'review-2', 'approved', findings=[],
+                                 references={'base': self.base, 'head': self.base, 'commit': self.base})
+
+            # Question parenting is callback lineage only, never execution causality.
+            recorder.emit('question-1', 'review', 'question_requested', facts={
+                'parent_occurrence_id': 'review-1',
+            })
+            self.assertIsNone(recorder.emit('bad', 'review', 'passed', facts={
+                'role': 'reviewer', 'execution_id': 'review-3', 'review_ordinal': 3,
+                'review_base': self.base, 'review_head': self.base, 'outcome': 'approved',
+                'private_payload': 'PRIVATE',
+            }))
+            rows = [(row['occurrence_id'], row['phase'], json.loads(row['facts']))
+                    for row in store.monitor('recorded')['observations']]
+            self.assertEqual(store.monitor('recorded')['run']['recording_version'], 1)
+            self.assertEqual(rows[0][2]['outcome'], 'rejected')
+            self.assertEqual(rows[1][2]['trigger_execution_id'], 'review-1')
+            self.assertEqual(rows[2][2]['execution_id'], 'fix-1')
+            self.assertEqual(rows[3][2]['head'], self.base)
+            self.assertEqual(rows[4][2]['predecessor_execution_id'], 'fix-1')
+            self.assertEqual(rows[5][2], {'parent_occurrence_id': 'review-1'})
+            self.assertNotIn('review-3', [row[0] for row in rows])
+            self.assertNotIn('PRIVATE first rejection', json.dumps(rows))
+            chain = store.review_chain('recorded', private=True)
+            self.assertEqual(chain['executions'][0]['findings'], [['PRIVATE first rejection']])
+            self.assertEqual([item['state'] for item in chain['executions']], ['rejected', 'approved', 'approved'])
+
+    def test_optional_recording_failure_adds_gap_without_changing_required_chain(self):
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('gap', self.base)
+            recorder = Recorder(store, 'gap')
+            self.assertTrue(recorder.register(descriptor({'tasks': []}, EXECUTOR, self.base)))
+            store.review_dispatch('gap', 'review-1', review_base=self.base, review_head=self.base)
+            store.review_outcome('gap', 'review-1', 'rejected', findings=['retained'],
+                                 references={'base': self.base, 'head': self.base})
+            with patch.object(store, 'append_monitor_observation', side_effect=RuntimeError('optional unavailable')):
+                self.assertIsNone(recorder.emit('review-1', 'review', 'failed', facts={
+                    'role': 'reviewer', 'execution_id': 'review-1', 'review_ordinal': 1,
+                    'review_base': self.base, 'review_head': self.base, 'outcome': 'rejected', 'finding_count': 1,
+                }))
+            with patch('coherence_workflow.monitoring.uuid.uuid4', side_effect=RuntimeError('id unavailable')):
+                self.assertIsNone(recorder.occurrence())
+            recorder.emit('later', 'terminal', 'passed', facts={'head': self.base})
+            self.assertEqual(store.review_chain('gap')['executions'][0]['state'], 'rejected')
+            self.assertIn('gap', [row['kind'] for row in store.monitor('gap')['observations']])
 
 
 class ChainHistoryTests(ProjectTest):

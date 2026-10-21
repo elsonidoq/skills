@@ -302,7 +302,10 @@ class Engine:
             # invocation before launch so an uncertain reviewer cannot be replayed.
             store.review_dispatch(self.run, reviewer_occurrence, role='reviewer', review_ordinal=1,
                                   fixing_round=0, review_base=review_base, review_head=head)
-            recorder.emit(reviewer_occurrence, 'review', 'started', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head})
+            recorder.emit(reviewer_occurrence, 'review', 'started', facts={
+                'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
+                'review_base': review_base, 'review_head': head,
+            })
             review_question_occurrence = [None]
             def review_question(state):
                 mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
@@ -316,22 +319,37 @@ class Engine:
             except BaseException as exc:
                 store.review_outcome(self.run, reviewer_occurrence, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
                                      findings=[], uncertainty=True, references={'base': review_base, 'head': head})
-                recorder.emit(reviewer_occurrence, 'review', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': _failure(exc)})
+                recorder.emit(reviewer_occurrence, 'review', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={
+                    'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
+                    'review_base': review_base, 'review_head': head,
+                    'outcome': 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
+                    'error_category': _failure(exc),
+                })
                 raise
             try:
                 value = json.loads(review)
             except ValueError:
                 store.review_outcome(self.run, reviewer_occurrence, 'failed', findings=[], references={'base': review_base, 'head': head})
-                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': 'malformed'})
+                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={
+                    'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
+                    'review_base': review_base, 'review_head': head, 'outcome': 'failed', 'error_category': 'malformed',
+                })
                 raise Blocked('reviewer returned invalid JSON; review remains incomplete: ' + review) from None
             if (not isinstance(value, dict) or type(value.get('approved')) is not bool or not isinstance(value.get('findings'), list) or any(not isinstance(f, str) for f in value['findings'])):
                 store.review_outcome(self.run, reviewer_occurrence, 'failed', findings=[], references={'base': review_base, 'head': head})
-                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': 'malformed'})
+                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={
+                    'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
+                    'review_base': review_base, 'review_head': head, 'outcome': 'failed', 'error_category': 'malformed',
+                })
                 raise Blocked('reviewer result needs boolean approved and a list of findings')
             review_state = 'approved' if value['approved'] and not value['findings'] else 'rejected'
             store.review_outcome(self.run, reviewer_occurrence, review_state, findings=value['findings'],
                                  references={'base': review_base, 'head': head})
-            recorder.emit(reviewer_occurrence, 'review', 'passed' if review_state == 'approved' else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'approved': value['approved'], 'finding_count': len(value['findings'])})
+            recorder.emit(reviewer_occurrence, 'review', 'passed' if review_state == 'approved' else 'failed', facts={
+                'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
+                'review_base': review_base, 'review_head': head, 'approved': value['approved'],
+                'outcome': review_state, 'finding_count': len(value['findings']),
+            })
             if not value['approved'] or value['findings']:
                 raise Blocked('independent review findings (commits retained): ' + canonical(value))
             store.finish(self.run, 'complete', head)

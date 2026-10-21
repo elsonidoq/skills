@@ -218,8 +218,11 @@ class Store:
     def append_monitor_observation(self, run, occurrence_id, phase, task_id, kind, facts):
         """One short append; a caller treats all errors as optional warnings."""
         self.authority.assert_held()
+        recorded = self.db.execute('SELECT recording_version FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
+        if not recorded:
+            raise Blocked('monitor recording is not registered')
         return self.db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
-                               (run, 1, occurrence_id, phase, task_id, kind, time.time(), canonical(facts))).lastrowid
+                               (run, recorded['recording_version'], occurrence_id, phase, task_id, kind, time.time(), canonical(facts))).lastrowid
 
     def monitor(self, run):
         row = self.db.execute('SELECT * FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()

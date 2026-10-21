@@ -56,6 +56,11 @@ New runs may additionally retain a closed `execution_monitor_runs` descriptor an
 append failures warn safely and never alter normal progress, checks, Git, or errors. Descriptors
 retain only declared task IDs/dependencies and explicitly supplied public presentation; observations
 retain closed phase/kind/fact fields, never prompts, answers, commands, output, findings, or errors.
+Descriptor version 2 records actual review execution IDs/ordinals, explicit trigger and predecessor execution
+IDs, fixer-owned check/checkpoint IDs, review range/outcome/count, and existing checkpoint hashes.
+A question's parent occurrence is callback lineage, not execution causality. The descriptor declares
+only the closed vocabulary; it does not assert any stage ran. Missing legacy links stay unknown: no
+backfill or inference from descriptor, role name, timestamp, or `correction_of` is permitted.
 Existing progress and historical rows are neither converted nor inferred. The retained closed descriptor has a
 distinct description version, phase labels with possible branches and pre-recording markers, task IDs and
 safe optional presentation, requested executor, revision-or-unknown, declared correction, and private

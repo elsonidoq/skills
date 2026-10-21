@@ -25,7 +25,7 @@ class MonitoringStorageTests(ProjectTest):
             self.assertEqual(record['observations'][0]['occurrence_id'], occurrence)
             retained = json.loads(record['run']['description'])
             self.assertEqual(retained['tasks'][0]['label'], 'Public')
-            self.assertEqual(retained['description_version'], 1)
+            self.assertEqual(retained['description_version'], 2)
             self.assertTrue(any(phase['pre_recording'] for phase in retained['phases']))
             self.assertTrue(any(phase['possible_branches'] for phase in retained['phases']))
             self.assertEqual(dict(owner.store.db.execute('SELECT * FROM execution_tasks').fetchone()), before)
