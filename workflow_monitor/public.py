@@ -124,6 +124,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                       "outcome": item.get("outcome") if item.get("outcome") in {"approved", "rejected", "failed", "interrupted"} else "unknown",
                       "trigger_ref": _ref("execution", run_id, item["trigger_execution_id"]) if isinstance(item.get("trigger_execution_id"), str) else None,
                       "predecessor_ref": _ref("execution", run_id, item["predecessor_execution_id"]) if isinstance(item.get("predecessor_execution_id"), str) else None,
+                      "input_refs": [_ref("activity", run_id, value) for value in item.get("input_invocation_ids", []) if isinstance(value, str)],
                       "occurrence_refs": [_ref("occ", run_id, value) for value in item.get("occurrence_ids", []) if isinstance(value, str)],
                       "review_range": {"base": _sha(item.get("review_base")), "head": _sha(item.get("review_head"))},
                       "findings": [value for value in item.get("findings", []) if isinstance(value, str)],
@@ -174,14 +175,16 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
             counters = source.get("counters") if isinstance(source.get("counters"), dict) else {}
             context = source.get("context") if isinstance(source.get("context"), dict) else {}
             dimensions = {key: numeric(context.get(key)) for key in ("context_window", "effective_reserve", "occupancy")}
+            applicable = context.get("compaction_enabled") is True and context.get("compaction_applicable") is True
             headroom = (dimensions["context_window"] - dimensions["effective_reserve"] - dimensions["occupancy"]
-                        if all(item is not None for item in dimensions.values()) else None)
+                        if applicable and all(item is not None for item in dimensions.values()) else None)
             return {"availability": "known" if isinstance(value, dict) else "unknown", "scope": "session_cumulative",
                     "counters": {key: observed(counters.get(key)) for key in ("input", "output", "cacheRead", "cacheWrite", "total")},
                     "estimated_usd": observed(source.get("estimated_usd")),
                     "context": {**{key: observed(item) for key, item in dimensions.items()},
-                                "effective_headroom": {**observed(headroom, signed=True),
-                                                       "provenance": "context_window_minus_reserve_minus_occupancy" if headroom is not None else None},
+                                "effective_headroom": ({**observed(headroom, signed=True),
+                                                       "provenance": "context_window_minus_reserve_minus_occupancy" if headroom is not None else None}
+                                                      if applicable else {"value": None, "availability": "unknown", "unknown_reason": "not_applicable", "provenance": None}),
                                 **{key: observed(context.get(key), boolean=True) for key in ("compaction_enabled", "compaction_applicable")}},
                     "compaction_entry_ids": references(source.get("compaction_entry_ids"))}
 
@@ -247,7 +250,11 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
             "review_definitions": review_definitions, "occurrences": occurrences, "records": records, "edges": edges,
             "unknown_records": unknown, "inventory": inventory, "followups": followups, "chain": chain,
             "chain_acceptance": chain_acceptance, "activities": activities,
-            "metric_coverage": {_ref("run", run_id): {"availability": value.get("coverage") if value.get("coverage") in {"complete", "partial", "unavailable"} else "unavailable", "reasons": [reason for reason in value.get("reasons", []) if isinstance(reason, str)]}
+            "metric_coverage": {_ref("run", run_id): {"availability": value.get("coverage") if value.get("coverage") in {"complete", "partial", "unavailable"} else "unavailable", "reasons": [reason for reason in value.get("reasons", []) if isinstance(reason, str)],
+                                                        "interval_count": value.get("interval_count") if type(value.get("interval_count")) is int and value["interval_count"] >= 0 else None,
+                                                        "distinct_membership_count": value.get("distinct_membership_count") if type(value.get("distinct_membership_count")) is int and value["distinct_membership_count"] >= 0 else None,
+                                                        "worker_fixer_records": value.get("worker_fixer_records") if type(value.get("worker_fixer_records")) is int and value["worker_fixer_records"] >= 0 else None,
+                                                        "reviewer_records": value.get("reviewer_records") if type(value.get("reviewer_records")) is int and value["reviewer_records"] >= 0 else None}
                                 for run_id, value in graph.get("metrics", {}).items() if isinstance(run_id, str) and isinstance(value, dict)}}
 
 

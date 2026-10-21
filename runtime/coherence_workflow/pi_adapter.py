@@ -324,10 +324,17 @@ class PiAdapter:
                                 self.observe(value)
                             except Exception:
                                 pass
-                        elif kind in ('claim', 'command', 'cleanup', 'question'):
+                        elif kind == 'question':
+                            # Questions may wait on the owner.  Keep the decoder free so
+                            # the correlated steering/control stream remains serviceable.
                             thread = threading.Thread(target=callback, args=(value,))
                             workers.append(thread)
                             thread.start()
+                        elif kind in ('claim', 'command', 'cleanup'):
+                            # These callbacks mutate the runner/store.  Its SQLite
+                            # connection belongs to this prompt thread, so never move
+                            # them to an arbitrary callback thread.
+                            callback(value)
                         elif kind == 'target':
                             target = value.get('target')
                             if value.get('status') != 'active' or not isinstance(target, dict):

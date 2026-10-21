@@ -2,7 +2,7 @@ import type { Edge, Node } from '@xyflow/react'
 
 export type Observation = { ref: string; run_ref: string; occurrence_ref: string; kind: string; source_seq: number; recorded_at: number | null; parent_occurrence_id?: string; error_category?: string | null; recording_gap?: boolean; ordinal?: number | null; exit_code: number | null; finding_count: number | null; approved?: boolean | null; no_change?: boolean | null; baseline?: string | null; head?: string | null; review_base: string | null; review_head: string | null }
 export type GraphEdge = { ref: string; run_ref: string; type: string; from_ref: string; to_ref: string; resolution: string }
-export type ChainExecution = { ref: string; run_ref: string; execution_id: string; role: 'reviewer' | 'fixer' | 'unknown'; review_ordinal: number | null; fixing_round: number | null; outcome: 'approved' | 'rejected' | 'failed' | 'interrupted' | 'unknown'; trigger_ref: string | null; predecessor_ref: string | null; occurrence_refs: string[]; review_range: { base: string | null; head: string | null }; findings: string[]; commit_refs: Record<string, string> }
+export type ChainExecution = { ref: string; run_ref: string; execution_id: string; role: 'reviewer' | 'fixer' | 'unknown'; review_ordinal: number | null; fixing_round: number | null; outcome: 'approved' | 'rejected' | 'failed' | 'interrupted' | 'unknown'; trigger_ref: string | null; predecessor_ref: string | null; input_refs: string[]; occurrence_refs: string[]; review_range: { base: string | null; head: string | null }; findings: string[]; commit_refs: Record<string, string> }
 export type Activity = { ref: string; run_ref: string; invocation_id: string; occurrence_ref: string; task_ref: string | null; role: 'worker' | 'fixing_worker' | 'reviewer' | 'unknown'; invocation_kind: 'task_worker' | 'corrective_worker' | 'unknown'; outcome: 'returned' | 'failed' | 'interrupted' | 'unknown'; error_category: string | null; input_qualification: 'recorded' | 'unknown'; input_refs: string[]; correction_chain: string[]; support_ref: string | null; stopped_by_ref: string | null; record_refs: string[]; metrics?: unknown }
 export type ExecutionSummary = { state: 'success' | 'failure' | 'waiting' | 'running' | 'unknown'; qualification: string | null }
 export type Occurrence = { ref: string; run_ref: string; occurrence_id?: string; phase_ref: string; task_ref: string | null; role: string; outcome: string | null; completeness: string; record_refs: string[]; phase?: string; first_seq?: number; last_seq?: number; parent_ref?: string | null; support_ref?: string | null; stopping?: boolean; execution_summary?: ExecutionSummary }
@@ -57,7 +57,12 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const membershipKey = key(execution.run_ref, occurrence)
     memberships.set(membershipKey, [...(memberships.get(membershipKey) ?? []), execution.ref])
   }
-  const alias = new Map([...memberships].flatMap(([membershipKey, refs]) => refs.length === 1 ? [[membershipKey, refs[0]] as const] : []))
+  const alias = new Map([...memberships].flatMap(([membershipKey, refs]) => {
+    const execution = refs.length === 1 ? chain.find(item => item.ref === refs[0]) : undefined
+    // A fixing execution can retain several distinct corrective calls.  It is
+    // not an invocation alias unless its membership is exactly one occurrence.
+    return execution?.occurrence_refs.length === 1 ? [[membershipKey, refs[0]] as const] : []
+  }))
   const nodeForOccurrence = (runRef: string, occurrenceRef: string) => alias.get(key(runRef, occurrenceRef)) ?? activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? occurrenceRef
   const activityNodes = activities.filter(activity => !alias.has(key(activity.run_ref, activity.occurrence_ref))).map(activity => {
     const task = taskFor(activity)
@@ -102,6 +107,7 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     for (const predecessor of activity.correction_chain.filter(ref => ref !== activity.ref)) add(`correction_${predecessor}_${activity.ref}`, predecessor, activity.ref, 'recorded-correction', { predecessorRef: predecessor, correctionRef: activity.ref })
   }
   for (const execution of chain) {
+    for (const input of execution.input_refs ?? []) add(`review_input_${input}_${execution.ref}`, input, execution.ref, 'recorded-review-input', { producerRef: input, reviewRef: execution.ref })
     if (execution.trigger_ref) add(`trigger_${execution.trigger_ref}_${execution.ref}`, execution.trigger_ref, execution.ref, 'recorded-correction-trigger', { triggerRef: execution.trigger_ref, executionRef: execution.ref })
     if (execution.predecessor_ref) add(`predecessor_${execution.predecessor_ref}_${execution.ref}`, execution.predecessor_ref, execution.ref, 'recorded-correction-predecessor', { predecessorRef: execution.predecessor_ref, executionRef: execution.ref })
   }

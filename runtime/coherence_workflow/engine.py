@@ -32,8 +32,11 @@ def usage_summary(project, run, expected_invocation_ids=()):
     fields = {'input': ('tokens', 'input'), 'output': ('tokens', 'output'),
               'cache_read': ('tokens', 'cache_read'), 'cache_write': ('tokens', 'cache_write'),
               'total_tokens': ('total_tokens',), 'estimated_usd': ('estimated_usd',)}
+    expected = set(expected_invocation_ids)
     def totals(rows):
-        values, complete = {key: 0 for key in fields}, {key: True for key in fields}
+        # These are explicitly known subtotals when run coverage is partial;
+        # an empty surviving group is unavailable, never a complete numeric zero.
+        values, complete = {key: 0 for key in fields}, {key: bool(rows) or not expected for key in fields}
         for row in rows:
             for key, path in fields.items():
                 value = row['interval']
@@ -46,9 +49,13 @@ def usage_summary(project, run, expected_invocation_ids=()):
                     complete[key] = False
         return {key: values[key] if complete[key] else None for key in fields}
     rows = summary['records']
+    worker_rows, reviewer_rows = ([row for row in rows if row['role'] != 'reviewer'],
+                                  [row for row in rows if row['role'] == 'reviewer'])
+    partial = summary['coverage'] != 'complete'
     return {**summary, 'memberships': sorted({row['task_id'] for row in rows if row['task_id'] is not None}),
-            'worker_totals': totals([row for row in rows if row['role'] != 'reviewer']),
-            'reviewer_totals': totals([row for row in rows if row['role'] == 'reviewer'])}
+            'worker_totals': totals(worker_rows), 'reviewer_totals': totals(reviewer_rows),
+            'worker_totals_qualification': 'known_subtotal' if partial and worker_rows else ('unavailable' if not worker_rows and expected else 'complete'),
+            'reviewer_totals_qualification': 'known_subtotal' if partial and reviewer_rows else ('unavailable' if not reviewer_rows and expected else 'complete')}
 
 
 _DECISION_CONSTRAINTS = (
@@ -165,7 +172,9 @@ class Engine:
         if self.metric_artifact is not None:
             finalizer = MetricArtifactFinalizer(
                 self.authority.project, artifact_relative(self.run),
-                lambda: read_artifact(self.authority.project, self.run, strict=True))
+                lambda: read_artifact(self.authority.project, self.run, strict=True),
+                expected_identity=self.metric_artifact.identity,
+                expected_bytes=self.metric_artifact.path.read_bytes())
             try:
                 committed = finalizer.commit()
             except BaseException as exc:

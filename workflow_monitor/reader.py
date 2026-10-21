@@ -184,6 +184,7 @@ class Reader:
                 reasons.append("incomplete_tail")
                 data = data.rsplit(b"\n", 1)[0]
             unique: dict[str, dict[str, Any]] = {}
+            conflicted: set[str] = set()
             for line in data.splitlines():
                 try:
                     record = self._metric_record(json.loads(line.decode("utf-8")), run_id)
@@ -192,11 +193,15 @@ class Reader:
                 if record is None:
                     reasons.append("invalid_record")
                     continue
-                prior = unique.get(record["invocation_id"])
+                invocation_id = record["invocation_id"]
+                prior = unique.get(invocation_id)
                 if prior is not None and prior != record:
                     reasons.append("conflicting_duplicate_invocation")
+                    conflicted.add(invocation_id)
+                    unique.pop(invocation_id, None)
                     continue
-                unique[record["invocation_id"]] = record
+                if invocation_id not in conflicted:
+                    unique[invocation_id] = record
             if expected.get(run_id, set()) - set(unique):
                 reasons.append("missing_expected_invocations")
             result[run_id] = {"coverage": "complete" if not reasons else "partial", "reasons": sorted(set(reasons)), "records": list(unique.values())}

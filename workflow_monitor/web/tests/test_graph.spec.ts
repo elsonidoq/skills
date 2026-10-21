@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { graphFor, type GraphSnapshot } from '../src/graph'
 import { layoutNodes } from '../src/layout'
 
-test('projects actual calls and lays their measured boxes DOWN using only validated edges', async () => {
+test('actual activity projection: projects calls and lays measured boxes DOWN using only validated edges', async () => {
   const snapshot: GraphSnapshot = {
     runs: [{ ref: 'run' }], tasks: [{ ref: 'task', run_ref: 'run', task_id: 'T005', label: 'Task', summary: 'Render activity', prerequisite_refs: [] }], records: [],
     occurrences: [{ ref: 'stop', run_ref: 'run', phase_ref: 'stop', task_ref: null, role: 'non_model', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: 'fix' }],

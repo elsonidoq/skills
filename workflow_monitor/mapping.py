@@ -266,6 +266,14 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
         if isinstance(metric_set, dict):
             records = metric_set.get("records") if isinstance(metric_set.get("records"), list) else []
             matches = [record for record in records if isinstance(record, dict) and record.get("invocation_id") == activity["invocation_id"]]
+            def matching_metric(record):
+                if not isinstance(record, dict) or record.get("invocation_id") != activity["invocation_id"]:
+                    return False
+                if record.get("task_id") != activity["task_id"]:
+                    return False
+                roles = {"worker": {"worker"}, "fixing_worker": {"corrective_worker", "fixing_worker"}, "reviewer": {"reviewer"}}
+                return record.get("role") in roles.get(activity["role"], set())
+            matches = [record for record in records if matching_metric(record)]
             activity["metric"] = matches[0] if len(matches) == 1 else None
             activity["metric_coverage"] = metric_set.get("coverage") if metric_set.get("coverage") in {"complete", "partial", "unavailable"} else "unavailable"
             activity["metric_reasons"] = [reason for reason in metric_set.get("reasons", []) if isinstance(reason, str)]
@@ -288,12 +296,29 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             references.append(producer)
         activity["input_invocation_ids"] = references if valid else []
         activity["input_qualification"] = "recorded" if valid else "unknown"
+    # First-review input membership is a recorded producer relationship, not a
+    # plan/dependency inference.  It is projected only when every checkpoint
+    # names an exact known invocation in this run.
+    for execution in chain:
+        inputs = execution.get("input_checkpoints")
+        producers = []
+        if isinstance(inputs, list):
+            for item in inputs:
+                producer = item.get("producer_invocation_id") if isinstance(item, dict) else None
+                if not isinstance(producer, str) or (execution["run_id"], producer) not in by_invocation:
+                    producers = []; break
+                producers.append(producer)
+        execution["input_invocation_ids"] = producers
     return {"state": "ok", "runs": runs, "phases": phases, "tasks": tasks, "occurrences": occurrences,
             "observations": observations, "edges": edges, "unknown_records": unknown,
             "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", [])), "followups": followups,
             "review_acceptance": review_acceptance, "chain": chain, "chain_acceptance": chain_acceptance,
             "activities": activities,
-            "metrics": {run_id: {"coverage": value.get("coverage"), "reasons": value.get("reasons", [])}
+            "metrics": {run_id: {"coverage": value.get("coverage"), "reasons": value.get("reasons", []),
+                                   "interval_count": len(value.get("records", [])) if isinstance(value.get("records"), list) else 0,
+                                   "distinct_membership_count": len({row.get("task_id") for row in value.get("records", []) if isinstance(row, dict) and isinstance(row.get("task_id"), str)}),
+                                   "worker_fixer_records": sum(1 for row in value.get("records", []) if isinstance(row, dict) and row.get("role") != "reviewer"),
+                                   "reviewer_records": sum(1 for row in value.get("records", []) if isinstance(row, dict) and row.get("role") == "reviewer")}
                         for run_id, value in metric_sets.items() if isinstance(run_id, str) and isinstance(value, dict)}}
 
 

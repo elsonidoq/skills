@@ -35,7 +35,7 @@ class ChainMappingTests(ProjectTest):
             else:
                 engine.invoke()
 
-    def test_activity_metrics_readback_without_graph(self):
+    def test_activity_readback_without_graph(self):
         """The producer's closed invocation facts survive without graph projection."""
         base = subprocess.check_output(['git', '-C', str(self.project), 'rev-parse', 'HEAD']).decode().strip()
         with Authority(self.project) as owner:
@@ -90,8 +90,10 @@ class ChainMappingTests(ProjectTest):
         self.assertEqual([metrics['before']['counters'][key]['value'] for key in ('input', 'output', 'cacheRead', 'cacheWrite', 'total')], [1, 2, 0, 0, 3])
         self.assertEqual(metrics['after']['counters']['total']['value'], 6)
         self.assertEqual(metrics['after']['estimated_usd']['value'], 0)
-        self.assertEqual(metrics['before']['context']['effective_headroom']['value'], 5)
+        self.assertIsNone(metrics['before']['context']['effective_headroom']['value'])
+        self.assertEqual(metrics['before']['context']['effective_headroom']['unknown_reason'], 'not_applicable')
         self.assertEqual(metrics['after']['context']['effective_headroom']['value'], -4)
+        self.assertEqual(metrics['after']['context']['effective_headroom']['provenance'], 'context_window_minus_reserve_minus_occupancy')
         self.assertEqual([metrics['after']['context'][key]['value'] for key in ('context_window', 'effective_reserve', 'occupancy')], [10, 2, 12])
         self.assertIs(metrics['before']['context']['compaction_enabled']['value'], False)
         self.assertIs(metrics['after']['context']['compaction_enabled']['value'], True)
@@ -109,6 +111,11 @@ class ChainMappingTests(ProjectTest):
         self.assertEqual(activities['invoke-two']['metrics']['availability'], 'partial')
         self.assertIn('missing_expected_invocations', activities['invoke-two']['metrics']['reasons'])
         self.assertNotIn('execution_history', repr(dto))
+
+    # T012 retains this named focused selection; it exercises the same closed
+    # producer→reader→public path with metric assertions above.
+    def test_activity_metrics_readback_without_graph(self):
+        self.test_activity_readback_without_graph()
 
     def test_four_engine_scenarios_project_only_actual_closed_chain_facts(self):
         project = self.project

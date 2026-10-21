@@ -36,8 +36,9 @@ class ExecutionPresentationTests(unittest.TestCase):
             ('run-a', 'terminal', 'terminal', None, 'failed', {}),
         ]
         first, second = self.view(rows)
-        # Adjacency and nested prepare rows are not actual stopping/support evidence.
-        self.assertFalse(any(item['stopping'] for item in first['occurrences']))
+        # Adjacency and nested prepare rows are not support evidence, but the
+        # recorded terminal failure remains visible as a cause-unknown stop.
+        self.assertTrue(next(item for item in first['occurrences'] if item['phase'] == 'terminal')['stopping'])
         worker = next(item for item in first['occurrences'] if item['role'] == 'worker')
         self.assertIsNone(next(item for item in first['occurrences'] if item['phase'] == 'check')['support_ref'])
         self.assertNotEqual(worker['ref'], second['occurrences'][0]['ref'])
@@ -52,7 +53,7 @@ class ExecutionPresentationTests(unittest.TestCase):
             ('run-a', 'prepare', 'prepare', 'one', 'failed', {}),
             ('run-a', 'terminal', 'terminal', None, 'failed', {}),
         ])
-        self.assertFalse(any(item['stopping'] for item in first['occurrences']))
+        self.assertTrue(next(item for item in first['occurrences'] if item['phase'] == 'terminal')['stopping'])
         self.assertTrue(any(item['phase'] == 'prepare' and item['outcome'] == 'failed' for item in first['occurrences']))
 
     def test_recovered_failure_stays_in_details_not_as_a_stopping_node(self):
@@ -273,4 +274,4 @@ class ExecutionPresentationTests(unittest.TestCase):
             ('run-a', 'prepare', 'prepare', 'two', 'failed', {}),
             ('run-a', 'terminal', 'terminal', None, 'failed', {}),
         ])
-        self.assertFalse(any(item['stopping'] for item in first['occurrences']))
+        self.assertTrue(next(item for item in first['occurrences'] if item['phase'] == 'terminal')['stopping'])

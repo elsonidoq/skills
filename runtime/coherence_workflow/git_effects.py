@@ -15,14 +15,26 @@ def _commit_result(project, sha, parent, path):
 
 class MetricArtifactFinalizer:
     """One runner-only end-of-run commit for an already-reserved metric artifact."""
-    def __init__(self, project, relative, validate):
+    def __init__(self, project, relative, validate, *, expected_identity=None, expected_bytes=None):
         self.project, self.relative, self.validate = Path(project), relative, validate
         self.parent = None
+        path = safe_path(self.project, self.relative)
+        if not path.is_file():
+            raise Blocked('metric artifact is not a regular file; retain bytes and inspect it')
+        info = path.stat(follow_symlinks=False)
+        self.expected_identity = expected_identity or (info.st_dev, info.st_ino, info.st_ctime_ns)
+        self.expected_bytes = path.read_bytes() if expected_bytes is None else expected_bytes
+
+    def _verify_reserved(self, path):
+        info = path.stat(follow_symlinks=False)
+        if (info.st_dev, info.st_ino, info.st_ctime_ns) != self.expected_identity or path.read_bytes() != self.expected_bytes:
+            raise Blocked('metric artifact drifted from the runner-reserved bytes; retain bytes and inspect it')
 
     def commit(self):
         path = safe_path(self.project, self.relative)
         if not path.is_file():
             raise Blocked('metric artifact is not a regular file; retain bytes and inspect it')
+        self._verify_reserved(path)
         self.validate()
         if not path.read_bytes():
             return {'sha': git(self.project, 'rev-parse', 'HEAD').decode().strip(), 'parent': None,
@@ -36,8 +48,9 @@ class MetricArtifactFinalizer:
         staged = set(filter(None, git(self.project, 'diff', '--cached', '--name-only', '-z', '--', self.relative).decode().split('\0')))
         if staged != {self.relative}:
             raise Blocked('metric artifact index differs from the exact owned path; retain bytes and inspect it')
+        self._verify_reserved(path)
         self.validate()
-        if git(self.project, 'show', ':' + self.relative) != path.read_bytes():
+        if git(self.project, 'show', ':' + self.relative) != self.expected_bytes:
             raise Blocked('metric artifact bytes changed before commit; retain bytes and inspect it')
         git(self.project, 'commit', '--only', '-m', 'workflow: metrics', '--', self.relative)
         return _commit_result(self.project, git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.parent, self.relative)

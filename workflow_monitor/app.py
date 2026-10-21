@@ -350,6 +350,11 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
                            if activity["invocation_id"] == stopped_by and activity["outcome"] in {"failed", "interrupted"}), None)
             if target and target.get("occurrence_ref") in occurrence_by_ref:
                 occurrence_by_ref[target["occurrence_ref"]]["stopping"] = True
+            else:
+                # A terminal pre-agent/non-model failure is still an actual
+                # essential stop; absence of a recorded invocation cause is
+                # explicitly qualified rather than hidden.
+                terminal_activity["stopping"] = True
 
         # Summaries deliberately use the full normalized snapshot, before HTTP paging.
         # They are execution facts, not task/check/review acceptance verdicts.
