@@ -99,6 +99,11 @@ def _closed_facts(phase, kind, facts):
     if phase == "worker" and kind in {"started", "returned", "failed", "interrupted"}:
         if facts.get("role") not in {"worker", "fixing_worker"}:
             return False
+        invocation_fields = {"invocation_id", "invocation_kind", "selected_input_checkpoints", "correction_chain"}
+        if not invocation_fields.intersection(facts):
+            # The existing review-fixer producer records its execution identity but
+            # has no task invocation vocabulary until T015 owns that migration.
+            return facts.get("role") == "fixing_worker" and isinstance(facts.get("execution_id"), str)
         if not isinstance(facts.get("invocation_id"), str) or facts.get("invocation_kind") not in _INVOCATION_KINDS:
             return False
         chain = facts.get("correction_chain")

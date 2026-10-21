@@ -34,6 +34,22 @@ class MonitoringStorageTests(ProjectTest):
             self.assertTrue(any(phase['possible_branches'] for phase in retained['phases']))
             self.assertEqual(dict(owner.store.db.execute('SELECT * FROM execution_tasks').fetchone()), before)
 
+    def test_legacy_fixer_lifecycle_remains_recordable_until_t015(self):
+        with Authority(self.project) as owner:
+            owner.store.start('legacy-fixer', self.base)
+            rec = Recorder(owner.store, 'legacy-fixer')
+            self.assertTrue(rec.register(descriptor({'tasks': []}, {})))
+            facts = {
+                'role': 'fixing_worker', 'execution_id': 'fix-1',
+                'trigger_execution_id': 'review-1', 'predecessor_execution_id': 'review-1',
+            }
+            rec.emit('fix-1', 'worker', 'started', task_id='fix-fix-1', facts=facts)
+            rec.emit('fix-1', 'worker', 'returned', task_id='fix-fix-1', facts=facts)
+            rows = [(row['kind'], json.loads(row['facts']))
+                    for row in owner.store.monitor('legacy-fixer')['observations']]
+
+        self.assertEqual(rows, [('started', facts), ('returned', facts)])
+
     def test_invalid_optional_metadata_and_append_failure_do_not_veto_progress(self):
         contract = {'tasks': [{'id': 'one'}], 'monitor': {'tasks': {'one': {'label': ['private']}}}}
         self.assertEqual(descriptor(contract, {})['tasks'][0]['label'], 'Task')

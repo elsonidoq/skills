@@ -466,11 +466,16 @@ class Engine:
                     # corrective prompts and never inferred from review references.
                     store.usage_membership(self.run, task['id'])
                     active_occurrence, invocation_chain, last_invocation = [None], [], [None]
+                    question_occurrence = [None]
                     def worker_question(state):
                         mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
                         if active_occurrence[0] is not None:
-                            recorder.emit(recorder.occurrence(), 'worker', mapping[state], task_id=task['id'],
+                            if state == 'requested' or question_occurrence[0] is None:
+                                question_occurrence[0] = recorder.occurrence()
+                            recorder.emit(question_occurrence[0], 'worker', mapping[state], task_id=task['id'],
                                           facts={'parent_occurrence_id': active_occurrence[0]})
+                            if state in {'sent', 'delivery_failed'}:
+                                question_occurrence[0] = None
                     session_request, reuse_key = self._session_request(task, role)
                     selection = select_session(session_request, self.session_candidates)
                     selected = next((candidate for candidate in self.session_candidates
