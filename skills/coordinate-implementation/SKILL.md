@@ -92,8 +92,7 @@ The SDK is an instruction-managed coding tool, not an adversarial filesystem/com
 
 Inspect the actual diff and preserve unrelated staged/unstaged/untracked work. The runner creates
 one focused verified owned-path checkpoint per implementation/repair task before subsequent mutation or handoff.
-It uses explicit paths and normal Git hooks/signing; failed hooks/signing or ownership conflict block
-that operation, never configure around them. No skip/defer, No-Git fallback, broad staging, reset,
+It uses explicit paths and normal Git hooks/signing; failed hooks/signing, whitespace, source, or ownership errors return their actual cause to the same task for safe correction, then rerun affected required checks and retry normally—never configure around them. After a reported-failed or interrupted commit, reconcile that operation's selected paths, attempted parent, and actual commit before retry; retain a matching SHA without recommit. An unsafe/out-of-scope action or unrecoverable signing/authority issue reports its exact blocker. No skip/defer, No-Git fallback, broad staging, reset,
 cleanup or history rewrite. Read-only/no-change makes no empty commit. No extra evidence-only checkpoint.
 Dependencies release after the producer's real focused checkpoint, not an approval envelope.
 Never blindly replay a Git commit after interruption; inspect the actual resulting commit first.

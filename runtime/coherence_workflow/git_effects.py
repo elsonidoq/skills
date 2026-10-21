@@ -44,25 +44,43 @@ class FocusedGit:
         else:
             self.task_edited.add(name)
 
-    def checkpoint(self):
-        # Only paths explicitly selected at an edit boundary are candidates.  Do not
-        # discover, adopt, or stage arbitrary command output.
-        # A claimed path that ends unchanged needs no empty checkpoint.  This is a
-        # per-selected-path Git query, not discovery of other worktree changes.
-        owned = sorted(name for name in self.task_edited
-                       if path_has_preexisting_changes(self.project, name))
-        if not owned:
-            return {'baseline': self.base, 'sha': self.base, 'paths': [],
-                    'artifacts': sorted(self.known_artifacts), 'no_change': True}
-        git(self.project, 'diff', '--check', '--', *owned)
-        before_commit = git(self.project, 'rev-parse', 'HEAD').decode().strip()
-        git(self.project, 'add', '-A', '--', *owned)
-        git(self.project, 'commit', '--only', '-m', 'workflow: ' + self.task['id'], '--', *owned)
-        sha = git(self.project, 'rev-parse', 'HEAD').decode().strip()
-        if git(self.project, 'rev-list', '--parents', '-n', '1', sha).decode().split() != [sha, before_commit]:
+    def _checkpoint_result(self, sha, parent, owned):
+        if git(self.project, 'rev-list', '--parents', '-n', '1', sha).decode().split() != [sha, parent]:
             raise Blocked('unexpected checkpoint parent; inspect actual commit')
         actual = set(filter(None, git(self.project, 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', sha).decode().split('\0')))
         if not actual or not actual <= set(owned):
             raise Blocked('commit changed unexpected paths; inspect actual commit')
         return {'baseline': self.base, 'sha': sha, 'paths': owned,
                 'artifacts': sorted(self.known_artifacts), 'no_change': False}
+
+    def checkpoint(self):
+        # Only paths explicitly selected at an edit boundary are candidates.  Do not
+        # discover, adopt, or stage arbitrary command output.
+        owned = sorted(name for name in self.task_edited
+                       if path_has_preexisting_changes(self.project, name))
+        if not owned:
+            return {'baseline': self.base, 'sha': self.base, 'paths': [],
+                    'artifacts': sorted(self.known_artifacts), 'no_change': True}
+        self.checkpoint_parent = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        self.checkpoint_paths = owned
+        git(self.project, 'diff', '--check', '--', *owned)
+        git(self.project, 'add', '-A', '--', *owned)
+        git(self.project, 'commit', '--only', '-m', 'workflow: ' + self.task['id'], '--', *owned)
+        sha = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        return self._checkpoint_result(sha, self.checkpoint_parent, owned)
+
+    def reconcile_checkpoint(self):
+        """Return only this operation's completed commit after a reported failure."""
+        parent = getattr(self, 'checkpoint_parent', None)
+        owned = getattr(self, 'checkpoint_paths', None)
+        if not parent or not owned:
+            return None
+        sha = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        if sha == parent:
+            return None
+        try:
+            return self._checkpoint_result(sha, parent, owned)
+        except Blocked:
+            # A different incoming commit is not a continuation veto or this task's
+            # checkpoint.  Leave it intact and correct the failed action instead.
+            return None

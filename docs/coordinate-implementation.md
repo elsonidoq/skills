@@ -99,7 +99,7 @@ necessary local/in-project dependency setup, and current-task artifact lifecycle
 this authority is not proof that checks passed. Product decisions, substantial complexity increases,
 separately scoped paid usage, and actions outside authority still ask. No global install, credential change,
 deployment, push, or unrelated-work deletion is implied. It runs requested project checks and yields a real
-focused commit before dependents. Normal Git configuration, hooks and signing are honored. Failures retain
+focused commit before dependents. Normal Git configuration, hooks and signing are honored. A correctable whitespace, source, hook, or Git checkpoint failure returns to the same task worker with its actual error; affected required checks rerun before the normal checkpoint retry. A reported-failed/interrupted commit is reconciled from that operation's selected paths, attempted parent, and actual result before any retry, retaining a matching SHA without recommit. Failures retain
 partial work and report the actual operation error. No empty commit for no-change work. No intent settlement
 or operation trailers, hook/filter admission, hidden repair quotas, arbitrary timers or process receipts.
 

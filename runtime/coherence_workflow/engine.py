@@ -146,46 +146,77 @@ class Engine:
                         recorder.emit(occurrence, 'check', kind, task_id=task['id'], facts=facts)
                     def run_required_checks():
                         return run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe)
-                    previous_failed_attempt = None
+                    def correct_required_checks():
+                        nonlocal text
+                        previous_failed_attempt = None
+                        while True:
+                            try:
+                                checks = run_required_checks()
+                                for attempt in checks:
+                                    store.history(self.run, task['id'], 'check', 'passed', attempt)
+                                return checks
+                            except CheckFailure as failure:
+                                if failure.attempt == previous_failed_attempt:
+                                    raise Blocked('required check failed and remains unchanged after same-task correction: ' + canonical(failure.attempt))
+                                previous_failed_attempt = failure.attempt
+                                store.history(self.run, task['id'], 'check', 'failed', failure.attempt)
+                                corrective_occurrence = recorder.occurrence()
+                                recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
+                                try:
+                                    text = worker.prompt(
+                                        'A runner-owned REQUIRED check for this same task failed. Make a reasoned, '
+                                        'authorized scoped source or local-setup correction if one is safe, then return. '
+                                        'Do not claim success, skip the command, or ask merely because files changed. '
+                                        'If no safe correction remains or a material decision is needed, state that blocker. '
+                                        'The runner will rerun the affected required command before checkpointing.\n'
+                                        'Actual failed attempt: ' + canonical(failure.attempt),
+                                        claim=claim, command=focused.command)
+                                except BaseException as exc:
+                                    state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                                    recorder.emit(corrective_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
+                                    store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': str(exc)})
+                                    raise
+                                recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
+                                store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
+
+                    checks = correct_required_checks()
+                    previous_checkpoint_error = None
                     while True:
+                        checkpoint_occurrence = recorder.occurrence()
+                        recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
                         try:
-                            checks = run_required_checks()
-                            break
-                        except CheckFailure as failure:
-                            if failure.attempt == previous_failed_attempt:
-                                raise Blocked('required check failed and remains unchanged after same-task correction: ' + canonical(failure.attempt))
-                            previous_failed_attempt = failure.attempt
-                            store.history(self.run, task['id'], 'check', 'failed', failure.attempt)
-                            # A nonzero REQUIRED command is a real failed attempt, but
-                            # ordinary scoped source/setup correction belongs to this
-                            # same task before its checkpoint—not a later task/review.
+                            checkpoint = focused.checkpoint()
+                        except BaseException as exc:
+                            state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                            recorder.emit(checkpoint_occurrence, 'checkpoint', state, task_id=task['id'], facts={'baseline': focused.base, 'error_category': _failure(exc)})
+                            store.history(self.run, task['id'], 'checkpoint', state, {'error': str(exc)})
+                            checkpoint = focused.reconcile_checkpoint()
+                            if checkpoint is not None:
+                                break
+                            if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+                                raise
+                            if str(exc) == previous_checkpoint_error:
+                                raise Blocked('checkpoint failed and remains unchanged after same-task correction: ' + str(exc))
+                            previous_checkpoint_error = str(exc)
                             corrective_occurrence = recorder.occurrence()
                             recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                             try:
                                 text = worker.prompt(
-                                    'A runner-owned REQUIRED check for this same task failed. Make a reasoned, '
-                                    'authorized scoped source or local-setup correction if one is safe, then return. '
-                                    'Do not claim success, skip the command, or ask merely because files changed. '
-                                    'If no safe correction remains or a material decision is needed, state that blocker. '
-                                    'The runner will rerun the affected required command before checkpointing.\n'
-                                    'Actual failed attempt: ' + canonical(failure.attempt),
+                                    'A runner-owned checkpoint for this same task failed. Make a reasoned, authorized '
+                                    'scoped correction if one is safe. Do not bypass hooks or signing, reset, rebase, '
+                                    'or adopt unrelated work. The runner will rerun affected REQUIRED checks and the '
+                                    'checkpoint with normal Git configuration intact.\nActual checkpoint error: ' + str(exc),
                                     claim=claim, command=focused.command)
-                            except BaseException as exc:
-                                state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                                recorder.emit(corrective_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
-                                store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': str(exc)})
+                            except BaseException as correction_error:
+                                correction_state = 'interrupted' if isinstance(correction_error, (KeyboardInterrupt, SystemExit)) else 'failed'
+                                recorder.emit(corrective_occurrence, 'worker', correction_state, task_id=task['id'], facts={'role': role, 'error_category': _failure(correction_error)})
+                                store.history(self.run, task['id'], 'worker', correction_state, {'role': role, 'correction': True, 'error': str(correction_error)})
                                 raise
                             recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
                             store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
-                    for attempt in checks:
-                        store.history(self.run, task['id'], 'check', 'passed', attempt)
-                    checkpoint_occurrence = recorder.occurrence()
-                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
-                    try:
-                        checkpoint = focused.checkpoint()
-                    except BaseException as exc:
-                        recorder.emit(checkpoint_occurrence, 'checkpoint', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'baseline': focused.base, 'error_category': _failure(exc)})
-                        raise
+                            checks = correct_required_checks()
+                            continue
+                        break
                     checkpoint['parent'] = (None if checkpoint['no_change'] else
                                             git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts={'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']})
