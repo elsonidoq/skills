@@ -15,7 +15,7 @@ from fixtures.support import ProjectTest
 class CliTests(ProjectTest):
     def test_minimal_start_uses_selected_executor_no_manifest_or_cgroup(self):
         tasks = self.root/'tasks.json'
-        tasks.write_text('[{"id":"fix","description":"Fix"}]')
+        tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"fix","description":"Fix"}]}')
         executor = self.root/'executor.json'
         executor.write_text('{"provider":"fixture","model":"offline-no-provider-call","effort":"medium"}')
         seen = []
@@ -24,7 +24,9 @@ class CliTests(ProjectTest):
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
                 return 'read only offline fixture'
-        with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out:
+        with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out, \
+             patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+                                                          'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}):
             code = main(['start', '--project', str(self.project), '--tasks', str(tasks), '--executor', str(executor), '--run', 'minimal'])
         self.assertEqual(code, 0, out.getvalue())
         self.assertEqual(seen[0], json.loads(executor.read_text()))
@@ -36,7 +38,7 @@ class CliTests(ProjectTest):
 
     def test_selected_reviewer_profile_reaches_only_fresh_read_only_session(self):
         tasks, executor = self.root/'tasks.json', self.root/'executor.json'
-        tasks.write_text('[{"id":"dummy","description":"Synthetic no-change fixture"}]')
+        tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"dummy","description":"Synthetic no-change fixture"}]}')
         worker = {'provider': 'fixture', 'model': 'offline-worker', 'effort': 'medium'}
         reviewer = {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}
         executor.write_text(json.dumps(dict(worker, reviewer=reviewer)))
@@ -48,7 +50,9 @@ class CliTests(ProjectTest):
             def prompt(self, prompt, **kwargs):
                 calls.append((self.profile, kwargs.get('read_only', False)))
                 return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'synthetic no-change fixture'
-        with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out:
+        with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out, \
+             patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+                                                          'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}):
             code = main(['start', '--project', str(self.project), '--tasks', str(tasks),
                          '--executor', str(executor), '--run', 'separate-reviewer'])
         self.assertEqual(code, 0, out.getvalue())
@@ -72,7 +76,7 @@ class CliTests(ProjectTest):
 
     def test_bad_attached_configuration_stops_before_storage_or_sdk(self):
         tasks, executor = self.root/'tasks.json', self.root/'executor.json'
-        tasks.write_text('[{"id":"smoke","description":"No changes"}]')
+        tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"smoke","description":"No changes"}]}')
         executor.write_text('{"provider":"fixture","model":"offline","effort":"medium"}')
         prefix = 'COHERENCE_PARENT_BRIDGE_'
         base_env = {k: v for k, v in os.environ.items() if not k.startswith(prefix)}
@@ -129,13 +133,15 @@ class CliTests(ProjectTest):
         ready = self.root/'ready'
         host.write_text("import json,signal,sys\nfrom pathlib import Path\njson.loads(input())\nsignal.signal(signal.SIGTERM,lambda *args: None)\nPath(" + repr(str(ready)) + ").write_text('ready')\nsys.stdin.read()\n")
         tasks = self.root/'tasks.json'
-        tasks.write_text('[{"id":"fix","description":"Fix"}]')
+        tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"fix","description":"Fix"}]}')
         executor = self.root/'executor.json'
         executor.write_text('{"provider":"fixture","model":"offline-no-provider-call","effort":"medium"}')
         code = "from pathlib import Path; import coherence_workflow.pi_adapter as a; a.host_path=lambda:Path(" + repr(str(host)) + "); from coherence_workflow.cli import main; raise SystemExit(main())"
         process = subprocess.Popen([sys.executable, '-B', '-c', code, 'start', '--project', str(self.project),
                                     '--tasks', str(tasks), '--executor', str(executor), '--run', 'cancelled'],
-                                   env=dict(os.environ, COHERENCE_NODE=sys.executable), stdout=subprocess.PIPE,
+                                   env=dict(os.environ, COHERENCE_NODE=sys.executable,
+                                            COHERENCE_PARENT_BRIDGE_SOCKET='', COHERENCE_PARENT_BRIDGE_TOKEN='',
+                                            COHERENCE_PARENT_BRIDGE_SESSION='', COHERENCE_PARENT_BRIDGE_RUN=''), stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True)
         try:
             deadline = time.monotonic() + 10  # Test harness only, not a workflow deadline.

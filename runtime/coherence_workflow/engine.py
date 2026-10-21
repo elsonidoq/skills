@@ -33,7 +33,7 @@ _ROUTINE_AUTHORITY = (
 
 
 class Engine:
-    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question):
+    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None):
         self.authority, self.run, self.contract = authority, run, contract
         self.executor = {key: value for key, value in executor.items() if key != 'reviewer'}
         self.reviewer_executor = executor.get('reviewer', self.executor)
@@ -42,7 +42,15 @@ class Engine:
             for key in ('provider', 'model', 'effort')
         ):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
-        self.adapter, self.question = adapter, question
+        self.adapter, self.question, self.paid_scope = adapter, question, paid_scope
+
+    def paid_authority(self):
+        if self.paid_scope is None:
+            return 'Paid scope: not supplied to this direct engine fixture; production CLI settles it before provider launch. '
+        return ('Paid scope approved for this unchanged run only: selected agent-provider(s): ' +
+                ', '.join(self.paid_scope['agent_providers']) + '; application/test APIs: ' +
+                (', '.join(self.paid_scope['apis']) if self.paid_scope['apis'] else 'none declared') +
+                '. Do not expand this scope or ask again while it is unchanged. ')
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store
@@ -104,7 +112,7 @@ class Engine:
                             'Preserve all unrelated and pre-existing dirty work. Ask the owner for material scope '
                             'or permission questions. No new planning/evidence artifacts. '
                             'Return an honest concise summary and check outcomes.\n'
-                            + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + '\n'
+                            + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
                             'Pre-existing dirty paths (do not edit): ' + canonical(sorted(focused.dirty)) + '\n'
                             'Task: ' + canonical(task), claim=focused.claim, command=focused.command)
                     except BaseException as exc:
@@ -157,7 +165,7 @@ class Engine:
             reviewer = self.adapter(project, self.reviewer_executor, question=self.question, observe_question=review_question)
             reviewer.lock_fd = self.authority.lock.fileno()
             try:
-                review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. ' + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
+                review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. ' + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
             except BaseException as exc:
                 recorder.emit(reviewer_occurrence, 'review', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={'role': 'reviewer', 'review_base': review_base, 'review_head': head, 'error_category': _failure(exc)})
                 raise

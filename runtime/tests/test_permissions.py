@@ -4,10 +4,11 @@ import os
 import sys
 from unittest.mock import patch
 
+from coherence_workflow.cli import main
 from coherence_workflow.engine import Engine, _ROUTINE_AUTHORITY
 from coherence_workflow.intake import admit
 from coherence_workflow.pi_adapter import PiAdapter
-from coherence_workflow.store import Authority
+from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
 
 
@@ -58,3 +59,59 @@ print(json.dumps({'type': 'result', 'text': 'offline'}), flush=True)
         request = json.loads(capture.read_text())
         self.assertEqual(request['prompt'], _ROUTINE_AUTHORITY)
         self.assertFalse(request['readOnly'])
+
+
+class PaidScopeTests(ProjectTest):
+    def test_missing_or_denied_scope_stops_before_provider_or_storage(self):
+        tasks, executor = self.root/'tasks.json', self.root/'executor.json'
+        tasks.write_text('{"paid_apis":["fixture test API"],"tasks":[{"id":"dummy","description":"Synthetic fixture"}]}')
+        executor.write_text(json.dumps(EXECUTOR))
+        for answer in ('no', None):
+            with self.subTest(answer=answer), patch('coherence_workflow.cli.PiAdapter') as adapter:
+                asked = []
+                def question(text):
+                    asked.append(text)
+                    if answer is None:
+                        raise Blocked('owner input unavailable')
+                    return answer
+                with patch('coherence_workflow.cli.terminal_question', side_effect=question), \
+                     patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+                                                                  'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}):
+                    code = main(['start', '--project', str(self.project), '--tasks', str(tasks),
+                                 '--executor', str(executor), '--run', 'scope-' + str(answer)])
+                self.assertEqual(code, 2)
+                self.assertEqual(len(asked), 1)
+                self.assertIn('selected agent-provider(s): fixture', asked[0])
+                self.assertIn('fixture test API', asked[0])
+                adapter.assert_not_called()
+                self.assertFalse((self.project/'.coherence').exists())
+
+    def test_granted_scope_reaches_every_role_and_provider_bound_request(self):
+        prompts, questions = [], []
+        scope = {'agent_providers': ['fixture'], 'apis': ['fixture test API']}
+        class Capture:
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, *, read_only=False, **kwargs):
+                prompts.append((prompt, read_only))
+                return '{"approved":true,"findings":[]}' if read_only else 'offline worker'
+        with Authority(self.project) as authority:
+            Engine(authority, 'granted', admit([{'id': 'dummy', 'description': 'Synthetic fixture'}]),
+                   EXECUTOR, adapter=Capture, paid_scope=scope,
+                   question=lambda text: questions.append(text)).invoke()
+        self.assertEqual(questions, [])
+        self.assertEqual(len(prompts), 2)
+        granted = 'Paid scope approved for this unchanged run only: selected agent-provider(s): fixture; application/test APIs: fixture test API.'
+        self.assertTrue(all(granted in prompt for prompt, _ in prompts))
+
+        capture = self.root / 'paid-provider-bound.json'
+        host = self.root / 'paid_zero_send_host.py'
+        host.write_text("""import json, os
+from pathlib import Path
+request = json.loads(input())
+Path(os.environ['CAPTURE']).write_text(json.dumps(request))
+print(json.dumps({'type': 'result', 'text': 'offline'}), flush=True)
+""")
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), \
+             patch.dict(os.environ, {'COHERENCE_NODE': sys.executable, 'CAPTURE': str(capture)}):
+            self.assertEqual(PiAdapter(self.project, EXECUTOR).prompt(granted), 'offline')
+        self.assertEqual(json.loads(capture.read_text())['prompt'], granted)

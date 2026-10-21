@@ -12,6 +12,13 @@ unchanged historical documents, not byte-equality or execution-eligibility manda
 second launch validator. A bare task list or `tasks` object is accepted. No mandatory
 approvals, evidence, order, execution intent, check catalogue, path list or envelope.
 
+A task-contract object may also contain dedicated paid-use fields outside individual task text:
+`paid_scope` is an explicit object with `approved: true`, exact `agent_providers` for the selected
+worker/reviewer providers, and an `apis` string list; alternatively `paid_apis` is the named application/test
+API list used in the one owner question. Missing, denied or mismatched scope stops before storage or any
+provider launch. Credentials, task descriptions and historical rows are never approval. The accepted unchanged
+scope/exclusions are prompt context for all roles, not a receipt, budget service or persistent permission store.
+
 `--executor` is ordinary JSON containing worker `provider`, `model`, `effort`, with an
 optional `reviewer` object containing its own `provider`, `model`, `effort`. The engine
 passes the worker profile to implementation sessions and the reviewer profile to the

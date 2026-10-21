@@ -60,6 +60,20 @@ Dependencies determine sequential order; forward references are valid. Empty wor
 `no tasks` before storage, locks or SDK launch. No mandatory check, path list, approval envelope,
 manifest, catalogue, graph, original session, cgroup or provenance record.
 
+Before any selected agent-provider call, provide explicit paid authority as a top-level task-contract
+field, for example:
+
+```json
+{"paid_scope":{"approved":true,"agent_providers":["openai-codex"],"apis":["selected application/test API"]},"tasks":[{"id":"fix-title","description":"Correct the page title."}]}
+```
+
+The provider list must exactly name the selected worker and reviewer providers. If this dedicated scope is
+absent or does not match, the CLI asks once through the current terminal or attached parent bridge before
+storage or provider launch, naming the selected providers and declared application/test APIs (`paid_apis`,
+or `none declared`). A denied or unavailable answer launches no provider. Credentials, ordinary task text
+and historical runs are not approval. The unchanged grant and exclusions are included in worker, fixing-worker
+and read-only reviewer prompts; altered scope requires a new answer.
+
 Optional `checks` accepts shell command strings, argv lists or objects with `command`/`argv`.
 A singular `check` or `required[].check` uses the same command format. Old registered catalogue
 IDs are no longer executable: supply the actual project command when requesting that check.
@@ -98,10 +112,10 @@ scope, rerun affected checks, and obtain independent review. SDK compaction/retr
 behavior; compaction/optional telemetry never creates a workflow fatal condition. SDK tools
 truncate long output with their normal continuation instructions; the transport has no size cap.
 
-Material questions use actual current terminal input. Without an interactive terminal the run
-stops with the question, preserves partial work and does not fabricate an answer. A loaded project
+Material questions, including missing paid scope before provider launch, use actual current terminal input.
+Without an interactive terminal the run stops with the question and does not fabricate an answer. A loaded project
 parent-session bridge may instead launch this same command with its private socket environment;
-it wakes that parent with the exact pending question and returns only its correlated reply to the
+it wakes that parent with the exact pending question (including the paid-scope decision when needed) and returns only its correlated reply to the
 waiting worker. Before attached execution, the runner checks the existing socket's authenticated
 readiness response and active parent reply tool; incomplete/mismatched configuration stops before
 storage or SDK launch, without terminal fallback. Each worker's actual SDK tool set must contain

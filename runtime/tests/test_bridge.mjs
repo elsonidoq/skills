@@ -68,7 +68,7 @@ function mockPi(messages, tools) {
   };
 }
 
-async function fixture({hold = false} = {}) {
+async function fixture({hold = false, paidScope = true} = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-bridge-'));
   const project = path.join(root, 'project');
   await fs.mkdir(path.join(project, 'scripts'), {recursive: true});
@@ -84,7 +84,7 @@ async function fixture({hold = false} = {}) {
   const host = path.join(root, 'offline-host.py');
   const node = path.join(root, 'offline-node');
   const marker = path.join(root, 'host-started');
-  await fs.writeFile(tasks, JSON.stringify([{id: 'question', description: 'Ask then continue'}]));
+  await fs.writeFile(tasks, JSON.stringify({...(paidScope ? {paid_scope: {approved: true, agent_providers: ['fixture'], apis: ['fixture test API']}} : {}), tasks: [{id: 'question', description: 'Ask then continue'}]}));
   await fs.writeFile(executor, JSON.stringify({provider: 'fixture', model: 'offline', effort: 'medium'}));
   await fs.writeFile(host, hold ? `import os, pathlib, sys, time
 json = __import__('json')
@@ -126,6 +126,33 @@ test('missing parent reply capability stops the actual CLI before storage or SDK
     await assert.rejects(fs.access(value.marker), {code: 'ENOENT'});
     await assert.rejects(fs.access(path.join(value.project, '.coherence')), {code: 'ENOENT'});
     assert.equal(messages.some(item => item.message.customType === 'coordinate_implementation_question'), false);
+  } finally {
+    if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
+    await pi.shutdown?.();
+    await fs.rm(value.root, {recursive: true, force: true});
+  }
+});
+
+test('bridge asks for missing paid scope before launching the provider', async () => {
+  const value = await fixture({hold: true, paidScope: false});
+  const messages = [], tools = new Map();
+  const pi = mockPi(messages, tools);
+  const originalNode = process.env.COHERENCE_NODE;
+  process.env.COHERENCE_NODE = value.node;
+  try {
+    const {default: bridge} = await import(bridgeModule);
+    bridge(pi);
+    const ctx = {cwd: value.project, sessionManager: {getSessionId: () => 'parent-session'}};
+    await tools.get('coordinate_implementation_start').execute('start', {tasks: value.tasks, executor: value.executor, run: 'paid-scope'}, undefined, undefined, ctx);
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_question')) await new Promise(resolve => setTimeout(resolve, 10));
+    const question = messages.find(item => item.message.customType === 'coordinate_implementation_question');
+    assert.match(question.message.content, /selected agent-provider\(s\): fixture/);
+    assert.match(question.message.content, /application\/test APIs: none declared/);
+    await assert.rejects(fs.access(value.marker), {code: 'ENOENT'});
+    await tools.get('coordinate_implementation_reply').execute('reply', {request_id: question.message.details.request_id, run: 'paid-scope', answer: 'no'}, undefined, undefined, ctx);
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete')) await new Promise(resolve => setTimeout(resolve, 10));
+    assert.match(messages.at(-1).message.content, /exit 2/);
+    await assert.rejects(fs.access(value.marker), {code: 'ENOENT'});
   } finally {
     if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
     await pi.shutdown?.();

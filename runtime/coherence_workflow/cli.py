@@ -10,8 +10,36 @@ import uuid
 
 from .engine import Engine
 from .intake import load_contract
-from .pi_adapter import PiAdapter, parent_question
+from .pi_adapter import PiAdapter, parent_question, terminal_question
 from .store import Authority, Blocked, canonical, read_history
+
+
+def _selected_providers(executor):
+    profiles = [executor]
+    if isinstance(executor.get('reviewer'), dict):
+        profiles.append(executor['reviewer'])
+    return sorted({profile.get('provider') for profile in profiles if isinstance(profile.get('provider'), str) and profile['provider']})
+
+
+def settle_paid_scope(contract, executor, question):
+    """Return explicit current-run paid scope before any provider launch."""
+    providers = _selected_providers(executor)
+    scope = contract.get('paid_scope')
+    if isinstance(scope, dict) and scope.get('approved') is True:
+        approved_providers, apis = scope.get('agent_providers'), scope.get('apis')
+        if (isinstance(approved_providers, list) and all(isinstance(value, str) and value for value in approved_providers)
+                and sorted(set(approved_providers)) == providers and isinstance(apis, list)
+                and all(isinstance(value, str) and value for value in apis)):
+            return {'agent_providers': providers, 'apis': apis}
+    apis = contract.get('paid_apis', [])
+    if not isinstance(apis, list) or any(not isinstance(value, str) or not value for value in apis):
+        raise Blocked('paid_apis must be a list of named application/test APIs when supplied')
+    named_apis = ', '.join(apis) if apis else 'none declared'
+    answer = question('Approve paid scope before any provider launch: selected agent-provider(s): ' +
+                      ', '.join(providers) + '; application/test APIs: ' + named_apis + '. [yes/no]')
+    if answer.strip().lower() not in ('yes', 'y'):
+        raise Blocked('paid scope was not approved; no provider launch occurred')
+    return {'agent_providers': providers, 'apis': apis}
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -91,6 +119,10 @@ def main(argv=None):
         if not isinstance(executor, dict) or any(not isinstance(executor.get(k), str) or not executor[k]
                                                  for k in ('provider', 'model', 'effort')):
             raise Blocked('executor needs provider, model and effort strings')
+        if 'reviewer' in executor and (not isinstance(executor['reviewer'], dict) or any(
+                not isinstance(executor['reviewer'].get(key), str) or not executor['reviewer'][key]
+                for key in ('provider', 'model', 'effort'))):
+            raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
         run_id = args.run or uuid.uuid4().hex
         question = None
         if any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')):
@@ -98,9 +130,10 @@ def main(argv=None):
                 raise Blocked('parent owner bridge run mismatch; launch this run through its parent-session bridge')
             parent_question(None, ready=True)
             question = parent_question
+        paid_scope = settle_paid_scope(contract, executor, question or terminal_question)
         with Authority(args.project) as authority:
             result = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
-                            **({'question': question} if question else {})).invoke()
+                            paid_scope=paid_scope, **({'question': question} if question else {})).invoke()
             print(canonical(result))
         return 0
     except (Blocked, OSError, ValueError, sqlite3.Error) as exc:

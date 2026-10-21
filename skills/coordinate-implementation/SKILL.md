@@ -39,9 +39,12 @@ Supply project, task file and executor JSON containing the owner-selected execut
 assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical
 fixes, isolated tests/servers, necessary local/in-project dependency setup, and current-task artifact
 lifecycle need no owner question; this authority does not prove checks passed. No global install, auth
-refresh, credential change, deployment, push or unrelated-work deletion is authorized. Ordinary approved
-model tokens need no financial receipt. A separately supplied paid scope applies only as supplied; obtain
-narrow permission for separately chargeable or irreversible external actions outside requested coding.
+refresh, credential change, deployment, push or unrelated-work deletion is authorized. Before any selected
+agent-provider call, the CLI requires an explicit paid scope naming every selected provider and applicable
+application/test APIs. Supply an already approved top-level `paid_scope` or answer the one current
+terminal/attached-bridge question; credentials, task text and history never imply approval. A denial or
+missing interactive reply launches no provider. The unchanged grant/exclusions follow worker, fixer and
+reviewer prompts without repetitive questions; a changed scope needs a new decision.
 
 ## Interface Actions
 

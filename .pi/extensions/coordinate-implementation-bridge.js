@@ -71,7 +71,7 @@ export default function coordinateImplementationBridge(pi) {
     bridge.pending = {request_id: request.request_id, socket};
     pi.sendMessage({
       customType: 'coordinate_implementation_question', display: true,
-      content: `Coordinate implementation asks: ${request.question}\n\nAsk the user, then call coordinate_implementation_reply with request_id ${request.request_id} and run ${bridge.run}.`,
+      content: `Coordinate implementation requires owner input before continuing: ${request.question}\n\nAsk the user, then call coordinate_implementation_reply with request_id ${request.request_id} and run ${bridge.run}.`,
       details: {request_id: request.request_id, run: bridge.run},
     }, {triggerTurn: true, deliverAs: 'followUp'});
   };
