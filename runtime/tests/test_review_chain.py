@@ -182,6 +182,11 @@ class ChainHistoryTests(ProjectTest):
 
 
 class BoundedChainTests(ProjectTest):
+    def test_optional_identity_failure_does_not_block_required_chain(self):
+        with patch.object(Recorder, 'occurrence', return_value=None):
+            self.test_actionable_rejection_repairs_once_then_fresh_rereview()
+
+
     def test_immediate_approval_skips_fixer_and_rereview(self):
         calls = []
         class Adapter:

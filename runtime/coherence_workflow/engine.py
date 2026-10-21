@@ -2,6 +2,7 @@
 import inspect
 import json
 import os
+import uuid
 
 from .git_effects import FocusedGit
 from .monitoring import Recorder, descriptor
@@ -279,7 +280,7 @@ class Engine:
                 trigger_execution_id=None, predecessor_execution_id=None):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
-        execution_id = recorder.occurrence()
+        execution_id = uuid.uuid4().hex
         store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
                               fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
                               predecessor_execution_id=predecessor_execution_id,
@@ -357,7 +358,7 @@ class Engine:
         if state != 'rejected' or review['approved'] or not review['findings']:
             raise Blocked('independent review was not an actionable rejection (commits retained): ' + canonical(review))
         if not fixers:
-            fix_id = recorder.occurrence()
+            fix_id = uuid.uuid4().hex
             self.run_fix(review['findings'], trigger_execution_id=review_id, review_base=review_base,
                          recorder=recorder, execution_id=fix_id)
             fixers = [item for item in store.review_chain(self.run, private=True)['executions'] if item['role'] == 'fixer']
