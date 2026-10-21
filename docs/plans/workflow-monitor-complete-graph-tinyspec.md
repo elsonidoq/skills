@@ -2,6 +2,8 @@
 
 **Status:** Implementation authorized by the owner's workflow-monitor implementation request in this session, including local synthetic checks and focused task commits through the Coordinate Implementation runner. That request supersedes historical planning-only restrictions. Requirements and acceptance remain unchanged; authorization is not feature completion. Planning approval provenance is retained in the [tasks document](workflow-monitor-complete-graph-tasks.md#planning-review-and-owner-approval).
 
+**Bounded follow-up approval:** The owner subsequently approved removing monitor-side privacy-driven hiding of recorded workflow prose/identities, fixing blank boolean Details and task-scoped manual-gate waiting, with local synthetic checks and separate focused commits by a sole Sol subagent rather than the Coordinate runner. This supersedes only the earlier privacy exclusions and runner-only delivery wording below; historical approvals remain historical. Keep typed DTO construction, credential protection, inert rendering and all read-only/HTTP, graph, color, pagination and lineage contracts. No producer/schema or polling change is authorized.
+
 ## Context and authority
 
 The owner needs a monitor that shows the complete recorded plan from launch, preserves planned identities through execution, identifies the selected run unmistakably, and separates **plan progress**, **execution outcome/color**, and **acceptance**.
@@ -86,13 +88,13 @@ Established terminal execution outcome takes precedence over stale waiting/runni
 
 Details independently expose check results, checkpoint status, review approval/findings count, recorded ranges, and current full-range acceptance qualification. Preserve original rejection and correction-only/unresolved/cyclic limitations even when execution is GREEN.
 
-Expose the requested run ID narrowly as text in every selector item and a persistent selected-run banner, including loading/error states. Selection remains unambiguous when labels match. Preserve opaque routing/reference IDs. Reuse stable task anchors; a narrow explicit task-ID display is an implementation recommendation for distinguishable generic task labels, not permission to expose private task prose.
+Expose the requested run ID narrowly as text in every selector item and a persistent selected-run banner, including loading/error states. Selection remains unambiguous when labels match. Preserve opaque routing/reference IDs. Reuse stable task anchors and display recorded task IDs to distinguish generic labels. Recorded task prose is visible under the bounded follow-up approval above.
 
 ## Compatibility and security
 
 Keep legacy outcome/completeness evidence intact; add distinct execution summaries rather than redefining historical acceptance fields. Pagination must affect loaded evidence only, never already-established status.
 
-Preserve existing stale-fetch/layout guards, status-only viewport/selection reuse, correction lineage and read-freshness distinctions. Preserve read-only SQLite access, closed GET API, loopback/same-origin/header restrictions and response protections. Add no raw errors, prompts, results, private task prose or unrelated identifiers; render requested identity as text, not markup.
+Preserve existing stale-fetch/layout guards, status-only viewport/selection reuse, correction lineage and read-freshness distinctions. Preserve read-only SQLite access, closed GET API, loopback/same-origin/header restrictions and response protections. Expose recorded workflow prose and identities through typed DTOs, not raw database output. Protect actual credentials and raw errors; render content as text, not markup.
 
 ## Observable acceptance and proof
 

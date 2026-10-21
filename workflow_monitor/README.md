@@ -25,7 +25,7 @@ rebuild to a regular local `dist/` directory and retry.
 Then open `http://127.0.0.1:8765/` in a local browser. The left selector and persistent
 selected-run banner show the recorded run ID as inert text, so identically labelled runs remain
 distinguishable during loading or a read error. Opaque references still route API requests; the
-run ID is the sole additional exposed identity. When a retained descriptor is complete, the
+recorded task and occurrence IDs are also visible in Details as inert text. When a retained descriptor is complete, the
 compact graph also exposes every declared task with stable run-scoped anchors and declared
 prerequisite edges, including pending work. Its final stage is separately defined as
 **“Planned independent review — not an agent call.”**; actual implementation, review,
@@ -34,7 +34,7 @@ that definition. Missing, malformed, partial, invalid-dependency, or fallback-em
 descriptors show complete graph unavailable instead of a repaired partial plan, while valid
 recorded history remains available. Unsupported stores and read failures remain unavailable
 or errors, never empty completed runs. Short labels use recorded roles and public task
-presentation; missing public task labels remain generic, never guessed from private task IDs.
+presentation; missing task labels fall back to the recorded task ID. Retained labels and summaries are displayed without monitor-side length exclusions.
 
 A confirmed internal step that stops a recorded failed run appears as a red node after
 its recorded parent or preceding agent in that run/task scope. A failure before any
@@ -81,8 +81,10 @@ selection also shows the full retained acceptance summary—checks, checkpoints,
 approval/findings/ranges and current full-range qualification—separately from paged
 loaded history. The legend makes this separation explicit; `skipped` and `cancelled`
 are unsupported and never inferred. **Loaded history and technical references** exposes
-supporting definitions, every loaded minimized observation and unsupported record without
-raw payloads. **Load more history** and **Load correction
+supporting definitions, every loaded typed observation (including parent identities, error categories and recording gaps) and unsupported record without
+raw database payloads. Recorded workflow prose and identities are intentionally visible;
+this is not a privacy filter. DTO construction still validates types and commit hashes,
+and does not expose arbitrary payload/credential fields, runner identity internals or raw errors. **Load more history** and **Load correction
 history** retrieve further pages at their snapshot watermarks. Inventory counts disclose
 unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 

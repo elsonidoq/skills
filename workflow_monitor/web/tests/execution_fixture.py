@@ -25,6 +25,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     git(project, 'add', 'tracked'); git(project, 'commit', '-qm', 'fixture')
     base = git(project, 'rev-parse', 'HEAD').decode().strip()
     presentation = descriptor({'tasks': [{'id': 'one', 'depends': []}, {'id': 'two', 'depends': ['one']}, {'id': 'three', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'T001'}, 'two': {'label': 'T002'}, 'three': {'label': 'T003'}}}}, {})
+    # Simulate already-retained prose; no producer behavior is changed.
+    presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
     with Authority(project) as owner:
         for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged'):
             owner.store.start(run, base)

@@ -20,8 +20,8 @@ def run_ref(run_id: str) -> str:
     return _ref("run", run_id)
 
 
-def _text(value: object, fallback: str, limit: int) -> str:
-    return value if isinstance(value, str) and 0 < len(value) <= limit else fallback
+def _text(value: object, fallback: str = "") -> str:
+    return value if isinstance(value, str) and value else fallback
 
 
 def _sha(value: object) -> str | None:
@@ -53,14 +53,15 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
         public_runs.append({"ref": _ref("run", run["run_id"]), "display_id": run["run_id"], "label": "Recorded run", "started_at": _time(run.get("started_at")),
                             "description_version": description.get("description_version") if type(description.get("description_version")) is int else None,
                             "plan_availability": "complete" if run.get("plan_available") else "unavailable",
-                            "requested_executor": {key: _text(requested.get(key), "unknown", 80) for key in ("provider", "model", "effort")},
+                            "requested_executor": {key: _text(requested.get(key), "unknown") for key in ("provider", "model", "effort")},
                             "completeness": "incomplete" if run.get("incomplete") else "recorded",
-                            "review_acceptance": graph.get("review_acceptance", {}).get(run["run_id"], {"state": "unknown", "base": None, "head": None})})
+                            "review_acceptance": {key: (_sha(value) if key in {"base", "head"} else value)
+                                                  for key, value in graph.get("review_acceptance", {}).get(run["run_id"], {"state": "unknown", "base": None, "head": None}).items()}})
     phases = [{"ref": _ref("phase", row["run_id"], row["phase_id"]), "run_ref": _ref("run", row["run_id"]),
-               "label": _text(row.get("label"), "Workflow phase", 80), "pre_recording": row.get("pre_recording") is True}
+               "phase_id": row["phase_id"], "label": _text(row.get("label"), row["phase_id"]), "pre_recording": row.get("pre_recording") is True}
               for row in graph.get("phases", [])]
     tasks = [{"ref": _ref("task", row["run_id"], row["task_id"]), "run_ref": _ref("run", row["run_id"]),
-              "label": _text(row.get("label"), "Task", 80), "summary": _text(row.get("summary"), "Task execution", 240),
+              "task_id": row["task_id"], "label": _text(row.get("label"), row["task_id"]), "summary": _text(row.get("summary"), "Task execution"),
               "prerequisite_refs": [_ref("task", row["run_id"], prerequisite) for prerequisite in row.get("depends", [])]}
              for row in graph.get("tasks", [])]
     review_definitions = [{"ref": _ref("review_definition", row["run_id"], row["phase_id"]),
@@ -79,6 +80,9 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                         "no_change": facts.get("no_change") if type(facts.get("no_change")) is bool else None,
                         "approved": facts.get("approved") if type(facts.get("approved")) is bool else None,
                         "finding_count": facts.get("finding_count") if type(facts.get("finding_count")) is int and facts["finding_count"] >= 0 else None,
+                        "parent_occurrence_id": _text(facts.get("parent_occurrence_id")),
+                        "error_category": facts.get("error_category") if isinstance(facts.get("error_category"), str) and facts.get("error_category") in {"blocked", "check", "git", "malformed", "transport", "interrupted", "unknown"} else None,
+                        "recording_gap": facts.get("recording_gap") is True,
                         "baseline": _sha(facts.get("baseline")), "head": _sha(facts.get("head")),
                         "review_base": _sha(facts.get("review_base")), "review_head": _sha(facts.get("review_head"))})
     occurrences = []
@@ -89,7 +93,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
         outcomes = [item.get("kind") for item in row.get("observations", [])]
         outcome = next((kind for kind in reversed(outcomes) if kind in {"passed", "failed", "interrupted", "abandoned"}), None)
         occurrences.append({"ref": _ref("occ", row["run_id"], row["occurrence_id"]), "run_ref": _ref("run", row["run_id"]),
-                            "phase_ref": _ref("phase", row["run_id"], row["phase"]),
+                            "occurrence_id": row["occurrence_id"], "phase_ref": _ref("phase", row["run_id"], row["phase"]),
                             "task_ref": _ref("task", row["run_id"], row["task_id"]) if row.get("task_id") else None,
                             "role": role, "outcome": outcome, "completeness": "incomplete" if row.get("incomplete") else "complete",
                             "record_refs": [_ref("record", row["run_id"], item["seq"]) for item in row.get("observations", [])]})

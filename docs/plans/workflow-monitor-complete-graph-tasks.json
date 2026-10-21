@@ -1,4 +1,5 @@
 {
+  "followup_scope": "Owner-approved bounded follow-up supersedes privacy-driven hiding and runner-only delivery wording in these original tasks: expose recorded workflow prose/identities via typed DTOs with credential protection and inert rendering, fix boolean Details and manual-gate waiting, using one Sol writer and separate verified focused commits. Preserve original graph/color/pagination/lineage and read-only HTTP contracts; historical approvals remain historical.",
   "review_base": "bfe9b5c44dc134a24957fdbe6632827d551fd858",
   "tasks": [
     {

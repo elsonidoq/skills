@@ -1,4 +1,4 @@
-"""Public minimization must expose identities, never private row content."""
+"""Typed DTOs expose recorded workflow content, not arbitrary payloads."""
 import json
 import unittest
 
@@ -19,6 +19,24 @@ class PublicTests(unittest.TestCase):
         self.assertEqual([run["display_id"] for run in result["runs"]], ["run-a", "run-b"])
         self.assertNotIn("PRIVATE-SENTINEL", repr(result))
         self.assertEqual(result["unknown_records"][0]["code"], "unsupported_observation")
+
+    def test_recorded_prose_and_identities_are_not_hidden_by_presentation_limits(self):
+        source = snapshot()
+        description = json.loads(source['runs'][0]['description'])
+        prose = '<img src=x onerror=alert(1)> Workflow explanation ' * 30
+        description['tasks'][0].update(label=prose, summary=prose)
+        source['runs'][0]['description'] = json.dumps(description)
+        result = minimize(normalize(source))
+        self.assertEqual(result['tasks'][0]['label'], prose)
+        self.assertEqual(result['tasks'][0]['summary'], prose)
+        self.assertEqual(result['tasks'][0]['task_id'], 'one')
+        self.assertEqual(result['occurrences'][0]['occurrence_id'], 'worker-1')
+        self.assertEqual(result['phases'][0]['phase_id'], 'intake')
+        # Unknown payload/credential fields remain outside the recording DTO contract.
+        source['observations'][0]['facts'] = json.dumps({'role': 'worker', 'api_key': 'synthetic-credential'})
+        protected = minimize(normalize(source))
+        self.assertNotIn('synthetic-credential', json.dumps(protected))
+        self.assertEqual(protected['unknown_records'][0]['code'], 'unsupported_observation')
 
     def test_planned_topology_is_run_scoped_and_review_is_not_an_execution(self):
         source = snapshot()

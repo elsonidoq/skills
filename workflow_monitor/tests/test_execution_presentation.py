@@ -43,7 +43,7 @@ class ExecutionPresentationTests(unittest.TestCase):
         self.assertNotEqual(stopping[0]['support_ref'], second['occurrences'][0]['ref'])
         self.assertIsNone(worker['outcome'])  # legacy outcome remains acceptance-neutral
         self.assertEqual(worker['execution_summary']['state'], 'success')
-        self.assertNotIn('parent_occurrence_id', json.dumps(first))
+        self.assertEqual(next(item for item in first['occurrences'] if item['role'] == 'worker')['occurrence_id'], 'worker')
 
     def test_pre_agent_stop_has_no_invented_parent(self):
         first, _ = self.view([
@@ -72,14 +72,32 @@ class ExecutionPresentationTests(unittest.TestCase):
         self.assertEqual(failed['support_ref'], worker['ref'])
         self.assertTrue(any(item['kind'] == 'failed' for item in first['records']))
 
-    def test_question_parent_is_opaque_and_scoped(self):
+    def test_question_parent_keeps_routing_scoped_and_displays_recorded_identity(self):
         first, _ = self.view([
             ('run-a', 'PRIVATE-SENTINEL', 'worker', 'one', 'started', {'role': 'worker'}),
             ('run-a', 'question', 'worker', 'one', 'question_requested', {'parent_occurrence_id': 'PRIVATE-SENTINEL'}),
         ])
         worker, question = first['occurrences']
         self.assertEqual(question['parent_ref'], worker['ref'])
-        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(first))
+        self.assertEqual(worker['occurrence_id'], 'PRIVATE-SENTINEL')
+        self.assertEqual(first['records'][1]['parent_occurrence_id'], 'PRIVATE-SENTINEL')
+
+    def test_acceptance_uses_the_same_typed_ranges_as_records(self):
+        credential = 'Bearer synthetic-credential-not-a-commit'
+        first, _ = self.view([
+            ('run-a', 'checkpoint', 'checkpoint', 'one', 'passed',
+             {'baseline': credential, 'head': {'token': credential}, 'no_change': True}),
+            ('run-a', 'review', 'review', None, 'failed',
+             {'role': 'reviewer', 'review_base': [credential], 'review_head': credential,
+              'approved': False, 'finding_count': -1}),
+        ])
+        summary = first['runs'][0]['acceptance_summary']
+        self.assertIsNone(summary['checkpoints'][0]['baseline'])
+        self.assertIsNone(summary['checkpoints'][0]['head'])
+        self.assertIsNone(summary['reviews'][0]['base'])
+        self.assertIsNone(summary['reviews'][0]['head'])
+        self.assertIsNone(summary['reviews'][0]['finding_count'])
+        self.assertNotIn(credential, json.dumps(first))
 
     def test_execution_and_acceptance_are_separate_full_snapshot_facts(self):
         base = 'a' * 40

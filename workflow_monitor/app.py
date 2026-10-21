@@ -181,10 +181,7 @@ def _task_progress(graph: dict[str, Any], public: dict[str, Any]) -> None:
         run = runs[task["run_ref"]]
         task_rows = [row for (run_id, _), row in occurrence_rows.items()
                      if run_id == run["display_id"] and row.get("task_id") is not None]
-        # The descriptor task ID is deliberately kept private; compare it only with
-        # raw graph facts and expose occurrence/task references below.
-        raw_id = next((row["task_id"] for row in graph["tasks"]
-                       if row["run_id"] == run["display_id"] and task["ref"] == _ref_task(row["run_id"], row["task_id"])), None)
+        raw_id = task["task_id"]
         rows = [row for row in task_rows if row["task_id"] == raw_id]
         decisive = []
         for row in rows:
@@ -253,10 +250,6 @@ def _task_progress(graph: dict[str, Any], public: dict[str, Any]) -> None:
             task["annotation"] = {"code": "not_started_run_stopped", "label": "Not started; run stopped"}
 
 
-def _ref_task(run_id: str, task_id: str) -> str:
-    return _ref("task", run_id, task_id)
-
-
 def _ref_occurrence(run_id: str, occurrence_id: str) -> str:
     return _ref("occ", run_id, occurrence_id)
 
@@ -267,6 +260,7 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
     Sequence means recorded order, not proven causality. A preparation failure can
     wrap a more specific check/worker failure; show only that specific stopping step.
     """
+    records = {(item["run_ref"], item["source_seq"]): item for item in public["records"]}
     pairs = list(zip(graph.get("occurrences", []), public["occurrences"]))
     by_identity = {(row["run_id"], row["occurrence_id"]): item for row, item in pairs}
     for row, item in pairs:
@@ -334,18 +328,18 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
         for item in scoped:
             rows = next(row["observations"] for row, candidate in pairs if candidate is item)
             terminal_row = next((row for row in reversed(rows) if row["kind"] in {"passed", "failed", "interrupted", "abandoned"}), None)
+            facts = records[(item["run_ref"], terminal_row["seq"])] if terminal_row else {}
             if item["phase"] == "check" and terminal_row:
                 checks.append({"occurrence_ref": item["ref"], "state": terminal_row["kind"],
-                               "ordinal": terminal_row["facts"].get("ordinal"), "exit_code": terminal_row["facts"].get("exit_code")})
+                               "ordinal": facts.get("ordinal"), "exit_code": facts.get("exit_code")})
             elif item["phase"] == "checkpoint" and terminal_row:
                 checkpoints.append({"occurrence_ref": item["ref"], "state": terminal_row["kind"],
-                                    "baseline": terminal_row["facts"].get("baseline"), "head": terminal_row["facts"].get("head"),
-                                    "no_change": terminal_row["facts"].get("no_change")})
+                                    "baseline": facts.get("baseline"), "head": facts.get("head"),
+                                    "no_change": facts.get("no_change")})
             elif item["role"] == "reviewer" and terminal_row:
                 reviews.append({"occurrence_ref": item["ref"], "state": terminal_row["kind"],
-                                "approved": terminal_row["facts"].get("approved") if type(terminal_row["facts"].get("approved")) is bool else None,
-                                "finding_count": terminal_row["facts"].get("finding_count") if type(terminal_row["facts"].get("finding_count")) is int else None,
-                                "base": terminal_row["facts"].get("review_base"), "head": terminal_row["facts"].get("review_head")})
+                                "approved": facts.get("approved"), "finding_count": facts.get("finding_count"),
+                                "base": facts.get("review_base"), "head": facts.get("review_head")})
         run["acceptance_summary"] = {"checks": checks, "checkpoints": checkpoints, "reviews": reviews,
                                      "full_range": run["review_acceptance"]}
         terminals = [item for item in scoped if item["phase"] == "terminal" and item["outcome"] in {"failed", "interrupted", "abandoned"}]
