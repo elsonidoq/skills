@@ -17,6 +17,35 @@ EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}
 
 
 class SameRunResumeTests(ProjectTest):
+    def test_checkpoint_history_survives_interruption_before_task_completion(self):
+        project = self.project
+        contract = {'tasks': [{'id': 'tiny', 'description': 'tiny disposable edit', 'owned_paths': ['tiny.txt']}]}
+        class Adapter:
+            workers = 0
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                Adapter.workers += 1
+                kwargs['claim']('tiny.txt')
+                (project/'tiny.txt').write_text('done')
+                return 'done'
+        with Authority(project) as owner:
+            original_task = owner.store.task
+            def interrupted(*args, **kwargs):
+                if args[2] == 'complete': raise KeyboardInterrupt
+                return original_task(*args, **kwargs)
+            with patch.object(owner.store, 'task', side_effect=interrupted), self.assertRaises(KeyboardInterrupt):
+                Engine(owner, 'lost-completion', contract, EXECUTOR, adapter=Adapter).invoke()
+            checkpoint = git(project, 'rev-parse', 'HEAD').decode().strip()
+            self.assertNotEqual(checkpoint, self.base)
+            owner.store.resume('lost-completion')
+            result = Engine(owner, 'lost-completion', contract, EXECUTOR, adapter=Adapter, resume=True).invoke()
+            self.assertEqual(Adapter.workers, 1)
+            self.assertEqual(result['checkpoints'][0]['sha'], checkpoint)
+            self.assertEqual(result['sha'], checkpoint)
+            self.assertEqual(owner.store.db.execute("SELECT state,result FROM execution_tasks WHERE run_id='lost-completion'").fetchone()[:], ('complete', checkpoint))
+
+
     def test_persisted_approval_never_accepts_incoming_commits(self):
         for ordinal in (1, 2):
             with self.subTest(ordinal=ordinal), Authority(self.project) as owner:

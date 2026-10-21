@@ -257,16 +257,25 @@ class Store:
         return {'baseline': row['baseline'], 'input': saved, 'previous_state': row['state'], 'previous_error': row['error']}
 
     def completed_checkpoints(self, run):
-        """Return only retained, reconciled completed task checkpoints for same-run resume."""
+        """Reconcile retained checkpoint results before dispatching unfinished work."""
         completed = {}
-        for row in self.db.execute("SELECT task_id,result FROM execution_tasks WHERE run_id=? AND state='complete'", (run,)):
+        for row in self.db.execute("SELECT task_id,state,baseline,result FROM execution_tasks WHERE run_id=?", (run,)):
             history = self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='checkpoint' AND state='passed' ORDER BY seq DESC LIMIT 1",
                                       (run, row['task_id'])).fetchone()
+            if not history and row['state'] != 'complete':
+                continue
             if not history:
                 raise Blocked('resume cannot skip completed task ' + row['task_id'] + ': checkpoint operation history is missing')
             details = json.loads(history['details'])
-            if not isinstance(details.get('sha'), str) or details['sha'] != row['result']:
+            if not isinstance(details.get('sha'), str) or (row['state'] == 'complete' and details['sha'] != row['result']):
                 raise Blocked('resume cannot skip completed task ' + row['task_id'] + ': checkpoint identity is uncertain')
+            # A checkpoint is durable before the current task projection is updated.
+            # Inspect that exact commit, not current HEAD/worktree, and never relaunch
+            # task tools merely to repair the interrupted completion write.
+            git(self.authority.project, 'cat-file', '-e', details['sha'] + '^{commit}')
+            if row['state'] != 'complete':
+                self.task(run, row['task_id'], 'complete', row['baseline'], details['sha'],
+                          {'recovered_checkpoint': details})
             completed[row['task_id']] = details
         return completed
 
