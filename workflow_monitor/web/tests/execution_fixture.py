@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     # Simulate already-retained prose; no producer behavior is changed.
     presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
     with Authority(project) as owner:
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(presentation)
