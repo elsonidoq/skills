@@ -115,7 +115,12 @@ rules above for reusable skills and commands.
   recent context, selective artifact/Git/check reconstruction and active-child reconciliation
   under the executable interface's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
   Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
-- Execution delivery uses a single writer and verified focused task checkpoints.
+- The owner decides whether workers run concurrently or sequentially, including in the same
+  checkout. Do not require sole-writer ownership when the owner authorizes concurrency; this
+  direction supersedes conflicting single-writer instructions in skills or workflow guidance.
+  Concurrent workers must keep explicit task-owned paths and preserve one another's changes;
+  overlapping edits or uncertain ownership require coordination, not a blanket concurrency ban.
+  Execution delivery retains verified focused task checkpoints.
   Planning must produce granular,
   independently verifiable tasks sized for Terra workers, regardless of the planning model.
   Split independently testable concerns rather than bundling milestones into implementation tasks.
@@ -131,7 +136,7 @@ rules above for reusable skills and commands.
   tools, actual specified project checks/manual gates, focused explicit-owned-path Git commits and
   fresh independent read-only final review. SQLite stores ordinary progress/history, not effect
   proof. No manifest, catalogue, cgroup provisioning, session/parent receipts or binding assessment.
-  Preserve sole writer ownership, unrelated work, hooks/signing, old rows and actual errors.
+  Preserve task-owned path boundaries, unrelated work, hooks/signing, old rows and actual errors.
   Current terminal input is authority when needed; no automatic install, auth refresh, reload,
   legacy restart, expensive failure retry loop or mass conversion.
 - Documentation: `docs/index.md` is the routing guide and root directory index;
