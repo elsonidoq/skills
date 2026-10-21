@@ -18,10 +18,26 @@ class SavedSessionTransportTests(ProjectTest):
         focused = FocusedGit(self.project, {'generated_outputs': ['web/dist/']},
                              {'artifacts': ['web/dist/known.js']})
         host = Path(__file__).with_name('cleanup_adapter_fixture.mjs')
-        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(
+        from coherence_workflow.engine import Engine
+        from coherence_workflow.sessions import select_session
+        from coherence_workflow.store import Authority
+        executor = {'provider': 'openai', 'model': 'gpt-4.1', 'effort': 'medium'}
+        task = {'id': 'tiny', 'description': 'zero-send SDK boundary', 'context_group': 'dummy'}
+        (self.project/'.pi').mkdir()
+        (self.project/'.pi/settings.json').write_text(json.dumps({'compaction': {'enabled': True}}))
+        with Authority(self.project) as owner, patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(
                 'os.environ', {'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}):
-            worker = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4.1', 'effort': 'medium'})
-            self.assertEqual(worker.prompt('dummy cleanup', cleanup=focused.cleanup_artifact), 'cleaned')
+            owner.store.start('sdk-boundary', self.base)
+            engine = Engine(owner, 'sdk-boundary', {'tasks': [task]}, executor)
+            request, reuse_key = engine._session_request(task)
+            worker = PiAdapter(self.project, executor)
+            self.assertEqual(worker.prompt('dummy cleanup', cleanup=focused.cleanup_artifact, reuse_key=reuse_key), 'cleaned')
+            # Feed real production SDK observations through the consumer that
+            # previously rejected every production result as missing headroom.
+            checkpoint = focused.checkpoint()
+            engine._settle_session(task, worker, request, reuse_key, checkpoint)
+            selected = select_session(request, engine.session_candidates)
+            self.assertEqual(selected['session_id'], worker.saved_session['id'])
         self.assertFalse((outputs/'known.js').exists())
         self.assertEqual((outputs/'sentinel.js').read_text(), 'unrelated')
         self.assertIsInstance(worker.last_observation['after']['headroom'], dict)
