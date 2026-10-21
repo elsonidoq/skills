@@ -6,6 +6,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT), str(ROOT / 'runtime')]
 from coherence_workflow.monitoring import Recorder, descriptor
+from coherence_workflow.metric_artifacts import create_artifact
 from coherence_workflow.store import Authority, git
 from workflow_monitor.app import create_app
 from workflow_monitor.reader import Reader
@@ -14,6 +15,22 @@ import uvicorn
 
 def emit(recorder, occurrence, phase, kind, *, task='one', **facts):
     recorder.emit(occurrence, phase, kind, task_id=task, facts=facts)
+
+
+def metric_record(run, invocation, mode, actual, *, partial=False):
+    field = lambda value: {'value': value, 'unknown_reason': None, 'provenance': 'fixture'}
+    before = {'counters': {'input': 10, 'output': 20, 'cacheRead': 0, 'cacheWrite': 0, 'total': 30}, 'estimated_usd': .25,
+              'context': {'context_window': 100, 'effective_reserve': 20, 'occupancy': 90, 'compaction_enabled': False, 'compaction_applicable': True}, 'compaction_entry_ids': []}
+    after = {'counters': {'input': 15, 'output': 27, 'cacheRead': 0, 'cacheWrite': 0, 'total': 42}, 'estimated_usd': .5,
+             'context': {'context_window': 100, 'effective_reserve': 20, 'occupancy': 110, 'compaction_enabled': True, 'compaction_applicable': True}, 'compaction_entry_ids': ['compact-one']}
+    interval = {'session_id': 'session-one', 'branch': 'branch-one', 'epoch': 'epoch-one', 'outcome': 'settled',
+                'tokens': {'input': field(5), 'output': field(7), 'cache_read': field(0), 'cache_write': field(0)},
+                'total_tokens': field(12), 'estimated_usd': field(.25),
+                'compactions': {'entry_ids': ['compact-one'], 'count': 1, 'unknown_reason': None},
+                'summary_overhead': {'entries': [{'entry_id': 'compact-one', 'unknown_reason': None, 'usage': {'input': 1, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 3, 'cacheWrite1h': 0, 'reasoning': 1, 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0, 'total': 0}}}], 'unknown_reason': None, 'included_in_sdk_deltas': True}}
+    if partial:
+        interval['tokens']['output'] = {'value': None, 'unknown_reason': 'missing_end', 'provenance': 'fixture'}
+    return {'version': 1, 'run_id': run, 'invocation_id': invocation, 'task_id': 'one', 'role': 'worker', 'outcome': 'settled', 'fixing_round': None, 'review_ordinal': None, 'interval': interval, 'before': before, 'after': after, 'selected_session_mode': mode, 'session_selection_reason': 'fixture-selection', 'actual_session_mode': actual, 'actual_session_id': 'session-one'}
 
 
 with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as temporary:
@@ -28,7 +45,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     # Simulate already-retained prose; no producer behavior is changed.
     presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
     with Authority(project) as owner:
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(presentation)
@@ -51,7 +68,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                 elif run == 'manual-stopped':
                     emit(recorder, 'terminal', 'terminal', 'failed', task=None)
             else:
-                emit(recorder, 'worker', 'worker', 'started', role='worker')
+                invocation = f'{run}-worker' if run in ('success', 'waiting') or run.startswith('metrics-') else None
+                worker_facts = {'role': 'worker', **({'invocation_id': invocation, 'invocation_kind': 'task_worker', 'selected_input_checkpoints': [], 'correction_chain': [invocation]} if invocation else {})}
+                emit(recorder, 'worker', 'worker', 'started', **worker_facts)
                 if run == 'waiting':
                     emit(recorder, 'question', 'worker', 'question_requested', parent_occurrence_id='worker')
                 elif run.startswith('booleans-'):
@@ -73,7 +92,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     emit(recorder, 'worker', 'worker', 'returned', role='worker')
                     emit(recorder, 'terminal', 'terminal', 'passed', task=None, head=base)
                 else:
-                    emit(recorder, 'worker', 'worker', 'returned', role='worker')
+                    emit(recorder, 'worker', 'worker', 'returned', **worker_facts)
                     if run == 'success':
                         emit(recorder, 'recovered-check', 'check', 'failed', ordinal=0, exit_code=1)
                     emit(recorder, 'check', 'check', 'started', ordinal=1)
@@ -84,5 +103,14 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                         emit(recorder, 'review', 'review', 'started', task=None, role='reviewer', review_base=base, review_head=base)
                         emit(recorder, 'review', 'review', 'failed', task=None, role='reviewer', approved=False, finding_count=2, review_base=base, review_head=base)
                     emit(recorder, 'terminal', 'terminal', 'failed' if run == 'stopping' else 'passed', task=None, head=base)
+            if run == 'success' or run.startswith('metrics-'):
+                modes = {'success': ('fresh', 'fresh'), 'metrics-reused': ('reused_from_earlier_task', 'reused_from_earlier_task'), 'metrics-continued': ('continued_same_task', 'continued_same_task'), 'metrics-unknown': ('unknown', 'unknown'), 'metrics-partial': ('fresh', 'fresh')}
+                artifact = create_artifact(project, run, authority=owner)
+                artifact.append(metric_record(run, f'{run}-worker', *modes[run], partial=run == 'metrics-partial'))
+                if run == 'metrics-partial':
+                    # A retained malformed tail makes coverage partial while the valid
+                    # invocation above remains safely visible through the production reader.
+                    with artifact.path.open('a') as output:
+                        output.write('{invalid metric record}\n')
             owner.store.db.execute('UPDATE execution_runs SET state=? WHERE run_id=?', ('failed' if run in ('stopping', 'before-agent') else 'completed', run))
     uvicorn.run(create_app(Reader(project), ROOT / 'workflow_monitor/web/dist', 4174), host='127.0.0.1', port=4174, access_log=False, log_level='critical')
