@@ -108,13 +108,14 @@ or operation trailers, hook/filter admission, hidden repair quotas, arbitrary ti
 
 The final reviewer is a fresh, read-only SDK session, not the worker context. It receives the
 actual full committed range, tasks, and the same routine-authority defaults/exclusions, with only
-read/search tools for source continuation. Authority does not prove checks or acceptance. Findings stop acceptance and are reported honestly with commits retained. An actionable first
-rejection may use the separately bounded one-round fixer: it receives the original task contracts,
+read/search tools for source continuation. Authority does not prove checks or acceptance. Findings stop acceptance and are reported honestly with commits retained. A well-formed actionable first
+rejection automatically uses the separately bounded one-round fixer; a findings-free approval completes without it.
+Malformed, interrupted, uncertain, or nonactionable review results stop without fixing; safe deterministic normalization
+may only recover the actual review result. The fixer receives the original task contracts,
 configured executor/authority, explicit source/artifact scope and the actual findings; its checks
 and focused checkpoint retain a distinct execution identity and explicit predecessor. Correctable
 check/checkpoint errors stay inside that assigned round and rerun affected checks before its
-checkpoint. This primitive neither routes work nor starts a recursive CLI/review loop; final
-chain control remains bounded to two reviews and one fixer. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
+checkpoint. This primitive neither routes work nor starts a recursive CLI/review loop; final chain control dispatches one fresh Review 2 after a successful fixer and remains bounded to two actual reviews and one fixer across resume. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
 workflow fatal condition. SDK tools truncate long output with their normal continuation
 instructions; the transport has no size cap. A runner may reuse only a returned private saved session identity from the same run after a
 successful idle settlement and preceding verified checkpoint. Reuse also requires an explicit

@@ -12,6 +12,10 @@ from .store import Blocked, canonical, git
 from .verification import CheckFailure, commands, manual_gates, run_checks
 
 
+class _ReviewFormat(Blocked):
+    """An actual reviewer response could not safely yield a verdict."""
+
+
 def _failure(exc):
     if isinstance(exc, (KeyboardInterrupt, SystemExit)): return 'interrupted'
     return 'transport' if isinstance(exc, Blocked) else 'unknown'
@@ -253,6 +257,102 @@ class Engine:
             })
             raise
 
+    @staticmethod
+    def _review_value(text):
+        """Parse only an actual reviewer verdict; fenced JSON is a safe normalization."""
+        if not isinstance(text, str):
+            raise _ReviewFormat('reviewer result must be text')
+        normalized = text.strip()
+        if normalized.startswith('```') and normalized.endswith('```'):
+            normalized = normalized.split('\n', 1)[1] if '\n' in normalized else ''
+            normalized = normalized.rsplit('```', 1)[0].strip()
+        try:
+            value = json.loads(normalized)
+        except ValueError:
+            raise _ReviewFormat('reviewer returned invalid JSON; review remains incomplete: ' + text) from None
+        if (not isinstance(value, dict) or type(value.get('approved')) is not bool
+                or not isinstance(value.get('findings'), list)
+                or any(not isinstance(item, str) or not item.strip() for item in value['findings'])):
+            raise _ReviewFormat('reviewer result needs boolean approved and a nonempty-string list of findings')
+        return value
+
+    def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
+                trigger_execution_id=None, predecessor_execution_id=None):
+        """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
+        store = self.authority.store
+        execution_id = recorder.occurrence()
+        store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
+                              fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
+                              predecessor_execution_id=predecessor_execution_id,
+                              review_base=review_base, review_head=head)
+        review_facts = {
+            'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
+            'review_base': review_base, 'review_head': head,
+        }
+        if trigger_execution_id is not None:
+            review_facts['trigger_execution_id'] = trigger_execution_id
+            review_facts['predecessor_execution_id'] = predecessor_execution_id
+        recorder.emit(execution_id, 'review', 'started', facts=review_facts)
+        reviewer = self.adapter(self.authority.project, self.reviewer_executor, question=self.question)
+        reviewer.lock_fd = self.authority.lock.fileno()
+        diff = git(self.authority.project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
+        try:
+            text = reviewer.prompt('Independently review the actual committed range below against the requested tasks. '
+                'You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, '
+                'so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. '
+                + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
+                + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. '
+                'Return only a JSON object {"approved":true,"findings":[]} or '
+                '{"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\n'
+                'Tasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff,
+                read_only=True)
+            value = self._review_value(text)
+        except BaseException as exc:
+            state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+            store.review_outcome(self.run, execution_id, state, findings=[], uncertainty=state != 'failed',
+                                 references={'base': review_base, 'head': head})
+            recorder.emit(execution_id, 'review', state, facts={
+                'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
+                'review_base': review_base, 'review_head': head, 'outcome': state,
+                'error_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc),
+            })
+            store.usage_interval(self.run, execution_id, role='reviewer', outcome=state,
+                                 interval=getattr(reviewer, 'last_interval', None))
+            raise
+        store.usage_interval(self.run, execution_id, role='reviewer', outcome='settled',
+                             interval=getattr(reviewer, 'last_interval', None))
+        state = 'approved' if value['approved'] and not value['findings'] else 'rejected'
+        store.review_outcome(self.run, execution_id, state, findings=value['findings'],
+                             references={'base': review_base, 'head': head})
+        review_facts.update({'approved': value['approved'], 'outcome': state,
+                             'finding_count': len(value['findings'])})
+        recorder.emit(execution_id, 'review', 'passed' if state == 'approved' else 'failed', facts=review_facts)
+        return execution_id, value, state
+
+    def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base):
+        head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
+        review_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1)
+        if state == 'approved':
+            self.authority.store.finish(self.run, 'complete', head)
+            recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
+            return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
+                    'checkpoints': checkpoints, 'review': review, 'usage': self.authority.store.usage_summary(self.run)}
+        if review['approved'] or not review['findings']:
+            raise Blocked('independent review was not an actionable rejection (commits retained): ' + canonical(review))
+        fix_id = recorder.occurrence()
+        self.run_fix(review['findings'], trigger_execution_id=review_id, review_base=review_base,
+                     recorder=recorder, execution_id=fix_id)
+        head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
+        _, final_review, final_state = self._review(recorder=recorder, review_base=review_base, head=head,
+                                                     ordinal=2, fixing_round=1,
+                                                     trigger_execution_id=fix_id, predecessor_execution_id=fix_id)
+        if final_state != 'approved':
+            raise Blocked('independent final review findings (commits retained): ' + canonical(final_review))
+        self.authority.store.finish(self.run, 'complete', head)
+        recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
+        return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
+                'checkpoints': checkpoints, 'review': final_review, 'usage': self.authority.store.usage_summary(self.run)}
+
     def invoke(self):
         project, store = self.authority.project, self.authority.store
         base = git(project, 'rev-parse', 'HEAD').decode().strip()
@@ -453,73 +553,8 @@ class Engine:
                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': str(exc)})
                     raise
-            head = git(project, 'rev-parse', 'HEAD').decode().strip()
-            diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
-            reviewer_occurrence = recorder.occurrence()
-            # Required ordinary chain history, not optional monitoring, records the actual
-            # invocation before launch so an uncertain reviewer cannot be replayed.
-            store.review_dispatch(self.run, reviewer_occurrence, role='reviewer', review_ordinal=1,
-                                  fixing_round=0, review_base=review_base, review_head=head)
-            recorder.emit(reviewer_occurrence, 'review', 'started', facts={
-                'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
-                'review_base': review_base, 'review_head': head,
-            })
-            def record_reviewer_usage(outcome):
-                # Reviews have distinct run totals and never create task membership.
-                store.usage_interval(self.run, reviewer_occurrence, role='reviewer', outcome=outcome,
-                                     interval=getattr(reviewer, 'last_interval', None))
-            review_question_occurrence = [None]
-            def review_question(state):
-                mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
-                if state == 'requested' or review_question_occurrence[0] is None:
-                    review_question_occurrence[0] = recorder.occurrence()
-                recorder.emit(review_question_occurrence[0], 'review', mapping[state], facts={'parent_occurrence_id': reviewer_occurrence})
-            reviewer = self.adapter(project, self.reviewer_executor, question=self.question, observe_question=review_question)
-            reviewer.lock_fd = self.authority.lock.fileno()
-            try:
-                review = reviewer.prompt('Independently review the actual committed range below against the requested tasks. You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. ' + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. Return only a JSON object {"approved":true,"findings":[]} or {"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\nTasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff, read_only=True)
-            except BaseException as exc:
-                store.review_outcome(self.run, reviewer_occurrence, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
-                                     findings=[], uncertainty=True, references={'base': review_base, 'head': head})
-                recorder.emit(reviewer_occurrence, 'review', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts={
-                    'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
-                    'review_base': review_base, 'review_head': head,
-                    'outcome': 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed',
-                    'error_category': _failure(exc),
-                })
-                record_reviewer_usage('interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed')
-                raise
-            record_reviewer_usage('settled')
-            try:
-                value = json.loads(review)
-            except ValueError:
-                store.review_outcome(self.run, reviewer_occurrence, 'failed', findings=[], references={'base': review_base, 'head': head})
-                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={
-                    'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
-                    'review_base': review_base, 'review_head': head, 'outcome': 'failed', 'error_category': 'malformed',
-                })
-                raise Blocked('reviewer returned invalid JSON; review remains incomplete: ' + review) from None
-            if (not isinstance(value, dict) or type(value.get('approved')) is not bool or not isinstance(value.get('findings'), list) or any(not isinstance(f, str) for f in value['findings'])):
-                store.review_outcome(self.run, reviewer_occurrence, 'failed', findings=[], references={'base': review_base, 'head': head})
-                recorder.emit(reviewer_occurrence, 'review', 'failed', facts={
-                    'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
-                    'review_base': review_base, 'review_head': head, 'outcome': 'failed', 'error_category': 'malformed',
-                })
-                raise Blocked('reviewer result needs boolean approved and a list of findings')
-            review_state = 'approved' if value['approved'] and not value['findings'] else 'rejected'
-            store.review_outcome(self.run, reviewer_occurrence, review_state, findings=value['findings'],
-                                 references={'base': review_base, 'head': head})
-            recorder.emit(reviewer_occurrence, 'review', 'passed' if review_state == 'approved' else 'failed', facts={
-                'role': 'reviewer', 'execution_id': reviewer_occurrence, 'review_ordinal': 1,
-                'review_base': review_base, 'review_head': head, 'approved': value['approved'],
-                'outcome': review_state, 'finding_count': len(value['findings']),
-            })
-            if not value['approved'] or value['findings']:
-                raise Blocked('independent review findings (commits retained): ' + canonical(value))
-            store.finish(self.run, 'complete', head)
-            recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
-            return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head, 'checkpoints': checkpoints,
-                    'review': value, 'usage': store.usage_summary(self.run)}
+            return self._finish_reviews(recorder=recorder, terminal=terminal, checkpoints=checkpoints,
+                                        base=base, review_base=review_base)
         except BaseException as exc:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, str(exc))

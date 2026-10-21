@@ -105,10 +105,7 @@ After task checkpoints, use one fresh independent reviewer context with only rea
 not the worker's conversation. Its review scope carries applicable accepted outcomes, explicit mechanism
 constraints and source links, and compares the actual change (including simplification or deletion)
 with them. Review the actual full committed range and relevant files with continuation; no
-provenance/evidence hash or SQL disposition is required. Concrete findings stop
-acceptance and are honestly reported with retained commits. Address findings in requested scope,
-rerun affected checks and obtain independent review; material scope changes need owner input.
-Do not relabel findings as resolved, substitute the writer as reviewer or claim unperformed checks.
+provenance/evidence hash or SQL disposition is required. A findings-free approval completes immediately. A well-formed actionable first rejection automatically dispatches exactly one configured-authority fixer within original scope, runs its applicable checks and focused checkpoint, then obtains one fresh read-only Review 2 over the original base→actual head. Formatting/tool issues use safe same-invocation correction or deterministic normalization of the actual result only; they never invent a verdict or launch a fixer. Malformed, interrupted, uncertain, nonactionable, fixer/checkpoint-unrecoverable, or Review 2 rejection stops honestly with retained work and actual findings/references. Across resume, retain at most two actual reviews and one fixing round; do not relabel findings as resolved, substitute the writer as reviewer, claim unperformed checks, or start another repair loop.
 
 ## Runner-configured worker role
 
