@@ -153,12 +153,20 @@ export async function createWorkflowSession({project, executor, readOnly = false
 function observation(session) {
   const usage = session.getContextUsage?.();
   const stats = session.getSessionStats?.();
+  const entries = session._coherenceSessionManager?.getEntries?.() ?? [];
+  // Persisted compaction entries, rather than start/end events, are the only
+  // accounting evidence: an aborted compaction never creates an entry here.
+  const compactionEntries = [...new Map(entries
+    .filter(entry => entry?.type === 'compaction' && typeof entry.id === 'string')
+    .map(entry => [entry.id, {id: entry.id, summary_usage: entry.usage ?? null}])).values()];
   return {
     session_id: session.coherenceSavedSession?.id ?? null,
     branch: session.sessionId ?? session.coherenceSavedSession?.id ?? null,
     epoch: session.coherenceEpoch,
     entry: session._coherenceSessionManager?.getLeafId() ?? null,
     counters: stats?.tokens ?? null,
+    costs: {estimated_usd: stats?.cost ?? null},
+    compaction_entries: compactionEntries,
     context_tokens: usage?.tokens ?? null,
     context_window: usage?.contextWindow ?? null,
   };

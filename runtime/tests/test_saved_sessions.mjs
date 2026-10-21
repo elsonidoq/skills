@@ -41,8 +41,25 @@ test('new host omits standalone session observations unless the adapter opts in'
   assert.deepEqual(sessionObservationRecord({sessionObservations: true}, session), {
     type: 'session', session: session.coherenceSavedSession,
     before: {session_id: 'session-1', branch: 'session-1', epoch: 'opened', entry: 'entry-1',
-      counters: {input: 1}, context_tokens: 1, context_window: 2},
+      counters: {input: 1}, costs: {estimated_usd: null}, compaction_entries: [],
+      context_tokens: 1, context_window: 2},
   });
+});
+
+test('persisted compaction entries expose unique IDs and available summary overhead', () => {
+  const session = {
+    coherenceSavedSession: {id: 'session-1', file: '/private/session-1.jsonl'}, coherenceEpoch: 'opened',
+    sessionId: 'session-1', getContextUsage() { return {}; },
+    getSessionStats() { return {tokens: {}, cost: 0.25}; },
+    _coherenceSessionManager: {getLeafId() { return 'entry-2'; }, getEntries() {
+      return [{type: 'compaction', id: 'compact-1', usage: {input: 3}},
+        {type: 'compaction', id: 'compact-1', usage: {input: 3}},
+        {type: 'message', id: 'message-1'}];
+    }},
+  };
+  assert.deepEqual(sessionObservationRecord({sessionObservations: true}, session).before.compaction_entries,
+    [{id: 'compact-1', summary_usage: {input: 3}}]);
+  assert.equal(sessionObservationRecord({sessionObservations: true}, session).before.costs.estimated_usd, 0.25);
 });
 
 test('prompt waits for SDK idle and reports actual compaction event names', async () => {

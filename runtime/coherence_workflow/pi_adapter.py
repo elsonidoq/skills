@@ -8,6 +8,7 @@ import sys
 import tempfile
 import uuid
 
+from .metrics import interval_record
 from .store import Blocked, canonical
 
 
@@ -65,6 +66,7 @@ class PiAdapter:
         self.observe_question = observe_question or (lambda state: None)
         self.saved_session = None
         self.last_observation = None
+        self.last_interval = None
 
     def prompt(self, prompt, *, claim=None, command=None, read_only=False, saved_session=None, reuse_key=None):
         """Run one prompt, optionally reopening only a runner-provided private session."""
@@ -157,6 +159,8 @@ class PiAdapter:
                             self.saved_session = session
                         observations = {'before': value.get('before'), 'after': value.get('after')}
                         self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
+                        self.last_interval = (interval_record(**observations)
+                                              if self.last_observation is not None else None)
                         result = value['text']
                     elif kind == 'error':
                         raise Blocked('SDK operation failed: ' + str(value.get('message')))

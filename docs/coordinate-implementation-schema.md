@@ -113,6 +113,16 @@ transport failure or evidence that reuse is safe. The host waits for both prompt
 SDK idle before returning or disposing. `compaction_start`/`compaction_end` are forwarded when
 emitted by the SDK; old auto-compaction event spelling remains observable for compatibility.
 
+Per-open usage observations may derive one private interval record: fieldwise cumulative
+`input`, `output`, `cacheRead`, and `cacheWrite` deltas; their defined total; and available
+estimated USD. Each value carries SDK provenance or an unknown reason. Deltas require a monotone,
+continuous exclusive session/branch/epoch; missing ends, resets and ambiguous intervals remain
+unknown while independently valid fields remain available. Context occupancy is never spend.
+Compaction count is the set of newly persisted compaction entry IDs, so starts that do not persist
+an entry do not count. Any available per-entry summary overhead is labelled as a subset already
+included in SDK deltas, never added again; unavailable overhead is unknown. These records are not
+membership, storage, CLI, or invoice data.
+
 Independent review uses a fresh session restricted to read/search tools and an ordinary
 `{approved: boolean, findings: string[]}` result. That is a small communication interface, not
 provenance/evidence attestation. Findings are honestly reported; no SQL dispositions, repair
