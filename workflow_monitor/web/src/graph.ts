@@ -53,10 +53,20 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relation
   const planRuns = new Set(planned.map(task => task.run_ref))
   const reviews = planAvailable ? (root.review_definitions ?? []).filter(review => planRuns.has(review.run_ref)) : []
   const occurrenceKey = (runRef: string, ref: string) => `${runRef}\u0000${ref}`
-  const chainOccurrences = new Set(chain.flatMap(item => item.occurrence_refs.map(ref => occurrenceKey(item.run_ref, ref))))
-  const chainSupport = new Set(recordedEdges.filter(edge => edge.type === 'chain_check' || edge.type === 'chain_checkpoint').flatMap(edge => [occurrenceKey(edge.run_ref, edge.from_ref), occurrenceKey(edge.run_ref, edge.to_ref)]))
-  const stopSupport = new Set(occurrences.filter(item => item.stopping && item.support_ref != null).map(item => occurrenceKey(item.run_ref, item.support_ref!)))
-  const visible = occurrences.filter(item => (!chainOccurrences.has(occurrenceKey(item.run_ref, item.ref)) && ['worker', 'fixing_worker', 'reviewer'].includes(item.role)) || chainSupport.has(occurrenceKey(item.run_ref, item.ref)) || stopSupport.has(occurrenceKey(item.run_ref, item.ref)) || item.stopping)
+  const chainByOccurrence = new Map<string, string[]>()
+  for (const execution of chain) for (const ref of execution.occurrence_refs) {
+    const key = occurrenceKey(execution.run_ref, ref)
+    chainByOccurrence.set(key, [...(chainByOccurrence.get(key) ?? []), execution.ref])
+  }
+  // An occurrence is replaced only by its single recorded same-run execution. Ambiguous
+  // membership remains an occurrence rather than guessing which execution owns it.
+  const representedByChain = new Map([...chainByOccurrence].flatMap(([key, refs]) => refs.length === 1 ? [[key, refs[0]] as const] : []))
+  const chainOccurrences = new Set(chainByOccurrence.keys())
+  const nodeRefFor = (runRef: string, ref: string) => representedByChain.get(occurrenceKey(runRef, ref)) ?? ref
+  const visible = occurrences.filter(item => !chainOccurrences.has(occurrenceKey(item.run_ref, item.ref)) &&
+    (['worker', 'fixing_worker', 'reviewer'].includes(item.role) || item.stopping || recordedEdges.some(edge =>
+      (edge.type === 'chain_check' || edge.type === 'chain_checkpoint') && edge.run_ref === item.run_ref && (edge.from_ref === item.ref || edge.to_ref === item.ref)) ||
+      occurrences.some(stop => stop.stopping && stop.run_ref === item.run_ref && stop.support_ref === item.ref)))
   const plannedByRef = new Map(planned.map(task => [task.ref, task]))
   const occurrenceOwner = (item: Occurrence) => item.task_ref && plannedByRef.get(item.task_ref)?.run_ref === item.run_ref ? item.task_ref : null
   const attemptLabel = (item: Occurrence) => `${roleName(item.role)} attempt ${item.occurrence_id ?? 'unknown'}`
@@ -82,20 +92,23 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relation
     })
   ]
   const edges: Edge[] = []
-  const nodeFor = (runRef: string, ref: string) => nodes.some(node => node.id === ref && (node.data.identity as { runRef?: string } | undefined)?.runRef === runRef)
+  const nodeFor = (runRef: string, ref: string) => nodes.some(node => node.id === nodeRefFor(runRef, ref) && (node.data.identity as { runRef?: string } | undefined)?.runRef === runRef)
   for (const task of planned) for (const prerequisite of task.prerequisite_refs) edges.push({ id: `dependency_${prerequisite}_${task.ref}`, source: prerequisite, target: task.ref, type: 'smoothstep', className: 'dependency-edge', data: { classification: 'backbone', relation: 'declared-prerequisite', identity: { prerequisiteRef: prerequisite, dependentRef: task.ref, runRef: task.run_ref } } })
-  for (const stop of visible.filter(item => item.stopping && item.support_ref != null && nodeFor(item.run_ref, item.support_ref!))) {
-    edges.push({ id: `stop_${stop.ref}`, source: stop.support_ref!, target: stop.ref, type: 'smoothstep', className: 'secondary-edge stop-edge', data: { classification: 'secondary', relation: 'recorded-stop-support', resolution: 'recorded', identity: { runRef: stop.run_ref, supportRef: stop.support_ref, stopRef: stop.ref } } })
+  for (const stop of occurrences.filter(item => item.stopping && item.support_ref != null && nodeFor(item.run_ref, item.support_ref!) && nodeFor(item.run_ref, item.ref))) {
+    const source = nodeRefFor(stop.run_ref, stop.support_ref!), target = nodeRefFor(stop.run_ref, stop.ref)
+    edges.push({ id: `stop_${stop.ref}`, source, target, type: 'smoothstep', className: 'secondary-edge stop-edge', data: { classification: 'secondary', relation: 'recorded-stop-support', resolution: 'recorded', identity: { runRef: stop.run_ref, supportRef: stop.support_ref, stopRef: stop.ref } } })
   }
   for (const edge of recordedEdges.filter(edge => edge.type.startsWith('chain_') && nodeFor(edge.run_ref, edge.from_ref) && nodeFor(edge.run_ref, edge.to_ref))) {
-    edges.push({ id: edge.ref, source: edge.from_ref, target: edge.to_ref, type: 'smoothstep', className: 'secondary-edge chain-edge', data: { classification: 'secondary', relation: edge.type, resolution: edge.resolution, identity: { ref: edge.ref, runRef: edge.run_ref, fromRef: edge.from_ref, toRef: edge.to_ref } } })
+    const source = nodeRefFor(edge.run_ref, edge.from_ref), target = nodeRefFor(edge.run_ref, edge.to_ref)
+    edges.push({ id: edge.ref, source, target, type: 'smoothstep', className: 'secondary-edge chain-edge', data: { classification: 'secondary', relation: edge.type, resolution: edge.resolution, identity: { ref: edge.ref, runRef: edge.run_ref, fromRef: edge.from_ref, toRef: edge.to_ref } } })
   }
   for (const relation of relations.filter(item => item.resolution === 'resolved' && nodeFor(item.source_run_ref, item.review_occurrence_ref))) {
     const fixes = [
       ...visible.filter(item => item.run_ref === relation.run_ref && item.role === 'fixing_worker').map(item => item.ref),
       ...chain.filter(item => item.run_ref === relation.run_ref && item.role === 'fixer').map(item => item.ref)
     ]
-    for (const fix of new Set(fixes)) edges.push({ id: `followup_${relation.review_occurrence_ref}_${fix}`, source: relation.review_occurrence_ref, target: fix, type: 'smoothstep', className: 'secondary-edge correction-edge', data: { classification: 'secondary', relation: 'declared-cross-run-correction', resolution: relation.resolution, qualification: 'declared cross-run correction; not recorded exact execution causality', identity: { sourceRunRef: relation.source_run_ref, reviewOccurrenceRef: relation.review_occurrence_ref, correctionRunRef: relation.run_ref, fixingRef: fix } } })
+    const source = nodeRefFor(relation.source_run_ref, relation.review_occurrence_ref)
+    for (const fix of new Set(fixes)) edges.push({ id: `followup_${relation.review_occurrence_ref}_${fix}`, source, target: fix, type: 'smoothstep', className: 'secondary-edge correction-edge', data: { classification: 'secondary', relation: 'declared-cross-run-correction', resolution: relation.resolution, qualification: 'declared cross-run correction; not recorded exact execution causality', identity: { sourceRunRef: relation.source_run_ref, reviewOccurrenceRef: relation.review_occurrence_ref, correctionRunRef: relation.run_ref, fixingRef: fix } } })
   }
   return { nodes, edges, topology: JSON.stringify({ nodes: nodes.map(node => node.id).sort(), edges: edges.map(edge => [edge.id, edge.source, edge.target]).sort() }) }
 }

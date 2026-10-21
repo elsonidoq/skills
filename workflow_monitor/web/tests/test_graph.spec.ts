@@ -89,7 +89,7 @@ test('readable state relations retain only qualified recorded stops and correcti
       { ref: 'current_stop', run_ref: 'original', phase_ref: 'check', task_ref: null, role: 'check', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: 'returned_worker' },
       { ref: 'before_agent_stop', run_ref: 'original', phase_ref: 'prepare', task_ref: null, role: 'prepare', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: null },
       { ref: 'recovered_check', run_ref: 'original', phase_ref: 'check', task_ref: null, role: 'check', outcome: 'failed', completeness: 'complete', record_refs: [] },
-      { ref: 'review_occurrence', run_ref: 'original', phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: [] }
+      { ref: 'review_occurrence', run_ref: 'original', phase_ref: 'review', task_ref: null, role: 'reviewer', outcome: 'passed', completeness: 'complete', record_refs: [], stopping: true, support_ref: 'returned_worker' }
     ],
     chain: [{ ref: 'review_execution', run_ref: 'original', execution_id: 'review', role: 'reviewer', review_ordinal: 1, fixing_round: null, outcome: 'rejected', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['review_occurrence'], review_range: { base: null, head: null }, findings: ['recorded rejection'], commit_refs: {} }]
   }
@@ -105,7 +105,8 @@ test('readable state relations retain only qualified recorded stops and correcti
       { ref: 'trigger_edge', run_ref: 'correction', type: 'chain_trigger', from_ref: 'correction_review_execution', to_ref: 'fix_execution', resolution: 'recorded' },
       { ref: 'predecessor_edge', run_ref: 'correction', type: 'chain_predecessor', from_ref: 'fix_execution', to_ref: 'rereview_execution', resolution: 'recorded' },
       { ref: 'check_edge', run_ref: 'correction', type: 'chain_check', from_ref: 'fix_execution', to_ref: 'check_record', resolution: 'recorded' },
-      { ref: 'checkpoint_edge', run_ref: 'correction', type: 'chain_checkpoint', from_ref: 'fix_execution', to_ref: 'checkpoint_record', resolution: 'recorded' }
+      { ref: 'checkpoint_edge', run_ref: 'correction', type: 'chain_checkpoint', from_ref: 'fix_execution', to_ref: 'checkpoint_record', resolution: 'recorded' },
+      { ref: 'represented_support_edge', run_ref: 'correction', type: 'chain_check', from_ref: 'fix_execution', to_ref: 'correction_review_occurrence', resolution: 'recorded' }
     ],
     chain: [
       { ref: 'correction_review_execution', run_ref: 'correction', execution_id: 'correction-review', role: 'reviewer', review_ordinal: 1, fixing_round: null, outcome: 'rejected', trigger_ref: null, predecessor_ref: null, occurrence_refs: ['correction_review_occurrence'], review_range: { base: null, head: null }, findings: ['still distinct'], commit_refs: {} },
@@ -113,8 +114,8 @@ test('readable state relations retain only qualified recorded stops and correcti
     ]
   }
   const graph = graphFor(root, [correction], [
-    { run_ref: 'correction', source_run_ref: 'original', review_occurrence_ref: 'review_execution', resolution: 'resolved' },
-    { run_ref: 'missing', source_run_ref: 'original', review_occurrence_ref: 'review_execution', resolution: 'unresolved' },
+    { run_ref: 'correction', source_run_ref: 'original', review_occurrence_ref: 'review_occurrence', resolution: 'resolved' },
+    { run_ref: 'missing', source_run_ref: 'original', review_occurrence_ref: 'review_occurrence', resolution: 'unresolved' },
     { run_ref: 'correction', source_run_ref: 'original', review_occurrence_ref: 'missing_review', resolution: 'cyclic' }
   ])
   const edge = (id: string) => graph.edges.find(item => item.id === id)
@@ -122,13 +123,17 @@ test('readable state relations retain only qualified recorded stops and correcti
   expect(graph.nodes.find(node => node.id === 'current_stop')?.className).toContain('failed')
   expect(graph.nodes.find(node => node.id === 'recovered_check')).toBeUndefined()
   expect(edge('stop_current_stop')).toMatchObject({ source: 'returned_worker', target: 'current_stop', data: { classification: 'secondary', relation: 'recorded-stop-support' } })
+  expect(edge('stop_review_occurrence')).toMatchObject({ source: 'returned_worker', target: 'review_execution', data: { classification: 'secondary', relation: 'recorded-stop-support' } })
+  expect(graph.nodes.find(node => node.id === 'review_occurrence')).toBeUndefined()
   expect(graph.edges.some(item => item.target === 'before_agent_stop')).toBeFalsy()
   expect(graph.nodes.find(node => node.id === 'before_agent_stop')).toBeDefined()
   expect(edge('trigger_edge')).toMatchObject({ source: 'correction_review_execution', target: 'fix_execution', data: { classification: 'secondary', relation: 'chain_trigger' } })
   expect(edge('check_edge')).toMatchObject({ source: 'fix_execution', target: 'check_occurrence', data: { identity: { ref: 'check_edge', toRef: 'check_occurrence' } } })
   expect(edge('checkpoint_edge')).toMatchObject({ source: 'fix_execution', target: 'checkpoint_occurrence', data: { identity: { ref: 'checkpoint_edge', toRef: 'checkpoint_occurrence' } } })
+  expect(edge('represented_support_edge')).toMatchObject({ source: 'fix_execution', target: 'correction_review_execution', data: { identity: { ref: 'represented_support_edge', toRef: 'correction_review_occurrence' } } })
+  expect(graph.nodes.find(node => node.id === 'correction_review_occurrence')).toBeUndefined()
   expect(edge('predecessor_edge')).toBeUndefined()
-  expect(edge('followup_review_execution_fix_execution')).toMatchObject({ source: 'review_execution', target: 'fix_execution', data: { classification: 'secondary', relation: 'declared-cross-run-correction', qualification: 'declared cross-run correction; not recorded exact execution causality' } })
+  expect(edge('followup_review_occurrence_fix_execution')).toMatchObject({ source: 'review_execution', target: 'fix_execution', data: { classification: 'secondary', relation: 'declared-cross-run-correction', qualification: 'declared cross-run correction; not recorded exact execution causality' } })
   expect(graph.edges.some(item => item.id.includes('missing') || item.data?.resolution === 'unresolved' || item.data?.resolution === 'cyclic')).toBeFalsy()
   expect(graph.edges.filter(item => item.data?.classification === 'backbone')).toEqual([])
   expect(graph.edges.every(item => item.data?.classification === 'secondary')).toBeTruthy()
