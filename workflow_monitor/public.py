@@ -52,6 +52,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
         requested = description.get("requested_executor") if isinstance(description.get("requested_executor"), dict) else {}
         public_runs.append({"ref": _ref("run", run["run_id"]), "display_id": run["run_id"], "label": "Recorded run", "started_at": _time(run.get("started_at")),
                             "description_version": description.get("description_version") if type(description.get("description_version")) is int else None,
+                            "plan_availability": "complete" if run.get("plan_available") else "unavailable",
                             "requested_executor": {key: _text(requested.get(key), "unknown", 80) for key in ("provider", "model", "effort")},
                             "completeness": "incomplete" if run.get("incomplete") else "recorded",
                             "review_acceptance": graph.get("review_acceptance", {}).get(run["run_id"], {"state": "unknown", "base": None, "head": None})})
@@ -59,8 +60,14 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                "label": _text(row.get("label"), "Workflow phase", 80), "pre_recording": row.get("pre_recording") is True}
               for row in graph.get("phases", [])]
     tasks = [{"ref": _ref("task", row["run_id"], row["task_id"]), "run_ref": _ref("run", row["run_id"]),
-              "label": _text(row.get("label"), "Task", 80), "summary": _text(row.get("summary"), "Task execution", 240)}
+              "label": _text(row.get("label"), "Task", 80), "summary": _text(row.get("summary"), "Task execution", 240),
+              "prerequisite_refs": [_ref("task", row["run_id"], prerequisite) for prerequisite in row.get("depends", [])]}
              for row in graph.get("tasks", [])]
+    review_definitions = [{"ref": _ref("review_definition", row["run_id"], row["phase_id"]),
+                           "run_ref": _ref("run", row["run_id"]),
+                           "phase_ref": _ref("phase", row["run_id"], row["phase_id"]),
+                           "label": "Planned independent review — not an agent call."}
+                          for row in graph.get("phases", []) if row.get("phase_id") == "review"]
     records = []
     for row in graph.get("observations", []):
         facts = row.get("facts") if isinstance(row.get("facts"), dict) else {}
@@ -101,8 +108,8 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
     inventory = {"phase_count": len(phases), "occurrence_count": len(occurrences), "observation_count": len(records),
                  "supported_count": len(records), "unsupported_count": len(unknown) + len(graph.get("unsupported_run_ids", [])), "hidden_count": 0}
     return {"monitor_version": 1, "state": "ok", "runs": public_runs, "phases": phases, "tasks": tasks,
-            "occurrences": occurrences, "records": records, "edges": edges, "unknown_records": unknown, "inventory": inventory,
-            "followups": followups}
+            "review_definitions": review_definitions, "occurrences": occurrences, "records": records, "edges": edges,
+            "unknown_records": unknown, "inventory": inventory, "followups": followups}
 
 
 __all__ = ["minimize", "run_ref"]

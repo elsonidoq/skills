@@ -1,4 +1,5 @@
 """Public minimization must expose identities, never private row content."""
+import json
 import unittest
 
 from workflow_monitor.mapping import normalize
@@ -18,6 +19,28 @@ class PublicTests(unittest.TestCase):
         self.assertEqual([run["display_id"] for run in result["runs"]], ["run-a", "run-b"])
         self.assertNotIn("PRIVATE-SENTINEL", repr(result))
         self.assertEqual(result["unknown_records"][0]["code"], "unsupported_observation")
+
+    def test_planned_topology_is_run_scoped_and_review_is_not_an_execution(self):
+        source = snapshot()
+        for row in source["runs"]:
+            description = json.loads(row["description"])
+            description["tasks"] = [{"id": "T001", "depends": [], "label": "One", "summary": "First"},
+                                    {"id": "T002", "depends": ["T001"], "label": "Two", "summary": "Second"},
+                                    {"id": "T003", "depends": [], "label": "Three", "summary": "Pending"}]
+            row["description"] = json.dumps(description)
+        result = minimize(normalize(source))
+        by_run = {}
+        for task in result["tasks"]:
+            by_run.setdefault(task["run_ref"], []).append(task)
+        self.assertEqual({len(tasks) for tasks in by_run.values()}, {3})
+        self.assertNotEqual(by_run[result["runs"][0]["ref"]][0]["ref"], by_run[result["runs"][1]["ref"]][0]["ref"])
+        dependent = next(task for task in result["tasks"] if task["run_ref"] == result["runs"][0]["ref"] and task["label"] == "Two")
+        prerequisite = next(task for task in result["tasks"] if task["run_ref"] == dependent["run_ref"] and task["label"] == "One")
+        self.assertEqual(dependent["prerequisite_refs"], [prerequisite["ref"]])
+        self.assertEqual({run["plan_availability"] for run in result["runs"]}, {"complete"})
+        self.assertEqual(len(result["review_definitions"]), 2)
+        self.assertTrue(all(item["label"] == "Planned independent review — not an agent call." for item in result["review_definitions"]))
+        self.assertNotIn(result["review_definitions"][0]["ref"], {item["ref"] for item in result["occurrences"]})
 
     def test_zero_null_no_change_and_questions_stay_distinct(self):
         source = snapshot()

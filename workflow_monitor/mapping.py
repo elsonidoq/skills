@@ -39,13 +39,35 @@ def _valid_facts(facts: dict[str, Any]) -> bool:
 
 
 def _descriptor(row: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    """Return only a complete, closed declared plan; never repair a partial one."""
     description = _object(row.get("description"))
     if description is None or description.get("version") != 1:
         return None, "description_invalid"
-    phases = description.get("phases")
-    tasks = description.get("tasks")
-    if not isinstance(phases, list) or not isinstance(tasks, list):
+    phases, tasks = description.get("phases"), description.get("tasks")
+    if not isinstance(phases, list) or not isinstance(tasks, list) or not tasks:
         return None, "description_invalid"
+    phase_ids = [phase.get("id") for phase in phases if isinstance(phase, dict)]
+    if (len(phase_ids) != len(phases) or any(not isinstance(value, str) or not value for value in phase_ids) or
+            len(set(phase_ids)) != len(phase_ids) or phase_ids.count("review") != 1):
+        return None, "description_invalid"
+    task_ids = [task.get("id") for task in tasks if isinstance(task, dict)]
+    if (len(task_ids) != len(tasks) or any(not isinstance(value, str) or not value for value in task_ids) or
+            len(set(task_ids)) != len(task_ids)):
+        return None, "description_invalid"
+    dependencies = {task["id"]: task.get("depends") for task in tasks}
+    if any(not isinstance(values, list) or any(not isinstance(value, str) or value not in dependencies or value == task_id
+                                                for value in values) or len(set(values)) != len(values)
+           for task_id, values in dependencies.items()):
+        return None, "description_invalid"
+    remaining = {task_id: set(values) for task_id, values in dependencies.items()}
+    while remaining:
+        ready = {task_id for task_id, values in remaining.items() if not values}
+        if not ready:
+            return None, "description_invalid"
+        for task_id in ready:
+            del remaining[task_id]
+        for values in remaining.values():
+            values.difference_update(ready)
     return description, None
 
 
@@ -72,8 +94,10 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(row, dict) or not isinstance(row.get("run_id"), str):
             continue
         run_id = row["run_id"]
+        retained_description = _object(row.get("description"))
         description, incomplete = _descriptor(row)
-        runs.append({"run_id": run_id, "started_at": row.get("started_at"), "description": description,
+        runs.append({"run_id": run_id, "started_at": row.get("started_at"),
+                     "description": retained_description, "plan_available": description is not None,
                      "incomplete": incomplete})
         if description is None:
             unknown.append({"run_id": run_id, "seq": None, "code": incomplete})
@@ -112,8 +136,8 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             continue
         run_id, seq = row["run_id"], row["seq"]
         facts = _object(row.get("facts"))
-        valid = (run_id in descriptions and isinstance(row.get("occurrence_id"), str) and
-                 row.get("phase") in KNOWN_PHASES and row.get("kind") in KNOWN_KINDS and facts is not None and _valid_facts(facts))
+        valid = (isinstance(row.get("occurrence_id"), str) and row.get("phase") in KNOWN_PHASES and
+                 row.get("kind") in KNOWN_KINDS and facts is not None and _valid_facts(facts))
         if not valid:
             unknown.append({"run_id": run_id, "seq": seq, "code": "unsupported_observation"})
             continue

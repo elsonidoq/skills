@@ -25,11 +25,16 @@ rebuild to a regular local `dist/` directory and retry.
 Then open `http://127.0.0.1:8765/` in a local browser. The left selector and persistent
 selected-run banner show the recorded run ID as inert text, so identically labelled runs remain
 distinguishable during loading or a read error. Opaque references still route API requests; the
-run ID is the sole additional exposed identity. The compact graph shows actual implementation, review, fixing and rereview
-executions, not phase/task definitions or separate start/return/checkpoint events. Each
-call remains distinct. Short labels use recorded roles and public task presentation;
-a global review is simply **Review**. Missing public task labels remain generic, never
-guessed from private task IDs.
+run ID is the sole additional exposed identity. When a retained descriptor is complete, the
+compact graph also exposes every declared task with stable run-scoped anchors and declared
+prerequisite edges, including pending work. Its final stage is separately defined as
+**“Planned independent review — not an agent call.”**; actual implementation, review,
+fixing and rereview executions remain distinct recorded attachments rather than replacing
+that definition. Missing, malformed, partial, invalid-dependency, or fallback-empty
+descriptors show complete graph unavailable instead of a repaired partial plan, while valid
+recorded history remains available. Unsupported stores and read failures remain unavailable
+or errors, never empty completed runs. Short labels use recorded roles and public task
+presentation; missing public task labels remain generic, never guessed from private task IDs.
 
 A confirmed internal step that stops a recorded failed run appears as a red node after
 its recorded parent or preceding agent in that run/task scope. A failure before any

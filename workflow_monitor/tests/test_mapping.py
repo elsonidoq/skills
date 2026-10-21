@@ -1,4 +1,5 @@
 """Mapper tests use local T006-compatible Store records; no provider is invoked."""
+import json
 import sys
 from pathlib import Path
 import tempfile
@@ -70,6 +71,25 @@ class MappingTests(unittest.TestCase):
     def test_unavailable_is_not_decoded_as_an_empty_graph(self):
         self.assertEqual(normalize({"state": "unsupported"})["state"], "unsupported")
         self.assertEqual(normalize({"state": "ok", "runs": [], "observations": []})["occurrences"], [])
+
+    def test_invalid_or_empty_descriptor_retains_supported_history_without_topology(self):
+        valid = json.loads(snapshot()["runs"][0]["description"])
+        invalids = [None, "{"]
+        for change in ({"tasks": valid["tasks"] + [{"id": None, "depends": []}]}, {"tasks": []}, {"tasks": [{"id": "one", "depends": ["missing"]}]}):
+            description = dict(valid)
+            description.update(change)
+            invalids.append(json.dumps(description))
+        source = {"state": "ok", "runs": [{"run_id": f"run-{index}", "description": description}
+                                                   for index, description in enumerate(invalids)],
+                  "observations": [{"seq": index, "run_id": f"run-{index}", "occurrence_id": "worker",
+                                    "phase": "worker", "task_id": "one", "kind": "returned", "facts": '{"role":"worker"}'}
+                                   for index in range(len(invalids))]}
+        graph = normalize(source)
+        self.assertEqual(graph["tasks"], [])
+        self.assertNotIn("task_prerequisite", {edge["type"] for edge in graph["edges"]})
+        self.assertEqual([row["plan_available"] for row in graph["runs"]], [False] * len(invalids))
+        self.assertEqual(len(graph["observations"]), len(invalids))
+        self.assertEqual(len(graph["occurrences"]), len(invalids))
 
 
 if __name__ == "__main__":
