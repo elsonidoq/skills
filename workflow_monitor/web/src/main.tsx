@@ -4,7 +4,7 @@ import { Background, Controls, ReactFlow, type Edge, type Node, type Viewport, t
 import '@xyflow/react/dist/style.css'
 import './style.css'
 import { graphFor, action, status, outcomeText, recordText, taskTitle, type Observation, type Occurrence, type Followup, type PlannedTask, type ReviewDefinition, type GraphEdge, type ChainExecution } from './graph'
-import { layoutFootprints, type LayoutGroup } from './layout'
+import { layoutNodes } from './layout'
 
 type Acceptance = { state: string; base: string | null; head: string | null }
 type AcceptanceItem = { occurrence_ref: string; state: string; ordinal?: number | null; exit_code?: number | null; baseline?: string | null; head?: string | null; no_change?: boolean | null; approved?: boolean | null; finding_count?: number | null; base?: string | null }
@@ -14,9 +14,28 @@ type Run = { ref: string; display_id: string; label: string; started_at: number 
 type Unknown = { ref: string; run_ref: string; source_seq: number | null; code: string }
 type Inventory = { phase_count: number; occurrence_count: number; observation_count: number; total_count: number; loaded_count: number; hidden_count: number; unsupported_count: number }
 type Freshness = { read_at: number; last_success_at: number | null; last_recorded_at: number | null; read_state: 'current' | 'unavailable'; warnings: string[] }
-type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; unknown_records: Unknown[]; edges: GraphEdge[]; chain?: ChainExecution[]; chain_acceptance?: Record<string, { state: string; terminal_execution_ref: string | null; range: { base: string | null; head: string | null } }>; inventory: Inventory; snapshot_ref: string; next_cursor: string | null; observation?: Freshness }
+type Snapshot = { runs: Run[]; phases: Array<{ ref: string; run_ref: string; label: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; unknown_records: Unknown[]; edges: GraphEdge[]; chain?: ChainExecution[]; activities?: import('./graph').Activity[]; chain_acceptance?: Record<string, { state: string; terminal_execution_ref: string | null; range: { base: string | null; head: string | null } }>; inventory: Inventory; snapshot_ref: string; next_cursor: string | null; observation?: Freshness }
 const POLL_INTERVAL_MS = 60_000
 const headers = { 'X-Workflow-Monitor': '1' }
+const routeFor = (displayId: string) => `/runs/id-${encodeURIComponent(displayId)}`
+function routeDisplayId(): string | null | undefined {
+  if (window.location.pathname === '/') return null
+  const prefix = '/runs/id-'
+  if (!window.location.pathname.startsWith(prefix)) return undefined
+  const encoded = window.location.pathname.slice(prefix.length)
+  if (!encoded || encoded.includes('/')) return undefined
+  try { return decodeURIComponent(encoded) } catch { return undefined }
+}
+function ordered(runs: Run[]) {
+  return [...runs].sort((left, right) => {
+    const leftTime = typeof left.started_at === 'number' && Number.isFinite(left.started_at) ? left.started_at : null
+    const rightTime = typeof right.started_at === 'number' && Number.isFinite(right.started_at) ? right.started_at : null
+    if (leftTime !== null && rightTime !== null && leftTime !== rightTime) return rightTime - leftTime
+    if (leftTime !== null && rightTime === null) return -1
+    if (leftTime === null && rightTime !== null) return 1
+    return left.display_id < right.display_id ? -1 : left.display_id > right.display_id ? 1 : 0
+  })
+}
 async function getJson<T>(path: string): Promise<T> { const response = await fetch(path, { headers }); if (!response.ok) throw new Error(response.status === 409 ? 'The snapshot changed; refreshing history.' : 'The monitor snapshot is unavailable.'); return response.json() as Promise<T> }
 function source(runRef: string) { return `source ${runRef}` }
 function mergePage(current: Snapshot | null, page: Snapshot): Snapshot {
@@ -27,10 +46,21 @@ function mergePage(current: Snapshot | null, page: Snapshot): Snapshot {
   return { ...page, next_cursor: current.next_cursor, records, unknown_records, inventory: { ...page.inventory, loaded_count: records.length + unknown_records.length, hidden_count: Math.max(0, page.inventory.total_count - records.length - unknown_records.length) } }
 }
 function App() {
-  const [runs, setRuns] = useState<Run[]>([]); const [selectedRun, setSelectedRun] = useState<string | null>(null); const [snapshot, setSnapshot] = useState<Snapshot | null>(null); const [lineage, setLineage] = useState<Snapshot[]>([]); const [relations, setRelations] = useState<Followup[]>([]); const [nodes, setNodes] = useState<Node[]>([]); const [edges, setEdges] = useState<Edge[]>([]); const [selected, setSelected] = useState<{ kind: 'node' | 'edge'; id: string } | null>(null); const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 }); const [message, setMessage] = useState('Loading monitor…')
+  const [runs, setRuns] = useState<Run[]>([]); const [selectedRun, setSelectedRun] = useState<string | null>(null); const [filter, setFilter] = useState(''); const [snapshot, setSnapshot] = useState<Snapshot | null>(null); const [lineage, setLineage] = useState<Snapshot[]>([]); const [relations, setRelations] = useState<Followup[]>([]); const [nodes, setNodes] = useState<Node[]>([]); const [edges, setEdges] = useState<Edge[]>([]); const [selected, setSelected] = useState<{ kind: 'node' | 'edge'; id: string } | null>(null); const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 }); const [message, setMessage] = useState('Loading monitor…')
   const flow = useRef<ReactFlowInstance | null>(null); const fitPending = useRef(false); const initialFitComplete = useRef(false);
-  const fetchGeneration = useRef(0); const layoutGeneration = useRef(0); const topology = useRef<string | null>(null); const positions = useRef<Record<string, { x: number; y: number }>>({}); const layoutStructure = useRef<string | null>(null); const measurementContent = useRef<string | null>(null); const measurePending = useRef(false); const measurements = useRef<Record<string, { width: number; height: number }>>({}); const [measurementGeneration, setMeasurementGeneration] = useState(0)
-  useEffect(() => { let active = true; const loadRuns = async () => { try { const data = await getJson<{ runs: Run[] }>('/api/monitor/v1/runs'); if (!active) return; setRuns(data.runs); setSelectedRun(current => current && data.runs.some(run => run.ref === current) ? current : (data.runs[0]?.ref ?? null)) } catch (error) { if (active) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } }; void loadRuns(); const timer = window.setInterval(() => void loadRuns(), POLL_INTERVAL_MS); return () => { active = false; window.clearInterval(timer) } }, [])
+  const fetchGeneration = useRef(0); const layoutGeneration = useRef(0); const topology = useRef<string | null>(null); const positions = useRef<Record<string, { x: number; y: number }>>({}); const layoutStructure = useRef<string | null>(null); const measurementContent = useRef<string | null>(null); const measurePending = useRef(false); const measurements = useRef<Record<string, { width: number; height: number }>>({}); const runsRef = useRef<Run[]>([]); const [measurementGeneration, setMeasurementGeneration] = useState(0)
+  const clearRun = () => { ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; positions.current = {}; initialFitComplete.current = false; setSnapshot(null); setLineage([]); setRelations([]); setNodes([]); setEdges([]); setSelected(null) }
+  const applyLocation = (available: Run[]) => {
+    let displayId = routeDisplayId()
+    if (displayId === undefined) { clearRun(); setSelectedRun(null); setMessage('The run URL is invalid.'); return }
+    if (displayId === null && available.length) { displayId = available[0].display_id; window.history.replaceState(null, '', routeFor(displayId)) }
+    if (displayId === null) { clearRun(); setSelectedRun(null); setMessage('No recorded runs are available.'); return }
+    const run = available.find(candidate => candidate.display_id === displayId)
+    if (!run) { clearRun(); setSelectedRun(null); setMessage(`Run ${displayId} is unavailable.`); return }
+    setSelectedRun(current => { if (current !== run.ref) clearRun(); return run.ref })
+  }
+  useEffect(() => { let active = true; const loadRuns = async () => { try { const data = await getJson<{ runs: Run[] }>('/api/monitor/v1/runs'); if (!active) return; const sorted = ordered(data.runs); runsRef.current = sorted; setRuns(sorted); applyLocation(sorted) } catch (error) { if (active) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } }; void loadRuns(); const timer = window.setInterval(() => void loadRuns(), POLL_INTERVAL_MS); return () => { active = false; window.clearInterval(timer) } }, [])
+  useEffect(() => { const onPopState = () => applyLocation(runsRef.current); window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [])
   useEffect(() => { if (!selectedRun) return; const generation = ++fetchGeneration.current; let active = true; const loadSnapshot = async () => { try { const page = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/snapshot`); let followups: Followup[] = []; try { let cursor: string | null = null; do { const result: { followups: Followup[]; next_cursor?: string | null } = await getJson(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/followups?snapshot=${encodeURIComponent(page.snapshot_ref)}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`); followups.push(...result.followups); cursor = result.next_cursor ?? null } while (cursor) } catch { /* A snapshot remains usable when a prior closed fixture has no followup route. */ } const linkedRefs = [...new Set(followups.flatMap(item => [item.run_ref, item.source_run_ref]).filter(ref => ref !== selectedRun))]; const linked = (await Promise.all(linkedRefs.map(async ref => { try { return await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(ref)}/snapshot`) } catch { return null } }))).filter((item): item is Snapshot => item !== null); if (active && generation === fetchGeneration.current) { setSnapshot(current => mergePage(current, page)); setRelations(followups); setLineage(current => linked.map(item => mergePage(current.find(old => old.snapshot_ref === item.snapshot_ref) ?? null, item))); setMessage('Updated from the recorded snapshot.') } } catch (error) { if (active && generation === fetchGeneration.current) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } }; void loadSnapshot(); const timer = window.setInterval(() => void loadSnapshot(), POLL_INTERVAL_MS); return () => { active = false; window.clearInterval(timer); ++fetchGeneration.current } }, [selectedRun])
   const loadMore = async () => { if (!snapshot || !selectedRun || !snapshot.next_cursor) return; const generation = fetchGeneration.current; try { const page = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/history?snapshot=${encodeURIComponent(snapshot.snapshot_ref)}&cursor=${encodeURIComponent(snapshot.next_cursor)}`); if (generation === fetchGeneration.current) setSnapshot(current => ({ ...mergePage(current, page), next_cursor: page.next_cursor })) } catch (error) { if (generation !== fetchGeneration.current) return; setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.'); try { const fresh = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(selectedRun)}/snapshot`); if (generation === fetchGeneration.current) setSnapshot(fresh) } catch { /* Keep the last safe view on read failure. */ } } }
   const loadLinkedMore = async (linked: Snapshot) => {
@@ -39,92 +69,70 @@ function App() {
     const generation = fetchGeneration.current
     try { const page = await getJson<Snapshot>(`/api/monitor/v1/runs/${encodeURIComponent(ref)}/history?snapshot=${encodeURIComponent(linked.snapshot_ref)}&cursor=${encodeURIComponent(linked.next_cursor)}`); if (generation === fetchGeneration.current) setLineage(current => current.map(item => item.snapshot_ref === linked.snapshot_ref ? { ...mergePage(item, page), next_cursor: page.next_cursor } : item)) } catch (error) { if (generation === fetchGeneration.current) setMessage(error instanceof Error ? error.message : 'History unavailable.') }
   }
-  useEffect(() => { if (!snapshot || !selectedRun) return; const graph = graphFor(snapshot, lineage, relations); const known = new Set([...graph.nodes.map(node => node.id), ...graph.edges.map(edge => edge.id)]); setSelected(current => current && known.has(current.id) ? current : null); setEdges(graph.edges)
-    const taskGroups = graph.nodes.filter(node => node.className?.includes('planned-node')).map(node => node.id)
-    const owner = (node: Node) => typeof node.data.owner === 'string' ? node.data.owner : null
-    const recordedRunScopedChain = (node: Node) => {
-      const identity = node.data.identity as { runRef?: string } | undefined
-      const execution = [snapshot, ...lineage].flatMap(item => item.chain ?? []).find(item => item.ref === node.id && item.run_ref === identity?.runRef)
-      if (!execution || !['reviewer', 'fixer'].includes(execution.role) || !execution.occurrence_refs.length) return false
-      const occurrences = [snapshot, ...lineage].flatMap(item => item.occurrences)
-      const members = execution.occurrence_refs.map(ref => occurrences.filter(item => item.run_ref === execution.run_ref && item.ref === ref))
-      return members.every(matches => matches.length === 1 && matches[0].task_ref === null)
-    }
-    const groupFor = (node: Node) => taskGroups.includes(node.id) ? node.id : owner(node) ?? (node.className?.includes('planned-review-node') || recordedRunScopedChain(node) ? 'run-review' : 'unassigned-history')
-    const groupTitle = (id: string) => id === 'run-review' ? 'Run review / execution history' : id === 'unassigned-history' ? 'Unassigned recorded history' : `Task ${String(graph.nodes.find(node => node.id === id)?.data.taskCode ?? 'unknown')} — ${String(graph.nodes.find(node => node.id === id)?.data.title ?? graph.nodes.find(node => node.id === id)?.data.label ?? 'Unknown task title')}`
-    const groupIds = [...taskGroups, ...(graph.nodes.some(node => groupFor(node) === 'run-review') ? ['run-review'] : []), ...(graph.nodes.some(node => groupFor(node) === 'unassigned-history') ? ['unassigned-history'] : [])]
-    const sizeFor = (id: string, fallback: { width: number; height: number }) => measurements.current[id] ?? fallback
-    const groups: LayoutGroup[] = groupIds.map(id => ({ id, kind: id === 'run-review' ? 'run-review' : id === 'unassigned-history' ? 'unassigned' : 'task', header: sizeFor(`header:${id}`, { width: 250, height: 42 }), members: graph.nodes.filter(node => groupFor(node) === id).map(node => ({ id: node.id, size: sizeFor(node.id, { width: 180, height: 70 }) })) }))
-    const prerequisites = graph.edges.filter(edge => edge.data?.classification === 'backbone').map(edge => ({ source: edge.source, target: edge.target }))
-    // Secondary relations are overlays: neither their identities nor their status changes
-    // alter task ownership, footprints, ranks, or a deliberate viewport.
-    const structure = JSON.stringify({ groups: groups.map(group => [group.id, group.kind, group.members.map(member => member.id)]), prerequisites })
-    const layoutKey = JSON.stringify({ structure, groups: groups.map(group => [group.id, group.header, group.members]) })
-    // Match the complete text rendered into each footprint. Labels cover titles, while
-    // statuses cover outcomes and task blocker annotations.
-    const contentKey = JSON.stringify({ nodes: graph.nodes.map(node => [node.id, node.data.label, node.data.status]), headers: groupIds.map(id => [id, groupTitle(id)]) })
+  useEffect(() => {
+    if (!snapshot || !selectedRun) return
+    const graph = graphFor(snapshot, lineage, relations)
+    const known = new Set([...graph.nodes.map(node => node.id), ...graph.edges.map(edge => edge.id)])
+    setSelected(current => current && known.has(current.id) ? current : null)
+    setEdges(graph.edges)
+    const contentKey = JSON.stringify(graph.nodes.map(node => [node.id, node.data.label, node.data.status]))
+    const contentChanged = measurementContent.current !== contentKey
+    measurementContent.current = contentKey
+    const layoutKey = JSON.stringify({ topology: graph.topology, sizes: graph.nodes.map(node => [node.id, measurements.current[node.id] ?? { width: 180, height: 70 }]) })
     const refreshNodes = () => setNodes(current => current.map(node => {
-      if (node.id.startsWith('group:')) {
-        const id = node.id.slice('group:'.length)
-        return { ...node, data: { ...node.data, label: <div className="group-header" data-group-header={id}>{groupTitle(id)}</div> } }
-      }
       const fresh = graph.nodes.find(item => item.id === node.id)
       return fresh ? { ...node, data: fresh.data, className: fresh.className } : node
     }))
-    const contentChanged = measurementContent.current !== contentKey
-    measurementContent.current = contentKey
     if (topology.current === layoutKey) {
-      // A cached layout describes the old footprint, not necessarily the freshly rendered
-      // content. Render first so the DOM measurement effect can feed its intrinsic graph
-      // coordinates back through this same layoutFootprints input/output path.
       measurePending.current = contentChanged
-      if (contentChanged) topology.current = null
       refreshNodes()
       return
     }
-    // Content measurements can refine footprints after a user has panned or zoomed.
-    // Reflow them, but reserve fitView for an initial or backbone/ownership change.
-    // Initial intrinsic measurement needs one fit after the measured layout. Later
-    // content reflows deliberately preserve a user's viewport.
-    if (layoutStructure.current !== structure && (!contentChanged || initialFitComplete.current)) fitPending.current = true
-    measurePending.current = contentChanged; const generation = ++layoutGeneration.current; let active = true
-    void layoutFootprints({ groups, prerequisites, secondaryRelations: graph.edges.filter(edge => edge.data?.classification === 'secondary') }).then(layout => { if (!active || generation !== layoutGeneration.current) return; topology.current = layoutKey; layoutStructure.current = structure; const byGroup = new Map(layout.groups.map(group => [group.id, group])); const grouped: Node[] = layout.groups.map(group => ({ id: `group:${group.id}`, position: { x: group.bounds.x, y: group.bounds.y }, data: { label: <div className="group-header" data-group-header={group.id}>{groupTitle(group.id)}</div> }, className: `owner-group ${group.kind}`, style: { width: group.bounds.width, height: group.bounds.height }, draggable: false, selectable: false }))
-      for (const node of graph.nodes) { const groupId = groupFor(node); const group = byGroup.get(groupId)!; const child = group.children.find(item => item.id === node.id)!; const position = { x: child.bounds.x - group.bounds.x, y: child.bounds.y - group.bounds.y }; positions.current[node.id] = position; grouped.push({ ...node, position: { x: child.bounds.x, y: child.bounds.y }, style: { width: child.bounds.width, height: child.bounds.height } }) }
-      setNodes(grouped) })
+    const structureChanged = layoutStructure.current !== graph.topology
+    if (structureChanged) fitPending.current = true
+    measurePending.current = true
+    const generation = ++layoutGeneration.current
+    let active = true
+    void layoutNodes(
+      graph.nodes.map(node => ({ id: node.id, size: measurements.current[node.id] ?? { width: 180, height: 70 } })),
+      graph.edges.map(edge => ({ source: edge.source, target: edge.target }))
+    ).then(layout => {
+      if (!active || generation !== layoutGeneration.current) return
+      topology.current = layoutKey
+      layoutStructure.current = graph.topology
+      const byId = new Map(layout.nodes.map(node => [node.id, node]))
+      setNodes(graph.nodes.map(node => {
+        const layoutNode = byId.get(node.id)!
+        const position = positions.current[node.id] ?? { x: layoutNode.x, y: layoutNode.y }
+        return { ...node, position, style: { width: layoutNode.width, height: layoutNode.height } }
+      }))
+    })
     return () => { active = false }
   }, [selectedRun, snapshot, lineage, relations, measurementGeneration])
   useEffect(() => {
     if (!nodes.length || !measurePending.current) return
-    // A content refresh first replaces node labels. Defer one frame so measurements see
-    // that committed DOM rather than a preceding cached node render.
     const frame = requestAnimationFrame(() => {
       if (!measurePending.current) return
       measurePending.current = false
       const next = { ...measurements.current }
       let changed = false
-      document.querySelectorAll<HTMLElement>('.react-flow__node[data-id], .group-header[data-group-header]').forEach(element => {
-        const id = element.dataset.groupHeader ? `header:${element.dataset.groupHeader}` : element.dataset.id
-        if (!id || id.startsWith('group:')) return
-        // offset/scroll dimensions are CSS (graph) coordinates; unlike client rects they
-        // are not shrunk by the ReactFlow viewport transform. scroll dimensions include
-        // wrapped/overflowing content before the next footprint fixes the node size.
+      document.querySelectorAll<HTMLElement>('.react-flow__node[data-id]').forEach(element => {
+        const id = element.dataset.id
+        if (!id) return
         const horizontalBorder = element.offsetWidth - element.clientWidth
         const verticalBorder = element.offsetHeight - element.clientHeight
-        // Group headers are positioned at the same 16px inset used by layoutFootprints;
-        // measure their own rendered footprint, not their enclosing owner box.
-        const width = Math.max(element.offsetWidth, element.scrollWidth + horizontalBorder)
-        // Node heights come from the prior layout. Clear that explicit constraint while
-        // reading intrinsic content so a shorter refreshed blocker/title can shrink too.
         const retainedHeight = element.style.height
         element.style.height = 'auto'
-        const height = Math.max(element.offsetHeight, element.scrollHeight + verticalBorder)
+        const size = {
+          width: Math.ceil(Math.max(element.offsetWidth, element.scrollWidth + horizontalBorder)),
+          height: Math.ceil(Math.max(element.offsetHeight, element.scrollHeight + verticalBorder))
+        }
         element.style.height = retainedHeight
-        const size = { width: Math.ceil(width), height: Math.ceil(height) }
         const previous = next[id]
         if (size.width && size.height && (previous?.width !== size.width || previous.height !== size.height)) { next[id] = size; changed = true }
       })
       if (!initialFitComplete.current) fitPending.current = true
-      if (changed) { measurements.current = next; ++layoutGeneration.current; topology.current = null; setMeasurementGeneration(current => current + 1) }
+      if (changed) { measurements.current = next; topology.current = null; setMeasurementGeneration(current => current + 1) }
     })
     return () => cancelAnimationFrame(frame)
   }, [nodes])
@@ -153,15 +161,23 @@ function App() {
     if (definition) return <><h3>{definition.label}</h3><p>Planned review definition — not an agent call.</p>{technical(<p>Definition ID: {definition.ref}; {source(definition.run_ref)}.</p>)}{acceptanceDetails(runFor(definition.run_ref))}</>
     const chain = all.flatMap(item => item.chain ?? []).find(item => item.ref === selected.id)
     if (chain) return <><h3>{chain.role === 'fixer' ? 'Fixing agent' : chain.role === 'reviewer' ? `Review ${chain.review_ordinal ?? 'unknown'}` : 'Recorded execution'}</h3><p>Execution outcome: {chain.outcome}.</p><p>What happened: {chain.findings.length ? 'Recorded review findings are available below.' : 'not recorded'}.</p><p>Current blocker: {chain.outcome === 'rejected' ? 'Review rejected the work.' : 'not recorded'}.</p>{chain.findings.length ? <section><h4>Actionable safe findings</h4>{chain.findings.map((finding, index) => <p key={index}>{finding}</p>)}</section> : <p>Actionable safe findings: not recorded.</p>}{technical(<><p>Execution ID: {chain.execution_id}; execution ref {chain.ref}; {source(chain.run_ref)}.</p><p>Explicit trigger: {chain.trigger_ref ?? 'unknown'}; explicit predecessor: {chain.predecessor_ref ?? 'unknown'}.</p><p>Recorded occurrences: {chain.occurrence_refs.length ? chain.occurrence_refs.join(', ') : 'unknown'}.</p><p>Range: {chain.review_range.base ?? 'unknown'} → {chain.review_range.head ?? 'unknown'}.</p><p>Commit references: {Object.entries(chain.commit_refs).length ? Object.entries(chain.commit_refs).map(([name, value]) => `${name} ${value}`).join('; ') : 'unknown'}.</p></>)}{acceptanceDetails(runFor(chain.run_ref))}</>
+    const activity = all.flatMap(item => item.activities ?? []).find(item => item.ref === selected.id)
+    if (activity) {
+      const task = activity.task_ref ? all.flatMap(item => item.tasks).find(item => item.ref === activity.task_ref && item.run_ref === activity.run_ref) : undefined
+      const title = `${activity.role === 'fixing_worker' ? 'Corrective worker' : activity.role === 'reviewer' ? 'Reviewer' : activity.role === 'worker' ? 'Worker' : 'Recorded activity'}${task ? ` — ${taskTitle(task)}` : ''}${activity.invocation_kind === 'corrective_worker' ? ' (correction)' : ''}`
+      const own = all.flatMap(item => item.records).filter(record => activity.record_refs.includes(record.ref) && record.run_ref === activity.run_ref)
+      const rendered = graphFor(snapshot, lineage, relations).nodes.find(node => node.id === activity.ref)
+      const qualification = rendered?.data.relationQualification
+      return <><h3>{title}</h3><p>Execution outcome: {activity.outcome === 'returned' ? 'returned — acceptance not established' : activity.outcome}.</p><p>What happened: {activity.error_category ? `Recorded safe error category: ${activity.error_category}.` : 'not recorded'}.</p><p>Stopping reason: {activity.stopped_by_ref ? `Recorded stopping reference ${activity.stopped_by_ref}.` : 'unknown/not recorded'}.</p>{qualification && <p>Relation qualification: {String(qualification)}</p>}{technical(<><p>Invocation ID: {activity.invocation_id}; activity {activity.ref}; task {task?.task_id ?? 'unknown'}; {source(activity.run_ref)}.</p><p>Recorded input references: {activity.input_refs.length ? activity.input_refs.join(', ') : 'none'}; qualification {activity.input_qualification}.</p><p>Correction references: {activity.correction_chain.length ? activity.correction_chain.join(', ') : 'none'}; support {activity.support_ref ?? 'unknown'}; stopped by {activity.stopped_by_ref ?? 'unknown'}.</p>{own.map(record => <p key={record.ref}>{recordText(record)}</p>)}</>)}{acceptanceDetails(runFor(activity.run_ref))}<p>Only loaded observations are shown; use history below for retained evidence.</p></>
+    }
     const occurrence = all.flatMap(item => item.occurrences).find(item => item.ref === selected.id)
     if (!occurrence) return null
     const own = all.flatMap(item => item.records).filter(item => item.occurrence_ref === occurrence.ref && item.run_ref === occurrence.run_ref)
     const supporting = all.flatMap(item => item.occurrences).filter(item => item.run_ref === occurrence.run_ref && item.role === 'non_model' && (item.support_ref === occurrence.ref || item.parent_ref === occurrence.ref))
     return <><h3>{action(occurrence, all)}</h3><p>Execution outcome: {outcomeText(occurrence, own)}.</p><p>What happened: {own.length ? 'Recorded lifecycle evidence is available in technical references.' : 'not recorded'}.</p><p>Current blocker: {occurrence.stopping ? 'Recorded workflow stopping step.' : 'not recorded'}.</p>{occurrence.execution_summary?.qualification && <p>Recorded execution qualification: {occurrence.execution_summary.qualification}.</p>}{technical(<><p>Occurrence ID: {occurrence.occurrence_id ?? 'unknown'}; execution {occurrence.ref}{occurrence.task_ref ? `; task ${occurrence.task_ref}` : ''}; {source(occurrence.run_ref)}.</p>{own.map(item => <p key={item.ref}>{recordText(item)}</p>)}{supporting.map(item => <section key={item.ref}><h4>{action(item, all)}: {outcomeText(item, all.flatMap(value => value.records))}</h4><p>{item.ref}; {item.stopping ? 'workflow stopping step' : 'supporting observation'}</p>{all.flatMap(value => value.records).filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => <p key={record.ref}>{recordText(record)}</p>)}</section>)}</>)}{acceptanceDetails(runFor(occurrence.run_ref))}<p>Only loaded observations are shown; use history below for retained evidence.</p></>
   }, [edges, lineage, selected, snapshot])
-  // ReactFlow retains measured dimensions/handles by node identity. Recreating these
-  // unmeasured inputs on viewport moves hides inner nodes and removes their edges
-  // until ResizeObserver measures them again; owner-group inputs already stay stable.
+  // ReactFlow retains measured dimensions/handles by node identity. Recreating nodes
+  // on viewport moves hides calls and removes connectors until ResizeObserver reruns.
   const renderedNodes = useMemo(() => nodes.map(node => node.id.startsWith('group:') ? node : ({ ...node, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
     <strong>{String(node.data.label)}</strong>
     <small>{String(node.data.status)}</small>
@@ -175,7 +191,10 @@ function App() {
     <h1>Workflow monitor</h1>
     <p className="status" role="status">{message}</p>
     <h2>Runs</h2>
-    <div className="run-list">{runs.map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun) return; setNodes([]); setEdges([]); ++fetchGeneration.current; ++layoutGeneration.current; topology.current = null; initialFitComplete.current = false; setSnapshot(null); setLineage([]); setRelations([]); setSelectedRun(run.ref); setSelected(null) }}>{run.label} · {run.display_id} · {run.completeness}</button>)}</div>
+    <label className="run-filter">Filter run ID <input value={filter} onChange={event => setFilter(event.target.value)} placeholder="Filter run ID" /></label>
+    <div className="run-list">{runs.filter(run => run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())).map(run => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun) return; window.history.pushState(null, '', routeFor(run.display_id)); applyLocation(runsRef.current) }}>{run.label} · {run.display_id} · {run.completeness}</button>)}</div>
+    {filter && !runs.some(run => run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p>No run IDs match this filter.</p>}
+    {filter && selectedRun && !runs.some(run => run.ref === selectedRun && run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p>The selected run is outside this filter.</p>}
     </aside>
     <section className="viewer">
     <header>
@@ -195,7 +214,7 @@ function App() {
     </div>
     <div className="execution-view">
     <div className="graph" aria-label="Workflow graph">
-    <ReactFlow<Node, Edge> nodes={renderedNodes} edges={edges.map(edge => ({ ...edge, selected: selected?.kind === 'edge' && selected.id === edge.id }))} onInit={instance => { flow.current = instance }} minZoom={.15} viewport={viewport} onMove={(_, next) => setViewport(next)} onNodeClick={(_, node) => { if (!node.id.startsWith('group:')) setSelected({ kind: 'node', id: node.id }) }} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}>
+    <ReactFlow<Node, Edge> nodes={renderedNodes} edges={edges.map(edge => ({ ...edge, selected: selected?.kind === 'edge' && selected.id === edge.id }))} onInit={instance => { flow.current = instance }} minZoom={.15} viewport={viewport} onMove={(_, next) => setViewport(next)} onNodeDragStop={(_, node) => { positions.current[node.id] = node.position; setNodes(current => current.map(item => item.id === node.id ? { ...item, position: node.position } : item)) }} onNodeClick={(_, node) => setSelected({ kind: 'node', id: node.id })} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}>
     <Background />
     <Controls />
     </ReactFlow>

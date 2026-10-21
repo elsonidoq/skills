@@ -22,22 +22,13 @@ that isolated environment. A missing build root, missing `index.html`, symlinked
 or non-directory asset root stops before binding with a fixed actionable diagnostic;
 rebuild to a regular local `dist/` directory and retry.
 
-Then open `http://127.0.0.1:8765/` in a local browser. The left selector and persistent
-selected-run banner show the recorded run ID as inert text, so identically labelled runs remain
-distinguishable during loading or a read error. Opaque references still route API requests. The default Details view leads with recorded title, progress or execution outcome, blocker, findings and acceptance; full task, occurrence, source and edge IDs remain inert text in expandable technical references. When a retained descriptor is complete, the
-compact graph also exposes every declared task with stable run-scoped anchors and declared
-prerequisite edges, including pending work. Its final stage is separately defined as
-**“Planned independent review — not an agent call.”**; actual implementation, review,
-fixing and rereview executions remain distinct recorded attachments rather than replacing
-that definition. Missing, malformed, partial, invalid-dependency, or fallback-empty
-descriptors show complete graph unavailable instead of a repaired partial plan, while valid
-recorded history remains available. Unsupported stores and read failures remain unavailable
-or errors, never empty completed runs. Short labels use recorded roles and public task
-presentation; missing task labels fall back to the recorded task ID. Retained labels and summaries are displayed without monitor-side length exclusions.
+Then open `http://127.0.0.1:8765/` in a local browser. The left selector and persistent selected-run banner show the recorded run ID as inert text, so identically labelled runs remain distinguishable during loading or a read error. Opaque references still route API requests. The graph renders only actual recorded worker, corrective-worker, reviewer, fixer, and necessary terminal-stop calls. It has no plan nodes, review definitions, groups, or inferred causal arrows. Details lead with the recorded action, outcome, blocker and findings; full task, occurrence, source and edge IDs remain inert text in expandable technical references. Missing, malformed, partial or unsupported records remain unavailable or qualified rather than repaired into a completed graph.
 
-A confirmed internal step that stops a recorded failed run appears as a red node with its recorded support relation. A failure before any
-agent starts remains visible without an invented agent. Recovered check observations
-remain in Details/history, not extra stopping nodes. The default graph shows declared prerequisites and only state-essential recorded stop/correction relations; attachment and recorded sequence arrows are omitted. A concise legend and selected-edge Details explain each relation's semantic type, endpoints and qualification. Recorded sequence remains accessible as history, not causal proof.
+The browser URL identifies a run by its actual displayed ID as `/runs/id-<percent-encoded ID>`; the client decodes that component once, looks it up exactly in the inventory, and only then uses the opaque API reference. A successful nonempty root inventory replaces `/` with its newest finite-epoch run (descending, deterministic ID ties; unknown times last). Different selections push history, repeated selections do not, and Back/Forward clears obsolete graph/Details work before loading the addressed run. Unknown, removed, or unavailable IDs remain in the address bar with an honest unavailable state rather than selecting a substitute. The run-ID filter is a case-insensitive local substring filter: it neither changes the selected URL/history nor sends a server search, and it explicitly reports selected-outside-filter and no-match states. Polling remains at 60 seconds and never steals the current selection for a newer row.
+
+A confirmed internal step that stops a recorded failed run appears as a red node with its explicit recorded support relation. A failure before any agent starts remains visible without an invented agent. Recovered checks remain in Details/history, not extra graph nodes. Edges come only from explicit recorded input, correction, review/fix and stop facts; missing, ambiguous or cyclic relations remain qualified in Details and are not rendered.
+
+Click an execution or edge to highlight it and update the visible Details panel next to the graph (below it on narrow screens). Execution Details keep outcome, what happened, blocker and actionable recorded findings separate from acceptance. Edge Details use semantic relation metadata rather than a rendered arrow label. Expand technical references to inspect full IDs, endpoints, qualifications, source references and retained history. **Loaded history and technical references** exposes loaded typed observations and unsupported records without raw database payloads. **Load more history** and **Load correction history** retrieve further pages at their snapshot watermarks. Inventory counts disclose unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 
 Snapshot occurrence `execution_summary` is derived from the full normalized snapshot
 before history paging. A worker or fixing-worker `returned` is green execution success;
@@ -90,31 +81,7 @@ and does not expose arbitrary payload/credential fields, runner identity interna
 history** retrieve further pages at their snapshot watermarks. Inventory counts disclose
 unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 
-The graph uses measured task and history-group footprints with ELK's layered top-to-bottom
-prerequisite backbone. The representative production browser fixture measures rendered header,
-member and owner bounds against the same footprint function, prints those observed bounds, and
-retains overview and inspection-zoom screenshots as automated evidence; this is not human visual
-acceptance. Task headers and their distinct recorded attempts share a visible owner
-area; run review/execution and unassigned recorded history have named areas instead of guessed
-ownership. Only declared prerequisites set ranks; recorded stops and qualified corrections are
-secondary overlays. The initial view fits the recorded graph into the available graph panel after
-the run selector and Details panel take their space. Pan, zoom and selection remain available for
-detail; unchanged-topology status polling preserves a deliberate viewport, positions, group
-ownership and selection while updating visible status. Because the viewport is controlled, its
-state is synchronized on every graph move, rather than only when a pan/drag ends; the focused
-browser regression holds a background pan and verifies the viewport transform changes before
-release and remains there afterward. The rendered node projection also retains node identity
-across viewport-only updates: ReactFlow otherwise discards measured dimensions and handle bounds
-for newly supplied unmeasured nodes, temporarily hiding inner nodes and removing connectors until
-remeasurement. A focused browser regression checks inner-node/edge visibility during movement and
-observes transient hidden-style changes and connector removals that end-of-frame geometry can miss.
-This mechanism was reproduced in Linux Chrome against the production view; it is not evidence of
-Mac compositor behavior or same-Mac visual acceptance. The closed snapshot API is polled every
-**60 seconds**; this is not a claim that polling alone caused previous slowness. The owner’s same-Mac
-interactive acceptance remains a separate pending manual gate. Stale old-run fetch/layout results
-are discarded. Read freshness, last successful read and last recorded activity remain separate.
-Failed reads retain sanitized evidence with a warning. Recorded runner `live`/`stopped`/`unknown`
-qualification is not proof of progress.
+The graph lays out only actual rendered activity calls using their measured DOM dimensions and ELK's layered top-to-bottom direction. Valid recorded relations are the only ELK edges; there are no task/group footprints, parent-relative children, planning anchors, or inferred relations. The representative production browser fixture verifies rendered bounds and connectors for branches, a join, review/fix links and an essential stop. The initial view fits the activity graph. Selection, deliberate node dragging, pan and zoom survive status-only refreshes; a topology or content-size change may relayout without arbitrarily resetting the viewport. Because the viewport is controlled, its state is synchronized on every graph move, rather than only when a pan/drag ends. The rendered node projection retains node identity across viewport-only updates so ReactFlow keeps measured dimensions and handle bounds instead of temporarily hiding nodes or removing connectors during remeasurement. The closed snapshot API is polled every **60 seconds**; this is not a claim that polling alone caused previous slowness. The owner’s same-Mac interactive acceptance remains a separate pending manual gate. Stale old-run fetch/layout results are discarded. Read freshness, last successful read and last recorded activity remain separate. Failed reads retain sanitized evidence with a warning. Recorded runner `live`/`stopped`/`unknown` qualification is not proof of progress.
 
 Only explicitly declared local correction relations expand the selected-root graph.
 For a same-run recorded review chain, the graph shows only actually emitted reviewer/fixer nodes

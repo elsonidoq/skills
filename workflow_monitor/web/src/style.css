@@ -13,13 +13,6 @@
 .plan { background: #e9e4ff !important; border-color: #5f4bb6 !important; }
 .acceptance { background: #e7f1ff !important; border-color: #1769aa !important; }
 .unavailable { background: #fff0c2 !important; border-color: #9a6900 !important; }
-.owner-group { box-sizing: border-box; border: 2px solid #7890aa; border-radius: .6rem; padding: 0; background: #f8fbff; pointer-events: none; }
-.owner-group.task { border-color: #5f4bb6; background: #f3f0ff; }
-.owner-group.run-review { border-style: dashed; background: #eef7ff; }
-.owner-group.unassigned { border-color: #9a6900; background: #fff9ea; }
-.group-header { box-sizing: border-box; position: absolute; left: 16px; top: 16px; width: calc(100% - 32px); padding: .55rem .7rem; font-size: .8rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
-.planned-node, .planned-review-node { width: 180px; min-height: 70px; box-sizing: border-box; border: 2px solid #5f4bb6; border-radius: .4rem; padding: .6rem; background: #e9e4ff; }
-.planned-review-node { border-style: dashed; }
 .progress-completed { background: #dcecff; }
 .progress-failed, .progress-blocked { background: #ffe5e5; }
 .progress-running { background: #fff0c2; }
