@@ -186,7 +186,8 @@ export async function execute(request, emit, ask) {
   // adapter can then expose that failed call/cause for inspection, never retry it.
   const sessionRecord = sessionObservationRecord(request, session);
   if (sessionRecord) emit(sessionRecord);
-  const cancel = () => { void session.abort(); };
+  let aborting;
+  const cancel = () => { aborting ??= Promise.resolve(session.abort()); };
   process.on('SIGTERM', cancel);
   process.on('SIGINT', cancel);
   try {
@@ -198,6 +199,9 @@ export async function execute(request, emit, ask) {
   } finally {
     process.off('SIGTERM', cancel);
     process.off('SIGINT', cancel);
+    // Do not dispose/release the host while its owned SDK abort is still
+    // draining an active tool invocation.
+    if (aborting) await aborting.catch(() => {});
     session.dispose();
   }
 }

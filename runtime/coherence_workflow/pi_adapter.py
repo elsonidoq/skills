@@ -181,7 +181,9 @@ class PiAdapter:
                 except BrokenPipeError:
                     pass
                 if proc.poll() is None:
-                    # Only our Popen child; SDK abort handles its active tools.
+                    # Only our Popen child. SIGTERM makes the host abort its active
+                    # SDK tools; wait for that host to exit before releasing our
+                    # inherited writer lock to a same-run continuation.
                     proc.terminate()
                     proc.wait()
                 proc.stdout.close()

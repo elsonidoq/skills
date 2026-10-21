@@ -2,6 +2,8 @@
 import contextlib
 import io
 import json
+import subprocess
+import sys
 from unittest.mock import patch
 
 from coherence_workflow import cli
@@ -189,3 +191,64 @@ class UnfinishedTaskResumeTests(ProjectTest):
                             for kind, state, details in history))
         self.assertTrue(any(kind == 'mutation' and state == 'claimed' and details['artifacts'] == ['web/dist/known.js']
                             for kind, state, details in history))
+
+
+class CancelledPartialResumeTests(ProjectTest):
+    def test_owned_cancellation_drains_fixture_tool_before_same_run_continuation(self):
+        project = self.project
+        contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [{
+            'id': 'cancelled-partial', 'description': 'synthetic owned cancellation fixture',
+            'owned_paths': ['work.txt'], 'generated_outputs': ['web/dist/'],
+            'checks': [[sys.executable, '-B', '-c', "from pathlib import Path; assert Path('work.txt').read_text() == 'continued\\n'"]],
+        }]})
+        tool = []
+
+        class Interrupted:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                kwargs['claim']('work.txt')
+                project.joinpath('work.txt').write_text('partial\n')
+                (project/'web/dist').mkdir(parents=True)
+                kwargs['claim']('web/dist/known.js')
+                project.joinpath('web/dist/known.js').write_text('generated\n')
+                kwargs['command']('start', 'synthetic-tool')
+                child = subprocess.Popen([sys.executable, '-B', '-c', 'import time; time.sleep(60)'])
+                tool.append(child)
+                child.terminate()
+                child.wait()
+                raise KeyboardInterrupt
+
+        with Authority(project) as owner:
+            with self.assertRaises(KeyboardInterrupt):
+                Engine(owner, 'cancelled-partial', contract, EXECUTOR, adapter=Interrupted,
+                       paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
+        self.assertIsNotNone(tool[0].returncode, 'test-owned tool must drain before the writer lock releases')
+        with Authority(project) as owner:
+            history = [(row['kind'], row['state'], json.loads(row['details'])) for row in owner.store.db.execute(
+                "SELECT kind,state,details FROM execution_history WHERE run_id='cancelled-partial' ORDER BY seq")]
+            self.assertTrue(any(kind == 'tool_command' and state == 'started' and details['call'] == 'synthetic-tool'
+                                for kind, state, details in history))
+            self.assertTrue(any(kind == 'worker' and state == 'interrupted' for kind, state, _ in history))
+            self.assertTrue(any(kind == 'mutation' and details['artifacts'] == ['web/dist/known.js']
+                                for kind, _, details in history))
+            saved = owner.store.resume('cancelled-partial')['input']
+
+            class Continued:
+                def __init__(self, *_args, **_kwargs): pass
+                def prompt(self, _prompt, **kwargs):
+                    if kwargs.get('read_only'):
+                        return '{"approved":true,"findings":[]}'
+                    kwargs['claim']('work.txt')
+                    project.joinpath('work.txt').write_text('continued\n')
+                    kwargs['cleanup']('web/dist/known.js')
+                    return 'continued after owned cancellation'
+
+            result = Engine(owner, 'cancelled-partial', saved['contract'], saved['executor'], adapter=Continued,
+                            paid_scope=saved['authority']['paid_scope'], resume=True).invoke()
+            memberships = owner.store.db.execute("SELECT COUNT(*) FROM execution_usage_memberships WHERE run_id='cancelled-partial'").fetchone()[0]
+            chain = owner.store.review_chain('cancelled-partial', private=True)
+        self.assertEqual(result['status'], 'complete')
+        self.assertFalse((project/'web/dist/known.js').exists())
+        self.assertEqual(memberships, 1)
+        self.assertEqual((chain['review_count'], chain['fixing_round_count']), (1, 0))
+        self.assertEqual(len(result['checkpoints']), 1)

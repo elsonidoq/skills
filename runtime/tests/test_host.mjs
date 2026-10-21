@@ -89,17 +89,20 @@ test('actual SDK assistant error is an operation error, not successful prompt co
   await assert.rejects(() => promptSession(session, 'fixture', () => {}), /fixture provider error/);
 });
 
-test('SDK command cancellation handles its own subprocess without cgroups', {timeout: 10000}, async () => {
+test('SDK command cancellation drains its owned subprocess without cgroups', {timeout: 10000}, async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-simplification-03-cancel-'));
   const controller = new AbortController();
   try {
-    const pending = createBashTool(root).execute('cancel', {command: 'echo ready > started; sleep 1000'}, controller.signal);
+    const pending = createBashTool(root).execute('cancel', {command: 'echo $$ > tool.pid; exec sleep 1000'}, controller.signal);
+    const pidPath = path.join(root, 'tool.pid');
     while (true) {
-      try { await fs.access(path.join(root, 'started')); break; }
+      try { await fs.access(pidPath); break; }
       catch { await new Promise(resolve => setTimeout(resolve, 10)); }
     }
+    const pid = Number(await fs.readFile(pidPath, 'utf8'));
     controller.abort();
     await assert.rejects(() => pending, /abort/i);
+    assert.throws(() => process.kill(pid, 0), {code: 'ESRCH'});
   } finally { await fs.rm(root, {recursive: true, force: true}); }
 });
 
