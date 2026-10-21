@@ -10,8 +10,12 @@ from workflow_monitor.tests.test_mapping import snapshot
 class ExecutionPresentationTests(unittest.TestCase):
     setUp = test_http.HttpTests.setUp
 
-    def view(self, rows):
+    def view(self, rows, tasks=None):
         raw = snapshot()
+        if tasks is not None:
+            description = json.loads(raw["runs"][0]["description"])
+            description["tasks"] = tasks
+            raw["runs"][0]["description"] = json.dumps(description)
         raw["observations"] = [dict(seq=index, run_id=run, occurrence_id=occ, phase=phase,
                                     task_id=task, kind=kind, recorded_at=index, facts=json.dumps(facts))
                                for index, (run, occ, phase, task, kind, facts) in enumerate(rows, 1)]
@@ -119,6 +123,74 @@ class ExecutionPresentationTests(unittest.TestCase):
             self.assertEqual(states.count(expected), 1)
             self.assertIn('success', states)  # terminal return beats its stale question
             self.assertIn('waiting', states)
+
+    def test_task_progress_is_pre_page_checkpoint_based_and_dependency_scoped(self):
+        tasks = [{"id": "one", "depends": []}, {"id": "two", "depends": ["one"]}, {"id": "three", "depends": []}]
+        rows = [("run-a", f"noise-{number}", "check", "one", "started", {"ordinal": number}) for number in range(50)]
+        rows.extend([
+            ("run-a", "one", "worker", "one", "started", {"role": "worker"}),
+            ("run-a", "one", "worker", "one", "returned", {"role": "worker"}),
+            ("run-a", "checkpoint", "checkpoint", "one", "started", {}),
+            ("run-a", "checkpoint", "checkpoint", "one", "passed", {}),
+            ("run-a", "two", "worker", "two", "started", {"role": "worker"}),
+            ("run-a", "two", "worker", "two", "failed", {"role": "worker"}),
+            ("run-a", "review", "review", None, "failed", {"role": "reviewer", "approved": False, "finding_count": 1}),
+            ("run-a", "terminal", "terminal", None, "failed", {}),
+        ])
+        first, _ = self.view(rows, tasks)
+        run = first["runs"][0]["ref"]
+        page = self.client.get(f"/api/monitor/v1/runs/{run}/snapshot", headers=self.api_headers).json()
+        full = self.client.get(f"/api/monitor/v1/runs/{run}/history?snapshot={page['snapshot_ref']}&cursor={page['next_cursor']}", headers=self.api_headers).json()
+        one, two, three = first["tasks"]
+        self.assertEqual(one["progress"], {"state": "completed", "qualification": None})
+        self.assertEqual(two["progress"], {"state": "failed", "qualification": None})
+        self.assertEqual(next(item for item in first["occurrences"] if item["ref"] == one["reason"]["occurrence_ref"])["phase"], "checkpoint")
+        self.assertEqual(three["annotation"], {"code": "not_started_run_stopped", "label": "Not started; run stopped"})
+        self.assertEqual([(item["ref"], item["progress"], item["reason"]) for item in first["tasks"]],
+                         [(item["ref"], item["progress"], item["reason"]) for item in full["tasks"]])
+        self.assertNotIn("skipped", json.dumps(first)); self.assertNotIn("cancelled", json.dumps(first))
+
+    def test_failed_prerequisite_blocks_only_its_declared_dependent(self):
+        tasks = [{"id": "one", "depends": []}, {"id": "two", "depends": ["one"]}, {"id": "three", "depends": []}]
+        first, _ = self.view([
+            ("run-a", "one", "worker", "one", "started", {"role": "worker"}),
+            ("run-a", "one", "worker", "one", "failed", {"role": "worker"}),
+            ("run-a", "terminal", "terminal", None, "failed", {}),
+        ], tasks)
+        one, two, three = first["tasks"]
+        self.assertEqual(one["progress"]["state"], "failed")
+        self.assertEqual(two["progress"], {"state": "blocked", "qualification": None})
+        self.assertEqual(two["reason"], {"code": "prerequisite_failed", "task_ref": one["ref"]})
+        self.assertEqual(three["progress"], {"state": "pending", "qualification": None})
+        self.assertEqual(three["annotation"], {"code": "not_started_run_stopped", "label": "Not started; run stopped"})
+
+    def test_return_without_checkpoint_is_not_completed_and_waiting_is_an_annotation(self):
+        tasks = [{"id": "one", "depends": []}, {"id": "two", "depends": ["one"]}, {"id": "three", "depends": []}]
+        first, _ = self.view([
+            ("run-a", "one", "worker", "one", "started", {"role": "worker"}),
+            ("run-a", "one", "worker", "one", "returned", {"role": "worker"}),
+            ("run-a", "three", "worker", "three", "started", {"role": "worker"}),
+            ("run-a", "question", "worker", "three", "question_requested", {"parent_occurrence_id": "three"}),
+        ], tasks)
+        one, dependent, waiting = first["tasks"]
+        self.assertEqual(one["progress"], {"state": "unknown", "qualification": "completion_unrecorded"})
+        self.assertEqual(dependent["progress"]["state"], "blocked")
+        self.assertEqual(waiting["annotation"]["code"], "waiting_for_input")
+
+    def test_incomplete_history_is_qualified_and_unavailable_plan_has_no_progress(self):
+        with patch('workflow_monitor.app.qualify', return_value={'state': 'stopped', 'reason': None}):
+            first, _ = self.view([('run-a', 'one', 'worker', 'one', 'started', {'role': 'worker'})])
+        self.assertEqual(first['tasks'][0]['progress'], {'state': 'unknown', 'qualification': 'incomplete_history'})
+        raw = snapshot()
+        raw['runs'] = [raw['runs'][0]]
+        raw['runs'][0]['description'] = 'malformed'
+        raw['observations'] = [dict(seq=1, run_id='run-a', occurrence_id='checkpoint', phase='checkpoint', task_id='one',
+                                    kind='passed', recorded_at=1, facts=json.dumps({}))]
+        self.reader.value = raw
+        run = self.client.get('/api/monitor/v1/runs', headers=self.api_headers).json()['runs'][0]
+        view = self.client.get(f"/api/monitor/v1/runs/{run['ref']}/snapshot", headers=self.api_headers).json()
+        self.assertEqual(run['plan_availability'], 'unavailable')
+        self.assertEqual(view['tasks'], [])
 
     def test_stop_does_not_borrow_another_tasks_agent(self):
         first, _ = self.view([

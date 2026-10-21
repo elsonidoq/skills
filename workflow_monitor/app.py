@@ -18,7 +18,7 @@ from starlette.routing import Route
 
 from .liveness import qualify
 from .mapping import normalize
-from .public import minimize, run_ref
+from .public import _ref, minimize, run_ref
 
 _CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 _ASSET_SUFFIXES = frozenset({".css", ".gif", ".html", ".ico", ".jpeg", ".jpg", ".js", ".png", ".svg", ".webp", ".woff", ".woff2"})
@@ -171,6 +171,96 @@ def _page(data: dict[str, Any], reference: str, after: int | str, size: int) -> 
     return result
 
 
+def _task_progress(graph: dict[str, Any], public: dict[str, Any]) -> None:
+    """Attach closed descriptor-task facts using the complete, unpaged snapshot."""
+    occurrence_rows = {(row["run_id"], row["occurrence_id"]): row for row in graph.get("occurrences", [])}
+    occurrences = {item["ref"]: item for item in public["occurrences"]}
+    runs = {item["ref"]: item for item in public["runs"]}
+
+    for task in public["tasks"]:
+        run = runs[task["run_ref"]]
+        task_rows = [row for (run_id, _), row in occurrence_rows.items()
+                     if run_id == run["display_id"] and row.get("task_id") is not None]
+        # The descriptor task ID is deliberately kept private; compare it only with
+        # raw graph facts and expose occurrence/task references below.
+        raw_id = next((row["task_id"] for row in graph["tasks"]
+                       if row["run_id"] == run["display_id"] and task["ref"] == _ref_task(row["run_id"], row["task_id"])), None)
+        rows = [row for row in task_rows if row["task_id"] == raw_id]
+        decisive = []
+        for row in rows:
+            outcome = next((item["kind"] for item in reversed(row["observations"])
+                            if item["kind"] in {"passed", "failed", "interrupted", "abandoned"}), None)
+            if row["phase"] == "checkpoint" and outcome == "passed":
+                decisive.append((row["observations"][-1]["seq"], "completed", row))
+            elif outcome == "failed":
+                decisive.append((row["observations"][-1]["seq"], "blocked" if any(
+                    item["facts"].get("error_category") == "blocked" for item in row["observations"]) else "failed", row))
+        task["progress"] = {"state": "pending", "qualification": None}
+        task["reason"] = None
+        task["annotation"] = None
+        if decisive:
+            _, state, row = max(decisive, key=lambda value: value[0])
+            occurrence = occurrences.get(_ref_occurrence(row["run_id"], row["occurrence_id"]))
+            task["progress"] = {"state": state, "qualification": None}
+            task["reason"] = {"code": "checkpoint_completed" if state == "completed" else
+                               ("explicit_impediment" if state == "blocked" else "task_failure"),
+                              "occurrence_ref": occurrence["ref"] if occurrence else None}
+            continue
+        agents = [occurrences[_ref_occurrence(row["run_id"], row["occurrence_id"])] for row in rows
+                  if _ref_occurrence(row["run_id"], row["occurrence_id"]) in occurrences and
+                  occurrences[_ref_occurrence(row["run_id"], row["occurrence_id"])]["role"] != "non_model"]
+        waiting = next((item for item in reversed(agents)
+                        if item.get("execution_summary", {}).get("state") == "waiting"), None)
+        active = next((item for item in reversed(agents)
+                       if item.get("execution_summary", {}).get("state") == "running"), None)
+        uncertain = next((item for item in reversed(agents)
+                          if item.get("execution_summary", {}).get("state") == "unknown"), None)
+        returned = next((item for item in reversed(agents)
+                         if item.get("execution_summary", {}).get("state") == "success"), None)
+        started = next((row for row in reversed(rows)
+                        if any(item["kind"] == "started" for item in row["observations"])), None)
+        if waiting:
+            task["progress"] = {"state": "running", "qualification": "waiting_for_input"}
+            task["annotation"] = {"code": "waiting_for_input", "occurrence_ref": waiting["ref"]}
+        elif active:
+            task["progress"] = {"state": "running", "qualification": active["execution_summary"]["qualification"]}
+            task["reason"] = {"code": "task_started", "occurrence_ref": active["ref"]}
+        elif uncertain:
+            task["progress"] = {"state": "unknown", "qualification": uncertain["execution_summary"]["qualification"]}
+            task["reason"] = {"code": "incomplete_task_history", "occurrence_ref": uncertain["ref"]}
+        elif returned:
+            task["progress"] = {"state": "unknown", "qualification": "completion_unrecorded"}
+            task["reason"] = {"code": "checkpoint_missing", "occurrence_ref": returned["ref"]}
+        elif started:
+            task["progress"] = {"state": "unknown", "qualification": "incomplete_history"}
+            task["reason"] = {"code": "incomplete_task_history",
+                              "occurrence_ref": _ref_occurrence(started["run_id"], started["occurrence_id"])}
+
+    for task in public["tasks"]:
+        if task["progress"]["state"] != "pending":
+            continue
+        prerequisite = next((candidate for candidate in public["tasks"]
+                             if candidate["ref"] in task["prerequisite_refs"] and candidate["progress"]["state"] != "completed"), None)
+        if prerequisite:
+            task["progress"] = {"state": "blocked", "qualification": None}
+            task["reason"] = {"code": "prerequisite_failed" if prerequisite["progress"]["state"] in {"failed", "blocked"}
+                              else "prerequisite_incomplete", "task_ref": prerequisite["ref"]}
+            continue
+        terminal = any(row["run_id"] == run_id and row["phase"] == "terminal" and
+                       any(item["kind"] in {"passed", "failed", "interrupted", "abandoned"} for item in row["observations"])
+                       for (run_id, _), row in occurrence_rows.items() if run_id == runs[task["run_ref"]]["display_id"])
+        if terminal:
+            task["annotation"] = {"code": "not_started_run_stopped", "label": "Not started; run stopped"}
+
+
+def _ref_task(run_id: str, task_id: str) -> str:
+    return _ref("task", run_id, task_id)
+
+
+def _ref_occurrence(run_id: str, occurrence_id: str) -> str:
+    return _ref("occ", run_id, occurrence_id)
+
+
 def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
     """Add closed execution and acceptance facts from recorded ownership, never payloads.
 
@@ -319,6 +409,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
                                and isinstance(row.get("run_id"), str) and item["ref"] == run_ref(row["run_id"])), None)
                 item["runner_state"] = qualify(identities.get(raw_id))
             _execution_details(graph, result)
+            _task_progress(graph, result)
             last_success_at = time.time()
             last_safe = observed(result, read_state="current")
             return last_safe, None

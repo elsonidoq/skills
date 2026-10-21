@@ -58,6 +58,17 @@ qualification. These facts are retained independently of the loaded history page
 status legend distinguishes green execution success, red execution failure, amber
 waiting and neutral recorded/incomplete/unknown. Worker return is **not acceptance**.
 
+For a complete retained descriptor, each public task also has pre-page `progress`,
+`reason`, and `annotation` facts. Pending means no task work or impediment; running is
+qualified; completion requires a successful focused checkpoint, never a worker return.
+A task-scoped failed step is failed, while an unstarted dependent is blocked with its
+public prerequisite reference. Outstanding input is a separate waiting annotation.
+An independent task never started when the run stopped remains pending with **“Not
+started; run stopped”**. Incomplete evidence stays qualified, and a later final-review
+rejection does not erase an earlier checkpoint. Missing or partial plans expose no task
+progress; `skipped` and `cancelled` are never synthesized. Reason/annotation references
+are opaque public task or occurrence refs, not task prose.
+
 Click a node or edge to highlight it and update the visible Details panel next to the
 graph (below it on narrow screens). Agent Details include loaded lifecycle/check/
 checkpoint evidence, source references and recorded review ranges. **Loaded history and
