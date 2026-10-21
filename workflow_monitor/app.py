@@ -182,8 +182,8 @@ def _page(data: dict[str, Any], reference: str, after: int | str, size: int) -> 
     # Keep the run selector, but never return another run's graph as part of this
     # selected-root snapshot. Explicit correction expansion uses its own endpoint.
     result = dict(data)
-    for key in ("phases", "tasks", "occurrences", "edges"):
-        result[key] = [item for item in data[key] if item["run_ref"] == reference]
+    for key in ("phases", "tasks", "occurrences", "edges", "activities"):
+        result[key] = [item for item in data.get(key, []) if item["run_ref"] == reference]
     for key in ("chain", "review_definitions"):
         result[key] = [item for item in data.get(key, []) if item["run_ref"] == reference]
     result["chain_acceptance"] = {key: value for key, value in data.get("chain_acceptance", {}).items()
@@ -330,21 +330,26 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
     for run in public["runs"]:
         scoped = [item for _, item in pairs if item["run_ref"] == run["ref"]]
         agents = [item for item in scoped if item["role"] != "non_model"]
-        for item in scoped:
-            if item["role"] != "non_model":
-                continue
-            parent = next((agent for agent in agents if agent["ref"] == item["parent_ref"]), None)
-            if parent is None:
-                contained = [agent for agent in agents if item["phase"] == "prepare"
-                             and agent["task_ref"] == item["task_ref"]
-                             and item["first_seq"] < agent["first_seq"] <= item["last_seq"]]
-                boundary = item["last_seq"] if item["phase"] == "terminal" else item["first_seq"]
-                preceding = [agent for agent in agents if agent["first_seq"] < boundary
-                             and (item["task_ref"] is None or agent["task_ref"] == item["task_ref"])]
-                parent = min(contained, key=lambda agent: agent["first_seq"], default=None)
-                if parent is None:
-                    parent = max(preceding, key=lambda agent: agent["first_seq"], default=None)
-            item["support_ref"] = parent["ref"] if parent else None
+        # Support and terminal cause are exact recorded invocation relations only.
+        # Sequence, task identity, containment, and nearest-agent selection are not evidence.
+        activity_by_ref = {item["ref"]: item for item in public.get("activities", []) if item["run_ref"] == run["ref"]}
+        occurrence_by_ref = {item["ref"]: item for item in scoped}
+        for activity in activity_by_ref.values():
+            occurrence = occurrence_by_ref.get(activity.get("occurrence_ref"))
+            support = activity.get("support_ref")
+            if occurrence is not None and support in activity_by_ref:
+                occurrence["support_ref"] = activity_by_ref[support]["occurrence_ref"]
+        for terminal_activity in (item for item in scoped if item["phase"] == "terminal" and item["outcome"] in {"failed", "interrupted", "abandoned"}):
+            terminal_source = next((source for source, candidate in pairs if candidate is terminal_activity), None)
+            stopped_by = None
+            if terminal_source:
+                terminal_facts = next((source["facts"] for source in reversed(terminal_source["observations"])
+                                       if source["kind"] in {"failed", "interrupted", "abandoned"}), {})
+                stopped_by = terminal_facts.get("stopped_by_invocation_id")
+            target = next((activity for activity in activity_by_ref.values()
+                           if activity["invocation_id"] == stopped_by and activity["outcome"] in {"failed", "interrupted"}), None)
+            if target and target.get("occurrence_ref") in occurrence_by_ref:
+                occurrence_by_ref[target["occurrence_ref"]]["stopping"] = True
 
         # Summaries deliberately use the full normalized snapshot, before HTTP paging.
         # They are execution facts, not task/check/review acceptance verdicts.
@@ -393,21 +398,6 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
                                 "base": facts.get("review_base"), "head": facts.get("review_head")})
         run["acceptance_summary"] = {"checks": checks, "checkpoints": checkpoints, "reviews": reviews,
                                      "full_range": run["review_acceptance"]}
-        terminals = [item for item in scoped if item["phase"] == "terminal" and item["outcome"] in {"failed", "interrupted", "abandoned"}]
-        for terminal in terminals:
-            failures = [item for item in scoped if item is not terminal and item["outcome"] in {"failed", "interrupted", "abandoned"}
-                        and terminal["first_seq"] <= item["last_seq"] <= terminal["last_seq"]]
-            failure = max(failures, key=lambda item: item["last_seq"], default=terminal)
-            if failure["phase"] == "prepare":
-                nested = [item for item in failures if item is not failure and item["task_ref"] == failure["task_ref"]
-                          and failure["first_seq"] <= item["last_seq"] <= failure["last_seq"]]
-                failure = max(nested, key=lambda item: item["last_seq"], default=failure)
-            later_progress = [item for item in scoped if item["phase"] not in {"prepare", "terminal"}
-                              and item["outcome"] == "passed" and failure["last_seq"] < item["last_seq"] < terminal["last_seq"]]
-            if later_progress or any(failure["last_seq"] < agent["first_seq"] < terminal["last_seq"] for agent in agents):
-                failure = terminal
-            if failure["role"] == "non_model":
-                failure["stopping"] = True
 
 
 def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlette:

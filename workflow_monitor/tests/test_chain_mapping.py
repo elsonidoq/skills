@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT / "runtime"))
 
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
+from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
 from workflow_monitor.mapping import normalize
@@ -32,6 +33,33 @@ class ChainMappingTests(ProjectTest):
                     engine.invoke()
             else:
                 engine.invoke()
+
+    def test_activity_readback_without_graph(self):
+        """The producer's closed invocation facts survive without graph projection."""
+        base = subprocess.check_output(['git', '-C', str(self.project), 'rev-parse', 'HEAD']).decode().strip()
+        with Authority(self.project) as owner:
+            owner.store.start('activity', base)
+            recorder = Recorder(owner.store, 'activity')
+            recorder.register(descriptor({'tasks': [{'id': 'one', 'depends': []}, {'id': 'two', 'depends': ['one']}]}, EXECUTOR))
+            first, second = recorder.occurrence(), recorder.occurrence()
+            first_facts = {'role': 'worker', 'invocation_id': 'invoke-one', 'invocation_kind': 'task_worker',
+                           'selected_input_checkpoints': [], 'correction_chain': ['invoke-one']}
+            second_facts = {'role': 'worker', 'invocation_id': 'invoke-two', 'invocation_kind': 'task_worker',
+                            'selected_input_checkpoints': [{'checkpoint_occurrence_id': 'checkpoint-one', 'task_id': 'one',
+                                                            'producer_invocation_id': 'invoke-one', 'correction_chain': ['invoke-one']}],
+                            'correction_chain': ['invoke-two']}
+            recorder.emit(first, 'worker', 'started', task_id='one', facts=first_facts)
+            recorder.emit(first, 'worker', 'returned', task_id='one', facts=first_facts)
+            recorder.emit(second, 'worker', 'started', task_id='two', facts=second_facts)
+            recorder.emit(second, 'worker', 'failed', task_id='two', facts={**second_facts,
+                          'stopped_by_invocation_id': 'invoke-two', 'error_category': 'check'})
+        dto = minimize(normalize(Reader(self.project).open_snapshot('activity')))
+        activities = {item['invocation_id']: item for item in dto['activities']}
+        self.assertEqual(activities['invoke-two']['input_refs'], [activities['invoke-one']['ref']])
+        self.assertEqual(activities['invoke-two']['outcome'], 'failed')
+        self.assertEqual(activities['invoke-two']['error_category'], 'check')
+        self.assertEqual(activities['invoke-two']['stopped_by_ref'], activities['invoke-two']['ref'])
+        self.assertNotIn('execution_history', repr(dto))
 
     def test_four_engine_scenarios_project_only_actual_closed_chain_facts(self):
         project = self.project

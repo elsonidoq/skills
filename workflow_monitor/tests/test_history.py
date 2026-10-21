@@ -28,8 +28,13 @@ class HistoryTests(unittest.TestCase):
             recorder.register(descriptor({"tasks": [{"id": "one", "depends": []}]}, {}))
             for number in range(51):
                 occurrence = recorder.occurrence()
-                recorder.emit(occurrence, "worker", "started", task_id="one", facts={"role": "worker"})
-                recorder.emit(occurrence, "worker", "failed" if number == 0 else "passed", task_id="one", facts={"role": "worker"})
+                invocation = "invocation-" + str(number)
+                facts = {"role": "worker", "invocation_id": invocation, "invocation_kind": "task_worker",
+                         "selected_input_checkpoints": [], "correction_chain": [invocation]}
+                recorder.emit(occurrence, "worker", "started", task_id="one", facts=facts)
+                terminal = "failed" if number == 0 else "returned"
+                recorder.emit(occurrence, "worker", terminal, task_id="one",
+                              facts={**facts, **({"stopped_by_invocation_id": invocation} if terminal == "failed" else {})})
             owner.store.db.execute("INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)", ("history", 1, "future", "worker", None, "future_kind", 1.0, json.dumps({"PRIVATE-SENTINEL": "never public"})))
         assets = Path(self.tmp.name) / "assets"; assets.mkdir(); (assets / "index.html").write_text("ok")
         self.client = TestClient(create_app(Reader(self.project), assets, 8765), base_url="http://127.0.0.1:8765")

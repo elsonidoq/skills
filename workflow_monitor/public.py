@@ -42,7 +42,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
     if graph.get("state") != "ok":
         state = graph.get("state") if isinstance(graph.get("state"), str) else "unavailable"
         return {"monitor_version": 1, "state": state, "code": graph.get("code") if isinstance(graph.get("code"), str) else None,
-                "runs": [], "phases": [], "tasks": [], "occurrences": [], "records": [], "edges": [],
+                "runs": [], "phases": [], "tasks": [], "occurrences": [], "records": [], "edges": [], "activities": [],
                 "unknown_records": [], "inventory": {"phase_count": 0, "occurrence_count": 0, "observation_count": 0,
                 "supported_count": 0, "unsupported_count": 0, "hidden_count": 0}}
 
@@ -126,18 +126,44 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                       "occurrence_refs": [_ref("occ", run_id, value) for value in item.get("occurrence_ids", []) if isinstance(value, str)],
                       "review_range": {"base": _sha(item.get("review_base")), "head": _sha(item.get("review_head"))},
                       "findings": [value for value in item.get("findings", []) if isinstance(value, str)],
+                      "attempts": [{"outcome": attempt.get("outcome") if attempt.get("outcome") in {"dispatched", "approved", "rejected", "failed", "interrupted"} else "unknown",
+                                    "uncertain": attempt.get("uncertain") is True,
+                                    "findings": [value for value in attempt.get("findings", []) if isinstance(value, str)],
+                                    "commit_refs": {key: _sha(value) for key, value in attempt.get("commit_refs", {}).items()
+                                                    if key in {"base", "head", "commit"} and _sha(value)}}
+                                   for attempt in item.get("attempts", []) if isinstance(attempt, dict)],
                       "commit_refs": {key: _sha(value) for key, value in item.get("commit_refs", {}).items()
                                       if key in {"base", "head", "commit"} and _sha(value)}})
     chain_acceptance = { _ref("run", run_id): {"state": value.get("state") if value.get("state") in {"accepted", "unknown"} else "unknown",
                           "terminal_execution_ref": _ref("execution", run_id, value["execution_id"]) if isinstance(value.get("execution_id"), str) else None,
                           "range": {"base": _sha(value.get("base")), "head": _sha(value.get("head"))}}
                          for run_id, value in graph.get("chain_acceptance", {}).items() if isinstance(run_id, str) and isinstance(value, dict)}
+    activities = []
+    for item in graph.get("activities", []):
+        if not isinstance(item, dict) or not isinstance(item.get("run_id"), str) or not isinstance(item.get("invocation_id"), str):
+            continue
+        role = item.get("role") if item.get("role") in _SAFE_ROLES else "unknown"
+        if role == "unknown":
+            continue
+        activity = {"ref": _ref("activity", item["run_id"], item["invocation_id"]), "run_ref": _ref("run", item["run_id"]),
+                    "invocation_id": item["invocation_id"], "occurrence_ref": _ref("occ", item["run_id"], item["occurrence_id"]),
+                    "task_ref": _ref("task", item["run_id"], item["task_id"]) if isinstance(item.get("task_id"), str) else None,
+                    "role": role, "invocation_kind": item.get("invocation_kind") if item.get("invocation_kind") in {"task_worker", "corrective_worker"} else "unknown",
+                    "outcome": item.get("outcome") if item.get("outcome") in {"returned", "failed", "interrupted"} else "unknown",
+                    "error_category": item.get("error_category") if item.get("error_category") in {"blocked", "check", "git", "malformed", "transport", "interrupted", "unknown"} else None,
+                    "input_qualification": item.get("input_qualification") if item.get("input_qualification") in {"recorded", "unknown"} else "unknown",
+                    "input_refs": [_ref("activity", item["run_id"], value) for value in item.get("input_invocation_ids", []) if isinstance(value, str)],
+                    "correction_chain": [_ref("activity", item["run_id"], value) for value in item.get("correction_chain", []) if isinstance(value, str)],
+                    "support_ref": _ref("activity", item["run_id"], item["support_invocation_id"]) if isinstance(item.get("support_invocation_id"), str) else None,
+                    "stopped_by_ref": _ref("activity", item["run_id"], item["stopped_by_invocation_id"]) if isinstance(item.get("stopped_by_invocation_id"), str) else None,
+                    "record_refs": [_ref("record", item["run_id"], value) for value in item.get("record_refs", []) if type(value) is int]}
+        activities.append(activity)
     inventory = {"phase_count": len(phases), "occurrence_count": len(occurrences), "observation_count": len(records),
                  "supported_count": len(records), "unsupported_count": len(unknown) + len(graph.get("unsupported_run_ids", [])), "hidden_count": 0}
     return {"monitor_version": 1, "state": "ok", "runs": public_runs, "phases": phases, "tasks": tasks,
             "review_definitions": review_definitions, "occurrences": occurrences, "records": records, "edges": edges,
             "unknown_records": unknown, "inventory": inventory, "followups": followups, "chain": chain,
-            "chain_acceptance": chain_acceptance}
+            "chain_acceptance": chain_acceptance, "activities": activities}
 
 
 __all__ = ["minimize", "run_ref"]

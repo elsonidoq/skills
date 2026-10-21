@@ -62,8 +62,10 @@ class MappingTests(unittest.TestCase):
                 recorder = Recorder(owner.store, "emitted")
                 recorder.register(descriptor({"tasks": [{"id": "one", "depends": []}]}, {}))
                 occurrence = recorder.occurrence()
-                recorder.emit(occurrence, "worker", "started", task_id="one", facts={"role": "worker"})
-                recorder.emit(occurrence, "worker", "failed", task_id="one", facts={"role": "worker"})
+                facts = {"role": "worker", "invocation_id": "invocation", "invocation_kind": "task_worker",
+                         "selected_input_checkpoints": [], "correction_chain": ["invocation"]}
+                recorder.emit(occurrence, "worker", "started", task_id="one", facts=facts)
+                recorder.emit(occurrence, "worker", "failed", task_id="one", facts={**facts, "stopped_by_invocation_id": "invocation"})
             graph = normalize(Reader(project).open_snapshot("emitted"))
         self.assertEqual([(item["occurrence_id"], item["incomplete"]) for item in graph["occurrences"]], [(occurrence, False)])
         self.assertEqual([item["kind"] for item in graph["observations"]], ["started", "failed"])

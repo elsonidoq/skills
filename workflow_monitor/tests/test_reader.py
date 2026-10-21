@@ -100,6 +100,16 @@ class ReaderTests(unittest.TestCase):
         finally:
             connection.close()
 
+    def test_review_attempt_history_is_retained_in_order(self):
+        self._record()
+        with Authority(self.project) as writer:
+            writer.store.review_dispatch('run', 'review', review_base=self.base, review_head=self.base)
+            writer.store.review_outcome('run', 'review', 'rejected', findings=['tracked:1 - safe finding'])
+            writer.store.review_outcome('run', 'review', 'approved', findings=[])
+        details = Reader(self.project).open_snapshot('run')['review_details']
+        self.assertEqual([item['outcome'] for item in details], ['dispatched', 'rejected', 'approved'])
+        self.assertEqual(details[1]['findings'], ['tracked:1 - safe finding'])
+
     def test_symlink_ownership_and_substitution_are_rejected(self):
         self._record()
         database = self.project / ".coherence/workflow/workflow.sqlite"

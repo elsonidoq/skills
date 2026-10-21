@@ -36,11 +36,11 @@ class ExecutionPresentationTests(unittest.TestCase):
             ('run-a', 'terminal', 'terminal', None, 'failed', {}),
         ]
         first, second = self.view(rows)
-        stopping = [item for item in first['occurrences'] if item['stopping']]
-        self.assertEqual([item['phase'] for item in stopping], ['check'])
+        # Adjacency and nested prepare rows are not actual stopping/support evidence.
+        self.assertFalse(any(item['stopping'] for item in first['occurrences']))
         worker = next(item for item in first['occurrences'] if item['role'] == 'worker')
-        self.assertEqual(stopping[0]['support_ref'], worker['ref'])
-        self.assertNotEqual(stopping[0]['support_ref'], second['occurrences'][0]['ref'])
+        self.assertIsNone(next(item for item in first['occurrences'] if item['phase'] == 'check')['support_ref'])
+        self.assertNotEqual(worker['ref'], second['occurrences'][0]['ref'])
         self.assertIsNone(worker['outcome'])  # legacy outcome remains acceptance-neutral
         self.assertEqual(worker['execution_summary']['state'], 'success')
         self.assertEqual(next(item for item in first['occurrences'] if item['role'] == 'worker')['occurrence_id'], 'worker')
@@ -52,10 +52,8 @@ class ExecutionPresentationTests(unittest.TestCase):
             ('run-a', 'prepare', 'prepare', 'one', 'failed', {}),
             ('run-a', 'terminal', 'terminal', None, 'failed', {}),
         ])
-        stopping = [item for item in first['occurrences'] if item['stopping']]
-        self.assertEqual(len(stopping), 1)
-        self.assertEqual(stopping[0]['phase'], 'prepare')
-        self.assertIsNone(stopping[0]['support_ref'])
+        self.assertFalse(any(item['stopping'] for item in first['occurrences']))
+        self.assertTrue(any(item['phase'] == 'prepare' and item['outcome'] == 'failed' for item in first['occurrences']))
 
     def test_recovered_failure_stays_in_details_not_as_a_stopping_node(self):
         first, _ = self.view([
@@ -69,8 +67,20 @@ class ExecutionPresentationTests(unittest.TestCase):
         self.assertFalse(any(item['stopping'] for item in first['occurrences']))
         failed = next(item for item in first['occurrences'] if item['outcome'] == 'failed')
         worker = next(item for item in first['occurrences'] if item['role'] == 'worker')
-        self.assertEqual(failed['support_ref'], worker['ref'])
+        self.assertIsNone(failed['support_ref'])
         self.assertTrue(any(item['kind'] == 'failed' for item in first['records']))
+
+    def test_explicit_invocation_stop_selects_only_the_recorded_failure(self):
+        worker = {'role': 'worker', 'invocation_id': 'worker-invocation', 'invocation_kind': 'task_worker',
+                  'selected_input_checkpoints': [], 'correction_chain': ['worker-invocation']}
+        first, _ = self.view([
+            ('run-a', 'worker', 'worker', 'one', 'started', worker),
+            ('run-a', 'worker', 'worker', 'one', 'failed', {**worker, 'stopped_by_invocation_id': 'worker-invocation', 'error_category': 'check'}),
+            ('run-a', 'terminal', 'terminal', None, 'failed', {'stopped_by_invocation_id': 'worker-invocation', 'error_category': 'check'}),
+        ])
+        failed = next(item for item in first['occurrences'] if item['occurrence_id'] == 'worker')
+        self.assertTrue(failed['stopping'])
+        self.assertEqual(next(item for item in first['activities'] if item['invocation_id'] == 'worker-invocation')['error_category'], 'check')
 
     def test_question_parent_keeps_routing_scoped_and_displays_recorded_identity(self):
         first, _ = self.view([
@@ -263,6 +273,4 @@ class ExecutionPresentationTests(unittest.TestCase):
             ('run-a', 'prepare', 'prepare', 'two', 'failed', {}),
             ('run-a', 'terminal', 'terminal', None, 'failed', {}),
         ])
-        stopping = next(item for item in first['occurrences'] if item['stopping'])
-        self.assertEqual(stopping['phase'], 'prepare')
-        self.assertIsNone(stopping['support_ref'])
+        self.assertFalse(any(item['stopping'] for item in first['occurrences']))

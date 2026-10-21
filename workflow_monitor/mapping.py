@@ -28,7 +28,9 @@ def _object(value: Any) -> dict[str, Any] | None:
 def _valid_facts(facts: dict[str, Any]) -> bool:
     allowed = {"role", "parent_occurrence_id", "error_category", "ordinal", "exit_code", "baseline", "head",
                "no_change", "review_base", "review_head", "approved", "outcome", "finding_count", "execution_id",
-               "review_ordinal", "trigger_execution_id", "predecessor_execution_id", "recording_gap"}
+               "review_ordinal", "trigger_execution_id", "predecessor_execution_id", "recording_gap", "invocation_id",
+               "invocation_kind", "selected_input_checkpoints", "correction_chain", "predecessor_invocation_id",
+               "stopped_by_invocation_id", "support_invocation_id", "producer_invocation_id", "fixing_round"}
     if set(facts) - allowed:
         return False
     return (not isinstance(facts.get("role"), (list, dict)) and
@@ -36,9 +38,14 @@ def _valid_facts(facts: dict[str, Any]) -> bool:
             ("exit_code" not in facts or type(facts["exit_code"]) is int) and
             ("finding_count" not in facts or type(facts["finding_count"]) is int) and
             ("review_ordinal" not in facts or type(facts["review_ordinal"]) is int) and
+            ("fixing_round" not in facts or type(facts["fixing_round"]) is int) and
             ("execution_id" not in facts or isinstance(facts["execution_id"], str)) and
             ("trigger_execution_id" not in facts or isinstance(facts["trigger_execution_id"], str)) and
             ("predecessor_execution_id" not in facts or isinstance(facts["predecessor_execution_id"], str)) and
+            all(isinstance(facts[key], str) and facts[key] for key in {"invocation_id", "invocation_kind", "predecessor_invocation_id", "stopped_by_invocation_id", "support_invocation_id", "producer_invocation_id"} & set(facts)) and
+            ("invocation_kind" not in facts or facts["invocation_kind"] in {"task_worker", "corrective_worker"}) and
+            ("selected_input_checkpoints" not in facts or isinstance(facts["selected_input_checkpoints"], list)) and
+            ("correction_chain" not in facts or isinstance(facts["correction_chain"], list)) and
             ("outcome" not in facts or facts["outcome"] in {"approved", "rejected", "failed", "interrupted"}) and
             ("no_change" not in facts or type(facts["no_change"]) is bool) and
             ("approved" not in facts or type(facts["approved"]) is bool))
@@ -178,7 +185,7 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
         execution_id = observation["facts"].get("execution_id")
         if isinstance(execution_id, str) and execution_id:
             execution_occurrences[(observation["run_id"], execution_id)].append(observation)
-    chain = []
+    chain_by_execution: dict[tuple[str, str], dict[str, Any]] = {}
     for detail in snapshot.get("review_details", []):
         if not isinstance(detail, dict):
             continue
@@ -186,7 +193,17 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
         rows = execution_occurrences.get((run_id, execution_id))
         if not isinstance(run_id, str) or not isinstance(execution_id, str) or not rows:
             continue
-        chain.append({**detail, "occurrence_ids": sorted({row["occurrence_id"] for row in rows})})
+        attempt = {key: detail.get(key) for key in ("attempt_seq", "outcome", "uncertain", "findings", "commit_refs")}
+        current = chain_by_execution.get((run_id, execution_id))
+        if current is None:
+            chain_by_execution[(run_id, execution_id)] = {**detail, "attempts": [attempt],
+                                                           "occurrence_ids": sorted({row["occurrence_id"] for row in rows})}
+        else:
+            current["attempts"].append(attempt)
+            # Reader order is the append-only attempt sequence, so later is the current
+            # outcome while the earlier authorized diagnostic/review history remains.
+            current.update({key: value for key, value in detail.items() if key != "attempt_seq"})
+    chain = list(chain_by_execution.values())
     known_executions = {(row["run_id"], row["execution_id"]) for row in chain}
     for item in chain:
         run_id, execution_id = item["run_id"], item["execution_id"]
@@ -212,10 +229,58 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
         else:
             chain_acceptance[run_id] = {"state": "unknown", "execution_id": None, "base": None, "head": None}
     followups, review_acceptance = resolve(runs, occurrences)
+    # Closed actual-call readback: relationships are preserved only where the producer
+    # recorded exact invocation/checkpoint identities.  This deliberately does not
+    # turn occurrence ordering, task dependencies, or review table adjacency into input.
+    activities: list[dict[str, Any]] = []
+    by_invocation: dict[tuple[str, str], dict[str, Any]] = {}
+    for occurrence in occurrences:
+        rows = occurrence["observations"]
+        facts = rows[0]["facts"] if rows else {}
+        invocation_id = facts.get("invocation_id")
+        if not isinstance(invocation_id, str) or not invocation_id:
+            continue
+        if any(row["facts"].get("invocation_id") != invocation_id for row in rows):
+            unknown.append({"run_id": occurrence["run_id"], "seq": rows[0]["seq"], "code": "unsupported_observation"})
+            continue
+        terminal = next((row for row in reversed(rows) if row["kind"] in {"returned", "failed", "interrupted"}), None)
+        activity = {"run_id": occurrence["run_id"], "invocation_id": invocation_id,
+                    "occurrence_id": occurrence["occurrence_id"], "task_id": occurrence["task_id"],
+                    "role": facts.get("role"), "invocation_kind": facts.get("invocation_kind"),
+                    "selected_input_checkpoints": facts.get("selected_input_checkpoints"),
+                    "correction_chain": facts.get("correction_chain"),
+                    "predecessor_invocation_id": facts.get("predecessor_invocation_id"),
+                    "outcome": terminal["kind"] if terminal else "unknown",
+                    "error_category": terminal["facts"].get("error_category") if terminal else None,
+                    "support_invocation_id": terminal["facts"].get("support_invocation_id") if terminal else None,
+                    "stopped_by_invocation_id": terminal["facts"].get("stopped_by_invocation_id") if terminal else None,
+                    "record_refs": [row["seq"] for row in rows]}
+        if (occurrence["run_id"], invocation_id) in by_invocation:
+            unknown.append({"run_id": occurrence["run_id"], "seq": rows[0]["seq"], "code": "unsupported_observation"})
+            continue
+        by_invocation[(occurrence["run_id"], invocation_id)] = activity
+        activities.append(activity)
+    for activity in activities:
+        inputs = activity["selected_input_checkpoints"]
+        if not isinstance(inputs, list):
+            activity["input_qualification"] = "unknown"
+            continue
+        references = []
+        valid = True
+        for item in inputs:
+            if not isinstance(item, dict) or set(item) != {"checkpoint_occurrence_id", "task_id", "producer_invocation_id", "correction_chain"}:
+                valid = False; break
+            producer = item.get("producer_invocation_id")
+            if not isinstance(producer, str) or (activity["run_id"], producer) not in by_invocation:
+                valid = False; break
+            references.append(producer)
+        activity["input_invocation_ids"] = references if valid else []
+        activity["input_qualification"] = "recorded" if valid else "unknown"
     return {"state": "ok", "runs": runs, "phases": phases, "tasks": tasks, "occurrences": occurrences,
             "observations": observations, "edges": edges, "unknown_records": unknown,
             "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", [])), "followups": followups,
-            "review_acceptance": review_acceptance, "chain": chain, "chain_acceptance": chain_acceptance}
+            "review_acceptance": review_acceptance, "chain": chain, "chain_acceptance": chain_acceptance,
+            "activities": activities}
 
 
 __all__ = ["normalize"]
