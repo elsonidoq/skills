@@ -60,6 +60,42 @@ class PublicTests(unittest.TestCase):
         self.assertTrue(all(item["label"] == "Planned independent review — not an agent call." for item in result["review_definitions"]))
         self.assertNotIn(result["review_definitions"][0]["ref"], {item["ref"] for item in result["occurrences"]})
 
+    def test_metric_expansion_is_typed_and_drops_private_nested_payloads(self):
+        private = '/private/SESSION-CREDENTIAL-SENTINEL'
+        metric = {'invocation_id': 'call-one', 'interval': {
+            'session_id': private, 'branch': private, 'epoch': 'epoch-one',
+            'tokens': {'input': {'value': 0}, 'output': {'value': True},
+                       'cache_read': {'value': float('inf')}, 'cache_write': {'value': -1}},
+            'compactions': {'count': True, 'entry_ids': ['entry-one', private]},
+            'summary_overhead': {'included_in_sdk_deltas': True, 'entries': [
+                {'entry_id': 'entry-one', 'usage': {'reasoning': 0, 'cacheWrite1h': False,
+                 'prompt': private, 'cost': {'total': float('nan'), 'api_key': private}}}]}},
+            'before': {'counters': {'input': True, 'total': 0}, 'context': {'occupancy': -1},
+                       'compaction_entry_ids': [private], 'private': private},
+            'after': None, 'actual_session_id': private, 'session_selection_reason': private,
+            'private': private}
+        graph = {'state': 'ok', 'activities': [{'run_id': 'run-one', 'invocation_id': 'call-one',
+                 'occurrence_id': 'occ-one', 'role': 'worker', 'metric': metric,
+                 'metric_coverage': 'partial', 'metric_reasons': ['missing_expected_invocations']}]}
+        result = minimize(graph)
+        projected = result['activities'][0]['metrics']
+        self.assertEqual(projected['tokens']['input']['value'], 0)
+        for key in ('output', 'cache_read', 'cache_write'):
+            self.assertIsNone(projected['tokens'][key]['value'])
+            self.assertEqual(projected['tokens'][key]['availability'], 'unknown')
+        self.assertIsNone(projected['before']['counters']['input']['value'])
+        self.assertEqual(projected['before']['counters']['total']['value'], 0)
+        self.assertIsNone(projected['before']['context']['effective_headroom']['value'])
+        self.assertEqual(projected['after']['availability'], 'unknown')
+        self.assertIsNone(projected['after']['context']['compaction_applicable']['value'])
+        self.assertIsNone(projected['compactions']['count']['value'])
+        self.assertEqual(projected['compactions']['entry_ids'], ['entry-one'])
+        usage = projected['summary_overhead']['entries'][0]['usage']
+        self.assertEqual(usage['reasoning']['value'], 0)
+        self.assertIsNone(usage['cacheWrite1h']['value'])
+        self.assertIsNone(usage['cost']['total']['value'])
+        self.assertNotIn(private, json.dumps(result, allow_nan=False))
+
     def test_zero_null_no_change_and_questions_stay_distinct(self):
         source = snapshot()
         source["observations"].append({"seq": 8, "run_id": "run-b", "occurrence_id": "check", "phase": "check", "task_id": None,

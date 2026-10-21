@@ -57,16 +57,23 @@ class ChainMappingTests(ProjectTest):
             field = lambda value: {'value': value, 'unknown_reason': None, 'provenance': 'fixture'}
             snapshot = {'counters': {'input': 1, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'total': 3},
                         'estimated_usd': 0, 'context': {'context_window': 10, 'effective_reserve': 2, 'occupancy': 3,
-                        'compaction_enabled': True, 'compaction_applicable': True}, 'compaction_entry_ids': []}
-            interval = {'session_id': None, 'branch': None, 'epoch': None, 'outcome': 'settled',
+                        'compaction_enabled': False, 'compaction_applicable': True}, 'compaction_entry_ids': []}
+            after = {**snapshot, 'counters': {**snapshot['counters'], 'input': 2, 'output': 4, 'total': 6},
+                     'context': {**snapshot['context'], 'occupancy': 12, 'compaction_enabled': True},
+                     'compaction_entry_ids': ['summary-one']}
+            interval = {'session_id': 'session-fixture', 'branch': 'branch-one', 'epoch': 'epoch-one', 'outcome': 'settled',
                         'tokens': {'input': field(1), 'output': field(2), 'cache_read': field(0), 'cache_write': field(0)},
                         'total_tokens': field(3), 'estimated_usd': field(0),
-                        'compactions': {'entry_ids': [], 'count': 0, 'unknown_reason': None},
-                        'summary_overhead': {'entries': [], 'unknown_reason': None, 'included_in_sdk_deltas': False}}
+                        'compactions': {'entry_ids': ['summary-one'], 'count': 1, 'unknown_reason': None},
+                        'summary_overhead': {'entries': [{'entry_id': 'summary-one', 'unknown_reason': None,
+                            'usage': {'input': 1, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 3,
+                                      'reasoning': 1, 'cacheWrite1h': 0,
+                                      'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0, 'total': 0}}}],
+                            'unknown_reason': None, 'included_in_sdk_deltas': True}}
             artifact = create_artifact(self.project, 'activity', authority=owner)
             artifact.append({'version': 1, 'run_id': 'activity', 'invocation_id': 'invoke-one', 'task_id': 'one',
                              'role': 'worker', 'outcome': 'settled', 'fixing_round': None, 'review_ordinal': None,
-                             'interval': interval, 'before': snapshot, 'after': snapshot, 'selected_session_mode': 'fresh',
+                             'interval': interval, 'before': snapshot, 'after': after, 'selected_session_mode': 'fresh',
                              'session_selection_reason': 'fixture', 'actual_session_mode': 'fresh', 'actual_session_id': 'session-fixture'})
         dto = minimize(normalize(Reader(self.project).open_snapshot('activity')))
         activities = {item['invocation_id']: item for item in dto['activities']}
@@ -76,6 +83,29 @@ class ChainMappingTests(ProjectTest):
         self.assertEqual(activities['invoke-two']['stopped_by_ref'], activities['invoke-two']['ref'])
         self.assertEqual(activities['invoke-one']['metrics']['tokens']['input']['value'], 1)
         self.assertEqual(activities['invoke-one']['metrics']['actual_session']['mode'], 'fresh')
+        metrics = activities['invoke-one']['metrics']
+        self.assertEqual(metrics['scope'], {'kind': 'invocation_interval', 'invocation_id': 'invoke-one',
+                         'session_id': 'session-fixture', 'branch': 'branch-one', 'epoch': 'epoch-one'})
+        self.assertEqual(metrics['before']['scope'], 'session_cumulative')
+        self.assertEqual([metrics['before']['counters'][key]['value'] for key in ('input', 'output', 'cacheRead', 'cacheWrite', 'total')], [1, 2, 0, 0, 3])
+        self.assertEqual(metrics['after']['counters']['total']['value'], 6)
+        self.assertEqual(metrics['after']['estimated_usd']['value'], 0)
+        self.assertEqual(metrics['before']['context']['effective_headroom']['value'], 5)
+        self.assertEqual(metrics['after']['context']['effective_headroom']['value'], -4)
+        self.assertEqual([metrics['after']['context'][key]['value'] for key in ('context_window', 'effective_reserve', 'occupancy')], [10, 2, 12])
+        self.assertIs(metrics['before']['context']['compaction_enabled']['value'], False)
+        self.assertIs(metrics['after']['context']['compaction_enabled']['value'], True)
+        self.assertIs(metrics['after']['context']['compaction_applicable']['value'], True)
+        self.assertEqual(metrics['after']['compaction_entry_ids'], ['summary-one'])
+        self.assertEqual(metrics['compactions']['count']['value'], 1)
+        self.assertEqual(metrics['compactions']['entry_ids'], ['summary-one'])
+        overhead = metrics['summary_overhead']
+        self.assertIs(overhead['included_in_sdk_deltas'], True)
+        self.assertEqual(overhead['warning'], 'already_included_do_not_add')
+        self.assertEqual(overhead['scope'], 'subset_of_invocation_usage')
+        usage = overhead['entries'][0]['usage']
+        self.assertEqual([usage[key]['value'] for key in ('input', 'output', 'cacheRead', 'cacheWrite', 'totalTokens', 'reasoning', 'cacheWrite1h')], [1, 2, 0, 0, 3, 1, 0])
+        self.assertEqual({key: value['value'] for key, value in usage['cost'].items()}, dict.fromkeys(('input', 'output', 'cacheRead', 'cacheWrite', 'total'), 0))
         self.assertEqual(activities['invoke-two']['metrics']['availability'], 'partial')
         self.assertIn('missing_expected_invocations', activities['invoke-two']['metrics']['reasons'])
         self.assertNotIn('execution_history', repr(dto))

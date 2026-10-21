@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 from typing import Any
 
@@ -145,14 +146,69 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
             return result
         interval = metric.get("interval") if isinstance(metric.get("interval"), dict) else {}
         tokens = interval.get("tokens") if isinstance(interval.get("tokens"), dict) else {}
+        def tag(value: object) -> str | None:
+            # Metric reasons/identities are identifiers, never paths or arbitrary prose.
+            return value if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_.:-]+", value) else None
+
+        def numeric(value: object, *, signed: bool = False) -> int | float | None:
+            return value if type(value) in (int, float) and math.isfinite(value) and (signed or value >= 0) else None
+
         def field(value: object) -> dict[str, Any]:
-            if not isinstance(value, dict):
-                return {"value": None, "availability": "unknown"}
-            number = value.get("value")
-            return {"value": number if type(number) in (int, float) else None,
-                    "availability": "known" if type(number) in (int, float) else "unknown",
-                    "unknown_reason": _text(value.get("unknown_reason")) or None,
-                    "provenance": _text(value.get("provenance")) or None}
+            value = value if isinstance(value, dict) else {}
+            number = numeric(value.get("value"))
+            return {"value": number, "availability": "known" if number is not None else "unknown",
+                    "unknown_reason": tag(value.get("unknown_reason")) if number is not None else tag(value.get("unknown_reason")) or "missing_or_invalid_observation",
+                    "provenance": tag(value.get("provenance"))}
+
+        def observed(value: object, *, boolean: bool = False, signed: bool = False) -> dict[str, Any]:
+            safe = (value if type(value) is bool else None) if boolean else numeric(value, signed=signed)
+            return {"value": safe, "availability": "known" if safe is not None else "unknown",
+                    "unknown_reason": None if safe is not None else "missing_or_invalid_observation",
+                    "provenance": "sdk_observation" if safe is not None else None}
+
+        def references(value: object) -> list[str]:
+            return [item for item in value if tag(item) is not None] if isinstance(value, list) else []
+
+        def session_snapshot(value: object) -> dict[str, Any]:
+            source = value if isinstance(value, dict) else {}
+            counters = source.get("counters") if isinstance(source.get("counters"), dict) else {}
+            context = source.get("context") if isinstance(source.get("context"), dict) else {}
+            dimensions = {key: numeric(context.get(key)) for key in ("context_window", "effective_reserve", "occupancy")}
+            headroom = (dimensions["context_window"] - dimensions["effective_reserve"] - dimensions["occupancy"]
+                        if all(item is not None for item in dimensions.values()) else None)
+            return {"availability": "known" if isinstance(value, dict) else "unknown", "scope": "session_cumulative",
+                    "counters": {key: observed(counters.get(key)) for key in ("input", "output", "cacheRead", "cacheWrite", "total")},
+                    "estimated_usd": observed(source.get("estimated_usd")),
+                    "context": {**{key: observed(item) for key, item in dimensions.items()},
+                                "effective_headroom": {**observed(headroom, signed=True),
+                                                       "provenance": "context_window_minus_reserve_minus_occupancy" if headroom is not None else None},
+                                **{key: observed(context.get(key), boolean=True) for key in ("compaction_enabled", "compaction_applicable")}},
+                    "compaction_entry_ids": references(source.get("compaction_entry_ids"))}
+
+        compactions = interval.get("compactions") if isinstance(interval.get("compactions"), dict) else {}
+        overhead = interval.get("summary_overhead") if isinstance(interval.get("summary_overhead"), dict) else {}
+        entries = []
+        for entry in overhead.get("entries", []) if isinstance(overhead.get("entries"), list) else []:
+            if not isinstance(entry, dict):
+                continue
+            usage = entry.get("usage") if isinstance(entry.get("usage"), dict) else {}
+            costs = usage.get("cost") if isinstance(usage.get("cost"), dict) else {}
+            entries.append({"entry_id": tag(entry.get("entry_id")), "unknown_reason": tag(entry.get("unknown_reason")),
+                            "usage": {**{key: observed(usage.get(key)) for key in ("input", "output", "cacheRead", "cacheWrite", "totalTokens", "cacheWrite1h", "reasoning")},
+                                      "cost": {key: observed(costs.get(key)) for key in ("input", "output", "cacheRead", "cacheWrite", "total")}}})
+        included = overhead.get("included_in_sdk_deltas") if type(overhead.get("included_in_sdk_deltas")) is bool else None
+        count = compactions.get("count")
+        result.update({"scope": {"kind": "invocation_interval", "invocation_id": tag(metric.get("invocation_id")),
+                                 "session_id": tag(interval.get("session_id")), "branch": tag(interval.get("branch")),
+                                 "epoch": tag(interval.get("epoch"))},
+                       "before": session_snapshot(metric.get("before")), "after": session_snapshot(metric.get("after")),
+                       "compactions": {"count": observed(count if type(count) is int else None),
+                                       "entry_ids": references(compactions.get("entry_ids")),
+                                       "unknown_reason": tag(compactions.get("unknown_reason"))},
+                       "summary_overhead": {"scope": "subset_of_invocation_usage", "entries": entries,
+                                            "included_in_sdk_deltas": included,
+                                            "warning": "already_included_do_not_add" if included is True else "inclusion_unverified",
+                                            "unknown_reason": tag(overhead.get("unknown_reason"))}})
         result.update({"outcome": metric.get("outcome") if metric.get("outcome") in {"settled", "failed", "interrupted", "approved", "rejected"} else "unknown",
                        "role": metric.get("role") if metric.get("role") in {"worker", "corrective_worker", "fixing_worker", "reviewer"} else "unknown",
                        "task_id": _text(metric.get("task_id")) or None,
@@ -160,8 +216,8 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                        "review_ordinal": metric.get("review_ordinal") if type(metric.get("review_ordinal")) is int else None,
                        "tokens": {name: field(tokens.get(name)) for name in ("input", "output", "cache_read", "cache_write")},
                        "total_tokens": field(interval.get("total_tokens")), "estimated_usd": field(interval.get("estimated_usd")),
-                       "selected_session": {"mode": metric.get("selected_session_mode") if metric.get("selected_session_mode") in {"fresh", "reused_from_earlier_task", "continued_same_task", "unknown"} else "unknown", "reason": _text(metric.get("session_selection_reason")) or None},
-                       "actual_session": {"mode": metric.get("actual_session_mode") if metric.get("actual_session_mode") in {"fresh", "reused_from_earlier_task", "continued_same_task", "unknown"} else "unknown", "identity": _text(metric.get("actual_session_id")) or None}})
+                       "selected_session": {"mode": metric.get("selected_session_mode") if metric.get("selected_session_mode") in {"fresh", "reused_from_earlier_task", "continued_same_task", "unknown"} else "unknown", "reason": tag(metric.get("session_selection_reason"))},
+                       "actual_session": {"mode": metric.get("actual_session_mode") if metric.get("actual_session_mode") in {"fresh", "reused_from_earlier_task", "continued_same_task", "unknown"} else "unknown", "identity": tag(metric.get("actual_session_id"))}})
         return result
 
     activities = []
