@@ -9,8 +9,8 @@ import path from 'node:path';
 const startParameters = {
   type: 'object', additionalProperties: false,
   properties: {
-    tasks: {type: 'string'}, executor: {type: 'string'}, run: {type: 'string'},
-  }, required: ['tasks', 'executor', 'run'],
+    tasks: {type: 'string'}, executor: {type: 'string'}, run: {type: 'string'}, resume: {type: 'boolean'},
+  }, required: ['run'],
 };
 const replyParameters = {
   type: 'object', additionalProperties: false,
@@ -82,6 +82,8 @@ export default function coordinateImplementationBridge(pi) {
     parameters: startParameters, executionMode: 'sequential',
     async execute(_id, params, signal, _update, ctx) {
       if (active) throw new Error('coordinate implementation bridge already has an active run');
+      if (!params.resume && (typeof params.tasks !== 'string' || typeof params.executor !== 'string'))
+        throw new Error('start requires tasks and executor; resume requires only the retained run ID');
       const directory = await mkdtemp(path.join(tmpdir(), 'coordinate-implementation-'));
       const endpoint = path.join(directory, 'bridge.sock');
       const session = ctx.sessionManager.getSessionId();
@@ -115,7 +117,9 @@ export default function coordinateImplementationBridge(pi) {
         await chmod(endpoint, 0o600);
         active = bridge;
         // Parent stdout belongs to Pi's RPC protocol; preserve runner diagnostics on stderr.
-        const child = spawn(path.join(ctx.cwd, 'scripts/coordinate-implementation'), [
+        const child = spawn(path.join(ctx.cwd, 'scripts/coordinate-implementation'), params.resume ? [
+          'resume', '--project', ctx.cwd, '--run', params.run,
+        ] : [
           'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,
         ], {cwd: ctx.cwd, stdio: ['ignore', 2, 2], env: {...process.env,
           COHERENCE_PARENT_BRIDGE_SOCKET: endpoint, COHERENCE_PARENT_BRIDGE_TOKEN: token,

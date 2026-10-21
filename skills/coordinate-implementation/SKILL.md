@@ -52,6 +52,8 @@ reviewer prompts without repetitive questions; a changed scope needs a new decis
 - `start --project ROOT --tasks FILE --executor CONFIG [--run ID]`: execute sequential work.
 - `status` / `history --project ROOT --run ID`: read progress or historical records without
   launching an agent or repairing old intent records.
+- `resume --project ROOT --run ID`: explicitly continue a retained failed/interrupted run after inspecting
+  its recorded cause and operation history; retain original input/scope/baseline and never replay completed checkpoints.
 - `abandon --project ROOT --run ID`: explicitly label abandoned work, never completed effects.
   The writer lock and current recorded child/controller identities protect against overlap;
   historical process scopes are inspected, never provisioned or signalled.
@@ -63,7 +65,7 @@ work; never invent an answer. No automatic resume, replay, control-mailbox or ba
 ## Recover Context
 
 Start from available summary/recent context, then selectively inspect Git, partial work,
-commands and progress. In a resumed direct run, re-establish applicable accepted-decision authority
+commands and progress. `resume` uses only retained original input and operation-local checkpoint/review history under the writer lock: changed files, index, HEAD and outputs are neither failure evidence nor admission. Missing history, uncertain completed effects, an uncertain review invocation, or a known live writer stops only that unsafe continuation. In a resumed direct run, re-establish applicable accepted-decision authority
 from supplied constraints or the discovered current records; retain their outcomes, explicit mechanism
 constraints and source links in the resumed worker and review briefs rather than relying on a prior
 read claim. Inspect a failed run and its invocation; unknown cause stops blind retries.

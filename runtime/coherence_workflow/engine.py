@@ -39,8 +39,8 @@ _ROUTINE_AUTHORITY = (
 
 
 class Engine:
-    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None):
-        self.authority, self.run, self.contract = authority, run, contract
+    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False):
+        self.authority, self.run, self.contract, self.resume = authority, run, contract, resume
         self.input_executor = executor
         self.executor = {key: value for key, value in executor.items() if key != 'reviewer'}
         self.reviewer_executor = executor.get('reviewer', self.executor)
@@ -330,33 +330,58 @@ class Engine:
         return execution_id, value, state
 
     def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base):
+        """Continue the one persisted review/fix chain without consuming a new slot."""
+        store = self.authority.store
+        chain = store.review_chain(self.run, private=True)
+        if chain['uncertain']:
+            raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
+        reviews = [item for item in chain['executions'] if item['role'] == 'reviewer']
+        fixers = [item for item in chain['executions'] if item['role'] == 'fixer']
         head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-        review_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1)
+        if not reviews:
+            review_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1)
+        else:
+            review_id, review, state = reviews[0]['execution_id'], {'approved': reviews[0]['state'] == 'approved',
+                'findings': reviews[0]['findings'][-1] if reviews[0].get('findings') else []}, reviews[0]['state']
+        if not reviews:
+            reviews = [item for item in store.review_chain(self.run, private=True)['executions'] if item['role'] == 'reviewer']
         if state == 'approved':
-            self.authority.store.finish(self.run, 'complete', head)
+            if len(reviews) != 1:
+                raise Blocked('review chain has no eligible completion stage')
+            store.finish(self.run, 'complete', head)
             recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
             return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
-                    'checkpoints': checkpoints, 'review': review, 'usage': self.authority.store.usage_summary(self.run)}
-        if review['approved'] or not review['findings']:
+                    'checkpoints': checkpoints, 'review': review, 'usage': store.usage_summary(self.run)}
+        if state != 'rejected' or review['approved'] or not review['findings']:
             raise Blocked('independent review was not an actionable rejection (commits retained): ' + canonical(review))
-        fix_id = recorder.occurrence()
-        self.run_fix(review['findings'], trigger_execution_id=review_id, review_base=review_base,
-                     recorder=recorder, execution_id=fix_id)
-        head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-        _, final_review, final_state = self._review(recorder=recorder, review_base=review_base, head=head,
-                                                     ordinal=2, fixing_round=1,
-                                                     trigger_execution_id=fix_id, predecessor_execution_id=fix_id)
+        if not fixers:
+            fix_id = recorder.occurrence()
+            self.run_fix(review['findings'], trigger_execution_id=review_id, review_base=review_base,
+                         recorder=recorder, execution_id=fix_id)
+            fixers = [item for item in store.review_chain(self.run, private=True)['executions'] if item['role'] == 'fixer']
+        fixer = fixers[0]
+        if fixer['state'] != 'approved':
+            raise Blocked('fixing round remains incomplete or failed; commits retained')
+        if len(reviews) == 1:
+            head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
+            _, final_review, final_state = self._review(recorder=recorder, review_base=review_base, head=head,
+                                                         ordinal=2, fixing_round=1,
+                                                         trigger_execution_id=fixer['execution_id'], predecessor_execution_id=fixer['execution_id'])
+        else:
+            final_review, final_state = {'approved': reviews[1]['state'] == 'approved',
+                'findings': reviews[1]['findings'][-1] if reviews[1].get('findings') else []}, reviews[1]['state']
         if final_state != 'approved':
             raise Blocked('independent final review findings (commits retained): ' + canonical(final_review))
-        self.authority.store.finish(self.run, 'complete', head)
+        store.finish(self.run, 'complete', head)
         recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
         return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
-                'checkpoints': checkpoints, 'review': final_review, 'usage': self.authority.store.usage_summary(self.run)}
+                'checkpoints': checkpoints, 'review': final_review, 'usage': store.usage_summary(self.run)}
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store
-        base = git(project, 'rev-parse', 'HEAD').decode().strip()
-        requested_review_base = self.contract.get('review_base', base)
+        recovered = store.completed_checkpoints(self.run) if self.resume else {}
+        base = store.db.execute('SELECT baseline FROM execution_runs WHERE run_id=?', (self.run,)).fetchone()['baseline'] if self.resume else git(project, 'rev-parse', 'HEAD').decode().strip()
+        requested_review_base = store.input(self.run)['review_base'] if self.resume else self.contract.get('review_base', base)
         if not isinstance(requested_review_base, str) or not requested_review_base:
             raise Blocked('review_base must be a Git commit')
         try:
@@ -364,19 +389,23 @@ class Engine:
             git(project, 'merge-base', '--is-ancestor', review_base, base)
         except Blocked:
             raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
-        store.start(self.run, base, contract=self.contract, executor=self.input_executor,
-                    authority={'paid_scope': self.paid_scope, 'routine_authority': True}, review_base=review_base)
+        if not self.resume:
+            store.start(self.run, base, contract=self.contract, executor=self.input_executor,
+                        authority={'paid_scope': self.paid_scope, 'routine_authority': True}, review_base=review_base)
         recorder = Recorder(store, self.run)
         try:
             identity = process_identity(os.getpid(), self.run)
         except Exception:
             identity = None
-        recorder.register(descriptor(self.contract, self.executor, base), identity)
+        if not self.resume:
+            recorder.register(descriptor(self.contract, self.executor, base), identity)
+        checkpoints = list(recovered.values())
         terminal = recorder.occurrence()
         recorder.emit(terminal, 'terminal', 'started', facts={'baseline': base})
-        checkpoints = []
         try:
             for task in self.contract['tasks']:
+                if task['id'] in recovered:
+                    continue
                 preparation = recorder.occurrence()
                 recorder.emit(preparation, 'prepare', 'started', task_id=task['id'])
                 focused = None

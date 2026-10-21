@@ -38,6 +38,7 @@ scripts/coordinate-implementation intake --tasks /tmp/tasks.json
 scripts/coordinate-implementation start --project /absolute/project \
   --tasks /tmp/tasks.json --executor /tmp/executor.json --run fix-title
 scripts/coordinate-implementation status --project /absolute/project --run fix-title
+scripts/coordinate-implementation resume --project /absolute/project --run FAILED_OR_INTERRUPTED_RUN
 # status/history include monitoring recording version, stable occurrence IDs, and safe review ranges when available
 ```
 
@@ -158,12 +159,14 @@ tools that startup skipped. In Paseo, use a fresh session and verify both
 do not reload or restart the current session automatically. After merging, start in the main
 checkout and verify its own trust decision and tool availability: trust is path-specific, not
 branch-specific. The bridge resolves the script from that session's checkout, not an old worktree.
-Runner diagnostics go to stderr so they cannot corrupt the parent's RPC stdout. There is no Paseo
+Runner diagnostics go to stderr so they cannot corrupt the parent's RPC stdout. The bridge starts an explicit same-run continuation with `{run, resume: true}`; it supplies no replacement task or executor input. There is no Paseo
 version/transcript/binding/receipt gate. No automatic resume/control mailbox or daemon.
 Cancellation aborts the owned SDK session and waits for its host; it never signals parent/sibling
 processes or provisions/signals cgroups.
 
-## History and explicit abandon
+## History, explicit resume and abandon
+
+`resume --project ROOT --run ID` is explicit only for a retained failed or interrupted run. Under the ordinary writer lock it inspects retained invocation/cause and original inputs, preserves the original contract/order, executor, paid scope, review base and attempts, skips only checkpointed tasks with matching operation history, and continues unfinished work or the exact eligible review/fix stage. It never compares the worktree, HEAD, index or outputs as admission, repeats a completed checkpoint, replaces a known live writer, resets consumed review slots, or asks again for unchanged paid scope. Missing original/checkpoint history, uncertain completed effects, or uncertain review invocation reports that precise limit.
 
 `status` and `history` are read-only SQLite readers. New runs privately retain their original parsed contract/order, selected executor, settled authority and resolved initial review base before dependent mutation. Append-only operation history preserves actual invocation, check and checkpoint outcomes; a corrected check does not replace its failed command/exit/output, and checkpoint facts retain only task-local paths/artifacts and available SHA/parent. CLI output is a safe projection (task IDs, review base and operation facts), never original task text, prompts, answers or check output. This is not a resume policy or a filesystem/Git snapshot.
 

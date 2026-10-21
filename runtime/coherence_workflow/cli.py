@@ -110,7 +110,7 @@ def cancel(signum, frame):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
-    for command in ('start', 'intake', 'status', 'history', 'abandon'):
+    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon'):
         sub = subs.add_parser(command)
         if command != 'intake':
             sub.add_argument('--project', required=True)
@@ -119,7 +119,7 @@ def main(argv=None):
         if command == 'start':
             sub.add_argument('--executor', help='JSON file with provider, model and effort; no manifest or binding proof')
             sub.add_argument('--run', default=None)
-        if command in ('status', 'history', 'abandon'):
+        if command in ('resume', 'status', 'history', 'abandon'):
             sub.add_argument('--run', required=True)
     args = parser.parse_args(argv)
     run_id = None
@@ -133,10 +133,22 @@ def main(argv=None):
             with Authority(args.project, wait=True) as authority:
                 print(canonical(authority.store.abandon(args.run)))
             return 0
-        contract = load_contract(args.tasks)
+        contract = load_contract(args.tasks) if args.command in ('start', 'intake') else None
         if args.command == 'intake':
             print(canonical({'task_ids': [task['id'] for task in contract['tasks']],
                              'status': 'ready' if contract['tasks'] else 'no tasks'}))
+            return 0
+        if args.command == 'resume':
+            with Authority(args.project, wait=True) as authority:
+                writer_entered = True
+                recovered = authority.store.resume(args.run)
+                saved = recovered['input']
+                paid_scope = saved['authority'].get('paid_scope') if isinstance(saved.get('authority'), dict) else None
+                if not isinstance(paid_scope, dict):
+                    raise Blocked('resume cannot continue: retained paid scope is missing')
+                result = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
+                                paid_scope=paid_scope, resume=True).invoke()
+                print(canonical(result))
             return 0
         if not contract['tasks']:
             print(canonical({'status': 'no tasks'}))

@@ -216,6 +216,45 @@ class Store:
             return None
         return {key: json.loads(row[key]) if key != 'review_base' else row[key]
                 for key in ('contract', 'executor', 'authority', 'review_base')}
+    def resume(self, run):
+        """Reopen one actually failed/interrupted run from its retained input/history."""
+        from .processes import inspect_recorded_writers
+        inspect_recorded_writers(self.db, 'resume')
+        row = self.db.execute('SELECT state,baseline,error FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+        if row is None:
+            raise Blocked('resume needs an existing run with retained original input/history')
+        if row['state'] not in ('failed', 'interrupted'):
+            raise Blocked('resume only continues genuinely failed or interrupted runs')
+        saved = self.input(run)
+        if not saved or not isinstance(saved.get('contract'), dict) or not isinstance(saved['contract'].get('tasks'), list):
+            raise Blocked('resume cannot continue: original contract/history is missing')
+        details = canonical({'previous_state': row['state'], 'previous_error': row['error']})
+        def write():
+            with self.transaction() as db:
+                db.execute("UPDATE execution_runs SET state='running',error=NULL WHERE run_id=?", (run,))
+                self._history_insert(db, run, None, 'invocation', 'resumed', details, time.time())
+        def completed():
+            current = self.db.execute('SELECT state,error FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+            recorded = self.db.execute("SELECT 1 FROM execution_history WHERE run_id=? AND task_id IS NULL AND kind='invocation' AND state='resumed' AND details=?",
+                                       (run, details)).fetchone()
+            return current is not None and current['state'] == 'running' and current['error'] is None and bool(recorded)
+        self._required_write('resume progress', write, completed)
+        return {'baseline': row['baseline'], 'input': saved, 'previous_state': row['state'], 'previous_error': row['error']}
+
+    def completed_checkpoints(self, run):
+        """Return only retained, reconciled completed task checkpoints for same-run resume."""
+        completed = {}
+        for row in self.db.execute("SELECT task_id,result FROM execution_tasks WHERE run_id=? AND state='complete'", (run,)):
+            history = self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='checkpoint' AND state='passed' ORDER BY seq DESC LIMIT 1",
+                                      (run, row['task_id'])).fetchone()
+            if not history:
+                raise Blocked('resume cannot skip completed task ' + row['task_id'] + ': checkpoint operation history is missing')
+            details = json.loads(history['details'])
+            if not isinstance(details.get('sha'), str) or details['sha'] != row['result']:
+                raise Blocked('resume cannot skip completed task ' + row['task_id'] + ': checkpoint identity is uncertain')
+            completed[row['task_id']] = details
+        return completed
+
     def register_monitor_run(self, run, description, runner_identity=None):
         """Add recording metadata without touching ordinary progress rows."""
         from .monitoring import RECORDING_VERSION

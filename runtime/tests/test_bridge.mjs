@@ -205,6 +205,25 @@ test('bridge start abort signal cancels the retained owned runner after launch',
   }
 });
 
+test('bridge launches explicit same-run resume without replacement task inputs', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-resume-bridge-'));
+  try {
+    await fs.mkdir(path.join(root, 'scripts'));
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
+      '#!/bin/sh\nprintf "%s\\n" "$@" > resume-args\n', {mode: 0o700});
+    const messages = [], tools = new Map();
+    const pi = mockPi(messages, tools);
+    const {default: bridge} = await import(bridgeModule);
+    bridge(pi);
+    await tools.get('coordinate_implementation_start').execute('resume', {run: 'failed-run', resume: true}, undefined, undefined,
+      {cwd: root, sessionManager: {getSessionId: () => 'parent-session'}});
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
+      await new Promise(resolve => setTimeout(resolve, 10));
+    assert.deepEqual((await fs.readFile(path.join(root, 'resume-args'), 'utf8')).trim().split('\n'),
+      ['resume', '--project', root, '--run', 'failed-run']);
+  } finally { await fs.rm(root, {recursive: true, force: true}); }
+});
+
 for (const mode of ['idle', 'busy']) test(`bridge wakes ${mode} parent and returns the correlated answer`, async () => {
   const value = await fixture();
   const messages = [], tools = new Map();
