@@ -74,7 +74,7 @@ Historical graph/SDK/Git intents remain untouched, not converted to successful c
 
 ## Execute and Integrate
 
-The runner establishes baseline HEAD and index/worktree ownership. It never adopts or commits unknown work.
+The runner retains initial history for reporting but never uses HEAD, index, dirty paths or filesystem changes as continuation admission. It never adopts or commits unknown work.
 One writer runs dependency-ready tasks in sequence using ordinary SDK read/search/edit/write/command tools.
 Its task brief carries applicable accepted outcomes, explicit mechanism constraints and source links;
 those complement rather than replace task requirements or existing execution authority. Harmless
@@ -83,8 +83,11 @@ and output continuation remain normal behavior, not fatal workflow conditions. N
 size caps, deadlines, lifetime quotas or repair budgets. Do not autonomously loop expensive failed runs.
 
 Project check commands are optional; run specified checks and report their actual outcomes with
-no universal collection-count/receipt format. A failed check is not passed. Never adopt existing dirty files.
-Optional `owned_paths` limits edits; otherwise ownership derives from the actual clean-baseline task edits.
+no universal collection-count/receipt format. A failed check is not passed. At an actual edit or destructive
+cleanup, preserve pre-existing/unknown bytes; never adopt them. Optional `owned_paths` limits source edits;
+explicit task edit selections determine checkpoint paths. Optional `generated_outputs` guides selective
+known-artifact regeneration/cleanup only: it is not an allowlist, registration, permission prerequisite or
+commit target. New, ignored, Git-visible, deleted or undeclared output never blocks commands or checks.
 The SDK is an instruction-managed coding tool, not an adversarial filesystem/command sandbox.
 
 Inspect the actual diff and preserve unrelated staged/unstaged/untracked work. The runner creates

@@ -14,7 +14,7 @@ def content_hash(path):
 
 
 def admit(contract):
-    """Validate work and sort dependencies; optional task context stays intact."""
+    """Validate six intake facts and preserve optional context, including artifact guidance."""
     result = {'tasks': copy.deepcopy(contract)} if isinstance(contract, list) else copy.deepcopy(contract)
     if not isinstance(result, dict) or not isinstance(result.get('tasks'), list):
         raise Blocked('task input must contain a task list; supply a list or an object with tasks')

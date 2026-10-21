@@ -38,9 +38,9 @@ The project database remains `.coherence/workflow/workflow.sqlite`. New executio
 - `execution_runs(run_id, state, baseline, result, error)`;
 - `execution_tasks(run_id, task_id, state, baseline, result, details)`.
 
-Task details retain useful summary, actual command exit codes and changed paths. State is
-ordinary running/complete/failed/interrupted/abandoned history, not proof of liveness, effect
-settlement or dispatch eligibility. IDs distinguish new runs; existing runs are not replayed.
+Task details retain useful summary, actual command exit codes, explicit task-edited checkpoint paths,
+and known generated-artifact facts. State is ordinary running/complete/failed/interrupted/abandoned history,
+not proof of liveness, effect settlement or dispatch eligibility. IDs distinguish new runs; existing runs are not replayed.
 SQLite errors report the actual operation. No graph saver, attempt selection or effect ledger
 is consumed to run new work. The writer lock is the ordinary per-worktree
 `coherence-workflow.lock`, held by the runner and inherited by its active SDK host.
@@ -100,5 +100,6 @@ SDK prompt completion, retries and compaction retain their standard behavior.
 Independent review uses a fresh session restricted to read/search tools and an ordinary
 `{approved: boolean, findings: string[]}` result. That is a small communication interface, not
 provenance/evidence attestation. Findings are honestly reported; no SQL dispositions, repair
-templates or budget catalogue is required. Focused Git commits are validated against actual
-baseline/diff/paths with normal hooks and signing, never effect receipts.
+templates or budget catalogue is required. Focused Git commits select only explicit task-edited source/deliverable paths and retain their actual
+parent/history with normal hooks and signing, never effect receipts. Filesystem, index, HEAD and undeclared-output
+changes are not execution admission or checkpoint-selection evidence.

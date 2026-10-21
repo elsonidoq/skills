@@ -81,18 +81,19 @@ Commands run normally with no workflow deadline or output cap; nonzero is failur
 No universal test collection count, byte pin or evidence applicability receipt.
 Optional `gates` contains question strings or objects with `question`/`description`; current owner
 approval is needed before that task's worker starts. Other optional context is passed to the worker.
-Optional `owned_paths` limits file/directory scope. Tasks without it derive ownership from actual
-edits against the task's clean baseline, excluding all pre-existing dirty work.
+Optional `owned_paths` limits source file/directory scope. Explicit SDK edit/write selections identify
+source checkpoint paths; the runner never derives ownership by scanning a clean baseline. Optional
+`generated_outputs` names expected task artifacts for selective regeneration/cleanup guidance, not a
+registration, allowlist, permission prerequisite, or automatic commit target.
 
 ## Real execution and safety
 
 An exclusive Git-worktree writer lock prevents overlapping cooperating runners. The SDK host
-inherits that lock while active. The runner inspects HEAD/index and pre-existing dirty files
-before work. SDK edit/write calls reject dirty, unsafe/symlink and out-of-scope paths before
-mutation. Commands remain ordinary SDK tools, not an adversarial sandbox: workers are instructed
-to preserve unrelated work and not stage/commit. The runner refuses changed HEAD/index or
-modified pre-existing work, and inspects actual edits before staging only explicit owned paths.
-Ignored/nested data is not recursively inventoried, adopted or cleaned.
+inherits that lock while active. At an actual SDK edit/write, the runner protects unsafe/symlink,
+out-of-scope, and already-modified target paths. Commands remain ordinary SDK tools, not an
+adversarial sandbox: new, modified, deleted, ignored, Git-visible, or undeclared output never
+stops a later command or check. The runner stages only explicitly selected source/deliverable
+paths; it does not inventory, adopt, or clean arbitrary output.
 
 Each task runs in a fresh coding conversation. Ordinary scoped technical fixes, isolated tests/servers,
 necessary local/in-project dependency setup, and current-task artifact lifecycle need no owner question;

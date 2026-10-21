@@ -113,13 +113,13 @@ class Engine:
                             'or permission questions. No new planning/evidence artifacts. '
                             'Return an honest concise summary and check outcomes.\n'
                             + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
-                            'Pre-existing dirty paths (do not edit): ' + canonical(sorted(focused.dirty)) + '\n'
+                            'Select source edit and commit paths explicitly; preserve unknown and pre-existing bytes. '
+                            'Generated outputs are cleanup guidance, never a registration or command prerequisite.\n'
                             'Task: ' + canonical(task), claim=focused.claim, command=focused.command)
                     except BaseException as exc:
                         recorder.emit(worker_occurrence, 'worker', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
                         raise
                     recorder.emit(worker_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
-                    focused.command('start', 'runner-checks')
                     check_occurrences = {}
                     def check_observe(kind, ordinal, code):
                         occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
@@ -127,7 +127,6 @@ class Engine:
                         if code is not None: facts['exit_code'] = code
                         recorder.emit(occurrence, 'check', kind, task_id=task['id'], facts=facts)
                     checks = run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe)
-                    focused.command('end', 'runner-checks')
                     checkpoint_occurrence = recorder.occurrence()
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
                     try:
@@ -138,7 +137,8 @@ class Engine:
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts={'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']})
                     checkpoints.append(checkpoint)
                     store.task(self.run, task['id'], 'complete', focused.base, checkpoint['sha'],
-                               {'summary': text, 'checks': checks, 'paths': checkpoint['paths']})
+                               {'summary': text, 'checks': checks, 'paths': checkpoint['paths'],
+                                'generated_artifacts': checkpoint['artifacts']})
                 except BaseException as exc:
                     recorder.emit(preparation, 'prepare', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'error_category': _failure(exc)})
                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
