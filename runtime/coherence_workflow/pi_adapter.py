@@ -80,6 +80,8 @@ class PiAdapter:
             if not isinstance(reuse_key, str):
                 raise Blocked('saved session reuse key must be a stable runner string')
             request['reuseKey'] = reuse_key
+        if saved_session is None:
+            saved_session = self.saved_session
         if saved_session is not None:
             if not isinstance(saved_session, dict):
                 raise Blocked('saved session identity must be runner-provided')

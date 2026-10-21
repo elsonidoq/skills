@@ -126,7 +126,11 @@ rule. Each reopen rebuilds the current task's callbacks, tools and mutation scop
 standalone pre-invocation `session` transport record explicitly requests it with
 `sessionObservations: true`; absent opt-in keeps the legacy record kinds. The host returns fresh
 boundary observations and waits for SDK idle before disposal. Missing optional observations select a fresh
-session at the routing layer; they do not stop ordinary SDK/tool correction.
+session at the routing layer; they do not stop ordinary SDK/tool correction. The engine keeps a
+small private same-run candidate registry and records each selection/rejection reason in private
+operation history. It promotes a saved identity only after that task is idle, all required checks
+actually pass, and its focused checkpoint succeeds; same-task corrective prompts keep their live
+context, while failed or unsettled sessions never route another task.
 
 Material questions, including missing paid scope before provider launch, use actual current terminal input.
 Without an interactive terminal the run stops with the question and does not fabricate an answer. A loaded project

@@ -1,4 +1,5 @@
 """Sequential task/check/Git execution, with one fresh read-only final reviewer."""
+import inspect
 import json
 import os
 
@@ -6,6 +7,7 @@ from .git_effects import FocusedGit
 from .monitoring import Recorder, descriptor
 from .pi_adapter import PiAdapter, terminal_question
 from .processes import process_identity
+from .sessions import select_session
 from .store import Blocked, canonical, git
 from .verification import CheckFailure, manual_gates, run_checks
 
@@ -44,6 +46,59 @@ class Engine:
         ):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
         self.adapter, self.question, self.paid_scope = adapter, question, paid_scope
+        # Private, run-local facts only. A failed or unfinished worker is never added.
+        self.session_candidates = []
+        self.session_settlement_sequence = 0
+
+    def _session_request(self, task, role='worker'):
+        authority = canonical({'paid_scope': self.paid_scope, 'routine_authority': True,
+                               'task_authority': task.get('authority')})
+        request = {
+            'run_id': self.run, 'role': role, 'context_group': task.get('context_group'),
+            'worktree': str(self.authority.project), 'executor': self.executor,
+            'resources': task.get('resources', {'tools': 'worker'}),
+            'instructions': 'worker-routine-authority-v1',
+            'settings': task.get('settings', {}), 'authority': authority,
+            'fresh_only': task.get('fresh_only') is True,
+        }
+        return request, canonical({key: request[key] for key in (
+            'role', 'worktree', 'executor', 'resources', 'instructions', 'settings', 'authority')})
+
+    @staticmethod
+    def _prompt_worker(worker, prompt, **kwargs):
+        """Keep older offline adapters usable while the real adapter gets reuse facts."""
+        parameters = inspect.signature(worker.prompt).parameters.values()
+        accepts_keywords = any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in parameters)
+        if not accepts_keywords:
+            names = {parameter.name for parameter in parameters}
+            kwargs = {key: value for key, value in kwargs.items() if key in names}
+        return worker.prompt(prompt, **kwargs)
+
+    @staticmethod
+    def _headroom(observation):
+        if not isinstance(observation, dict):
+            return None
+        headroom = observation.get('headroom')
+        return headroom if isinstance(headroom, dict) else None
+
+    def _settle_session(self, task, worker, request, reuse_key, checkpoint):
+        session = getattr(worker, 'saved_session', None)
+        observation = getattr(worker, 'last_observation', None)
+        after = observation.get('after') if isinstance(observation, dict) else None
+        headroom = self._headroom(after)
+        if not isinstance(session, dict) or not isinstance(session.get('id'), str) or not headroom:
+            self.authority.store.history(self.run, task['id'], 'session', 'unavailable',
+                                         {'reason': 'missing_saved_identity_or_headroom'})
+            return
+        self.session_settlement_sequence += 1
+        candidate = {**request, 'id': session['id'], 'saved_session': session,
+                     'settled': True, 'idle': True, 'checkpoint_verified': True,
+                     'settled_at': self.session_settlement_sequence, 'headroom': headroom,
+                     'checkpoint_sha': checkpoint['sha'], 'reuse_key': reuse_key}
+        self.session_candidates[:] = [item for item in self.session_candidates if item['id'] != session['id']]
+        self.session_candidates.append(candidate)
+        self.authority.store.history(self.run, task['id'], 'session', 'settled',
+                                     {'session_id': session['id'], 'checkpoint_sha': checkpoint['sha']})
 
     def paid_authority(self):
         if self.paid_scope is None:
@@ -110,6 +165,14 @@ class Engine:
                         if state == 'requested' or question_occurrence[0] is None:
                             question_occurrence[0] = recorder.occurrence()
                         recorder.emit(question_occurrence[0], 'worker', mapping[state], task_id=task['id'], facts={'parent_occurrence_id': worker_occurrence})
+                    session_request, reuse_key = self._session_request(task, role)
+                    selection = select_session(session_request, self.session_candidates)
+                    selected = next((candidate for candidate in self.session_candidates
+                                     if candidate['id'] == selection['session_id']), None)
+                    store.history(self.run, task['id'], 'session', 'selected', {
+                        'session_id': selection['session_id'], 'reason': selection['reason'],
+                        'rejected': selection['rejected'],
+                    })
                     worker = self.adapter(project, self.executor, question=self.question, observe_question=worker_question)
                     worker.lock_fd = self.authority.lock.fileno()
                     claimed_paths = set()
@@ -118,7 +181,7 @@ class Engine:
                             focused.claim(name)
                             claimed_paths.add(name)
                     try:
-                        text = worker.prompt(
+                        text = self._prompt_worker(worker,
                             'Execute this one requested task in the current project. Read the relevant files, '
                             'make the smallest correct edits, run relevant actual project checks and fix ordinary '
                             'tool/read/argument/check errors in this conversation. Never stage or commit: the runner '
@@ -130,7 +193,8 @@ class Engine:
                             + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
                             'Select source edit and commit paths explicitly; preserve unknown and pre-existing bytes. '
                             'Generated outputs are cleanup guidance, never a registration or command prerequisite.\n'
-                            'Task: ' + canonical(task), claim=claim, command=focused.command)
+                            'Task: ' + canonical(task), claim=claim, command=focused.command,
+                            saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
                     except BaseException as exc:
                         state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                         recorder.emit(worker_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
@@ -163,14 +227,14 @@ class Engine:
                                 corrective_occurrence = recorder.occurrence()
                                 recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                                 try:
-                                    text = worker.prompt(
+                                    text = self._prompt_worker(worker,
                                         'A runner-owned REQUIRED check for this same task failed. Make a reasoned, '
                                         'authorized scoped source or local-setup correction if one is safe, then return. '
                                         'Do not claim success, skip the command, or ask merely because files changed. '
                                         'If no safe correction remains or a material decision is needed, state that blocker. '
                                         'The runner will rerun the affected required command before checkpointing.\n'
                                         'Actual failed attempt: ' + canonical(failure.attempt),
-                                        claim=claim, command=focused.command)
+                                        claim=claim, command=focused.command, reuse_key=reuse_key)
                                 except BaseException as exc:
                                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                                     recorder.emit(corrective_occurrence, 'worker', state, task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
@@ -201,12 +265,12 @@ class Engine:
                             corrective_occurrence = recorder.occurrence()
                             recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
                             try:
-                                text = worker.prompt(
+                                text = self._prompt_worker(worker,
                                     'A runner-owned checkpoint for this same task failed. Make a reasoned, authorized '
                                     'scoped correction if one is safe. Do not bypass hooks or signing, reset, rebase, '
                                     'or adopt unrelated work. The runner will rerun affected REQUIRED checks and the '
                                     'checkpoint with normal Git configuration intact.\nActual checkpoint error: ' + str(exc),
-                                    claim=claim, command=focused.command)
+                                    claim=claim, command=focused.command, reuse_key=reuse_key)
                             except BaseException as correction_error:
                                 correction_state = 'interrupted' if isinstance(correction_error, (KeyboardInterrupt, SystemExit)) else 'failed'
                                 recorder.emit(corrective_occurrence, 'worker', correction_state, task_id=task['id'], facts={'role': role, 'error_category': _failure(correction_error)})
@@ -222,6 +286,7 @@ class Engine:
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts={'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']})
                     store.history(self.run, task['id'], 'checkpoint', 'passed', checkpoint)
                     checkpoints.append(checkpoint)
+                    self._settle_session(task, worker, session_request, reuse_key, checkpoint)
                     store.task(self.run, task['id'], 'complete', focused.base, checkpoint['sha'],
                                {'summary': text, 'checks': checks, 'paths': checkpoint['paths'],
                                 'generated_artifacts': checkpoint['artifacts']})
