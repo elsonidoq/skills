@@ -2,8 +2,16 @@
 import os
 import signal
 import subprocess
+import tempfile
 
 from .store import Blocked
+
+
+class CheckFailure(Blocked):
+    """A real failed command returned to the task worker for scoped correction."""
+    def __init__(self, task_id, attempt):
+        self.task_id, self.attempt = task_id, attempt
+        super().__init__('task ' + task_id + ' check failed (exit ' + str(attempt['exit_code']) + '): ' + str(attempt['command']))
 
 
 def commands(task):
@@ -24,33 +32,35 @@ def _run_check(project, command, lock_fd):
     reader, writer = os.pipe()
     proc = None
     cancellation = {signal.SIGINT, signal.SIGTERM}
-    try:
+    with tempfile.TemporaryFile() as output:
         try:
-            proc = subprocess.Popen(command, cwd=project, shell=isinstance(command, str),
-                                    start_new_session=True,
-                                    pass_fds=(writer,) if lock_fd is None else (writer, lock_fd))
+            try:
+                proc = subprocess.Popen(command, cwd=project, shell=isinstance(command, str),
+                                        start_new_session=True, stderr=output,
+                                        pass_fds=(writer,) if lock_fd is None else (writer, lock_fd))
+            finally:
+                os.close(writer)
+            os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOWAIT)
+            while os.read(reader, 4096):
+                pass
         finally:
-            os.close(writer)
-        os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOWAIT)
-        while os.read(reader, 4096):
-            pass
-    finally:
-        # No grace deadline/watchdog: stop only our group, even on normal exit
-        # (a background descendant may have closed its inherited descriptors).
-        # Keep the leader unreaped until signalling; block repeated cancellation
-        # during cleanup. Inherited lock holders also exclude replacement if the
-        # runner dies. Deliberate session escapes/closing the lock are not fenced.
-        previous = signal.pthread_sigmask(signal.SIG_BLOCK, cancellation)
-        try:
-            if proc is not None:
-                os.killpg(proc.pid, signal.SIGKILL)
-                while os.read(reader, 4096):
-                    pass
-                proc.wait()
-        finally:
-            os.close(reader)
-            signal.pthread_sigmask(signal.SIG_SETMASK, previous)
-    return proc.returncode
+            # No grace deadline/watchdog: stop only our group, even on normal exit
+            # (a background descendant may have closed its inherited descriptors).
+            # Keep the leader unreaped until signalling; block repeated cancellation
+            # during cleanup. Inherited lock holders also exclude replacement if the
+            # runner dies. Deliberate session escapes/closing the lock are not fenced.
+            previous = signal.pthread_sigmask(signal.SIG_BLOCK, cancellation)
+            try:
+                if proc is not None:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                    while os.read(reader, 4096):
+                        pass
+                    proc.wait()
+            finally:
+                os.close(reader)
+                signal.pthread_sigmask(signal.SIG_SETMASK, previous)
+        output.seek(0)
+        return proc.returncode, output.read().decode(errors='replace')
 
 
 def run_checks(project, task, *, lock_fd=None, observe=None):
@@ -63,14 +73,16 @@ def run_checks(project, task, *, lock_fd=None, observe=None):
         # No workflow deadline or output cap. Preserve normal shell/project behavior.
         if observe: observe('started', ordinal, None)
         try:
-            code = _run_check(project, command, lock_fd)
+            code, output = _run_check(project, command, lock_fd)
         except BaseException:
             if observe: observe('interrupted', ordinal, None)
             raise
-        results.append({'command': command, 'exit_code': code})
+        results.append({'command': command, 'exit_code': code, 'output': output})
         if observe: observe('passed' if code == 0 else 'failed', ordinal, code)
         if code:
-            raise Blocked('task ' + task['id'] + ' check failed (exit ' + str(code) + '): ' + str(command))
+            # The failed attempt is data for the engine's same-task corrective
+            # continuation, not a terminal verdict or a suggestion-only prompt.
+            raise CheckFailure(task['id'], results[-1])
     return results
 
 

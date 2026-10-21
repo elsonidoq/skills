@@ -38,8 +38,8 @@ The project database remains `.coherence/workflow/workflow.sqlite`. New executio
 - `execution_runs(run_id, state, baseline, result, error)`;
 - `execution_tasks(run_id, task_id, state, baseline, result, details)`.
 
-Task details retain useful summary, actual command exit codes, explicit task-edited checkpoint paths,
-and known generated-artifact facts. State is ordinary running/complete/failed/interrupted/abandoned history,
+Task details retain useful summary, actual command/exit/output results (including failed attempts), explicit task-edited checkpoint paths,
+and known generated-artifact facts. A failed required-check attempt is returned only to the same task's corrective worker context; a later real pass is required before checkpointing, while an unavailable safe correction retains its actual blocker. State is ordinary running/complete/failed/interrupted/abandoned history,
 not proof of liveness, effect settlement or dispatch eligibility. IDs distinguish new runs; existing runs are not replayed.
 SQLite errors report the actual operation. No graph saver, attempt selection or effect ledger
 is consumed to run new work. The writer lock is the ordinary per-worktree

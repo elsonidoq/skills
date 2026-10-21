@@ -83,7 +83,7 @@ and output continuation remain normal behavior, not fatal workflow conditions. N
 size caps, deadlines, lifetime quotas or repair budgets. Do not autonomously loop expensive failed runs.
 
 Project check commands are optional; run specified checks and report their actual outcomes with
-no universal collection-count/receipt format. A failed check is not passed. At an actual edit or destructive
+no universal collection-count/receipt format. A nonzero required command retains its exact command, exit and output as a failed attempt and returns it to the live or compatible same-task worker with its ordinary corrective tools. The worker makes a reasoned safe scoped source/setup correction or reports the actual blocker; the runner reruns affected required commands and never checkpoints before they pass. This is not cross-task reuse, a post-review round, a skip, or an unchanged-command spin. A failed check is not passed. At an actual edit or destructive
 cleanup, preserve pre-existing/unknown bytes; never adopt them. Optional `owned_paths` limits source edits;
 explicit task edit selections determine checkpoint paths. Optional `generated_outputs` guides selective
 known-artifact regeneration/cleanup only: it is not an allowlist, registration, permission prerequisite or

@@ -77,8 +77,7 @@ and read-only reviewer prompts; altered scope requires a new answer.
 Optional `checks` accepts shell command strings, argv lists or objects with `command`/`argv`.
 A singular `check` or `required[].check` uses the same command format. Old registered catalogue
 IDs are no longer executable: supply the actual project command when requesting that check.
-Commands run normally with no workflow deadline or output cap; nonzero is failure, not success.
-No universal test collection count, byte pin or evidence applicability receipt.
+Commands run normally with no workflow deadline or output cap. A nonzero required command is retained with its exact command, exit and output as a failed attempt, then returned to the same-task worker for a reasoned safe scoped source/setup correction. The runner reruns the affected required command and only checkpoints after real passes; an unavailable safe correction or material decision reports its actual blocker. This is neither a skipped check nor cross-task reuse/post-review fixing, and it never spins an unchanged failed command. No universal test collection count, byte pin or evidence applicability receipt.
 Optional `gates` contains question strings or objects with `question`/`description`; current owner
 approval is needed before that task's worker starts. Other optional context is passed to the worker.
 Optional `owned_paths` limits source file/directory scope. Explicit SDK edit/write selections identify

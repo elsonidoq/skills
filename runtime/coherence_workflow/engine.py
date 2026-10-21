@@ -7,7 +7,7 @@ from .monitoring import Recorder, descriptor
 from .pi_adapter import PiAdapter, terminal_question
 from .processes import process_identity
 from .store import Blocked, canonical, git
-from .verification import manual_gates, run_checks
+from .verification import CheckFailure, manual_gates, run_checks
 
 
 def _failure(exc):
@@ -126,7 +126,35 @@ class Engine:
                         facts = {'ordinal': ordinal}
                         if code is not None: facts['exit_code'] = code
                         recorder.emit(occurrence, 'check', kind, task_id=task['id'], facts=facts)
-                    checks = run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe)
+                    def run_required_checks():
+                        return run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe)
+                    previous_failed_attempt = None
+                    while True:
+                        try:
+                            checks = run_required_checks()
+                            break
+                        except CheckFailure as failure:
+                            if failure.attempt == previous_failed_attempt:
+                                raise Blocked('required check remains unchanged after same-task correction: ' + canonical(failure.attempt))
+                            previous_failed_attempt = failure.attempt
+                            # A nonzero REQUIRED command is a real failed attempt, but
+                            # ordinary scoped source/setup correction belongs to this
+                            # same task before its checkpoint—not a later task/review.
+                            corrective_occurrence = recorder.occurrence()
+                            recorder.emit(corrective_occurrence, 'worker', 'started', task_id=task['id'], facts={'role': role})
+                            try:
+                                text = worker.prompt(
+                                    'A runner-owned REQUIRED check for this same task failed. Make a reasoned, '
+                                    'authorized scoped source or local-setup correction if one is safe, then return. '
+                                    'Do not claim success, skip the command, or ask merely because files changed. '
+                                    'If no safe correction remains or a material decision is needed, state that blocker. '
+                                    'The runner will rerun the affected required command before checkpointing.\n'
+                                    'Actual failed attempt: ' + canonical(failure.attempt),
+                                    claim=focused.claim, command=focused.command)
+                            except BaseException as exc:
+                                recorder.emit(corrective_occurrence, 'worker', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'role': role, 'error_category': _failure(exc)})
+                                raise
+                            recorder.emit(corrective_occurrence, 'worker', 'returned', task_id=task['id'], facts={'role': role})
                     checkpoint_occurrence = recorder.occurrence()
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
                     try:

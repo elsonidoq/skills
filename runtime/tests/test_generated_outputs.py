@@ -51,3 +51,14 @@ class GeneratedActionScopeTests(ProjectTest):
         self.assertEqual((project/'undeclared.out').read_text(), 'undeclared\n')
         self.assertEqual((project/'ignored.tmp').read_text(), 'ignored\n')
         self.assertNotIn('web/dist/known.js', git(project, 'show', '--name-only', '--format=', 'HEAD').decode())
+
+
+class RunnerCheckOutputsTests(ProjectTest):
+    def test_failed_runner_check_keeps_command_exit_and_output(self):
+        from coherence_workflow.verification import CheckFailure, run_checks
+        with self.assertRaises(CheckFailure) as raised:
+            run_checks(self.project, {'id': 'output', 'checks': [[
+                'python3', '-B', '-c', "raise SystemExit('synthetic missing setup')"]]})
+        self.assertEqual(raised.exception.attempt['exit_code'], 1)
+        self.assertEqual(raised.exception.attempt['command'][:3], ['python3', '-B', '-c'])
+        self.assertIn('synthetic missing setup', raised.exception.attempt['output'])
