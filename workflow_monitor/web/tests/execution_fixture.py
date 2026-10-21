@@ -56,8 +56,9 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     emit(recorder, 'check', 'check', 'failed' if run == 'stopping' else 'passed', ordinal=1, exit_code=1 if run == 'stopping' else 0)
                     if run == 'success':
                         emit(recorder, 'checkpoint', 'checkpoint', 'passed', baseline=base, head=base, no_change=True)
+                        # A typed rejecting verdict is a returned reviewer execution, not acceptance.
                         emit(recorder, 'review', 'review', 'started', task=None, role='reviewer', review_base=base, review_head=base)
-                        emit(recorder, 'review', 'review', 'passed', task=None, role='reviewer', approved=True, finding_count=0, review_base=base, review_head=base)
+                        emit(recorder, 'review', 'review', 'failed', task=None, role='reviewer', approved=False, finding_count=2, review_base=base, review_head=base)
                     emit(recorder, 'terminal', 'terminal', 'failed' if run == 'stopping' else 'passed', task=None, head=base)
             owner.store.db.execute('UPDATE execution_runs SET state=? WHERE run_id=?', ('failed' if run in ('stopping', 'before-agent') else 'completed', run))
     uvicorn.run(create_app(Reader(project), ROOT / 'workflow_monitor/web/dist', 4174), host='127.0.0.1', port=4174, access_log=False, log_level='critical')

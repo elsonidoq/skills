@@ -7,8 +7,10 @@ import './style.css'
 import { graphFor, action, status, outcomeText, recordText, type Observation, type Occurrence, type Followup, type PlannedTask, type ReviewDefinition } from './graph'
 
 type Acceptance = { state: string; base: string | null; head: string | null }
+type AcceptanceItem = { occurrence_ref: string; state: string; ordinal?: number | null; exit_code?: number | null; baseline?: string | null; head?: string | null; no_change?: boolean | null; approved?: boolean | null; finding_count?: number | null; base?: string | null }
+type AcceptanceSummary = { checks: AcceptanceItem[]; checkpoints: AcceptanceItem[]; reviews: AcceptanceItem[]; full_range: Acceptance }
 type RunnerState = { state: 'live' | 'stopped' | 'unknown'; reason: string | null }
-type Run = { ref: string; display_id: string; label: string; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance }
+type Run = { ref: string; display_id: string; label: string; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance; acceptance_summary?: AcceptanceSummary }
 type Unknown = { ref: string; run_ref: string; source_seq: number | null; code: string }
 type GraphEdge = { ref: string; run_ref: string; type: string; from_ref: string; to_ref: string; resolution: string }
 type Inventory = { phase_count: number; occurrence_count: number; observation_count: number; total_count: number; loaded_count: number; hidden_count: number; unsupported_count: number }
@@ -44,12 +46,23 @@ function App() {
   const details = useMemo(() => {
     if (!snapshot || !selected) return null
     const all = [snapshot, ...lineage]
-    if (selected.kind === 'edge') { const edge = edges.find(item => item.id === selected.id); return edge ? <><h3>{String(edge.label)}</h3><p>Recorded relation: {edge.source} → {edge.target}. Sequence is recorded order, not proof of causality.</p></> : null }
+    const runFor = (ref: string) => all.flatMap(item => item.runs).find(run => run.ref === ref)
+    const acceptanceDetails = (run: Run | undefined) => {
+      const summary = run?.acceptance_summary
+      if (!summary) return <p>Full retained acceptance summary unavailable.</p>
+      const full = summary.full_range
+      return <section><h4>Acceptance (full retained summary)</h4><p>Full-range qualification: {full?.state ?? 'unknown'}{full?.base && full?.head ? `; ${full.base} → ${full.head}` : ''}</p>{summary.checks.map(item => <p key={`check-${item.occurrence_ref}`}>Check {item.occurrence_ref}: {item.state}; ordinal {item.ordinal ?? 'unknown'}; exit {item.exit_code ?? 'unknown'}</p>)}{summary.checkpoints.map(item => <p key={`checkpoint-${item.occurrence_ref}`}>Checkpoint {item.occurrence_ref}: {item.state}; {item.baseline ?? 'unknown'} → {item.head ?? 'unknown'}; no change {item.no_change ?? 'unknown'}</p>)}{summary.reviews.map(item => <p key={`review-${item.occurrence_ref}`}>Review {item.occurrence_ref}: {item.state}; approved {item.approved ?? 'unknown'}; findings {item.finding_count ?? 'unknown'}; range {item.base ?? 'unknown'} → {item.head ?? 'unknown'}</p>)}</section>
+    }
+    if (selected.kind === 'edge') { const edge = edges.find(item => item.id === selected.id); const edgeRun = edge && [...all.flatMap(item => item.tasks), ...all.flatMap(item => item.occurrences), ...all.flatMap(item => item.review_definitions ?? [])].find(item => item.ref === edge.source)?.run_ref; return edge ? <><h3>{String(edge.label)}</h3><p>Recorded relation: {edge.source} → {edge.target}; {String(edge.label) === 'Recorded sequence' ? 'recorded order, not proof of causality.' : 'declared or recorded as labelled.'}</p><p>Edge {edge.id}</p>{acceptanceDetails(edgeRun ? runFor(edgeRun) : undefined)}</> : null }
+    const task = all.flatMap(item => item.tasks).find(item => item.ref === selected.id)
+    if (task) return <><h3>{task.label}</h3><p>Plan task {task.ref}; {source(task.run_ref)}</p><p>Progress: {task.progress?.state ?? 'unavailable'}{task.progress?.qualification ? ` — ${task.progress.qualification}` : ''}.</p><p>Prerequisites: {task.prerequisite_refs.length ? task.prerequisite_refs.join(', ') : 'none'}.</p>{task.reason && <p>Reason: {task.reason.code}{task.reason.task_ref ? `; task ${task.reason.task_ref}` : ''}{task.reason.occurrence_ref ? `; occurrence ${task.reason.occurrence_ref}` : ''}.</p>}{task.annotation && <p>Annotation: {task.annotation.label ?? task.annotation.code ?? 'recorded'}{task.annotation.occurrence_ref ? `; occurrence ${task.annotation.occurrence_ref}` : ''}.</p>}<p>{task.summary}</p>{acceptanceDetails(runFor(task.run_ref))}</>
+    const definition = all.flatMap(item => item.review_definitions ?? []).find(item => item.ref === selected.id)
+    if (definition) return <><h3>{definition.label}</h3><p>Plan definition {definition.ref}; {source(definition.run_ref)}. This is not an agent call.</p>{acceptanceDetails(runFor(definition.run_ref))}</>
     const occurrence = all.flatMap(item => item.occurrences).find(item => item.ref === selected.id)
     if (!occurrence) return null
     const own = all.flatMap(item => item.records).filter(item => item.occurrence_ref === occurrence.ref && item.run_ref === occurrence.run_ref)
     const supporting = all.flatMap(item => item.occurrences).filter(item => item.run_ref === occurrence.run_ref && item.role === 'non_model' && (item.support_ref === occurrence.ref || item.parent_ref === occurrence.ref))
-    return <><h3>{action(occurrence, all)}</h3><p>{occurrence.role}; {outcomeText(occurrence, own)}; {source(occurrence.run_ref)}</p><p>Execution {occurrence.ref}{occurrence.task_ref ? `; task ${occurrence.task_ref}` : ''}</p>{own.map(item => <p key={item.ref}>{recordText(item)}</p>)}{supporting.map(item => <section key={item.ref}><h4>{action(item, all)}: {outcomeText(item, all.flatMap(value => value.records))}</h4><p>{item.ref}; {item.stopping ? 'workflow stopping step' : 'supporting observation'}</p>{all.flatMap(value => value.records).filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => <p key={record.ref}>{recordText(record)}</p>)}</section>)}<p>Only loaded observations are shown; use history below for retained evidence.</p></>
+    return <><h3>{action(occurrence, all)}</h3><p>{occurrence.role}; {outcomeText(occurrence, own)}; {source(occurrence.run_ref)}</p><p>Execution {occurrence.ref}{occurrence.task_ref ? `; task ${occurrence.task_ref}` : ''}</p>{own.map(item => <p key={item.ref}>{recordText(item)}</p>)}{supporting.map(item => <section key={item.ref}><h4>{action(item, all)}: {outcomeText(item, all.flatMap(value => value.records))}</h4><p>{item.ref}; {item.stopping ? 'workflow stopping step' : 'supporting observation'}</p>{all.flatMap(value => value.records).filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => <p key={record.ref}>{recordText(record)}</p>)}</section>)}{acceptanceDetails(runFor(occurrence.run_ref))}<p>Only loaded observations are shown; use history below for retained evidence.</p></>
   }, [edges, lineage, selected, snapshot])
   const allOccurrences = snapshot ? [snapshot, ...lineage].flatMap(item => item.occurrences) : []; const failures = allOccurrences.filter(item => item.outcome === 'failed').length; const incomplete = allOccurrences.filter(item => item.completeness === 'incomplete').length; const waiting = allOccurrences.filter(item => status(item, [snapshot, ...lineage].flatMap(value => value?.records ?? [])) === 'waiting').length
   const selectedRunInfo = runs.find(run => run.ref === selectedRun); const acceptance = selectedRunInfo?.review_acceptance; const acceptanceText = acceptance?.state === 'accepted_full_range' ? `Full-range acceptance: ${acceptance.base} → ${acceptance.head}` : acceptance?.state === 'correction_only' ? 'Correction-only review; current head is not accepted.' : 'Current lineage acceptance is unknown.'
@@ -69,11 +82,12 @@ function App() {
     <p>Pan and zoom the graph. Select a node or edge for its brief details.</p>
     </header>
     <div className="legend" aria-label="Status legend">
-    <span className="success">Success</span>
-    <span className="failed">Failure / stopping step</span>
-    <span className="waiting">Waiting / blocked</span>
-    <span className="neutral">Recorded / incomplete / unknown</span>
-    <span className="plan">Plan progress (not execution outcome)</span>
+    <span className="success">Green: execution returned</span>
+    <span className="failed">Red: execution failure / stopping step</span>
+    <span className="waiting">Amber: waiting (not dependency-blocked)</span>
+    <span className="neutral">Recorded running / incomplete / unknown</span>
+    <span className="plan">Plan progress (not execution outcome or acceptance)</span>
+    <span className="acceptance">Acceptance is in Details; skipped/cancelled unsupported</span>
     <span>Declared prerequisite · Recorded attachment · Recorded sequence · Declared correction</span>
     {snapshot && selectedRunInfo?.plan_availability !== 'complete' && <span className="unavailable">Complete graph unavailable</span>}
     </div>

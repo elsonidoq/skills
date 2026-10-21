@@ -13,7 +13,7 @@ const runs = [
 ]
 function occurrence(ref: string, run_ref: string, role: string, outcome: string, phase_ref = `phase_${ref}`) { return { ref, run_ref, phase_ref, task_ref: null, role, outcome, completeness: 'complete', record_refs: [`record_${ref}`] } }
 function record(ref: string, run_ref: string, occurrence_ref: string, kind: string, seq: number, base: string | null = null, head: string | null = null) { return { ref, run_ref, occurrence_ref, kind, source_seq: seq, recorded_at: seq, exit_code: null, finding_count: kind === 'failed' ? 1 : 0, review_base: base, review_head: head } }
-const original = occurrence('original_review', 'original', 'reviewer', 'failed')
+const original = { ...occurrence('original_review', 'original', 'reviewer', 'failed'), execution_summary: { state: 'success', qualification: null } }
 const fixing = { ...occurrence('fixing_worker', 'fixing', 'fixing_worker', 'passed'), task_ref: 'task_fix' }
 const check = occurrence('fixing_check', 'fixing', 'non_model', 'passed')
 const checkpoint = occurrence('fixing_checkpoint', 'fixing', 'non_model', 'passed')
@@ -32,14 +32,14 @@ test.afterAll(() => new Promise<void>(resolve => server.close(() => resolve())))
 test('navigates an explicit reviewer-to-fixing-to-rereview lineage without replacing the rejected root', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('.react-flow__node')).toHaveCount(3)
-  await expect(page.locator('.react-flow__node[data-id="original_review"]')).toHaveClass(/failed/)
+  await expect(page.locator('.react-flow__node[data-id="original_review"]')).toHaveClass(/success/)
   await expect(page.locator('.react-flow__node[data-id="fixing_worker"]')).toContainText('Fix T001')
   await expect(page.locator('.react-flow__node[data-id="fixing_rereview"]')).toHaveClass(/success/)
   await expect(page.locator('.react-flow__node[data-id="fixing_check"]')).toHaveCount(0)
   await page.locator('.react-flow__node[data-id="fixing_rereview"]').click()
   await expect(page.getByLabel('Selected execution details')).toContainText(`range ${fullBase} → ${fullHead}`)
   await expect(page.locator('.react-flow__node[data-id="fixing_rereview"]')).toHaveClass(/selected/)
-  await expect(page.locator('.react-flow__node[data-id="original_review"]')).toHaveClass(/failed/)
+  await expect(page.locator('.react-flow__node[data-id="original_review"]')).toHaveClass(/success/)
   await expect(page.getByLabel('Lineage acceptance')).toHaveText(`Full-range acceptance: ${fullBase} → ${fullHead}`)
   await expect(page.getByText('resolved: original → fixing')).toBeVisible()
   await expect(page.getByTestId('rf__edge-followup_original_review_fixing_worker').getByText('Declared correction')).toBeVisible()

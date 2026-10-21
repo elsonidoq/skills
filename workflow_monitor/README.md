@@ -44,14 +44,17 @@ recorded-sequence, and declared-correction edges are visibly distinct. Sequence 
 not proven causality; no generic possible-flow edge claims scheduled work.
 
 Snapshot occurrence `execution_summary` is derived from the full normalized snapshot
-before history paging. A worker or fixing-worker `returned` is execution success; its
-own established failure is execution failure. Checks, checkpoints, questions and review
-acceptance never recolor that worker. Outstanding input is waiting; a start-only agent is
-only *recorded running* with a compatible live recorded runner, otherwise it is
-unknown/incomplete. Interrupted, abandoned, or conflicting terminal evidence stays
-qualified unknown. Terminal evidence beats stale waiting/running and attempts remain
-distinct. A reviewer with typed `approved` and `finding_count` returned successfully even
-when it rejected the work; malformed/transport reviewer failure does not imply success.
+before history paging. A worker or fixing-worker `returned` is green execution success;
+its own established failure is red. Checks, checkpoints, questions and review acceptance
+never recolor that worker. Outstanding input is waiting, not dependency-blocked; a
+start-only agent is only *recorded running* with a compatible live recorded runner,
+otherwise it is unknown/incomplete. Recorded running is not process liveness.
+Interrupted, abandoned, or conflicting terminal evidence stays qualified unknown.
+Terminal evidence beats stale waiting/running and attempts remain distinct. A reviewer
+with typed `approved` and `finding_count` returned successfully even when it rejected
+the work; that reviewer is green only for the recorded-return inference while Details
+still show rejected acceptance. Malformed/transport reviewer failure does not imply
+success.
 
 Each run also exposes a separate full-snapshot `acceptance_summary`: checks,
 checkpoints, reviewer approval/findings/ranges, and the existing full-range acceptance
@@ -70,11 +73,16 @@ rejection does not erase an earlier checkpoint. Missing or partial plans expose 
 progress; `skipped` and `cancelled` are never synthesized. Reason/annotation references
 are opaque public task or occurrence refs, not task prose.
 
-Click a node or edge to highlight it and update the visible Details panel next to the
-graph (below it on narrow screens). Agent Details include loaded lifecycle/check/
-checkpoint evidence, source references and recorded review ranges. **Loaded history and
-technical references** exposes supporting definitions, every loaded minimized observation
-and unsupported record without raw payloads. **Load more history** and **Load correction
+Click a plan task, planned review definition, execution, or edge to highlight it and
+update the visible Details panel next to the graph (below it on narrow screens). Plan
+Details distinguish progress, prerequisites, reasons and annotations from execution.
+Execution Details include loaded lifecycle evidence and source references. Every Details
+selection also shows the full retained acceptance summary—checks, checkpoints, review
+approval/findings/ranges and current full-range qualification—separately from paged
+loaded history. The legend makes this separation explicit; `skipped` and `cancelled`
+are unsupported and never inferred. **Loaded history and technical references** exposes
+supporting definitions, every loaded minimized observation and unsupported record without
+raw payloads. **Load more history** and **Load correction
 history** retrieve further pages at their snapshot watermarks. Inventory counts disclose
 unloaded records. Changed watermarks require refresh rather than mixing snapshots.
 
@@ -88,8 +96,9 @@ runner `live`/`stopped`/`unknown` qualification is not proof of progress.
 Only explicitly declared local correction relations expand the selected-root graph.
 The original rejected reviewer, distinct fixing calls and subsequent reviewer remain
 visible; source-run refs and actual ranges are in Details rather than repeated in labels.
-The original rejection stays red after a later full-range success. Correction-only,
-unresolved and cyclic relations do not establish current full-range acceptance. Supporting
+A valid rejecting reviewer remains a green returned execution while its rejection stays
+visible in Details and lineage acceptance. Correction-only, unresolved and cyclic
+relations do not establish current full-range acceptance. Supporting
 checks/checkpoints remain available in agent Details and paginated history.
 
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
