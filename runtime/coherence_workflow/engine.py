@@ -119,10 +119,11 @@ class Engine:
     def paid_authority(self):
         if self.paid_scope is None:
             return 'Paid scope: not supplied to this direct engine fixture; production CLI settles it before provider launch. '
-        return ('Paid scope approved for this unchanged run only: selected agent-provider(s): ' +
-                ', '.join(self.paid_scope['agent_providers']) + '; application/test APIs: ' +
+        return ('Selected worker/reviewer models are authorized by the implementation launch. '
+                'Paid application/test APIs approved for this unchanged run only: ' +
                 (', '.join(self.paid_scope['apis']) if self.paid_scope['apis'] else 'none declared') +
-                '. Do not expand this scope or ask again while it is unchanged. ')
+                '. Ask before using any additional paid application/test API, including one discovered '
+                'during execution; do not ask again for unchanged scope. ')
 
     def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id):
         """Run the one already-authorized review repair without routing another workflow.

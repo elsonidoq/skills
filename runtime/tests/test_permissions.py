@@ -4,7 +4,7 @@ import os
 import sys
 from unittest.mock import patch
 
-from coherence_workflow.cli import main
+from coherence_workflow.cli import main, settle_paid_scope
 from coherence_workflow.engine import Engine, _ROUTINE_AUTHORITY
 from coherence_workflow.intake import admit
 from coherence_workflow.pi_adapter import PiAdapter
@@ -62,6 +62,36 @@ print(json.dumps({'type': 'result', 'text': 'offline'}), flush=True)
 
 
 class PaidScopeTests(ProjectTest):
+    def test_selected_worker_and_reviewer_need_no_separate_consent(self):
+        executor = {**EXECUTOR, 'reviewer': {**EXECUTOR, 'provider': 'other'}}
+        with patch('coherence_workflow.cli.Engine') as engine, \
+             patch('coherence_workflow.cli.terminal_question', side_effect=lambda text: self.fail(text)):
+            engine.return_value.invoke.return_value = {'status': 'completed'}
+            tasks, config = self.root/'tasks.json', self.root/'executor.json'
+            tasks.write_text('{"tasks":[{"id":"dummy","description":"Synthetic fixture"}]}')
+            config.write_text(json.dumps(executor))
+            self.assertEqual(main(['start', '--project', str(self.project), '--tasks', str(tasks),
+                                   '--executor', str(config), '--run', 'ordinary']), 0)
+            self.assertEqual(engine.call_args.kwargs['paid_scope'],
+                             {'agent_providers': ['fixture', 'other'], 'apis': []})
+
+    def test_approved_apis_do_not_depend_on_model_provider_list(self):
+        scope = {'approved': True, 'agent_providers': ['old-provider'], 'apis': ['paid API']}
+        result = settle_paid_scope({'paid_scope': scope}, EXECUTOR, lambda text: self.fail(text))
+        self.assertEqual(result, {'agent_providers': ['fixture'], 'apis': ['paid API']})
+
+    def test_new_or_unapproved_apis_still_ask(self):
+        for contract in ({'paid_apis': ['new API']},
+                         {'paid_scope': {'approved': False, 'apis': ['new API']}},
+                         {'paid_scope': {'approved': True, 'apis': ['old API']}, 'paid_apis': ['new API']}):
+            with self.subTest(contract=contract):
+                questions = []
+                result = settle_paid_scope(contract, EXECUTOR, lambda text: questions.append(text) or 'yes')
+                self.assertEqual(len(questions), 1)
+                self.assertIn('new API', questions[0])
+                self.assertIn('new API', result['apis'])
+                self.assertNotIn('agent-provider', questions[0])
+
     def test_missing_or_denied_scope_stops_before_provider_or_storage(self):
         tasks, executor = self.root/'tasks.json', self.root/'executor.json'
         tasks.write_text('{"paid_apis":["fixture test API"],"tasks":[{"id":"dummy","description":"Synthetic fixture"}]}')
@@ -81,7 +111,7 @@ class PaidScopeTests(ProjectTest):
                                  '--executor', str(executor), '--run', 'scope-' + str(answer)])
                 self.assertEqual(code, 2)
                 self.assertEqual(len(asked), 1)
-                self.assertIn('selected agent-provider(s): fixture', asked[0])
+                self.assertIn('Approve paid application/test APIs:', asked[0])
                 self.assertIn('fixture test API', asked[0])
                 adapter.assert_not_called()
                 self.assertFalse((self.project/'.coherence').exists())
@@ -100,7 +130,8 @@ class PaidScopeTests(ProjectTest):
                    question=lambda text: questions.append(text)).invoke()
         self.assertEqual(questions, [])
         self.assertEqual(len(prompts), 2)
-        granted = 'Paid scope approved for this unchanged run only: selected agent-provider(s): fixture; application/test APIs: fixture test API.'
+        granted = 'Paid application/test APIs approved for this unchanged run only: fixture test API.'
+        self.assertTrue(all('Ask before using any additional paid application/test API' in prompt for prompt, _ in prompts))
         self.assertTrue(all(granted in prompt for prompt, _ in prompts))
 
         capture = self.root / 'paid-provider-bound.json'

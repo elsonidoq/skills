@@ -61,19 +61,21 @@ Dependencies determine sequential order; forward references are valid. Empty wor
 `no tasks` before storage, locks or SDK launch. No mandatory check, path list, approval envelope,
 manifest, catalogue, graph, original session, cgroup or provenance record.
 
-Before any selected agent-provider call, provide explicit paid authority as a top-level task-contract
-field, for example:
+Implementation launch authorizes ordinary use of the selected worker/reviewer models; no separate
+paid-consent question or `paid_scope` is needed for those calls. Paid application/test APIs still need
+explicit approval. Declare them in `paid_apis` to request approval before storage or provider launch,
+or supply an already approved top-level scope, for example:
 
 ```json
-{"paid_scope":{"approved":true,"agent_providers":["openai-codex"],"apis":["selected application/test API"]},"tasks":[{"id":"fix-title","description":"Correct the page title."}]}
+{"paid_scope":{"approved":true,"apis":["selected paid application/test API"]},"tasks":[{"id":"fix-title","description":"Correct the page title."}]}
 ```
 
-The provider list must exactly name the selected worker and reviewer providers. If this dedicated scope is
-absent or does not match, the CLI asks once through the current terminal or attached parent bridge before
-storage or provider launch, naming the selected providers and declared application/test APIs (`paid_apis`,
-or `none declared`). A denied or unavailable answer launches no provider. Credentials, ordinary task text
-and historical runs are not approval. The unchanged grant and exclusions are included in worker, fixing-worker
-and read-only reviewer prompts; altered scope requires a new answer.
+Only application/test APIs are separately gated; changing selected model providers does not invalidate
+API approval. Any declared paid APIs not covered by the approved scope trigger one current terminal or
+attached-parent question. A denied or unavailable answer launches no provider. Credentials and historical
+runs are not API approval. The unchanged grant and exclusions follow worker, fixing-worker and read-only
+reviewer prompts. Additional paid APIs discovered during execution require approval before use. Existing
+`agent_providers` fields remain compatible historical context, not a paid-consent requirement.
 
 Optional `checks` accepts shell command strings, argv lists or objects with `command`/`argv`.
 A singular `check` or `required[].check` uses the same command format. Old registered catalogue
@@ -146,7 +148,7 @@ operation history. It promotes a saved identity only after that task is idle, al
 actually pass, and its focused checkpoint succeeds; same-task corrective prompts keep their live
 context, while failed or unsettled sessions never route another task.
 
-Material questions, including missing paid scope before provider launch, use actual current terminal input.
+Material questions, including unapproved paid application/test APIs, use actual current terminal input.
 Without an interactive terminal the run stops with the question and does not fabricate an answer. A loaded project
 parent-session bridge may instead launch this same command with its private socket environment;
 it wakes that parent with the exact pending question (including the paid-scope decision when needed) and returns only its correlated reply to the

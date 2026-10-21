@@ -22,21 +22,19 @@ def _selected_providers(executor):
 
 
 def settle_paid_scope(contract, executor, question):
-    """Return explicit current-run paid scope before any provider launch."""
+    """Settle paid application/test APIs; selected models are ordinary launch authority."""
     providers = _selected_providers(executor)
     scope = contract.get('paid_scope')
-    if isinstance(scope, dict) and scope.get('approved') is True:
-        approved_providers, apis = scope.get('agent_providers'), scope.get('apis')
-        if (isinstance(approved_providers, list) and all(isinstance(value, str) and value for value in approved_providers)
-                and sorted(set(approved_providers)) == providers and isinstance(apis, list)
-                and all(isinstance(value, str) and value for value in apis)):
-            return {'agent_providers': providers, 'apis': apis}
+    scope_apis = scope.get('apis', []) if isinstance(scope, dict) else []
     apis = contract.get('paid_apis', [])
-    if not isinstance(apis, list) or any(not isinstance(value, str) or not value for value in apis):
-        raise Blocked('paid_apis must be a list of named application/test APIs when supplied')
-    named_apis = ', '.join(apis) if apis else 'none declared'
-    answer = question('Approve paid scope before any provider launch: selected agent-provider(s): ' +
-                      ', '.join(providers) + '; application/test APIs: ' + named_apis + '. [yes/no]')
+    for values in (scope_apis, apis):
+        if not isinstance(values, list) or any(not isinstance(value, str) or not value for value in values):
+            raise Blocked('paid_apis and paid_scope.apis must be lists of named application/test APIs; correct the task contract')
+    apis = list(dict.fromkeys(scope_apis + apis))
+    if not apis or (isinstance(scope, dict) and scope.get('approved') is True
+                    and set(apis).issubset(scope_apis)):
+        return {'agent_providers': providers, 'apis': apis}
+    answer = question('Approve paid application/test APIs: ' + ', '.join(apis) + '. [yes/no]')
     if answer.strip().lower() not in ('yes', 'y'):
         raise Blocked('paid scope was not approved; no provider launch occurred')
     return {'agent_providers': providers, 'apis': apis}
