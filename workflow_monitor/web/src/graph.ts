@@ -8,10 +8,19 @@ export type PlannedTask = { ref: string; run_ref: string; task_id?: string; labe
 export type ReviewDefinition = { ref: string; run_ref: string; label: string }
 export type GraphSnapshot = { runs: Array<{ ref: string; plan_availability?: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; edges?: GraphEdge[]; chain?: ChainExecution[] }
 export type Followup = { run_ref: string; source_run_ref: string; review_occurrence_ref: string; resolution: string }
+const genericTitle = (value: string | undefined, taskId?: string) => !value || /^task(?:\s|$)/i.test(value.trim()) || (taskId != null && value.trim() === taskId)
+function taskTitle(task: PlannedTask) {
+  const summary = task.summary.trim()
+  const title = genericTitle(task.label, task.task_id) && summary ? summary : task.label || summary || 'Unknown task title'
+  return title.length > 80 ? `${title.slice(0, 79)}…` : title
+}
+function taskCode(task: PlannedTask) {
+  return task.task_id?.trim() || 'Unknown task ID'
+}
+const roleName = (role: string) => role === 'worker' ? 'Worker' : role === 'fixing_worker' ? 'Fixing worker' : role === 'reviewer' ? 'Reviewer' : ({ check: 'Check', checkpoint: 'Checkpoint', prepare: 'Prepare', gate: 'Gate', terminal: 'Stop' }[role] ?? 'Recorded occurrence')
 export function action(item: Occurrence, snapshots: GraphSnapshot[]) {
-  const verb = item.role === 'worker' ? 'Implement' : item.role === 'fixing_worker' ? 'Fix' : item.role === 'reviewer' ? 'Review' : ({ check: 'Check', checkpoint: 'Checkpoint', prepare: 'Prepare', gate: 'Gate', terminal: 'Stop' }[item.phase ?? ''] ?? 'Stop')
   const task = snapshots.flatMap(snapshot => snapshot.tasks).find(task => task.ref === item.task_ref && task.run_ref === item.run_ref)
-  return `${verb}${task ? ` ${task.label.length > 24 ? task.label.slice(0, 23) + '…' : task.label}` : ''}`
+  return `${roleName(item.role)}${task ? ` — ${taskTitle(task)}` : ''}`
 }
 export function status(item: Occurrence, records: Observation[]) {
   if (item.execution_summary) return item.execution_summary.state === 'failure' ? 'failed' : item.execution_summary.state === 'success' ? 'success' : item.execution_summary.state
@@ -29,7 +38,6 @@ export function outcomeText(item: Occurrence, records: Observation[]) {
   if (own.some(record => record.kind === 'returned')) return 'returned — acceptance not established'
   return item.completeness === 'incomplete' ? 'incomplete — outcome unknown' : 'recorded — outcome unknown'
 }
-const seq = (item: Occurrence, records: Observation[]) => item.first_seq ?? Math.min(...records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => record.source_seq), Number.MAX_SAFE_INTEGER)
 export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relations: Followup[]) {
   const snapshots = [root, ...lineage], occurrences = snapshots.flatMap(item => item.occurrences), records = snapshots.flatMap(item => item.records), chain = snapshots.flatMap(item => item.chain ?? []), rawEdges = snapshots.flatMap(item => item.edges ?? [])
   // Producer chain support edges reference observations, not occurrence nodes.
@@ -44,50 +52,41 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], relation
   const planned = planAvailable ? root.tasks : []
   const planRuns = new Set(planned.map(task => task.run_ref))
   const reviews = planAvailable ? (root.review_definitions ?? []).filter(review => planRuns.has(review.run_ref)) : []
-  const chainOccurrences = new Set(chain.flatMap(item => item.occurrence_refs))
-  const chainSupport = new Set(recordedEdges.filter(edge => edge.type === 'chain_check' || edge.type === 'chain_checkpoint').flatMap(edge => [edge.from_ref, edge.to_ref]))
-  const visible = occurrences.filter(item => (!chainOccurrences.has(item.ref) && ['worker', 'fixing_worker', 'reviewer'].includes(item.role)) || chainSupport.has(item.ref) || item.stopping)
+  const occurrenceKey = (runRef: string, ref: string) => `${runRef}\u0000${ref}`
+  const chainOccurrences = new Set(chain.flatMap(item => item.occurrence_refs.map(ref => occurrenceKey(item.run_ref, ref))))
+  const chainSupport = new Set(recordedEdges.filter(edge => edge.type === 'chain_check' || edge.type === 'chain_checkpoint').flatMap(edge => [occurrenceKey(edge.run_ref, edge.from_ref), occurrenceKey(edge.run_ref, edge.to_ref)]))
+  const visible = occurrences.filter(item => (!chainOccurrences.has(occurrenceKey(item.run_ref, item.ref)) && ['worker', 'fixing_worker', 'reviewer'].includes(item.role)) || chainSupport.has(occurrenceKey(item.run_ref, item.ref)) || item.stopping)
+  const plannedByRef = new Map(planned.map(task => [task.ref, task]))
+  const occurrenceOwner = (item: Occurrence) => item.task_ref && plannedByRef.get(item.task_ref)?.run_ref === item.run_ref ? item.task_ref : null
+  const attemptLabel = (item: Occurrence) => `${roleName(item.role)} attempt ${item.occurrence_id ?? 'unknown'}`
   const nodes: Node[] = [
-    ...planned.map(task => ({ id: task.ref, position: { x: 0, y: 0 }, data: { label: task.label, status: `Plan progress: ${task.progress?.state ?? 'pending'}${task.annotation?.label ? ` — ${task.annotation.label}` : ''}` }, className: `planned-node progress-${task.progress?.state ?? 'pending'}` })),
-    ...reviews.map(review => ({ id: review.ref, position: { x: 0, y: 0 }, data: { label: review.label, status: 'Declared stage' }, className: 'planned-review-node' })),
+    ...planned.map(task => ({ id: task.ref, position: { x: 0, y: 0 }, data: { label: taskTitle(task), taskCode: taskCode(task), title: taskTitle(task), status: `Plan progress: ${task.progress?.state ?? 'pending'}${task.annotation?.label ? ` — ${task.annotation.label}` : ''}`, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null } }, className: `planned-node progress-${task.progress?.state ?? 'pending'}` })),
+    ...reviews.map(review => ({ id: review.ref, position: { x: 0, y: 0 }, data: { label: review.label, status: 'Declared stage', identity: { ref: review.ref, runRef: review.run_ref, kind: 'planned-review-definition' }, owner: null }, className: 'planned-review-node' })),
     ...visible.map(item => {
       const ownStatus = status(item, records)
       const color = item.stopping ? 'failed' : ownStatus === 'neutral' && occurrences.some(child => child.run_ref === item.run_ref && child.parent_ref === item.ref && status(child, records) === 'waiting') ? 'waiting' : ownStatus
       const support = recordedEdges.find(edge => edge.to_ref === item.ref && (edge.type === 'chain_check' || edge.type === 'chain_checkpoint'))
-      const task = snapshots.flatMap(snapshot => snapshot.tasks).find(candidate => candidate.ref === item.task_ref)
-      const label = support ? `${support.type === 'chain_check' ? 'Check' : 'Checkpoint'}${task ? ` ${task.label}` : ''}` : action(item, snapshots)
-      return { id: item.ref, position: { x: 0, y: 0 }, data: { label, status: color === 'waiting' ? 'waiting — recorded question' : outcomeText(item, records) }, className: `execution-node ${color}` }
+      const owner = occurrenceOwner(item)
+      const label = support ? `${support.type === 'chain_check' ? 'Check' : 'Checkpoint'} — ${attemptLabel(item)}` : `${attemptLabel(item)}${owner ? ` — ${taskTitle(plannedByRef.get(owner)!)}` : ''}`
+      return { id: item.ref, position: { x: 0, y: 0 }, data: { label, status: color === 'waiting' ? 'waiting — recorded question' : outcomeText(item, records), identity: { ref: item.ref, runRef: item.run_ref, occurrenceId: item.occurrence_id ?? null }, owner: owner ?? { scope: 'run', runRef: item.run_ref, state: 'unassigned' } }, className: `execution-node ${color}` }
     }),
     ...chain.map(item => {
+      const members = occurrences.filter(occurrence => item.occurrence_refs.includes(occurrence.ref) && occurrence.run_ref === item.run_ref).map(occurrenceOwner).filter((owner): owner is string => owner != null)
+      const owners = [...new Set(members)]
+      const owner = owners.length === 1 && members.length === item.occurrence_refs.length ? owners[0] : null
       const failed = item.outcome === 'failed' || item.outcome === 'interrupted'
-      const label = item.role === 'fixer' ? 'Fixing agent' : item.role === 'reviewer' ? `Review ${item.review_ordinal ?? 'unknown'}` : 'Recorded execution'
+      const label = item.role === 'fixer' ? `Fixing agent${item.fixing_round != null ? ` round ${item.fixing_round}` : ''}` : item.role === 'reviewer' ? `Review ${item.review_ordinal ?? 'unknown'}` : 'Recorded execution'
       const outcome = item.outcome === 'rejected' ? `rejected${item.findings.length ? ` — ${item.findings.length} finding${item.findings.length === 1 ? '' : 's'}` : ''}` : item.outcome
-      return { id: item.ref, position: { x: 0, y: 0 }, data: { label, status: outcome }, className: `execution-node chain-node ${failed ? 'failed' : item.outcome === 'unknown' ? 'neutral' : 'success'}` }
+      return { id: item.ref, position: { x: 0, y: 0 }, data: { label, status: outcome, identity: { ref: item.ref, runRef: item.run_ref, executionId: item.execution_id, occurrenceRefs: item.occurrence_refs }, owner: owner ?? { scope: 'run', runRef: item.run_ref, state: 'unassigned' } }, className: `execution-node chain-node ${failed ? 'failed' : item.outcome === 'unknown' ? 'neutral' : 'success'}` }
     })
   ]
   const edges: Edge[] = []
-  for (const task of planned) for (const prerequisite of task.prerequisite_refs) edges.push({ id: `dependency_${prerequisite}_${task.ref}`, source: prerequisite, target: task.ref, label: 'Declared prerequisite', type: 'smoothstep', className: 'dependency-edge' })
-  for (const item of visible.filter(item => !chainSupport.has(item.ref))) {
-    const parent = item.role === 'reviewer' ? reviews.find(review => review.run_ref === item.run_ref) : planned.find(task => task.ref === item.task_ref)
-    if (parent) edges.push({ id: `attachment_${parent.ref}_${item.ref}`, source: parent.ref, target: item.ref, label: 'Recorded attachment', type: 'smoothstep', className: 'attachment-edge' })
-  }
-  for (const run of new Set(visible.map(item => item.run_ref))) {
-    const agents = visible.filter(item => item.run_ref === run && item.role !== 'non_model' && !chainOccurrences.has(item.ref)).sort((a, b) => seq(a, records) - seq(b, records))
-    for (let index = 1; index < agents.length; index++) edges.push({ id: `sequence_${agents[index - 1].ref}_${agents[index].ref}`, source: agents[index - 1].ref, target: agents[index].ref, label: 'Recorded sequence', type: 'smoothstep', className: 'sequence-edge' })
-    for (const stop of visible.filter(item => item.run_ref === run && item.stopping)) {
-      const parent = agents.find(item => item.ref === stop.support_ref)
-      if (parent) edges.push({ id: `stop_${stop.ref}`, source: parent.ref, target: stop.ref, label: 'Stopping step', type: 'smoothstep' })
-    }
-  }
+  for (const task of planned) for (const prerequisite of task.prerequisite_refs) edges.push({ id: `dependency_${prerequisite}_${task.ref}`, source: prerequisite, target: task.ref, type: 'smoothstep', className: 'dependency-edge', data: { relation: 'declared-prerequisite', identity: { prerequisiteRef: prerequisite, dependentRef: task.ref, runRef: task.run_ref } } })
   for (const edge of recordedEdges.filter(edge => edge.type.startsWith('chain_') && nodes.some(node => node.id === edge.from_ref) && nodes.some(node => node.id === edge.to_ref))) {
     const label = edge.type === 'chain_trigger' ? 'Recorded trigger' : edge.type === 'chain_predecessor' ? 'Recorded predecessor' : edge.type === 'chain_check' ? 'Fixer check' : 'Fixer checkpoint'
-    edges.push({ id: edge.ref, source: edge.from_ref, target: edge.to_ref, label, type: 'smoothstep', className: 'chain-edge' })
+    edges.push({ id: edge.ref, source: edge.from_ref, target: edge.to_ref, label, type: 'smoothstep', className: 'chain-edge', data: { relation: edge.type, resolution: edge.resolution, identity: { ref: edge.ref, runRef: edge.run_ref, fromRef: edge.from_ref, toRef: edge.to_ref } } })
   }
-  for (const relation of relations.filter(item => item.resolution === 'resolved')) {
-    if (!visible.some(item => item.ref === relation.review_occurrence_ref && item.run_ref === relation.source_run_ref)) continue
-    const fix = visible.filter(item => item.run_ref === relation.run_ref && item.role === 'fixing_worker').sort((a, b) => seq(a, records) - seq(b, records))[0]
-    if (fix) edges.push({ id: `followup_${relation.review_occurrence_ref}_${fix.ref}`, source: relation.review_occurrence_ref, target: fix.ref, label: 'Declared correction', type: 'smoothstep', className: 'correction-edge' })
-  }
+  void relations // T002 projects only explicit qualified correction relations.
   return { nodes, edges, topology: JSON.stringify({ nodes: nodes.map(node => node.id).sort(), edges: edges.map(edge => [edge.id, edge.source, edge.target]).sort() }) }
 }
 export function recordText(record: Observation) {
