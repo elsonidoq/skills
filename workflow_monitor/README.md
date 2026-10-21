@@ -103,9 +103,15 @@ detail; unchanged-topology status polling preserves a deliberate viewport, posit
 ownership and selection while updating visible status. Because the viewport is controlled, its
 state is synchronized on every graph move, rather than only when a pan/drag ends; the focused
 browser regression holds a background pan and verifies the viewport transform changes before
-release and remains there afterward. The closed snapshot API is polled every **60 seconds**; this
-is not a claim that polling alone caused previous slowness. The owner’s same-Mac interactive
-acceptance remains a separate pending manual gate. Stale old-run fetch/layout results
+release and remains there afterward. The rendered node projection also retains node identity
+across viewport-only updates: ReactFlow otherwise discards measured dimensions and handle bounds
+for newly supplied unmeasured nodes, temporarily hiding inner nodes and removing connectors until
+remeasurement. A focused browser regression checks inner-node/edge visibility during movement and
+observes transient hidden-style changes and connector removals that end-of-frame geometry can miss.
+This mechanism was reproduced in Linux Chrome against the production view; it is not evidence of
+Mac compositor behavior or same-Mac visual acceptance. The closed snapshot API is polled every
+**60 seconds**; this is not a claim that polling alone caused previous slowness. The owner’s same-Mac
+interactive acceptance remains a separate pending manual gate. Stale old-run fetch/layout results
 are discarded. Read freshness, last successful read and last recorded activity remain separate.
 Failed reads retain sanitized evidence with a warning. Recorded runner `live`/`stopped`/`unknown`
 qualification is not proof of progress.

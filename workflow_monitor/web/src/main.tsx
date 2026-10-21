@@ -159,6 +159,13 @@ function App() {
     const supporting = all.flatMap(item => item.occurrences).filter(item => item.run_ref === occurrence.run_ref && item.role === 'non_model' && (item.support_ref === occurrence.ref || item.parent_ref === occurrence.ref))
     return <><h3>{action(occurrence, all)}</h3><p>Execution outcome: {outcomeText(occurrence, own)}.</p><p>What happened: {own.length ? 'Recorded lifecycle evidence is available in technical references.' : 'not recorded'}.</p><p>Current blocker: {occurrence.stopping ? 'Recorded workflow stopping step.' : 'not recorded'}.</p>{occurrence.execution_summary?.qualification && <p>Recorded execution qualification: {occurrence.execution_summary.qualification}.</p>}{technical(<><p>Occurrence ID: {occurrence.occurrence_id ?? 'unknown'}; execution {occurrence.ref}{occurrence.task_ref ? `; task ${occurrence.task_ref}` : ''}; {source(occurrence.run_ref)}.</p>{own.map(item => <p key={item.ref}>{recordText(item)}</p>)}{supporting.map(item => <section key={item.ref}><h4>{action(item, all)}: {outcomeText(item, all.flatMap(value => value.records))}</h4><p>{item.ref}; {item.stopping ? 'workflow stopping step' : 'supporting observation'}</p>{all.flatMap(value => value.records).filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref).map(record => <p key={record.ref}>{recordText(record)}</p>)}</section>)}</>)}{acceptanceDetails(runFor(occurrence.run_ref))}<p>Only loaded observations are shown; use history below for retained evidence.</p></>
   }, [edges, lineage, selected, snapshot])
+  // ReactFlow retains measured dimensions/handles by node identity. Recreating these
+  // unmeasured inputs on viewport moves hides inner nodes and removes their edges
+  // until ResizeObserver measures them again; owner-group inputs already stay stable.
+  const renderedNodes = useMemo(() => nodes.map(node => node.id.startsWith('group:') ? node : ({ ...node, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
+    <strong>{String(node.data.label)}</strong>
+    <small>{String(node.data.status)}</small>
+    </> } })), [nodes, selected])
   const allOccurrences = snapshot ? [snapshot, ...lineage].flatMap(item => item.occurrences) : []; const failures = allOccurrences.filter(item => item.outcome === 'failed').length; const incomplete = allOccurrences.filter(item => item.completeness === 'incomplete').length; const allTasks = [snapshot, ...lineage].flatMap(value => value?.tasks ?? []); const waiting = allTasks.filter(task => task.annotation?.code === 'waiting_for_input').length + allOccurrences.filter(item => !allTasks.some(task => task.ref === item.task_ref) && status(item, [snapshot, ...lineage].flatMap(value => value?.records ?? [])) === 'waiting').length
   const selectedRunInfo = runs.find(run => run.ref === selectedRun); const acceptance = selectedRunInfo?.review_acceptance; const acceptanceText = acceptance?.state === 'accepted_full_range' ? `Full-range acceptance: ${acceptance.base} → ${acceptance.head}` : acceptance?.state === 'correction_only' ? 'Correction-only review; current head is not accepted.' : 'Current lineage acceptance is unknown.'
   const freshness = snapshot?.observation; const freshnessText = freshness ? `Read ${freshness.read_state}; last successful read ${freshness.last_success_at ?? 'unknown'}; last recorded activity ${freshness.last_recorded_at ?? 'unknown'}${freshness.warnings.length ? `; warning: ${freshness.warnings.join(', ')}` : ''}.` : 'Read state unknown.'
@@ -188,10 +195,7 @@ function App() {
     </div>
     <div className="execution-view">
     <div className="graph" aria-label="Workflow graph">
-    <ReactFlow<Node, Edge> nodes={nodes.map(node => node.id.startsWith('group:') ? node : ({ ...node, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
-    <strong>{String(node.data.label)}</strong>
-    <small>{String(node.data.status)}</small>
-    </> } }))} edges={edges.map(edge => ({ ...edge, selected: selected?.kind === 'edge' && selected.id === edge.id }))} onInit={instance => { flow.current = instance }} minZoom={.15} viewport={viewport} onMove={(_, next) => setViewport(next)} onNodeClick={(_, node) => { if (!node.id.startsWith('group:')) setSelected({ kind: 'node', id: node.id }) }} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}>
+    <ReactFlow<Node, Edge> nodes={renderedNodes} edges={edges.map(edge => ({ ...edge, selected: selected?.kind === 'edge' && selected.id === edge.id }))} onInit={instance => { flow.current = instance }} minZoom={.15} viewport={viewport} onMove={(_, next) => setViewport(next)} onNodeClick={(_, node) => { if (!node.id.startsWith('group:')) setSelected({ kind: 'node', id: node.id }) }} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}>
     <Background />
     <Controls />
     </ReactFlow>

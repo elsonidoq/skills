@@ -250,3 +250,56 @@ test('updates the controlled viewport while background panning is held', async (
   await page.mouse.up()
   await expect.poll(() => page.locator('.react-flow__viewport').evaluate(element => element.style.transform)).toBe(whileHeld)
 })
+
+test('keeps inner nodes and connectors visible throughout background movement', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('.planned-node')).toHaveCount(3)
+  await expect(page.locator('.react-flow__edge-path')).toHaveCount(1)
+  await page.waitForTimeout(250)
+  const start = await page.evaluate(() => {
+    const pane = document.querySelector('.react-flow__pane')!
+    const bounds = pane.getBoundingClientRect()
+    for (let y = bounds.top + 20; y < bounds.bottom - 20; y += 20) {
+      for (let x = bounds.left + 20; x < bounds.right - 20; x += 20) {
+        if (document.elementFromPoint(x, y) === pane) return { x, y }
+      }
+    }
+    throw new Error('No blank graph pane point available for background pan.')
+  })
+  await page.evaluate(() => {
+    const failures: string[] = []
+    ;(window as Window & { panVisibilityFailures?: string[] }).panVisibilityFailures = failures
+    // End-of-frame geometry misses nodes hidden and remeasured within the same frame.
+    // Retain both sides of style mutations and edge removals, not just the final DOM.
+    const observer = new MutationObserver(records => {
+      for (const record of records) {
+        if (record.type === 'attributes' && record.target instanceof HTMLElement && record.target.matches('.react-flow__node:not(.owner-group)')) {
+          if (record.oldValue?.includes('visibility: hidden') || record.target.style.visibility === 'hidden') failures.push(`hidden node: ${record.target.dataset.id}`)
+        }
+        for (const removed of record.removedNodes) {
+          if (removed instanceof Element && (removed.matches('.react-flow__edge') || removed.querySelector('.react-flow__edge'))) failures.push('removed connector')
+        }
+      }
+    })
+    observer.observe(document.querySelector('.react-flow__viewport')!, { subtree: true, attributes: true, attributeFilter: ['style'], attributeOldValue: true, childList: true })
+  })
+  await page.mouse.move(start.x, start.y)
+  await page.mouse.down()
+  for (let step = 1; step <= 8; step++) {
+    await page.mouse.move(start.x + step * 4, start.y + step * 3)
+    const visible = await page.evaluate(() => {
+      const nodes = [...document.querySelectorAll<HTMLElement>('.react-flow__node:not(.owner-group)')]
+      const edges = [...document.querySelectorAll<SVGElement>('.react-flow__edge-path')]
+      return nodes.length > 0 && edges.length === 1 && [...nodes, ...edges].every(element => {
+        const style = getComputedStyle(element)
+        const bounds = element.getBoundingClientRect()
+        const hasGeometry = element instanceof SVGPathElement ? element.getTotalLength() > 0 : bounds.width > 0 && bounds.height > 0
+        return style.visibility === 'visible' && style.display !== 'none' && style.opacity !== '0' && hasGeometry
+      })
+    })
+    expect(visible).toBe(true)
+  }
+  const failures = await page.evaluate(() => (window as Window & { panVisibilityFailures?: string[] }).panVisibilityFailures)
+  await page.mouse.up()
+  expect(failures).toEqual([])
+})
