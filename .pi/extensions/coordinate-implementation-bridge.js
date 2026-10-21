@@ -18,6 +18,13 @@ const replyParameters = {
     request_id: {type: 'string'}, run: {type: 'string'}, answer: {type: 'string'},
   }, required: ['request_id', 'run', 'answer'],
 };
+const steerParameters = {
+  type: 'object', additionalProperties: false,
+  properties: {
+    request_id: {type: 'string'}, run: {type: 'string'}, task_id: {type: 'string'},
+    invocation_id: {type: 'string'}, instruction: {type: 'string'},
+  }, required: ['request_id', 'run', 'task_id', 'invocation_id', 'instruction'],
+};
 
 function textResult(text, details = undefined) {
   return {content: [{type: 'text', text}], details};
@@ -45,10 +52,62 @@ export default function coordinateImplementationBridge(pi) {
   const send = (socket, value) => {
     if (!socket.destroyed) socket.end(JSON.stringify(value) + '\n');
   };
+  const write = (socket, value) => {
+    return !socket.destroyed && socket.write(JSON.stringify(value) + '\n');
+  };
+  const exactTarget = value => value && typeof value === 'object' &&
+    ['run_id', 'task_id', 'invocation_id', 'session_id', 'role'].every(key => typeof value[key] === 'string' && value[key]) &&
+    ['task_worker', 'corrective_worker', 'fixer'].includes(value.role);
+  const sameTarget = (left, right) => exactTarget(left) && exactTarget(right) &&
+    ['run_id', 'task_id', 'invocation_id', 'session_id', 'role'].every(key => left[key] === right[key]);
+  const settleUnknown = (bridge, target) => {
+    for (const [requestId, direction] of bridge.directions) {
+      if (direction.target === target && ['accepted', 'queued'].includes(direction.status)) {
+        direction.status = 'unknown';
+        pi.sendMessage({customType: 'coordinate_implementation_steering_status', display: true,
+          content: `Coordinate implementation direction ${requestId}: unknown.`,
+          details: {run: bridge.run, request_id: requestId, status: 'unknown',
+            task_id: target.task_id, invocation_id: target.invocation_id}},
+          {triggerTurn: true, deliverAs: 'followUp'});
+      }
+    }
+  };
 
   const receive = (bridge, socket, line) => {
     let request;
     try { request = JSON.parse(line); } catch { send(socket, {error: 'invalid bridge request'}); return; }
+    if (request && ['steering_target', 'steering_status', 'steering_closed'].includes(request.type)) {
+      if (request.token !== bridge.token || request.session_id !== bridge.session || request.run_id !== bridge.run) {
+        send(socket, {error: 'bridge request does not target this parent session and run'}); return;
+      }
+      if (request.type === 'steering_target') {
+        if (!exactTarget(request.target) || request.target.run_id !== bridge.run) { send(socket, {error: 'invalid active steering target'}); return; }
+        bridge.target = {target: request.target, socket};
+        pi.sendMessage({customType: 'coordinate_implementation_target', display: true,
+          content: `Coordinate implementation active target: ${request.target.task_id}/${request.target.invocation_id}.`,
+          details: {run: bridge.run, task_id: request.target.task_id, invocation_id: request.target.invocation_id, role: request.target.role}},
+          {triggerTurn: true, deliverAs: 'followUp'});
+        return;
+      }
+      if (request.type === 'steering_closed') {
+        if (bridge.target?.socket === socket && sameTarget(request.target, bridge.target.target)) {
+          settleUnknown(bridge, bridge.target.target);
+          bridge.target = undefined;
+        }
+        return;
+      }
+      if (typeof request.request_id !== 'string' || typeof request.status !== 'string' ||
+          bridge.target?.socket !== socket || !sameTarget(request.target, bridge.target.target)) { send(socket, {error: 'invalid steering status'}); return; }
+      const direction = bridge.directions.get(request.request_id);
+      if (!direction) return;
+      direction.status = request.status;
+      pi.sendMessage({customType: 'coordinate_implementation_steering_status', display: true,
+        content: `Coordinate implementation direction ${request.request_id}: ${request.status}.`,
+        details: {run: bridge.run, request_id: request.request_id, status: request.status,
+          task_id: direction.target.task_id, invocation_id: direction.target.invocation_id}},
+        {triggerTurn: true, deliverAs: 'followUp'});
+      return;
+    }
     if (!request || !['ready', 'question'].includes(request.type) || request.token !== bridge.token ||
         request.session_id !== bridge.session || request.run_id !== bridge.run ||
         typeof request.request_id !== 'string' || !request.request_id ||
@@ -89,26 +148,30 @@ export default function coordinateImplementationBridge(pi) {
       const session = ctx.sessionManager.getSessionId();
       const token = randomBytes(32).toString('hex');
       const sockets = new Set();
-      const bridge = {directory, endpoint, session, token, run: params.run, sockets, pending: undefined,
-        server: undefined, child: undefined, exited: undefined, closing: undefined, abortSignal: signal, abort: undefined};
+      const bridge = {directory, endpoint, session, token, run: params.run, sockets, pending: undefined, target: undefined,
+        directions: new Map(), server: undefined, child: undefined, exited: undefined, closing: undefined, abortSignal: signal, abort: undefined};
       try {
         await chmod(directory, 0o700);
         const server = createServer(socket => {
           sockets.add(socket);
           let data = '';
-          let handled = false;
           socket.setEncoding('utf8');
           socket.on('data', chunk => {
             data += chunk;
-            const end = data.indexOf('\n');
-            if (!handled && end >= 0) {
-              handled = true;
-              receive(bridge, socket, data.slice(0, end));
+            let end;
+            while ((end = data.indexOf('\n')) >= 0) {
+              const line = data.slice(0, end);
+              data = data.slice(end + 1);
+              receive(bridge, socket, line);
             }
           });
           socket.on('close', () => {
             sockets.delete(socket);
             if (bridge.pending?.socket === socket) bridge.pending = undefined;
+            if (bridge.target?.socket === socket) {
+              settleUnknown(bridge, bridge.target.target);
+              bridge.target = undefined;
+            }
           });
           socket.on('error', () => {});
         });
@@ -152,6 +215,35 @@ export default function coordinateImplementationBridge(pi) {
         else await rm(directory, {recursive: true, force: true});
         throw error;
       }
+    },
+  });
+
+  pi.registerTool({
+    name: 'coordinate_implementation_steer', label: 'Steer active coordinate implementation worker',
+    description: 'Relay an owner direction to one exact active worker/fixer invocation; returns queue status, never compliance.',
+    parameters: steerParameters, executionMode: 'sequential',
+    async execute(_id, params, _signal, _update, ctx) {
+      if (!active || ctx.sessionManager.getSessionId() !== active.session || params.run !== active.run) {
+        throw new Error('no matching active coordinate-implementation run');
+      }
+      const target = active.target;
+      if (!target || target.target.task_id !== params.task_id || target.target.invocation_id !== params.invocation_id) {
+        throw new Error('exact active worker target unavailable; inspect the current target before sending');
+      }
+      const prior = active.directions.get(params.request_id);
+      if (prior) {
+        if (prior.target !== target.target) throw new Error('direction request ID already targets another invocation');
+        return textResult(`Direction ${params.request_id} is ${prior.status}.`, {request_id: params.request_id, status: prior.status});
+      }
+      const direction = {target: target.target, status: 'accepted'};
+      active.directions.set(params.request_id, direction);
+      if (!write(target.socket, {type: 'steer', request_id: params.request_id, target: target.target, instruction: params.instruction})) {
+        direction.status = 'unknown';
+        return textResult(`Direction ${params.request_id} status is unknown: the active target connection closed.`,
+          {request_id: params.request_id, status: 'unknown', task_id: params.task_id, invocation_id: params.invocation_id});
+      }
+      return textResult(`Direction ${params.request_id} accepted for the exact active worker; awaiting queue status.`,
+        {request_id: params.request_id, status: 'accepted', task_id: params.task_id, invocation_id: params.invocation_id});
     },
   });
 

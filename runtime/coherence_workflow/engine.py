@@ -193,6 +193,11 @@ class Engine:
                 outcome = 'settled'
                 # Do not attribute the previous prompt's interval to a failed call.
                 worker.last_interval = None
+                steering = {'run_id': self.run, 'task_id': fix_task['id'], 'invocation_id': invocation_id,
+                            'role': 'fixer'}
+                if getattr(worker, 'parent_steering_available', lambda: False)():
+                    worker.enable_parent_steering(steering)
+                    kwargs['steering'] = steering
                 try:
                     result = self._prompt_worker(worker, prompt, **kwargs)
                 except BaseException as exc:
@@ -603,6 +608,11 @@ class Engine:
                                  'saved_session': getattr(worker, 'saved_session', None)}
                         store.history(self.run, task['id'], 'worker_invocation', 'started', facts)
                         recorder.emit(occurrence, 'worker', 'started', task_id=task['id'], facts=public)
+                        steering = {'run_id': self.run, 'task_id': task['id'], 'invocation_id': invocation_id,
+                                    'role': invocation_kind}
+                        if getattr(worker, 'parent_steering_available', lambda: False)():
+                            worker.enable_parent_steering(steering)
+                            kwargs['steering'] = steering
                         try:
                             result = self._prompt_worker(worker, prompt, **kwargs)
                         except BaseException as exc:

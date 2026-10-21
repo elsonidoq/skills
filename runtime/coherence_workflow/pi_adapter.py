@@ -58,6 +58,83 @@ def parent_question(question, *, ready=False):
     return response['answer']
 
 
+class _ParentSteering:
+    """Private, invocation-local bridge control; never persists direction text."""
+    def __init__(self, adapter, expected):
+        self.adapter, self.expected = adapter, expected
+        self.socket = None
+        self.target = None
+        self.lock = threading.Lock()
+        self.closed = False
+
+    def _send(self, value):
+        with self.lock:
+            if self.closed or self.socket is None:
+                return False
+            try:
+                self.socket.sendall((canonical(value) + '\n').encode())
+                return True
+            except OSError:
+                self.closed = True
+                return False
+
+    def activate(self, target):
+        if any(target.get(key) != self.expected.get(key) for key in self.expected) or not isinstance(target.get('session_id'), str):
+            raise Blocked('SDK host advertised a different steering target')
+        self.target = target
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            client.connect(os.environ['COHERENCE_PARENT_BRIDGE_SOCKET'])
+            self.socket = client
+            request = {'type': 'steering_target', 'request_id': uuid.uuid4().hex,
+                       'run_id': os.environ['COHERENCE_PARENT_BRIDGE_RUN'],
+                       'session_id': os.environ['COHERENCE_PARENT_BRIDGE_SESSION'],
+                       'token': os.environ['COHERENCE_PARENT_BRIDGE_TOKEN'], 'target': target}
+            if not self._send(request):
+                raise OSError('bridge connection closed')
+        except OSError as exc:
+            client.close()
+            self.closed = True
+            raise Blocked('parent steering bridge unavailable: ' + str(exc)) from None
+
+        def controls():
+            try:
+                stream = client.makefile('r', encoding='utf-8')
+                for line in stream:
+                    value = json.loads(line)
+                    if value.get('type') != 'steer' or not isinstance(value.get('request_id'), str):
+                        continue
+                    try:
+                        self.adapter.steer(value['request_id'], value.get('instruction'), target=value.get('target'))
+                    except Blocked:
+                        # steer() reports unknown for write loss; a rejected target
+                        # has no host status, so report its known unavailability.
+                        self.status({'request_id': value['request_id'], 'status': 'failed-unavailable'})
+            except (OSError, ValueError):
+                pass
+            finally:
+                self.closed = True
+        threading.Thread(target=controls, daemon=True).start()
+
+    def status(self, update):
+        self._send({'type': 'steering_status', 'run_id': os.environ.get('COHERENCE_PARENT_BRIDGE_RUN'),
+                    'session_id': os.environ.get('COHERENCE_PARENT_BRIDGE_SESSION'),
+                    'token': os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN'), 'target': self.target, **update})
+
+    def close(self):
+        self._send({'type': 'steering_closed', 'run_id': os.environ.get('COHERENCE_PARENT_BRIDGE_RUN'),
+                    'session_id': os.environ.get('COHERENCE_PARENT_BRIDGE_SESSION'),
+                    'token': os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN'), 'target': self.target})
+        with self.lock:
+            self.closed = True
+            if self.socket is not None:
+                try:
+                    self.socket.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                self.socket.close()
+
+
 class PiAdapter:
     def __init__(self, project, executor, *, question=None, observe=None, observe_question=None,
                  steering_status=None):
@@ -76,6 +153,23 @@ class PiAdapter:
         self.steering_states = {}
         self._send_control = None
         self._control_lock = threading.Lock()
+        self._parent_steering = None
+
+    def parent_steering_available(self):
+        """Whether this attached parent can receive active-target updates."""
+        return all(os.environ.get(name) for name in (
+            'COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+            'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN'))
+
+    def enable_parent_steering(self, target):
+        """Limit bridge control to this one runner-created invocation target."""
+        if not self.parent_steering_available():
+            return False
+        if not isinstance(target, dict) or any(not isinstance(target.get(key), str) or not target[key]
+                                               for key in ('run_id', 'task_id', 'invocation_id', 'role')):
+            raise Blocked('parent steering needs an exact runner-created target')
+        self._parent_steering = _ParentSteering(self, target)
+        return True
 
     def steer(self, request_id, instruction, *, target=None):
         """Send one exact-target direction to the currently active host only."""
@@ -238,16 +332,21 @@ class PiAdapter:
                             with self._control_lock:
                                 self.active_target = target
                                 self._send_control = send
+                            if self._parent_steering is not None:
+                                self._parent_steering.activate(target)
                         elif kind == 'steer':
                             request_id = value.get('request_id')
                             status = value.get('status')
                             if not isinstance(request_id, str) or not isinstance(status, str):
                                 raise Blocked('SDK host returned an invalid steering status')
                             self.steering_states[request_id] = status
+                            update = {'request_id': request_id, 'status': status}
                             try:
-                                self.steering_status({'request_id': request_id, 'status': status})
+                                self.steering_status(update)
                             except Exception:
                                 pass
+                            if self._parent_steering is not None:
+                                self._parent_steering.status(update)
                         elif kind == 'session':
                             session = value.get('session')
                             if not (isinstance(session, dict) and isinstance(session.get('id'), str)
@@ -304,6 +403,9 @@ class PiAdapter:
                 with self._control_lock:
                     self.active_target = None
                     self._send_control = None
+                if self._parent_steering is not None:
+                    self._parent_steering.close()
+                    self._parent_steering = None
                 close_input()
                 if proc.poll() is None:
                     proc.terminate()

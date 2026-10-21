@@ -161,7 +161,9 @@ created session identity in an active target record; callback replies are `reply
 correlated to host callback IDs; and `steer` control records carry an exact target, request ID
 and inert owner-direction text. The Python adapter is the sole initial-request opt-in: it has one
 stdout decoder, serializes stdin writes, exposes the active target only for that host invocation,
-and sends controls through its `steer` hook. It continues decoding target/status records while a
+and sends controls through its `steer` hook. For an attached parent bridge it privately publishes
+only that runner-created exact target and forwards controls matching it; target/session tokens and
+direction text are never monitoring/SQLite/public data. It continues decoding target/status records while a
 callback waits; a callback reply remains correlated and cannot be supplied by a control record.
 The host reports accepted, queued, consumed, failed-unavailable or unknown separately. It
 validates consumption only from the matching SDK user `message_start`; queue insertion/removal

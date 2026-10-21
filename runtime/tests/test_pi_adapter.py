@@ -103,6 +103,44 @@ class SDKTransportTests(ProjectTest):
         self.assertEqual(outcome, ['steering complete'])
         self.assertEqual(adapter.steering_states.get('direction-1'), 'consumed')
 
+    def test_parent_bridge_relays_only_the_advertised_exact_target(self):
+        endpoint = str(self.root/'steering.sock')
+        target = {'run_id': 'run', 'task_id': 'T010', 'invocation_id': 'invocation', 'role': 'task_worker'}
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server.bind(endpoint)
+        server.listen(1)
+        received = []
+        def serve():
+            client, _ = server.accept()
+            with client:
+                stream = client.makefile('r', encoding='utf-8')
+                active = json.loads(stream.readline())
+                received.append(active)
+                client.sendall((json.dumps({'type': 'steer', 'request_id': 'direction',
+                                            'target': active['target'], 'instruction': 'Be pragmatic'}) + '\n').encode())
+                received.extend(json.loads(line) for line in stream if line.strip())
+            server.close()
+        thread = threading.Thread(target=serve)
+        thread.start()
+        body = """target=request['steering'] | {'session_id':'host-session'}
+print(json.dumps({'type':'target','status':'active','target':target}),flush=True)
+control=json.loads(input());assert control['type'] == 'steer';assert control['target'] == target
+print(json.dumps({'type':'steer','request_id':control['request_id'],'status':'accepted'}),flush=True)
+print(json.dumps({'type':'steer','request_id':control['request_id'],'status':'queued'}),flush=True)
+print(json.dumps({'type':'result','text':'complete'}),flush=True)
+"""
+        a, b = self.fixture(body)
+        values = {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint, 'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
+                  'COHERENCE_PARENT_BRIDGE_SESSION': 'parent', 'COHERENCE_PARENT_BRIDGE_RUN': 'run'}
+        adapter = PiAdapter(self.project, {})
+        with a, b, patch.dict(os.environ, values, clear=False):
+            self.assertTrue(adapter.enable_parent_steering(target))
+            self.assertEqual(adapter.prompt('fixture', steering=target), 'complete')
+        thread.join(5)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(received[0]['target'], target | {'session_id': 'host-session'})
+        self.assertEqual([item['status'] for item in received[1:] if item['type'] == 'steering_status'], ['accepted', 'queued'])
+
     def test_local_path_error_can_be_corrected_same_host_conversation(self):
         body = '''print(json.dumps({'type':'claim','path':'bad.txt'}),flush=True)
 a=json.loads(input());assert 'error' in a
