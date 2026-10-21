@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mock, test } from 'node:test';
+import readline from 'node:readline';
 import { AgentSession, createReadTool, createEditTool, createWriteTool, createBashTool } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
-import { createWorkflowSession, mutationTools, promptSession } from '../pi-host/host.mjs';
+import { createWorkflowSession, mutationTools, promptSession, steeringController } from '../pi-host/host.mjs';
 
 test('actual SDK worker exposes ask_owner while independent reviewer remains read-only', async () => {
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-owner-tools-'));
@@ -65,6 +66,101 @@ test('provider-bound routine authority reaches the SDK prompt without sending a 
   const authority = 'Routine authority: isolated tests and local servers need no owner question.';
   assert.equal(await promptSession(session, authority, () => {}), 'offline');
   assert.equal(received, authority);
+});
+
+test('steering uses the installed SDK queue and matching user event, not queue insertion as consumption', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-steering-sdk-'));
+  const events = [];
+  try {
+    const session = await createWorkflowSession({project,
+      executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'}}, async () => ({}));
+    try {
+      const sdkEvents = [];
+      session.subscribe(event => sdkEvents.push(event));
+      // This is the controlled local provider seam: the real SDK queue receives
+      // steer(), then emits its normal user-message event on the next turn.
+      session._isAgentRunActive = true;
+      let consumed;
+      session.agent.steer = message => { consumed = new Promise(resolve => setImmediate(resolve)).then(() =>
+        session._handleAgentEvent({type: 'message_start', message})); };
+      const target = {run_id: 'run', task_id: 'T009', invocation_id: 'invocation', role: 'task_worker'};
+      const controller = steeringController({steering: target}, session, event => events.push(event));
+      const control = {type: 'steer', request_id: 'direction-1', target: {...target,
+        session_id: session.coherenceSavedSession.id}, instruction: '/do not execute'};
+      await controller.steer(control);
+      await consumed;
+      assert.ok(sdkEvents.some(event => event.type === 'message_start'), 'installed SDK emitted the user-message event');
+      assert.equal(sdkEvents.find(event => event.type === 'message_start').message.role, 'user');
+      assert.match(JSON.stringify(sdkEvents.find(event => event.type === 'message_start').message.content), /owner-direction/);
+      assert.deepEqual(events.filter(event => event.type === 'steer').map(event => event.status),
+        ['accepted', 'queued', 'consumed']);
+      assert.equal(session._steeringMessages.length, 0, 'actual SDK message_start removes the queued envelope');
+      await controller.steer(control);
+      assert.equal(events.filter(event => event.type === 'steer' && event.request_id === 'direction-1').at(-1).status,
+        'consumed', 'same correlation ID never queues twice');
+      const second = {...control, request_id: 'direction-2'};
+      await controller.steer(second);
+      await consumed;
+      assert.deepEqual([...new Set(events.filter(event => event.type === 'steer' && event.status === 'consumed')
+        .map(event => event.request_id))].sort(), ['direction-1', 'direction-2'],
+      'identical owner text with a new ID remains distinct');
+      controller.close();
+    } finally { session.dispose(); }
+  } finally { await fs.rm(project, {recursive: true, force: true}); }
+});
+
+test('opted-in host dispatches a control while a correlated callback remains pending', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-steering-host-'));
+  const host = fileURLToPath(new URL('../pi-host/host.mjs', import.meta.url));
+  const preload = fileURLToPath(new URL('cleanup_adapter_fixture.mjs', import.meta.url));
+  const child = spawn(process.execPath, [host], {cwd: root, stdio: ['pipe', 'pipe', 'pipe'], env: {
+    ...process.env, COHERENCE_HOST_PRELOAD: '1', NODE_OPTIONS: `--import=${preload}`,
+    PI_CODING_AGENT_DIR: path.join(root, 'private-agent'),
+  }});
+  const target = {run_id: 'run', task_id: 'T009', invocation_id: 'invocation', role: 'task_worker'};
+  const records = [];
+  const send = value => child.stdin.write(JSON.stringify(value) + '\n');
+  try {
+    send({project: root, executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'},
+      prompt: 'fixture', steering: target});
+    const lines = readline.createInterface({input: child.stdout});
+    for await (const line of lines) {
+      const record = JSON.parse(line);
+      records.push(record);
+      if (record.type === 'target') send({type: 'steer', request_id: 'direction', target: record.target, instruction: '/inert'});
+      if (record.type === 'question') {
+        assert.equal(record.request_id, 'callback-1');
+        // The control was already handled; this reply can only resolve its callback.
+        send({type: 'reply', request_id: record.request_id, reply: {answer: 'ordinary callback'}});
+      }
+      if (record.type === 'result') break;
+    }
+    assert.equal(records.at(-1).type, 'result');
+    assert.deepEqual(records.filter(record => record.type === 'steer').map(record => record.status).slice(0, 2), ['accepted', 'queued']);
+    if (child.exitCode === null) await new Promise((resolve, reject) => child.once('exit', code =>
+      code === 0 ? resolve() : reject(new Error(`host exit ${code}`))));
+    else assert.equal(child.exitCode, 0);
+  } finally {
+    child.stdin.end();
+    if (child.exitCode === null) child.kill('SIGTERM');
+    await fs.rm(root, {recursive: true, force: true});
+  }
+});
+
+test('steering rejects mismatched or closed targets without retargeting', async () => {
+  const subscriptions = [];
+  const events = [];
+  const session = {coherenceSavedSession: {id: 'session'}, subscribe(fn) {
+    subscriptions.push(fn); return () => subscriptions.splice(subscriptions.indexOf(fn), 1);
+  }, async steer() { throw new Error('must not steer another target'); }};
+  const target = {run_id: 'run', task_id: 'T009', invocation_id: 'invocation', role: 'task_worker'};
+  const controller = steeringController({steering: target}, session, event => events.push(event));
+  await controller.steer({type: 'steer', request_id: 'wrong', instruction: 'hello', target: {...target, task_id: 'other', session_id: 'session'}});
+  subscriptions[0]({type: 'agent_settled'});
+  await controller.steer({type: 'steer', request_id: 'closed', instruction: 'hello', target: {...target, session_id: 'session'}});
+  assert.deepEqual(events.filter(event => event.type === 'steer').map(event => event.status),
+    ['failed-unavailable', 'failed-unavailable']);
+  controller.close();
 });
 
 test('SDK compaction events continue to actual prompt completion without telemetry or deadline', async () => {

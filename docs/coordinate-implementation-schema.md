@@ -127,7 +127,17 @@ exit/interruption outcome is retained before the next command, including earlier
 
 `pi_adapter.py` and `pi-host/host.mjs` exchange newline-delimited JSON for a prompt, local
 edit/write path checks, current owner questions, optional event observations and final text/error.
-When explicitly launched by the project parent-session bridge, the adapter uses one private
+A caller that explicitly supplies an initial worker/fixer `steering` target (`run_id`,
+`task_id`, `invocation_id`, and closed worker/fixer `role`) selects the multiplexed host protocol: the host privately advertises the
+created session identity in an active target record; callback replies are `reply` records
+correlated to host callback IDs; and `steer` control records carry an exact target, request ID
+and inert owner-direction text. The host reports accepted, queued, consumed, failed-unavailable
+or unknown separately. It validates consumption only from the matching SDK user `message_start`;
+queue insertion/removal is not consumption. Same request IDs are idempotent, new IDs remain
+distinct, and settlement, cancellation, EOF or disposal closes the target without retargeting.
+Without this explicit opt-in, the original uncorrelated callback/reply vocabulary remains the
+only transport vocabulary; `sessionObservations` alone does not select steering. When explicitly
+launched by the project parent-session bridge, the adapter uses one private
 Unix-socket request/reply connection with a token, parent session, run and request identity; EOF,
 unavailable endpoints and uncorrelated replies stop with the actual bridge error. The bridge keeps
 its pending request only in memory and never stores question or answer text in monitoring SQLite.

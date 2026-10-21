@@ -204,13 +204,96 @@ export function sessionObservationRecord(request, session) {
   return {type: 'session', session: session.coherenceSavedSession, before: observation(session)};
 }
 
-export async function execute(request, emit, ask) {
+function validTarget(value) {
+  return value && typeof value === 'object' && ['run_id', 'task_id', 'invocation_id']
+    .every(key => typeof value[key] === 'string' && value[key].length > 0) &&
+    ['task_worker', 'corrective_worker', 'fixer'].includes(value.role);
+}
+
+function directionEnvelope(requestId, instruction) {
+  // Prefixing makes even a leading slash inert to the SDK command parser while
+  // retaining the owner instruction verbatim in the conversation.
+  return `[owner-direction id=${requestId}]\n${instruction}`;
+}
+
+export function steeringTarget(request, session) {
+  if (!validTarget(request.steering)) return null;
+  return {...request.steering, session_id: session.coherenceSavedSession.id};
+}
+
+export function steeringController(request, session, emit) {
+  const target = steeringTarget(request, session);
+  if (!target) return null;
+  let active = true;
+  const requests = new Map();
+  const sameTarget = candidate => validTarget(candidate) &&
+    ['run_id', 'task_id', 'invocation_id', 'session_id', 'role'].every(key => candidate[key] === target[key]);
+  const report = (requestId, status, extra = {}) =>
+    emit({type: 'steer', request_id: requestId, status, target, ...extra});
+  const close = (reason, status = 'failed-unavailable') => {
+    if (!active) return;
+    active = false;
+    for (const [requestId, entry] of requests) {
+      if (entry.status === 'queued') report(requestId, status, {reason});
+    }
+  };
+  const unsubscribe = session.subscribe(event => {
+    if (event.type === 'message_start' && event.message?.role === 'user') {
+      const text = event.message.content?.filter(part => part.type === 'text').map(part => part.text).join('') ?? '';
+      for (const [requestId, entry] of requests) {
+        if (entry.status === 'queued' && text === entry.envelope) {
+          entry.status = 'consumed';
+          report(requestId, 'consumed');
+        }
+      }
+    } else if (event.type === 'agent_settled') {
+      // agent_end may be followed by SDK retry, compaction, or queued input.
+      close('target settled before observed consumption');
+    }
+  });
+  emit({type: 'target', status: 'active', target});
+  return {
+    async steer(control) {
+      const requestId = control?.request_id;
+      if (typeof requestId !== 'string' || requestId.length === 0) return;
+      const prior = requests.get(requestId);
+      if (prior) {
+        report(requestId, prior.status);
+        return;
+      }
+      if (!active || !sameTarget(control.target)) {
+        report(requestId, 'failed-unavailable', {reason: !active ? 'target is closed' : 'exact active target required'});
+        return;
+      }
+      if (typeof control.instruction !== 'string') {
+        report(requestId, 'failed-unavailable', {reason: 'owner direction instruction must be text'});
+        return;
+      }
+      const entry = {status: 'accepted', envelope: directionEnvelope(requestId, control.instruction)};
+      requests.set(requestId, entry);
+      report(requestId, 'accepted');
+      try {
+        await session.steer(entry.envelope, undefined, {source: 'interactive'});
+        entry.status = 'queued';
+        report(requestId, 'queued');
+      } catch (error) {
+        entry.status = 'failed-unavailable';
+        report(requestId, 'failed-unavailable', {reason: error.message});
+      }
+    },
+    close(reason = 'host input closed', status) { close(reason, status); unsubscribe(); },
+  };
+}
+
+export async function execute(request, emit, ask, controls = null) {
   const session = await createWorkflowSession(request, ask);
   session.coherenceEpoch = crypto.randomUUID();
   // Preserve the existing session identity before an invocation can fail. The
   // adapter can then expose that failed call/cause for inspection, never retry it.
   const sessionRecord = sessionObservationRecord(request, session);
   if (sessionRecord) emit(sessionRecord);
+  const steering = steeringController(request, session, emit);
+  controls?.setSteering(steering);
   let aborting;
   const cancel = () => { aborting ??= Promise.resolve(session.abort()); };
   process.on('SIGTERM', cancel);
@@ -227,6 +310,7 @@ export async function execute(request, emit, ask) {
     // Do not dispose/release the host while its owned SDK abort is still
     // draining an active tool invocation.
     if (aborting) await aborting.catch(() => {});
+    steering?.close('host disposed');
     session.dispose();
   }
 }
@@ -234,17 +318,51 @@ export async function execute(request, emit, ask) {
 async function main() {
   const lines = readline.createInterface({input: process.stdin});
   const iterator = lines[Symbol.asyncIterator]();
-  const receive = async () => {
+  const next = async () => {
     const line = await iterator.next();
     if (line.done) throw new Error('SDK transport input closed');
     return JSON.parse(line.value);
   };
   const emit = value => process.stdout.write(JSON.stringify(value) + '\n');
-  const ask = async value => { emit(value); return receive(); };
   try {
-    const request = await receive();
-    const result = await execute(request, emit, ask);
+    const request = await next();
+    // Old adapters retain their one-at-a-time uncorrelated callback protocol.
+    if (!validTarget(request.steering)) {
+      const result = await execute(request, emit, async value => { emit(value); return next(); });
+      emit({type: 'result', ...result});
+      return;
+    }
+    let steering, resolveSteering;
+    const steeringReady = new Promise(resolve => { resolveSteering = resolve; });
+    const callbacks = new Map();
+    let callbackSequence = 0;
+    const ask = value => new Promise((resolve, reject) => {
+      const requestId = `callback-${++callbackSequence}`;
+      callbacks.set(requestId, {resolve, reject});
+      emit({...value, request_id: requestId});
+    });
+    const operation = execute(request, emit, ask, {setSteering(value) { steering = value; resolveSteering(value); }});
+    const input = (async () => {
+      try {
+        while (true) {
+          const value = await next();
+          if (value?.type === 'steer') await (steering ?? await steeringReady)?.steer(value);
+          else if (value?.type === 'reply' && typeof value.request_id === 'string') {
+            const pending = callbacks.get(value.request_id);
+            if (pending) { callbacks.delete(value.request_id); pending.resolve(value.reply); }
+          }
+        }
+      } catch (error) {
+        steering?.close('host input closed', 'unknown');
+        for (const pending of callbacks.values()) pending.reject(error);
+        callbacks.clear();
+      }
+    })();
+    const result = await operation;
     emit({type: 'result', ...result});
+    // The result closes the host protocol; stdin may remain open in callers.
+    lines.close();
+    await input;
   } catch (error) {
     emit({type: 'error', message: error.message});
     process.exitCode = 1;

@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import subprocess
 import sys
 import threading
 from unittest.mock import patch
@@ -18,6 +19,54 @@ class SDKTransportTests(ProjectTest):
         host.write_text('import json,sys\nrequest=json.loads(input())\n' + body)
         return patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(
             'os.environ', {'COHERENCE_NODE': sys.executable})
+
+    def test_pre_steering_transport_with_opt_in_host(self):
+        """Frozen pre-change framing reaches the changed production host dispatcher."""
+        host = Path(__file__).resolve().parents[1] / 'pi-host' / 'host.mjs'
+        preload = Path(__file__).with_name('cleanup_adapter_fixture.mjs')
+        env = {**os.environ, 'COHERENCE_HOST_PRELOAD': '1',
+               'NODE_OPTIONS': '--import=' + str(preload),
+               'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}
+        proc = subprocess.Popen(['node', str(host)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, text=True, encoding='utf-8', cwd=self.project, env=env)
+        try:
+            # This deliberately predates sessionObservations and steering: it is
+            # the original one-request/one-uncorrelated-callback transport.
+            request = {'project': str(self.project), 'executor': {'provider': 'openai', 'model': 'gpt-4o-mini',
+                       'effort': 'medium'}, 'prompt': 'ordinary prompt', 'readOnly': False,
+                       # Existing observation opt-in is deliberately not steering consent.
+                       'sessionObservations': True}
+            proc.stdin.write(json.dumps(request) + '\n')
+            proc.stdin.flush()
+            records = []
+            while True:
+                line = proc.stdout.readline()
+                if not line:
+                    self.fail('production host ended before a transport record: ' + proc.stderr.read())
+                record = json.loads(line)
+                records.append(record)
+                if record['type'] == 'session':
+                    self.assertIn('session', record)
+                elif record['type'] == 'question':
+                    # Original replies have no correlation wrapper.
+                    self.assertNotIn('request_id', record)
+                    proc.stdin.write(json.dumps({'answer': 'ordinary callback'}) + '\n')
+                    proc.stdin.flush()
+                elif record['type'] == 'result':
+                    self.assertEqual(record['text'], 'legacy complete')
+                    break
+                else:
+                    self.fail('unexpected legacy record: ' + repr(record))
+            self.assertEqual([record['type'] for record in records], ['session', 'question', 'result'])
+            self.assertEqual(proc.wait(timeout=10), 0, proc.stderr.read())
+        finally:
+            if proc.stdin and not proc.stdin.closed:
+                proc.stdin.close()
+            if proc.poll() is None:
+                proc.terminate()
+                proc.wait(timeout=10)
+            proc.stdout.close()
+            proc.stderr.close()
 
     def test_local_path_error_can_be_corrected_same_host_conversation(self):
         body = '''print(json.dumps({'type':'claim','path':'bad.txt'}),flush=True)
