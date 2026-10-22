@@ -238,7 +238,13 @@ Pi canonicalizes matching global/project symlink resources, so the same bridge l
 suite checkout as well as unrelated repos. New repos need no copied launcher or bridge, but still
 supply their own task file and explicit executor JSON; no model, permissions, adoption policy,
 authentication or old run data is copied. Use a fresh Pi/Paseo session and verify all three tools;
-never automatically reload/restart the current session. To roll back global activation, remove
+never automatically reload/restart the current session. Attached runs need a long-lived parent:
+use interactive Pi, Paseo, or RPC with stdin kept open until the terminal workflow notification.
+A one-shot print/JSON parent can settle after an intermediate notification and exit, which normally
+cancels its owned runner; it is not a reliable harness for a nonempty asynchronous run. An empty-task
+smoke verifies discovery/launch without creating a workflow store; use a disposable repository for
+actual worker/reviewer smoke checks rather than adding runtime artifacts to an unrelated project.
+To roll back global activation, remove
 only the two proven installer-owned symlinks, leaving the isolated runtime and project data intact.
 
 Focused checks in the prepared environment:
