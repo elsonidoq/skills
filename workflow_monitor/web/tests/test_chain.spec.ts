@@ -40,7 +40,7 @@ test('renders a flat measured DOWN activity graph and preserves interaction stat
   const geometry = await nodes.evaluateAll(items => items.map(item => ({ id: (item as HTMLElement).dataset.id, width: (item as HTMLElement).offsetWidth, height: (item as HTMLElement).offsetHeight })))
   expect(geometry.every(item => item.width > 0 && item.height > 0)).toBeTruthy()
   await page.locator('.react-flow__node[data-id="review"]').click()
-  await expect(page.getByLabel('Selected execution details')).toContainText('Outcome: returned — changes requested')
+  await expect(page.getByLabel('Selected execution details')).toContainText('Execution: returned — changes requested')
   const pane = page.locator('.react-flow__pane'); const box = await pane.boundingBox(); if (!box) throw new Error('Missing graph pane')
   const before = await page.locator('.react-flow__viewport').getAttribute('style')
   await page.mouse.move(box.x + 200, box.y + 200); await page.mouse.down(); await page.mouse.move(box.x + 260, box.y + 240)

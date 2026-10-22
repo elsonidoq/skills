@@ -24,7 +24,7 @@ test.afterAll(() => new Promise<void>(resolve => server.close(() => resolve())))
 test('displays read freshness, incomplete history, and qualified liveness without control requests', async ({ page }) => {
   await page.clock.install(); await page.goto('http://127.0.0.1:4175/')
   await expect(page.getByLabel('Read freshness')).toContainText('last successful read 0; last recorded activity 0')
-  await expect(page.getByLabel('Runner liveness')).toHaveText(/Recorded runner live.*does not prove progress/)
+  await expect(page.getByLabel('Runner liveness')).toHaveText(/Recorded runner Live.*does not prove progress/)
   await page.clock.fastForward(60_000)
   await expect(page.getByLabel('Read freshness')).toContainText('Read unavailable')
   await expect(page.getByLabel('Read freshness')).toContainText('Read unavailable, Incomplete history')
