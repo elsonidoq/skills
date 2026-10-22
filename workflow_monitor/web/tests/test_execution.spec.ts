@@ -27,8 +27,36 @@ test.beforeAll(async () => {
   await ready()
 })
 test.afterAll(async () => {
+  if (fixture.exitCode !== null) return
+  const exited = new Promise<void>(resolve => fixture.once('exit', () => resolve()))
   fixture.kill('SIGTERM')
-  await new Promise<void>(resolve => fixture.once('exit', () => resolve()))
+  await exited
+})
+
+test('inspects every merged input and correction fact with readable action endpoints', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto('/runs/id-merged-edge')
+  await expect(page.locator('.react-flow__node')).toHaveCount(2)
+  await expect(page.locator('.react-flow__node').last()).toBeInViewport()
+  const edge = page.locator('.react-flow__edge-interaction')
+  await expect(edge).toHaveCount(1)
+  const point = await edge.evaluate(element => {
+    const path = element as SVGPathElement
+    const point = path.getPointAtLength(path.getTotalLength() / 2)
+    const screen = new DOMPoint(point.x, point.y).matrixTransform(path.getScreenCTM()!)
+    return { x: screen.x, y: screen.y }
+  })
+  await page.mouse.click(point.x, point.y)
+  const details = page.getByLabel('Selected execution details')
+  await expect(details.getByRole('heading', { name: 'Recorded relationships', exact: true })).toBeVisible()
+  await expect(details.locator(':scope > p').first()).toHaveText('Worker — Prepare result → Worker — Prepare result (correction)')
+  await expect(details.getByText('Recorded input', { exact: true })).toBeVisible()
+  await expect(details.getByText('Recorded correction', { exact: true })).toBeVisible()
+  await details.getByText('Technical references and retained history', { exact: true }).click()
+  await expect(details).toContainText('producerRef')
+  await expect(details).toContainText('consumerRef')
+  await expect(details).toContainText('predecessorRef')
+  await expect(details).toContainText('correctionRef')
 })
 
 test('renders selected actual invocation metrics from the fixture JSONL through production HTTP', async ({ page }) => {

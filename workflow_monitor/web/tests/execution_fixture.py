@@ -64,12 +64,26 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                        'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),
             {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=CorrectionAdapter,
             question=lambda _: 'fixture correction', paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'merged-edge', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
-            recorder.register(presentation)
+            recorder.register(descriptor({'tasks': [{'id': 'edge', 'description': 'Prepare usable input'}],
+                'monitor': {'tasks': {'edge': {'label': 'Prepare result'}}}}, {}) if run == 'merged-edge' else presentation)
             emit(recorder, 'terminal', 'terminal', 'started', task=None, baseline=base)
+            if run == 'merged-edge':
+                inputs = [{'checkpoint_occurrence_id': 'edge-checkpoint', 'task_id': 'edge',
+                           'producer_invocation_id': 'edge-first', 'correction_chain': ['edge-first']}]
+                for identity, kind, selected, chain in [('edge-first', 'task_worker', [], ['edge-first']),
+                        ('edge-second', 'corrective_worker', inputs, ['edge-first', 'edge-second'])]:
+                    if identity == 'edge-second':
+                        emit(recorder, 'edge-checkpoint', 'checkpoint', 'passed', task='edge', baseline=base, head=base,
+                             no_change=True, producer_invocation_id='edge-first', correction_chain=['edge-first'])
+                    for state in ('started', 'returned'):
+                        emit(recorder, identity, 'worker', state, task='edge', role='worker', invocation_id=identity,
+                             invocation_kind=kind, selected_input_checkpoints=selected, correction_chain=chain)
+                continue
             if run == 'metrics-composed':
+                conflicting_record = None
                 artifact = create_artifact(project, run, authority=owner)
                 for identity, task, role, kind, record_role in [('initial', 'one', 'worker', 'task_worker', 'worker'), ('correction', 'one', 'worker', 'corrective_worker', 'corrective_worker'), ('missing', 'one', 'worker', 'corrective_worker', 'corrective_worker'), ('other', 'two', 'worker', 'task_worker', 'worker'), ('wrong', 'one', 'worker', 'task_worker', 'worker'), ('conflict', 'one', 'worker', 'task_worker', 'worker'), ('reviewer', None, 'reviewer', None, 'reviewer')]:
                     identity_facts = {'execution_id': identity, 'review_base': base, 'review_head': base, 'review_ordinal': 1} if role == 'reviewer' else {'invocation_id': identity, 'invocation_kind': kind, 'correction_chain': [identity]}
@@ -88,11 +102,13 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                         record['review_ordinal'] = 1
                     artifact.append(record)
                     if identity == 'conflict':
-                        # Reader must exclude both conflicting intervals, not choose one.
-                        import json
-                        record['interval']['total_tokens']['value'] = 999
-                        with artifact.path.open('a') as output:
-                            output.write(json.dumps(record) + '\n')
+                        conflicting_record = record
+                # Inject external corruption only after the legitimate writer is done;
+                # its ownership checks must not be bypassed for a later append.
+                import json
+                conflicting_record['interval']['total_tokens']['value'] = 999
+                with artifact.path.open('a') as output:
+                    output.write(json.dumps(conflicting_record) + '\n')
                 owner.store.history(run, None, 'metric_artifact', 'failed', {'status': 'failed', 'path': str(artifact.path.relative_to(project)), 'error': '/PRIVATE/error'})
                 continue
             if run == 'before-agent':
