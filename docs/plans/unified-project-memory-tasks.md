@@ -105,9 +105,40 @@ approved workflow launch; no automatic reload/restart or owner slash-command ins
 
 ## Planning review and owner approval
 
-Task preparation and its focused commit are authorized under the chosen TinySpec path. Planner
-inspection and combined current-source/tasks/scope approval are pending. No implementation or
-historical deletion/relocation is authorized by this preparation. Combined approval must explicitly
-cover exact historical removal/revision-reference disposition, unified quote preservation and
-memory-only constitutional alignment. The owner's current boundary remains **planning only**;
-a later execution launch requires its actual authority and applicable gates, not rewritten history.
+Task preparation and its focused commit are authorized under the chosen TinySpec path. Parent
+planner review completed after task checkpoint `bdfaf8503c11bed7f73903fa1b16a96af0a1f599`:
+**READY for combined planning-only approval; no blocking findings**. This is the prescribed
+TinySpec parent review, not an independent implementation review or implementation acceptance.
+
+Reviewed content: source SHA256
+`f4643cfee2a3ee7451ac99357476507903344e4fcb512b592eba268a805de8b1`;
+canonical JSON SHA256 `188115ae9c25be6a81a0e106c77f21dca5bc262cd4281b1b2437032f1de847fd`;
+human task presentation at the task checkpoint above (this review section adds no task semantics).
+The parent inspected actual source/tasks, producer commits and owned diffs, relevant current
+consumer/test/loader seams and source-to-task A1–A6/ADR traceability. Seven outcome boundaries
+are proportionate to the selected executor: no milestone bundle, gratuitous prototype, duplicate
+review task or report/cleanup chain. Real reference/provenance preservation precedes removal.
+Explicit paths, dependencies, fifteen REQUIRED mappings, source/context delivery, exclusions,
+authorization-neutral executable instructions and unchanged runtime/configuration are covered.
+
+Actual planning validation:
+
+- Both `check-task-order.py` invocations (JSON and Markdown): **PASS**, independently rerun by parent.
+- Actual `coherence_workflow.intake.load_contract` and `verification.commands`: **PASS**;
+  seven ordered tasks, command arrays, nonempty REQUIRED pass/evidence fields, existing/unique
+  within-task ownership, explicit source/context instructions. No runner launch occurred.
+- Inventory/reference checks: **PASS**; all 41 tracked legacy files plus retired reference match
+  deletion ownership and exist at baseline via `git cat-file -e`; introduced local Markdown
+  destinations resolve; source/JSON digests match; parent owned-range `git diff --check` passes.
+- Source producer's baseline checks: workflow checker **PASS**, planner **155**, memory **9** and
+  initialization **190** tests **PASS**. Unchanged suites were not rerun for bookkeeping.
+- Implementation checks/new regressions, live model obedience, notification runtime and remote
+  historical URL accessibility: **NOT RUN**. Runtime work is excluded; exact local Git retrieval,
+  not remote publication, is the historical-provenance acceptance boundary.
+
+Combined current-source/tasks/scope approval is pending. It must explicitly cover removing the
+41 old records and retired reference without relocation, precise Git historical references,
+unified quote preservation and memory-only constitutional alignment. No implementation or
+historical deletion/relocation is authorized by preparation or this review. The owner's current
+boundary remains **planning only**; approval returns the reviewed handoff without starting the
+coordinator. Later implementation requires actual launch authority and applicable gates.
