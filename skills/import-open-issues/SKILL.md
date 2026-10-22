@@ -32,7 +32,9 @@ link, and a deterministic body marker:
 
 That identity intentionally excludes title and revision, so title/revision changes can be
 reconciled later, but includes source host/repository/path to prevent cross-repository OI-N
-collisions. A duplicate OI ID in one source is rejected. Required fields are `Status`,
+collisions. Every occurrence of a duplicate OI ID in one source is rejected with its source
+line diagnostic; none is eligible for reconciliation/apply until the ambiguity is resolved.
+Unaffected unique records remain eligible. Required fields are `Status`,
 `Problem`, `Primary evidence`, and `Resumption condition`; unknown fields retain their order.
 Multiline field values retain line boundaries, blank lines, and continuation indentation in
 both transformed sections and the original excerpt.

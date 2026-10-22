@@ -88,7 +88,7 @@ class PreviewTests(unittest.TestCase):
         unsafe = valid.replace("OI-1: Valid", "OI-3: Unsafe").replace("safe", "<script>alert(1)</script>", 1)
         sensitive = valid.replace("OI-1: Valid", "OI-4: Sensitive").replace("safe", "token=DO_NOT_EXPORT", 1)
         result = preview(valid + bad_status + duplicate + unsafe + sensitive, SOURCE, "dest/repo")
-        self.assertEqual([r.title for r in result.records], ["OI-1: Valid"])
+        self.assertEqual(result.records, ())
         reasons = "\n".join(d.reason for d in result.diagnostics)
         self.assertIn("unmappable status", reasons)
         self.assertIn("duplicate OI identity", reasons)
@@ -99,7 +99,25 @@ class PreviewTests(unittest.TestCase):
         status_secret = preview(valid.replace("Status:** open", "Status:** token=DO_NOT_EXPORT"), SOURCE, "dest/repo")
         self.assertEqual(status_secret.records, ())
         self.assertEqual(status_secret.diagnostics[0].reason, "sensitive candidate data rejected; fidelity is unavailable")
-        self.assertEqual(result.counts["unmappable"], 4)
+        self.assertEqual(result.counts["unmappable"], 5)
+        self.assertEqual([d.line for d in result.diagnostics if d.oi_id == "OI-1"], [1, 11])
+
+    def test_all_duplicate_occurrences_are_excluded_before_reconciliation_and_apply(self):
+        first = "## OI-1: First\n- **Status:** open\n- **Problem:** p\n- **Primary evidence:** e\n- **Resumption condition:** r\n"
+        second = first.replace("First", "Second").replace("Status:** open", "Status:** closed")
+        third = first.replace("First", "Third")
+        unique = first.replace("OI-1: First", "OI-2: Unique")
+        proposal = preview(first + unique + second + third, SOURCE, "dest/repo")
+        self.assertEqual([record.title for record in proposal.records], ["OI-2: Unique"])
+        self.assertEqual([(d.oi_id, d.line) for d in proposal.diagnostics], [("OI-1", 1), ("OI-1", 11), ("OI-1", 16)])
+        calls, issues = [], []
+        transport = ApplyTests()._transport(issues, calls)
+        reviewed = reconcile(proposal, transport, "github.com")
+        self.assertEqual([item.record.title for item in reviewed.records], ["OI-2: Unique"])
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "offline fixture"))
+        self.assertEqual([item.record.title for item in result.records], ["OI-2: Unique"])
+        self.assertEqual([issue["title"] for issue in issues], ["OI-2: Unique"])
+        self.assertTrue(all("OI-1" not in (stdin or "") for _, stdin in calls))
 
     def test_missing_structure_does_not_drop_valid_records_or_claim_completeness(self):
         valid = """## OI-1: Good\n- **Status:** closed\n- **Problem:** p\n- **Primary evidence:** e\n- **Resumption condition:** r\n"""

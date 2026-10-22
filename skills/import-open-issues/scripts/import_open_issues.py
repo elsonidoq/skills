@@ -5,6 +5,7 @@ consume its ParsedRecord/Preview interfaces, but preview itself is read-only.
 """
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 import json
 import posixpath
@@ -477,12 +478,11 @@ def preview(markdown: str, source: Source, destination: str) -> Preview:
     parsed, diagnostics = parse_markdown(markdown)
     output: list[RenderedRecord] = []
     all_diagnostics = list(diagnostics)
-    seen: set[str] = set()
+    counts = Counter(record.oi_id for record in parsed)
     for record in parsed:
-        if record.oi_id in seen:
-            all_diagnostics.append(Diagnostic(record.line, "duplicate OI identity in source", record.oi_id))
+        if counts[record.oi_id] > 1:
+            all_diagnostics.append(Diagnostic(record.line, "duplicate OI identity in source; reconcile all occurrences before importing this identity", record.oi_id))
             continue
-        seen.add(record.oi_id)
         rendered = render_record(record, source)
         if isinstance(rendered, Diagnostic):
             all_diagnostics.append(rendered)
