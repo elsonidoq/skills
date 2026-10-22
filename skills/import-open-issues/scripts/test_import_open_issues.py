@@ -37,6 +37,19 @@ class PreviewTests(unittest.TestCase):
         self.assertIn("[OI-5](https://github.com/elsonidoq/skills/blob/952e39b813a443caeb7417e63c170e219a433dbd/docs/open_issues.md)", by_id["OI-6"].body)
         self.assertTrue(by_id["OI-18"].original_entry_url.endswith("#oi-18-resumed-runs-cannot-append-to-their-existing-jsonl-metrics-artifact"))
 
+    def test_multiline_fields_keep_exact_line_boundaries_in_transformed_sections(self):
+        value = "first\nsecond\n\n  - nested item\n  - another\n\n```text\ncode line\n```"
+        text = ("## OI-1: Multiline\n- **Status:** open\n- **Problem:** " + value
+                + "\n- **Primary evidence:** evidence\ncontinuation\n- **Resumption condition:** resume\n")
+        result = preview(text, SOURCE, "dest/repo")
+        self.assertEqual(result.diagnostics, ())
+        record = result.records[0]
+        self.assertEqual(dict(record.fields)["Problem"], value)
+        self.assertEqual(dict(record.fields)["Primary evidence"], "evidence\ncontinuation")
+        transformed = record.body.split("## Original Markdown excerpt", 1)[0]
+        self.assertIn("## Problem\n" + value + "\n\n## Primary evidence\nevidence\ncontinuation\n", transformed)
+        self.assertEqual(record.original_excerpt, text.rstrip("\n"))
+
     def test_multiline_extra_fields_links_and_identity(self):
         text = """## OI-1: Renamed title\n\n- **Status:** open\n- **Problem:** First line\n  second line with [relative](../runtime/a.py#part), [absolute #2](https://github.com/x/y/issues/2), OI-9 and `../code.py`.\n- **Primary evidence:** evidence\n- **Resumption condition:** resume\n- **History:** retained\n"""
         result = preview(text, SOURCE, "dest/repo")

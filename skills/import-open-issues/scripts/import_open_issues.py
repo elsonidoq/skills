@@ -395,7 +395,7 @@ def parse_markdown(markdown: str) -> tuple[tuple[ParsedRecord, ...], tuple[Diagn
             if match:
                 if current is not None:
                     fields.append((current[0], current[1].rstrip("\n")))
-                current = [match.group(1), match.group(2)]
+                current = [match.group(1), match.group(2) + ("\n" if line.endswith("\n") else "")]
             elif current is not None:
                 current[1] += line
         if current is not None:

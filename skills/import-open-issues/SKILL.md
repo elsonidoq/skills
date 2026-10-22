@@ -34,6 +34,8 @@ That identity intentionally excludes title and revision, so title/revision chang
 reconciled later, but includes source host/repository/path to prevent cross-repository OI-N
 collisions. A duplicate OI ID in one source is rejected. Required fields are `Status`,
 `Problem`, `Primary evidence`, and `Resumption condition`; unknown fields retain their order.
+Multiline field values retain line boundaries, blank lines, and continuation indentation in
+both transformed sections and the original excerpt.
 Unknown status, missing structure, unsafe Markdown, and sensitive candidate data yield a
 source line/reason diagnostic. Valid records still preview, but diagnostics mean the preview
 is not a complete migration claim. Sensitive content is rejected rather than exported; this is
