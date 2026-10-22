@@ -70,9 +70,9 @@ approved-specification/plan-request prerequisites, research availability and bou
 canonical-owner/discovery writes; do not infer permission from invocation. Missing
 required tools, usable sources, version evidence or write authority stops affected
 design and returns exact missing evidence, affected decisions and needed authority to
-planner (or the standalone owner). No recollection fallback or automatic deferral:
+planner (or the standalone owner). No recollection-based completion or automatic deferral:
 planner/owner must explicitly resolve any bounded deferral with impact, allowed bounds
-and outstanding validation. The standalone local fallback cannot bypass required research.
+and outstanding validation. Standalone entry cannot bypass required research.
 Research-driven approved-specification changes require renewed approval through the
 existing owner gate, including standalone entry; return them rather than assume approval.
 
@@ -84,25 +84,11 @@ claim that the planning stage ran.
 Inspect the runtime for an allowed delegation tool (the `subagent` tool from the
 `pi-subagents` package is the suite's pinned delegation mechanism; see the global
 configuration repository's `REQUIREMENTS.md`) and configured planning-capable
-agents. For independently authorized standalone selection, use the
-[qualified seed rubric](../planner/references/profile-selection.md): assess all six
-applicable factors, including the weakest verification blind spot; justify family and supported
-effort independently. Compare suitable family/effort options before readiness, including a
-smaller never-launched pending proposal, with independent comparative Family and Effort rationales.
-Then report readiness/gaps under the shared rubric: readiness blocks launch, not suitability;
-retain the recommendation and ask for bounded authorization or an explicit fallback choice.
-A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
-Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.
-Obtain one exact owner-selected profile. Verify permissions, tools,
-callable binding and supported effort at assignment and dispatch through the shared readiness conjunction. Copy the selected binding/effort
-unchanged into the invocation; missing selection/support or a settings/default override stops,
-never silently substitutes. Record proposed, selected and observed separately; unknown actual
-model or effort stays unknown. Implementation-only batching, task-count and REQUIRED-item rules
-are not planning prerequisites. This standalone selection cannot override a manager-governed
-Standard invocation's Sol/medium exception. Never invent an agent, model, command, or
-configuration. If delegation is unavailable, state
-`Architectural delegation: UNAVAILABLE` and offer to run the installed SpecKit
-planning stage locally with a separate review pass.
+agents. Never invent an agent, model, command, or configuration. For a managed
+Standard pass, the planner supplies the saved plan assignment; preserve it unchanged
+through dispatch and the complete pass. A missing, unsupported, or unavailable binding
+stops that affected pass with the resolver's focused owner-correction question, never a
+settings/default substitution or local pass.
 
 Brief the planner to follow the detected SpecKit planning instructions, including the exact
 applicable accepted outcome constraints and source links, and verify the generated artifacts. On
@@ -119,12 +105,10 @@ to actual runtime configuration. Task handoffs follow the shared `task-generatio
 contract, not mandatory execution-intent, compatibility-assessment or provenance metadata.
 
 Use owner-guided qualitative scaffolding, not universal rankings or fixed thresholds:
-Luna: narrow coherent outcomes, named interfaces/invariants, context/edge-case pointers and
-ordered guidance where useful. Terra: clear boundaries, non-obvious decisions and moderate
-scaffolding. Sol: outcome-oriented instructions may leave routine choices open when justified.
-Effort and verified guidance refine assumptions; unknown/unlisted classes default to explicit
-instructions without unnecessary micro-tasks. A more capable planner must not leave architecture
-implicit for a smaller executor. Record what is explicit/bounded, what choices remain open and
+state clear boundaries, non-obvious decisions, named interfaces/invariants and useful
+context/edge-case pointers; leave routine choices open only when justified. Effort and
+verified guidance refine assumptions; uncertainty calls for explicit instructions without
+unnecessary micro-tasks. Record what is explicit/bounded, what choices remain open and
 uncertainty. REQUIRED acceptance, dependencies, safety and approval gates never shrink.
 
 Preserve the selected executor and effort without silent substitution. Revise guidance when
@@ -149,19 +133,17 @@ delegation stops; no managed direct/inline/local fallback. The specification is 
 truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct
 requirements input. Governing instructions/contracts, memory and permission/safety still apply.
 
-When `planner` invokes this helper from its Standard `plan_create` stage, it is not a standalone
-fallback. Select the Sol family with exactly **medium** supported effort for the ENTIRE
-Standard direct/helper pass. Use the manager's exact selected Sol/medium binding and effort
-unchanged in the helper brief/dispatch, not an inferred observed profile. Verify a permitted
-callable Sol binding and medium support at assignment and dispatch. Unavailable Sol/medium stops
-with the precise binding/support gap; no substitution, settings/default override or standalone
-helper fallback may bypass this rule. Record observed binding/effort separately;
-unknown stays unknown. Preserve mandatory stops, owner gates, approval renewal, and upstream context-coherent
-brief/handoff constraints. In that
-one same-session pass, review/fix the approved specification, run the detected planning capability
+When `planner` invokes this helper from its Standard `plan_create` stage, it supplies
+its resolved `standard-plan-helper` saved assignment. Carry that exact binding unchanged
+in the helper brief and dispatch throughout the ENTIRE managed pass; ambient settings or
+observed profile never replace it. Verify that binding is permitted and callable at dispatch.
+If it is unsupported or unavailable, stop the affected pass with the resolver's exact
+focused owner-correction question; do not substitute or run a local pass. Record observed
+binding/effort separately; unknown stays unknown. Preserve mandatory stops, owner gates,
+approval renewal, and upstream context-coherent brief/handoff constraints. In that one
+same-session pass, review/fix the approved specification, run the detected planning capability
 once to create the plan, then review/fix the produced plan. Return evidence and resulting artifacts
-to the manager for inspection; do not direct it to create the plan again. The standalone local
-fallback and separate-review policies below do not apply to this adapter invocation.
+to the manager for inspection; do not direct it to create the plan again.
 Verify the manager's explicit bounded documentation permission against the preflight
 and boundary below; absence is not implied authority. Research-driven changes to any
 approved specification content return through the manager's renewed specification
@@ -206,8 +188,8 @@ Ensure the SpecKit plan covers:
 - Security, privacy, migration, rollback, and authorization gates where relevant.
 - Documentation scope and specialized capabilities needed for implementation.
 
-Leave implementation task breakdown, not model-class labeling, to the SpecKit
-tasks stage; do not use the plan as a substitute for it. Carry source constraints, canonical
+Leave implementation task breakdown to the SpecKit tasks stage; do not use the
+plan as a substitute for it. Carry source constraints, canonical
 research, applicable guidelines and observable verification needs for stable REQUIRED items
 through the task-generation contract. The executable runner verifies approved execution configuration;
 manager-governed planning-stage bindings remain unchanged.

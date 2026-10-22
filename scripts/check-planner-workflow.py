@@ -313,15 +313,24 @@ def check_contracts(texts):
     require("batch-tiny", tiny, "verification item completeness")
     require("batch-standard", review, "verification item completeness")
     require("batch-legacy", a, "inadequate REQUIRED contracts", "producing review/approval gate", "renewed affected approval")
-    require("batch-helper", texts["helper"], "not model-class labeling", "applicable guidelines")
+    require("batch-helper", texts["helper"], "applicable guidelines")
     require("batch-source", texts["tiny"], "stable task-local REQUIRED")
     require("batch-brainstorm", texts["brainstorm"], "not implementation-task assignments")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
             "nonempty string `id`", "Optional `depends`", "IDs must be unique",
             "references must exist", "not cycle", "File order", "Do not regenerate old tasks")
-    require("adapter", texts["helper"], "Planner Standard adapter", "`planner`", "same-session pass",
-            "do not direct it to create the plan again", "standalone local\nfallback")
+    helper_adapter = section(texts["helper"], "## Planner Standard adapter contract")
+    require("adapter", helper_adapter, "Planner Standard adapter", "`planner`", "same-session pass",
+            "do not direct it to create the plan again")
+    require("helper-assignment", helper_adapter,
+            "`standard-plan-helper` saved assignment", "exact binding unchanged",
+            "ambient settings or\nobserved profile never replace it", "permitted and callable at dispatch",
+            "unsupported or unavailable", "resolver's exact\nfocused owner-correction question",
+            "do not substitute or run a local pass", "review/fix the approved specification",
+            "once to create the plan", "review/fix the produced plan")
+    reject("helper-retired-routing", helper_adapter, "Sol/medium", "Sol family",
+           "standalone local fallback", "separate-review policies", "fallback may bypass")
     c = texts["coordinator"]
     require("intake", section(c, "## Load and Verify"), "exactly six linter checks",
             "An empty", "Optional context stays intact")
@@ -345,21 +354,21 @@ def check_contracts(texts):
     require("validation-tasks", section(t, "## Task contract"), "smallest relevant project check",
             "optional task context", "not mandatory universal acceptance items", "real outcome")
     require("validation-execution", section(c, "## Execute and Integrate"), "Project check commands are optional",
-            "no universal collection-count/receipt", "Never adopt existing dirty files")
+            "no universal collection-count/receipt", "preserve pre-existing/unknown bytes; never adopt them")
     require("validation-timeout", section(c, "## Recover Context"),
             "Inspect a failed run and its invocation", "unknown cause stops blind retries",
             "Preserve partial and unrelated work")
     require("execution-checkpoints", section(c, "## Execute and Integrate"),
-            "runner establishes baseline HEAD", "one focused verified owned-path",
+            "one focused verified owned-path",
             "checkpoint per implementation/repair task", "before subsequent mutation or handoff",
             "No extra evidence-only checkpoint", "Never blindly replay a Git commit")
     require("execution-sequential", section(c, "## Execute and Integrate"), "Dependencies release after",
             "real focused checkpoint", "not an approval envelope")
     require("execution-selection", section(c, "## Prepare Approved Execution"), "owner-selected executor/effort",
-            "without silent substitutions", "no owner catalog", "No automatic")
+            "without silent substitutions", "no owner catalog")
     require("execution-strategy", section(c, "## Interface Actions"),
-            "task metadata is not an approval prerequisite", "current terminal owner input",
-            "never invent an answer", "No automatic resume")
+            "task metadata is not an approval prerequisite")
+    require("execution-strategy", section(c, "## Question triage"), "never invent an answer")
     require("adoption", texts["adoption"], "bounded refresh", "marked", "every unrelated byte",
             "dirty", "concurrently", "Before calling `ask_user`", "memory store and index")
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
@@ -419,9 +428,9 @@ def check_contracts(texts):
     require("research-helper", h_pre, "[dependency research contract](../planner/references/dependency-research.md)",
             "before consequential architecture/plan decisions", "verify it is readable",
             "Standalone entry verifies equivalent Standard planning/preparation authority",
-            "bounded\ncanonical-owner/discovery writes", "No recollection fallback or automatic deferral",
+            "bounded\ncanonical-owner/discovery writes", "No recollection-based completion or automatic deferral",
             "returns exact missing evidence, affected decisions and needed authority",
-            "standalone local fallback cannot bypass required research",
+            "Standalone entry cannot bypass required research",
             "Research-driven approved-specification changes require renewed approval")
     require("research-helper-adapter", section(texts["helper"], "## Planner Standard adapter contract"),
             "explicit bounded documentation permission", "absence is not implied authority")
@@ -688,7 +697,7 @@ DELEGATION_CARRIERS = (
     ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "unauthorized task", "delegation stops", "no parent task creation/substantive correction or inline/local fallback")),
     ("delegate-overall-correction", "planner", "stage:overall_review", ("Delegate uncertain or substantive task-level and", "originating producer", "fresh bounded correction delegate", "independent reviewer", "does not become the producer", "No parent substantive artifact edits", "unauthorized", "correction delegation stops", "no inline/local fallback")),
     ("delegate-recovery", "approval", "## Transition and invalidation table", ("Delegate uncertain or substantive artifact corrections", "originating producer context", "fresh bounded correction delegate", "No parent artifact authoring", "substantive task-level or upstream repair, including legacy recovery", "unauthorized delegation stops", "fallback or full transcript handoff")),
-    ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors fresh artifacts or makes substantive repairs", "Delegate uncertain or substantive corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "no managed direct/inline/local fallback")),
+    ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors fresh artifacts or makes substantive repairs", "Delegate uncertain or substantive corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "`standard-plan-helper` saved assignment", "do not substitute or run a local pass")),
     ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent is not delegation", "never fresh artifact authoring or substantive repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate uncertain or substantive artifact", "corrections, including task-level and upstream changes")),
 )
 
@@ -717,10 +726,10 @@ VERIFICATION_CARRIERS = (
     ("verification-handoff", "planner", "## Selected production and stage handoffs",
      ("item mappings unchanged", "whole task contract before", "legacy producing review/renewal")),
     ("verification-graph", "coordinator", "## Execute and Integrate",
-     ("runner establishes baseline HEAD", "before subsequent mutation or handoff")),
+     ("one focused verified owned-path", "before subsequent mutation or handoff")),
     ("verification-audit", "coordinator", "## Execute and Integrate",
      ("actual diff", "explicit paths", "normal Git hooks/signing",
-      "Never adopt existing dirty files", "Dependencies release after")),
+      "preserve pre-existing/unknown bytes; never adopt them", "Dependencies release after")),
     ("verification-repair", "coordinator", "## Execute and Integrate",
      ("No arbitrary workflow", "Do not autonomously loop expensive failed runs",
       "Never blindly replay a Git commit")),

@@ -713,7 +713,7 @@ class ProportionateValidationTests(unittest.TestCase):
         self.assert_clause_required("planner",
             "Never drop an owner-required check or approved\nsafety criterion without explicit authority",
             "validation-authority")
-        self.assert_clause_required("coordinator", "Never adopt existing dirty files", "validation-execution")
+        self.assert_clause_required("coordinator", "preserve pre-existing/unknown bytes; never adopt them", "validation-execution")
         self.assert_clause_required("tasks", "real outcome", "validation-tasks")
 
     def test_timeout_narrows_remaining_work_without_blind_retry(self):
@@ -794,7 +794,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "do not create the plan again", "create the plan again", "plan:"),
             ("planner", "renewed specification approval", "existing specification approval", "plan:"),
             ("planner", "independent review and final approval remain required", "producer approval suffices", "task-stage:"),
-            ("planner", "independent owner-selected reviewer", "implementer reviewer", "review:"),
+            ("planner", "independent saved reviewer assignment", "implementer reviewer", "review:"),
             ("approval", "before calling `ask_user`", "after calling `ask_user`", "approval:"),
             ("approval", "Every actual task ID separately", "unstructured paragraphs", "approval:"),
             ("planner", "brief bullet-list executive summary", "summary in tool context", "tiny-flow:"),
@@ -931,7 +931,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "stable task-local REQUIRED", "batch-handoff:"),
             ("approval", "inadequate REQUIRED contracts", "batch-legacy:"),
             ("tiny", "stable task-local REQUIRED", "batch-source:"),
-            ("helper", "not model-class labeling", "batch-helper:"),
+            ("helper", "applicable guidelines", "batch-helper:"),
             ("brainstorm", "not implementation-task assignments", "batch-brainstorm:"),
         ):
             with self.subTest(carrier=key):
@@ -1005,7 +1005,7 @@ class DependencyResearchTests(unittest.TestCase):
             ("research", "## Persist within verified authority", "Re-read each target immediately before", "research-persistence"),
             ("tiny", "## Compact source contract", "Trace source recommendation/local evidence → compact implementation\n  constraint → observable acceptance/check", "research-tiny-traceability"),
             ("helper", "## Planner Boundary", "supporting source spans → implementation constraints → observable checks", "research-boundary"),
-            ("helper", "## Preflight", "standalone local fallback cannot bypass required research", "research-helper"),
+            ("helper", "## Preflight", "Standalone entry cannot bypass required research", "research-helper"),
             ("helper", "## Planner Standard adapter contract", "absence is not implied authority", "research-helper-adapter"),
             ("planner", "## Selected production and stage handoffs", "supporting spans → constraints → observable checks", "research-review"),
             ("planner", "overall_review", "direct Standard\n   pass and helper-managed/standalone contract coverage", "research-standard-review"),
@@ -1213,7 +1213,7 @@ class StageDispatchTests(unittest.TestCase):
     """Authored symbolic direct/earned-workflow cases, not a provider/tool invocation."""
     def test_stage_dispatch_guards_are_scoped_and_not_footer_rescuable(self):
         texts = checker.load_texts()
-        clauses = ("direct asynchronous single-stage dispatch", "selected profile unchanged",
+        clauses = ("direct asynchronous single-stage dispatch", "resolved saved assignment unchanged",
                    "Inspect the returned artifact/checkpoint", "before the next authorized stage",
                    "Never prewire dependent source→tasks", "direct delegation cannot adequately serve",
                    "stage sequence alone is insufficient", "do not authorize parallel implementation batches")
@@ -2176,6 +2176,78 @@ class OwnerAssignmentPlannerTests(unittest.TestCase):
                   {"type": "planner_retry", "operation": "standard-plan-direct", "inspected": False}]
         self.assertIn("retry without failed invocation inspection",
                       "\n".join(trace.check_assignments(events, {"standard-plan-direct": binding})))
+
+
+class OwnerAssignmentHelperTests(unittest.TestCase):
+    """The saved helper binding spans its one managed plan pass; no provider call."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.assignments = load("helper_assignments", "../skills/planner/scripts/model_assignments.py")
+        cls.config = ROOT / "skills/planner/references/model-assignments.json"
+
+    def fixture(self, directory, data):
+        planner = Path(directory) / "planner"
+        (planner / "references").mkdir(parents=True)
+        (planner / "SKILL.md").write_text("fixture")
+        (planner / "references/model-assignments.json").write_text(json.dumps(data))
+        return planner
+
+    def test_saved_helper_binding_covers_review_create_and_correction(self):
+        data = json.loads(self.config.read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            planner = self.fixture(directory, data)
+            def managed_pass():
+                binding = self.assignments.resolve("standard-plan-helper", planner_skill=planner)["requested"]
+                return [{"type": "planner_assignment", "operation": "standard-plan-helper",
+                         "brief": binding, "call": binding, "step": step}
+                        for step in ("spec-review", "plan-create", "plan-review")]
+
+            before = managed_pass()
+            data["assignments"]["standard-plan"]["model"] = "owner/changed-plan"
+            data["assignments"]["standard-plan"]["effort"] = "high"
+            (planner / "references/model-assignments.json").write_text(json.dumps(data))
+            after = managed_pass()
+
+        for events in (before, after):
+            binding = events[0]["brief"]
+            self.assertEqual([event["brief"] for event in events], [binding] * 3)
+            self.assertEqual([event["call"] for event in events], [binding] * 3)
+            self.assertEqual(trace.check_assignments(events, {"standard-plan-helper": binding}), [])
+        self.assertNotEqual(before[0]["brief"], after[0]["brief"])
+        self.assertEqual(after[0]["brief"], {"model": "owner/changed-plan", "effort": "high"})
+
+    def test_invalid_helper_assignment_stops_without_default_or_local_pass(self):
+        data = json.loads(self.config.read_text())
+        data["assignments"].pop("standard-plan")
+        with tempfile.TemporaryDirectory() as directory:
+            planner = self.fixture(directory, data)
+            with self.assertRaises(self.assignments.AssignmentError) as raised:
+                self.assignments.resolve("standard-plan-helper", planner_skill=planner)
+        message = str(raised.exception).lower()
+        self.assertIn("standard-plan-helper", message)
+        self.assertIn("ask the owner to correct", message)
+        self.assertFalse(any(word in message for word in ("default", "fallback", "substitute", "local pass")))
+
+    def test_helper_contract_rejects_carrier_mutations(self):
+        texts = checker.load_texts()
+        self.assertFalse([error for error in checker.check_contracts(texts)
+                          if error.startswith(("helper-assignment:", "helper-retired-routing:"))])
+        body = checker.section(texts["helper"], "## Planner Standard adapter contract")
+        for old, new in (
+            ("exact binding unchanged", "ambient binding"),
+            ("do not substitute or run a local pass", "run a local pass"),
+            ("once to create the plan", "twice to create the plan"),
+        ):
+            with self.subTest(mutation=new):
+                changed = dict(texts)
+                changed["helper"] = changed["helper"].replace(body, body.replace(old, new, 1), 1)
+                self.assertTrue(any(error.startswith("helper-assignment:")
+                                    for error in checker.check_contracts(changed)))
+        changed = dict(texts)
+        changed["helper"] = changed["helper"].replace(body, body + "\nSol/medium\n", 1)
+        self.assertTrue(any(error.startswith("helper-retired-routing:")
+                            for error in checker.check_contracts(changed)))
 
 
 class OwnerAssignmentBrainstormTests(unittest.TestCase):
