@@ -194,7 +194,7 @@ whole-index-first retrieval, selective entries and recheck-after-write remain re
 
 | Acceptance seam | Named offline evidence |
 | --- | --- |
-| Guidance decisions/safety | `test_clear_future_feedback_needs_no_second_approval`, `test_explanation_no_feedback_approval_observation_and_no_write`, `test_dirty_concurrent_path_symlink_sensitive_and_owner_safety_stops`, unified associated-index storage and scoped removal/resurrection mutations in `test_coordination_contract.py` |
+| Guidance decisions/safety | `test_authority_matrix`, `test_path_symlink_sensitive_owner_dirty_and_concurrent_safety_stops`, `test_authorized_custom_association_creates_one_index_and_entry_preserving_bytes`, unified associated-index storage and scoped removal/resurrection mutations in `test_coordination_contract.py` |
 | Context-first recovery | `test_summary_insufficient_fresh_and_uncertain_context`, `test_active_unrecorded_unknown_and_inspected_failure`, seven `GitScenarioTests` in `test_state_contract.py`; no snapshot writes or duplicated commits |
 | Cheap plan trust | `test_administrative_loops_and_trust_only_acceptance_fail`, scoped actionable-guard mutations in `test_intake_contract.py`; `PreparationTraceTests` and item-specific acceptance/repair cases in `test_batching_contract.py` |
 | Substantive checkpoints | `scripts/check-task-commit-contract.py` and `scripts/test-task-commit-contract.py`: real temporary-Git scoped commits, unrelated staged/unstaged preservation, hook failures, ambiguous ownership and existing-SHA recovery without evidence-only commits |
