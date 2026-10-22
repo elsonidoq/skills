@@ -7,7 +7,46 @@ from coherence_workflow.intake import admit
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
-EXECUTOR = {'provider': 'fixture', 'model': 'offline-not-provider-success', 'effort': 'medium'}
+EXECUTOR = {'provider': 'fixture', 'model': 'offline-not-provider-success', 'effort': 'medium',
+            'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
+
+
+class OwnerAssignmentExecutionRoleTests(ProjectTest):
+    def test_reviewer_is_required_and_profiles_remain_role_specific(self):
+        worker = {'provider': 'fixture', 'model': 'worker', 'effort': 'medium'}
+        reviewer = {'provider': 'fixture', 'model': 'reviewer', 'effort': 'medium'}
+        for invalid in (worker, {**worker, 'reviewer': None}, {**worker, 'reviewer': {}}):
+            with self.subTest(invalid=invalid):
+                with Authority(self.project) as owner:
+                    with self.assertRaisesRegex(Blocked, 'reviewer needs provider, model and effort'):
+                        Engine(owner, 'invalid-reviewer', admit([]), invalid)
+
+        calls, sessions = [], []
+        class Adapter:
+            def __init__(self, _project, profile, **_kwargs):
+                self.profile = profile
+                sessions.append(self)
+            def prompt(self, _prompt, **kwargs):
+                calls.append((self.profile, kwargs.get('read_only', False)))
+                if not kwargs.get('read_only'):
+                    return 'offline worker'
+                return ('{"approved":false,"findings":["fixture finding"]}'
+                        if len([call for call in calls if call[1]]) == 1 else '{"approved":true,"findings":[]}')
+
+        executor = {**worker, 'reviewer': reviewer}
+        with Authority(self.project) as owner:
+            result = Engine(owner, 'role-propagation', admit([{'id': 'task', 'description': 'fixture'}]),
+                            executor, adapter=Adapter).invoke()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(calls, [(worker, False), (reviewer, True), (worker, False), (reviewer, True)])
+        self.assertEqual(len({id(session) for session in sessions}), 4)
+
+        shared = {**worker, 'reviewer': dict(worker)}
+        with Authority(self.project) as owner:
+            engine = Engine(owner, 'shared-roles', admit([]), shared)
+        self.assertEqual(engine.executor, worker)
+        self.assertEqual(engine.reviewer_executor, worker)
+        self.assertIsNot(engine.executor, engine.reviewer_executor)
 
 
 class SequentialExecutionTests(ProjectTest):
@@ -21,7 +60,8 @@ class SequentialExecutionTests(ProjectTest):
         case = self
         class OfflineOperations:
             def __init__(self, project, executor, **kwargs):
-                case.assertEqual(executor, EXECUTOR)
+                case.assertEqual(executor, {key: value for key, value in EXECUTOR.items() if key != 'reviewer'}
+                                 if len(sessions) < 2 else EXECUTOR['reviewer'])
                 sessions.append(self)
             def prompt(self, prompt, *, claim=None, command=None, read_only=False):
                 prompts.append((prompt, read_only))
@@ -83,7 +123,7 @@ class SequentialExecutionTests(ProjectTest):
                 return 'worker claims done but actual command fails'
         with self.assertRaisesRegex(Blocked, 'check failed'):
             self.execute([{'id': 'fix', 'description': 'Fix', 'checks': [['python3', '-B', '-c', 'raise SystemExit(7)']]}], OfflineFailure)
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(calls), 2)
         self.assertEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
         self.assertEqual((project/'owned.txt').read_text(), 'partial\n')
         from coherence_workflow.cli import status
@@ -161,7 +201,10 @@ else:
     time.sleep(1)
 """)
         contract = admit([{'id': 'fix', 'description': 'Fix'}])
-        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, {'COHERENCE_NODE': sys.executable}):
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(
+                os.environ, {'COHERENCE_NODE': sys.executable, 'COHERENCE_PARENT_BRIDGE_SOCKET': '',
+                             'COHERENCE_PARENT_BRIDGE_TOKEN': '', 'COHERENCE_PARENT_BRIDGE_SESSION': '',
+                             'COHERENCE_PARENT_BRIDGE_RUN': ''}):
             with Authority(self.project) as owner:
                 with self.assertRaises((BrokenPipeError, OSError)):
                     def answer(text):
@@ -207,7 +250,9 @@ else:
                 if kwargs.get('read_only'):
                     prompts.append(prompt)
                     return '{"approved":false,"findings":["fix.txt:1 - original defect"]}' if len(prompts) == 1 else '{"approved":true,"findings":[]}'
-                if 'fix' in prompt:
+                if prompt.startswith('Correct the actionable findings'):
+                    raise Blocked('original defect')
+                if '"id":"fix"' in prompt:
                     kwargs['claim']('fix.txt')
                     (project/'fix.txt').write_text('corrected\\n')
                 return 'offline worker'

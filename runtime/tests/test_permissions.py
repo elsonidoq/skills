@@ -12,7 +12,8 @@ from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
 
 
-EXECUTOR = {'provider': 'fixture', 'model': 'offline-not-provider-success', 'effort': 'medium'}
+EXECUTOR = {'provider': 'fixture', 'model': 'offline-not-provider-success', 'effort': 'medium',
+            'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
 
 
 class RoutineDefaultsTests(ProjectTest):
@@ -63,7 +64,8 @@ print(json.dumps({'type': 'result', 'text': 'offline'}), flush=True)
 
 class PaidScopeTests(ProjectTest):
     def test_selected_worker_and_reviewer_need_no_separate_consent(self):
-        executor = {**EXECUTOR, 'reviewer': {**EXECUTOR, 'provider': 'other'}}
+        executor = {**EXECUTOR, 'reviewer': {**{key: value for key, value in EXECUTOR.items() if key != 'reviewer'},
+                                              'provider': 'other'}}
         with patch('coherence_workflow.cli.Engine') as engine, \
              patch('coherence_workflow.cli.terminal_question', side_effect=lambda text: self.fail(text)):
             engine.return_value.invoke.return_value = {'status': 'completed'}

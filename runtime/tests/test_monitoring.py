@@ -9,6 +9,10 @@ from coherence_workflow.store import Authority
 from fixtures.support import ProjectTest
 
 
+EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
+            'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
+
+
 class MonitoringStorageTests(ProjectTest):
     def test_closed_append_survives_reopen_and_ordinary_progress(self):
         contract = {'tasks': [{'id': 'one', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'Public'}}}}
@@ -89,8 +93,7 @@ class MonitoringStorageTests(ProjectTest):
             {'id': 'join', 'description': 'join', 'depends': ['left', 'right']},
         ]
         with Authority(self.project) as owner:
-            Engine(owner, 'relations', admit(tasks),
-                   {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=Worker).invoke()
+            Engine(owner, 'relations', admit(tasks), EXECUTOR, adapter=Worker).invoke()
             rows = [(row['task_id'], row['kind'], json.loads(row['facts'])) for row in
                     owner.store.monitor('relations')['observations'] if row['phase'] == 'worker']
             checkpoints = [{**json.loads(row['facts']), 'checkpoint_occurrence_id': row['occurrence_id']}
@@ -137,8 +140,7 @@ class MonitoringStorageTests(ProjectTest):
 
         with Authority(project) as owner:
             with self.assertRaises(KeyboardInterrupt):
-                Engine(owner, 'resume-lineage', admit([task]),
-                       {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'},
+                Engine(owner, 'resume-lineage', admit([task]), EXECUTOR,
                        adapter=InterruptedWorker).invoke()
             owner.store.resume('resume-lineage')
 
@@ -154,8 +156,7 @@ class MonitoringStorageTests(ProjectTest):
                     return 'continued without replaying completed effect'
 
             self_case = self
-            result = Engine(owner, 'resume-lineage', admit([task]),
-                            {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'},
+            result = Engine(owner, 'resume-lineage', admit([task]), EXECUTOR,
                             adapter=ResumedWorker, resume=True).invoke()
             observations = owner.store.monitor('resume-lineage')['observations']
 
@@ -183,7 +184,7 @@ class MonitoringStorageTests(ProjectTest):
         with Authority(self.project) as owner:
             with self.assertRaisesRegex(RuntimeError, 'offline failure'):
                 Engine(owner, 'terminal-stop', admit([{'id': 'broken', 'description': 'broken'}]),
-                       {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=FailingWorker).invoke()
+                       EXECUTOR, adapter=FailingWorker).invoke()
             rows = owner.store.monitor('terminal-stop')['observations']
 
         worker = next(json.loads(row['facts']) for row in rows

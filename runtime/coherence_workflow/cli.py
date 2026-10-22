@@ -185,9 +185,9 @@ def main(argv=None):
         if not isinstance(executor, dict) or any(not isinstance(executor.get(k), str) or not executor[k]
                                                  for k in ('provider', 'model', 'effort')):
             raise Blocked('executor needs provider, model and effort strings')
-        if 'reviewer' in executor and (not isinstance(executor['reviewer'], dict) or any(
+        if not isinstance(executor.get('reviewer'), dict) or any(
                 not isinstance(executor['reviewer'].get(key), str) or not executor['reviewer'][key]
-                for key in ('provider', 'model', 'effort'))):
+                for key in ('provider', 'model', 'effort')):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
         run_id = args.run or uuid.uuid4().hex
         question = attached_question(run_id)

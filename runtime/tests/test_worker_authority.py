@@ -5,7 +5,8 @@ from coherence_workflow.store import Authority
 from fixtures.support import ProjectTest
 
 
-EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}
+EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
+            'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
 
 
 class WorkerAuthorityTests(ProjectTest):

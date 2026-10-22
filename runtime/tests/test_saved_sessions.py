@@ -21,7 +21,8 @@ class SavedSessionTransportTests(ProjectTest):
         from coherence_workflow.engine import Engine
         from coherence_workflow.sessions import select_session
         from coherence_workflow.store import Authority
-        executor = {'provider': 'openai', 'model': 'gpt-4.1', 'effort': 'medium'}
+        executor = {'provider': 'openai', 'model': 'gpt-4.1', 'effort': 'off',
+                    'reviewer': {'provider': 'openai', 'model': 'gpt-4.1', 'effort': 'off'}}
         task = {'id': 'tiny', 'description': 'zero-send SDK boundary', 'context_group': 'dummy'}
         (self.project/'.pi').mkdir()
         (self.project/'.pi/settings.json').write_text(json.dumps({'compaction': {'enabled': True}}))

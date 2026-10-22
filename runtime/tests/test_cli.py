@@ -17,7 +17,7 @@ class CliTests(ProjectTest):
         tasks = self.root/'tasks.json'
         tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"fix","description":"Fix"}]}')
         executor = self.root/'executor.json'
-        executor.write_text('{"provider":"fixture","model":"offline-no-provider-call","effort":"medium"}')
+        executor.write_text('{"provider":"fixture","model":"offline-no-provider-call","effort":"medium","reviewer":{"provider":"fixture","model":"offline-reviewer","effort":"medium"}}')
         seen = []
         class Boundary:
             def __init__(self, project, executor, **kwargs): seen.append(executor)
@@ -29,7 +29,7 @@ class CliTests(ProjectTest):
                                                           'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}):
             code = main(['start', '--project', str(self.project), '--tasks', str(tasks), '--executor', str(executor), '--run', 'minimal'])
         self.assertEqual(code, 0, out.getvalue())
-        self.assertEqual(seen[0], json.loads(executor.read_text()))
+        self.assertEqual(seen[0], {'provider': 'fixture', 'model': 'offline-no-provider-call', 'effort': 'medium'})
         self.assertEqual(json.loads(out.getvalue())['checkpoints'][0]['no_change'], True)
         observed = status(self.project, 'minimal')
         self.assertEqual(observed['run']['state'], 'complete')
@@ -77,7 +77,7 @@ class CliTests(ProjectTest):
     def test_bad_attached_configuration_stops_before_storage_or_sdk(self):
         tasks, executor = self.root/'tasks.json', self.root/'executor.json'
         tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"smoke","description":"No changes"}]}')
-        executor.write_text('{"provider":"fixture","model":"offline","effort":"medium"}')
+        executor.write_text('{"provider":"fixture","model":"offline","effort":"medium","reviewer":{"provider":"fixture","model":"offline-reviewer","effort":"medium"}}')
         prefix = 'COHERENCE_PARENT_BRIDGE_'
         base_env = {k: v for k, v in os.environ.items() if not k.startswith(prefix)}
         cases = [({'TOKEN': 'partial'}, 'run mismatch'),
@@ -164,7 +164,7 @@ class CliTests(ProjectTest):
         tasks = self.root/'tasks.json'
         tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"fix","description":"Fix"}]}')
         executor = self.root/'executor.json'
-        executor.write_text('{"provider":"fixture","model":"offline-no-provider-call","effort":"medium"}')
+        executor.write_text('{"provider":"fixture","model":"offline-no-provider-call","effort":"medium","reviewer":{"provider":"fixture","model":"offline-reviewer","effort":"medium"}}')
         code = "from pathlib import Path; import coherence_workflow.pi_adapter as a; a.host_path=lambda:Path(" + repr(str(host)) + "); from coherence_workflow.cli import main; raise SystemExit(main())"
         process = subprocess.Popen([sys.executable, '-B', '-c', code, 'start', '--project', str(self.project),
                                     '--tasks', str(tasks), '--executor', str(executor), '--run', 'cancelled'],

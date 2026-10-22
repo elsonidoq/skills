@@ -15,6 +15,10 @@ from coherence_workflow.store import Authority, git
 from fixtures.support import ProjectTest
 
 
+EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
+            'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
+
+
 def observation(input=10, *, output=5, cache_read=2, cache_write=1, usd=.1):
     return {'session_id': 'private-session', 'branch': 'b', 'epoch': 'e',
             'counters': {'input': input, 'output': output, 'cacheRead': cache_read, 'cacheWrite': cache_write},
@@ -142,7 +146,7 @@ class MetricArtifactTests(ProjectTest):
 
         with Authority(self.project) as authority:
             result = Engine(authority, 'terminal-calls', admit([{'id': 'metric', 'description': 'fixture'}]),
-                            {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=Adapter).invoke()
+                            EXECUTOR, adapter=Adapter).invoke()
         artifact = result['metric_artifact']
         self.assertEqual(artifact['status'], 'committed')
         self.assertNotEqual(result['sha'], artifact['sha'])
@@ -162,7 +166,7 @@ class MetricArtifactTests(ProjectTest):
         with Authority(self.project) as authority:
             with self.assertRaisesRegex(RuntimeError, 'controlled worker failure'):
                 Engine(authority, 'failed-terminal-call', admit([{'id': 'metric', 'description': 'fixture'}]),
-                       {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=FailingAdapter).invoke()
+                       EXECUTOR, adapter=FailingAdapter).invoke()
         rows = read_artifact(self.project, 'failed-terminal-call')['records']
         self.assertEqual([(row['role'], row['outcome']) for row in rows], [('worker', 'failed')])
         self.assertEqual(git(self.project, 'show', '--name-only', '--format=', 'HEAD').decode().splitlines(),
@@ -196,7 +200,7 @@ class MetricArtifactTests(ProjectTest):
                         return original_finalize(engine, result)
                     with Authority(self.project) as authority:
                         engine = Engine(authority, run, admit([{'id': 'metric', 'description': 'fixture'}]),
-                                        {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=Adapter)
+                                        EXECUTOR, adapter=Adapter)
                         head = git(self.project, 'rev-parse', 'HEAD')
                         with patch.object(Engine, '_finalize_metric_artifact', finalize):
                             with patch('coherence_workflow.engine.MetricArtifactFinalizer', side_effect=RuntimeError('constructor fault')) if fault == 'constructor' else nullcontext():

@@ -7,7 +7,8 @@ from coherence_workflow.store import Authority
 from fixtures.support import ProjectTest
 
 
-EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}
+EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
+            'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
 HEADROOM = {'context_window': 250001, 'effective_reserve': 50000, 'occupancy': 50000,
             'compaction_enabled': True, 'compaction_applicable': True}
 
@@ -29,6 +30,8 @@ class SessionRoutingTests(ProjectTest):
                     self.assert_same_worker = True
                     claim('ready')
                     project.joinpath('ready').write_text('ready\n')
+                    self.saved_session = saved_session or {'id': 'persisted-worker', 'file': '/private/worker.jsonl'}
+                    self.last_observation = {'after': {'headroom': HEADROOM}}
                     return 'corrected required check'
                 workers.append((self, saved_session, reuse_key, prompt))
                 if '"id":"first"' in prompt:

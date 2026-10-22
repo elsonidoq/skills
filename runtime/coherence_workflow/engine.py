@@ -91,7 +91,7 @@ class Engine:
         self.authority, self.run, self.contract, self.resume = authority, run, contract, resume
         self.input_executor = executor
         self.executor = {key: value for key, value in executor.items() if key != 'reviewer'}
-        self.reviewer_executor = executor.get('reviewer', self.executor)
+        self.reviewer_executor = executor.get('reviewer')
         if not isinstance(self.reviewer_executor, dict) or any(
             not isinstance(self.reviewer_executor.get(key), str) or not self.reviewer_executor[key]
             for key in ('provider', 'model', 'effort')
