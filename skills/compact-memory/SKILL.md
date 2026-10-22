@@ -16,8 +16,9 @@ duplicate, or git-owned records.
 2. If no project memory store exists or its association cannot be verified, stop. Report `compaction unavailable:
    no verified project memory store`; do not create a memory store or modify global memory.
 3. Read the project's memory/documentation distinction. If absent, use the `memory-handling` rule: documentation
-   describes current state; memory contains non-obvious, action-triggered gotchas that would surprise an agent who
-   read the code and authoritative documentation.
+   describes current state; memory contains verified non-obvious, action-triggered gotchas and may contain explicitly
+   authorized future owner guidance with its user provenance. Guidance is not a current-state fact or a gotcha merely
+   because it is compact; do not infer, create, or alter its authority during compaction.
 4. Discover the configured threshold and index format. If no threshold is configured, accept a target stated in the
    user's request only after identifying it as user-provided; otherwise ask the user for a target. Never invent a line or
    byte limit.
@@ -34,9 +35,10 @@ duplicate, or git-owned records.
 - Do not write secrets, tokens, personal data, or sensitive payloads into memory or documentation.
 - Verify facts against primary artifacts before migrating them to documentation. A stale memory is dropped or
   corrected; it must not become a stale durable document.
-- Never delete a genuine gotcha until its required destination is verified. When uncertain whether a fact is a
-  current-state convention or a trigger-first trap, preserve the trap and put any durable convention in its
-  documentation owner.
+- Never delete a genuine gotcha or valid authorized guidance until its required destination or surviving merged entry
+  is verified. When uncertain whether a fact is a current-state convention or a trigger-first trap, preserve the trap
+  and put any durable convention in its documentation owner. When guidance authority or provenance is uncertain,
+  preserve it and ask rather than migrating or dropping it.
 
 ## Phase 1: Inventory and Classify
 
@@ -48,10 +50,10 @@ Classify each memory exactly once:
 
 | Class | Meaning and action |
 | --- | --- |
-| `KEEP` | A verified, non-obvious trigger-first gotcha. Tighten only when doing so preserves the trigger and consequence. |
-| `MIGRATE` | A verified current-state fact, contract, invariant, or convention. Add it to its most specific authoritative document, then remove or reduce the redundant memory. |
-| `MERGE` | Overlapping memories. Combine every distinct actionable fact into one surviving memory and repair inbound references. |
-| `DROP` | Stale, resolved, superseded, duplicate, or git-owned metadata. Record why it is safe to remove. |
+| `KEEP` | A verified, non-obvious trigger-first gotcha, or valid explicitly authorized owner guidance with provenance. Tighten a gotcha only when preserving its trigger and consequence; retain guidance authority, provenance, future trigger, and action. |
+| `MIGRATE` | A verified current-state fact, contract, invariant, or convention. Add it to its most specific authoritative document, then remove or reduce the redundant memory. Do not migrate owner guidance solely because it is not a gotcha. |
+| `MERGE` | Overlapping records of the same evidence kind. Combine every distinct actionable fact into one surviving record, retaining gotcha evidence or guidance authority/provenance as applicable, and repair inbound references. |
+| `DROP` | Stale, resolved, superseded, duplicate, or git-owned metadata. Record why it is safe to remove. Valid guidance is not dropped solely for failing gotcha criteria. |
 
 For each `MIGRATE`, name the target document and section. For each `DROP`, explicitly distinguish stale/wrong facts
 from completed-work or other git-owned records. Search for near-duplicate claim text whenever a memory is refuted
@@ -63,8 +65,8 @@ Before editing, present:
 
 1. Documentation additions grouped by target document, including source memory records.
 2. Memory records to merge or delete, with a concrete reason and destination where applicable.
-3. The kept-record count, any new trigger pointers, and the projected index size against the configured or
-   user-provided target.
+3. The kept-record count, any new trigger pointers, retained guidance provenance/authority, and the projected index
+   size against the configured or user-provided target.
 4. Backup location and verification result.
 
 Stop and wait for explicit user approval. If the index is already within its target, ask whether the user wants a
@@ -75,8 +77,8 @@ lightweight hygiene pass rather than forcing removals.
 1. Add approved migrations to their documentation owners first. Keep each fact in one authoritative document;
    do not create duplicate summaries.
 2. Merge or delete approved memories. Repair every inbound index or intra-memory reference so no link dangles.
-3. Rewrite the memory index in its existing trigger-first format. Preserve index entries' trigger and consequence;
-   remove empty sections.
+3. Rewrite the memory index in its existing format. Preserve gotcha entries' trigger and consequence and guidance entries'
+   user provenance, future trigger, and action; remove empty sections.
 4. Recompute the configured target measurement. If still over, perform another approved `MIGRATE`, `MERGE`, or
    `DROP` pass rather than gutting a record until it becomes undiscoverable.
 5. Validate only links and references changed by compaction.
@@ -85,8 +87,8 @@ lightweight hygiene pass rather than forcing removals.
 
 If an independent reviewer capability is available, ask a fresh reviewer to inspect the pre-compaction backup and
 current files. Otherwise, perform a separate self-audit and report `independent audit: UNAVAILABLE`. The audit checks
-that every removed memory maps to an approved `MIGRATE`, `MERGE`, or `DROP`; preserved gotchas remain actionable;
-migrated facts are accurate; and changed links resolve. Fix actionable findings with the same dirty-target protection,
+that every removed record maps to an approved `MIGRATE`, `MERGE`, or `DROP`; preserved gotchas remain actionable;
+valid guidance retains authority and provenance; migrated facts are accurate; and changed links resolve. Fix actionable findings with the same dirty-target protection,
 then re-check the configured size target.
 
 Report the verified memory location, configured target, backup path, migrations, merges, drops, kept count, final

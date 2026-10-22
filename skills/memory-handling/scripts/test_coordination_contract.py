@@ -9,6 +9,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[3]
 TEXT = (ROOT / "skills/memory-handling/SKILL.md").read_text()
+CLOSEOUT_TEXT = (ROOT / "skills/finish-session/SKILL.md").read_text()
+COMPACTOR_TEXT = (ROOT / "skills/compact-memory/SKILL.md").read_text()
+JEV_TEXT = (ROOT / "skills/finish-session-jev/SKILL.md").read_text()
 
 GUARDS = {
     "Discovering the association": (
@@ -58,6 +61,44 @@ def contract_errors(text):
     return errors
 
 
+def closeout_errors(closeout, compactor, jev):
+    checks = {
+        "finish-session unified association": (
+            closeout,
+            "same verified project association/index for both kinds",
+            "No feedback means no guidance write.",
+            "update or reuse a related entry rather than duplicating it",
+            "recheck after an actual write",
+        ),
+        "compact-memory guidance preservation": (
+            compactor,
+            "valid explicitly authorized owner guidance with provenance",
+            "Do not migrate owner guidance solely because it is not a gotcha.",
+            "retaining gotcha evidence or guidance authority/provenance as applicable",
+            "Valid guidance is not dropped solely for failing gotcha criteria.",
+            "configured or user-provided target",
+            "Stop and wait for explicit user approval.",
+            "fresh, independent backup",
+        ),
+        "Jev manual authority": (
+            jev,
+            "Explicit future-directed owner guidance also routes manually",
+            "Jev cannot establish decision approval, guidance authority, or provenance.",
+            "Exclude and manually route any candidate involving explicit owner guidance",
+            "no classifier result can authorize, infer, suppress, or write it",
+        ),
+    }
+    errors = []
+    for name, (text, *clauses) in checks.items():
+        errors.extend(f"{name}: missing {clause}" for clause in clauses if clause not in text)
+    for text, unsafe in ((closeout, "Infer guidance from closeout reflection"),
+                         (compactor, "Drop guidance because it is not a gotcha"),
+                         (jev, "Jev may authorize guidance")):
+        if unsafe.lower() in text.lower():
+            errors.append("authority: " + unsafe)
+    return errors
+
+
 def write_decision(kind, *, no_write=False, safe=True):
     """Authored symbolic authority oracle; it is not a filesystem write engine."""
     if no_write or kind in (
@@ -67,6 +108,27 @@ def write_decision(kind, *, no_write=False, safe=True):
     if kind == "ambiguous":
         return "ask/no-write"
     return "write-unified-entry" if safe else "stop/no-write"
+
+
+class UnifiedMemoryCloseoutTests(unittest.TestCase):
+    def test_actual_closeout_compaction_and_jev_carry_unified_contract(self):
+        self.assertEqual(closeout_errors(CLOSEOUT_TEXT, COMPACTOR_TEXT, JEV_TEXT), [])
+
+    def test_gotcha_only_and_classifier_authorization_mutations_are_rejected(self):
+        gotcha_only = COMPACTOR_TEXT.replace(
+            "valid explicitly authorized owner guidance with provenance", "a gotcha only", 1
+        )
+        errors = closeout_errors(CLOSEOUT_TEXT, gotcha_only, JEV_TEXT)
+        self.assertIn(
+            "compact-memory guidance preservation: missing valid explicitly authorized owner guidance with provenance",
+            errors,
+        )
+        errors = closeout_errors(CLOSEOUT_TEXT, COMPACTOR_TEXT, JEV_TEXT + "\nJev may authorize guidance")
+        self.assertIn("authority: Jev may authorize guidance", errors)
+
+    def test_unrelated_closeout_has_no_memory_search_or_guidance_write(self):
+        self.assertIn("Otherwise report `not needed` without searching for a memory store.", CLOSEOUT_TEXT)
+        self.assertEqual(write_decision("none"), "no-write")
 
 
 class UnifiedMemoryContractTests(unittest.TestCase):

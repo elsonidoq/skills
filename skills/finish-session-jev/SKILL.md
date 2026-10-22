@@ -11,11 +11,11 @@ Insert the optional triage below after the base workflow derives candidate findi
 
 ## Jev Triage
 
-An explicitly approved consequential decision that warrants durable rationale routes manually to `save-adr` under the base workflow; it is outside Jev triage. Jev cannot establish that approval or provenance.
+An explicitly approved consequential decision that warrants durable rationale routes manually to `save-adr` under the base workflow; it is outside Jev triage. Explicit future-directed owner guidance also routes manually through the base workflow and its `memory-handling` authority rule. Jev cannot establish decision approval, guidance authority, or provenance.
 
 Load the `jev` skill before using Jev and follow its authentication and data-safety rules. If the skill or CLI is unavailable or authentication is unavailable, route every candidate manually and continue the base workflow.
 
-Use Jev only when each candidate's routing is a narrow, self-contained typed semantic judgment with explicit alternatives, and the candidate is already grounded in the attributable diff and primary artifacts. Do not use it merely because there are multiple candidates. Exclude and manually route any candidate involving security, deployment, credentials, personal data, sensitive payloads, or uncertain evidence. Submit every eligible candidate together; do not select a subset based on count. Make at most one bulk Jev call.
+Use Jev only when each candidate's routing is a narrow, self-contained typed semantic judgment with explicit alternatives, and the candidate is already grounded in the attributable diff and primary artifacts. Do not use it merely because there are multiple candidates. Exclude and manually route any candidate involving explicit owner guidance, security, deployment, credentials, personal data, sensitive payloads, or uncertain evidence. Submit every eligible candidate together; do not select a subset based on count. Make at most one bulk Jev call.
 
 Give every eligible candidate a stable ID and a compact evidence-backed description containing no sensitive data. Send the descriptions as JSONL through stdin or non-repository scratch data; do not persist the batch in the repository. Use one typed `choice` decision per input line with JSON output, order preserved, and a minimum confidence of `0.80` (for example, `jev pick ... -l --field description --json --min-confidence 0.80`). Define these choices in the prompt:
 
@@ -32,9 +32,9 @@ Jev is not an authority. It must not:
 - create, edit, or delete any artifact
 - authorize deployment work or commands
 - see credentials, tokens, personal data, or sensitive payloads
-- replace duplicate checks, primary-artifact verification, or the final routing decision
+- replace duplicate checks, primary-artifact verification, the final routing decision, or manual review of explicit guidance authority
 
-Before writing, manually review every candidate against its primary artifact and the base workflow's routing table, including every `skip`, excluded candidate, and low-confidence or unavailable result. Jev may prioritize attention but cannot suppress a candidate or make the final routing decision.
+Before writing, manually review every candidate against its primary artifact and the base workflow's routing table, including every `skip`, excluded candidate, and low-confidence or unavailable result. Review explicit guidance manually under the base workflow; no classifier result can authorize, infer, suppress, or write it. Jev may prioritize attention but cannot suppress a candidate or make the final routing decision.
 
 Report whether Jev was used, the eligible and submitted counts, the confidence threshold, how many classifications were manually overridden, how many `skip` results were retained or rerouted after review, and all excluded, unavailable, malformed, or low-confidence cases.
 
