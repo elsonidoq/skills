@@ -1199,6 +1199,36 @@ class UnifiedMemoryPlanningTests(unittest.TestCase):
                 self.assertIn("One verified", (target / name / "../memory-handling/SKILL.md").read_text())
 
 
+class UnifiedMemoryRepositoryTests(unittest.TestCase):
+    """Repository association and current owner guidance, not parent-wakeup runtime tests."""
+
+    guidance = ("Routine task transitions/completions and steering-status updates must not wake the parent agent or require acknowledgment. "
+                "Only agent questions and terminal workflow completion, whether success or error, should trigger a parent turn.")
+
+    def test_repository_has_one_operational_memory_association_and_verbatim_guidance(self):
+        index = (ROOT / "memory/MEMORY.md").read_text()
+        self.assertIn(self.guidance, index)
+        self.assertIn("Explicit current owner feedback", index)
+        self.assertEqual(checker.repository_memory_errors(), [])
+
+    def test_repository_guard_rejects_missing_guidance_or_second_store_policy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for path in ("AGENTS.md", "README.md", "REQUIREMENTS.md", "docs/index.md", "memory/MEMORY.md"):
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text((ROOT / path).read_text())
+            index = root / "memory/MEMORY.md"
+            index.write_text(index.read_text().replace(self.guidance, "REMOVED", 1))
+            self.assertTrue(any(error.startswith("unified-memory-repository: memory/MEMORY.md")
+                                for error in checker.repository_memory_errors(root)))
+            index.write_text((ROOT / "memory/MEMORY.md").read_text())
+            agents = root / "AGENTS.md"
+            agents.write_text(agents.read_text() + "\nPlanning guidance is in memory/coordination/.\n")
+            self.assertTrue(any(error == "unified-memory-repository: AGENTS.md restores an operative second-store path"
+                                for error in checker.repository_memory_errors(root)))
+
+
 class ProjectCoordinationWiringTests(unittest.TestCase):
     """Compatibility name for unified-memory coordinator wiring checks."""
 

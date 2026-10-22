@@ -791,6 +791,32 @@ ACTIVE_EXECUTION_CONSUMERS = (
 )
 
 
+def repository_memory_errors(root=ROOT):
+    """Check this repository's unified-memory association, not a project adoption engine."""
+    errors = []
+    sources = {
+        "AGENTS.md": ("its single index for verified trigger-first gotchas and explicit future-directed owner\n  guidance",),
+        "README.md": ("One verified association/index carries technical gotchas and explicit future-directed owner",),
+        "REQUIREMENTS.md": ("one approved project-memory\nassociation and index for verified technical gotchas and explicit future-directed owner guidance",),
+        "docs/index.md": ("single\n[project-memory index]", "[Memory Handling](../skills/memory-handling/SKILL.md)"),
+    }
+    for path, clauses in sources.items():
+        text = (root / path).read_text()
+        for clause in clauses:
+            if clause not in text:
+                errors.append(f"unified-memory-repository: {path} missing {clause!r}")
+    for path in ("AGENTS.md", "README.md", "REQUIREMENTS.md"):
+        if "memory/coordination/" in (root / path).read_text():
+            errors.append(f"unified-memory-repository: {path} restores an operative second-store path")
+    index = (root / "memory/MEMORY.md").read_text()
+    guidance = ("Routine task transitions/completions and steering-status updates must not wake the parent agent or require acknowledgment. "
+                "Only agent questions and terminal workflow completion, whether success or error, should trigger a parent turn.")
+    for clause in ("## Owner guidance", guidance, "Explicit current owner feedback"):
+        if clause not in index:
+            errors.append(f"unified-memory-repository: memory/MEMORY.md missing {clause!r}")
+    return errors
+
+
 def active_consumer_errors(root=ROOT):
     errors=[]
     for path in ACTIVE_EXECUTION_CONSUMERS:
@@ -814,7 +840,7 @@ def main():
             errors=active_consumer_errors(args.root)
             for path in ACTIVE_EXECUTION_CONSUMERS:print('ActiveConsumersTests: inspected '+path)
         else:
-            errors = check_contracts(load_texts(args.root))
+            errors = check_contracts(load_texts(args.root)) + repository_memory_errors(args.root)
     except (OSError, ValueError) as exc:
         errors = [str(exc)]
     for error in errors:

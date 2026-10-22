@@ -344,7 +344,7 @@ class CandidateTests(unittest.TestCase):
                 self.assertNotIn(retired, text, path)
             self.assertIn("initialize-coherence", text, path)
         memory = normalized((ROOT / "skills/memory-handling/SKILL.md").read_text())
-        for phrase in ("memory adoption: missing — run initialize-coherence", "do not create, guess, or modify a global store", "read the whole index first", "index → matching entries"):
+        for phrase in ("memory adoption: missing — run initialize-coherence", "never guess a path or use global agent memory as a fallback", "read the whole associated index first", "index → matching entries"):
             self.assertIn(phrase, memory)
         compact = normalized((ROOT / "skills/compact-memory/SKILL.md").read_text())
         for phrase in ("no verified project memory store", "do not create a memory store or modify global memory", "stop on a concurrent change", "fresh, independent backup"):
@@ -379,10 +379,13 @@ class CandidateTests(unittest.TestCase):
         gotchas = (ROOT / "memory/MEMORY.md").read_text()
         self.assertIn("<!-- coherence-suite-contract:start -->", agents)
         self.assertIn("associated store is `memory/`", normalized(agents))
-        self.assertIn("No project gotchas recorded yet.", gotchas)
-        self.assertIn("[gotcha-memory index](../memory/MEMORY.md)", index)
+        self.assertIn("## Owner guidance", gotchas)
+        self.assertIn("Explicit current owner feedback", gotchas)
+        self.assertIn("[project-memory index](../memory/MEMORY.md)", index)
+        self.assertIn("single", normalized(index))
+        self.assertIn("Memory Handling", index)
+        self.assertNotIn("coordination memory remains a separate", normalized(index))
         self.assertIn("[Plans directory index](plans/index.md)", index)
-        self.assertIn("coordination memory remains a separate", normalized(index))
         self.assertIn("no default suite-level database is created by adoption", normalized(index))
         self.assertIn("[Runtime schema owner](coordinate-implementation-schema.md)", index)
         self.assertIn("thin executable interface", normalized(index))
