@@ -6,15 +6,18 @@ export type ChainExecution = { ref: string; run_ref: string; execution_id: strin
 export type Activity = { ref: string; run_ref: string; invocation_id: string; occurrence_ref: string; task_ref: string | null; role: 'worker' | 'fixing_worker' | 'reviewer' | 'unknown'; invocation_kind: 'task_worker' | 'corrective_worker' | 'unknown'; outcome: 'returned' | 'failed' | 'interrupted' | 'unknown'; error_category: string | null; input_qualification: 'recorded' | 'unknown'; input_refs: string[]; correction_chain: string[]; support_ref: string | null; stopped_by_ref: string | null; record_refs: string[]; metrics?: unknown; task_metrics?: unknown; trigger_ref?: string | null }
 export type ExecutionSummary = { state: 'success' | 'failure' | 'waiting' | 'running' | 'unknown'; qualification: string | null }
 export type Occurrence = { ref: string; run_ref: string; occurrence_id?: string; phase_ref: string; task_ref: string | null; role: string; outcome: string | null; completeness: string; record_refs: string[]; phase?: string; first_seq?: number; last_seq?: number; parent_ref?: string | null; support_ref?: string | null; stopping?: boolean; execution_summary?: ExecutionSummary }
-export type PlannedTask = { ref: string; run_ref: string; task_id?: string; label: string; summary: string; prerequisite_refs: string[]; progress?: { state: string; qualification: string | null }; reason?: { code: string; occurrence_ref?: string; task_ref?: string } | null; annotation?: { code?: string; label?: string; occurrence_ref?: string } | null }
+export type PlannedTask = { ref: string; run_ref: string; task_id?: string; label: string; work_description?: string | null; prerequisite_refs: string[]; progress?: { state: string; qualification: string | null }; reason?: { code: string; occurrence_ref?: string; task_ref?: string } | null; annotation?: { code?: string; label?: string; occurrence_ref?: string } | null }
 export type ReviewDefinition = { ref: string; run_ref: string; label: string; prerequisite_refs?: string[] }
 export type GraphSnapshot = { runs: Array<{ ref: string; plan_availability?: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; edges?: GraphEdge[]; chain?: ChainExecution[]; activities?: Activity[] }
 export type Followup = { run_ref: string; source_run_ref: string; review_occurrence_ref: string; resolution: string }
 
-const genericTitle = (value: string | undefined, taskId?: string) => !value || /^task(?:\s|$)/i.test(value.trim()) || (taskId != null && value.trim() === taskId)
+export function taskNumber(task: PlannedTask, tasks: PlannedTask[]) {
+  const index = tasks.filter(item => item.run_ref === task.run_ref).findIndex(item => item.ref === task.ref)
+  return index < 0 ? 'Task' : `Task ${index + 1}`
+}
 export function taskTitle(task: PlannedTask) {
-  const summary = task.summary.trim()
-  const title = genericTitle(task.label, task.task_id) && summary ? summary : task.label || summary || 'Unknown task title'
+  const candidate = task.label.trim()
+  const title = !candidate || /^task(?:\s|$)/i.test(candidate) || /^[A-Z]+[-_]?\d+$/i.test(candidate) ? 'Recorded task' : candidate
   return title.length > 80 ? `${title.slice(0, 79)}…` : title
 }
 const roleName = (role: string) => role === 'worker' ? 'Worker' : role === 'fixing_worker' ? 'Corrective worker' : role === 'reviewer' ? 'Reviewer' : role === 'fixer' ? 'Fixing worker' : 'Stop'
@@ -49,7 +52,7 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   const definitions = snapshots.flatMap(snapshot => snapshot.review_definitions ?? [])
   const key = (runRef: string, ref: string) => `${runRef}\u0000${ref}`
   const taskFor = (activity: Activity) => activity.task_ref ? tasks.find(task => task.ref === activity.task_ref && task.run_ref === activity.run_ref) : undefined
-  const designation = (task: PlannedTask) => task.task_id || `Task ${tasks.filter(item => item.run_ref === task.run_ref).indexOf(task) + 1}`
+  const designation = (task: PlannedTask) => taskNumber(task, tasks)
   const exactRoot = (activity: Activity, task: PlannedTask) => activity.run_ref === task.run_ref && activity.task_ref === task.ref && activity.role === 'worker' && activity.invocation_kind === 'task_worker' && activity.correction_chain.length === 1 && activity.correction_chain[0] === activity.invocation_id
   const slotId = (runRef: string, ref: string) => `planned-task:${runRef}:${ref}`
   const slotFor = (task: PlannedTask) => slotId(task.run_ref, task.ref)
@@ -140,5 +143,6 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   return { nodes, edges, topology: JSON.stringify({ nodes: nodes.map(node => node.id).sort(), edges: edges.map(edge => [edge.source, edge.target, edge.data?.relation]).sort() }) }
 }
 export function recordText(record: Observation) {
-  return [`${record.kind}; sequence ${record.source_seq}`, record.recorded_at != null ? `recorded ${record.recorded_at}` : 'recorded time unknown', record.ordinal != null ? `check ${record.ordinal}` : '', record.exit_code != null ? `exit ${record.exit_code}` : '', record.approved != null ? `approved ${record.approved}` : '', record.finding_count != null ? `findings ${record.finding_count}` : '', record.no_change != null ? `no change ${record.no_change}` : '', record.baseline ? `baseline ${record.baseline}` : '', record.head ? `head ${record.head}` : '', record.review_base && record.review_head ? `range ${record.review_base} → ${record.review_head}` : '', record.parent_occurrence_id ? `parent ${record.parent_occurrence_id}` : '', record.error_category ? `error ${record.error_category}` : '', record.recording_gap ? 'recording gap' : '', `record ${record.ref}`].filter(Boolean).join('; ')
+  const event = ({ started: 'Started', returned: 'Returned', passed: 'Passed', failed: 'Failed', question_requested: 'Waiting for input', answer_returned: 'Answer returned', answer_sent: 'Answer sent', delivery_failed: 'Answer delivery failed' } as Record<string, string>)[record.kind] ?? 'Recorded event'
+  return [event, record.ordinal != null ? `check ${record.ordinal}` : '', record.exit_code != null ? `exit ${record.exit_code}` : '', record.approved != null ? record.approved ? 'approved' : 'changes requested' : '', record.finding_count != null ? `${record.finding_count} findings` : '', record.no_change != null ? record.no_change ? 'no changes' : 'changes recorded' : '', record.error_category ? `safe error: ${record.error_category}` : '', record.recording_gap ? 'recording gap' : ''].filter(Boolean).join('; ')
 }

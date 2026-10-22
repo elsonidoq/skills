@@ -46,7 +46,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     base = git(project, 'rev-parse', 'HEAD').decode().strip()
     presentation = descriptor({'tasks': [{'id': 'one', 'depends': []}, {'id': 'two', 'depends': ['one']}, {'id': 'three', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'T001'}, 'two': {'label': 'T002'}, 'three': {'label': 'T003'}}}}, {})
     # Simulate already-retained prose; no producer behavior is changed.
-    presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
+    presentation['tasks'][0]['work_description'] = '<img src=x onerror=alert(1)> Recorded workflow explanation opaque-invocation-identity ' * 12
+    presentation['tasks'][1]['work_description'] = None
     with Authority(project) as owner:
         class CorrectionAdapter:
             calls = 0

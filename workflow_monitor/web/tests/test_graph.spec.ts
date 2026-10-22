@@ -36,7 +36,7 @@ test('exact run/task/kind/chain matching retains resumes, collisions and ambigui
   const graph = graphFor(snapshot([initial, resumed, corrective, collision, otherTask]), [], [])
   expect(graph.nodes.map(node => node.id).sort()).toEqual(['fix', 'other-run', 'planned-review:run:final', 'planned-task:run:alpha', 'planned-task:run:opaque', 'resume'])
   expect(graph.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.identity).toMatchObject({ invocationId: 'initial' })
-  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toContain('T003 — Corrective worker — Fix 1')
+  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toContain('Task 1 — Corrective worker — Fix 1')
   expect(graph.nodes.find(node => node.id === 'planned-task:run:opaque')?.data.label).toContain('Task 2 — Worker')
 
   const ambiguous = graphFor(snapshot([call('root-a', 'alpha'), call('root-b', 'alpha')]), [], [])
