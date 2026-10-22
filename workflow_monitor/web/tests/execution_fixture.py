@@ -65,7 +65,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                        'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),
             {'provider': 'fixture', 'model': 'offline', 'effort': 'medium', 'reviewer': {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}}, adapter=CorrectionAdapter,
             question=lambda _: 'fixture correction', paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'merged-edge', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'merged-edge', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(descriptor({'tasks': [{'id': 'edge', 'description': 'Prepare usable input'}],
@@ -82,6 +82,19 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     for state in ('started', 'returned'):
                         emit(recorder, identity, 'worker', state, task='edge', role='worker', invocation_id=identity,
                              invocation_kind=kind, selected_input_checkpoints=selected, correction_chain=chain)
+                continue
+            if run.startswith('review-'):
+                owner.store.review_dispatch(run, 'private-review-two', role='reviewer', review_ordinal=2, fixing_round=1, review_base=base, review_head=base)
+                if run != 'review-dispatched':
+                    facts = {'role': 'reviewer', 'execution_id': 'private-review-two', 'review_ordinal': 2, 'review_base': base, 'review_head': base}
+                    emit(recorder, 'review-two', 'review', 'started', task=None, **facts)
+                    if run == 'review-waiting':
+                        emit(recorder, 'review-question', 'review', 'question_requested', task=None, parent_occurrence_id='review-two')
+                    if run in ('review-returned', 'review-conflict'):
+                        emit(recorder, 'review-two', 'review', 'returned', task=None, **facts)
+                        owner.store.review_outcome(run, 'private-review-two', 'rejected', findings=['Correct the result'], references={'base': base, 'head': base})
+                    if run == 'review-conflict':
+                        emit(recorder, 'review-two', 'review', 'failed', task=None, **facts)
                 continue
             if run == 'metrics-composed':
                 conflicting_record = None

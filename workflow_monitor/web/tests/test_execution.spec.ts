@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { resolve } from 'node:path'
+import { graphFor, type GraphSnapshot } from '../src/graph'
 
 let fixture: ChildProcess
 let fixtureOutput = ''
@@ -49,13 +50,39 @@ test('inspects every merged input and correction fact with readable action endpo
   await page.mouse.click(point.x, point.y)
   const details = page.getByLabel('Selected execution details')
   await expect(details.getByRole('heading', { name: 'Recorded relationships', exact: true })).toBeVisible()
-  await expect(details.locator(':scope > p').first()).toHaveText('Task 1 — Worker — Prepare result → Task 1 — Worker — Prepare result')
+  await expect(details.locator(':scope > p').first()).toHaveText('Task 1 — Worker — Prepare result → Task 1 — Worker — Correction 1 — Prepare result')
   await expect(details.getByText('Recorded input', { exact: true })).toBeVisible()
   await expect(details.getByText('Recorded correction', { exact: true })).toBeVisible()
   await expect(details).not.toContainText('producerRef')
   await expect(details).not.toContainText('consumerRef')
   await expect(details).not.toContainText('predecessorRef')
   await expect(details).not.toContainText('correctionRef')
+})
+
+test('producer readback reconciles ordinal-two dispatch and qualifies observed lifecycle', async ({ page }) => {
+  for (const [stage, expected] of [['dispatched', 'unknown'], ['started', 'unknown'], ['waiting', 'waiting'], ['returned', 'returned — changes requested'], ['conflict', 'unknown']] as const) {
+    const response = await fetch(`http://127.0.0.1:4174/api/monitor/v1/runs`, { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
+    const { runs } = await response.json()
+    const run = runs.find((item: { display_id: string }) => item.display_id === `review-${stage}`)
+    const snapshotResponse = await fetch(`http://127.0.0.1:4174/api/monitor/v1/runs/${run.ref}/snapshot`, { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
+    const input: GraphSnapshot = await snapshotResponse.json()
+    const execution = input.chain!.find(item => item.review_ordinal === 2)!
+    const activity = input.activities!.find(item => item.invocation_id === execution.execution_id)!
+    expect(activity.ref).not.toBe(activity.invocation_id)
+    const graph = graphFor(input, [], [])
+    expect(graph.nodes.filter(node => node.id === execution.ref)).toHaveLength(1)
+    expect(graph.nodes.some(node => node.id === activity.ref)).toBe(false)
+    expect(graph.nodes.find(node => node.id === execution.ref)?.data.status).toContain(expected)
+    await page.goto(`/runs/id-review-${stage}`)
+    const node = page.locator('.react-flow__node').filter({ hasText: 'Review 2' })
+    await expect(node).toHaveCount(1)
+    await node.click()
+    await expect(page.getByLabel('Selected execution details')).toContainText(`Execution: ${expected}`)
+    await page.getByText('Loaded history', { exact: true }).click()
+    for (const raw of ['recorded_running', 'outstanding_input', 'incomplete_history', 'conflicting_terminal_evidence']) await expect(page.locator('main')).not.toContainText(raw)
+  }
+  await page.goto('/runs/id-before-agent')
+  await expect(page.locator('.react-flow__node').filter({ hasText: 'Final review' })).toContainText('Not started; run stopped')
 })
 
 test('renders scoped ordinary metrics from fixture JSONL through production HTTP', async ({ page }, testInfo) => {

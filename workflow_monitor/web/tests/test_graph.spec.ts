@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { graphFor, type Activity, type ChainExecution, type GraphSnapshot } from '../src/graph'
+import { graphFor, outcomeText, qualificationText, type Occurrence, type Activity, type ChainExecution, type GraphSnapshot } from '../src/graph'
 import { layoutNodes } from '../src/layout'
 
 const task = (ref: string, taskId: string | undefined, label: string, prerequisites: string[] = []) => ({ ref, run_ref: 'run', task_id: taskId, label, summary: `${label} work`, prerequisite_refs: prerequisites })
@@ -72,6 +72,29 @@ test('only exact ordinal-one review replaces initial intent; actual correction c
   const ambiguous = graphFor(snapshot([], [review('review-a', 1), review('review-b', 1)]), [], [])
   expect(ambiguous.nodes.map(node => node.id)).toEqual(expect.arrayContaining(['review-a', 'review-b', 'planned-review:run:final']))
   expect(ambiguous.nodes.find(node => node.id === 'planned-review:run:final')?.data.relationQualification).toContain('ambiguous')
+})
+
+test('all observed calls use qualified lifecycle without successful fallback or raw qualifications', () => {
+  const initial = call('initial', 'alpha', 'task_worker', ['initial'], 'returned')
+  const correction = { ...call('correction', 'alpha', 'corrective_worker', ['initial', 'correction'], 'returned'), role: 'worker' as const }
+  const reviewer = { ...call('review-activity', null), role: 'reviewer' as const, invocation_id: 'private-review', occurrence_ref: 'review-occ' }
+  const execution = { ...review('public-review', 2, 'approved', ['review-occ']), execution_id: 'private-review' }
+  for (const [state, qualification, css] of [['running', 'recorded_running', 'running'], ['waiting', 'outstanding_input', 'waiting'], ['unknown', 'conflicting_terminal_evidence', 'neutral']] as const) {
+    const input = snapshot([initial, correction, reviewer], [execution])
+    input.occurrences = [initial, correction, reviewer].map(activity => ({ ref: activity.occurrence_ref!, run_ref: 'run', phase_ref: 'phase', task_ref: activity.task_ref, role: activity.role, outcome: null, completeness: 'complete', record_refs: [], execution_summary: { state, qualification } }))
+    const graph = graphFor(input, [], [])
+    for (const id of ['planned-task:run:alpha', 'correction', 'public-review']) {
+      expect(graph.nodes.find(node => node.id === id)?.className?.split(' ').at(-1)).toBe(css)
+      expect(graph.nodes.find(node => node.id === id)?.data.status).toContain(state)
+      expect(graph.nodes.find(node => node.id === id)?.data.status).not.toContain(qualification)
+    }
+    expect(graph.nodes.find(node => node.id === 'correction')?.data.label).toContain('Task 1 — Worker — Correction 1')
+    expect(outcomeText(input.occurrences[0], [])).not.toContain(qualification)
+  }
+  expect(qualificationText('private.schema.value')).toBe('Unknown')
+  const stopped = snapshot()
+  stopped.occurrences = [{ ref: 'terminal', run_ref: 'run', phase_ref: 'terminal', phase: 'terminal', task_ref: null, role: 'non_model', outcome: 'failed', completeness: 'complete', record_refs: [] } as Occurrence]
+  expect(graphFor(stopped, [], []).nodes.find(node => node.id === 'planned-review:run:final')?.data.status).toBe('Not started; run stopped')
 })
 
 test('declared and recorded relations have different semantics and reject missing or cyclic endpoints', async () => {

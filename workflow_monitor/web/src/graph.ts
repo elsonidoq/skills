@@ -34,8 +34,11 @@ export function status(item: Occurrence, records: Observation[]) {
   if (allOwnRecordsLoaded && own.some(record => record.kind === 'question_requested') && !own.some(record => record.kind === 'answer_sent' || record.kind === 'answer_returned')) return 'waiting'
   return 'neutral'
 }
+export function qualificationText(value: string | null | undefined) {
+  return ({ recorded_running: 'Recorded running', outstanding_input: 'Outstanding input', waiting_for_input: 'Waiting for input', incomplete_history: 'Incomplete history', conflicting_terminal_evidence: 'Conflicting completion evidence', incomplete_terminal: 'Incomplete completion evidence' } as Record<string, string>)[value ?? ''] ?? 'Unknown'
+}
 export function outcomeText(item: Occurrence, records: Observation[]) {
-  if (item.execution_summary) return item.execution_summary.state === 'success' ? 'returned — acceptance not established' : item.execution_summary.state === 'failure' ? 'failed' : `${item.execution_summary.state} — ${item.execution_summary.qualification ?? 'recorded qualification'}`
+  if (item.execution_summary) return item.execution_summary.state === 'success' ? 'returned — acceptance not established' : item.execution_summary.state === 'failure' ? 'failed' : `${item.execution_summary.state} — ${qualificationText(item.execution_summary.qualification)}`
   if (item.outcome) return item.outcome
   const own = records.filter(record => record.occurrence_ref === item.ref && record.run_ref === item.run_ref)
   if (own.some(record => record.kind === 'returned')) return 'returned — acceptance not established'
@@ -53,6 +56,19 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   const key = (runRef: string, ref: string) => `${runRef}\u0000${ref}`
   const taskFor = (activity: Activity) => activity.task_ref ? tasks.find(task => task.ref === activity.task_ref && task.run_ref === activity.run_ref) : undefined
   const designation = (task: PlannedTask) => taskNumber(task, tasks)
+  const occurrenceFor = (activity: Activity) => occurrences.find(item => item.run_ref === activity.run_ref && item.ref === activity.occurrence_ref)
+  const presentation = (summary: ExecutionSummary | undefined, outcome: string, rejected = false) => {
+    const state = summary?.state ?? (['returned', 'approved', 'rejected'].includes(outcome) ? 'success' : outcome === 'failed' ? 'failure' : 'unknown')
+    return { lifecycle: state === 'failure' ? 'failed' : state === 'unknown' ? 'neutral' : state,
+      status: state === 'success' ? rejected ? 'returned — changes requested' : 'returned — acceptance not established' : state === 'failure' ? 'failed' : `${state}${summary?.qualification ? ` — ${qualificationText(summary.qualification)}` : ''}` }
+  }
+  const reviewPresentation = (execution: ChainExecution) => {
+    const observed = occurrences.filter(item => item.run_ref === execution.run_ref && (execution.occurrence_refs.includes(item.ref) || activities.some(activity => activity.run_ref === execution.run_ref && activity.role === 'reviewer' && activity.invocation_id === execution.execution_id && activity.occurrence_ref === item.ref)))
+    const summaries = observed.map(item => item.execution_summary)
+    const summary = summaries.length > 1 ? summaries.every(item => item && item.state === summaries[0]?.state) ? summaries[0] : { state: 'unknown' as const, qualification: 'conflicting_terminal_evidence' } : summaries[0]
+    return presentation(summary, execution.outcome, execution.outcome === 'rejected')
+  }
+  const runStopped = (runRef: string) => occurrences.some(item => item.run_ref === runRef && item.phase === 'terminal' && ['passed', 'failed', 'interrupted', 'abandoned'].includes(item.outcome ?? ''))
   // Public correction-chain entries are opaque activity refs, not private invocation IDs.
   const exactRoot = (activity: Activity, task: PlannedTask) => activity.run_ref === task.run_ref && activity.task_ref === task.ref && activity.role === 'worker' && activity.invocation_kind === 'task_worker' && activity.correction_chain.length === 1 && activity.correction_chain[0] === activity.ref
   const slotId = (runRef: string, ref: string) => `planned-task:${runRef}:${ref}`
@@ -69,8 +85,9 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const occurrence = matched?.occurrence_ref ? occurrences.find(item => item.run_ref === matched.run_ref && item.ref === matched.occurrence_ref) : undefined
     const qualified = occurrence?.execution_summary
     const state = matched ? qualified ? outcomeText(occurrence!, root.records) : matched.outcome === 'returned' ? 'returned — acceptance not established' : matched.outcome : unresolved ? 'unknown — initial worker reconciliation ambiguous' : task.annotation?.label ?? task.progress?.state ?? 'planned — not started'
-    const qualification = unresolved ? 'Initial worker reconciliation ambiguous or incomplete; distinct recorded calls remain separate.' : qualified?.qualification ?? null
-    return { id: slotFor(task), position: { x: 0, y: 0 }, data: { label: `${designation(task)} — Worker — ${taskTitle(task)}`, status: state, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null, planned: true, invocationId: matched?.invocation_id ?? null }, relationQualification: qualification }, className: `execution-node planned-call ${qualified?.state === 'failure' || matched?.outcome === 'failed' ? 'failed' : qualified?.state === 'success' || matched?.outcome === 'returned' ? 'success' : matches.length > 1 ? 'neutral' : 'neutral'}` } satisfies Node
+    const qualification = unresolved ? 'Initial worker reconciliation ambiguous or incomplete; distinct recorded calls remain separate.' : qualified?.qualification ? qualificationText(qualified.qualification) : null
+    const lifecycle = matched ? presentation(qualified, matched.outcome).lifecycle : unresolved ? 'neutral' : task.progress?.state === 'blocked' ? 'waiting' : 'pending'
+    return { id: slotFor(task), position: { x: 0, y: 0 }, data: { label: `${designation(task)} — Worker — ${taskTitle(task)}`, status: state, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null, planned: true, invocationId: matched?.invocation_id ?? null }, relationQualification: qualification }, className: `execution-node planned-call ${lifecycle}` } satisfies Node
   })
   const reviewFor = (definition: ReviewDefinition) => `planned-review:${definition.run_ref}:${definition.ref}`
   const boundReview = new Map<string, string>()
@@ -79,15 +96,16 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const executionIds = new Set(candidates.map(item => item.execution_id))
     const matched = executionIds.size === 1 ? candidates[0] : undefined
     if (matched) boundReview.set(matched.ref, reviewFor(definition))
-    const state = matched ? `${matched.outcome === 'approved' ? 'returned — acceptance not established' : matched.outcome === 'rejected' ? 'returned — changes requested' : matched.outcome}` : candidates.length > 1 ? 'unknown — initial review reconciliation ambiguous' : 'planned — not started'
-    return { id: reviewFor(definition), position: { x: 0, y: 0 }, data: { label: 'Final review — Independent reviewer', status: state, identity: { ref: definition.ref, runRef: definition.run_ref, planned: true, executionId: matched?.execution_id ?? null }, relationQualification: candidates.length > 1 ? 'Initial review reconciliation ambiguous; distinct recorded reviews remain separate.' : null }, className: `execution-node planned-review ${matched?.outcome === 'failed' || matched?.outcome === 'interrupted' ? 'failed' : matched ? 'success' : 'neutral'}` } satisfies Node
+    const observed = matched ? reviewPresentation(matched) : undefined
+    const state = observed?.status ?? (candidates.length > 1 ? 'unknown — initial review reconciliation ambiguous' : runStopped(definition.run_ref) ? 'Not started; run stopped' : 'planned — not started')
+    return { id: reviewFor(definition), position: { x: 0, y: 0 }, data: { label: 'Final review — Independent reviewer', status: state, identity: { ref: definition.ref, runRef: definition.run_ref, planned: true, executionId: matched?.execution_id ?? null }, relationQualification: candidates.length > 1 ? 'Initial review reconciliation ambiguous; distinct recorded reviews remain separate.' : null }, className: `execution-node planned-review ${observed?.lifecycle ?? (candidates.length > 1 ? 'neutral' : 'pending')}` } satisfies Node
   })
 
   // A review dispatch may be unobserved. Its retained execution ID is still the
   // exact identity for the reviewer activity, so bind it before occurrence lookup.
-  for (const execution of chain) if (boundReview.has(execution.ref)) {
+  for (const execution of chain.filter(item => item.role === 'reviewer')) {
     const matches = activities.filter(activity => activity.run_ref === execution.run_ref && activity.role === 'reviewer' && activity.invocation_id === execution.execution_id)
-    if (matches.length === 1) boundActivity.set(matches[0].ref, boundReview.get(execution.ref)!)
+    if (matches.length === 1 && chain.filter(item => item.run_ref === execution.run_ref && item.execution_id === execution.execution_id).length === 1) boundActivity.set(matches[0].ref, boundReview.get(execution.ref) ?? execution.ref)
   }
   const memberships = new Map<string, string[]>()
   for (const execution of chain.filter(item => item.role !== 'fixer')) for (const occurrence of execution.occurrence_refs) {
@@ -101,17 +119,18 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   }
   for (const activity of activities) if (boundActivity.has(activity.ref) && activity.occurrence_ref) occurrenceNode.set(key(activity.run_ref, activity.occurrence_ref), boundActivity.get(activity.ref)!)
   const nodeForOccurrence = (runRef: string, occurrenceRef: string) => occurrenceNode.get(key(runRef, occurrenceRef)) ?? boundActivity.get(activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? '') ?? activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? occurrenceRef
-  const fixNumber = (activity: Activity) => activities.filter(candidate => candidate.run_ref === activity.run_ref && candidate.task_ref === activity.task_ref && candidate.role === 'fixing_worker').indexOf(activity) + 1
+  const fixNumber = (activity: Activity) => activity.role === 'fixing_worker' ? activities.filter(candidate => candidate.run_ref === activity.run_ref && candidate.task_ref === activity.task_ref && candidate.role === 'fixing_worker').indexOf(activity) + 1 : activity.correction_chain.filter(ref => activities.some(candidate => candidate.ref === ref && candidate.run_ref === activity.run_ref && candidate.invocation_kind === 'corrective_worker')).length
   const activityNodes = activities.filter(activity => !boundActivity.has(activity.ref) && (!activity.occurrence_ref || !occurrenceNode.has(key(activity.run_ref, activity.occurrence_ref)))).map(activity => {
     const task = taskFor(activity)
-    const repeat = activity.role === 'fixing_worker' ? ` — Fix ${fixNumber(activity)}` : ''
+    const repeat = activity.role === 'fixing_worker' ? ` — Fix ${fixNumber(activity)}` : activity.invocation_kind === 'corrective_worker' ? ` — Correction ${fixNumber(activity) || 'unknown'}` : ''
     const title = `${task ? `${designation(task)} — ` : ''}${roleName(activity.role)}${repeat}${task ? ` — ${taskTitle(task)}` : ''}`
-    const outcome = activity.outcome === 'returned' ? 'returned — acceptance not established' : activity.outcome
-    return { id: activity.ref, position: { x: 0, y: 0 }, data: { label: title, status: `${outcome}${activity.error_category ? ` — ${activity.error_category}` : ''}`, identity: { ref: activity.ref, runRef: activity.run_ref, invocationId: activity.invocation_id, taskId: task?.task_id ?? null }, relationQualification: activity.input_qualification === 'recorded' ? null : 'Input relations unknown/not recorded.' }, className: `execution-node actual-call ${activity.outcome === 'failed' ? 'failed' : activity.outcome === 'unknown' ? 'neutral' : 'success'}` } satisfies Node
+    const observed = presentation(occurrenceFor(activity)?.execution_summary, activity.outcome)
+    return { id: activity.ref, position: { x: 0, y: 0 }, data: { label: title, status: observed.status, identity: { ref: activity.ref, runRef: activity.run_ref, invocationId: activity.invocation_id, taskId: task?.task_id ?? null }, relationQualification: activity.input_qualification === 'recorded' ? null : 'Input relations unknown/not recorded.' }, className: `execution-node actual-call ${observed.lifecycle}` } satisfies Node
   })
   const chainNodes = chain.filter(execution => !boundReview.has(execution.ref) && execution.role !== 'fixer').map(execution => {
     const title = execution.role === 'reviewer' ? `Review ${execution.review_ordinal ?? 'unknown'} — Independent reviewer` : execution.role === 'fixer' ? `Fixing worker${execution.fixing_round == null ? '' : ` round ${execution.fixing_round}`}` : 'Recorded execution'
-    return { id: execution.ref, position: { x: 0, y: 0 }, data: { label: title, status: execution.outcome === 'rejected' ? 'returned — changes requested' : execution.outcome, identity: { ref: execution.ref, runRef: execution.run_ref, executionId: execution.execution_id, occurrenceRefs: execution.occurrence_refs } }, className: `execution-node chain-node actual-call ${execution.outcome === 'failed' || execution.outcome === 'interrupted' ? 'failed' : execution.outcome === 'unknown' ? 'neutral' : 'success'}` } satisfies Node
+    const observed = reviewPresentation(execution)
+    return { id: execution.ref, position: { x: 0, y: 0 }, data: { label: title, status: observed.status, identity: { ref: execution.ref, runRef: execution.run_ref, executionId: execution.execution_id, occurrenceRefs: execution.occurrence_refs } }, className: `execution-node chain-node actual-call ${observed.lifecycle}` } satisfies Node
   })
   const stopNodes = occurrences.filter(occurrence => occurrence.stopping && !occurrenceNode.has(key(occurrence.run_ref, occurrence.ref)) && !activities.some(activity => activity.run_ref === occurrence.run_ref && activity.occurrence_ref === occurrence.ref)).map(occurrence => ({ id: occurrence.ref, position: { x: 0, y: 0 }, data: { label: 'Execution stopped', status: occurrence.outcome ?? 'cause unknown', identity: { ref: occurrence.ref, runRef: occurrence.run_ref, occurrenceId: occurrence.occurrence_id ?? null }, relationQualification: occurrence.support_ref ? null : 'Stopping cause unknown.' }, className: 'execution-node stop-node failed' } satisfies Node))
   const nodes: Node[] = [...plannedNodes, ...reviewNodes, ...activityNodes, ...chainNodes, ...stopNodes]
