@@ -24,11 +24,11 @@ class PublicTests(unittest.TestCase):
         source = snapshot()
         description = json.loads(source['runs'][0]['description'])
         prose = '<img src=x onerror=alert(1)> Workflow explanation ' * 30
-        description['tasks'][0].update(label=prose, summary=prose)
+        description['tasks'][0].update(label=prose, work_description=prose)
         source['runs'][0]['description'] = json.dumps(description)
         result = minimize(normalize(source))
         self.assertEqual(result['tasks'][0]['label'], prose)
-        self.assertEqual(result['tasks'][0]['summary'], prose)
+        self.assertEqual(result['tasks'][0]['work_description'], prose)
         self.assertEqual(result['tasks'][0]['task_id'], 'one')
         self.assertEqual(result['occurrences'][0]['occurrence_id'], 'worker-1')
         self.assertEqual(result['phases'][0]['phase_id'], 'intake')
@@ -42,9 +42,9 @@ class PublicTests(unittest.TestCase):
         source = snapshot()
         for row in source["runs"]:
             description = json.loads(row["description"])
-            description["tasks"] = [{"id": "T001", "depends": [], "label": "One", "summary": "First"},
-                                    {"id": "T002", "depends": ["T001"], "label": "Two", "summary": "Second"},
-                                    {"id": "T003", "depends": [], "label": "Three", "summary": "Pending"}]
+            description["tasks"] = [{"id": "T001", "depends": [], "label": "One", "work_description": "First"},
+                                    {"id": "T002", "depends": ["T001"], "label": "Two", "work_description": "Second"},
+                                    {"id": "T003", "depends": [], "label": "Three", "work_description": None}]
             row["description"] = json.dumps(description)
         result = minimize(normalize(source))
         by_run = {}
@@ -59,6 +59,13 @@ class PublicTests(unittest.TestCase):
         self.assertEqual(len(result["review_definitions"]), 2)
         self.assertTrue(all(item["label"] == "Planned independent review — not an agent call." for item in result["review_definitions"]))
         self.assertNotIn(result["review_definitions"][0]["ref"], {item["ref"] for item in result["occurrences"]})
+        # Generic review phase vocabulary is not explicit review-plan intent.
+        description = json.loads(source["runs"][0]["description"])
+        description.pop("initial_review")
+        source["runs"][0]["description"] = json.dumps(description)
+        unknown_intent = minimize(normalize(source))
+        self.assertEqual(len(unknown_intent["review_definitions"]), 1)
+        self.assertIsNone(next(task for task in unknown_intent["tasks"] if task["run_ref"] == unknown_intent["runs"][0]["ref"] and task["task_id"] == "T003")["work_description"])
 
     def test_metric_expansion_is_typed_and_drops_private_nested_payloads(self):
         private = '/private/SESSION-CREDENTIAL-SENTINEL'

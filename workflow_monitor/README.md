@@ -4,6 +4,14 @@
 workflow snapshots. It imports no workflow writer, never creates or migrates a store,
 and has no execution or control routes.
 
+New recordings use descriptor version 3. Each task retains its label, declared
+prerequisites, and the complete explicit `outcome`/`description` work text when supplied;
+missing work text remains unknown. The descriptor also records explicit initial independent
+review intent separately from generic review phase vocabulary. It never retains task objects,
+prompts, answers, credentials, or arbitrary payloads. Closed public DTOs expose only these
+fields, so a missing work text or review intent is not replaced from summaries or current
+files.
+
 Install the exact dependencies from `requirements.lock` in a prepared isolated Python
 environment; starting the viewer never installs or builds anything. From the repository
 root, use the prepared interpreter explicitly so neither launch nor checks accidentally

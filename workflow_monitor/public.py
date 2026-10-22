@@ -62,14 +62,18 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                "phase_id": row["phase_id"], "label": _text(row.get("label"), row["phase_id"]), "pre_recording": row.get("pre_recording") is True}
               for row in graph.get("phases", [])]
     tasks = [{"ref": _ref("task", row["run_id"], row["task_id"]), "run_ref": _ref("run", row["run_id"]),
-              "task_id": row["task_id"], "label": _text(row.get("label"), row["task_id"]), "summary": _text(row.get("summary"), "Task execution"),
+              "task_id": row["task_id"], "label": _text(row.get("label"), row["task_id"]),
+              "work_description": row.get("work_description") if isinstance(row.get("work_description"), str) else None,
               "prerequisite_refs": [_ref("task", row["run_id"], prerequisite) for prerequisite in row.get("depends", [])]}
              for row in graph.get("tasks", [])]
+    planned_reviews = {run["run_id"] for run in graph.get("runs", [])
+                       if isinstance(run.get("description"), dict) and run["description"].get("initial_review") == {"planned": True}}
     review_definitions = [{"ref": _ref("review_definition", row["run_id"], row["phase_id"]),
                            "run_ref": _ref("run", row["run_id"]),
                            "phase_ref": _ref("phase", row["run_id"], row["phase_id"]),
                            "label": "Planned independent review — not an agent call."}
-                          for row in graph.get("phases", []) if row.get("phase_id") == "review"]
+                          for row in graph.get("phases", [])
+                          if row.get("phase_id") == "review" and row["run_id"] in planned_reviews]
     records = []
     for row in graph.get("observations", []):
         facts = row.get("facts") if isinstance(row.get("facts"), dict) else {}

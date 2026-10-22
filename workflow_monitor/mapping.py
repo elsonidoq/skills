@@ -54,7 +54,7 @@ def _valid_facts(facts: dict[str, Any]) -> bool:
 def _descriptor(row: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
     """Return only a complete, closed declared plan; never repair a partial one."""
     description = _object(row.get("description"))
-    if description is None or description.get("version") != 1:
+    if description is None or description.get("version") != 1 or description.get("description_version") != 3:
         return None, "description_invalid"
     phases, tasks = description.get("phases"), description.get("tasks")
     if not isinstance(phases, list) or not isinstance(tasks, list) or not tasks:
@@ -65,12 +65,19 @@ def _descriptor(row: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]
         return None, "description_invalid"
     task_ids = [task.get("id") for task in tasks if isinstance(task, dict)]
     if (len(task_ids) != len(tasks) or any(not isinstance(value, str) or not value for value in task_ids) or
-            len(set(task_ids)) != len(task_ids)):
+            len(set(task_ids)) != len(task_ids) or
+            any(set(task) != {"id", "depends", "label", "work_description"} or
+                not isinstance(task.get("label"), str) or not task["label"] or
+                (task.get("work_description") is not None and not isinstance(task.get("work_description"), str))
+                for task in tasks)):
         return None, "description_invalid"
     dependencies = {task["id"]: task.get("depends") for task in tasks}
     if any(not isinstance(values, list) or any(not isinstance(value, str) or value not in dependencies or value == task_id
                                                 for value in values) or len(set(values)) != len(values)
            for task_id, values in dependencies.items()):
+        return None, "description_invalid"
+    initial_review = description.get("initial_review")
+    if initial_review is not None and initial_review != {"planned": True}:
         return None, "description_invalid"
     remaining = {task_id: set(values) for task_id, values in dependencies.items()}
     while remaining:
@@ -133,8 +140,8 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
                 unknown.append({"run_id": run_id, "seq": None, "code": "task_invalid"})
                 continue
             task_id = task["id"]
-            tasks.append({"run_id": run_id, "task_id": task_id, "label": task.get("label"), "summary": task.get("summary"),
-                          "depends": task.get("depends")})
+            tasks.append({"run_id": run_id, "task_id": task_id, "label": task.get("label"),
+                          "work_description": task.get("work_description"), "depends": task.get("depends")})
             if isinstance(task.get("depends"), list):
                 for prerequisite in task["depends"]:
                     if isinstance(prerequisite, str):

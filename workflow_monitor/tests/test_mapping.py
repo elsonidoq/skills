@@ -11,14 +11,16 @@ sys.path.insert(0, str(ROOT / "runtime"))
 from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.store import Authority, git
 from workflow_monitor.mapping import normalize
+from workflow_monitor.public import minimize
 from workflow_monitor.reader import Reader
 
 BASE = "a" * 40
 
 
 def snapshot():
-    description = descriptor({"tasks": [{"id": "one", "depends": []}, {"id": "two", "depends": ["one"]}],
-                              "monitor": {"tasks": {"one": {"label": "One", "executive_summary": "First"}}}},
+    description = descriptor({"tasks": [{"id": "one", "depends": [], "outcome": "Complete the full retained work text. " * 12},
+                                         {"id": "two", "depends": ["one"], "description": "Second work"}],
+                              "monitor": {"tasks": {"one": {"label": "One"}}}},
                              {"provider": "offline", "model": "fixture", "effort": "medium"}, BASE)
     import json
     return {"state": "ok", "runs": [{"run_id": "run-a", "description": json.dumps(description), "started_at": 1},
@@ -40,6 +42,8 @@ class MappingTests(unittest.TestCase):
         self.assertEqual(len(graph["phases"]), 16)
         self.assertEqual(len(graph["occurrences"]), 4)
         self.assertEqual([row["seq"] for row in graph["observations"]], [1, 2, 3, 4, 6, 7])
+        self.assertEqual(graph["tasks"][0]["work_description"], "Complete the full retained work text. " * 12)
+        self.assertEqual(graph["tasks"][1]["work_description"], "Second work")
         self.assertEqual(graph["unknown_records"], [{"run_id": "run-a", "seq": 5, "code": "unsupported_observation"}])
         kinds = {edge["type"] for edge in graph["edges"]}
         self.assertTrue({"possible_flow", "task_prerequisite", "recorded_next", "phase_occurrence", "execution_milestone", "reviewed_range"} <= kinds)
@@ -57,10 +61,12 @@ class MappingTests(unittest.TestCase):
             git(project, "add", "tracked")
             git(project, "commit", "-qm", "fixture")
             base = git(project, "rev-parse", "HEAD").decode().strip()
+            work = "Complete this full work description without truncation. " * 12
             with Authority(project) as owner:
                 owner.store.start("emitted", base)
                 recorder = Recorder(owner.store, "emitted")
-                recorder.register(descriptor({"tasks": [{"id": "one", "depends": []}]}, {}))
+                recorder.register(descriptor({"tasks": [{"id": "one", "depends": [], "outcome": work},
+                                                        {"id": "two", "depends": ["one"], "description": "Second task"}]}, {}))
                 occurrence = recorder.occurrence()
                 facts = {"role": "worker", "invocation_id": "invocation", "invocation_kind": "task_worker",
                          "selected_input_checkpoints": [], "correction_chain": ["invocation"]}
@@ -69,10 +75,24 @@ class MappingTests(unittest.TestCase):
             graph = normalize(Reader(project).open_snapshot("emitted"))
         self.assertEqual([(item["occurrence_id"], item["incomplete"]) for item in graph["occurrences"]], [(occurrence, False)])
         self.assertEqual([item["kind"] for item in graph["observations"]], ["started", "failed"])
+        public = minimize(graph)
+        self.assertEqual([task["work_description"] for task in public["tasks"]], [work, "Second task"])
+        self.assertEqual(public["tasks"][1]["prerequisite_refs"], [public["tasks"][0]["ref"]])
+        self.assertEqual(len(public["review_definitions"]), 1)
 
     def test_unavailable_is_not_decoded_as_an_empty_graph(self):
         self.assertEqual(normalize({"state": "unsupported"})["state"], "unsupported")
         self.assertEqual(normalize({"state": "ok", "runs": [], "observations": []})["occurrences"], [])
+
+    def test_missing_work_or_review_intent_remains_unknown_without_reconstruction(self):
+        source = snapshot()
+        description = json.loads(source["runs"][0]["description"])
+        description["tasks"][0]["work_description"] = None
+        description.pop("initial_review")
+        source["runs"][0]["description"] = json.dumps(description)
+        graph = normalize(source)
+        self.assertTrue(graph["runs"][0]["plan_available"])
+        self.assertIsNone(graph["tasks"][0]["work_description"])
 
     def test_invalid_or_empty_descriptor_retains_supported_history_without_topology(self):
         valid = json.loads(snapshot()["runs"][0]["description"])
