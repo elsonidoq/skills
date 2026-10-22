@@ -19,7 +19,9 @@
 .progress-failed, .progress-blocked { background: #ffe5e5; }
 .progress-running { background: #fff0c2; }
 .execution-node.selected { outline: 3px solid #1769aa; outline-offset: 3px; box-shadow: 0 0 0 6px #dcecff; }
-.dependency-edge .react-flow__edge-path { stroke: #5f4bb6; stroke-dasharray: 5 3; }
+.declared-edge .react-flow__edge-path { stroke: #5f4bb6; stroke-dasharray: 6 4; stroke-width: 2; }
+.recorded-edge .react-flow__edge-path { stroke: #1769aa; stroke-dasharray: none; stroke-width: 2; }
+.mixed-edge .react-flow__edge-path { stroke: #28756b; stroke-dasharray: 8 3 2 3; stroke-width: 3; }
 .attachment-edge .react-flow__edge-path { stroke: #1769aa; }
 .sequence-edge .react-flow__edge-path { stroke: #64748b; }
 .correction-edge .react-flow__edge-path { stroke: #9a6900; stroke-dasharray: 2 3; }

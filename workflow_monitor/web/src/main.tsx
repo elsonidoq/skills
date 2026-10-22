@@ -185,10 +185,10 @@ function App() {
       const endpoint = (ref: string) => graph.nodes.find(node => node.id === ref)
       const endpointLabel = (ref: string) => String(endpoint(ref)?.data.label ?? 'Unknown recorded activity')
       const edgeRun = edge ? (endpoint(edge.source)?.data.identity as { runRef?: string } | undefined)?.runRef : undefined
-      const data = edge?.data as { relation?: string; relations?: string[]; resolution?: string; qualification?: string; identity?: Record<string, unknown>; identities?: Record<string, unknown>[] } | undefined
+      const data = edge?.data as { classification?: string; relation?: string; relations?: string[]; resolution?: string; qualification?: string; identity?: Record<string, unknown>; identities?: Record<string, unknown>[] } | undefined
       const facts = data?.relations?.length ? data.relations : [data?.relation ?? 'unknown']
-      const relationLabel = (relation: string) => ({ 'recorded-input': 'Recorded input', 'recorded-correction': 'Recorded correction', 'recorded-review-input': 'Recorded review input', 'recorded-correction-trigger': 'Recorded correction trigger', 'recorded-correction-predecessor': 'Recorded correction predecessor', 'declared-prerequisite': 'Declared prerequisite', 'recorded-stop-support': 'Recorded stopping support', chain_trigger: 'Recorded correction trigger', chain_predecessor: 'Recorded correction predecessor', chain_check: 'Recorded correction check', chain_checkpoint: 'Recorded correction checkpoint', 'declared-cross-run-correction': 'Declared cross-run correction' } as Record<string, string>)[relation] ?? 'Unknown recorded relation'
-      return edge ? <><h3>{facts.length > 1 ? 'Recorded relationships' : relationLabel(facts[0])}</h3><p>{endpointLabel(edge.source)} → {endpointLabel(edge.target)}</p><ul>{facts.map((fact, index) => <li key={`${fact}-${index}`}>{relationLabel(fact)}</li>)}</ul><p>{data?.qualification ?? (data?.resolution ? `Qualification: ${data.resolution}.` : 'Qualification not recorded.')}</p>{acceptanceDetails(edgeRun ? runFor(edgeRun) : undefined)}</> : null
+      const relationLabel = (relation: string) => ({ 'recorded-input': 'Recorded input', 'recorded-correction': 'Recorded correction', 'recorded-review-input': 'Recorded review input', 'recorded-correction-trigger': 'Recorded correction trigger', 'recorded-correction-predecessor': 'Recorded correction predecessor', 'declared-prerequisite': 'Declared prerequisite', 'declared-review-completion': 'Declared completion before final review', 'recorded-stop-support': 'Recorded stopping support', chain_trigger: 'Recorded correction trigger', chain_predecessor: 'Recorded correction predecessor', chain_check: 'Recorded correction check', chain_checkpoint: 'Recorded correction checkpoint', 'declared-cross-run-correction': 'Declared cross-run correction' } as Record<string, string>)[relation] ?? 'Unknown recorded relation'
+      return edge ? <><h3>{facts.length > 1 ? 'Recorded relationships' : relationLabel(facts[0])}</h3><p>{endpointLabel(edge.source)} → {endpointLabel(edge.target)}</p><ul>{facts.map((fact, index) => <li key={`${fact}-${index}`}>{relationLabel(fact)}</li>)}</ul><p>{data?.classification === 'mixed' ? 'This pair has both a declared dependency and a recorded execution relationship.' : data?.classification === 'declared' ? 'Declared plan dependency; not proof of execution.' : 'Recorded execution relationship.'}</p>{acceptanceDetails(edgeRun ? runFor(edgeRun) : undefined)}</> : null
     }
     const graph = graphFor(snapshot, lineage, relations)
     const graphNode = graph.nodes.find(node => node.id === selected.id)
@@ -220,9 +220,7 @@ function App() {
   // on viewport moves hides calls and removes connectors until ResizeObserver reruns.
   const renderedNodes = useMemo(() => nodes.map(node => {
     if (node.id.startsWith('group:')) return node
-    const word = String(node.data.status).toLowerCase()
-    const stateClass = word.includes('running') ? 'running' : word.includes('waiting') || word.includes('blocked') ? 'waiting' : word.includes('failed') || word.includes('interrupted') ? 'failed' : word.includes('returned') || word.includes('approved') || word.includes('rejected') ? 'success' : word.includes('planned') || word.includes('pending') || word.includes('not started') ? 'pending' : 'neutral'
-    return { ...node, className: `${node.className ?? ''} ${stateClass}`, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
+    return { ...node, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
       <strong>{String(node.data.label)}</strong>
       <small>{String(node.data.status)}</small>
       </> } }
@@ -256,7 +254,7 @@ function App() {
     <span className="neutral">Neutral: qualified unknown or incomplete</span>
     <span className="plan">Full-snapshot plan progress is not execution outcome or acceptance</span>
     <span className="acceptance">Acceptance is in Details; skipped/cancelled unsupported</span>
-    <span>Relations: declared prerequisites; recorded stops and qualified corrections. Select an edge for details.</span>
+    <span>Relations: purple dashed = declared plan; blue solid = recorded execution; teal dash-dot = both. Select an edge for details.</span>
     {snapshot && selectedRunInfo?.plan_availability !== 'complete' && <span className="unavailable">Complete graph unavailable</span>}
     </div>
     <div className="execution-view">

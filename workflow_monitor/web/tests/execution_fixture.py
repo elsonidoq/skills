@@ -2,6 +2,7 @@
 from pathlib import Path
 import sys
 import tempfile
+import os
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT), str(ROOT / 'runtime')]
@@ -11,6 +12,7 @@ from coherence_workflow.intake import admit
 from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.metric_artifacts import create_artifact
 from coherence_workflow.store import Authority, git
+from coherence_workflow.processes import process_identity
 from workflow_monitor.app import create_app
 from workflow_monitor.reader import Reader
 import uvicorn
@@ -65,11 +67,11 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                        'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),
             {'provider': 'fixture', 'model': 'offline', 'effort': 'medium', 'reviewer': {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}}, adapter=CorrectionAdapter,
             question=lambda _: 'fixture correction', paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'merged-edge', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'merged-edge', 'relation-styles', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(descriptor({'tasks': [{'id': 'edge', 'description': 'Prepare usable input'}],
-                'monitor': {'tasks': {'edge': {'label': 'Prepare result'}}}}, {}) if run == 'merged-edge' else presentation)
+                'monitor': {'tasks': {'edge': {'label': 'Prepare result'}}}}, {}) if run == 'merged-edge' else presentation, runner_identity=process_identity(os.getpid(), 'offline-fixture'))
             emit(recorder, 'terminal', 'terminal', 'started', task=None, baseline=base)
             if run == 'merged-edge':
                 inputs = [{'checkpoint_occurrence_id': 'edge-checkpoint', 'task_id': 'edge',
@@ -82,6 +84,14 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     for state in ('started', 'returned'):
                         emit(recorder, identity, 'worker', state, task='edge', role='worker', invocation_id=identity,
                              invocation_kind=kind, selected_input_checkpoints=selected, correction_chain=chain)
+                continue
+            if run == 'relation-styles':
+                for identity, task in [('first', 'one'), ('second', 'two'), ('third', 'three')]:
+                    selected = [] if task == 'one' else [{'checkpoint_occurrence_id': 'first-checkpoint', 'task_id': 'one', 'producer_invocation_id': 'first', 'correction_chain': ['first']}]
+                    for state in ('started', 'returned'):
+                        emit(recorder, identity, 'worker', state, task=task, role='worker', invocation_id=identity, invocation_kind='task_worker', selected_input_checkpoints=selected, correction_chain=[identity])
+                    if task == 'one':
+                        emit(recorder, 'first-checkpoint', 'checkpoint', 'passed', task=task, baseline=base, head=base, no_change=True, producer_invocation_id=identity, correction_chain=[identity])
                 continue
             if run.startswith('review-'):
                 owner.store.review_dispatch(run, 'private-review-two', role='reviewer', review_ordinal=2, fixing_round=1, review_base=base, review_head=base)

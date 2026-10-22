@@ -86,7 +86,7 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const qualified = occurrence?.execution_summary
     const state = matched ? qualified ? outcomeText(occurrence!, root.records) : matched.outcome === 'returned' ? 'returned — acceptance not established' : matched.outcome : unresolved ? 'unknown — initial worker reconciliation ambiguous' : task.annotation?.label ?? task.progress?.state ?? 'planned — not started'
     const qualification = unresolved ? 'Initial worker reconciliation ambiguous or incomplete; distinct recorded calls remain separate.' : qualified?.qualification ? qualificationText(qualified.qualification) : null
-    const lifecycle = matched ? presentation(qualified, matched.outcome).lifecycle : unresolved ? 'neutral' : task.progress?.state === 'blocked' ? 'waiting' : 'pending'
+    const lifecycle = matched ? presentation(qualified, matched.outcome).lifecycle : unresolved ? 'neutral' : task.annotation?.code === 'waiting_for_input' || task.progress?.state === 'blocked' ? 'waiting' : task.progress?.state === 'running' ? 'running' : task.progress?.state === 'unknown' ? 'neutral' : 'pending'
     return { id: slotFor(task), position: { x: 0, y: 0 }, data: { label: `${designation(task)} — Worker — ${taskTitle(task)}`, status: state, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null, planned: true, invocationId: matched?.invocation_id ?? null }, relationQualification: qualification }, className: `execution-node planned-call ${lifecycle}` } satisfies Node
   })
   const reviewFor = (definition: ReviewDefinition) => `planned-review:${definition.run_ref}:${definition.ref}`
@@ -143,13 +143,20 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   const reaches = (from: string, target: string, seen = new Set<string>()): boolean => from === target || (!seen.has(from) && (seen.add(from), edges.some(edge => edge.source === from && reaches(edge.target, target, seen))))
   const add = (id: string, rawSource: string, rawTarget: string, relation: string, identity: Record<string, unknown>, classification: 'declared' | 'recorded' = 'recorded') => {
     const source = resolve(rawSource), target = resolve(rawTarget)
-    if (source === target) { reject(target, `${relation}: self relation rejected.`); return }
-    if (!nodeExists(source) || !nodeExists(target)) { reject(target, `${relation}: endpoint missing or ambiguous.`); return }
+    if (source === target) { reject(target, 'self relation rejected.'); return }
+    if (!nodeExists(source) || !nodeExists(target)) { reject(target, 'Relationship endpoint missing or ambiguous.'); return }
     const pair = `${source}\u0000${target}`
     const existing = edgeByPair.get(pair)
-    if (existing) { const data = existing.data as { relations: string[]; identities: Record<string, unknown>[] }; if (!data.relations.includes(relation)) { data.relations.push(relation); data.identities.push(identity) }; return }
-    if (reaches(target, source)) { reject(target, `${relation}: cyclic relation rejected.`); return }
-    const edge: Edge = { id, source, target, type: 'smoothstep', className: `${classification}-edge`, data: { classification, relation, relations: [relation], resolution: 'recorded', identity, identities: [identity] } }
+    if (existing) {
+      const data = existing.data as { classification: string; classifications: string[]; relations: string[]; identities: Record<string, unknown>[] }
+      if (!data.relations.includes(relation)) { data.relations.push(relation); data.identities.push(identity) }
+      if (!data.classifications.includes(classification)) data.classifications.push(classification)
+      data.classification = data.classifications.length > 1 ? 'mixed' : classification
+      existing.className = `${data.classification}-edge`
+      return
+    }
+    if (reaches(target, source)) { reject(target, 'Cyclic relationship rejected.'); return }
+    const edge: Edge = { id, source, target, type: 'smoothstep', className: `${classification}-edge`, data: { classification, classifications: [classification], relation, relations: [relation], resolution: 'recorded', identity, identities: [identity] } }
     edgeByPair.set(pair, edge); edges.push(edge)
   }
   for (const task of tasks) for (const prerequisite of task.prerequisite_refs) add(`prerequisite_${prerequisite}_${task.ref}`, slotId(task.run_ref, prerequisite), slotFor(task), 'declared-prerequisite', { prerequisiteRef: prerequisite, taskRef: task.ref }, 'declared')

@@ -60,7 +60,7 @@ test('inspects every merged input and correction fact with readable action endpo
 })
 
 test('producer readback reconciles ordinal-two dispatch and qualifies observed lifecycle', async ({ page }) => {
-  for (const [stage, expected] of [['dispatched', 'unknown'], ['started', 'unknown'], ['waiting', 'waiting'], ['returned', 'returned — changes requested'], ['conflict', 'unknown']] as const) {
+  for (const [stage, expected] of [['dispatched', 'unknown'], ['started', 'running'], ['waiting', 'waiting'], ['returned', 'returned — changes requested'], ['conflict', 'unknown']] as const) {
     const response = await fetch(`http://127.0.0.1:4174/api/monitor/v1/runs`, { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
     const { runs } = await response.json()
     const run = runs.find((item: { display_id: string }) => item.display_id === `review-${stage}`)
@@ -83,6 +83,29 @@ test('producer readback reconciles ordinal-two dispatch and qualifies observed l
   }
   await page.goto('/runs/id-before-agent')
   await expect(page.locator('.react-flow__node').filter({ hasText: 'Final review' })).toContainText('Not started; run stopped')
+})
+
+test('production computed lifecycle colors and declared recorded mixed connectors', async ({ page }, testInfo) => {
+  const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 240, 194)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(238, 242, 246)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'Task 1', 'rgb(255, 240, 194)']] as const
+  for (const [run, title, color] of colors) {
+    await page.goto(`/runs/id-${run}`)
+    const node = page.locator('.react-flow__node').filter({ hasText: title })
+    await expect(node).toHaveCSS('background-color', color)
+    expect((await node.getAttribute('class'))?.split(' ').filter(value => ['pending', 'running', 'success', 'failed', 'waiting', 'neutral'].includes(value))).toHaveLength(1)
+  }
+  await page.goto('/runs/id-relation-styles')
+  for (const [kind, stroke, dash] of [['declared', 'rgb(95, 75, 182)', '6px, 4px'], ['recorded', 'rgb(23, 105, 170)', 'none'], ['mixed', 'rgb(40, 117, 107)', '8px, 3px, 2px, 3px']] as const) {
+    const path = page.locator(`.${kind}-edge .react-flow__edge-path`).first()
+    await expect(path).toHaveCSS('stroke', stroke)
+    await expect(path).toHaveCSS('stroke-dasharray', dash)
+  }
+  const mixed = page.locator('.mixed-edge .react-flow__edge-interaction')
+  const point = await mixed.evaluate(element => { const path = element as SVGPathElement; const p = path.getPointAtLength(path.getTotalLength() / 2); const s = new DOMPoint(p.x, p.y).matrixTransform(path.getScreenCTM()!); return { x: s.x, y: s.y } })
+  await page.mouse.click(point.x, point.y)
+  await expect(page.getByLabel('Selected execution details')).toContainText('both a declared dependency and a recorded execution relationship')
+  await expect(page.getByLabel('Selected execution details')).toContainText('Declared prerequisite')
+  await expect(page.getByLabel('Selected execution details')).toContainText('Recorded input')
+  await page.screenshot({ path: testInfo.outputPath('production-mixed-relations.png'), fullPage: true })
 })
 
 test('renders scoped ordinary metrics from fixture JSONL through production HTTP', async ({ page }, testInfo) => {

@@ -102,6 +102,12 @@ test('declared and recorded relations have different semantics and reject missin
   const fix = { ...call('fix', 'alpha', 'corrective_worker', ['worker', 'fix'], 'returned'), input_refs: ['worker', 'missing'], trigger_ref: 'worker' }
   const rereview = { ...review('review-two', 2, 'approved'), predecessor_ref: 'review-two' }
   const graph = graphFor(snapshot([worker, fix], [rereview]), [], [])
+  const consuming = { ...call('consumer', 'opaque', 'task_worker', ['consumer'], 'returned'), input_refs: ['worker'] }
+  const mixed = graphFor(snapshot([worker, consuming]), [], []).edges.find(edge => edge.target === 'planned-task:run:opaque')!
+  expect(mixed.data?.classification).toBe('mixed')
+  expect(mixed.data?.classifications).toEqual(['declared', 'recorded'])
+  expect(mixed.data?.relations).toEqual(['declared-prerequisite', 'recorded-input'])
+  expect(mixed.className).toBe('mixed-edge')
   expect(graph.edges.some(edge => edge.data?.classification === 'declared' && edge.data?.relation === 'declared-prerequisite')).toBeTruthy()
   expect(graph.edges.some(edge => edge.data?.classification === 'recorded' && (edge.data?.relations as string[]).includes('recorded-input'))).toBeTruthy()
   expect(graph.nodes.find(node => node.id === 'fix')?.data.relationQualification).toContain('endpoint missing or ambiguous')
