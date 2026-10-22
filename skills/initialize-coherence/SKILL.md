@@ -81,6 +81,9 @@ not block unrelated legacy work.
   of an authoritative owner. Map only verified project-specific material change
   categories to authoritative owners; reference owner content rather than duplicate
   it. Do not claim a generic category applies without evidence.
+- Preserve the existing declared local register until approved cutover. Discovery or bounded
+  refresh does not migrate issues or switch a project's canonical owner; retain its declared
+  local association while cutover proof/approval is unresolved.
 - Resolve the unresolved-work owner from project routing. An explicitly configured GitHub
   Issues target is an external owner, not a local documentation file: do not create or
   require `docs/open_issues.md`. Confirm the explicit target and usable `gh`, authenticated

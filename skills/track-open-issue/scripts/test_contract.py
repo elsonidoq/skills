@@ -9,6 +9,19 @@ TEXT = SKILL.read_text(encoding="utf-8")
 
 
 class LifecycleContractTests(unittest.TestCase):
+    def test_not_yet_cut_over_project_keeps_its_declared_owner(self):
+        root = SKILL.resolve().parents[2]
+        finish = (root / "skills/finish-session/SKILL.md").read_text()
+        initialize = (root / "skills/initialize-coherence/SKILL.md").read_text()
+        for text in (TEXT, finish, initialize):
+            self.assertIn("Preserve the existing declared local register until approved cutover", text)
+        self.assertIn("inspect open and closed entries", TEXT)
+        self.assertIn("preserve unrelated entry bytes and history", TEXT)
+        self.assertIn("not a fallback", TEXT)
+        self.assertNotIn("use only its explicitly resolved GitHub Issues target", finish)
+        self.assertIn("[Open Issues](open_issues.md): Canonical local register", (root / "docs/index.md").read_text())
+        self.assertIn("INCONCLUSIVE / NOT PASS", (root / "skills/import-open-issues/SKILL.md").read_text())
+
     def test_explicit_target_capability_and_deferred_response(self):
         for clause in (
             "Resolve `HOST`, `OWNER`, and `REPO`", "verified remote evidence",

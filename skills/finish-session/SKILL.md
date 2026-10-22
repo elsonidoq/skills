@@ -33,7 +33,7 @@ documentation owners and indexes exist.
 ## Core Invariants
 
 1. Affected authoritative documentation describes what is built now.
-2. Discovered work deliberately left unresolved has one canonical owner: the explicit GitHub Issues target resolved by `track-open-issue`.
+2. Discovered work deliberately left unresolved has one canonical owner: the project's declared unresolved-work owner, followed through `track-open-issue`.
 3. For a deployed project, deploy-time work pending since the last confirmed deploy has one canonical owner.
 4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
 5. The memory index remains usable.
@@ -54,13 +54,13 @@ documentation owners and indexes exist.
 
 ## Step 1: Discover Existing Owners
 
-Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. For unresolved issues, load `track-open-issue` and use only its explicitly resolved GitHub Issues target. Do not create a local register, retain a parallel fallback tracker, or migrate unrelated records. For other information, preserve existing authoritative documentation owners and runbooks.
+Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. For unresolved issues, load `track-open-issue` and follow the project's declared canonical owner. Preserve the existing declared local register until approved cutover; preparing GitHub skills or an inconclusive import proof does not switch authority. For a project already using GitHub, use only its explicitly resolved target, never create a local fallback. Do not migrate records during closeout. For other information, preserve existing authoritative documentation owners and runbooks.
 
 Do not initialize fallback artifacts during discovery. If a verified finding has
 no owner, report the missing owner and ask the user to choose its location and
-format. For unresolved issues, `track-open-issue` reports an unavailable target,
-capability, authentication, or write-authority gap with candidate evidence and a
-resumption condition; it never creates a local fallback.
+format. For unresolved issues already routed to GitHub, `track-open-issue` reports an
+unavailable target, capability, authentication, or write-authority gap with candidate
+evidence and a resumption condition; it never creates a local fallback.
 
 ## Step 2: Derive Candidate Findings From Attributable Work
 
@@ -97,14 +97,15 @@ during closeout.
 | Finding | Owner |
 | --- | --- |
 | Current convention, contract, invariant, module shape, API behavior, operational procedure, user-facing fact, or database schema | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
-| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | Explicit GitHub Issues target, through `track-open-issue`. |
+| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | Project-declared unresolved-work owner, through `track-open-issue`. |
 | Verified action required around a future deployment | The established deploy runbook, or the documented deployment-step owner when it is the local owner. |
 | Non-obvious trap, counterintuitive rationale, failed approach, or user rule that would surprise an agent who read the code and docs | The project's memory store. |
 
 If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, treat the verified uncertainty and its missing evidence as an investigation candidate.
 
 For each verified issue candidate, load and follow `track-open-issue` with its verified problem statement,
-primary evidence, and resumption condition. It resolves the explicit GitHub target and requires usable `gh`,
+primary evidence, and resumption condition. Follow its declared-local-owner branch before cutover; for an
+active GitHub owner it resolves the explicit target and requires usable `gh`,
 authentication, issue capability, and current scoped write authority; never infer write authority from a read or
 create a local fallback. Apply the base workflow's evidence, concurrent-edit, and unrelated-target protections
 to every issue write; do not change unrelated issues. If the skill cannot be loaded or its target/capability/

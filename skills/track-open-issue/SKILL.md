@@ -1,14 +1,20 @@
 ---
 name: track-open-issue
-description: Use when verified unresolved work needs recording in the project's explicit GitHub Issues target.
+description: Use when verified unresolved work needs recording in the project's declared issue tracker.
 ---
 
 # Track Open Issue
 
-Record a verified unresolved-work candidate in the explicitly configured GitHub Issues
-repository. Do not modify product code, tests, generated assets, deployment state, or
+Record a verified unresolved-work candidate in the project's declared canonical owner.
+For a project cut over to GitHub, use the explicitly configured GitHub Issues repository. Do not modify product code, tests, generated assets, deployment state, or
 unrelated issues. A bare `#N` or `OI-N` is not an identity: report native issues as a
 repository-qualified `HOST/OWNER/REPO#N` and URL.
+
+## Declared owner before cutover
+
+Read project instructions and routing before selecting a tracker. Preserve the existing declared local register until approved cutover. This is not a fallback for a GitHub capability failure and does not create a parallel tracker. Do not infer cutover from an installed skill, repository remote, or unfinished migration proof.
+
+If project routing still declares an existing local register, read it and inspect open and closed entries for the same problem/evidence before adding or narrowly updating a candidate. Retain the verified problem, primary evidence, resumption condition, uncertainty and established identifier/format; preserve unrelated entry bytes and history. Close or reopen only with recorded problem-specific evidence and authority. Re-read before editing, stop on concurrent changes, then read back the affected entry and use the focused task checkpoint below. A missing or conflicting declared owner is deferred with the candidate/evidence/resumption and a corrective ownership action, not permission to initialize another tracker. Return after this local operation; the remote instructions below apply only to a declared GitHub owner.
 
 ## Candidate and target
 
