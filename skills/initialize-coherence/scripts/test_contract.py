@@ -545,20 +545,66 @@ class DecisionConsultationTests(unittest.TestCase):
 
 class UnifiedMemoryAdoptionTests(unittest.TestCase):
     """Authored unified-memory outputs, not a generator or live adoption simulation."""
+    def assert_memory_outputs(self, row):
+        index = row["memory_index"]
+        self.assertEqual(index, "custom/gotchas/MEMORY.md")
+        self.assertIn(index, row["after"])
+        self.assertNotIn("GUIDELINES.md", row["after"])
+        before, after = row["files_before"], row["files_after"]
+        self.assertIn(index, after, "authored custom index output is missing")
+        # New adoption adds only its approved index; refresh writes no memory files.
+        self.assertEqual(set(after), set(before) | {index}, "unexpected second store or file")
+        for path, content in before.items():
+            self.assertEqual(after[path].encode(), content.encode(), f"custom bytes lost: {path}")
+        body = after[index]
+        for heading in ("## Technical gotchas", "## Owner guidance"):
+            self.assertIn(heading, body)
+        rules = normalized(body)
+        for clause in ("read the whole index first", "only relevant entries", "recheck after writes",
+                       "verified technical gotchas", "explicit future-directed owner guidance",
+                       "user provenance", "only explicit user feedback authorizes guidance"):
+            self.assertIn(clause, rules)
+        for target in re.findall(r"\]\(([^)]+)\)", body):
+            self.assertIn(str(Path(index).parent / target), after, "unresolvable selective entry")
+        if index not in before:
+            # Skeletons describe authority without fabricating entries or owner feedback.
+            self.assertIn("No gotchas yet.", body)
+            self.assertIn("No guidance entries yet.", body)
+            self.assertNotRegex(body, r"(?m)^- \*\*(?:Trigger|Action|Provenance):")
+
     def test_new_and_refresh_outputs_use_one_custom_association(self):
         rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
-        expected = {"verified technical gotchas", "explicit future-directed owner guidance"}
-        by_name = {row["name"]: row for row in rows}
         self.assertEqual(unified_adoption_errors(SKILL.read_text()), [])
-        for name in ("new-adoption-resolving-custom-associations",
-                     "bounded-refresh-preserves-custom-policy-memory-docs"):
-            row = by_name[name]
-            with self.subTest(case=name):
-                self.assertEqual(row["memory_index"], "custom/gotchas/MEMORY.md")
-                self.assertEqual(set(row["memory_kinds"]), expected)
-                self.assertNotIn("GUIDELINES.md", row["after"])
-        self.assertIn("no entries yet", by_name["new-adoption-resolving-custom-associations"]["memory_skeleton"].lower())
-        self.assertIn("preserved", by_name["bounded-refresh-preserves-custom-policy-memory-docs"]["memory_skeleton"].lower())
+        for row in rows:
+            if row["route"] == "full":
+                with self.subTest(case=row["name"]):
+                    self.assert_memory_outputs(row)
+
+    def test_authored_memory_outputs_reject_content_loss_and_second_store(self):
+        rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
+        for row in rows:
+            if row["route"] != "full":
+                continue
+            index = row["memory_index"]
+            mutations = {
+                "guidance omitted": lambda files: files.__setitem__(index, files[index].split("## Owner guidance")[0]),
+                "guidance kind omitted": lambda files: files.__setitem__(index, files[index].replace("explicit future-directed owner guidance", "inferred lessons")),
+                "guidance authority omitted": lambda files: files.__setitem__(index, files[index].replace("Only explicit user feedback authorizes guidance", "Routine approval authorizes guidance")),
+                "index missing": lambda files: files.pop(index),
+                "second store initialized": lambda files: files.__setitem__("custom/feedback/INDEX.md", "# Guidance\n"),
+            }
+            if index in row["files_before"]:
+                mutations.update({
+                    "index replaced by skeleton": lambda files: files.__setitem__(index, rows[0]["files_after"][index]),
+                    "custom index content lost": lambda files: files.__setitem__(index, files[index].replace("Local note: preserve export aliases.\n", "")),
+                    "selective entry lost": lambda files: files.__setitem__("custom/gotchas/cli.md", ""),
+                })
+            for name, mutate in mutations.items():
+                with self.subTest(case=row["name"], mutation=name):
+                    changed = dict(row, files_after=dict(row["files_after"]))
+                    mutate(changed["files_after"])
+                    with self.assertRaises(AssertionError):
+                        self.assert_memory_outputs(changed)
 
     def test_second_store_setup_or_propagation_has_named_diagnostic(self):
         source = SKILL.read_text()

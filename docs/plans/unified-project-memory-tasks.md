@@ -198,3 +198,14 @@ final review covers the repair. Preserve current failed-check evidence; if the a
 cannot isolate these operations safely, report the precise blocker rather than mutate state or
 adopt the dirty T002 paths. This task producer prepares/commits planning deliverables only and
 does not launch either run or implement the test correction.
+
+### Later owner correction — test scope supersession
+
+The owner subsequently directed: “Don't overfit the tests. There are some tests that might
+make sense to delete (those testing the coordinattion memories). Those testing the actual
+expected usage of the memory should work well.” This supersedes the R001 supplement's
+baseline-memory preservation machinery, not checkpoint safety or the original task contracts.
+The current direct correction is authorized to remove the rejected uncommitted byte-freeze
+machinery, test actual authored custom-index/new-adoption and preserved refresh outputs,
+and finalize the already-approved 42 deletions in focused validated checkpoints. Historical
+approvals and failed reviews remain historical; fresh independent final review is still required.
