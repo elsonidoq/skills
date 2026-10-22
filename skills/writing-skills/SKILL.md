@@ -31,9 +31,10 @@ A global skill may depend on a reusable tool, script, reference, or other skill 
 5. Any relative cross-reference resolves within the distributed skill, and any external skill reference is discoverable by name.
 
 If any condition fails, remove the dependency or make the guidance self-contained.
-In this repository the suite's pinned runtime, packages, and model-class mapping are
-declared in the global `REQUIREMENTS.md`; a skill that depends on a pinned capability
-cites that file while still verifying availability at run time.
+In this repository the suite's pinned runtime and packages are declared in the global
+`REQUIREMENTS.md`; a skill that depends on a pinned capability cites that file while still
+verifying availability at run time. Planning-role assignments belong to the canonical saved
+assignment owner, not reusable skill text.
 
 ## Authoring
 

@@ -67,7 +67,7 @@ substantive task/runtime evidence, documentation and Git ownership distinct.
 ## Project Constraints
 
 The repository's `AGENTS.md` governs global portability and skill-use policy;
-`REQUIREMENTS.md` owns runtime prerequisites and model/effort routing requirements; `docs/index.md` routes
+`REQUIREMENTS.md` owns runtime prerequisites and saved planning-assignment requirements; `docs/index.md` routes
 other documentation. Reuse a coordination root declared in the current project's instructions
 or configuration; otherwise use `<project-root>/memory/coordination/`. Resolve the current project
 root from its selected repository/workspace, never from the global skill installation. Every
@@ -81,7 +81,7 @@ Planner presents TinySpec and Standard and obtains the owner's choice; each rout
 its established artifact and approval gates before coordinator execution. The coordinator
 verifies authorization, task evidence, integration, and required independent review. Changes
 to shared skill contracts MUST be checked with focused fixtures and the relevant existing
-suite checks. Trust approved settled design and task contracts. For the executable Coordinate Implementation path, the runner orders tasks by dependencies, uses the owner-selected model/effort without provenance admission, runs actual specified project checks/manual gates, inspects actual diffs and creates focused task checkpoints. The six task-linter checks are the entire task-startup linter. Old graph/custody/manifest/session/evidence eligibility mandates are superseded; historical rows remain readable, never rewritten as completed effects. No automatic retries of expensive failed runs or invented repair budgets. One writer per worktree and fresh independent read-only full-range final review remain mandatory. Planning remains skill-based: direct asynchronous single-stage delegation, fresh artifact producers, parent inspection before dependent-stage release, and existing owner choice/current-content approval gates remain required. A planning workflow wrapper still needs earned branching, parallel-independent or aggregation justification; it grants no parallel implementation writers. No background LLM decides workflow transitions. Global skill/prompt changes require `/reload` in pi.
+suite checks. Trust approved settled design and task contracts. For the executable Coordinate Implementation path, the runner orders tasks by dependencies, uses the owner-selected model/effort without provenance admission, runs actual specified project checks/manual gates, inspects actual diffs and creates focused task checkpoints. The six task-linter checks are the entire task-startup linter. Old graph/custody/manifest/session/evidence eligibility mandates are superseded; historical rows remain readable, never rewritten as completed effects. No automatic retries of expensive failed runs or invented repair budgets. One writer per worktree and fresh independent read-only full-range final review remain mandatory. Planning remains skill-based: direct asynchronous single-stage delegation, fresh artifact producers, parent inspection before dependent-stage release, and existing owner choice/current-content approval gates remain required. A planning workflow wrapper still needs earned branching, parallel-independent or aggregation justification; it grants no parallel implementation writers. No background LLM decides workflow transitions. In Paseo, global skill/prompt changes require a fresh-session handoff, not an owner reload instruction or automatic restart.
 
 ## Governance
 

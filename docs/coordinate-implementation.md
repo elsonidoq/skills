@@ -262,4 +262,4 @@ Git commit that is an ancestor of the run baseline; it changes that review's act
 recorded review outcome to base→current-head. Invalid or unrelated bases fail only the affected review.
 A malformed, failed, or interrupted reviewer records that actual selected range before its original error
 propagates. Without it, the default
-run-baseline→head range is unchanged. After adopting changed global skills, run `/reload`.
+run-baseline→head range is unchanged. In Paseo, adopting changed global skills requires a fresh-session handoff; do not reload or restart the current session automatically.

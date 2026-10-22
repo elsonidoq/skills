@@ -89,7 +89,6 @@ def operational_carrier(text, selector):
 
 # Focused workflow-ownership boundaries; these are textual checks, not semantic oracles.
 MECHANICAL_CARRIERS = (
-    ("requirements", "The explicit owner-required exception"),
     ("planner", "## Selected production and stage handoffs"),
     ("planner", "item:3. **Review"),
     ("planner", "stage:overall_review"),

@@ -30,7 +30,7 @@ git diff --check
 Fixture tasks demonstrate shared syntax only: they lack real source/review/authorization
 and must not be executed. Existing dependency-parser tests cover IDs, gaps, duplicates,
 self/forward/missing prerequisites and story continuity. Manual/semantic review still checks
-implicit producers, acceptance meaning, selected-profile rationale, exclusions and documentation truth.
+implicit producers, acceptance meaning, saved-assignment propagation, exclusions and documentation truth.
 
 Instruction mutations delete gates/constraints, change classes, remove renewals, permit
 adapter double creation, remove stage bodies, swap stages and insert contradictory policies.
@@ -58,9 +58,9 @@ brief from current artifacts, preserving boundaries, settled decisions, risks, a
 content authority and next phase. TinySpec keeps its single combined gate/no plan; Standard
 keeps specification then overall approval/no new plan gate. Standard tasks remain create-only at
 production, corrections delegated under overall review, which remains independently reviewed.
-Exact runtime-resolved Sol/medium governs the entire single plan pass; one plan creation,
-renewed specification approval, permissions/support/settings/failure stops and preparation/task/
-evidence commit authority remain intact. Global skill changes require **/reload** in pi.
+The saved assignment governs each planning role; one plan creation, renewed specification approval,
+permissions/support/settings/failure stops and preparation/task/evidence commit authority remain intact.
+In Paseo, changed skills require a fresh-session handoff, not a reload or automatic restart.
 
 SDD quality guidance applies to specification creation only, including TinySpec. Actual source
 producer briefs require complete relevant behavior, approach, constraints and observable acceptance
@@ -77,8 +77,8 @@ still bind every actor; separate tasks stay mandatory.
 | A2 correction | TinySpec review, Standard overall, recovery and managed helper; `test_parent_mechanical_upstream_task_and_managed_fallback_mutations` | Delegated corrections/stops, standalone distinction |
 | A3 complete coverage | Executive brief and actual trace oracle; `CompleteBriefTests.test_trusted_artifacts_match_eight_stage_and_eight_task_inventory`, `test_missing_reordered_duplicate_collapsed_empty_truncated_and_wrong_outcomes`, `test_tiny_combined_spec_only_and_standard_overall_applicability` | Every applicable item, ordered meaningful outcomes, no cap/invented gate |
 | A4 visibility/current renewals | Approval current-content carrier and trace; `test_full_inventory_context_hidden_and_late_briefs_rejected`, `test_current_renewal_accepts_fresh_rejects_stale_inventory_and_brief`; existing TraceTests lifecycle/drift/continuation | BEFORE assistant text and current renewal, not tool/hidden/late/stale |
-| A5 safeguards | Existing route transition, whole-pass profile, create-only tasks and independent overall review; existing `ActivePlanningRoutingTests`, `PlanningCommitAuthorityTests`, `TraceTests` and instruction safety mutations | No extra gates or lost runtime/permission/commit safeguards |
-| A6 truthful assurance/discovery | Distributed source-quality links and existing `LinkTests`; manual changed-doc/shared-target review and integrated checker/suite/diff | Offline sensitivity only; live separately authorized NOT RUN; /reload |
+| A5 safeguards | Existing route transition, saved assignment, create-only tasks and independent overall review; existing `OwnerAssignmentPlannerTests`, `PlanningCommitAuthorityTests`, `TraceTests` and instruction safety mutations | No extra gates or lost runtime/permission/commit safeguards |
+| A6 truthful assurance/discovery | Distributed source-quality links and existing `LinkTests`; manual changed-doc/shared-target review and integrated checker/suite/diff | Offline sensitivity only; live separately authorized NOT RUN; Paseo uses a fresh-session handoff |
 | A7 source quality/downstream truth | Discovery/TinySpec/Standard source inputs versus actual plan/helper/task adapters; `test_source_quality_and_downstream_truth_actual_inputs`, `test_downstream_sdd_forward_reread_and_competing_plan_authority`, `test_source_quality_distributed_links_and_actor_governance` | Specification-only quality input, complete source requirements truth, plan sequencing only; governance still binding |
 
 The retained inventory/artifact fixtures contain eight plan stages and eight task outcomes.
@@ -180,9 +180,9 @@ These bounded static/symbolic fixtures test specified failure sensitivity; they 
 planner simulator, runtime enforcement, model-obedience proof, real dependency experiment,
 migration/live validation or proof of external correctness. The local oracle uses no project
 data, services, deployment, production resources or job interruption. No paid/live/provider/
-engine/browser/external-project trial is authorized or run. Global skill changes require
-`/reload` in pi. Fresh independent final implementation review remains required under the
-existing workflow, separate from this bounded documentation check.
+engine/browser/external-project trial is authorized or run. In Paseo, global skill changes require
+a fresh-session handoff; do not reload or restart the current session automatically. Fresh independent
+final implementation review remains required under the existing workflow, separate from this bounded documentation check.
 
 ## Project coordination feedback and context-first recovery assurance
 
@@ -206,36 +206,7 @@ Run the existing suite entry plus the separate feedback test:
 Static mutations and symbolic scenarios show instruction consistency, not live obedience,
 provider execution or compaction fidelity. Live checks are NOT RUN and require separate
 permission. Fresh independent final review over the committed range remains required.
-Global asset changes require `/reload` in pi.
-
-## Comparative routing and approved-learning evaluation (permission-gated, NOT RUN)
-
-This is a four-case before/after evaluation recipe, not permission to invoke a model. Preserve
-these fixed inputs and the baseline/candidate document revisions before any later authorized
-comparison:
-
-1. **Closed design:** bounded documentation task, strong deterministic oracle, no hidden recovery.
-2. **Recovery:** same-sized task with hidden coupling, multi-step recovery and costly failure.
-3. **Docs plus acceptance:** a documentation producer followed by its acceptance/cleanup consumer;
-   assess coherent grouping against the concrete smaller-profile opportunity.
-4. **User feedback:** supply explicit future-directed corrective feedback, then retrieve
-   authorized compact guidance and show its effect on a source criterion, task dependency/check, brief and
-   routing decision. Pending/rejected/drifted content must not influence the decision.
-
-For each, record baseline and candidate input/artifact hashes, then obtain fresh read-only outputs
-from the exact owner-selected profile. Before invocation, a coordinator must obtain explicit
-permission for this live evaluation and verify the binding is callable/permitted, the requested
-and supported effort match, tools are read-only and usable, and a finite spend/run budget is set.
-The proposed limit is one baseline and one candidate run per case (eight total), no relaunches;
-if any capability, permission, support, isolation or budget gate fails, stop and mark NOT RUN.
-Record proposed, selected and observed binding/effort separately; unknown observations remain
-unknown. Record provider/runtime errors as such, not model failure. An independent reviewer,
-not the producing agent, applies the same prewritten case criteria to both outputs and records
-criterion-level evidence and disagreements.
-
-This small sample is not controlled performance evidence, a universal routing rule, or proof of
-model obedience. Provider observations are distinct from local static/fixture checks below.
-No live comparison has been authorized or performed for this task.
+In Paseo, global asset changes require a fresh-session handoff; do not reload or restart the current session automatically.
 
 ## Proportionate validation regression
 
@@ -351,7 +322,7 @@ briefs, approval and resume. Blocked attempts still fail behavioral acceptance.
 | Interrupted preselection | Recover session answers or ask missing ones | Decision file/source edit before choice or inferred answer |
 | TinySpec production | Separate fresh bounded-context source/task delegates, direct adapter, planner review, one combined approval | Parent authoring/repair, inline fallback, embedded-only tasks, extra approval or invented SpecKit prerequisite |
 | Standard production | Separate fresh bounded-context spec/plan/task producers, genuine stages, valid constitution, spec approval first, independent overall review | Parent artifact writes, generic replacement, installed-tool simulation or installation |
-| Adapter planning | Entire delegated Sol/medium spec review/fix → one plan creation → plan review/fix; suitable originating correction context | Double creation, parent repair or standalone fallback overrides managed gates |
+| Adapter planning | Saved assignment spans delegated spec review/fix → one plan creation → plan review/fix; suitable originating correction context | Double creation, parent repair, assignment substitution or fallback overrides managed gates |
 | Corrections/recovery | Bounded delegated mechanical/upstream/task fixes, fresh context if origin unsuitable; current approval renewal | Parent artifact edits, full transcripts, missing delegation bypass or reviewer becomes producer |
 | Requirements inputs | Source producers apply SDD quality guidance and retain complete behavior/approach/acceptance; plan/tasks derive requirements from source, plan sequencing only | Downstream direct SDD forwarding/rereading or plan promoted to competing truth; lost governance/memory/safety |
 | Approval brief | Visible concrete scope and each actual ordered plan stage/task ID with outcome separately before the question, plus boundaries/risks/checks/content/next-phase authority; include >6 cases | Truncation, merged IDs/stages, catch-alls, fictitious TinySpec plan/spec-only tasks, hidden/late/context-only brief or empty headings |
@@ -369,20 +340,15 @@ briefs, approval and resume. Blocked attempts still fail behavioral acceptance.
 | Dirty documentation | Fresh investigation, shell boundaries, owner plan approval, planner depth choice | Substantive edits authorized by shell initialization |
 | Adoption refresh | Marked bounded section, custom paths intact, dirty/concurrent stop | Global rename/custom-policy overwrite or memory reset |
 
-Use mock SpecKit profiles only to test routing/failure injection, labelled simulated. Real
+Use mock SpecKit installations only to test stage failure injection, labelled simulated. Real
 integration pins the project's observed installation and records actual commands/assets/stage
 outputs; no universal slash-command assumption. Exercise valid/template/missing constitution
 and failed repair independently. Installed SpecKit must not affect direct-path applicability.
 
-Differential runs compare the baseline Git source and candidate under matched fixture,
-model/runtime and answer scripts. Compare constraints, evidence, gates and artifacts—not prose
-or task counts. Whitelist explicit changes: user-selected depth, separate TinySpec, qualitative
-assessment, no new Epic/forced documentation exception. Failures in both remain failures.
-
-Start with a small high-risk live subset (choice override, denial, stale approval, capability
-failure, brief ordering and legacy resume); retain the first failing trace, distinguish harness
-from agent failures, inspect before retries, and use owner-approved budgets. Expanded full
-scenarios and deployment checks are not implied by deterministic test success.
+Compare deterministic fixtures by constraints, evidence, gates and artifacts—not prose or task
+counts. Whitelist explicit changes: user-selected depth, separate TinySpec, no new Epic/forced
+documentation exception. Failures remain failures. Live scenarios require separate authorization;
+deterministic test success does not imply deployment checks.
 
 ## Evidence status
 
@@ -400,11 +366,12 @@ scenarios and deployment checks are not implied by deterministic test success.
 
 ## Executable migration validation boundary
 
-Planning remains skill-owned; the six-factor profile owner is planner/references/profile-selection.md,
-not retired implementation batching. Source/task producers remain fresh and stage-gated, with
-Standard Sol/medium plan-stage exception and owner-selected other planning profiles intact.
-Executor class/effort is captured separately before architecture/decomposition with explicit
-scaffolding assumptions, provenance and compatibility/renewal, never model-performance claims.
+Planning remains skill-owned. Source/task producers remain fresh and stage-gated; each planning
+role uses its saved assignment from `planner/references/model-assignments.json` unchanged in its
+brief and dispatch. Missing, malformed, unsupported or unavailable assignments stop only the
+affected role for owner correction. Executor configuration is captured separately before
+architecture/decomposition with explicit scaffolding assumptions, provenance and
+compatibility/renewal, never model-performance claims.
 
 The thin executable entry has independent runtime tests for task/schema/approval/parity, exact
 SDK resources/profiles, role-safe sessions, real checks/commits, custody/restart, original-only

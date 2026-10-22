@@ -15,7 +15,7 @@ scripts/install.sh --probe  # additionally invokes one model; authorize separate
 
 Foreign entries at installation destinations are preserved and reported, not overwritten.
 Retired links are backed up only when their target proves they belong to this checkout.
-After installation or global skill changes outside Paseo, run `/reload` inside pi. In Paseo, prepare a fresh-session handoff instead; the fresh agent verifies the checkout and loaded capabilities before work.
+After installation or global skill changes, in Paseo prepare a fresh-session handoff instead; the fresh agent verifies the checkout and loaded capabilities before work. Do not reload or restart the current Paseo session automatically.
 
 On a project, use [Initialize Coherence](skills/initialize-coherence/SKILL.md)
 (`initialize-coherence`) for proposal-first suite instructions, project memory association,
@@ -51,8 +51,7 @@ require SpecKit; Standard retains its stage capability gates.
 ### Existing-project policy refresh
 
 Installation/update alone does not refresh already-adopted project instructions. After later
-approved integration, use the existing installer above to install/update the suite, then run
-a Pi reload outside Paseo for changed global skills; in Paseo, prepare a fresh-session handoff instead. In each explicitly selected and authorized target,
+approved integration, use the existing installer above to install/update the suite. In Paseo, prepare a fresh-session handoff for changed global skills instead of reloading or restarting the current session. In each explicitly selected and authorized target,
 request: “Use initialize-coherence for a policy-only parsimony refresh of this already-adopted project.”
 It compares the actual installed [canonical policy fragment](skills/planner/references/parsimony.md),
 not a version/hash/receipt. Inspect and approve its exact bounded instructions diff; resolve
@@ -182,7 +181,7 @@ partial files/history. Current terminal input answers material questions without
 proofs; noninteractive questions stop honestly. No automatic resume/replay or expensive retry
 loop. An ordinary writer lock prevents cooperating overlap; SDK tools are not an adversarial
 sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
-After adopting changed global skills/prompts, reload pi outside Paseo; in Paseo, prepare a fresh-session handoff instead.
+After adopting changed global skills/prompts in Paseo, prepare a fresh-session handoff instead of reloading or restarting the current session.
 
 ## Context-first recovery and coordination feedback
 
@@ -204,13 +203,13 @@ create only needed guidelines storage, never history/index/run scaffolding.
 Required adopted gotcha-memory discovery/retrieval stays separate.
 
 Planner defaults to direct async stage → parent artifact/checkpoint inspection → next
-authorized stage with selected profile unchanged. A workflow needs earned branching,
+authorized stage with the saved assignment unchanged. A workflow needs earned branching,
 parallel independent work or other orchestration beyond convenience/single-child/sequential
 wrapping; stage authority/reviewer independence remain. Executable implementation remains single-writer and dependency-ordered.
 Coordinator trusts settled approved design, cheaply audits actual diffs/focused commits/
 REQUIRED outputs, then advances ready tasks. Only concrete invalidation reopens affected
 work; no routine replanning or unchanged preflight loops. Independent final review remains.
-After changing global assets, reload pi outside Paseo; in Paseo, prepare a fresh-session handoff instead.
+After changing global assets in Paseo, prepare a fresh-session handoff instead of reloading or restarting the current session.
 
 ## Supporting Skills
 
@@ -247,4 +246,4 @@ creates no empty commit. Preserve unrelated staged/unstaged work; ambiguous owne
 or incompatible policy stops rather than waives the checkpoint. Executable runs use runner-owned real verification, diff audits, focused commits and actual Git inspection; workers do not stage/commit or own workflow state. Planning/standalone and an
 ongoing instruction-managed bootstrap keep their authorized writer checkpoints. The interface
 cannot waive safety or create routine evidence-only checkpoints. Static/Git fixtures are not
-universal model-obedience proof. After changed global skills/prompts are adopted, reload pi outside Paseo; in Paseo, prepare a fresh-session handoff instead.
+universal model-obedience proof. After changed global skills/prompts are adopted in Paseo, prepare a fresh-session handoff instead of reloading or restarting the current session.

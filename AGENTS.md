@@ -25,8 +25,8 @@ agent only after verifying it is available and stating an unavailable fallback.
 - Commands and skills must not assume a project name, repository layout, branch, local path, deployed state, or
   configured model or agent.
 - Do not add project-specific workflow, data, or historical rationale to global assets.
-- After changing global configuration, commands, or skills, tell the user to run
-  `/reload` inside pi.
+- After changing global configuration, commands, or skills, use a fresh-session handoff in
+  Paseo; elsewhere follow the host's normal reload guidance.
 
 ## Parsimony and Actionable Checks
 
@@ -122,7 +122,7 @@ rules above for reusable skills and commands.
   overlapping edits or uncertain ownership require coordination, not a blanket concurrency ban.
   Execution delivery retains verified focused task checkpoints.
   Planning must produce granular,
-  independently verifiable tasks sized for Terra workers, regardless of the planning model.
+  independently verifiable tasks sized for the selected executor configuration.
   Split independently testable concerns rather than bundling milestones into implementation tasks.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.
   Every workflow launch in this repository, including continuations and corrective runs, uses

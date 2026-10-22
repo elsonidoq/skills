@@ -35,7 +35,7 @@ against an existing repository. Missing usable CLI or unknown safe recipe blocks
 do not silently install/upgrade tooling. Conflict/drift/failure stops without readiness,
 automatic retry or destructive rollback; report partial outputs. Other missing runtime prerequisites
 retain stop/report behavior. TinySpec/direct tasking still does not require SpecKit, and
-Standard capability gates remain. After global skill changes, run `/reload` inside pi.
+Standard capability gates remain. In Paseo, changed tools or extensions require a fresh-session handoff; the fresh agent verifies the checkout and loaded capabilities without an automatic reload or restart.
 
 Explicit policy-only parsimony refresh on an already-adopted project is narrower than full
 initialization. It requires applicable runtime/question, approval-contract, safe path/readability,
@@ -45,9 +45,8 @@ SpecKit inventory/provisioning. Missing unrelated assets/docs do not block the l
 missing capability required for that operation does. Full default new/compatible/refresh routes
 retain their applicable documentation, SpecKit and structural readiness duties.
 
-After later integration, install/update through the existing [setup procedure](README.md#setup)
-and run `/reload` for changed global skills. Installation alone does not refresh existing project
-instructions. Only in an explicitly selected authorized project, request initialize-coherence
+After later integration, use the existing [setup procedure](README.md#setup). Installation alone does not refresh existing project
+instructions. In Paseo, changed tools or extensions require a fresh-session handoff and fresh-agent checkout/capability verification; no automatic reload or restart occurs. Only in an explicitly selected authorized project, request initialize-coherence
 policy-only refresh, compare actual canonical policy text, approve the exact bounded diff and
 separately approve dirty exact overlap. Retain custom/equivalent owners and overrides; drift stops.
 Verify `policy refresh applied` / `policy already current`, never full initialization/Standard
@@ -101,44 +100,19 @@ installation, global settings changes, mass conversion or background daemon. Ins
 failed operations/partial commits before targeted follow-up; no autonomous expensive retry loop.
 See the [operating](docs/coordinate-implementation.md) and [storage/interface](docs/coordinate-implementation-schema.md) owners.
 
-### Planning/advisory selection
+### Planning assignments
 
-Planning/advisory invocations use the same
-[qualified seed rubric](skills/planner/references/profile-selection.md): assess
-all six applicable factors, including the weakest verification blind spot, and justify family
-and supported effort independently. Proposal precedes readiness: a suitable never-launched
-option may remain pending while passive, authoritative readiness evidence is incomplete. Distinguish
-catalog from authenticated/runtime readiness and observed launch; reuse current applicable proof
-and audit provider/source mappings only for concrete uncertainty, contradiction, clamping risk,
-or absent necessary support evidence. Missing readiness blocks dispatch, retains the proposal,
-and requires bounded authorization or an explicitly selected, independently justified fallback.
-Obtain one exact owner-selected binding plus effort; verify permissions, tools, callable binding
-and supported effort at assignment and dispatch. Pass the selected profile unchanged through direct
-calls and helper briefs/dispatch. A missing selection/support or settings/default mismatch blocks
-work, never silently substitutes. Record proposed, selected and observed separately; unknown actual
-binding/effort stays unknown. Implementation-only batching, task-count and REQUIRED-item rules are
-not planning prerequisites.
-
-The explicit owner-required exception is Standard `plan_create`: **Sol with exactly medium
-supported effort** for the complete same-session specification review/fix → one plan creation →
-produced-plan review/fix, both delegated non-helper and helper execution. Planner never
-authors fresh artifacts or makes substantive repairs: each artifact has a separate fresh bounded-context producer;
-uncertain or substantive corrections use suitable originating producer context or a fresh bounded delegate.
-Direct mechanical repair follows the [bounded mechanical correction contract](skills/planner/references/approval-and-recovery.md#bounded-mechanical-corrections). Missing,
-unusable or unauthorized delegation stops with no parent inline/local fallback. Resolve its concrete binding from
-permitted usable runtime options, not a provider/version hard-coded into skills. Unavailable
-Sol/medium stops with the precise binding/support gap; no substitution, settings/default override
-or standalone helper fallback may bypass this rule. It is an owner preference, not a family
-hierarchy, capability ranking or benchmark claim. Independently authorized standalone helper
-selection stays separate but cannot override a manager-governed Standard invocation.
-
-Other selections—including TinySpec source/tasks, brainstorming assessment/application,
-Standard specification/tasks and independent reviewer—follow the shared rubric, not fixed
-stage families or replacement classes. Preserve planner-owned dialogue, stage order, approvals,
-write boundaries and reviewer independence. See the operational
+Planning roles use the canonical saved assignments in
+[`skills/planner/references/model-assignments.json`](skills/planner/references/model-assignments.json).
+The selected assignment is copied unchanged into its bounded brief and dispatch. If its saved
+assignment is missing, malformed, unsupported or unavailable, stop only that operation and ask
+the owner for a correction; do not recommend, infer, substitute or use a fallback. The planner
+parent, source/task producers, plan pass, brainstorming, and independent review retain their
+separate assigned roles. Planner-owned dialogue, stage order, approvals, producer/parent boundaries,
+write boundaries and reviewer independence remain unchanged. See the operational
 [planner](skills/planner/SKILL.md) and
 [helper adapter](skills/delegating-architectural-planning/SKILL.md) contracts.
-Settings examples are neither current owner selections nor capability proof.
+Settings examples are neither current owner assignments nor capability proof.
 
 ## Memory contract
 

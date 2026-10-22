@@ -1,49 +1,32 @@
 # Pi settings sample
 
-`~/.pi/agent/settings.json` (user-level) additions that make this skill suite work. Edit
-while pi is not running, then run `/reload` inside the next session.
+`~/.pi/agent/settings.json` (user-level) additions can expose this skill suite. Preserve
+existing settings and use your local skill path.
 
 ```json
 {
   "skills": [
-    "/Users/elsonidoq/.config/opencode/skills"
-  ],
-  "subagents": {
-    "defaultModel": "deepseek/deepseek-v4.1-flash",
-    "agentOverrides": {
-      "reviewer": { "model": "deepseek/deepseek-v4.1-flash" },
-      "scout": { "model": "deepseek/deepseek-v4.1-flash" },
-      "oracle": { "model": "anthropic/claude-opus-5" }
-    }
-  }
+    "/path/to/skills"
+  ]
 }
 ```
 
-Executable implementation uses approved exact YAML bindings/efforts and a separate executor
-intent compatibility assessment, not a subagent batch model override. This sample intentionally
-has no worker override; it neither changes runner config nor authorizes dispatch. Requested
-versus observed binding remains separate; resource/trust/tool/permission validation still applies.
+In Paseo, changed tools or extensions require a fresh-session handoff. The fresh agent verifies
+the checkout and loaded capabilities; do not instruct the owner to reload or restart the current session.
 
-Planning/advisory selections also use the existing
-[qualified seed rubric](../skills/planner/references/profile-selection.md),
-with all six applicable factors and independent family/effort rationales, not stage classes.
-Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites.
-Standard `plan_create` alone requires **Sol with exactly medium supported effort** for the entire
-same-session specification review/fix → one plan creation → produced-plan review/fix, both direct
-and helper execution. Resolve the concrete Sol binding from permitted usable runtime options;
-unavailable Sol/medium stops with the precise gap, never substitutes another profile or uses a
-standalone helper fallback to bypass the manager. Other independently authorized standalone helper
-selections remain separate. These example Claude IDs/defaults imply no current routing authority.
-For every planning invocation, verify selection, permissions, tools, callable binding and supported
-effort at assignment and dispatch; propagate the exact selected profile unchanged. A default or
-agent override mismatch blocks dispatch. Record proposed/selected separately from observed;
-unknown actual binding/effort stays unknown. No configuration change is prescribed by this cleanup.
+Executable implementation uses the approved exact executor configuration; this sample neither
+changes runner config nor authorizes dispatch. Requested versus observed binding remains separate;
+resource, trust, tool and permission validation still applies.
 
-The planning rubric governs planning/advisory choice only. Executable runs do not use LLM
-batching, task-count thresholds, model escalation or coordination-feedback obligations. Preserve
-whole REQUIRED maps and original gates; the runner executes real checks, audits owned diffs and
-creates individual focused task commits. A fresh current full-range independent review is still
-required for acceptance. No settings sample can substitute authority/capability proof.
+Planning roles use the canonical saved assignments in
+[`skills/planner/references/model-assignments.json`](../skills/planner/references/model-assignments.json).
+A saved assignment is copied unchanged into its bounded brief and dispatch. A missing, malformed,
+unsupported or unavailable assignment stops only the affected role for an owner correction; no
+default, recommendation, inference, substitution or fallback is implied. Executable runs do not
+use task-count thresholds, model escalation or coordination-feedback obligations. Preserve whole
+REQUIRED maps and original gates; the runner executes real checks, audits owned diffs and creates
+individual focused task commits. A fresh current full-range independent review is still required
+for acceptance. No settings sample can substitute authority/capability proof.
 
 ## Compact subagent output
 
@@ -60,8 +43,8 @@ This keeps each inline subagent tool result to one stable row without child-outp
 previews. It does not suppress separate completion-notification previews or change
 model-facing output. Detailed reports still require an explicit launch binding:
 `output: "review.md", outputMode: "file-only"`. Use separate output paths for the
-child report and enclosing workflow summary. Restart Pi after changing extension
-configuration; `/reload` is the suite's resource-refresh step after skill changes.
+child report and enclosing workflow summary. In Paseo, use a fresh-session handoff after changing extension configuration; do not reload or
+restart the current session automatically.
 
 ## Configuration decisions
 

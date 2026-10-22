@@ -154,7 +154,7 @@ SPECKIT_RULES = {
                     'Revalidate the authoritative expected inventory against actual readable, '
                     'nonempty files, required permissions and resolving references; manifest-only '
                     'success or CLI exit status is insufficient.',
-                    'After global skill changes, tell the user to run `/reload` inside pi.'])}
+                    'manifest-only success or CLI exit status is insufficient.'])}
 
 DECISION_RULES = {
     "decision-discovery": ("Discovery", ["actual project decision owner, index and record convention",
@@ -317,11 +317,14 @@ class CandidateTests(unittest.TestCase):
     def test_setup_matches_branch_and_readiness_bounds(self):
         readme = normalized((ROOT / "README.md").read_text())
         requirements = normalized((ROOT / "REQUIREMENTS.md").read_text())
-        for phrase in ("proposal-first", "compatible adoption", "bounded refresh", "fresh read-only investigation", "empty/template shells", "structural readiness", "outstanding work", "/reload", "authorize separately"):
+        for phrase in ("proposal-first", "compatible adoption", "bounded refresh", "fresh read-only investigation", "empty/template shells", "structural readiness", "outstanding work", "fresh-session handoff", "authorize separately"):
             self.assertIn(phrase, readme)
         for doc in (readme, requirements):
-            for phrase in ("every full initialization", "commands, templates and scripts", "compatible adoption and refresh", "approved missing-file-only transfer", "missing usable cli", "other missing runtime prerequisites", "tinyspec/direct tasking", "no blanket", "--force", "/reload"):
+            for phrase in ("every full initialization", "commands, templates and scripts", "compatible adoption and refresh", "approved missing-file-only transfer", "missing usable cli", "other missing runtime prerequisites", "tinyspec/direct tasking", "no blanket", "--force", "fresh-session handoff"):
                 self.assertIn(phrase, doc)
+            self.assertTrue("no automatic reload or restart" in doc or
+                            "no automatic reload or restart occurs" in doc or
+                            "instead of reloading or restarting the current session" in doc)
         for phrase in ("0.87.x", "0.87.1", "pi-subagents@0.73.1", "pi-ask-user@0.15.1", "tinyspec/direct tasking does not require it", "manual routing", "schema owner", "missing required structure blocks readiness"):
             self.assertIn(phrase, requirements)
 

@@ -2387,6 +2387,41 @@ class OwnerAssignmentBrainstormTests(unittest.TestCase):
                 self.assertFalse(any(word in message for word in ("recommend", "fallback", "substitute")))
 
 
+class OwnerAssignmentDocsTests(unittest.TestCase):
+    """Current documentation names saved assignments; historical records stay outside this scope."""
+
+    def test_current_docs_use_saved_assignments_not_retired_routing_policy(self):
+        paths = (
+            "AGENTS.md", "REQUIREMENTS.md", "README.md", "docs/index.md",
+            "docs/pi-settings-sample.md", "docs/plans/planner-regression.md",
+            "docs/coordinate-implementation.md", "docs/coordinate-implementation-schema.md",
+            "skills/writing-skills/SKILL.md",
+        )
+        retired = ("profile-selection.md", "six-factor", "Sol/medium", "sonnet-class", "opus-class")
+        for path in paths:
+            with self.subTest(path=path):
+                text = (ROOT / path).read_text()
+                self.assertFalse(any(term.casefold() in text.casefold() for term in retired))
+        self.assertFalse((ROOT / "skills/planner/references/profile-selection.md").exists())
+        requirements = (ROOT / "REQUIREMENTS.md").read_text()
+        index = (ROOT / "docs/index.md").read_text()
+        self.assertIn("model-assignments.json", requirements)
+        self.assertIn("model-assignments.json", index)
+        self.assertIn("not current assignment policy", index)
+
+    def test_paseo_docs_require_fresh_handoff_not_current_session_reload(self):
+        for path in ("README.md", "REQUIREMENTS.md", "docs/pi-settings-sample.md",
+                     "docs/coordinate-implementation.md", ".specify/memory/constitution.md"):
+            with self.subTest(path=path):
+                text = (ROOT / path).read_text().casefold()
+                self.assertIn("fresh-session handoff", text)
+                self.assertTrue("no automatic reload or restart" in text or
+                                "instead of reloading or restarting the current session" in text or
+                                "not an owner reload instruction or automatic restart" in text or
+                                "do not instruct the owner to reload or restart" in text or
+                                "do not reload or restart the current session automatically" in text)
+
+
 class LinkTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
