@@ -38,8 +38,8 @@ class OwnerAssignmentExecutionRoleTests(ProjectTest):
             result = Engine(owner, 'role-propagation', admit([{'id': 'task', 'description': 'fixture'}]),
                             executor, adapter=Adapter).invoke()
         self.assertEqual(result['status'], 'complete')
-        self.assertEqual(calls, [(worker, False), (reviewer, True), (worker, False), (reviewer, True)])
-        self.assertEqual(len({id(session) for session in sessions}), 4)
+        self.assertEqual(calls, [(worker, False), (reviewer, True), (reviewer, False), (reviewer, True)])
+        self.assertEqual(len({id(session) for session in sessions}), 3)
 
         shared = {**worker, 'reviewer': dict(worker)}
         with Authority(self.project) as owner:
@@ -250,7 +250,7 @@ else:
                 if kwargs.get('read_only'):
                     prompts.append(prompt)
                     return '{"approved":false,"findings":["fix.txt:1 - original defect"]}' if len(prompts) == 1 else '{"approved":true,"findings":[]}'
-                if prompt.startswith('Correct the actionable findings'):
+                if 'Continue your code review:' in prompt:
                     raise Blocked('original defect')
                 if '"id":"fix"' in prompt:
                     kwargs['claim']('fix.txt')

@@ -47,6 +47,41 @@ class SameRunResumeTests(ProjectTest):
             self.assertEqual(owner.store.db.execute("SELECT state,result FROM execution_tasks WHERE run_id='lost-completion'").fetchone()[:], ('complete', checkpoint))
 
 
+    def test_review_repair_reopens_persisted_reviewer_after_process_restart(self):
+        calls = []
+        saved = {'id': 'warm-review', 'file': '/private/review.jsonl',
+                 'compatibility': {'readOnly': True}}
+        case = self
+        class Adapter:
+            def __init__(self, _project, profile, **_kwargs):
+                self.profile = profile
+                self.saved_session = None
+            def prompt(self, prompt, **kwargs):
+                calls.append((self.profile, kwargs))
+                if kwargs.get('read_only'):
+                    if len(calls) == 2:
+                        self.saved_session = saved
+                        return '{"approved":false,"findings":["fixture defect"]}'
+                    case.assertIsNone(self.saved_session)
+                    return '{"approved":true,"findings":[]}'
+                if 'Actionable findings:' in prompt:
+                    case.assertEqual(self.saved_session, saved)
+                    case.assertEqual(kwargs['saved_session'], saved)
+                    case.assertTrue(kwargs['review_repair'])
+                    case.assertEqual(self.profile, EXECUTOR['reviewer'])
+                    self.saved_session = {**saved, 'compatibility': {'readOnly': False}}
+                return 'fixture'
+        contract = admit([{'id': 'task', 'description': 'fixture'}])
+        with Authority(self.project) as owner:
+            with patch.object(Engine, 'run_fix', side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+                Engine(owner, 'review-restart', contract, EXECUTOR, adapter=Adapter).invoke()
+        # A new authority and Engine have no in-memory reviewer adapter.
+        with Authority(self.project) as owner:
+            owner.store.resume('review-restart')
+            result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=Adapter, resume=True).invoke()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(len(calls), 4)
+
     def test_persisted_approval_never_accepts_incoming_commits(self):
         for ordinal in (1, 2):
             with self.subTest(ordinal=ordinal), Authority(self.project) as owner:
