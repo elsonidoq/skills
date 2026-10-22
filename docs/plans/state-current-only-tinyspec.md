@@ -16,9 +16,9 @@ are still required before execution.
 Governing constraints: [AGENTS](../../AGENTS.md), [constitution principles I–VI](../../.specify/memory/constitution.md),
 [documentation routing](../index.md), [TinySpec](../../skills/tiny-spec/SKILL.md),
 [checkpoint contract](../../skills/memory-handling/references/task-commit-contract.md),
-[coordination evidence](../../skills/memory-handling/references/project-coordination.md).
+[coordination evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/skills/memory-handling/references/project-coordination.md).
 Verified project gotcha store: [memory index](../../memory/MEMORY.md), no recorded gotchas.
-[Coordination guidelines](../../memory/coordination/GUIDELINES.md) contain no approved guidance;
+[Coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) contain no approved guidance;
 required files exist, so initialization is unnecessary. No historical evidence intake is needed.
 Factual run owner: `memory/coordination/evidence/2026-10-08-state-current-only/SUMMARY.md`.
 

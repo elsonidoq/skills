@@ -20,7 +20,7 @@ Repository [instructions](../../AGENTS.md), [constitution](../../.specify/memory
 [early-risk](../../skills/planner/references/early-risk-reduction.md) and
 [task checkpoints](../../skills/memory-handling/references/task-commit-contract.md) govern.
 The whole [memory index](../../memory/MEMORY.md) has no gotchas and
-[coordination guidelines](../../memory/coordination/GUIDELINES.md) have no approved guidance;
+[coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) have no approved guidance;
 no calibration or success history is inferred. Retained research linked by the source is
 qualified evidence, not a leaderboard or current policy owner. No new dependency/research is needed.
 

@@ -6,7 +6,7 @@ Authoritative source: [TinySpec](early-risk-reduction-tinyspec.md), R1–R5 and 
 Origin: planner / owner-selected TinySpec, task-generation direct adapter. Preparation
 only; combined current-content source/task/scope approval **pending**. No task is authorized
 for execution by this file. Planner-owned review/content digests and planning checkpoints
-are recorded in [run SUMMARY](../../memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md).
+are recorded in [run SUMMARY](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md).
 No implementation profile assigned; coordinator owns later selection and routing approval.
 
 This instruction change plans selective executable risk-reduction work in future projects;

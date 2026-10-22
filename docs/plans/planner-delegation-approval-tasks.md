@@ -1,7 +1,7 @@
 # Planner delegation and complete approval briefs — tasks
 
 Source: [TinySpec](planner-delegation-approval-tinyspec.md), Scope, Approach and A1–A7.
-Authorization/evidence: [run SUMMARY](../../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
+Authorization/evidence: [run SUMMARY](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
 Owner-selected TinySpec preparation is authorized; source/task review and current-content
 combined approval are pending. This separate deliverable grants no implementation authority.
 Direct adapter applies; no plan artifact, SpecKit task-stage prerequisite or intermediate approval.

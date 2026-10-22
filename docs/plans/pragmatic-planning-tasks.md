@@ -26,7 +26,7 @@ Repository instructions, constitution, routing/runtime requirements, documentati
 [early-risk contract](../../skills/planner/references/early-risk-reduction.md) and
 [checkpoint contract](../../skills/memory-handling/references/task-commit-contract.md) apply.
 The whole [memory index](../../memory/MEMORY.md) has no gotchas;
-[coordination guidelines](../../memory/coordination/GUIDELINES.md) have none approved.
+[coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) have none approved.
 No new dependency/API decision: local inspection suffices, external research omitted.
 Owner's very-small-task guidance applies specifically to genuine-unknown prototype experiments,
 not normal delivery outcomes. Such experiments may justify tiny prerequisite tasks and smaller

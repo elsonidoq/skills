@@ -30,7 +30,7 @@ consistency needs. Do not create another owner or duplicate contracts across con
 
 Preserve [AGENTS](../../AGENTS.md), [constitution](../../.specify/memory/constitution.md),
 [documentation routing](../index.md), [task checkpoints](../../skills/memory-handling/references/task-commit-contract.md),
-[feedback boundaries](../../skills/memory-handling/references/project-coordination.md),
+[feedback boundaries](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/skills/memory-handling/references/project-coordination.md),
 [early risk reduction](../../skills/planner/references/early-risk-reduction.md),
 [dependency research](../../skills/planner/references/dependency-research.md) and
 [TinySpec source contract](../../skills/tiny-spec/SKILL.md) and
@@ -38,7 +38,7 @@ Preserve [AGENTS](../../AGENTS.md), [constitution](../../.specify/memory/constit
 `writing-skills` completely from its discoverable installation; it supplies portability,
 observable-branch and focused-validation guidance, not new suite runtime requirements.
 The adopted [memory index](../../memory/MEMORY.md) has no gotchas and
-[coordination guidelines](../../memory/coordination/GUIDELINES.md) have no approved guidance;
+[coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) have no approved guidance;
 no memory writes or invented lessons.
 
 Excluded: external-project/memory changes; installs, live probes, external operations,

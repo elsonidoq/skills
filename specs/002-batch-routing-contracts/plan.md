@@ -108,7 +108,7 @@ On failure inspect child run, invocation, partial commits and check evidence fir
 
 ### Feedback integration (FR-009, FR-010)
 
-Extend only profile/feedback compatibility wording in [project coordination contract](../../skills/memory-handling/references/project-coordination.md). Existing indexed run/task records hold each attempt's exact selected and observed profile, factors, contract strength, first/final outcome, diagnosis, evidence/checkpoint references and repair. Preserve accepted, partial, escalated and blocked attempts; do not infer incapacity from unavailable environments or generalize weak/invalidated successes. Reflection remains selective/index-first, with exact owner-approved candidate content and drift checks as the only guideline-write path. No new YAML schema, score, automatic learner or raw outcome promotion.
+Extend only profile/feedback compatibility wording in [project coordination contract](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/skills/memory-handling/references/project-coordination.md). Existing indexed run/task records hold each attempt's exact selected and observed profile, factors, contract strength, first/final outcome, diagnosis, evidence/checkpoint references and repair. Preserve accepted, partial, escalated and blocked attempts; do not infer incapacity from unavailable environments or generalize weak/invalidated successes. Reflection remains selective/index-first, with exact owner-approved candidate content and drift checks as the only guideline-write path. No new YAML schema, score, automatic learner or raw outcome promotion.
 
 ## Research Traceability and Capability Gates
 

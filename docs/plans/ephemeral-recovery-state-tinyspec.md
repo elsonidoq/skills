@@ -9,7 +9,7 @@ Owner: bookkeeping must be lightweight; STATE exists only to recover gracefully 
 auto-compaction, giving the big picture and enough pointers to reconstruct details from
 project files. Owner accepted recovery-bookmark semantics and explicitly required small,
 ephemeral current content removed when its task finishes. This source preserves the
-conversation-only request. [Run evidence](../../memory/coordination/evidence/2026-10-08-ephemeral-recovery-state/SUMMARY.md)
+conversation-only request. [Run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-08-ephemeral-recovery-state/SUMMARY.md)
 owns approval identities and execution evidence.
 
 ## Scope and settled decisions

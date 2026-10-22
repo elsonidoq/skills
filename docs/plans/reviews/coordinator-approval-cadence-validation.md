@@ -1,6 +1,6 @@
 # Coordinator approval/cadence — bounded implementation validation
 
-Authority: [TinySpec](../coordinator-approval-cadence-tinyspec.md), [tasks](../coordinator-approval-cadence-tasks.md), [approval/review](coordinator-approval-cadence-planning-review.md). Evidence: [run summary](../../../memory/coordination/evidence/2026-10-06-coordinator-approval-cadence/SUMMARY.md).
+Authority: [TinySpec](../coordinator-approval-cadence-tinyspec.md), [tasks](../coordinator-approval-cadence-tasks.md), [approval/review](coordinator-approval-cadence-planning-review.md). Evidence: [run summary](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-06-coordinator-approval-cadence/SUMMARY.md).
 
 Implementation was local as explicitly requested. Fresh independent native reviewer, separately approved with exact `openai-codex/gpt-6.1-sol:medium`, completed with no issues and verdict OK. No worker task/evidence behavior was changed.
 

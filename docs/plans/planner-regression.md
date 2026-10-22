@@ -355,7 +355,7 @@ deterministic test success does not imply deployment checks.
 - Pre-change static suite baseline: PASS.
 - Historical refactor candidate deterministic checks: see planner-refactor validation record.
 - Delegation/complete-brief correction: static checker PASS and 111 offline tests PASS;
-  item-level proof/checkpoints in [run evidence](../../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
+  item-level proof/checkpoints in [run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
   Fresh independent final review: READY, no findings; all ten required items satisfied within
   offline/manual bounds. This is contract sensitivity evidence, not live model-obedience proof.
 - RPC driver against synthetic process: covered by offline tests.

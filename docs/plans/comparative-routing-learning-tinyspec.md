@@ -22,7 +22,7 @@ router, learner, approval chain, benchmark system or second evidence store.
 ## Evidence and constraints
 
 Canonical owners: [routing rubric](../../skills/coordinate-implementation/references/batch-routing.md),
-[coordination contract](../../skills/memory-handling/references/project-coordination.md),
+[coordination contract](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/skills/memory-handling/references/project-coordination.md),
 [coordinator](../../skills/coordinate-implementation/SKILL.md),
 [task checkpoints](../../skills/memory-handling/references/task-commit-contract.md).
 Reuse [qualified research](../../specs/002-batch-routing-contracts/research.md), especially
