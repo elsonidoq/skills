@@ -1,10 +1,11 @@
 import hashlib
+import json
 from pathlib import Path
 import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parent))
-from import_open_issues import Source, preview
+from import_open_issues import GhApiTransport, IncompleteLookup, Source, preview, reconcile
 
 ROOT = Path(__file__).resolve().parents[3]
 BASELINE_SHA256 = "314b9ddd758d25923105d85c23225293d0a1398b506d1b28925d783a5c3e1c7a"
@@ -75,6 +76,104 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(result.records[0].state, "closed")
         self.assertEqual(result.diagnostics[0].oi_id, "OI-2")
         self.assertIn("missing required", result.diagnostics[0].reason)
+
+
+class ReconciliationTests(unittest.TestCase):
+    def _proposal(self):
+        text = """## OI-1: One
+- **Status:** open
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+## OI-2: Two
+- **Status:** closed
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+"""
+        return preview(text, SOURCE, "dest/repo")
+
+    def test_complete_explicit_get_excludes_prs_and_finds_closed_second_page(self):
+        proposal = self._proposal()
+        one, two = proposal.records
+        calls = []
+
+        def fake_gh(argv, stdin):
+            calls.append((argv, stdin))
+            self.assertEqual(argv[argv.index("--method") + 1], "GET")
+            self.assertNotIn("POST", argv)
+            return json.dumps([[
+                {"number": 1, "state": "open", "body": one.body},
+                {"number": 2, "state": "open", "body": two.marker.replace("OI-2", "OI-20")},
+                {"number": 3, "state": "open", "body": two.body, "pull_request": {"url": "x"}},
+            ], [{"number": 9, "state": "closed", "body": two.body}]])
+
+        result = reconcile(proposal, GhApiTransport(fake_gh), "github.com")
+        self.assertEqual([item.outcome for item in result.records], ["no-op", "no-op"])
+        argv, stdin = calls[0]
+        self.assertEqual(stdin, None)
+        self.assertEqual(argv, (
+            "gh", "api", "--method", "GET", "--hostname", "github.com", "--paginate", "--slurp",
+            "--header", "X-GitHub-Api-Version: 2022-11-28",
+            "repos/dest/repo/issues?state=all&per_page=100",
+        ))
+
+    def test_failed_middle_page_is_incomplete_not_create_eligible_and_never_writes(self):
+        proposal = self._proposal()
+        calls = []
+
+        def failed_second_page(argv, stdin):
+            calls.append((argv, stdin))
+            if "--method" not in argv or argv[argv.index("--method") + 1] != "GET":
+                raise AssertionError("mutating gh method rejected")
+            raise IncompleteLookup("page 2 rate limit")
+
+        result = reconcile(proposal, GhApiTransport(failed_second_page), "github.com")
+        self.assertEqual([item.outcome for item in result.records], ["incomplete lookup", "incomplete lookup"])
+        self.assertIn("page 2 rate limit", result.lookup_error)
+        self.assertEqual(len(calls), 1)
+        self.assertIsNone(calls[0][1])
+
+    def test_reruns_divergence_duplicates_and_reviewed_mapping_are_record_specific(self):
+        proposal = self._proposal()
+        one, two = proposal.records
+
+        def snapshot(argv, stdin):
+            return json.dumps([[
+                {"number": 1, "state": "open", "body": one.body},
+                {"number": 2, "state": "open", "body": "human issue #2, no import marker"},
+                {"number": 3, "state": "closed", "body": two.body + "\nhuman edit"},
+                {"number": 4, "state": "closed", "body": two.body},
+            ]])
+
+        result = reconcile(proposal, GhApiTransport(snapshot), "github.com", {one.identity: 2})
+        self.assertEqual(result.records[0].outcome, "no-op")  # exact marker wins over title/mapping
+        self.assertEqual(result.records[1].outcome, "conflict")  # changed body plus a second exact marker
+        mapped = reconcile(preview("""## OI-4: Overlap
+- **Status:** open
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+""", SOURCE, "dest/repo"), GhApiTransport(snapshot), "github.com", {"github.com/elsonidoq/skills:docs/open_issues.md:OI-4": 2})
+        self.assertEqual(mapped.records[0].outcome, "existing-issue mapping")
+        self.assertEqual(mapped.records[0].issue.number, 2)
+
+        changed = preview("""## OI-1: One
+- **Status:** closed
+- **Problem:** revised
+- **Primary evidence:** e
+- **Resumption condition:** r
+""", Source("github.com", "elsonidoq/skills", "docs/open_issues.md", "new-revision"), "dest/repo")
+        divergent = reconcile(changed, GhApiTransport(snapshot), "github.com")
+        self.assertEqual(divergent.records[0].outcome, "conflict")
+        self.assertIn("diverges", divergent.records[0].detail)
+
+        def unknown_state(argv, stdin):
+            return json.dumps([[{"number": 8, "state": "unknown", "body": one.body}]])
+
+        unknown = reconcile(proposal, GhApiTransport(unknown_state), "github.com")
+        self.assertEqual(unknown.records[0].outcome, "conflict")
+        self.assertIn("close ownership", unknown.records[0].detail)
 
 
 if __name__ == "__main__":

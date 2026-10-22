@@ -6,8 +6,11 @@ consume its ParsedRecord/Preview interfaces, but preview itself is read-only.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import posixpath
 import re
+import subprocess
+from typing import Callable, Mapping
 from urllib.parse import quote
 
 _HEADING = re.compile(r"^## (OI-\d+):\s+(.+?)\s*$")
@@ -83,6 +86,123 @@ class Preview:
     @property
     def counts(self) -> dict[str, int]:
         return {"records": len(self.records), "open": sum(r.state == "open" for r in self.records), "closed": sum(r.state == "closed" for r in self.records), "unmappable": len(self.diagnostics)}
+
+
+@dataclass(frozen=True)
+class RemoteIssue:
+    number: int
+    state: str
+    body: str
+    is_pull_request: bool = False
+
+
+@dataclass(frozen=True)
+class Reconciliation:
+    record: RenderedRecord
+    outcome: str
+    issue: RemoteIssue | None = None
+    detail: str | None = None
+
+
+@dataclass(frozen=True)
+class ReconciliationPreview:
+    preview: Preview
+    records: tuple[Reconciliation, ...]
+    lookup_error: str | None = None
+
+
+class IncompleteLookup(RuntimeError):
+    """The complete destination snapshot could not be established safely."""
+
+
+class GhApiTransport:
+    """Read-only, explicit-target `gh api` boundary used by reconciliation."""
+
+    api_version = "2022-11-28"
+
+    def __init__(self, execute: Callable[[tuple[str, ...], str | None], str] | None = None):
+        self._execute = execute or self._subprocess_execute
+
+    @staticmethod
+    def _subprocess_execute(argv: tuple[str, ...], stdin: str | None) -> str:
+        completed = subprocess.run(argv, input=stdin, text=True, capture_output=True, check=False)
+        if completed.returncode:
+            raise IncompleteLookup(completed.stderr.strip() or f"gh exited {completed.returncode}")
+        return completed.stdout
+
+    def list_issues(self, host: str, destination: str) -> tuple[RemoteIssue, ...]:
+        if not re.fullmatch(r"[A-Za-z0-9.-]+", host):
+            raise ValueError("destination host must be a hostname")
+        if not re.fullmatch(r"[^/\s]+/[^/\s]+", destination):
+            raise ValueError("destination must be OWNER/REPO")
+        argv = (
+            "gh", "api", "--method", "GET", "--hostname", host, "--paginate", "--slurp",
+            "--header", f"X-GitHub-Api-Version: {self.api_version}",
+            f"repos/{destination}/issues?state=all&per_page=100",
+        )
+        try:
+            raw = self._execute(argv, None)
+            pages = json.loads(raw)
+        except (IncompleteLookup, OSError, json.JSONDecodeError, TypeError, ValueError) as error:
+            raise IncompleteLookup(f"complete destination lookup unavailable: {error}") from error
+        if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+            raise IncompleteLookup("complete destination lookup returned an unexpected paginated response")
+        issues: list[RemoteIssue] = []
+        for page in pages:
+            for item in page:
+                if not isinstance(item, dict) or not isinstance(item.get("number"), int):
+                    raise IncompleteLookup("complete destination lookup returned an invalid issue")
+                body = item.get("body")
+                state = item.get("state")
+                if not isinstance(body, str) or not isinstance(state, str):
+                    raise IncompleteLookup("complete destination lookup omitted issue body or state")
+                issues.append(RemoteIssue(item["number"], state, body, "pull_request" in item))
+        return tuple(issues)
+
+
+def reconcile(
+    proposal: Preview,
+    transport: GhApiTransport,
+    host: str,
+    confirmed_mappings: Mapping[str, int] | None = None,
+) -> ReconciliationPreview:
+    """Compare a local preview with one complete read-only remote issue snapshot.
+
+    This performs no create, update, close, or other mutation.  A mapping is only a
+    caller-supplied reviewed choice for an already-existing issue; it never adopts by title.
+    """
+    try:
+        issues = transport.list_issues(host, proposal.destination)
+    except IncompleteLookup as error:
+        detail = str(error)
+        return ReconciliationPreview(proposal, tuple(Reconciliation(record, "incomplete lookup", detail=detail) for record in proposal.records), detail)
+
+    by_number = {issue.number: issue for issue in issues if not issue.is_pull_request}
+    mappings = confirmed_mappings or {}
+    results: list[Reconciliation] = []
+    for record in proposal.records:
+        matches = [issue for issue in by_number.values() if issue.body.count(record.marker)]
+        if len(matches) > 1 or any(issue.body.count(record.marker) != 1 for issue in matches):
+            results.append(Reconciliation(record, "conflict", detail="duplicate exact provenance marker; inspect affected issues"))
+            continue
+        if not matches and record.identity in mappings:
+            issue = by_number.get(mappings[record.identity])
+            if issue is None:
+                results.append(Reconciliation(record, "conflict", detail="reviewed mapping does not name a visible non-PR issue"))
+            else:
+                results.append(Reconciliation(record, "existing-issue mapping", issue, "reviewed mapping; preserve remote body and state"))
+            continue
+        if not matches:
+            results.append(Reconciliation(record, "planned create"))
+            continue
+        issue = matches[0]
+        if issue.state not in {"open", "closed"}:
+            results.append(Reconciliation(record, "conflict", issue, "unknown remote state; inspect close ownership"))
+        elif issue.body == record.body and issue.state == record.state:
+            results.append(Reconciliation(record, "no-op", issue))
+        else:
+            results.append(Reconciliation(record, "conflict", issue, "remote body or state diverges; inspect before any change"))
+    return ReconciliationPreview(proposal, tuple(results))
 
 
 def parse_markdown(markdown: str) -> tuple[tuple[ParsedRecord, ...], tuple[Diagnostic, ...]]:

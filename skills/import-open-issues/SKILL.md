@@ -45,12 +45,46 @@ remain unchanged. OI references become source-qualified immutable source links; 
 create task/issue relationships. Inline code paths are retained as code and are not claimed
 as verified links.
 
+## Read-only reconciliation
+
+`reconcile(preview, GhApiTransport(), HOST, confirmed_mappings=None)` obtains one complete,
+read-only destination snapshot before any future apply. Its transport uses the explicit target
+only:
+
+```text
+gh api --method GET --hostname HOST --paginate --slurp \
+  --header "X-GitHub-Api-Version: 2022-11-28" \
+  "repos/OWNER/REPO/issues?state=all&per_page=100"
+```
+
+The installed `gh` 2.102.0 help confirms that `--paginate` follows every page, `--slurp`
+returns page arrays, and field flags otherwise change the default method to POST. Keep the
+explicit GET even though this lookup has no fields. The explicit REST version is `2022-11-28`;
+a target that rejects it, any auth/rate-limit error, malformed result, missing page, failed
+readback, or uncertain visibility is `incomplete lookup`, never evidence that a marker is
+absent or that a create is eligible. Do not refresh auth. This is version-sensitive operational
+guidance, not a claim that an untested target supports another version.
+
+The snapshot excludes REST items with `pull_request`. It compares each raw, exact body marker
+(no title/search/near-match adoption): unchanged body and native open/closed state is `no-op`;
+no marker is `planned create`; body/state divergence, duplicate marker, or unknown close state
+is an affected-record `conflict` requiring inspection. It does not reset stale source state,
+merge titles, overwrite human edits, or claim close ownership. A `confirmed_mappings` identity
+→ issue-number input reports an `existing-issue mapping` only when a reviewer has explicitly
+chosen that visible non-PR issue; it preserves its body/state and is nonauthoritative. In
+particular an historical link to issue #2 is not a mapping by itself.
+
+Reconciliation is preview-only: it sends no stdin/body, uses no shell, and performs no labels,
+assignments, uploads, relationships, create, edit, close, or reopen. Its result is the
+read-before-write interface for later stages. One cooperating apply operator per source and
+destination is expected; immediate readback/best-effort concurrent-edit detection is still
+needed, and no exactly-once guarantee or repository-wide lock exists for simultaneous importers.
+
 ## Apply boundary
 
-Preview is the default and has zero external writes. Remote lookup, reconciliation, and apply
-are intentionally not implemented by this offline stage. Before a future apply, require an
+Preview and reconciliation have zero external writes. Before a future apply, require an
 explicit named destination/write scope, reviewed preview, complete open-and-closed marker
 reconciliation, independent readback, and a reviewed choice for any pre-existing overlap.
 Never infer a fix, actor, timestamp, closure reason, or target availability from the
-historical text. Keep the original Markdown intact; no source
-archive/delete or local tracking database is part of this skill.
+historical text. Keep the original Markdown intact; no source archive/delete or local tracking
+database is part of this skill.
