@@ -212,6 +212,9 @@ class UnfinishedTaskResumeTests(ProjectTest):
             self.assertEqual(result['status'], 'complete')
             self.assertEqual(len(inspected), 1)
             self.assertIn('private-session', inspected[0])
+            self.assertIn('As coordinating agent, inspect', inspected[0])
+            self.assertIn('do not ask the owner to debug routine technical failures', inspected[0])
+            self.assertIn('leave empty if unknown', inspected[0])
             self.assertEqual(len(calls), 2)
 
 
