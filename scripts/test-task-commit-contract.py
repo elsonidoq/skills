@@ -215,6 +215,19 @@ APPROVED_GUIDANCE = (
     'Routine task transitions/completions and steering-status updates must not wake the parent agent or require acknowledgment. '
     'Only agent questions and terminal workflow completion, whether success or error, should trigger a parent turn.'
 )
+LEGACY_SEPARATE_STORE_TEXT = (
+    'keep project guidance and factual\n'
+    'run evidence in the separate `memory/coordination/` store. '
+)
+
+
+def approved_memory_index(baseline_index):
+    """The approved unified-index transition retains every non-retired baseline byte."""
+    return baseline_index.replace(LEGACY_SEPARATE_STORE_TEXT, '') + (
+        '\n## Owner guidance\n\n'
+        f'{APPROVED_GUIDANCE}\n\n'
+        'Current-conversation provenance.\n'
+    )
 
 
 def legacy_inventory():
@@ -238,7 +251,12 @@ def assert_approved_memory_transition(case, repo, baseline, inventory):
         case.assertNotEqual(status[0], 'R', 'legacy records must not be renamed or relocated')
         if path == 'memory/MEMORY.md':
             case.assertEqual(status, 'M', 'the approved index may only be modified')
+            baseline_index = run(repo, 'show', f'{baseline}:{path}').stdout
             index = (repo / path).read_text()
+            # The sole retired sentence named a separate store. All other baseline bytes
+            # must survive the approved unified-index/guidance transition.
+            protected_baseline = baseline_index.replace(LEGACY_SEPARATE_STORE_TEXT, '')
+            case.assertIn(protected_baseline, index, 'index update lost unapproved baseline content')
             case.assertIn(APPROVED_GUIDANCE, index, 'index update must retain the approved guidance')
             case.assertIn('provenance', index.lower(), 'index update must retain feedback provenance')
         else:
@@ -313,7 +331,7 @@ class RuntimePolicyCompatibilityTests(GitProtocolFixtureTests):
         assert_approved_memory_transition(self, repo, baseline, inventory)
 
         (repo / 'memory/MEMORY.md').write_text(
-            f'owner guidance\n\n{APPROVED_GUIDANCE}\n\nCurrent-conversation provenance.\n'
+            approved_memory_index((repo / 'memory/MEMORY.md').read_text())
         )
         for path in inventory:
             (repo / path).unlink()
@@ -338,6 +356,15 @@ class RuntimePolicyCompatibilityTests(GitProtocolFixtureTests):
                     target.write_text(content)
                 with self.assertRaises(AssertionError):
                     assert_approved_memory_transition(self, repo, baseline, inventory)
+
+    def test_scoped_memory_preservation_rejects_index_content_loss_with_approved_strings(self):
+        inventory = legacy_inventory()
+        repo, baseline = self.memory_fixture_repo(inventory)
+        index = approved_memory_index((repo / 'memory/MEMORY.md').read_text())
+        # Both approved strings remain, but unrelated baseline content may not disappear.
+        (repo / 'memory/MEMORY.md').write_text(index.replace('gotcha index\n', ''))
+        with self.assertRaises(AssertionError):
+            assert_approved_memory_transition(self, repo, baseline, inventory)
 
 
 if __name__ == "__main__":
