@@ -207,9 +207,16 @@ def stage(text, name):
     return text[start:] if end < 0 else text[start:end]
 
 
+SECOND_STORE_OPERATION = re.compile(
+    r"\b(?:create|discover|read|maintain|propagate|use)\b.{0,100}\b(?:separate|second|independent)\b.{0,100}\b(?:guidance|coordination|feedback|memory)\b.{0,100}\b(?:store|root|index|ledger)\b",
+    re.I,
+)
+
+
 def unified_adoption_errors(text):
     """Static unified-memory adoption guard; not an adoption runner."""
-    adoption = normalized(stage(text, "Adoption"))
+    raw_adoption = stage(text, "Adoption")
+    adoption = normalized(raw_adoption)
     errors = []
     for phrase in (
         "one associated index carries verified technical gotchas and explicit future-directed owner guidance",
@@ -222,6 +229,11 @@ def unified_adoption_errors(text):
             errors.append(f"unified-adoption: missing {phrase!r}")
     if re.search(r"\bcreate guidelines\.md\b|\bpropagate guidance to guidelines\.md\b", adoption):
         errors.append("unified-adoption-separate-guidelines: prohibited second-store setup or propagation")
+    for match in SECOND_STORE_OPERATION.finditer(raw_adoption):
+        prefix = raw_adoption[max(0, match.start() - 20):match.start()]
+        if not re.search(r"(?:no|never|do not)\s*$", prefix, re.I):
+            errors.append("unified-adoption-separate-guidelines: prohibited second-store setup or propagation")
+            break
     return errors
 
 
@@ -552,7 +564,8 @@ class UnifiedMemoryAdoptionTests(unittest.TestCase):
         source = SKILL.read_text()
         self.assertEqual(unified_adoption_errors(source), [])
         for mutation in ("Create GUIDELINES.md for owner guidance.",
-                         "Propagate guidance to GUIDELINES.md."):
+                         "Propagate guidance to GUIDELINES.md.",
+                         "Propagate an independent coordination guidance store."):
             with self.subTest(mutation=mutation):
                 changed = source.replace(stage(source, "Adoption"),
                                          stage(source, "Adoption") + "\n" + mutation, 1)

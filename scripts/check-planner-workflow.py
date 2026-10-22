@@ -24,6 +24,22 @@ PATHS = {
 }
 
 
+# Final unified-memory composition inspects only active carrier files. Historical plans,
+# negative assertions, and inert fixture bytes are deliberately outside this boundary.
+UNIFIED_MEMORY_CARRIERS = (
+    ("memory", "# Memory Handling", ("One verified\nproject association and one index", "two distinct evidence kinds")),
+    ("planner", "## Discovery and capability boundary", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("tiny", "## Inputs and preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("tasks", "## Preconditions and adapters", ("verified unified", "explicit owner guidance, alongside gotchas")),
+    ("helper", "## Preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("coordinator", "# Coordinate Implementation", ("Memory Handling remains the unified owner", "execution-time feedback/routing")),
+    ("adoption", "## Adoption", ("One associated index carries verified technical\n  gotchas and explicit future-directed owner guidance", "Do not scaffold a separate coordination or guidelines root")),
+)
+SECOND_STORE_REINTRODUCTION = re.compile(
+    r"\b(?:create|discover|read|maintain|propagate|use)\b.{0,100}\b(?:separate|second|independent)\b.{0,100}\b(?:guidance|coordination|feedback|memory)\b.{0,100}\b(?:store|root|index|ledger)\b",
+    re.I,
+)
+
 
 # A5 adapter carriers: source acceptance must become a task-local gate/check/brief.
 ACCEPTED_ADAPTER_CARRIERS = (
@@ -791,6 +807,21 @@ ACTIVE_EXECUTION_CONSUMERS = (
 )
 
 
+def composed_unified_memory_errors(texts):
+    """Reject active second-store behavior without scanning historical/proposal bytes."""
+    errors = []
+    for key, heading, clauses in UNIFIED_MEMORY_CARRIERS:
+        body = section(texts[key], heading)
+        for clause in clauses:
+            if " ".join(clause.split()) not in " ".join(body.split()):
+                errors.append(f"unified-memory-composition: {key} missing {clause!r}")
+        for match in SECOND_STORE_REINTRODUCTION.finditer(body):
+            prefix = body[max(0, match.start() - 20):match.start()]
+            if not re.search(r"(?:no|never|do not)\s*$", prefix, re.I):
+                errors.append(f"unified-memory-composition: {key} restores a second-store operation")
+    return errors
+
+
 def repository_memory_errors(root=ROOT):
     """Check this repository's unified-memory association, not a project adoption engine."""
     errors = []
@@ -840,7 +871,9 @@ def main():
             errors=active_consumer_errors(args.root)
             for path in ACTIVE_EXECUTION_CONSUMERS:print('ActiveConsumersTests: inspected '+path)
         else:
-            errors = check_contracts(load_texts(args.root)) + repository_memory_errors(args.root)
+            texts = load_texts(args.root)
+            errors = (check_contracts(texts) + composed_unified_memory_errors(texts)
+                      + repository_memory_errors(args.root))
     except (OSError, ValueError) as exc:
         errors = [str(exc)]
     for error in errors:

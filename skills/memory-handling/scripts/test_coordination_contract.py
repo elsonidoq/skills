@@ -4,6 +4,7 @@
 These fixtures do not execute a skill or prove model obedience.
 """
 from pathlib import Path
+import re
 import tempfile
 import unittest
 
@@ -99,6 +100,29 @@ def closeout_errors(closeout, compactor, jev):
     return errors
 
 
+ACTIVE_CARRIERS = {
+    "memory": TEXT,
+    "closeout": CLOSEOUT_TEXT,
+    "compaction": COMPACTOR_TEXT,
+    "jev": JEV_TEXT,
+}
+SECOND_STORE_OPERATION = re.compile(
+    r"\b(?:create|discover|read|maintain|propagate|use)\b.{0,100}\b(?:separate|second|independent)\b.{0,100}\b(?:guidance|coordination|feedback|memory)\b.{0,100}\b(?:store|root|index|ledger)\b",
+    re.I,
+)
+
+
+def second_store_operation_errors(carriers):
+    """Inspect active owners only; historical/negative fixture text is intentionally excluded."""
+    errors = []
+    for name, text in carriers.items():
+        for match in SECOND_STORE_OPERATION.finditer(text):
+            prefix = text[max(0, match.start() - 20):match.start()]
+            if not re.search(r"(?:no|never|do not)\s*$", prefix, re.I):
+                errors.append(f"unified-memory-composition: {name} restores a second-store operation")
+    return errors
+
+
 def write_decision(kind, *, no_write=False, safe=True):
     """Authored symbolic authority oracle; it is not a filesystem write engine."""
     if no_write or kind in (
@@ -134,6 +158,20 @@ class UnifiedMemoryCloseoutTests(unittest.TestCase):
 class UnifiedMemoryContractTests(unittest.TestCase):
     def test_actual_unified_owner_contract(self):
         self.assertEqual(contract_errors(TEXT), [])
+
+    def test_active_memory_closeout_and_compaction_carriers_reject_renamed_second_stores(self):
+        self.assertEqual(second_store_operation_errors(ACTIVE_CARRIERS), [])
+        for name, mutation in (
+            ("memory", "Create an independent feedback ledger."),
+            ("closeout", "Maintain a separate guidance store."),
+            ("compaction", "Use a second memory guidance index."),
+            ("jev", "Propagate an independent coordination guidance root."),
+        ):
+            with self.subTest(carrier=name):
+                changed = dict(ACTIVE_CARRIERS)
+                changed[name] += "\n" + mutation
+                self.assertIn(f"unified-memory-composition: {name} restores a second-store operation",
+                              second_store_operation_errors(changed))
 
     def test_each_guard_mutation_has_named_diagnostic(self):
         for heading, clauses in GUARDS.items():

@@ -690,10 +690,10 @@ class ProportionateValidationTests(unittest.TestCase):
 
     def test_batch_profile_feedback_and_diagnosed_repair_carriers(self):
         for key, clause, diagnostic in (
-            ("coordination", "explicit user corrective/future-round direction", "coordination-feedback"),
-            ("coordination", "No feedback means no write", "coordination-feedback"),
-            ("coordinator", "Do not autonomously loop expensive failed runs", "coordination-routing"),
-            ("coordinator", "No arbitrary workflow", "coordination-routing"),
+            ("memory", "ordinary implementation approval", "unified-memory-owner"),
+            ("memory", "no feedback write nothing", "unified-memory-owner"),
+            ("coordinator", "Do not autonomously loop expensive failed runs", "unified-memory-routing"),
+            ("coordinator", "No arbitrary workflow", "unified-memory-routing"),
         ):
             self.assert_clause_required(key, clause, diagnostic)
 
@@ -1197,6 +1197,26 @@ class UnifiedMemoryPlanningTests(unittest.TestCase):
             for name in ("planner", "tiny-spec", "task-generation", "delegating-architectural-planning"):
                 self.assertEqual((target / name / "../memory-handling/SKILL.md").resolve(), owner.resolve())
                 self.assertIn("One verified", (target / name / "../memory-handling/SKILL.md").read_text())
+
+
+class UnifiedMemoryCompositionTests(unittest.TestCase):
+    """Active-carrier convergence only; historical and fixture bytes remain valid inputs."""
+
+    def test_active_carriers_share_one_index_without_second_store_operations(self):
+        self.assertEqual(checker.composed_unified_memory_errors(checker.load_texts()), [])
+
+    def test_renamed_second_store_operations_have_named_diagnostics(self):
+        for key, mutation in (
+            ("planner", "Create an independent feedback ledger for planning guidance."),
+            ("adoption", "Propagate a second coordination guidance store."),
+        ):
+            with self.subTest(carrier=key):
+                changed = checker.load_texts()
+                heading = next(heading for name, heading, _ in checker.UNIFIED_MEMORY_CARRIERS if name == key)
+                body = checker.section(changed[key], heading)
+                changed[key] = changed[key].replace(body, body + "\n" + mutation, 1)
+                self.assertIn(f"unified-memory-composition: {key} restores a second-store operation",
+                              checker.composed_unified_memory_errors(changed))
 
 
 class UnifiedMemoryRepositoryTests(unittest.TestCase):
