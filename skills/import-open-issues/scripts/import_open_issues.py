@@ -284,6 +284,8 @@ def reconcile(
             results.append(Reconciliation(record, "conflict", issue, "unknown remote state; inspect close ownership"))
         elif issue.title != record.title:
             results.append(Reconciliation(record, "conflict", issue, "remote title diverges; inspect before any change"))
+        elif record.state == "closed" and issue.state_reason is not None:
+            results.append(Reconciliation(record, "conflict", issue, "remote state reason is not null; inspect closure mapping or human state changes before any write"))
         elif issue.body == record.body and issue.state == record.state:
             results.append(Reconciliation(record, "no-op", issue))
         elif record.state == "closed" and issue.body == record.pending_close_body and issue.state == "open":
@@ -299,6 +301,8 @@ def _verified_open_readback(record: RenderedRecord, issue: RemoteIssue) -> Apply
         return ApplyResult(record, "deferred", issue, "readback resolved to a pull request")
     if issue.body.count(record.marker) != 1:
         return ApplyResult(record, "deferred", issue, "readback marker is absent or duplicated")
+    if record.state == "closed" and issue.state_reason is not None:
+        return ApplyResult(record, "deferred", issue, "pending closure state reason diverges; preserve possible human state changes")
     if issue.title != record.title or issue.body != expected_body or issue.state != "open":
         return ApplyResult(record, "deferred", issue, "readback title, content, or open state diverges; preserve remote changes")
     return ApplyResult(record, "created", issue)

@@ -67,7 +67,8 @@ guidance, not a claim that an untested target supports another version.
 
 The snapshot excludes REST items with `pull_request`. It compares each raw, exact body marker
 (no title/search/near-match adoption): unchanged title, body, and native open/closed state is
-`no-op`; no marker is `planned create`; title/body/state divergence, duplicate marker, or
+`no-op` (an originally closed record also requires null `state_reason`); no marker is
+`planned create`; a non-null reason for an originally closed record, title/body/state divergence, duplicate marker, or
 unknown close state is an affected-record `conflict` requiring inspection. It does not reset stale source state,
 merge titles, overwrite human edits, or claim close ownership. A `confirmed_mappings` identity
 → issue-number input reports an `existing-issue mapping` only when a reviewer has explicitly
@@ -95,7 +96,7 @@ GET must prove one marker, exact final content, `closed`, and null reason before
 `closed`. The source status remains verbatim in the rendered content; null is used only because
 no historical closure reason is specified. No fix, actor, or timestamp is invented.
 
-Only the exact pending marker/body plus open state is known import-owned unfinished closure and
+Only the exact pending marker/body plus open state and null reason is known import-owned unfinished closure and
 can resume on a later reviewed apply. A final imported body that is later open, an edited pending
 body, duplicate marker, unexpected state/reason, pull request, failed listing/readback, or any
 other ambiguity is `conflict`/`deferred`: never reset a possible human close/reopen. The helper

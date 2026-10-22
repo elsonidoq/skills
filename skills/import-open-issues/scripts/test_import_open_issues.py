@@ -409,6 +409,48 @@ class ClosedResumeTests(unittest.TestCase):
 - **Resumption condition:** r
 """, SOURCE, "dest/repo")
 
+    def test_reason_conflicts_remain_conflicts_on_rerun_without_writes(self):
+        proposal = self._proposal()
+        record = proposal.records[0]
+        for body, state, reason, expected in (
+            (record.body, "closed", None, "no-op"),
+            (record.body, "closed", "completed", "conflict"),
+            (record.body, "closed", "not_planned", "conflict"),
+            (record.pending_close_body, "open", None, "pending close"),
+            (record.pending_close_body, "open", "reopened", "conflict"),
+            (record.pending_close_body, "closed", "completed", "conflict"),
+            (record.body, "open", "reopened", "conflict"),
+        ):
+            with self.subTest(state=state, reason=reason, pending=body != record.body):
+                calls = []
+                issue = {"number": 3, "title": record.title, "body": body, "state": state, "state_reason": reason}
+                def gh(argv, stdin):
+                    calls.append(argv)
+                    self.assertIn("GET", argv)
+                    return json.dumps([[issue]])
+                transport = GhApiTransport(gh)
+                reviewed = reconcile(proposal, transport, "github.com")
+                self.assertEqual(reviewed.records[0].outcome, expected)
+                if expected == "conflict":
+                    result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "offline fixture"))
+                    self.assertEqual(result.records[0].outcome, "deferred")
+                    self.assertTrue(all("GET" in argv for argv in calls))
+
+    def test_pending_readback_reason_drift_does_not_close_human_reopen(self):
+        proposal = self._proposal()
+        record = proposal.records[0]
+        issue = {"number": 3, "title": record.title, "body": record.pending_close_body, "state": "open", "state_reason": None}
+        def gh(argv, stdin):
+            self.assertIn("GET", argv)  # Any PATCH/POST fails this fixture.
+            if "--paginate" in argv:
+                return json.dumps([[issue]])
+            return json.dumps({**issue, "state_reason": "reopened"})
+        transport = GhApiTransport(gh)
+        reviewed = reconcile(proposal, transport, "github.com")
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "offline fixture"))
+        self.assertEqual(result.records[0].outcome, "deferred")
+        self.assertIn("state reason diverges", result.records[0].detail)
+
     def test_known_pending_close_resumes_once_but_human_reopen_or_unknown_ownership_defers(self):
         proposal = self._proposal()
         record = proposal.records[0]
