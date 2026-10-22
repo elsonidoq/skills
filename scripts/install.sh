@@ -35,8 +35,10 @@ SPEC_DRIVEN_GUIDANCE="$SUITE_DIR/docs/best_practices_spec_driven_development.md"
 PROBE=0
 case "${1:-}" in
   --workflow-prefix)
-    [ "$#" -eq 3 ] || { echo "usage: $0 --workflow-prefix NEW_DIRECTORY --allow-network" >&2; exit 2; }
-    exec "$SUITE_DIR/scripts/install-workflow.sh" --prefix "$2" "$3" ;;
+    { [ "$#" -eq 3 ] || [ "$#" -eq 4 ]; } || { echo "usage: $0 --workflow-prefix NEW_DIRECTORY --allow-network [--global]" >&2; exit 2; }
+    shift
+    prefix="$1"; shift
+    exec "$SUITE_DIR/scripts/install-workflow.sh" --prefix "$prefix" "$@" ;;
   --probe) PROBE=1 ;;
   "") ;;
   *) echo "usage: $0 [--probe]" >&2; exit 2 ;;

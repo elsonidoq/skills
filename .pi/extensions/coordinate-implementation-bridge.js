@@ -1,6 +1,7 @@
 // Parent-session bridge for the existing coordinate-implementation runner.
 import { createServer } from 'node:net';
-import { mkdtemp, chmod, rm } from 'node:fs/promises';
+import { mkdtemp, chmod, rm, access } from 'node:fs/promises';
+import { constants } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -180,7 +181,15 @@ export default function coordinateImplementationBridge(pi) {
         await chmod(endpoint, 0o600);
         active = bridge;
         // Parent stdout belongs to Pi's RPC protocol; preserve runner diagnostics on stderr.
-        const child = spawn(path.join(ctx.cwd, 'scripts/coordinate-implementation'), params.resume ? [
+        const localRunner = path.join(ctx.cwd, 'scripts/coordinate-implementation');
+        let command = localRunner;
+        try {
+          await access(localRunner, constants.X_OK);
+        } catch (error) {
+          if (error.code !== 'ENOENT') throw error;
+          command = 'coordinate-implementation'; // Shared installation on PATH; project remains ctx.cwd.
+        }
+        const child = spawn(command, params.resume ? [
           'resume', '--project', ctx.cwd, '--run', params.run,
         ] : [
           'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,

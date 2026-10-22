@@ -185,7 +185,7 @@ tools that startup skipped. In Paseo, use a fresh session and verify both
 `coordinate_implementation_start` and `coordinate_implementation_reply` are available before launch;
 do not reload or restart the current session automatically. After merging, start in the main
 checkout and verify its own trust decision and tool availability: trust is path-specific, not
-branch-specific. The bridge resolves the script from that session's checkout, not an old worktree.
+branch-specific. The bridge uses an executable `scripts/coordinate-implementation` in that session's checkout when present; otherwise it launches the shared `coordinate-implementation` on PATH. Permission errors on an existing local launcher are not silently bypassed. Both paths keep that session's cwd as `--project`, never an old worktree or the suite checkout.
 Runner diagnostics go to stderr so they cannot corrupt the parent's RPC stdout. During an attached run, the active worker/fixer privately advertises its exact task and invocation target. The parent may call `coordinate_implementation_steer` only with that exact advertised run/task/invocation and a new direction ID; it returns `accepted` immediately, then parent notifications report `queued`, `consumed`, `failed-unavailable`, or `unknown`. `consumed` is matching SDK user-message observation, not compliance. No target exists for a reviewer, a completed invocation, or a task-ID-only successor; connection loss stays unknown and is never automatically resent or retargeted. Direction text remains in the authorized parent/worker conversation, not runner history or monitor data. After a bridge change, use a fresh Paseo session, verify checkout trust and all three bridge tools (`coordinate_implementation_start`, `coordinate_implementation_reply`, `coordinate_implementation_steer`), and obtain separate authorization before any live-provider proof. The bridge starts an explicit same-run continuation with `{run, resume: true}`; it supplies no replacement task or executor input. There is no Paseo
 version/transcript/binding/receipt gate. No automatic resume/control mailbox or daemon.
 Cancellation aborts the owned SDK session and waits for its host; it never signals parent/sibling
@@ -221,6 +221,25 @@ runtime dependencies. SDK 0.87.1 is tested; the dependency lock is install metad
 SDK/Node equality admission. No LangGraph, cgroup delegation, custom SDK tools or host manifests.
 Explicit optional setup remains `scripts/install-workflow.sh --prefix NEW_DIRECTORY --allow-network`
 only with separate install/network authority. Ordinary entry never calls it.
+
+For explicitly authorized global activation, add `--global`:
+
+```sh
+scripts/install-workflow.sh --prefix "$HOME/.local/share/coherence-workflow" --allow-network --global
+```
+
+Choose a new absolute prefix. This installs an isolated Python/SDK runtime and links its command
+at `~/.local/bin/coordinate-implementation` and the suite bridge at
+`${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/extensions/coordinate-implementation-bridge.js`.
+Existing foreign prefixes or link destinations are preserved and reported. Keep this suite checkout:
+the bridge and globally linked skills refer to its current files, while the installed runner is a
+snapshot and needs an explicit new-prefix installation to update. Ensure `~/.local/bin` is on PATH.
+Pi canonicalizes matching global/project symlink resources, so the same bridge loads once in the
+suite checkout as well as unrelated repos. New repos need no copied launcher or bridge, but still
+supply their own task file and explicit executor JSON; no model, permissions, adoption policy,
+authentication or old run data is copied. Use a fresh Pi/Paseo session and verify all three tools;
+never automatically reload/restart the current session. To roll back global activation, remove
+only the two proven installer-owned symlinks, leaving the isolated runtime and project data intact.
 
 Focused checks in the prepared environment:
 

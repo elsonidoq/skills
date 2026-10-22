@@ -19,6 +19,22 @@ class PackagingTests(unittest.TestCase):
             self.assertTrue((ROOT/'runtime'/path).is_file())
         self.assertEqual(config['project']['scripts']['coordinate-implementation'], 'coherence_workflow.cli:main')
 
+    def test_global_install_preserves_foreign_command_before_creating_prefix(self):
+        with tempfile.TemporaryDirectory(prefix='coherence-global-conflict-') as directory:
+            home = Path(directory)
+            command = home / '.local/bin/coordinate-implementation'
+            command.parent.mkdir(parents=True)
+            command.write_text('foreign command\n')
+            prefix = home / 'runtime'
+            result = subprocess.run([str(ROOT/'scripts/install-workflow.sh'), '--prefix', str(prefix),
+                                     '--allow-network', '--global'],
+                                    env=dict(os.environ, HOME=str(home), PI_CODING_AGENT_DIR=str(home/'agent')),
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertIn('existing/foreign destination preserved', result.stderr)
+            self.assertEqual(command.read_text(), 'foreign command\n')
+            self.assertFalse(prefix.exists(), 'conflicts must stop before downloads or installation')
+
     def test_actual_entry_help_from_unrelated_directory(self):
         with tempfile.TemporaryDirectory(prefix='coherence-simplification-03-help-') as directory:
             result = subprocess.run([str(ROOT/'scripts/coordinate-implementation'), '--help'], cwd=directory,

@@ -162,7 +162,11 @@ Executor JSON contains the actual selected `provider`, `model`, `effort`; no sub
 provenance assessment. No workflow graph, manifest, catalogue, cgroup delegation, original
 session, parent receipt or proof-of-effect database is required. Installed entry is
 `coordinate-implementation`; optional explicit isolated setup is separate install/network authority,
-never ordinary-use provisioning or auth refresh. Read actual `--help` and the
+never ordinary-use provisioning or auth refresh. Explicit cross-repository activation uses
+`scripts/install-workflow.sh --prefix "$HOME/.local/share/coherence-workflow" --allow-network --global`.
+It links the command and Pi bridge globally; retain this suite checkout, put `~/.local/bin` on PATH,
+and start a fresh Pi/Paseo session. Project tasks, executor selection and permissions remain local.
+Read actual `--help` and the
 [operating guide](docs/coordinate-implementation.md) / [storage owner](docs/coordinate-implementation-schema.md).
 
 Workers use ordinary SDK tools and correct harmless read/argument errors in the same conversation.
