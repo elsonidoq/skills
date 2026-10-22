@@ -33,7 +33,7 @@ test('uses actual production routes for display-ID direct opens, history, sortin
   await expect(page).toHaveURL('/runs/id-...')
   await expect(page.getByLabel('Selected run')).toContainText('...')
 
-  await page.getByRole('button', { name: 'Recorded run · slash/%? #東京 · recorded' }).click()
+  await page.getByRole('button', { name: 'Recorded run · slash/%? #東京 · incomplete' }).click()
   await expect(page).toHaveURL('/runs/id-slash%2F%25%3F%20%23%E6%9D%B1%E4%BA%AC')
   await expect(page.getByLabel('Selected run')).toContainText('slash/%? #東京')
   await page.goBack()

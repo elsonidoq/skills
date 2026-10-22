@@ -5,7 +5,7 @@ import { extname, join } from 'node:path'
 
 let server: Server
 let snapshots = 0
-const run = { ref: 'run_live', label: 'Observed run', completeness: 'recorded', started_at: 0, runner_state: { state: 'live', reason: null } }
+const run = { ref: 'run_live', display_id: 'observed-run', label: 'Observed run', completeness: 'recorded', started_at: 0, runner_state: { state: 'live', reason: null } }
 function view() {
   snapshots++
   const unavailable = snapshots > 1
@@ -18,11 +18,11 @@ test.beforeAll(async () => {
     if (url.pathname.endsWith('/snapshot')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify(view())); return }
     try { const file = url.pathname === '/' ? 'index.html' : url.pathname.slice(1); response.setHeader('content-type', { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }[extname(file)] ?? 'application/octet-stream'); response.end(await readFile(join('dist', file))) } catch { response.statusCode = 404; response.end() }
   })
-  await new Promise<void>(resolve => server.listen(4174, '127.0.0.1', resolve))
+  await new Promise<void>(resolve => server.listen(4175, '127.0.0.1', resolve))
 })
 test.afterAll(() => new Promise<void>(resolve => server.close(() => resolve())))
 test('displays read freshness, incomplete history, and qualified liveness without control requests', async ({ page }) => {
-  await page.clock.install(); await page.goto('/')
+  await page.clock.install(); await page.goto('http://127.0.0.1:4175/')
   await expect(page.getByLabel('Read freshness')).toContainText('last successful read 0; last recorded activity 0')
   await expect(page.getByLabel('Runner liveness')).toHaveText(/Recorded runner live.*does not prove progress/)
   await page.clock.fastForward(60_000)

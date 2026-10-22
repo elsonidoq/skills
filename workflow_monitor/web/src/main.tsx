@@ -57,6 +57,9 @@ function MetricDetails({ metrics }: { metrics: Metrics | undefined }) {
   return <section className="metric-details"><h4>Invocation metrics</h4><p>Availability: {metrics.availability}; {metrics.reasons.length ? `coverage reasons: ${metrics.reasons.join(', ')}` : 'coverage reasons: none recorded'}.</p><p>Scope: {metrics.scope?.kind ?? 'unknown'}; invocation {metrics.scope?.invocation_id ?? 'unknown'}; session {metrics.scope?.session_id ?? 'unknown'}; branch {metrics.scope?.branch ?? 'unknown'}; epoch {metrics.scope?.epoch ?? 'unknown'}.</p><p>Invocation role: {metrics.role ?? 'unknown'}; outcome: {metrics.outcome ?? 'unknown'}; task: {metrics.task_id ?? 'not applicable'}; worker/fixer round: {metrics.fixing_round ?? 'not applicable'}; reviewer ordinal: {metrics.review_ordinal ?? 'not applicable'}.</p><p>Selected opening: {metrics.selected_session?.mode ?? 'unknown'}; reason: {metrics.selected_session?.reason ?? 'unknown'}. Confirmed opening: {metrics.actual_session?.mode ?? 'unknown'}; actual identity: {metrics.actual_session?.identity ?? 'unknown'}.</p><p>Selection intent is not a confirmed opening. Invocation usage is not task-wide dispatch totals or reviewer/session spend.</p><ul>{Object.entries(metrics.tokens ?? {}).map(([name, field]) => <MetricFieldLine key={name} label={`${name.replaceAll('_', '-')} tokens`} field={field} />)}<MetricFieldLine label="total tokens" field={metrics.total_tokens} /><MetricFieldLine label="estimated USD" field={metrics.estimated_usd} /></ul><p>Invocation compactions: {metricValue(metrics.compactions?.count)}; references: {metrics.compactions?.entry_ids?.length ? metrics.compactions.entry_ids.join(', ') : 'none recorded'}{metrics.compactions?.unknown_reason ? `; ${metrics.compactions.unknown_reason}` : ''}.</p><SessionMetrics label="Before" snapshot={metrics.before} /><SessionMetrics label="After" snapshot={metrics.after} />{overhead && <section><h5>Compaction summary subset</h5><p>Scope: {overhead.scope}; {overhead.warning}; included in SDK deltas: {overhead.included_in_sdk_deltas === null ? 'unknown' : String(overhead.included_in_sdk_deltas)}{overhead.unknown_reason ? `; ${overhead.unknown_reason}` : ''}. Do not add this subset to invocation totals.</p>{overhead.entries.length ? overhead.entries.map(entry => <section key={entry.entry_id ?? 'unknown'}><p>Summary {entry.entry_id ?? 'unknown'}{entry.unknown_reason ? `: ${entry.unknown_reason}` : ''}</p><ul>{Object.entries(entry.usage).flatMap(([name, value]) => typeof value === 'object' && value !== null && 'availability' in value ? [<MetricFieldLine key={name} label={name} field={value as MetricField} />] : Object.entries(value as Record<string, MetricField>).map(([cost, field]) => <MetricFieldLine key={`${name}-${cost}`} label={`${name} ${cost}`} field={field} />))}</ul></section>) : <p>No summary subset entries recorded.</p>}</section>}</section>
 }
 function mergePage(current: Snapshot | null, page: Snapshot): Snapshot {
+  // Older public descriptors may omit optional task prose; preserve that qualification
+  // without allowing a renderer-only label operation to throw.
+  page = { ...page, tasks: page.tasks.map(task => ({ ...task, summary: typeof task.summary === 'string' ? task.summary : '' })) }
   if (!current || current.snapshot_ref !== page.snapshot_ref) return page
   const records = [...current.records, ...page.records.filter(item => !current.records.some(old => old.ref === item.ref))]
   const oldUnknown = current.unknown_records ?? []; const pageUnknown = page.unknown_records ?? []
@@ -209,10 +212,15 @@ function App() {
   }, [edges, lineage, selected, snapshot])
   // ReactFlow retains measured dimensions/handles by node identity. Recreating nodes
   // on viewport moves hides calls and removes connectors until ResizeObserver reruns.
-  const renderedNodes = useMemo(() => nodes.map(node => node.id.startsWith('group:') ? node : ({ ...node, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
-    <strong>{String(node.data.label)}</strong>
-    <small>{String(node.data.status)}</small>
-    </> } })), [nodes, selected])
+  const renderedNodes = useMemo(() => nodes.map(node => {
+    if (node.id.startsWith('group:')) return node
+    const word = String(node.data.status).toLowerCase()
+    const stateClass = word.includes('running') ? 'running' : word.includes('waiting') || word.includes('blocked') ? 'waiting' : word.includes('failed') || word.includes('interrupted') ? 'failed' : word.includes('returned') || word.includes('approved') || word.includes('rejected') ? 'success' : word.includes('planned') || word.includes('pending') || word.includes('not started') ? 'pending' : 'neutral'
+    return { ...node, className: `${node.className ?? ''} ${stateClass}`, selected: selected?.kind === 'node' && selected.id === node.id, data: { ...node.data, label: <>
+      <strong>{String(node.data.label)}</strong>
+      <small>{String(node.data.status)}</small>
+      </> } }
+  }), [nodes, selected])
   const allOccurrences = snapshot ? [snapshot, ...lineage].flatMap(item => item.occurrences) : []; const failures = allOccurrences.filter(item => item.outcome === 'failed').length; const incomplete = allOccurrences.filter(item => item.completeness === 'incomplete').length; const allTasks = [snapshot, ...lineage].flatMap(value => value?.tasks ?? []); const waiting = allTasks.filter(task => task.annotation?.code === 'waiting_for_input').length + allOccurrences.filter(item => !allTasks.some(task => task.ref === item.task_ref) && status(item, [snapshot, ...lineage].flatMap(value => value?.records ?? [])) === 'waiting').length
   const selectedRunInfo = runs.find(run => run.ref === selectedRun); const acceptance = selectedRunInfo?.review_acceptance; const acceptanceText = acceptance?.state === 'accepted_full_range' ? `Full-range acceptance: ${acceptance.base} → ${acceptance.head}` : acceptance?.state === 'correction_only' ? 'Correction-only review; current head is not accepted.' : 'Current lineage acceptance is unknown.'
   const freshness = snapshot?.observation; const freshnessText = freshness ? `Read ${freshness.read_state}; last successful read ${freshness.last_success_at ?? 'unknown'}; last recorded activity ${freshness.last_recorded_at ?? 'unknown'}${freshness.warnings.length ? `; warning: ${freshness.warnings.join(', ')}` : ''}.` : 'Read state unknown.'
@@ -234,11 +242,13 @@ function App() {
     <p>Pan and zoom the graph. Select a node or edge for its brief details.</p>
     </header>
     <div className="legend" aria-label="Status legend">
-    <span className="success">Green: execution returned</span>
+    <span className="pending">Grey: planned or pending</span>
+    <span className="running">Blue: recorded running</span>
+    <span className="success">Green: execution returned (a reviewer may still reject)</span>
     <span className="failed">Red: execution failure / stopping step</span>
-    <span className="waiting">Amber: waiting (not dependency-blocked)</span>
-    <span className="neutral">Recorded running / incomplete / unknown</span>
-    <span className="plan">Plan progress (not execution outcome or acceptance)</span>
+    <span className="waiting">Amber: evidence-backed waiting or blocked</span>
+    <span className="neutral">Neutral: qualified unknown or incomplete</span>
+    <span className="plan">Full-snapshot plan progress is not execution outcome or acceptance</span>
     <span className="acceptance">Acceptance is in Details; skipped/cancelled unsupported</span>
     <span>Relations: declared prerequisites; recorded stops and qualified corrections. Select an edge for details.</span>
     {snapshot && selectedRunInfo?.plan_availability !== 'complete' && <span className="unavailable">Complete graph unavailable</span>}

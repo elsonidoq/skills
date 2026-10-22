@@ -56,8 +56,10 @@ checkpoints, reviewer approval/findings/ranges, and the existing full-range acce
 qualification. These facts are retained independently of the loaded history page;
 Details explicitly display `true`/`false` for approval and no-change (or `unknown`
 when absent), including when the evidence is beyond the first 50 records. The
-status legend distinguishes green execution success, red execution failure, amber
-waiting and neutral recorded/incomplete/unknown. Worker return is **not acceptance**.
+status legend distinguishes grey planned/pending calls, blue recorded-running calls,
+green execution success, red execution failure, amber evidence-backed waiting/blocked,
+and neutral qualified unknown/incomplete state. A green reviewer may still reject;
+worker return is **not acceptance**.
 
 For a complete retained descriptor, each public task also has pre-page `progress`,
 `reason`, and `annotation` facts. Pending means no task work or impediment; running is
