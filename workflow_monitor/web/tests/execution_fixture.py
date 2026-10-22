@@ -5,6 +5,9 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT), str(ROOT / 'runtime')]
+sys.path.append('/usr/lib/python3/dist-packages')  # Prepared system PyYAML, after venv packages.
+from coherence_workflow.engine import Engine
+from coherence_workflow.intake import admit
 from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.metric_artifacts import create_artifact
 from coherence_workflow.store import Authority, git
@@ -45,6 +48,22 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     # Simulate already-retained prose; no producer behavior is changed.
     presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
     with Authority(project) as owner:
+        class CorrectionAdapter:
+            calls = 0
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                self.last_interval = metric_record('engine-correction', 'supplied-interval', 'fresh', 'fresh')['interval']
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"findings":[]}'
+                CorrectionAdapter.calls += 1
+                kwargs['claim']('correction.txt')
+                (project/'correction.txt').write_text('broken' if CorrectionAdapter.calls == 1 else 'fixed')
+                return 'offline correction'
+        Engine(owner, 'engine-correction', admit({'monitor': {'correction_of': {'run_id': 'original', 'review_execution_id': 'review-id'}},
+            'tasks': [{'id': 'fix', 'description': 'Correct original result', 'owned_paths': ['correction.txt'],
+                       'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),
+            {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=CorrectionAdapter,
+            question=lambda _: 'fixture correction', paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
         for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)

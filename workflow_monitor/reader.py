@@ -327,7 +327,7 @@ class Reader:
                             identity = detail.get('invocation_id')
                             if isinstance(identity, str) and identity:
                                 dispatches[run_id][identity] = {'invocation_id': identity, 'task_id': row['task_id'],
-                                    'role': 'fixing_worker' if row['kind'] == 'fixer_invocation' else 'worker'}
+                                    'role': 'fixing_worker' if row['kind'] == 'fixer_invocation' else (detail.get('role', 'worker') if detail.get('role', 'worker') in {'worker', 'fixing_worker'} else 'unknown')}
                 if 'execution_review_executions' in tables:
                     for row in connection.execute("SELECT execution_id FROM execution_review_executions WHERE run_id=? AND role='reviewer'", (run_id,)):
                         dispatches[run_id][row['execution_id']] = {'invocation_id': row['execution_id'], 'task_id': None, 'role': 'reviewer'}

@@ -117,6 +117,36 @@ class ChainMappingTests(ProjectTest):
     def test_activity_metrics_readback_without_graph(self):
         self.test_activity_readback_without_graph()
 
+    def test_correction_run_engine_metrics_keep_explicit_roles(self):
+        self.test_activity_readback_without_graph()
+        interval = Reader(self.project).open_snapshot('activity')['metrics']['activity']['records'][0]['interval']
+        project = self.project
+        class Adapter:
+            calls = 0
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                self.last_interval = interval
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"findings":[]}'
+                Adapter.calls += 1
+                kwargs['claim']('correction.txt')
+                (project/'correction.txt').write_text('broken' if Adapter.calls == 1 else 'fixed')
+                return 'fixture'
+        contract = admit({'monitor': {'correction_of': {'run_id': 'original', 'review_execution_id': 'review-id'}},
+            'tasks': [{'id': 'fix', 'description': 'Correct original result', 'owned_paths': ['correction.txt'],
+                       'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]})
+        with Authority(project) as owner:
+            Engine(owner, 'correction-run', contract, EXECUTOR, adapter=Adapter, paid_scope=SCOPE).invoke()
+        raw = Reader(project).open_snapshot('correction-run')
+        self.assertEqual([row['role'] for row in raw['metrics']['correction-run']['records']], ['fixing_worker', 'fixing_worker', 'reviewer'])
+        dto = minimize(normalize(raw))
+        workers = [call for call in dto['activities'] if call['role'] == 'fixing_worker']
+        self.assertEqual(len(workers), 2)
+        for call in workers:
+            self.assertEqual(call['metrics']['total_tokens']['value'], 3)
+            self.assertEqual(call['task_metrics']['fields']['total_tokens']['full_total'], 6)
+        self.assertEqual(dto['metric_aggregates'][dto['runs'][0]['ref']]['worker_fixer']['interval_count'], 2)
+
     def test_dispatch_scoped_corrections_reviewers_and_artifact_outcomes(self):
         self.test_activity_readback_without_graph()
         template = Reader(self.project).open_snapshot('activity')['metrics']['activity']['records'][0]

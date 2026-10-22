@@ -750,7 +750,7 @@ class Engine:
                                   'selected_input_checkpoints': selected_inputs(), 'correction_chain': chain}
                         if predecessor:
                             public['predecessor_invocation_id'] = predecessor
-                        facts = {'invocation_id': invocation_id, 'prompt': prompt, 'reuse_key': reuse_key,
+                        facts = {'invocation_id': invocation_id, 'role': role, 'prompt': prompt, 'reuse_key': reuse_key,
                                  'saved_session': getattr(worker, 'saved_session', None)}
                         store.history(self.run, task['id'], 'worker_invocation', 'started', facts)
                         recorder.emit(occurrence, 'worker', 'started', task_id=task['id'], facts=public)
@@ -776,7 +776,7 @@ class Engine:
                                           facts={**public, 'stopped_by_invocation_id': invocation_id,
                                                  'error_category': _failure(exc)})
                             self._append_metric(worker, invocation_id=invocation_id, task_id=task['id'],
-                                                role=('corrective_worker' if predecessor else 'worker'), outcome=state,
+                                                role=(role if role == 'fixing_worker' else 'corrective_worker' if predecessor else 'worker'), outcome=state,
                                                 selection=selection, continued=predecessor is not None,
                                                 expected_session_id=expected_session_id)
                             raise
@@ -784,7 +784,7 @@ class Engine:
                                       {**facts, 'saved_session': getattr(worker, 'saved_session', None)})
                         recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)
                         self._append_metric(worker, invocation_id=invocation_id, task_id=task['id'],
-                                            role=('corrective_worker' if predecessor else 'worker'), outcome='settled',
+                                            role=(role if role == 'fixing_worker' else 'corrective_worker' if predecessor else 'worker'), outcome='settled',
                                             selection=selection, continued=predecessor is not None,
                                             expected_session_id=expected_session_id)
                         invocation_chain[:] = chain
