@@ -98,7 +98,8 @@ class CliTests(ProjectTest):
         paid_scope = {'agent_providers': ['fixture'], 'apis': []}
         with Authority(self.project) as owner:
             owner.store.start('attached-resume', self.base, contract={'tasks': []},
-                              executor={'provider': 'fixture', 'model': 'offline', 'effort': 'medium'},
+                              executor={'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
+                                        'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}},
                               authority={'paid_scope': paid_scope}, review_base=self.base)
             owner.store.finish('attached-resume', 'failed', self.base, 'fixture interruption')
         env = {f'COHERENCE_PARENT_BRIDGE_{key}': value for key, value in
@@ -113,6 +114,26 @@ class CliTests(ProjectTest):
         self.assertEqual(question.call_args_list[1].args, ('recovery diagnosis',))
         self.assertEqual(engine.call_args.kwargs['paid_scope'], paid_scope)
         self.assertTrue(engine.call_args.kwargs['resume'])
+
+    def test_invalid_saved_reviewer_does_not_mark_legacy_run_running(self):
+        legacy_executor = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}
+        with Authority(self.project) as owner:
+            owner.store.start('legacy-reviewer', self.base, contract={'tasks': []}, executor=legacy_executor,
+                              authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []}}, review_base=self.base)
+            owner.store.finish('legacy-reviewer', 'failed', self.base, 'legacy interruption')
+        with patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+                                                          'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}), \
+             contextlib.redirect_stdout(io.StringIO()) as out:
+            code = main(['resume', '--project', str(self.project), '--run', 'legacy-reviewer'])
+        self.assertEqual(code, 2)
+        self.assertIn('correct the reviewer profile', json.loads(out.getvalue())['reason'])
+        with Authority(self.project) as owner:
+            state = owner.store.db.execute("SELECT state,error FROM execution_runs WHERE run_id='legacy-reviewer'").fetchone()
+            invocations = list(owner.store.db.execute(
+                "SELECT state FROM execution_history WHERE run_id='legacy-reviewer' AND kind='invocation' ORDER BY seq"))
+            self.assertEqual(owner.store.input('legacy-reviewer')['executor'], legacy_executor)
+        self.assertEqual(tuple(state), ('failed', 'legacy interruption'))
+        self.assertEqual([row['state'] for row in invocations], ['started', 'failed'])
 
     def test_attached_resume_rejects_wrong_run_before_recovery(self):
         with patch.dict(os.environ, {'COHERENCE_PARENT_BRIDGE_RUN': 'other-run'}), \

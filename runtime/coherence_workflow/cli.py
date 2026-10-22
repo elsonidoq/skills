@@ -166,14 +166,19 @@ def main(argv=None):
         if args.command == 'resume':
             question = attached_question(args.run)
             with Authority(args.project, wait=True) as authority:
-                writer_entered = True
-                recovered = authority.store.resume(args.run)
-                saved = recovered['input']
+                saved = authority.store.input(args.run)
+                if not saved or not isinstance(saved.get('contract'), dict) or not isinstance(saved['contract'].get('tasks'), list):
+                    raise Blocked('resume cannot continue: original contract/history is missing')
                 paid_scope = saved['authority'].get('paid_scope') if isinstance(saved.get('authority'), dict) else None
                 if not isinstance(paid_scope, dict):
                     raise Blocked('resume cannot continue: retained paid scope is missing')
-                result = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
-                                paid_scope=paid_scope, resume=True, **({'question': question} if question else {})).invoke()
+                # Validate retained launch bindings before resume() records progress. A legacy
+                # missing reviewer needs owner correction, not a stranded running run.
+                engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
+                                paid_scope=paid_scope, resume=True, **({'question': question} if question else {}))
+                recovered = authority.store.resume(args.run)
+                writer_entered = True
+                result = engine.invoke()
                 print(canonical(result))
             return 0
         if not contract['tasks']:
