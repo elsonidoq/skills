@@ -312,6 +312,13 @@ class ChainMappingTests(ProjectTest):
             "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
             input=json.dumps(dto).encode(), cwd=ROOT))
         nodes = {node['id'] for node in view['nodes']}
+        repaired_fixer_calls = [call for call in dto['activities'] if call['run_ref'] == by_run['repaired'] and call['role'] == 'fixing_worker']
+        self.assertGreater(len(repaired_fixer_calls), 1)
+        for call in repaired_fixer_calls:
+            self.assertEqual(call.get('trigger_ref'), repaired[0]['ref'])
+            self.assertTrue(any(edge['source'] == repaired[0]['ref'] and edge['target'] == call['ref']
+                                and 'recorded-correction-trigger' in edge['data']['relations'] for edge in view['edges']))
+        self.assertFalse(any(edge['source'] in {call['ref'] for call in repaired_fixer_calls} and edge['target'] == repaired[2]['ref'] for edge in view['edges']))
         self.assertFalse(any('planned' in node.get('className', '') for node in view['nodes']))
         self.assertFalse(any(edge['data']['relation'] in ('chain_check', 'chain_checkpoint') for edge in view['edges']))
         represented = {}

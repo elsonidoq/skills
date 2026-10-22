@@ -252,6 +252,7 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
                     "selected_input_checkpoints": facts.get("selected_input_checkpoints"),
                     "correction_chain": facts.get("correction_chain") or [],
                     "predecessor_invocation_id": facts.get("predecessor_invocation_id"),
+                    "trigger_execution_id": facts.get("trigger_execution_id"),
                     "outcome": ('returned' if terminal['kind'] == 'passed' else terminal['kind']) if terminal else 'unknown',
                     "error_category": terminal["facts"].get("error_category") if terminal else None,
                     "support_invocation_id": terminal["facts"].get("support_invocation_id") if terminal else None,

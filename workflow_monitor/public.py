@@ -248,6 +248,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                     "input_qualification": item.get("input_qualification") if item.get("input_qualification") in {"recorded", "unknown"} else "unknown",
                     "input_refs": [_ref("activity", item["run_id"], value) for value in item.get("input_invocation_ids", []) if isinstance(value, str)],
                     "correction_chain": [_ref("activity", item["run_id"], value) for value in item.get("correction_chain", []) if isinstance(value, str)],
+                    "trigger_ref": _ref('execution', item['run_id'], item['trigger_execution_id']) if isinstance(item.get('trigger_execution_id'), str) else None,
                     "support_ref": _ref("activity", item["run_id"], item["support_invocation_id"]) if isinstance(item.get("support_invocation_id"), str) else None,
                     "stopped_by_ref": _ref("activity", item["run_id"], item["stopped_by_invocation_id"]) if isinstance(item.get("stopped_by_invocation_id"), str) else None,
                     "record_refs": [_ref("record", item["run_id"], value) for value in item.get("record_refs", []) if type(value) is int],
