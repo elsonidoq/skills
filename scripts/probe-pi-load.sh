@@ -9,7 +9,7 @@ SUITE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 REQUIRED=(planner tiny-spec coordinate-implementation \
           planning-brainstorming task-generation memory-handling initialize-coherence \
-          finish-session writing-skills track-open-issue)
+          finish-session writing-skills track-open-issue import-open-issues)
 
 tmp=$(mktemp); tmp2=$(mktemp); trap 'rm -f "$tmp" "$tmp2"' EXIT
 

@@ -222,7 +222,9 @@ After changing global assets in Paseo, prepare a fresh-session handoff instead o
 - `save-adr`: canonical discovery, save, consultation and propagation for consequential
   decisions; project routing selects the actual owner and store, if any.
 - `requesting-code-review` / `receiving-code-review`: independent assessment and disposition.
-- `memory-handling`, `track-open-issue`, `finish-session`: durable guidance and closeout.
+- `memory-handling`, `finish-session`: durable guidance and closeout.
+- `track-open-issue`: project-discovered GitHub unresolved-issue lifecycle, scoped writes and independent readback.
+- `import-open-issues`: default offline historical Markdown preview, conflict-aware reconciliation and separately authorized import; never an automatic migration.
 
 ## Validation and Documentation
 
@@ -233,9 +235,17 @@ are not proof of model obedience; live tests require separate authorization.
 
 Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
 describes current behavior, gotcha memory contains only verified non-obvious warnings,
-project-local coordination memory records only explicit future-directed user feedback, and
-`docs/open_issues.md` is the canonical unresolved-work register. Global assets must not assume
-project paths, branch, deployment state, named models or an invented artifact/state schema.
+project-local coordination memory records only explicit future-directed user feedback. This repository's
+canonical active unresolved-work tracker is [GitHub Issues](https://github.com/elsonidoq/skills/issues),
+explicit target `github.com/elsonidoq/skills`, through `track-open-issue`. `docs/open_issues.md` is
+preserved historical source only; actual historical migration is **NOT RUN**. A future import needs
+separate apply authority, reviewed preview, OI-4/#2 mapping choice and full independent readback.
+For active GitHub operations, verify usable `gh`, exact-host authentication and issue-read capability;
+reads do not grant write authority. Missing capability or scoped authority returns the candidate,
+evidence and resumption condition in the response, not a persistent local fallback. See
+[requirements](REQUIREMENTS.md#github-unresolved-work-tracking) and the skill contracts.
+Global assets discover each project's own target; they must not assume project paths, branch,
+deployment state, named models or an invented artifact/state schema.
 
 ## Mandatory task checkpoints
 

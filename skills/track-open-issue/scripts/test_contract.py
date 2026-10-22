@@ -19,8 +19,24 @@ class LifecycleContractTests(unittest.TestCase):
         self.assertIn("preserve unrelated entry bytes and history", TEXT)
         self.assertIn("not a fallback", TEXT)
         self.assertNotIn("use only its explicitly resolved GitHub Issues target", finish)
-        self.assertIn("[Open Issues](open_issues.md): Canonical local register", (root / "docs/index.md").read_text())
+        self.assertIn("GitHub Issues", (root / "docs/index.md").read_text())
         self.assertIn("INCONCLUSIVE / NOT PASS", (root / "skills/import-open-issues/SKILL.md").read_text())
+
+    def test_this_project_has_one_explicit_github_owner_and_retained_history(self):
+        root = SKILL.resolve().parents[2]
+        for path in ("AGENTS.md", "README.md", "REQUIREMENTS.md", "docs/index.md"):
+            text = (root / path).read_text()
+            with self.subTest(path=path):
+                self.assertIn("https://github.com/elsonidoq/skills/issues", text)
+                self.assertNotIn("Canonical local register", text)
+                self.assertNotIn("`docs/open_issues.md` is the canonical", text)
+                self.assertNotIn("`docs/open_issues.md` holds the canonical", text)
+        history = (root / "docs/open_issues.md").read_text()
+        self.assertIn("Historical source only, not an active tracker", history)
+        self.assertIn("Actual historical migration: **NOT RUN**", history)
+        self.assertIn("OI-4/#2 mapping", history)
+        for path in ("scripts/check-task-commit-contract.py", "scripts/probe-pi-load.sh"):
+            self.assertIn("import-open-issues", (root / path).read_text())
 
     def test_explicit_target_capability_and_deferred_response(self):
         for clause in (

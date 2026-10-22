@@ -10,6 +10,17 @@ from import_open_issues import ApplyAuthorization, GhApiTransport, IncompleteLoo
 ROOT = Path(__file__).resolve().parents[3]
 BASELINE_SHA256 = "314b9ddd758d25923105d85c23225293d0a1398b506d1b28925d783a5c3e1c7a"
 SOURCE = Source("github.com", "elsonidoq/skills", "docs/open_issues.md", "952e39b813a443caeb7417e63c170e219a433dbd")
+CUTOVER_NOTICE = (
+    "<!-- issue-tracking-cutover:start -->\n"
+    "> Historical source only, not an active tracker. Active unresolved work is owned by\n"
+    "> [GitHub Issues](https://github.com/elsonidoq/skills/issues) via `track-open-issue`.\n"
+    "> Actual historical migration: **NOT RUN**. The original entries below remain verbatim\n"
+    "> at their recorded states; no source-to-issue mapping or verified resolution is implied.\n"
+    "> Future import requires explicit apply authority, reviewed preview, the OI-4/#2 mapping\n"
+    "> choice and independent full content/state/count readback. Do not update this history\n"
+    "> as an active register or create a parallel local tracker.\n"
+    "<!-- issue-tracking-cutover:end -->\n\n"
+)
 
 
 def retained_observations(issues):
@@ -21,7 +32,13 @@ def retained_observations(issues):
 class PreviewTests(unittest.TestCase):
     def test_actual_baseline_is_faithfully_previewed_by_production_helper(self):
         original = (ROOT / "docs/open_issues.md").read_text()
-        self.assertEqual(hashlib.sha256(original.encode()).hexdigest(), BASELINE_SHA256)
+        self.assertEqual(original.count(CUTOVER_NOTICE), 1)
+        self.assertEqual(original.count("<!-- issue-tracking-cutover:start -->"), 1)
+        self.assertEqual(original.count("<!-- issue-tracking-cutover:end -->"), 1)
+        # Remove ONLY the exact approved notice; unexpected notices or any original
+        # header/entry modification still fail the immutable original-file hash.
+        retained_original = original.replace(CUTOVER_NOTICE, "", 1)
+        self.assertEqual(hashlib.sha256(retained_original.encode()).hexdigest(), BASELINE_SHA256)
         result = preview(original, SOURCE, "elsonidoq/skills")
         self.assertEqual(result.diagnostics, ())
         self.assertEqual([r.title.split(":", 1)[0] for r in result.records], ["OI-18", "OI-19", *[f"OI-{n}" for n in range(1, 18)]])

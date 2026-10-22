@@ -1,5 +1,15 @@
 # Open Issues
 
+<!-- issue-tracking-cutover:start -->
+> Historical source only, not an active tracker. Active unresolved work is owned by
+> [GitHub Issues](https://github.com/elsonidoq/skills/issues) via `track-open-issue`.
+> Actual historical migration: **NOT RUN**. The original entries below remain verbatim
+> at their recorded states; no source-to-issue mapping or verified resolution is implied.
+> Future import requires explicit apply authority, reviewed preview, the OI-4/#2 mapping
+> choice and independent full content/state/count readback. Do not update this history
+> as an active register or create a parallel local tracker.
+<!-- issue-tracking-cutover:end -->
+
 ## OI-18: Resumed runs cannot append to their existing JSONL metrics artifact
 
 - **Status:** open

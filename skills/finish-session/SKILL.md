@@ -54,7 +54,7 @@ documentation owners and indexes exist.
 
 ## Step 1: Discover Existing Owners
 
-Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. For unresolved issues, load `track-open-issue` and follow the project's declared canonical owner. Preserve the existing declared local register until approved cutover; preparing GitHub skills or an inconclusive import proof does not switch authority. For a project already using GitHub, use only its explicitly resolved target, never create a local fallback. Do not migrate records during closeout. For other information, preserve existing authoritative documentation owners and runbooks.
+Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. For unresolved issues, load `track-open-issue` and follow the project's declared canonical owner. Preserve the existing declared local register until approved cutover; preparing GitHub skills or an inconclusive import proof does not switch authority. For a project already using GitHub, use only its explicitly resolved target, never create a local fallback or write to a retained historical register. Missing GitHub capability or write authority defers the candidate in the response; it does not reactivate old local ownership. Do not migrate records during closeout. For other information, preserve existing authoritative documentation owners and runbooks.
 
 Do not initialize fallback artifacts during discovery. If a verified finding has
 no owner, report the missing owner and ask the user to choose its location and

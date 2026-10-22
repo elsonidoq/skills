@@ -145,8 +145,11 @@ cause stops blind relaunch. No guessed completion, duplicate dispatch or repeate
 
 ## Project docs
 
-`docs/open_issues.md` holds the canonical register of unresolved work
-(`track-open-issue`). `initialize-coherence` preserves or establishes documentation
+This repository's canonical active unresolved-work tracker is
+[GitHub Issues](https://github.com/elsonidoq/skills/issues), explicit target
+`github.com/elsonidoq/skills`, via `track-open-issue`. `docs/open_issues.md` is retained historical
+source only; actual historical migration is NOT RUN, not implied by routing activation.
+`initialize-coherence` preserves or establishes documentation
 owners/indexes and a verified project-specific documentation-routing guide, recording them
 in approved project instructions. Persistent-database projects also require an authoritative
 schema owner or documented set, even without a naming convention. Initially clean projects
@@ -155,6 +158,26 @@ and approved shell/index bounds, with no substantive documentation writes. Missi
 structure blocks readiness; empty/stale substantive content remains planner work, not completed
 by a shell. `finish-session` checks owner/index/routing/schema existence without initializing
 or auditing them.
+
+## GitHub unresolved-work tracking
+
+For a project configured to use GitHub Issues, `track-open-issue` requires usable GitHub CLI
+`gh`, authentication for the exact configured hostname, issue-read capability and explicit scoped
+write authority before mutation. Verify these at the operation boundary without displaying token
+values; do not install `gh` or refresh authentication automatically. An ADMIN permission field
+or successful read is not issue-write authority. Missing target/capability/authority yields
+`issue tracking: UNAVAILABLE` or `deferred`, with candidate/evidence/resumption and corrective
+action in the response, not a persistent local fallback tracker. Other suite operations do not
+acquire a new unconditional GitHub dependency.
+
+`import-open-issues` defaults to offline Python preview; remote reconciliation is explicit and
+read-only. The bounded observed closure mapping uses github.com REST API `2022-11-28` and native
+completed metadata, never proof of a historical fix. Future actual import requires separate
+named-destination/apply authority, reviewed preview, overlap/mapping choice (here OI-4/#2), and
+independent full mapping/content/state/count readback. Preserve original Markdown; no automatic
+migration, source deletion or new local tracking database. The skills own exact operation and
+recovery rules; changed global assets require a fresh-session activation handoff in Paseo.
+
 ## Task commit contract
 
 Package-managed execution uses the shared [task-commit contract](skills/memory-handling/references/task-commit-contract.md).

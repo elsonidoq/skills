@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = (
     "brainstorming compact-memory coordinate-implementation delegating-architectural-planning "
-    "finish-session finish-session-jev handoff-prompt incorporate-skill infographic initialize-coherence "
+    "finish-session finish-session-jev handoff-prompt import-open-issues incorporate-skill infographic initialize-coherence "
     "memory-handling planner planning-brainstorming receiving-code-review requesting-code-review "
     "scientific-method-debugging supabase-server task-generation tiny-spec track-open-issue "
     "using-git-worktrees writing-skills"

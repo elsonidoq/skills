@@ -218,9 +218,13 @@ Independent assessment must compose the retained real invisible-marker deferral 
 same-identity pending-close recovery with this revised exact live body/readback. Permanent
 actual-helper fixtures establish the explicit uncertainty-input wiring; the old live run did
 not exercise another still-invisible rerun using that later-added input. Do not force a new
-invisibility episode merely as ceremony, or claim it was observed. No additional live risk
-observable has been demonstrated missing here, but revised T005/V2 sufficiency and dependent
-cutover remain pending fresh independent assessment, not self-certification. Original T005/V2
+invisibility episode merely as ceremony, or claim it was observed. Fresh independent review
+of the retained sessions, body-only invocation, current actual-helper GET/list/reconciliation
+and composed fixture found revised A4 **sufficient within these tested
+bounds**. The review is supplied in `/tmp/github-open-issues-native-boundary-review.md`
+(ephemeral review artifact); it is not self-certification or full migration acceptance.
+Applicable unchanged observations may be reused for conditional consumer cutover; no additional
+invisibility episode or new platform experiment is required. Original T005/V2
 remains INCONCLUSIVE / NOT PASS under its original criterion. No further live mutation is
 authorized. Retain the declared local owner until boundary acceptance and usable consistent
 routing; reuse sufficient evidence rather than replaying proof or migrating real records.

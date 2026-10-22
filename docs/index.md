@@ -15,7 +15,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | A skill's operational contract | Its `skills/<name>/SKILL.md`; shared brainstorming and task semantics belong to the shared owners linked below |
 | Planning depth assessment principles | [Spec-driven-development guidance](best_practices_spec_driven_development.md); planner assesses and the owner chooses |
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
-| Verified unresolved bug, risk or investigation | [Open Issues](open_issues.md), via `track-open-issue` |
+| Verified unresolved bug, risk or investigation | [GitHub Issues](https://github.com/elsonidoq/skills/issues), explicit target `github.com/elsonidoq/skills`, via `track-open-issue`; [original Markdown](open_issues.md) is history only |
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
 | Consequential decision records and accepted decision constraints | [Decision index](decisions/index.md) owns this repository's ADRs; [Save ADR](../skills/save-adr/SKILL.md) preserves decision status, provenance and supersession |
 | Historical model-routing research and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md) and [Batch Routing Contracts Research](../specs/002-batch-routing-contracts/research.md) remain discoverable historical records; they are not current assignment policy. |
@@ -99,4 +99,6 @@ their manager names are not current entry points:
 
 ## Registers
 
-- [Open Issues](open_issues.md): Canonical local register for verified unresolved bugs, risks, shortcuts, missing capabilities, and investigations.
+- [GitHub Issues](https://github.com/elsonidoq/skills/issues): Sole canonical active unresolved-work tracker, target `github.com/elsonidoq/skills`, via `track-open-issue`; missing capability or write authority defers a candidate in the response, never to a persistent local fallback.
+- [Historical Open Issues](open_issues.md): Original entries preserved verbatim, nonauthoritative for current state. Actual historical migration is **NOT RUN**; future import requires separately authorized apply, reviewed preview, OI-4/#2 mapping choice and independent full readback. No mapping or completed migration is implied by this routing switch.
+- [Import Open Issues](../skills/import-open-issues/SKILL.md): Reusable default offline preview and separately gated historical import; routine active tracking belongs to `track-open-issue`.

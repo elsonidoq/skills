@@ -114,7 +114,12 @@ rules above for reusable skills and commands.
   or reflection. Preserve existing STATE/custom content. Use available conversation summary/
   recent context, selective artifact/Git/check reconstruction and active-child reconciliation
   under the executable interface's [context-first recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
-  Pi sessions record conversation; `docs/open_issues.md` owns unresolved work via `track-open-issue`.
+  Pi sessions record conversation. This repository's canonical active unresolved-work owner is
+  [GitHub Issues](https://github.com/elsonidoq/skills/issues), target `github.com/elsonidoq/skills`,
+  via `track-open-issue`; `docs/open_issues.md` is preserved historical source only, not an active
+  register. Actual historical migration is NOT RUN; future import requires separate apply authority,
+  reviewed preview, OI-4/#2 mapping choice and full independent readback. Missing GitHub capability
+  or scoped write authority defers the candidate in the response, never creates a local fallback.
 - The owner decides whether workers run concurrently or sequentially, including in the same
   checkout. Do not require sole-writer ownership when the owner authorizes concurrency; this
   direction supersedes conflicting single-writer instructions in skills or workflow guidance.
