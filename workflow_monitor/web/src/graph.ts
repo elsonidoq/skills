@@ -7,7 +7,7 @@ export type Activity = { ref: string; run_ref: string; invocation_id: string; oc
 export type ExecutionSummary = { state: 'success' | 'failure' | 'waiting' | 'running' | 'unknown'; qualification: string | null }
 export type Occurrence = { ref: string; run_ref: string; occurrence_id?: string; phase_ref: string; task_ref: string | null; role: string; outcome: string | null; completeness: string; record_refs: string[]; phase?: string; first_seq?: number; last_seq?: number; parent_ref?: string | null; support_ref?: string | null; stopping?: boolean; execution_summary?: ExecutionSummary }
 export type PlannedTask = { ref: string; run_ref: string; task_id?: string; label: string; summary: string; prerequisite_refs: string[]; progress?: { state: string; qualification: string | null }; reason?: { code: string; occurrence_ref?: string; task_ref?: string } | null; annotation?: { code?: string; label?: string; occurrence_ref?: string } | null }
-export type ReviewDefinition = { ref: string; run_ref: string; label: string }
+export type ReviewDefinition = { ref: string; run_ref: string; label: string; prerequisite_refs?: string[] }
 export type GraphSnapshot = { runs: Array<{ ref: string; plan_availability?: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; edges?: GraphEdge[]; chain?: ChainExecution[]; activities?: Activity[] }
 export type Followup = { run_ref: string; source_run_ref: string; review_occurrence_ref: string; resolution: string }
 
@@ -39,90 +39,104 @@ export function outcomeText(item: Occurrence, records: Observation[]) {
   return item.completeness === 'incomplete' ? 'incomplete — outcome unknown' : 'recorded — outcome unknown'
 }
 
-/** Project only recorded calls and explicit relations; plans and observation sequence are details. */
+/** Projects declared plan slots and only exact recorded calls; relation references never infer identity. */
 export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relations: Followup[]) {
   const snapshots = [root, ...lineage]
   const occurrences = snapshots.flatMap(snapshot => snapshot.occurrences)
   const activities = snapshots.flatMap(snapshot => snapshot.activities ?? [])
   const chain = snapshots.flatMap(snapshot => snapshot.chain ?? [])
   const tasks = snapshots.flatMap(snapshot => snapshot.tasks)
+  const definitions = snapshots.flatMap(snapshot => snapshot.review_definitions ?? [])
   const key = (runRef: string, ref: string) => `${runRef}\u0000${ref}`
   const taskFor = (activity: Activity) => activity.task_ref ? tasks.find(task => task.ref === activity.task_ref && task.run_ref === activity.run_ref) : undefined
+  const designation = (task: PlannedTask) => task.task_id || `Task ${tasks.filter(item => item.run_ref === task.run_ref).indexOf(task) + 1}`
+  const exactRoot = (activity: Activity, task: PlannedTask) => activity.run_ref === task.run_ref && activity.task_ref === task.ref && activity.role === 'worker' && activity.invocation_kind === 'task_worker' && activity.correction_chain.length === 1 && activity.correction_chain[0] === activity.invocation_id
+  const slotId = (runRef: string, ref: string) => `planned-task:${runRef}:${ref}`
+  const slotFor = (task: PlannedTask) => slotId(task.run_ref, task.ref)
+  const taskMatches = new Map<PlannedTask, Activity[]>()
+  for (const task of tasks) taskMatches.set(task, activities.filter(activity => exactRoot(activity, task)))
+  const boundActivity = new Map<string, string>()
+  const plannedNodes = tasks.map(task => {
+    const matches = taskMatches.get(task) ?? []
+    const possibleRoots = activities.filter(activity => activity.run_ref === task.run_ref && activity.task_ref === task.ref && activity.role === 'worker' && activity.invocation_kind === 'task_worker')
+    const matched = matches.length === 1 ? matches[0] : undefined
+    if (matched) boundActivity.set(matched.ref, slotFor(task))
+    const unresolved = matches.length > 1 || (!matched && possibleRoots.length > 0)
+    const state = matched ? matched.outcome === 'returned' ? 'returned — acceptance not established' : matched.outcome : unresolved ? 'unknown — initial worker reconciliation ambiguous' : task.annotation?.label ?? task.progress?.state ?? 'planned — not started'
+    const qualification = unresolved ? 'Initial worker reconciliation ambiguous or incomplete; distinct recorded calls remain separate.' : null
+    return { id: slotFor(task), position: { x: 0, y: 0 }, data: { label: `${designation(task)} — Worker — ${taskTitle(task)}`, status: state, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null, planned: true, invocationId: matched?.invocation_id ?? null }, relationQualification: qualification }, className: `execution-node planned-call ${matched?.outcome === 'failed' ? 'failed' : matched?.outcome === 'returned' ? 'success' : matches.length > 1 ? 'neutral' : 'neutral'}` } satisfies Node
+  })
+  const reviewFor = (definition: ReviewDefinition) => `planned-review:${definition.run_ref}:${definition.ref}`
+  const boundReview = new Map<string, string>()
+  const reviewNodes = definitions.map(definition => {
+    const candidates = chain.filter(execution => execution.run_ref === definition.run_ref && execution.role === 'reviewer' && execution.review_ordinal === 1)
+    const executionIds = new Set(candidates.map(item => item.execution_id))
+    const matched = executionIds.size === 1 ? candidates[0] : undefined
+    if (matched) boundReview.set(matched.ref, reviewFor(definition))
+    const state = matched ? `${matched.outcome === 'approved' ? 'returned — acceptance not established' : matched.outcome === 'rejected' ? 'returned — changes requested' : matched.outcome}` : candidates.length > 1 ? 'unknown — initial review reconciliation ambiguous' : 'planned — not started'
+    return { id: reviewFor(definition), position: { x: 0, y: 0 }, data: { label: 'Final review — Independent reviewer', status: state, identity: { ref: definition.ref, runRef: definition.run_ref, planned: true, executionId: matched?.execution_id ?? null }, relationQualification: candidates.length > 1 ? 'Initial review reconciliation ambiguous; distinct recorded reviews remain separate.' : null }, className: `execution-node planned-review ${matched?.outcome === 'failed' || matched?.outcome === 'interrupted' ? 'failed' : matched ? 'success' : 'neutral'}` } satisfies Node
+  })
 
-  // A chain execution may stand in for an occurrence only when it names that one
-  // occurrence and no competing chain names it. Shared membership (OI-16) remains
-  // visible as its own activity/stop instead of assigning it by metadata.
   const memberships = new Map<string, string[]>()
-  for (const execution of chain) for (const occurrence of execution.occurrence_refs) {
+  for (const execution of chain.filter(item => item.role !== 'fixer')) for (const occurrence of execution.occurrence_refs) {
     const membershipKey = key(execution.run_ref, occurrence)
     memberships.set(membershipKey, [...(memberships.get(membershipKey) ?? []), execution.ref])
   }
-  const alias = new Map([...memberships].flatMap(([membershipKey, refs]) => {
+  const occurrenceNode = new Map<string, string>()
+  for (const [membershipKey, refs] of memberships) {
     const execution = refs.length === 1 ? chain.find(item => item.ref === refs[0]) : undefined
-    // A fixing execution can retain several distinct corrective calls.  It is
-    // not an invocation alias unless its membership is exactly one occurrence.
-    return execution?.occurrence_refs.length === 1 ? [[membershipKey, refs[0]] as const] : []
-  }))
-  const nodeForOccurrence = (runRef: string, occurrenceRef: string) => alias.get(key(runRef, occurrenceRef)) ?? activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? occurrenceRef
-  const activityNodes = activities.filter(activity => !alias.has(key(activity.run_ref, activity.occurrence_ref))).map(activity => {
+    if (execution?.occurrence_refs.length === 1) occurrenceNode.set(membershipKey, boundReview.get(execution.ref) ?? execution.ref)
+  }
+  for (const activity of activities) if (boundActivity.has(activity.ref)) occurrenceNode.set(key(activity.run_ref, activity.occurrence_ref), boundActivity.get(activity.ref)!)
+  const nodeForOccurrence = (runRef: string, occurrenceRef: string) => occurrenceNode.get(key(runRef, occurrenceRef)) ?? boundActivity.get(activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? '') ?? activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? occurrenceRef
+  const fixNumber = (activity: Activity) => activities.filter(candidate => candidate.run_ref === activity.run_ref && candidate.task_ref === activity.task_ref && candidate.role === 'fixing_worker').indexOf(activity) + 1
+  const activityNodes = activities.filter(activity => !boundActivity.has(activity.ref) && !occurrenceNode.has(key(activity.run_ref, activity.occurrence_ref))).map(activity => {
     const task = taskFor(activity)
-    const title = `${roleName(activity.role)}${task ? ` — ${taskTitle(task)}` : ''}${activity.invocation_kind === 'corrective_worker' ? ' (correction)' : ''}`
+    const repeat = activity.role === 'fixing_worker' ? ` — Fix ${fixNumber(activity)}` : ''
+    const title = `${task ? `${designation(task)} — ` : ''}${roleName(activity.role)}${repeat}${task ? ` — ${taskTitle(task)}` : ''}`
     const outcome = activity.outcome === 'returned' ? 'returned — acceptance not established' : activity.outcome
     return { id: activity.ref, position: { x: 0, y: 0 }, data: { label: title, status: `${outcome}${activity.error_category ? ` — ${activity.error_category}` : ''}`, identity: { ref: activity.ref, runRef: activity.run_ref, invocationId: activity.invocation_id, taskId: task?.task_id ?? null }, relationQualification: activity.input_qualification === 'recorded' ? null : 'Input relations unknown/not recorded.' }, className: `execution-node actual-call ${activity.outcome === 'failed' ? 'failed' : activity.outcome === 'unknown' ? 'neutral' : 'success'}` } satisfies Node
   })
-  // A fixing round is not another call. Multiple retained prompt occurrences
-  // are already represented by their distinct activities; do not invent a
-  // round-to-invocation endpoint for its aggregate relations.
-  const chainNodes = chain.filter(execution => execution.role !== 'fixer' || execution.occurrence_refs.length === 1).map(execution => {
-    const title = execution.role === 'reviewer' ? `Review ${execution.review_ordinal ?? 'unknown'}` : execution.role === 'fixer' ? `Fixing worker${execution.fixing_round == null ? '' : ` round ${execution.fixing_round}`}` : 'Recorded execution'
-    return { id: execution.ref, position: { x: 0, y: 0 }, data: { label: title, status: execution.outcome, identity: { ref: execution.ref, runRef: execution.run_ref, executionId: execution.execution_id, occurrenceRefs: execution.occurrence_refs } }, className: `execution-node chain-node actual-call ${execution.outcome === 'failed' || execution.outcome === 'interrupted' ? 'failed' : execution.outcome === 'unknown' ? 'neutral' : 'success'}` } satisfies Node
+  const chainNodes = chain.filter(execution => !boundReview.has(execution.ref) && execution.role !== 'fixer').map(execution => {
+    const title = execution.role === 'reviewer' ? `Review ${execution.review_ordinal ?? 'unknown'} — Independent reviewer` : execution.role === 'fixer' ? `Fixing worker${execution.fixing_round == null ? '' : ` round ${execution.fixing_round}`}` : 'Recorded execution'
+    return { id: execution.ref, position: { x: 0, y: 0 }, data: { label: title, status: execution.outcome === 'rejected' ? 'returned — changes requested' : execution.outcome, identity: { ref: execution.ref, runRef: execution.run_ref, executionId: execution.execution_id, occurrenceRefs: execution.occurrence_refs } }, className: `execution-node chain-node actual-call ${execution.outcome === 'failed' || execution.outcome === 'interrupted' ? 'failed' : execution.outcome === 'unknown' ? 'neutral' : 'success'}` } satisfies Node
   })
-  const stopNodes = occurrences.filter(occurrence => occurrence.stopping && !activities.some(activity => activity.run_ref === occurrence.run_ref && activity.occurrence_ref === occurrence.ref) && !alias.has(key(occurrence.run_ref, occurrence.ref))).map(occurrence => ({ id: occurrence.ref, position: { x: 0, y: 0 }, data: { label: 'Execution stopped', status: occurrence.outcome ?? 'cause unknown', identity: { ref: occurrence.ref, runRef: occurrence.run_ref, occurrenceId: occurrence.occurrence_id ?? null }, relationQualification: occurrence.support_ref ? null : 'Stopping cause unknown.' }, className: 'execution-node stop-node failed' } satisfies Node))
-  const nodes: Node[] = [...activityNodes, ...chainNodes, ...stopNodes]
+  const stopNodes = occurrences.filter(occurrence => occurrence.stopping && !occurrenceNode.has(key(occurrence.run_ref, occurrence.ref)) && !activities.some(activity => activity.run_ref === occurrence.run_ref && activity.occurrence_ref === occurrence.ref)).map(occurrence => ({ id: occurrence.ref, position: { x: 0, y: 0 }, data: { label: 'Execution stopped', status: occurrence.outcome ?? 'cause unknown', identity: { ref: occurrence.ref, runRef: occurrence.run_ref, occurrenceId: occurrence.occurrence_id ?? null }, relationQualification: occurrence.support_ref ? null : 'Stopping cause unknown.' }, className: 'execution-node stop-node failed' } satisfies Node))
+  const nodes: Node[] = [...plannedNodes, ...reviewNodes, ...activityNodes, ...chainNodes, ...stopNodes]
   const nodeExists = (id: string) => nodes.some(node => node.id === id)
+  const resolve = (ref: string) => boundActivity.get(ref) ?? boundReview.get(ref) ?? ref
   const edges: Edge[] = []
   const edgeByPair = new Map<string, Edge>()
   const rejected = new Map<string, string[]>()
   const reject = (node: string, reason: string) => rejected.set(node, [...(rejected.get(node) ?? []), reason])
-  const reaches = (from: string, target: string, seen = new Set<string>()): boolean => {
-    if (from === target) return true
-    if (seen.has(from)) return false
-    seen.add(from)
-    return edges.some(edge => edge.source === from && reaches(edge.target, target, seen))
-  }
-  const add = (id: string, source: string, target: string, relation: string, identity: Record<string, unknown>) => {
+  const reaches = (from: string, target: string, seen = new Set<string>()): boolean => from === target || (!seen.has(from) && (seen.add(from), edges.some(edge => edge.source === from && reaches(edge.target, target, seen))))
+  const add = (id: string, rawSource: string, rawTarget: string, relation: string, identity: Record<string, unknown>, classification: 'declared' | 'recorded' = 'recorded') => {
+    const source = resolve(rawSource), target = resolve(rawTarget)
     if (source === target) { reject(target, `${relation}: self relation rejected.`); return }
     if (!nodeExists(source) || !nodeExists(target)) { reject(target, `${relation}: endpoint missing or ambiguous.`); return }
     const pair = `${source}\u0000${target}`
     const existing = edgeByPair.get(pair)
-    if (existing) {
-      const data = existing.data as { relations: string[]; identities: Record<string, unknown>[] }
-      if (!data.relations.includes(relation)) { data.relations.push(relation); data.identities.push(identity) }
-      return
-    }
+    if (existing) { const data = existing.data as { relations: string[]; identities: Record<string, unknown>[] }; if (!data.relations.includes(relation)) { data.relations.push(relation); data.identities.push(identity) }; return }
     if (reaches(target, source)) { reject(target, `${relation}: cyclic relation rejected.`); return }
-    const edge: Edge = { id, source, target, type: 'smoothstep', className: 'secondary-edge actual-edge', data: { classification: 'actual', relation, relations: [relation], resolution: 'recorded', identity, identities: [identity] } }
+    const edge: Edge = { id, source, target, type: 'smoothstep', className: `${classification}-edge`, data: { classification, relation, relations: [relation], resolution: 'recorded', identity, identities: [identity] } }
     edgeByPair.set(pair, edge); edges.push(edge)
   }
+  for (const task of tasks) for (const prerequisite of task.prerequisite_refs) add(`prerequisite_${prerequisite}_${task.ref}`, slotId(task.run_ref, prerequisite), slotFor(task), 'declared-prerequisite', { prerequisiteRef: prerequisite, taskRef: task.ref }, 'declared')
+  for (const definition of definitions) for (const prerequisite of definition.prerequisite_refs ?? []) add(`review_prerequisite_${prerequisite}_${definition.ref}`, slotId(definition.run_ref, prerequisite), reviewFor(definition), 'declared-review-completion', { prerequisiteRef: prerequisite, reviewRef: definition.ref }, 'declared')
   for (const activity of activities) {
-    if (!nodeExists(activity.ref)) continue
+    const target = resolve(activity.ref)
+    if (!nodeExists(target)) continue
     if (activity.trigger_ref) add(`trigger_${activity.trigger_ref}_${activity.ref}`, activity.trigger_ref, activity.ref, 'recorded-correction-trigger', { triggerRef: activity.trigger_ref, correctionRef: activity.ref })
     if (activity.input_qualification === 'recorded') for (const input of activity.input_refs) add(`input_${input}_${activity.ref}`, input, activity.ref, 'recorded-input', { producerRef: input, consumerRef: activity.ref })
     for (const predecessor of activity.correction_chain.filter(ref => ref !== activity.ref)) add(`correction_${predecessor}_${activity.ref}`, predecessor, activity.ref, 'recorded-correction', { predecessorRef: predecessor, correctionRef: activity.ref })
   }
-  for (const execution of chain) {
+  for (const execution of chain.filter(item => item.role !== 'fixer')) {
     for (const input of execution.input_refs ?? []) add(`review_input_${input}_${execution.ref}`, input, execution.ref, 'recorded-review-input', { producerRef: input, reviewRef: execution.ref })
     if (execution.trigger_ref) add(`trigger_${execution.trigger_ref}_${execution.ref}`, execution.trigger_ref, execution.ref, 'recorded-correction-trigger', { triggerRef: execution.trigger_ref, executionRef: execution.ref })
     if (execution.predecessor_ref) add(`predecessor_${execution.predecessor_ref}_${execution.ref}`, execution.predecessor_ref, execution.ref, 'recorded-correction-predecessor', { predecessorRef: execution.predecessor_ref, executionRef: execution.ref })
   }
-  for (const stop of occurrences.filter(occurrence => occurrence.stopping && occurrence.support_ref)) {
-    const source = nodeForOccurrence(stop.run_ref, stop.support_ref!), target = nodeForOccurrence(stop.run_ref, stop.ref)
-    add(`stop_${stop.ref}`, source, target, 'recorded-stop-support', { supportRef: stop.support_ref, stopRef: stop.ref, runRef: stop.run_ref })
-  }
-  for (const node of nodes) {
-    const qualifications = rejected.get(node.id)
-    if (qualifications?.length) node.data = { ...node.data, relationQualification: qualifications.join(' ') }
-  }
+  for (const stop of occurrences.filter(occurrence => occurrence.stopping && occurrence.support_ref)) add(`stop_${stop.ref}`, nodeForOccurrence(stop.run_ref, stop.support_ref!), nodeForOccurrence(stop.run_ref, stop.ref), 'recorded-stop-support', { supportRef: stop.support_ref, stopRef: stop.ref, runRef: stop.run_ref })
+  for (const node of nodes) { const qualifications = rejected.get(node.id); if (qualifications?.length) node.data = { ...node.data, relationQualification: qualifications.join(' ') } }
   return { nodes, edges, topology: JSON.stringify({ nodes: nodes.map(node => node.id).sort(), edges: edges.map(edge => [edge.source, edge.target, edge.data?.relation]).sort() }) }
 }
 export function recordText(record: Observation) {
