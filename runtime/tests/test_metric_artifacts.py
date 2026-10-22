@@ -1,5 +1,8 @@
 """Real-file contract tests for the optional closed metrics artifact."""
 import os
+from contextlib import nullcontext
+import json
+from unittest.mock import patch
 
 from coherence_workflow.engine import Engine
 from coherence_workflow.git_effects import MetricArtifactFinalizer
@@ -164,6 +167,56 @@ class MetricArtifactTests(ProjectTest):
         self.assertEqual([(row['role'], row['outcome']) for row in rows], [('worker', 'failed')])
         self.assertEqual(git(self.project, 'show', '--name-only', '--format=', 'HEAD').decode().splitlines(),
                          [artifact_relative('failed-terminal-call')])
+
+    def test_finalizer_faults_preserve_original_success_or_worker_error(self):
+        original_finalize = Engine._finalize_metric_artifact
+        for fault in ('missing', 'replaced', 'symlink', 'constructor'):
+            for failing in (False, True):
+                with self.subTest(fault=fault, failing=failing):
+                    run = f'fault-{fault}-{failing}'
+                    original_error = RuntimeError('original worker error')
+                    class Adapter:
+                        def __init__(self, *_args, **_kwargs): pass
+                        def prompt(self, _prompt, **kwargs):
+                            if failing:
+                                raise original_error
+                            return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
+                    retained = {}
+                    def finalize(engine, result=None):
+                        path = engine.metric_artifact.path
+                        retained['original'] = path.read_bytes()
+                        if fault != 'constructor':
+                            path.unlink()
+                            if fault == 'replaced':
+                                path.write_bytes(retained['original'])
+                            elif fault == 'symlink':
+                                target = self.project / f'{run}-target'
+                                target.write_bytes(retained['original'])
+                                path.symlink_to(target)
+                        return original_finalize(engine, result)
+                    with Authority(self.project) as authority:
+                        engine = Engine(authority, run, admit([{'id': 'metric', 'description': 'fixture'}]),
+                                        {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=Adapter)
+                        head = git(self.project, 'rev-parse', 'HEAD')
+                        with patch.object(Engine, '_finalize_metric_artifact', finalize):
+                            with patch('coherence_workflow.engine.MetricArtifactFinalizer', side_effect=RuntimeError('constructor fault')) if fault == 'constructor' else nullcontext():
+                                if failing:
+                                    with self.assertRaises(RuntimeError) as caught:
+                                        engine.invoke()
+                                    self.assertIs(caught.exception, original_error)
+                                else:
+                                    result = engine.invoke()
+                                    self.assertEqual(result['metric_artifact']['status'], 'failed')
+                        row = authority.store.db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC LIMIT 1", (run,)).fetchone()
+                        self.assertEqual(json.loads(row['details'])['status'], 'failed')
+                        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), head)
+                        self.assertEqual(git(self.project, 'diff', '--cached', '--name-only'), b'')
+                        path = engine.metric_artifact.path
+                        if fault == 'missing':
+                            self.assertFalse(path.exists())
+                        else:
+                            self.assertEqual(path.read_bytes(), retained['original'])
+                            self.assertEqual(path.is_symlink(), fault == 'symlink')
 
     def test_staged_collision_and_expected_coverage_are_qualified(self):
         run = 'staged'
