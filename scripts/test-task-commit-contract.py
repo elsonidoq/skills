@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Static contract mutations and temporary-Git protocol fixtures, not model-obedience tests."""
 import importlib.util
+import re
 import shutil
 import subprocess
 import tempfile
@@ -208,25 +209,135 @@ class GitProtocolFixtureTests(unittest.TestCase):
         self.assertEqual(run(repo, "diff", "--cached", "--name-only").stdout, "")
 
 
+LEGACY_BASELINE = '5ec94a87ffc4cc5747adaf93e290c2cf8526e594'
+LEGACY_ROOT = 'memory/coordination/'
+APPROVED_GUIDANCE = (
+    'Routine task transitions/completions and steering-status updates must not wake the parent agent or require acknowledgment. '
+    'Only agent questions and terminal workflow completion, whether success or error, should trigger a parent turn.'
+)
+
+
+def legacy_inventory():
+    source = (ROOT / 'docs/plans/unified-project-memory-tinyspec.md').read_text()
+    inventory = re.search(r'Exact tracked inventory .*?```text\n(.*?)\n```', source, re.S)
+    if inventory is None:
+        raise AssertionError('TinySpec legacy inventory missing')
+    return tuple(LEGACY_ROOT + path for path in inventory.group(1).splitlines() if path)
+
+
+def changed_paths(repo, baseline, *paths):
+    return [line.split('\t', 1) for line in run(repo, 'diff', '--name-status', baseline, '--', *paths).stdout.splitlines()]
+
+
+def assert_approved_memory_transition(case, repo, baseline, inventory):
+    expected = set(inventory)
+    actual = changed_paths(repo, baseline, 'memory')
+    untracked = run(repo, 'ls-files', '--others', '--exclude-standard', '--', 'memory').stdout.splitlines()
+    case.assertEqual(untracked, [], f'unapproved untracked memory paths: {untracked}')
+    for status, path in actual:
+        case.assertNotEqual(status[0], 'R', 'legacy records must not be renamed or relocated')
+        if path == 'memory/MEMORY.md':
+            case.assertEqual(status, 'M', 'the approved index may only be modified')
+            index = (repo / path).read_text()
+            case.assertIn(APPROVED_GUIDANCE, index, 'index update must retain the approved guidance')
+            case.assertIn('provenance', index.lower(), 'index update must retain feedback provenance')
+        else:
+            case.assertIn(path, expected, f'unapproved memory change: {path}')
+            case.assertEqual(status, 'D', f'legacy record may only be deleted: {path}')
+    deleted = {path for status, path in actual if status == 'D'}
+    case.assertTrue(deleted <= expected)
+    # Every listed legacy byte is either untouched or deleted, never rewritten.
+    for path in inventory:
+        statuses = [status for status, changed in actual if changed == path]
+        case.assertIn(statuses, ([], ['D']), f'legacy record rewritten: {path}')
+
+
+def assert_recovery_semantics(case, source):
+    clauses = (
+        'return earliest invalid gate',
+        'Return earliest affected Standard stage and renew affected approvals',
+        'producing review/approval gate for correction and renewed affected approval',
+        'Preserve original source/approval origin',
+        'active/unknown legacy writers first',
+    )
+    for clause in clauses:
+        case.assertIn(clause, source)
+
+
 class RuntimePolicyCompatibilityTests(GitProtocolFixtureTests):
+    def memory_fixture_repo(self, inventory):
+        holder, repo = fixture_repo()
+        self.addCleanup(holder.cleanup)
+        (repo / 'memory').mkdir()
+        (repo / 'memory/MEMORY.md').write_text('gotcha index\n')
+        (repo / 'memory/custom-history.md').write_text('custom bytes\n')
+        for path in inventory:
+            target = repo / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(f'legacy bytes: {path}\n')
+        run(repo, 'add', 'memory')
+        run(repo, 'commit', '-qm', 'memory baseline')
+        return repo, run(repo, 'rev-parse', 'HEAD').stdout.strip()
+
     def test_historical_custom_and_original_source_bytes_preserved(self):
-        baseline='5ec94a87ffc4cc5747adaf93e290c2cf8526e594'
-        paths=['memory','.pi/STATE.md','specs/003-coordinate-workflow/tasks.json',
-               'specs/003-coordinate-workflow/spec.md','specs/003-coordinate-workflow/planning-approval.md',
-               'specs/003-coordinate-workflow/spec-approval.md','docs/evidence',
-               'skills/initialize-coherence/scripts/fixtures/old-initialize-coherence.txt']
-        result=run(ROOT,'diff',baseline,'--',*paths)
-        self.assertEqual(result.stdout,'')
-        source=(ROOT/'skills/planner/references/approval-and-recovery.md').read_text()
-        for phrase in ('active/unknown','earliest affected producing renewal','original source/approval origin'):
-            self.assertIn(phrase,source)
-        contract=CONTRACT.read_text()
-        self.assertIn('workers may propose/produce owned task changes but do not stage, commit',contract)
+        inventory = legacy_inventory()
+        self.assertEqual(len(inventory), 41)
+        self.assertEqual(
+            set(inventory),
+            set(run(ROOT, 'ls-tree', '-r', '--name-only', LEGACY_BASELINE, '--', 'memory/coordination').stdout.splitlines()),
+        )
+        paths = ['.pi/STATE.md', 'specs/003-coordinate-workflow/tasks.json',
+                 'specs/003-coordinate-workflow/spec.md', 'specs/003-coordinate-workflow/planning-approval.md',
+                 'specs/003-coordinate-workflow/spec-approval.md', 'docs/evidence',
+                 'skills/initialize-coherence/scripts/fixtures/old-initialize-coherence.txt']
+        self.assertEqual(run(ROOT, 'diff', LEGACY_BASELINE, '--', *paths).stdout, '')
+        assert_approved_memory_transition(self, ROOT, LEGACY_BASELINE, inventory)
+
+        source = (ROOT / 'skills/planner/references/approval-and-recovery.md').read_text()
+        assert_recovery_semantics(self, source)
+        for clause in ('return earliest invalid gate', 'renew affected approvals', 'original source/approval origin', 'active/unknown legacy writers'):
+            with self.subTest(removed=clause), self.assertRaises(AssertionError):
+                assert_recovery_semantics(self, source.replace(clause, 'REMOVED'))
+
+        contract = CONTRACT.read_text()
+        self.assertIn('workers may propose/produce owned task changes but do not stage, commit', contract)
         self.assertTrue(any('executable checkpoint responsibility' in error for error in
-            checker.check(contract_text=contract.replace('do not stage, commit','may stage and commit'))))
-        self.assertIn('Unknown/live work, missing verification/Git authority',contract)
-        self.assertIn('Planning/standalone retained artifacts continue',contract)
-        self.assertEqual(checker.check(),[])
+            checker.check(contract_text=contract.replace('do not stage, commit', 'may stage and commit'))))
+        self.assertIn('Unknown/live work, missing verification/Git authority', contract)
+        self.assertIn('Planning/standalone retained artifacts continue', contract)
+        self.assertEqual(checker.check(), [])
+
+    def test_scoped_memory_preservation_accepts_only_pre_or_approved_post_cleanup(self):
+        inventory = legacy_inventory()
+        repo, baseline = self.memory_fixture_repo(inventory)
+        assert_approved_memory_transition(self, repo, baseline, inventory)
+
+        (repo / 'memory/MEMORY.md').write_text(
+            f'owner guidance\n\n{APPROVED_GUIDANCE}\n\nCurrent-conversation provenance.\n'
+        )
+        for path in inventory:
+            (repo / path).unlink()
+        assert_approved_memory_transition(self, repo, baseline, inventory)
+
+    def test_scoped_memory_preservation_rejects_rewrites_and_unapproved_changes(self):
+        inventory = legacy_inventory()
+        cases = (
+            ('legacy rewrite', inventory[0], 'rewritten legacy bytes\n'),
+            ('unapproved index rewrite', 'memory/MEMORY.md', 'arbitrary index rewrite\n'),
+            ('extra memory addition', 'memory/extra.md', 'extra bytes\n'),
+            ('custom historical deletion', 'memory/custom-history.md', None),
+        )
+        for label, path, content in cases:
+            with self.subTest(label=label):
+                repo, baseline = self.memory_fixture_repo(inventory)
+                target = repo / path
+                if content is None:
+                    target.unlink()
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text(content)
+                with self.assertRaises(AssertionError):
+                    assert_approved_memory_transition(self, repo, baseline, inventory)
 
 
 if __name__ == "__main__":
