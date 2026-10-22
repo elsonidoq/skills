@@ -140,6 +140,15 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                           "terminal_execution_ref": _ref("execution", run_id, value["execution_id"]) if isinstance(value.get("execution_id"), str) else None,
                           "range": {"base": _sha(value.get("base")), "head": _sha(value.get("head"))}}
                          for run_id, value in graph.get("chain_acceptance", {}).items() if isinstance(run_id, str) and isinstance(value, dict)}
+    def aggregate_projection(value):
+        if not isinstance(value, dict):
+            return None
+        def number(item):
+            return item if type(item) in (int, float) and math.isfinite(item) and item >= 0 else None
+        return {**{key: number(value.get(key)) for key in ('interval_count', 'dispatch_count', 'distinct_membership_count')},
+                'fields': {key: {name: number(field.get(name)) for name in ('known_subtotal', 'full_total', 'known_interval_count')}
+                    for key, field in value.get('fields', {}).items() if key in {'input', 'output', 'cache_read', 'cache_write', 'total_tokens', 'estimated_usd'} and isinstance(field, dict)}}
+
     def metric_projection(metric: object, coverage: object, reasons: object) -> dict[str, Any]:
         result: dict[str, Any] = {"availability": coverage if coverage in {"complete", "partial", "unavailable"} else "unavailable",
                                   "reasons": [reason for reason in reasons if isinstance(reason, str)] if isinstance(reasons, list) else []}
@@ -242,6 +251,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                     "support_ref": _ref("activity", item["run_id"], item["support_invocation_id"]) if isinstance(item.get("support_invocation_id"), str) else None,
                     "stopped_by_ref": _ref("activity", item["run_id"], item["stopped_by_invocation_id"]) if isinstance(item.get("stopped_by_invocation_id"), str) else None,
                     "record_refs": [_ref("record", item["run_id"], value) for value in item.get("record_refs", []) if type(value) is int],
+                    "task_metrics": aggregate_projection(item.get('task_metrics')),
                     "metrics": metric_projection(item.get("metric"), item.get("metric_coverage"), item.get("metric_reasons"))}
         activities.append(activity)
     inventory = {"phase_count": len(phases), "occurrence_count": len(occurrences), "observation_count": len(records),
@@ -250,6 +260,12 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
             "review_definitions": review_definitions, "occurrences": occurrences, "records": records, "edges": edges,
             "unknown_records": unknown, "inventory": inventory, "followups": followups, "chain": chain,
             "chain_acceptance": chain_acceptance, "activities": activities,
+            'metric_artifacts': {_ref('run', run_id): {'status': value.get('status'),
+                'path': value.get('path') if value.get('path') == '.coherence/metrics/run-' + hashlib.sha256(run_id.encode('utf-8')).hexdigest() + '.jsonl' else None,
+                'sha': _sha(value.get('sha'))} for run_id, value in graph.get('metric_artifacts', {}).items()
+                if isinstance(run_id, str) and isinstance(value, dict) and value.get('status') in {'not_created', 'failed', 'committed', 'committed_after_reported_error', 'no_content'}},
+            'metric_aggregates': {_ref('run', run_id): {scope: aggregate_projection(value.get(scope)) for scope in ('worker_fixer', 'reviewer')}
+                for run_id, value in graph.get('metric_aggregates', {}).items() if isinstance(run_id, str) and isinstance(value, dict)},
             "metric_coverage": {_ref("run", run_id): {"availability": value.get("coverage") if value.get("coverage") in {"complete", "partial", "unavailable"} else "unavailable", "reasons": [reason for reason in value.get("reasons", []) if isinstance(reason, str)],
                                                         "interval_count": value.get("interval_count") if type(value.get("interval_count")) is int and value["interval_count"] >= 0 else None,
                                                         "distinct_membership_count": value.get("distinct_membership_count") if type(value.get("distinct_membership_count")) is int and value["distinct_membership_count"] >= 0 else None,

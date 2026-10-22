@@ -231,8 +231,8 @@ class Reader:
             connection.execute("BEGIN")
             connection.set_authorizer(self._authorizer)
             tables = {row["name"] for row in connection.execute(
-                "SELECT name FROM sqlite_master WHERE type=? AND name IN (?, ?, ?, ?, ?)",
-                ("table", "execution_monitor_runs", "execution_observations", "execution_review_executions", "execution_review_attempts", "execution_review_inputs"),
+                "SELECT name FROM sqlite_master WHERE type=? AND name IN (?, ?, ?, ?, ?, ?)",
+                ("table", "execution_monitor_runs", "execution_observations", "execution_review_executions", "execution_review_attempts", "execution_review_inputs", "execution_history"),
             )}
             if not {"execution_monitor_runs", "execution_observations"} <= tables:
                 return {"state": "unavailable", "code": "monitor_schema_missing"}
@@ -300,12 +300,50 @@ class Reader:
                     facts = json.loads(row["facts"])
                 except (TypeError, ValueError):
                     continue
-                invocation_id = facts.get("invocation_id") if isinstance(facts, dict) else None
+                invocation_id = (facts.get('invocation_id') or (facts.get('execution_id') if facts.get('role') == 'reviewer' else None)) if isinstance(facts, dict) else None
                 if isinstance(invocation_id, str) and invocation_id:
                     expected.setdefault(row["run_id"], set()).add(invocation_id)
-            metrics = self._read_metrics({row["run_id"] for row in supported}, expected)
+            dispatches: dict[str, dict[str, dict[str, Any]]] = {row['run_id']: {} for row in supported}
+            artifacts = {}
+            for run_id in dispatches:
+                if 'execution_history' in tables:
+                    for row in connection.execute(
+                            "SELECT task_id, kind, state, details FROM execution_history WHERE run_id=? "
+                            "AND kind IN ('worker_invocation','fixer_invocation','metric_artifact') ORDER BY seq", (run_id,)):
+                        try:
+                            detail = json.loads(row['details'])
+                        except (TypeError, ValueError):
+                            continue
+                        if not isinstance(detail, dict):
+                            continue
+                        if row['kind'] == 'metric_artifact':
+                            status = detail.get('status')
+                            if status in {'not_created', 'failed', 'committed', 'committed_after_reported_error', 'no_content'}:
+                                expected_path = self._metric_file(run_id).relative_to(self.project).as_posix()
+                                artifacts[run_id] = {'status': status,
+                                    'path': expected_path if detail.get('path') == expected_path or detail.get('paths') == [expected_path] else None,
+                                    'sha': detail.get('sha') if isinstance(detail.get('sha'), str) and _HASH.fullmatch(detail['sha']) else None}
+                        elif row['state'] == 'started':
+                            identity = detail.get('invocation_id')
+                            if isinstance(identity, str) and identity:
+                                dispatches[run_id][identity] = {'invocation_id': identity, 'task_id': row['task_id'],
+                                    'role': 'fixing_worker' if row['kind'] == 'fixer_invocation' else 'worker'}
+                if 'execution_review_executions' in tables:
+                    for row in connection.execute("SELECT execution_id FROM execution_review_executions WHERE run_id=? AND role='reviewer'", (run_id,)):
+                        dispatches[run_id][row['execution_id']] = {'invocation_id': row['execution_id'], 'task_id': None, 'role': 'reviewer'}
+            observed_expected = {key: set(value) for key, value in expected.items()}
+            for run_id, calls in dispatches.items():
+                expected.setdefault(run_id, set()).update(calls)
+            metrics = self._read_metrics({row['run_id'] for row in supported}, expected)
+            for run_id, value in metrics.items():
+                value['dispatches'] = list(dispatches[run_id].values())
+                if not dispatches[run_id] or observed_expected.get(run_id, set()) - set(dispatches[run_id]):
+                    value['reasons'] = sorted(set(value['reasons'] + ['dispatch_evidence_unverified']))
+                    if value['coverage'] == 'complete':
+                        value['coverage'] = 'partial'
             return {"state": "ok", "runs": supported, "unsupported_run_ids": unsupported,
-                    "observations": observations, "review_details": review_details, "metrics": metrics}
+                    "observations": observations, "review_details": review_details, "metrics": metrics,
+                    "metric_artifacts": artifacts}
         except (sqlite3.Error, OSError, ValueError):
             return {"state": "unavailable", "code": "read_failed"}
         finally:

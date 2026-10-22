@@ -45,11 +45,37 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     # Simulate already-retained prose; no producer behavior is changed.
     presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
     with Authority(project) as owner:
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(presentation)
             emit(recorder, 'terminal', 'terminal', 'started', task=None, baseline=base)
+            if run == 'metrics-composed':
+                artifact = create_artifact(project, run, authority=owner)
+                for identity, task, role, kind, record_role in [('initial', 'one', 'worker', 'task_worker', 'worker'), ('correction', 'one', 'worker', 'corrective_worker', 'corrective_worker'), ('missing', 'one', 'worker', 'corrective_worker', 'corrective_worker'), ('other', 'two', 'worker', 'task_worker', 'worker'), ('wrong', 'one', 'worker', 'task_worker', 'worker'), ('conflict', 'one', 'worker', 'task_worker', 'worker'), ('reviewer', None, 'reviewer', None, 'reviewer')]:
+                    identity_facts = {'execution_id': identity, 'review_base': base, 'review_head': base, 'review_ordinal': 1} if role == 'reviewer' else {'invocation_id': identity, 'invocation_kind': kind, 'correction_chain': [identity]}
+                    if role == 'reviewer':
+                        owner.store.review_dispatch(run, identity, role='reviewer', review_ordinal=1, fixing_round=0, review_base=base, review_head=base)
+                        owner.store.review_outcome(run, identity, 'approved', findings=[], references={'base': base, 'head': base})
+                    else:
+                        owner.store.history(run, task, 'worker_invocation', 'started', {'invocation_id': identity})
+                    for state in ('started', 'returned'):
+                        emit(recorder, identity, 'review' if role == 'reviewer' else 'worker', state, task=task, role=role, selected_input_checkpoints=[], **identity_facts)
+                    if identity == 'missing':
+                        continue
+                    record = metric_record(run, identity, 'fresh', 'fresh')
+                    record.update(task_id='two' if identity == 'wrong' else task, role=record_role)
+                    if role == 'reviewer':
+                        record['review_ordinal'] = 1
+                    artifact.append(record)
+                    if identity == 'conflict':
+                        # Reader must exclude both conflicting intervals, not choose one.
+                        import json
+                        record['interval']['total_tokens']['value'] = 999
+                        with artifact.path.open('a') as output:
+                            output.write(json.dumps(record) + '\n')
+                owner.store.history(run, None, 'metric_artifact', 'failed', {'status': 'failed', 'path': str(artifact.path.relative_to(project)), 'error': '/PRIVATE/error'})
+                continue
             if run == 'before-agent':
                 emit(recorder, 'prepare', 'prepare', 'started')
                 emit(recorder, 'prepare', 'prepare', 'failed', error_category='blocked')
@@ -69,6 +95,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     emit(recorder, 'terminal', 'terminal', 'failed', task=None)
             else:
                 invocation = f'{run}-worker' if run in ('success', 'waiting') or run.startswith('metrics-') else None
+                if invocation:
+                    owner.store.history(run, 'one', 'worker_invocation', 'started', {'invocation_id': invocation})
                 worker_facts = {'role': 'worker', **({'invocation_id': invocation, 'invocation_kind': 'task_worker', 'selected_input_checkpoints': [], 'correction_chain': [invocation]} if invocation else {})}
                 emit(recorder, 'worker', 'worker', 'started', **worker_facts)
                 if run == 'waiting':

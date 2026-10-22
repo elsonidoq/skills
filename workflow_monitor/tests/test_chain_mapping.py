@@ -117,6 +117,69 @@ class ChainMappingTests(ProjectTest):
     def test_activity_metrics_readback_without_graph(self):
         self.test_activity_readback_without_graph()
 
+    def test_dispatch_scoped_corrections_reviewers_and_artifact_outcomes(self):
+        self.test_activity_readback_without_graph()
+        template = Reader(self.project).open_snapshot('activity')['metrics']['activity']['records'][0]
+        base = subprocess.check_output(['git', '-C', str(self.project), 'rev-parse', 'HEAD']).decode().strip()
+        import copy
+        with Authority(self.project) as owner:
+            owner.store.start('scoped', base)
+            recorder = Recorder(owner.store, 'scoped')
+            recorder.register(descriptor({'tasks': [{'id': 'one', 'depends': []}, {'id': 'two', 'depends': []}]}, EXECUTOR))
+            artifact = create_artifact(self.project, 'scoped', authority=owner)
+            for identity, task, kind in [('initial', 'one', 'task_worker'), ('correction', 'one', 'corrective_worker'), ('lost-observation', 'one', 'corrective_worker'), ('missing', 'one', 'corrective_worker'), ('other', 'two', 'task_worker'), ('wrong', 'one', 'task_worker'), ('reviewer', None, None)]:
+                reviewer = identity == 'reviewer'
+                if reviewer:
+                    owner.store.review_dispatch('scoped', identity, role='reviewer', review_ordinal=1, fixing_round=0, review_base=base, review_head=base)
+                    owner.store.review_outcome('scoped', identity, 'approved', findings=[], references={'base': base, 'head': base})
+                    facts = {'role': 'reviewer', 'execution_id': identity, 'review_base': base, 'review_head': base, 'review_ordinal': 1}
+                else:
+                    owner.store.history('scoped', task, 'worker_invocation', 'started', {'invocation_id': identity, 'prompt': 'PRIVATE-PROMPT'})
+                    facts = {'role': 'worker', 'invocation_id': identity, 'invocation_kind': kind, 'correction_chain': [identity], 'selected_input_checkpoints': []}
+                if identity != 'lost-observation':
+                    for state in ('started', 'returned'):
+                        recorder.emit(identity, 'review' if reviewer else 'worker', state, task_id=task, facts=facts)
+                if identity in {'missing', 'lost-observation'}:
+                    continue
+                record = copy.deepcopy(template)
+                record.update(run_id='scoped', invocation_id=identity, task_id='two' if identity == 'wrong' else task,
+                              role='reviewer' if reviewer else 'corrective_worker' if kind == 'corrective_worker' else 'worker')
+                artifact.append(record)
+            owner.store.history('scoped', None, 'metric_artifact', 'failed', {'status': 'failed', 'path': str(artifact.path.relative_to(self.project)), 'error': 'PRIVATE-PATH/error'})
+        from starlette.testclient import TestClient
+        from workflow_monitor.app import create_app
+        assets = self.root / 'scoped-assets'; assets.mkdir(); (assets/'index.html').write_text('<main>fixture</main>')
+        reader = Reader(self.project)
+        raw = reader.open_snapshot('scoped')
+        self.assertIn('missing_expected_invocations', raw['metrics']['scoped']['reasons'])
+        self.assertEqual(len(raw['metrics']['scoped']['dispatches']), 7)
+        dto = minimize(normalize(raw))
+        reference = dto['runs'][0]['ref']
+        client = TestClient(create_app(reader, assets, 8765), base_url='http://127.0.0.1:8765')
+        selected = client.get('/api/monitor/v1/runs/' + reference + '/snapshot', headers={'sec-fetch-site': 'same-origin', 'x-workflow-monitor': '1'}).json()
+        calls = {item['invocation_id']: item for item in selected['activities']}
+        self.assertEqual(calls['correction']['metrics']['total_tokens']['value'], 3)
+        self.assertEqual(calls['reviewer']['metrics']['total_tokens']['value'], 3)
+        self.assertNotIn('total_tokens', calls['wrong']['metrics'])
+        task = calls['correction']['task_metrics']
+        self.assertEqual(task['fields']['total_tokens']['known_subtotal'], 6)
+        self.assertIsNone(task['fields']['total_tokens']['full_total'])
+        self.assertEqual(task['dispatch_count'], 5)
+        run = selected['metric_aggregates'][reference]
+        self.assertEqual(run['worker_fixer']['fields']['total_tokens']['known_subtotal'], 9)
+        self.assertEqual(run['reviewer']['fields']['total_tokens']['known_subtotal'], 3)
+        self.assertEqual(run['worker_fixer']['distinct_membership_count'], 2)
+        self.assertEqual(selected['metric_artifacts'][reference]['status'], 'failed')
+        self.assertTrue(selected['metric_artifacts'][reference]['path'].startswith('.coherence/metrics/run-'))
+        self.assertNotIn('PRIVATE', repr(selected))
+        with Authority(self.project) as owner:
+            owner.store.history('scoped', None, 'metric_artifact', 'committed', {'status': 'committed', 'path': str(artifact.path.relative_to(self.project)), 'sha': base, 'error': 'PRIVATE'})
+        committed = minimize(normalize(reader.open_snapshot('scoped')))
+        self.assertEqual(committed['metric_artifacts'][reference]['sha'], base)
+        self.assertEqual(committed['chain_acceptance'][reference]['range'], selected['chain_acceptance'][reference]['range'])
+        self.assertEqual(committed['chain_acceptance'][reference]['state'], 'accepted')
+        self.assertNotIn('PRIVATE', repr(committed))
+
     def test_four_engine_scenarios_project_only_actual_closed_chain_facts(self):
         project = self.project
 
@@ -207,7 +270,7 @@ class ChainMappingTests(ProjectTest):
                 "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
                 input=json.dumps(selected).encode(), cwd=ROOT))
             rendered_chain = {node['id'] for node in selected_view['nodes'] if 'chain-node' in node.get('className', '')}
-            self.assertEqual(rendered_chain, {item['ref'] for item in selected['chain']})
+            self.assertEqual(rendered_chain, {item['ref'] for item in selected['chain'] if item['role'] != 'fixer' or len(item['occurrence_refs']) == 1})
 
         # The production helper consumes the closed DTO, rather than task-plan or
         # routine-check records. Exact recorded worker input survives as an actual
@@ -229,7 +292,7 @@ class ChainMappingTests(ProjectTest):
             aliases = represented.get((activity['run_ref'], activity['occurrence_ref']), [])
             if len(aliases) != 1:
                 self.assertIn(activity['ref'], nodes)
-            for producer in activity['input_refs']:
+            for producer in activity['input_refs'] if activity['ref'] in nodes else []:
                 self.assertTrue(any(edge['source'] == producer and edge['target'] == activity['ref']
                                     and 'recorded-input' in edge['data']['relations'] for edge in view['edges']))
         self.assertNotIn("PRIVATE-SENTINEL", repr(dto))

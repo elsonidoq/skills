@@ -237,20 +237,22 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
     for occurrence in occurrences:
         rows = occurrence["observations"]
         facts = rows[0]["facts"] if rows else {}
-        invocation_id = facts.get("invocation_id")
+        def call_identity(value):
+            return value.get('invocation_id') or (value.get('execution_id') if value.get('role') == 'reviewer' else None)
+        invocation_id = call_identity(facts)
         if not isinstance(invocation_id, str) or not invocation_id:
             continue
-        if any(row["facts"].get("invocation_id") != invocation_id for row in rows):
+        if any(call_identity(row['facts']) != invocation_id for row in rows):
             unknown.append({"run_id": occurrence["run_id"], "seq": rows[0]["seq"], "code": "unsupported_observation"})
             continue
-        terminal = next((row for row in reversed(rows) if row["kind"] in {"returned", "failed", "interrupted"}), None)
+        terminal = next((row for row in reversed(rows) if row['kind'] in {'returned', 'failed', 'interrupted'} or (facts.get('role') == 'reviewer' and row['kind'] == 'passed')), None)
         activity = {"run_id": occurrence["run_id"], "invocation_id": invocation_id,
                     "occurrence_id": occurrence["occurrence_id"], "task_id": occurrence["task_id"],
                     "role": facts.get("role"), "invocation_kind": facts.get("invocation_kind"),
                     "selected_input_checkpoints": facts.get("selected_input_checkpoints"),
-                    "correction_chain": facts.get("correction_chain"),
+                    "correction_chain": facts.get("correction_chain") or [],
                     "predecessor_invocation_id": facts.get("predecessor_invocation_id"),
-                    "outcome": terminal["kind"] if terminal else "unknown",
+                    "outcome": ('returned' if terminal['kind'] == 'passed' else terminal['kind']) if terminal else 'unknown',
                     "error_category": terminal["facts"].get("error_category") if terminal else None,
                     "support_invocation_id": terminal["facts"].get("support_invocation_id") if terminal else None,
                     "stopped_by_invocation_id": terminal["facts"].get("stopped_by_invocation_id") if terminal else None,
@@ -271,12 +273,20 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
                     return False
                 if record.get("task_id") != activity["task_id"]:
                     return False
-                roles = {"worker": {"worker"}, "fixing_worker": {"corrective_worker", "fixing_worker"}, "reviewer": {"reviewer"}}
-                return record.get("role") in roles.get(activity["role"], set())
+                dispatches = [call for call in metric_set.get('dispatches', []) if call.get('invocation_id') == activity['invocation_id']]
+                if any(call.get('task_id') != activity['task_id'] or call.get('role') != activity['role'] for call in dispatches):
+                    return False
+                role = ('corrective_worker' if activity['role'] == 'worker' and activity['invocation_kind'] == 'corrective_worker' else activity['role'])
+                roles = {'worker': {'worker'}, 'corrective_worker': {'corrective_worker'},
+                         'fixing_worker': {'fixing_worker'}, 'reviewer': {'reviewer'}}
+                return record.get('role') in roles.get(role, set())
             matches = [record for record in records if matching_metric(record)]
             activity["metric"] = matches[0] if len(matches) == 1 else None
             activity["metric_coverage"] = metric_set.get("coverage") if metric_set.get("coverage") in {"complete", "partial", "unavailable"} else "unavailable"
             activity["metric_reasons"] = [reason for reason in metric_set.get("reasons", []) if isinstance(reason, str)]
+            if any(record.get('invocation_id') == activity['invocation_id'] for record in records) and len(matches) != 1:
+                activity['metric_reasons'].append('metric_association_mismatch')
+                activity['metric_coverage'] = 'partial'
         else:
             activity["metric"] = None
             activity["metric_coverage"] = "unavailable"
@@ -296,6 +306,56 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             references.append(producer)
         activity["input_invocation_ids"] = references if valid else []
         activity["input_qualification"] = "recorded" if valid else "unknown"
+    def aggregate(records, expected_ids, coverage):
+        import math
+        fields = {}
+        for name in ('input', 'output', 'cache_read', 'cache_write', 'total_tokens', 'estimated_usd'):
+            values = []
+            for record in records:
+                interval = record.get('interval', {})
+                field = interval.get('tokens', {}).get(name) if name in {'input', 'output', 'cache_read', 'cache_write'} else interval.get(name)
+                number = field.get('value') if isinstance(field, dict) else None
+                if type(number) in (int, float) and math.isfinite(number) and number >= 0:
+                    values.append(number)
+            complete = coverage == 'complete' and bool(expected_ids) and {row['invocation_id'] for row in records} == expected_ids and len(values) == len(records)
+            fields[name] = {'known_subtotal': sum(values) if values else None,
+                            'full_total': sum(values) if complete else None,
+                            'known_interval_count': len(values)}
+        return {'fields': fields, 'interval_count': len(records), 'dispatch_count': len(expected_ids),
+                'distinct_membership_count': len({row['task_id'] for row in records if row.get('task_id') is not None})}
+
+    aggregates = {}
+    for run_id, metric_set in metric_sets.items():
+        if not isinstance(metric_set, dict):
+            continue
+        dispatch = {row['invocation_id']: row for row in metric_set.get('dispatches', [])}
+        records = []
+        for record in metric_set.get('records', []):
+            call = dispatch.get(record.get('invocation_id'))
+            activity = by_invocation.get((run_id, record.get('invocation_id')))
+            # An observed call must agree exactly; surviving dispatch history can
+            # supply attribution when optional observation recording was lost.
+            dispatch_matches = call is not None and call['task_id'] == record.get('task_id') and record.get('role') in ({'worker', 'corrective_worker'} if call['role'] == 'worker' else {call['role']})
+            if activity is not None:
+                valid = activity.get('metric') == record and (call is None or dispatch_matches)
+            else:
+                valid = dispatch_matches
+            if valid:
+                records.append(record)
+        coverage = metric_set.get('coverage')
+        if len(records) != len(metric_set.get('records', [])):
+            coverage = 'partial'
+            metric_set['coverage'] = coverage
+            metric_set['reasons'] = sorted(set(metric_set.get('reasons', []) + ['unattributed_intervals']))
+        task_ids = {row['task_id'] for row in dispatch.values() if row['task_id'] is not None}
+        aggregates[run_id] = {
+            'tasks': {task_id: aggregate([row for row in records if row.get('task_id') == task_id],
+                        {identity for identity, row in dispatch.items() if row['task_id'] == task_id}, coverage) for task_id in task_ids},
+            **{scope: aggregate([row for row in records if (row['role'] == 'reviewer') == reviewer],
+                {identity for identity, row in dispatch.items() if (row['role'] == 'reviewer') == reviewer}, coverage)
+               for scope, reviewer in [('worker_fixer', False), ('reviewer', True)]}}
+    for activity in activities:
+        activity['task_metrics'] = aggregates.get(activity['run_id'], {}).get('tasks', {}).get(activity['task_id'])
     # First-review input membership is a recorded producer relationship, not a
     # plan/dependency inference.  It is projected only when every checkpoint
     # names an exact known invocation in this run.
@@ -313,7 +373,8 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             "observations": observations, "edges": edges, "unknown_records": unknown,
             "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", [])), "followups": followups,
             "review_acceptance": review_acceptance, "chain": chain, "chain_acceptance": chain_acceptance,
-            "activities": activities,
+            "activities": activities, "metric_aggregates": aggregates,
+            "metric_artifacts": snapshot.get('metric_artifacts', {}),
             "metrics": {run_id: {"coverage": value.get("coverage"), "reasons": value.get("reasons", []),
                                    "interval_count": len(value.get("records", [])) if isinstance(value.get("records"), list) else 0,
                                    "distinct_membership_count": len({row.get("task_id") for row in value.get("records", []) if isinstance(row, dict) and isinstance(row.get("task_id"), str)}),
