@@ -14,7 +14,10 @@ class ExecutionPresentationTests(unittest.TestCase):
         raw = snapshot()
         if tasks is not None:
             description = json.loads(raw["runs"][0]["description"])
-            description["tasks"] = tasks
+            description["tasks"] = [{"id": task["id"], "depends": task["depends"],
+                                     "label": task.get("label", task["id"]),
+                                     "work_description": task.get("work_description")}
+                                    for task in tasks]
             raw["runs"][0]["description"] = json.dumps(description)
         raw["observations"] = [dict(seq=index, run_id=run, occurrence_id=occ, phase=phase,
                                     task_id=task, kind=kind, recorded_at=index, facts=json.dumps(facts))

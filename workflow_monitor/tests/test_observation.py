@@ -43,7 +43,9 @@ class ObservationTests(unittest.TestCase):
             recorder = Recorder(owner.store, "live")
             recorder.register(descriptor({"tasks": [{"id": "one", "depends": []}]}, {}), identity(os.getpid()))
             self.occurrence = recorder.occurrence()
-            recorder.emit(self.occurrence, "worker", "started", task_id="one", facts={"role": "worker"})
+            self.worker_facts = {"role": "worker", "invocation_id": "live-worker", "invocation_kind": "task_worker",
+                                 "selected_input_checkpoints": [], "correction_chain": ["live-worker"]}
+            recorder.emit(self.occurrence, "worker", "started", task_id="one", facts=self.worker_facts)
         assets = Path(self.tmp.name) / "assets"; assets.mkdir(); (assets / "index.html").write_text("safe")
         self.flaky = FlakyReader(Reader(self.project))
         self.client = TestClient(create_app(self.flaky, assets, 8765), base_url="http://127.0.0.1:8765")
@@ -69,7 +71,7 @@ class ObservationTests(unittest.TestCase):
         self.assertNotIn("PRIVATE-SENTINEL", str(failed))
         self.flaky.fail = False
         with Authority(self.project) as owner:
-            owner.store.append_monitor_observation("live", self.occurrence, "worker", None, "passed", {"role": "worker"})
+            owner.store.append_monitor_observation("live", self.occurrence, "worker", None, "passed", self.worker_facts)
         recovered = self._snapshot()
         self.assertEqual(recovered["observation"]["read_state"], "current")
         self.assertEqual([row["kind"] for row in recovered["records"]], ["started", "passed"])
@@ -99,7 +101,9 @@ class ObservationTests(unittest.TestCase):
                 with Authority(self.project) as owner:
                     ready.set()
                     for number in range(8):
-                        owner.store.append_monitor_observation("live", f"writer-{number}", "worker", None, "returned", {"role": "worker"})
+                        facts = {"role": "worker", "invocation_id": f"writer-{number}", "invocation_kind": "task_worker",
+                                 "selected_input_checkpoints": [], "correction_chain": [f"writer-{number}"]}
+                        owner.store.append_monitor_observation("live", f"writer-{number}", "worker", None, "returned", facts)
                         time.sleep(.01)
             except BaseException as exc: failures.append(exc)
             finally: done.set()

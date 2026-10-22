@@ -97,9 +97,11 @@ and explicit trigger, predecessor, fixer-check, and fixer-checkpoint relations; 
 those links from labels, timestamps, or correction fields. Details show the selected execution's
 ID, ordinal/outcome/range, explicit references, and SHA references. A review issue is shown only
 when it matches the inert `path:line - issue` review form; raw reviewer payloads, arbitrary
-findings, prompts, answers, errors, and secrets remain private. The original rejected reviewer,
-distinct fixing call and subsequent reviewer remain visible; missing legacy chain relations remain
-unknown rather than inferred.
+findings, prompts, answers, errors, and secrets remain private. The original rejected reviewer and subsequent reviewer remain visible by their persisted execution
+identities even if optional observation rows are absent. A fixing execution is shown only as a typed
+round notice in Details/history: it is not an individual model call. Individual fixing calls appear
+only when retained invocation history or an exact recorded invocation ID proves them; missing
+observation/dispatch evidence remains unknown rather than inferred.
 A valid rejecting reviewer remains a green returned execution while its rejection stays
 visible in Details and lineage acceptance. Same-run acceptance identifies the explicit terminal reviewer and its recorded range, never temporal proximity. Missing/dangling chain links remain unknown. Correction-only, unresolved and cyclic
 relations do not establish current full-range acceptance. Supporting

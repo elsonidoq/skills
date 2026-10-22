@@ -184,7 +184,7 @@ def _page(data: dict[str, Any], reference: str, after: int | str, size: int) -> 
     result = dict(data)
     for key in ("phases", "tasks", "occurrences", "edges", "activities"):
         result[key] = [item for item in data.get(key, []) if item["run_ref"] == reference]
-    for key in ("chain", "review_definitions"):
+    for key in ("chain", "fixing_rounds", "review_definitions"):
         result[key] = [item for item in data.get(key, []) if item["run_ref"] == reference]
     for key in ('chain_acceptance', 'metric_coverage', 'metric_aggregates', 'metric_artifacts'):
         result[key] = {run_ref: value for run_ref, value in data.get(key, {}).items() if run_ref == reference}

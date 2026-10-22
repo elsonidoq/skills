@@ -16,7 +16,8 @@ from workflow_monitor.app import create_app
 from workflow_monitor.mapping import normalize
 from workflow_monitor.reader import Reader
 
-EXECUTOR = {"provider": "offline", "model": "lineage-fixture", "effort": "medium"}
+EXECUTOR = {"provider": "offline", "model": "lineage-fixture", "effort": "medium",
+            "reviewer": {"provider": "offline", "model": "lineage-review-fixture", "effort": "medium"}}
 
 
 class LineageTests(unittest.TestCase):
@@ -90,7 +91,10 @@ class LineageTests(unittest.TestCase):
 
     def test_dangling_wrong_and_cyclic_declarations_never_accept(self):
         def description(correction):
-            return json.dumps({"version": 1, "description_version": 1, "phases": [], "tasks": [], "requested_executor": {}, "correction_of": correction})
+            return json.dumps({"version": 1, "description_version": 3,
+                               "phases": [{"id": "review", "label": "Review", "possible_branches": [], "pre_recording": False}],
+                               "tasks": [{"id": "fixture", "depends": [], "label": "Fixture", "work_description": None}],
+                               "initial_review": {"planned": True}, "requested_executor": {}, "correction_of": correction})
         sha = "a" * 40
         snapshot = {"state": "ok", "runs": [
             {"run_id": "source", "description": description(None), "started_at": 1},
