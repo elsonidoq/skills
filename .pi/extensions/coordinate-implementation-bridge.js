@@ -130,7 +130,7 @@ export default function coordinateImplementationBridge(pi) {
     bridge.pending = {request_id: request.request_id, socket};
     pi.sendMessage({
       customType: 'coordinate_implementation_question', display: true,
-      content: `Coordinate implementation requires owner input before continuing: ${request.question}\n\nAsk the user, then call coordinate_implementation_reply with request_id ${request.request_id} and run ${bridge.run}.`,
+      content: `Coordinate implementation needs a response before continuing: ${request.question}\n\nTriage this as coordinator: investigate and reply for routine authorized technical matters. Ask the owner and reply with their actual answer only for material product, scope, or permission decisions. Then call coordinate_implementation_reply with request_id ${request.request_id} and run ${bridge.run}.`,
       details: {request_id: request.request_id, run: bridge.run},
     }, {triggerTurn: true, deliverAs: 'followUp'});
   };
@@ -249,7 +249,7 @@ export default function coordinateImplementationBridge(pi) {
 
   pi.registerTool({
     name: 'coordinate_implementation_reply', label: 'Reply to coordinate implementation',
-    description: 'Return the user answer for the exact pending coordinate-implementation owner question.',
+    description: 'Return the coordinator response for a routine authorized technical matter, or the actual owner answer for a material decision, to the exact pending coordinate-implementation question.',
     parameters: replyParameters, executionMode: 'sequential',
     async execute(_id, params, _signal, _update, ctx) {
       if (!active || ctx.sessionManager.getSessionId() !== active.session || params.run !== active.run ||
@@ -259,7 +259,7 @@ export default function coordinateImplementationBridge(pi) {
       const pending = active.pending;
       active.pending = undefined;
       send(pending.socket, {request_id: params.request_id, answer: params.answer});
-      return textResult('Returned the owner answer to the waiting worker.', {request_id: params.request_id, run: params.run});
+      return textResult('Returned the response to the waiting worker.', {request_id: params.request_id, run: params.run});
     },
   });
 

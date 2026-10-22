@@ -286,10 +286,12 @@ class UnfinishedTaskResumeTests(ProjectTest):
                 "SELECT kind,state,details FROM execution_history WHERE run_id='partial-resume' ORDER BY seq")]
             first = owner.store.db.execute(
                 "SELECT result FROM execution_tasks WHERE run_id='partial-resume' AND task_id='completed'").fetchone()['result']
-            memberships = owner.store.db.execute(
-                "SELECT COUNT(*) FROM execution_usage_memberships WHERE run_id='partial-resume' AND task_id='partial'").fetchone()[0]
+            terminal_calls = [row['state'] for row in owner.store.db.execute(
+                "SELECT state FROM execution_history WHERE run_id='partial-resume' AND task_id='partial' "
+                "AND kind='worker_invocation' AND state IN ('returned','interrupted','failed') ORDER BY seq")]
         self.assertEqual(first, first_sha)
-        self.assertEqual(memberships, 1)
+        # Initial work, interrupted check correction, resumed work, then setup correction.
+        self.assertEqual(terminal_calls, ['returned', 'interrupted', 'returned', 'returned'])
         self.assertTrue(any(kind == 'check' and state == 'failed' and details['exit_code'] == 1
                             for kind, state, details in history))
         self.assertTrue(any(kind == 'mutation' and state == 'claimed' and details['artifacts'] == ['web/dist/known.js']
@@ -348,10 +350,12 @@ class CancelledPartialResumeTests(ProjectTest):
 
             result = Engine(owner, 'cancelled-partial', saved['contract'], saved['executor'], adapter=Continued,
                             paid_scope=saved['authority']['paid_scope'], resume=True).invoke()
-            memberships = owner.store.db.execute("SELECT COUNT(*) FROM execution_usage_memberships WHERE run_id='cancelled-partial'").fetchone()[0]
             chain = owner.store.review_chain('cancelled-partial', private=True)
+            terminal_calls = [row['state'] for row in owner.store.db.execute(
+                "SELECT state FROM execution_history WHERE run_id='cancelled-partial' AND task_id='cancelled-partial' "
+                "AND kind='worker_invocation' AND state IN ('returned','interrupted','failed') ORDER BY seq")]
         self.assertEqual(result['status'], 'complete')
         self.assertFalse((project/'web/dist/known.js').exists())
-        self.assertEqual(memberships, 1)
+        self.assertEqual(terminal_calls, ['interrupted', 'returned'])
         self.assertEqual((chain['review_count'], chain['fixing_round_count']), (1, 0))
         self.assertEqual(len(result['checkpoints']), 1)

@@ -684,9 +684,10 @@ class Engine:
                                     raise Blocked('terminal worker failure has no saved session; inspect the failed invocation/cause before any relaunch: '
                                                   + str(continuation.get('invocation_id', 'unknown')))
                                 correction = self.question(
-                                    'Inspect this terminal worker invocation and its saved session before continuing. '
-                                    'Provide the diagnosed cause and a targeted correction justifying safe continuation '
-                                    '(not an unchanged retry); leave empty if unknown. Actual invocation: ' + canonical(continuation))
+                                    'As coordinating agent, inspect this terminal worker invocation and its saved session before continuing. '
+                                    'Provide the inspected diagnosis and a targeted correction justifying safe continuation '
+                                    '(not an unchanged retry); do not ask the owner to debug routine technical failures; leave empty if unknown. '
+                                    'Actual invocation: ' + canonical(continuation))
                                 if not correction.strip() or correction.strip().lower() in ('unknown', 'retry', 'yes'):
                                     raise Blocked('terminal worker cause/targeted correction remains unknown; no worker relaunched')
                                 continuation['targeted_correction'] = correction
