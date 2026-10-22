@@ -36,11 +36,11 @@ test.afterAll(async () => {
 test('inspects every merged input and correction fact with readable action endpoints', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/runs/id-merged-edge')
-  await expect(page.locator('.react-flow__node')).toHaveCount(4)
+  await expect(page.locator('.react-flow__node')).toHaveCount(3)
   await expect(page.locator('.react-flow__node').last()).toBeInViewport()
   const edge = page.locator('.react-flow__edge-interaction')
-  await expect(edge).toHaveCount(1)
-  const point = await edge.evaluate(element => {
+  await expect(edge).toHaveCount(2)
+  const point = await edge.last().evaluate(element => {
     const path = element as SVGPathElement
     const point = path.getPointAtLength(path.getTotalLength() / 2)
     const screen = new DOMPoint(point.x, point.y).matrixTransform(path.getScreenCTM()!)
@@ -75,7 +75,7 @@ test('renders scoped ordinary metrics from fixture JSONL through production HTTP
   await details.getByRole('heading', { name: 'This call', exact: true }).scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('production-metrics-this-call.png'), fullPage: true })
   await details.getByText('Acceptance history').click()
-  await expect(details).toContainText('Check 1: failed; exit 1.')
+  await expect(details).toContainText('Check 1: Failed; exit 1.')
   await page.screenshot({ path: testInfo.outputPath('production-metrics-details-expanded.png'), fullPage: true })
 
   for (const [run, opening] of [['metrics-reused', 'Session reused from an earlier task'], ['metrics-continued', 'Session continued for this task'], ['metrics-unknown', 'Opening not recorded']] as const) {
@@ -84,7 +84,7 @@ test('renders scoped ordinary metrics from fixture JSONL through production HTTP
     await expect(page.getByLabel('Selected execution details')).toContainText(`Selected opening: ${opening}. Confirmed opening: ${opening}.`)
   }
   await page.goto('/runs/id-metrics-composed')
-  await page.locator('.react-flow__node').first().click()
+  await page.locator('.react-flow__node.actual-call').first().click()
   await expect(details).toContainText('Task total')
   await expect(details).toContainText('Total tokens: known subtotal 24; complete total Unavailable')
   await expect(details).toContainText('Overall run — workers and corrective workers')

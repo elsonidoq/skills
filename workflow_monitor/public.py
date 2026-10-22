@@ -71,6 +71,9 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
     review_definitions = [{"ref": _ref("review_definition", row["run_id"], row["phase_id"]),
                            "run_ref": _ref("run", row["run_id"]),
                            "phase_ref": _ref("phase", row["run_id"], row["phase_id"]),
+                           # Initial review is declared after every retained planned task.
+                           "prerequisite_refs": [_ref("task", row["run_id"], task["task_id"])
+                                                 for task in graph.get("tasks", []) if task.get("run_id") == row["run_id"]],
                            "label": "Planned independent review — not an agent call."}
                           for row in graph.get("phases", [])
                           if row.get("phase_id") == "review" and row["run_id"] in planned_reviews]

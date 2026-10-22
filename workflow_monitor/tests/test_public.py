@@ -58,6 +58,7 @@ class PublicTests(unittest.TestCase):
         self.assertEqual({run["plan_availability"] for run in result["runs"]}, {"complete"})
         self.assertEqual(len(result["review_definitions"]), 2)
         self.assertTrue(all(item["label"] == "Planned independent review — not an agent call." for item in result["review_definitions"]))
+        self.assertEqual(result["review_definitions"][0]["prerequisite_refs"], [item["ref"] for item in by_run[result["runs"][0]["ref"]]])
         self.assertNotIn(result["review_definitions"][0]["ref"], {item["ref"] for item in result["occurrences"]})
         # Generic review phase vocabulary is not explicit review-plan intent.
         description = json.loads(source["runs"][0]["description"])

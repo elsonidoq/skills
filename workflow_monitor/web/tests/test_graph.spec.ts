@@ -28,6 +28,11 @@ test('planned slots persist and reconcile only one exact initial root across lif
 })
 
 test('exact run/task/kind/chain matching retains resumes, collisions and ambiguity as separate calls', () => {
+  // The public boundary replaces private invocation IDs with opaque activity refs.
+  const opaqueBoundary = { ...call('activity-root', 'alpha', 'task_worker', ['activity-root'], 'returned'), invocation_id: 'private-invocation', occurrence_ref: 'root-occ' }
+  const qualified = graphFor({ ...snapshot([opaqueBoundary]), occurrences: [{ ref: 'root-occ', run_ref: 'run', phase_ref: 'worker', task_ref: 'alpha', role: 'worker', outcome: null, completeness: 'complete', record_refs: [], execution_summary: { state: 'waiting', qualification: 'waiting_for_input' } }], records: [] }, [], [])
+  expect(qualified.nodes.map(node => node.id)).not.toContain('activity-root')
+  expect(qualified.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.status).toContain('waiting')
   const resumed = call('resume', 'alpha', 'task_worker', ['first', 'resume'], 'returned')
   const corrective = call('fix', 'alpha', 'corrective_worker', ['initial', 'fix'], 'returned')
   const collision = { ...call('other-run', 'alpha', 'task_worker', ['other-run'], 'returned'), run_ref: 'other' }
@@ -61,6 +66,9 @@ test('only exact ordinal-one review replaces initial intent; actual correction c
   expect(graph.nodes.find(node => node.id === 'fix-two')?.data.label).toContain('Fix 2')
   expect(graph.nodes.map(node => node.id)).not.toContain('round')
 
+  const unobserved = { ...call('review-dispatch', null), role: 'reviewer' as const, invocation_id: 'review-one', occurrence_ref: null, invocation_kind: 'unknown' as const }
+  const reconciled = graphFor(snapshot([unobserved], [first]), [], [])
+  expect(reconciled.nodes.map(node => node.id)).not.toContain('review-dispatch')
   const ambiguous = graphFor(snapshot([], [review('review-a', 1), review('review-b', 1)]), [], [])
   expect(ambiguous.nodes.map(node => node.id)).toEqual(expect.arrayContaining(['review-a', 'review-b', 'planned-review:run:final']))
   expect(ambiguous.nodes.find(node => node.id === 'planned-review:run:final')?.data.relationQualification).toContain('ambiguous')

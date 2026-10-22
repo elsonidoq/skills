@@ -2,8 +2,8 @@ import type { Edge, Node } from '@xyflow/react'
 
 export type Observation = { ref: string; run_ref: string; occurrence_ref: string; kind: string; source_seq: number; recorded_at: number | null; parent_occurrence_id?: string; error_category?: string | null; recording_gap?: boolean; ordinal?: number | null; exit_code: number | null; finding_count: number | null; approved?: boolean | null; no_change?: boolean | null; baseline?: string | null; head?: string | null; review_base: string | null; review_head: string | null }
 export type GraphEdge = { ref: string; run_ref: string; type: string; from_ref: string; to_ref: string; resolution: string }
-export type ChainExecution = { ref: string; run_ref: string; execution_id: string; role: 'reviewer' | 'fixer' | 'unknown'; review_ordinal: number | null; fixing_round: number | null; outcome: 'approved' | 'rejected' | 'failed' | 'interrupted' | 'unknown'; trigger_ref: string | null; predecessor_ref: string | null; input_refs: string[]; occurrence_refs: string[]; review_range: { base: string | null; head: string | null }; findings: string[]; commit_refs: Record<string, string> }
-export type Activity = { ref: string; run_ref: string; invocation_id: string; occurrence_ref: string; task_ref: string | null; role: 'worker' | 'fixing_worker' | 'reviewer' | 'unknown'; invocation_kind: 'task_worker' | 'corrective_worker' | 'unknown'; outcome: 'returned' | 'failed' | 'interrupted' | 'unknown'; error_category: string | null; input_qualification: 'recorded' | 'unknown'; input_refs: string[]; correction_chain: string[]; support_ref: string | null; stopped_by_ref: string | null; record_refs: string[]; metrics?: unknown; task_metrics?: unknown; trigger_ref?: string | null }
+export type ChainExecution = { ref: string; run_ref: string; execution_id: string; role: 'reviewer' | 'fixer' | 'unknown'; review_ordinal: number | null; fixing_round: number | null; outcome: 'approved' | 'rejected' | 'failed' | 'interrupted' | 'unknown'; trigger_ref: string | null; predecessor_ref: string | null; input_refs: string[]; occurrence_refs: string[]; review_range: { base: string | null; head: string | null }; findings: string[]; attempts?: Array<{ outcome: string; uncertain: boolean; findings: string[] }>; commit_refs: Record<string, string> }
+export type Activity = { ref: string; run_ref: string; invocation_id: string; occurrence_ref: string | null; task_ref: string | null; role: 'worker' | 'fixing_worker' | 'reviewer' | 'unknown'; invocation_kind: 'task_worker' | 'corrective_worker' | 'unknown'; outcome: 'returned' | 'failed' | 'interrupted' | 'unknown'; error_category: string | null; input_qualification: 'recorded' | 'unknown'; input_refs: string[]; correction_chain: string[]; support_ref: string | null; stopped_by_ref: string | null; record_refs: string[]; metrics?: unknown; task_metrics?: unknown; trigger_ref?: string | null }
 export type ExecutionSummary = { state: 'success' | 'failure' | 'waiting' | 'running' | 'unknown'; qualification: string | null }
 export type Occurrence = { ref: string; run_ref: string; occurrence_id?: string; phase_ref: string; task_ref: string | null; role: string; outcome: string | null; completeness: string; record_refs: string[]; phase?: string; first_seq?: number; last_seq?: number; parent_ref?: string | null; support_ref?: string | null; stopping?: boolean; execution_summary?: ExecutionSummary }
 export type PlannedTask = { ref: string; run_ref: string; task_id?: string; label: string; work_description?: string | null; prerequisite_refs: string[]; progress?: { state: string; qualification: string | null }; reason?: { code: string; occurrence_ref?: string; task_ref?: string } | null; annotation?: { code?: string; label?: string; occurrence_ref?: string } | null }
@@ -53,7 +53,8 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   const key = (runRef: string, ref: string) => `${runRef}\u0000${ref}`
   const taskFor = (activity: Activity) => activity.task_ref ? tasks.find(task => task.ref === activity.task_ref && task.run_ref === activity.run_ref) : undefined
   const designation = (task: PlannedTask) => taskNumber(task, tasks)
-  const exactRoot = (activity: Activity, task: PlannedTask) => activity.run_ref === task.run_ref && activity.task_ref === task.ref && activity.role === 'worker' && activity.invocation_kind === 'task_worker' && activity.correction_chain.length === 1 && activity.correction_chain[0] === activity.invocation_id
+  // Public correction-chain entries are opaque activity refs, not private invocation IDs.
+  const exactRoot = (activity: Activity, task: PlannedTask) => activity.run_ref === task.run_ref && activity.task_ref === task.ref && activity.role === 'worker' && activity.invocation_kind === 'task_worker' && activity.correction_chain.length === 1 && activity.correction_chain[0] === activity.ref
   const slotId = (runRef: string, ref: string) => `planned-task:${runRef}:${ref}`
   const slotFor = (task: PlannedTask) => slotId(task.run_ref, task.ref)
   const taskMatches = new Map<PlannedTask, Activity[]>()
@@ -65,9 +66,11 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const matched = matches.length === 1 ? matches[0] : undefined
     if (matched) boundActivity.set(matched.ref, slotFor(task))
     const unresolved = matches.length > 1 || (!matched && possibleRoots.length > 0)
-    const state = matched ? matched.outcome === 'returned' ? 'returned — acceptance not established' : matched.outcome : unresolved ? 'unknown — initial worker reconciliation ambiguous' : task.annotation?.label ?? task.progress?.state ?? 'planned — not started'
-    const qualification = unresolved ? 'Initial worker reconciliation ambiguous or incomplete; distinct recorded calls remain separate.' : null
-    return { id: slotFor(task), position: { x: 0, y: 0 }, data: { label: `${designation(task)} — Worker — ${taskTitle(task)}`, status: state, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null, planned: true, invocationId: matched?.invocation_id ?? null }, relationQualification: qualification }, className: `execution-node planned-call ${matched?.outcome === 'failed' ? 'failed' : matched?.outcome === 'returned' ? 'success' : matches.length > 1 ? 'neutral' : 'neutral'}` } satisfies Node
+    const occurrence = matched?.occurrence_ref ? occurrences.find(item => item.run_ref === matched.run_ref && item.ref === matched.occurrence_ref) : undefined
+    const qualified = occurrence?.execution_summary
+    const state = matched ? qualified ? outcomeText(occurrence!, root.records) : matched.outcome === 'returned' ? 'returned — acceptance not established' : matched.outcome : unresolved ? 'unknown — initial worker reconciliation ambiguous' : task.annotation?.label ?? task.progress?.state ?? 'planned — not started'
+    const qualification = unresolved ? 'Initial worker reconciliation ambiguous or incomplete; distinct recorded calls remain separate.' : qualified?.qualification ?? null
+    return { id: slotFor(task), position: { x: 0, y: 0 }, data: { label: `${designation(task)} — Worker — ${taskTitle(task)}`, status: state, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null, planned: true, invocationId: matched?.invocation_id ?? null }, relationQualification: qualification }, className: `execution-node planned-call ${qualified?.state === 'failure' || matched?.outcome === 'failed' ? 'failed' : qualified?.state === 'success' || matched?.outcome === 'returned' ? 'success' : matches.length > 1 ? 'neutral' : 'neutral'}` } satisfies Node
   })
   const reviewFor = (definition: ReviewDefinition) => `planned-review:${definition.run_ref}:${definition.ref}`
   const boundReview = new Map<string, string>()
@@ -80,6 +83,12 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     return { id: reviewFor(definition), position: { x: 0, y: 0 }, data: { label: 'Final review — Independent reviewer', status: state, identity: { ref: definition.ref, runRef: definition.run_ref, planned: true, executionId: matched?.execution_id ?? null }, relationQualification: candidates.length > 1 ? 'Initial review reconciliation ambiguous; distinct recorded reviews remain separate.' : null }, className: `execution-node planned-review ${matched?.outcome === 'failed' || matched?.outcome === 'interrupted' ? 'failed' : matched ? 'success' : 'neutral'}` } satisfies Node
   })
 
+  // A review dispatch may be unobserved. Its retained execution ID is still the
+  // exact identity for the reviewer activity, so bind it before occurrence lookup.
+  for (const execution of chain) if (boundReview.has(execution.ref)) {
+    const matches = activities.filter(activity => activity.run_ref === execution.run_ref && activity.role === 'reviewer' && activity.invocation_id === execution.execution_id)
+    if (matches.length === 1) boundActivity.set(matches[0].ref, boundReview.get(execution.ref)!)
+  }
   const memberships = new Map<string, string[]>()
   for (const execution of chain.filter(item => item.role !== 'fixer')) for (const occurrence of execution.occurrence_refs) {
     const membershipKey = key(execution.run_ref, occurrence)
@@ -90,10 +99,10 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const execution = refs.length === 1 ? chain.find(item => item.ref === refs[0]) : undefined
     if (execution?.occurrence_refs.length === 1) occurrenceNode.set(membershipKey, boundReview.get(execution.ref) ?? execution.ref)
   }
-  for (const activity of activities) if (boundActivity.has(activity.ref)) occurrenceNode.set(key(activity.run_ref, activity.occurrence_ref), boundActivity.get(activity.ref)!)
+  for (const activity of activities) if (boundActivity.has(activity.ref) && activity.occurrence_ref) occurrenceNode.set(key(activity.run_ref, activity.occurrence_ref), boundActivity.get(activity.ref)!)
   const nodeForOccurrence = (runRef: string, occurrenceRef: string) => occurrenceNode.get(key(runRef, occurrenceRef)) ?? boundActivity.get(activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? '') ?? activities.find(activity => activity.run_ref === runRef && activity.occurrence_ref === occurrenceRef)?.ref ?? occurrenceRef
   const fixNumber = (activity: Activity) => activities.filter(candidate => candidate.run_ref === activity.run_ref && candidate.task_ref === activity.task_ref && candidate.role === 'fixing_worker').indexOf(activity) + 1
-  const activityNodes = activities.filter(activity => !boundActivity.has(activity.ref) && !occurrenceNode.has(key(activity.run_ref, activity.occurrence_ref))).map(activity => {
+  const activityNodes = activities.filter(activity => !boundActivity.has(activity.ref) && (!activity.occurrence_ref || !occurrenceNode.has(key(activity.run_ref, activity.occurrence_ref)))).map(activity => {
     const task = taskFor(activity)
     const repeat = activity.role === 'fixing_worker' ? ` — Fix ${fixNumber(activity)}` : ''
     const title = `${task ? `${designation(task)} — ` : ''}${roleName(activity.role)}${repeat}${task ? ` — ${taskTitle(task)}` : ''}`
