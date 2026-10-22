@@ -550,6 +550,26 @@ class ExternalIssueOwnerTests(unittest.TestCase):
         # actionable unavailable/deferred result rather than a local register.
         jev = (ROOT / "skills/finish-session-jev/SKILL.md").read_text()
         self.assertIn("read the installed sibling\n`../finish-session/SKILL.md` in full", jev)
+        # Inspect the composed active consumer, not only initialization's promise.
+        base = (ROOT / "skills/finish-session/SKILL.md").read_text()
+        for clause in (
+            "follow the project's declared canonical owner",
+            "never create a local fallback or write to a retained historical register",
+            "does not reactivate old local ownership",
+            "load and follow `track-open-issue`",
+            "issue tracking: UNAVAILABLE",
+            "This is an existence check only",
+            "Do not execute deployment procedures",
+            "Do not create, edit or remove STATE",
+        ):
+            self.assertIn(clause, base)
+        target = "https://github.com/elsonidoq/skills/issues"
+        self.assertIn(target, (ROOT / "AGENTS.md").read_text())
+        self.assertIn(target, (ROOT / "docs/index.md").read_text())
+        lifecycle = (ROOT / "skills/track-open-issue/SKILL.md").read_text()
+        self.assertIn('gh auth status --hostname "$HOST"', lifecycle)
+        self.assertIn("After every create, update, close, or reopen, independently GET", lifecycle)
+        self.assertIn("required write authority is unavailable", lifecycle)
         discovery = stage(SKILL.read_text(), "Discovery")
         for clause in (
             "explicitly configured GitHub Issues target is an external owner",
