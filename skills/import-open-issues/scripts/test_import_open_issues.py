@@ -5,11 +5,17 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parent))
-from import_open_issues import ApplyAuthorization, GhApiTransport, IncompleteLookup, Source, apply, preview, reconcile
+from import_open_issues import ApplyAuthorization, GhApiTransport, IncompleteLookup, Source, VerifiedIssueObservation, apply, preview, reconcile
 
 ROOT = Path(__file__).resolve().parents[3]
 BASELINE_SHA256 = "314b9ddd758d25923105d85c23225293d0a1398b506d1b28925d783a5c3e1c7a"
 SOURCE = Source("github.com", "elsonidoq/skills", "docs/open_issues.md", "952e39b813a443caeb7417e63c170e219a433dbd")
+
+
+def retained_observations(issues):
+    """Fixture equivalents of independently read-back results in the prior return."""
+    return tuple(VerifiedIssueObservation("github.com", "dest/repo", "2022-11-28",
+                                         GhApiTransport._issue(issue, "fixture prior GET")) for issue in issues)
 
 
 class PreviewTests(unittest.TestCase):
@@ -36,6 +42,21 @@ class PreviewTests(unittest.TestCase):
         self.assertIn("[GitHub issue #2](https://github.com/elsonidoq/skills/issues/2)", by_id["OI-4"].body)
         self.assertIn("[OI-5](https://github.com/elsonidoq/skills/blob/952e39b813a443caeb7417e63c170e219a433dbd/docs/open_issues.md)", by_id["OI-6"].body)
         self.assertTrue(by_id["OI-18"].original_entry_url.endswith("#oi-18-resumed-runs-cannot-append-to-their-existing-jsonl-metrics-artifact"))
+
+    def test_closed_disclaimer_is_exact_visible_and_outside_original_excerpt(self):
+        disclaimer = ("Historical import: the source marked this record closed; its original closure reason is unknown. "
+                      "GitHub's native closure reason is platform metadata, not evidence of a verified fix. "
+                      "This import does not establish that the original problem was resolved.")
+        original = (ROOT / "docs/open_issues.md").read_text()
+        for record in preview(original, SOURCE, "dest/repo").records:
+            before, excerpt = record.body.split("## Original Markdown excerpt\n", 1)
+            if record.state == "closed":
+                self.assertEqual(before.count(disclaimer), 1)
+                self.assertIn(disclaimer, record.pending_close_body)
+            else:
+                self.assertNotIn(disclaimer, before)
+            self.assertNotIn(disclaimer, excerpt)
+            self.assertEqual(excerpt, "```markdown\n" + record.original_excerpt + "\n```")
 
     def test_multiline_fields_keep_exact_line_boundaries_in_transformed_sections(self):
         value = "first\nsecond\n\n  - nested item\n  - another\n\n```text\ncode line\n```"
@@ -179,9 +200,13 @@ class ReconciliationTests(unittest.TestCase):
                 {"number": 2, "title": two.title, "state": "open", "body": two.marker.replace("OI-2", "OI-20")},
                 {"number": 3, "title": two.title, "state": "open", "body": two.body, "pull_request": {"url": "x"}},
                 {"number": 4, "title": "unrelated", "state": "open", "body": None},
-            ], [{"number": 9, "title": two.title, "state": "closed", "body": two.body}]])
+            ], [{"number": 9, "title": two.title, "state": "closed", "body": two.body, "state_reason": "completed"}]])
 
-        result = reconcile(proposal, GhApiTransport(fake_gh), "github.com")
+        prior = retained_observations((
+            {"number": 1, "title": one.title, "state": "open", "body": one.body},
+            {"number": 9, "title": two.title, "state": "closed", "body": two.body, "state_reason": "completed"},
+        ))
+        result = reconcile(proposal, GhApiTransport(fake_gh), "github.com", verified_observations=prior)
         self.assertEqual([item.outcome for item in result.records], ["no-op", "no-op"])
         argv, stdin = calls[0]
         self.assertEqual(stdin, None)
@@ -219,7 +244,8 @@ class ReconciliationTests(unittest.TestCase):
                 {"number": 4, "title": two.title, "state": "closed", "body": two.body},
             ]])
 
-        result = reconcile(proposal, GhApiTransport(snapshot), "github.com", {one.identity: 2})
+        prior = retained_observations(json.loads(snapshot((), None))[0])
+        result = reconcile(proposal, GhApiTransport(snapshot), "github.com", {one.identity: 2}, verified_observations=prior)
         self.assertEqual(result.records[0].outcome, "no-op")  # exact marker wins over title/mapping
         self.assertEqual(result.records[1].outcome, "conflict")
         title_changed = json.loads(snapshot((), None))
@@ -297,7 +323,7 @@ class ApplyTests(unittest.TestCase):
                 payload = json.loads(stdin)
                 self.assertEqual(payload["state_reason"], None)
                 issue = next(issue for issue in issues if issue["number"] == number)
-                issue.update({"body": payload["body"], "state": payload["state"], "state_reason": payload["state_reason"]})
+                issue.update({"body": payload["body"], "state": payload["state"], "state_reason": "completed"})
                 return json.dumps(issue)
             if method == "GET" and "/issues/" in path:
                 number = int(path.rsplit("/", 1)[1])
@@ -323,7 +349,8 @@ class ApplyTests(unittest.TestCase):
         self.assertTrue(all(argv[-1] == "repos/dest/repo/issues" for argv, _ in posts))
         self.assertEqual(len(issues), 3)
 
-        rerun = reconcile(proposal, transport, "github.com")
+        rerun = reconcile(proposal, transport, "github.com", verified_observations=retained_observations(issues))
+        self.assertTrue(all(item.outcome == "no-op" for item in rerun.records))
         calls.clear()
         second = apply(rerun, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "reviewed rerun"))
         self.assertEqual([item.outcome for item in second.records], ["deferred", "deferred", "deferred"])
@@ -359,8 +386,9 @@ class ApplyTests(unittest.TestCase):
             self.assertIn(record.original_excerpt, remote["body"])
 
         # The lost OI-1 POST response was reconciled, not reposted; a later unchanged
-        # review remains safe and emits no further mutation.
-        rerun = reconcile(proposal, transport, "github.com")
+        # review carries independently read-back observations from the previous return.
+        rerun = reconcile(proposal, transport, "github.com", verified_observations=retained_observations(issues))
+        self.assertTrue(all(item.outcome == "no-op" for item in rerun.records))
         calls.clear()
         repeated = apply(rerun, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "unchanged rerun"))
         self.assertTrue(all(item.outcome == "deferred" for item in repeated.records))
@@ -477,11 +505,62 @@ class ClosedResumeTests(unittest.TestCase):
 - **Resumption condition:** r
 """, SOURCE, "dest/repo")
 
+    def test_invisible_closed_create_carries_uncertainty_then_resumes_same_identity(self):
+        proposal = self._proposal()
+        record = proposal.records[0]
+        issues, calls = [], []
+        visible = False
+        base = ApplyTests()._transport(issues, calls, lose_create=record.title)
+        def gh(argv, stdin):
+            if "--paginate" in argv and not visible:
+                calls.append((argv, stdin))
+                return json.dumps([[]])
+            return base._execute(argv, stdin)
+        transport = GhApiTransport(gh)
+        reviewed = reconcile(proposal, transport, "github.com")
+        first = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "fixture"))
+        self.assertEqual(first.records[0].outcome, "deferred")
+        self.assertEqual(len(issues), 1)
+        uncertain = {first.records[0].record.identity}
+        missing = reconcile(proposal, transport, "github.com", uncertain_identities=uncertain)
+        self.assertEqual(missing.records[0].outcome, "deferred")
+        blocked = apply(missing, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "fixture"))
+        self.assertEqual(blocked.records[0].outcome, "deferred")
+        visible = True
+        later = reconcile(proposal, transport, "github.com", uncertain_identities=uncertain)
+        self.assertEqual(later.records[0].outcome, "pending close")
+        recovered = apply(later, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "fixture"))
+        self.assertEqual(recovered.records[0].outcome, "closed")
+        self.assertEqual(recovered.records[0].issue.number, issues[0]["number"])
+        self.assertEqual(issues[0]["body"], record.body)
+        self.assertEqual(issues[0]["state_reason"], "completed")
+        self.assertEqual(sum("POST" in argv for argv, _ in calls), 1)
+        self.assertEqual(sum("PATCH" in argv for argv, _ in calls), 1)
+        retained = retained_observations(issues)
+        rerun = reconcile(proposal, transport, "github.com", verified_observations=retained)
+        self.assertEqual(rerun.records[0].outcome, "no-op")
+
+    def test_unmapped_host_or_api_defers_closed_writes(self):
+        proposal = self._proposal()
+        for host, version in (("other.example", "2022-11-28"), ("github.com", "different-api")):
+            calls = []
+            def gh(argv, stdin):
+                calls.append(argv)
+                self.assertIn("GET", argv)
+                return json.dumps([[]])
+            transport = GhApiTransport(gh)
+            transport.api_version = version
+            reviewed = reconcile(proposal, transport, host)
+            result = apply(reviewed, transport, host, ApplyAuthorization(host, "dest/repo", "fixture"))
+            self.assertEqual(result.records[0].outcome, "deferred")
+            self.assertIn("mapping", result.records[0].detail)
+            self.assertTrue(all("GET" in argv for argv in calls))
+
     def test_reason_conflicts_remain_conflicts_on_rerun_without_writes(self):
         proposal = self._proposal()
         record = proposal.records[0]
         for body, state, reason, expected in (
-            (record.body, "closed", None, "no-op"),
+            (record.body, "closed", None, "conflict"),
             (record.body, "closed", "completed", "conflict"),
             (record.body, "closed", "not_planned", "conflict"),
             (record.pending_close_body, "open", None, "pending close"),
@@ -503,6 +582,85 @@ class ClosedResumeTests(unittest.TestCase):
                     result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "offline fixture"))
                     self.assertEqual(result.records[0].outcome, "deferred")
                     self.assertTrue(all("GET" in argv for argv in calls))
+
+    def test_native_completed_close_and_verified_reason_equivalence(self):
+        from import_open_issues import HISTORICAL_CLOSURE_DISCLAIMER
+        proposal = self._proposal()
+        record = proposal.records[0]
+        issues, calls = [], []
+        transport = ApplyTests()._transport(issues, calls)
+        reviewed = reconcile(proposal, transport, "github.com")
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "fixture"))
+        self.assertEqual(result.records[0].outcome, "closed")
+        final = result.records[0].issue
+        self.assertEqual(final.state_reason, "completed")
+        evidence = VerifiedIssueObservation("github.com", "dest/repo", transport.api_version, final)
+        rerun = reconcile(proposal, transport, "github.com", verified_observations=(evidence,))
+        self.assertEqual(rerun.records[0].outcome, "no-op")
+        missing = reconcile(proposal, transport, "github.com")
+        self.assertEqual(missing.records[0].outcome, "conflict")
+        self.assertIn("prior independently verified", missing.records[0].detail)
+        # Even an otherwise admissible reason cannot replace a verified reason silently.
+        issues[0]["state_reason"] = None
+        drift = reconcile(proposal, transport, "github.com", verified_observations=(evidence,))
+        self.assertEqual(drift.records[0].outcome, "conflict")
+        self.assertIn("reason", drift.records[0].detail)
+        # Matching independent null evidence is admitted only for that observed target/API.
+        null_issue = transport.get_issue("github.com", "dest/repo", final.number)
+        null_evidence = VerifiedIssueObservation("github.com", "dest/repo", transport.api_version, null_issue)
+        exact_null = reconcile(proposal, transport, "github.com", verified_observations=(null_evidence,))
+        self.assertEqual(exact_null.records[0].outcome, "no-op")
+        issues[0]["state_reason"] = "completed"
+        back_drift = reconcile(proposal, transport, "github.com", verified_observations=(null_evidence,))
+        self.assertEqual(back_drift.records[0].outcome, "conflict")
+        for reason in ("not_planned", "duplicate", "reopened", "unknown"):
+            issues[0]["state_reason"] = reason
+            observed = transport.get_issue("github.com", "dest/repo", final.number)
+            unsupported = reconcile(proposal, transport, "github.com", verified_observations=(
+                VerifiedIssueObservation("github.com", "dest/repo", transport.api_version, observed),))
+            self.assertEqual(unsupported.records[0].outcome, "conflict")
+            self.assertIn(reason, unsupported.records[0].detail)
+        issues[0]["state_reason"] = "completed"
+        for host, version, destination in (("other.example", transport.api_version, "dest/repo"),
+                                           ("github.com", "different-api", "dest/repo"),
+                                           ("github.com", transport.api_version, "other/repo")):
+            wrong = VerifiedIssueObservation(host, destination, version, final)
+            mismatch = reconcile(proposal, transport, host, verified_observations=(wrong,))
+            self.assertEqual(mismatch.records[0].outcome, "conflict")
+        calls.clear()
+        for edit in ({"title": "human title"}, {"body": record.body + "\nhuman section"},
+                     {"body": record.body.replace(HISTORICAL_CLOSURE_DISCLAIMER + "\n", "")},
+                     {"body": record.body.replace("Historical import:", "Edited history:")},
+                     {"state": "open", "state_reason": "reopened"}):
+            issues[0] = {"number": final.number, "title": record.title, "body": record.body,
+                         "state": "closed", "state_reason": "completed", **edit}
+            changed = reconcile(proposal, transport, "github.com", verified_observations=(evidence,))
+            self.assertEqual(changed.records[0].outcome, "conflict")
+            report = apply(changed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "fixture"))
+            self.assertEqual(report.records[0].outcome, "deferred")
+        self.assertFalse(any("PATCH" in argv or "POST" in argv for argv, _ in calls))
+
+    def test_null_close_readback_requires_applicable_prior_target_evidence(self):
+        proposal = self._proposal()
+        record = proposal.records[0]
+        for evidence_present in (False, True):
+            issues, calls = [], []
+            base = ApplyTests()._transport(issues, calls)
+            def gh(argv, stdin):
+                response = base._execute(argv, stdin)
+                if "PATCH" in argv:
+                    issues[0]["state_reason"] = None
+                    response = json.dumps(issues[0])
+                return response
+            transport = GhApiTransport(gh)
+            evidence = retained_observations((
+                {"number": 99, "title": "previous independent null observation", "body": "retained content",
+                 "state": "closed", "state_reason": None},)) if evidence_present else ()
+            reviewed = reconcile(proposal, transport, "github.com", verified_observations=evidence)
+            report = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "fixture"))
+            self.assertEqual(report.records[0].outcome, "closed" if evidence_present else "deferred")
+            self.assertEqual(issues[0]["body"], record.body)
+            self.assertEqual(sum("PATCH" in argv for argv, _ in calls), 1)
 
     def test_pending_readback_reason_drift_does_not_close_human_reopen(self):
         proposal = self._proposal()
@@ -535,7 +693,7 @@ class ClosedResumeTests(unittest.TestCase):
             if method == "PATCH":
                 payload = json.loads(stdin)
                 self.assertEqual(payload, {"body": record.body, "state": "closed", "state_reason": None})
-                issues[0].update({"body": record.body, "state": "closed", "state_reason": None})
+                issues[0].update({"body": record.body, "state": "closed", "state_reason": "completed"})
                 return json.dumps(issues[0])
             raise AssertionError(argv)
 
@@ -544,7 +702,7 @@ class ClosedResumeTests(unittest.TestCase):
         self.assertEqual(reviewed.records[0].outcome, "pending close")
         result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "resume one known pending close"))
         self.assertEqual(result.records[0].outcome, "closed")
-        self.assertEqual(issues[0]["state_reason"], None)
+        self.assertEqual(issues[0]["state_reason"], "completed")
         self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
 
         # A final import body reopened by a human (or a body with no recognized pending
@@ -572,7 +730,7 @@ class ClosedResumeTests(unittest.TestCase):
                 issues.append({"number": 10, "title": record.title, "state": "open", "body": record.pending_close_body})
                 raise IncompleteLookup("create response lost after create")
             if method == "PATCH":
-                issues[0].update({"body": record.body, "state": "closed", "state_reason": None})
+                issues[0].update({"body": record.body, "state": "closed", "state_reason": "completed"})
                 if phase["close_lost"]:
                     raise IncompleteLookup("close response lost after close")
                 return json.dumps(issues[0])

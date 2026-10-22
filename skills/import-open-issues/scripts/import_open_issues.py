@@ -24,6 +24,11 @@ _OI_REFERENCE = re.compile(r"(?<![\w-])(OI-\d+)(?![\w-])")
 _REQUIRED_FIELDS = ("Status", "Problem", "Primary evidence", "Resumption condition")
 _SENSITIVE = re.compile(r"(?:BEGIN [A-Z ]*PRIVATE KEY|(?:api[_-]?key|token|password|secret)\s*[:=])", re.I)
 _UNSAFE = re.compile(r"<\s*(?:script|iframe|object)\b|javascript\s*:", re.I)
+HISTORICAL_CLOSURE_DISCLAIMER = (
+    "Historical import: the source marked this record closed; its original closure reason is unknown. "
+    "GitHub's native closure reason is platform metadata, not evidence of a verified fix. "
+    "This import does not establish that the original problem was resolved."
+)
 
 
 @dataclass(frozen=True)
@@ -110,6 +115,16 @@ class RemoteIssue:
 
 
 @dataclass(frozen=True)
+class VerifiedIssueObservation:
+    """A retained independent GET result, supplied from the operator's prior return."""
+
+    host: str
+    destination: str
+    api_version: str
+    issue: RemoteIssue
+
+
+@dataclass(frozen=True)
 class Reconciliation:
     record: RenderedRecord
     outcome: str
@@ -124,6 +139,7 @@ class ReconciliationPreview:
     records: tuple[Reconciliation, ...]
     lookup_error: str | None = None
     uncertain_identities: frozenset[str] = frozenset()
+    verified_observations: tuple[VerifiedIssueObservation, ...] = ()
 
 
 class IncompleteLookup(RuntimeError):
@@ -243,12 +259,27 @@ class GhApiTransport:
             raise IncompleteLookup(f"issue close outcome unknown: {error}") from error
 
 
+def _admitted_closed_reason(
+    reason: str | None, host: str, destination: str, api_version: str,
+    observations: Collection[VerifiedIssueObservation],
+) -> bool:
+    if reason == "completed":
+        return host == "github.com" and api_version == "2022-11-28"
+    # Null readback needs applicable actual target evidence, not nullable input.
+    return reason is None and any(
+        item.host == host and item.destination == destination and item.api_version == api_version
+        and not item.issue.is_pull_request and item.issue.state == "closed" and item.issue.state_reason is None
+        for item in observations
+    )
+
+
 def reconcile(
     proposal: Preview,
     transport: GhApiTransport,
     host: str,
     confirmed_mappings: Mapping[str, int] | None = None,
     uncertain_identities: Collection[str] = (),
+    verified_observations: Collection[VerifiedIssueObservation] = (),
 ) -> ReconciliationPreview:
     """Compare a local preview with one complete read-only remote issue snapshot.
 
@@ -256,11 +287,12 @@ def reconcile(
     caller-supplied reviewed choice for an already-existing issue; it never adopts by title.
     """
     unresolved_uncertainties = frozenset(uncertain_identities)
+    observations = tuple(verified_observations)
     try:
         issues = transport.list_issues(host, proposal.destination)
     except IncompleteLookup as error:
         detail = str(error)
-        return ReconciliationPreview(proposal, host, tuple(Reconciliation(record, "incomplete lookup", detail=detail) for record in proposal.records), detail, unresolved_uncertainties)
+        return ReconciliationPreview(proposal, host, tuple(Reconciliation(record, "incomplete lookup", detail=detail) for record in proposal.records), detail, unresolved_uncertainties, observations)
 
     by_number = {issue.number: issue for issue in issues if not issue.is_pull_request}
     mappings = confirmed_mappings or {}
@@ -288,15 +320,24 @@ def reconcile(
             results.append(Reconciliation(record, "conflict", issue, "unknown remote state; inspect close ownership"))
         elif issue.title != record.title:
             results.append(Reconciliation(record, "conflict", issue, "remote title diverges; inspect before any change"))
-        elif record.state == "closed" and issue.state_reason is not None:
-            results.append(Reconciliation(record, "conflict", issue, "remote state reason is not null; inspect closure mapping or human state changes before any write"))
-        elif issue.body == record.body and issue.state == record.state:
-            results.append(Reconciliation(record, "no-op", issue))
-        elif record.state == "closed" and issue.body == record.pending_close_body and issue.state == "open":
+        elif record.state == "closed" and issue.body == record.pending_close_body and issue.state == "open" and issue.state_reason is None:
             results.append(Reconciliation(record, "pending close", issue, "recognized import-owned closure is unfinished"))
+        elif issue.body == record.body and issue.state == record.state:
+            prior = [item.issue for item in observations if item.host == host and item.destination == proposal.destination
+                     and item.api_version == transport.api_version and item.issue.number == issue.number]
+            if prior and any(item.state_reason != issue.state_reason for item in prior):
+                results.append(Reconciliation(record, "conflict", issue, "remote native reason differs from prior independently verified reason; inspect human state changes"))
+            elif record.state == "closed" and not _admitted_closed_reason(issue.state_reason, host, proposal.destination, transport.api_version, observations):
+                results.append(Reconciliation(record, "conflict", issue, f"unsupported native reason {issue.state_reason!r} for {host}/{proposal.destination}#{issue.number} at API {transport.api_version}; review mapping or human state changes"))
+            elif not prior:
+                results.append(Reconciliation(record, "conflict", issue, "no prior independently verified issue/reason observation; independently GET and review exact content/state/reason before claiming unchanged history"))
+            elif any(item != issue for item in prior):
+                results.append(Reconciliation(record, "conflict", issue, "remote issue differs from prior independently verified observation; review exact title/body/state/reason"))
+            else:
+                results.append(Reconciliation(record, "no-op", issue))
         else:
             results.append(Reconciliation(record, "conflict", issue, "remote body or state diverges; inspect before any change"))
-    return ReconciliationPreview(proposal, host, tuple(results), uncertain_identities=unresolved_uncertainties)
+    return ReconciliationPreview(proposal, host, tuple(results), uncertain_identities=unresolved_uncertainties, verified_observations=observations)
 
 
 def _verified_open_readback(record: RenderedRecord, issue: RemoteIssue) -> ApplyResult:
@@ -305,14 +346,14 @@ def _verified_open_readback(record: RenderedRecord, issue: RemoteIssue) -> Apply
         return ApplyResult(record, "deferred", issue, "readback resolved to a pull request")
     if issue.body.count(record.marker) != 1:
         return ApplyResult(record, "deferred", issue, "readback marker is absent or duplicated")
-    if record.state == "closed" and issue.state_reason is not None:
-        return ApplyResult(record, "deferred", issue, "pending closure state reason diverges; preserve possible human state changes")
+    if issue.state_reason is not None:
+        return ApplyResult(record, "deferred", issue, "staged open state reason diverges; preserve possible human state changes")
     if issue.title != record.title or issue.body != expected_body or issue.state != "open":
         return ApplyResult(record, "deferred", issue, "readback title, content, or open state diverges; preserve remote changes")
     return ApplyResult(record, "created", issue)
 
 
-def _close_after_verified_pending(record: RenderedRecord, proposal: Preview, transport: GhApiTransport, host: str, number: int) -> ApplyResult:
+def _close_after_verified_pending(record: RenderedRecord, proposal: Preview, transport: GhApiTransport, host: str, number: int, observations: Collection[VerifiedIssueObservation] = ()) -> ApplyResult:
     try:
         staged = _verified_open_readback(record, transport.get_issue(host, proposal.destination, number))
     except IncompleteLookup as error:
@@ -327,19 +368,20 @@ def _close_after_verified_pending(record: RenderedRecord, proposal: Preview, tra
         final = transport.get_issue(host, proposal.destination, number)
     except IncompleteLookup as error:
         return ApplyResult(record, "deferred", staged.issue, f"closure readback unavailable: {error}")
-    if final.is_pull_request or final.title != record.title or final.body.count(record.marker) != 1 or final.body != record.body or final.state != "closed" or final.state_reason is not None:
-        return ApplyResult(record, "deferred", final, "closure readback did not prove exact title, closed content, and null state reason")
+    if final.is_pull_request or final.title != record.title or final.body.count(record.marker) != 1 or final.body != record.body or final.state != "closed" or not _admitted_closed_reason(final.state_reason, host, proposal.destination, transport.api_version, observations):
+        return ApplyResult(record, "deferred", final, f"closure readback did not prove exact title/full disclaimer-bearing body/closed state and admitted native reason ({final.state_reason!r}); review mapping or human changes before any further mutation")
     return ApplyResult(record, "closed", final)
 
 
-def _recover_uncertain_create(record: RenderedRecord, proposal: Preview, transport: GhApiTransport, host: str, cause: str) -> ApplyResult:
+def _recover_uncertain_create(record: RenderedRecord, proposal: Preview, transport: GhApiTransport, host: str, cause: str, observations: Collection[VerifiedIssueObservation] = ()) -> ApplyResult:
     snapshot = reconcile(proposal, transport, host)
     current = next(item for item in snapshot.records if item.record.identity == record.identity)
-    expected = "no-op" if record.state == "open" else "pending close"
-    if current.outcome != expected or current.issue is None:
+    # A first discovered open match lacks prior unchanged-history evidence. Its
+    # independent GET below proves this create's exact content, not a no-op history.
+    if current.issue is None or (record.state == "closed" and current.outcome != "pending close"):
         return ApplyResult(record, "deferred", detail=f"create outcome uncertain ({cause}); complete lookup did not prove one exact import-owned record")
     if record.state == "closed":
-        return _close_after_verified_pending(record, proposal, transport, host, current.issue.number)
+        return _close_after_verified_pending(record, proposal, transport, host, current.issue.number, observations)
     try:
         return _verified_open_readback(record, transport.get_issue(host, proposal.destination, current.issue.number))
     except IncompleteLookup as error:
@@ -352,7 +394,7 @@ def apply(
     host: str,
     authorization: ApplyAuthorization,
 ) -> ApplyReport:
-    """Create only reviewed, currently missing open records; never update or close issues.
+    """Create reviewed missing records or finish exact import-owned pending closes.
 
     A successful POST is independently read back. A failed POST response is permanently
     uncertain: it is reconciled once and never retried by this helper.
@@ -360,26 +402,29 @@ def apply(
     proposal = reviewed.preview
     if authorization.host != host or reviewed.host != host or authorization.destination != proposal.destination or not authorization.write_scope.strip():
         raise ValueError("apply requires explicit matching host, destination, and non-empty write scope confirmation")
-    immediate = reconcile(proposal, transport, host, uncertain_identities=reviewed.uncertain_identities)
+    immediate = reconcile(proposal, transport, host, uncertain_identities=reviewed.uncertain_identities,
+                          verified_observations=reviewed.verified_observations)
     reviewed_by_id = {item.record.identity: item for item in reviewed.records}
     current_by_id = {item.record.identity: item for item in immediate.records}
     results: list[ApplyResult] = []
     for record in proposal.records:
         prior = reviewed_by_id.get(record.identity)
         current = current_by_id[record.identity]
-        if prior is None:
+        if record.state == "closed" and not any(_admitted_closed_reason(reason, host, proposal.destination, transport.api_version, reviewed.verified_observations) for reason in ("completed", None)):
+            results.append(ApplyResult(record, "deferred", detail="no applicable closed-reason mapping for this host/repository/API; review target evidence before importing closed records"))
+        elif prior is None:
             results.append(ApplyResult(record, "deferred", detail="record was not reviewed"))
         elif record.state == "closed" and prior.outcome == current.outcome == "pending close" and current.issue is not None:
-            results.append(_close_after_verified_pending(record, proposal, transport, host, current.issue.number))
+            results.append(_close_after_verified_pending(record, proposal, transport, host, current.issue.number, reviewed.verified_observations))
         elif prior.outcome != "planned create" or current.outcome != "planned create":
             results.append(ApplyResult(record, "deferred", current.issue, "immediate target reinspection changed; reconcile before any write"))
         else:
             try:
                 created = transport.create_issue(host, proposal.destination, record, record.pending_close_body)
                 staged = _verified_open_readback(record, transport.get_issue(host, proposal.destination, created.number))
-                results.append(_close_after_verified_pending(record, proposal, transport, host, created.number) if record.state == "closed" and staged.outcome == "created" else staged)
+                results.append(_close_after_verified_pending(record, proposal, transport, host, created.number, reviewed.verified_observations) if record.state == "closed" and staged.outcome == "created" else staged)
             except IncompleteLookup as error:
-                results.append(_recover_uncertain_create(record, proposal, transport, host, str(error)))
+                results.append(_recover_uncertain_create(record, proposal, transport, host, str(error), reviewed.verified_observations))
     return ApplyReport(proposal, tuple(results))
 
 
@@ -467,7 +512,7 @@ def render_record(record: ParsedRecord, source: Source) -> RenderedRecord | Diag
     original_url = _entry_url(source, record)
     sections = [marker]
     if status == "closed":
-        sections.append("<!-- import-open-issues-closure: closed -->")
+        sections.extend(("<!-- import-open-issues-closure: closed -->", HISTORICAL_CLOSURE_DISCLAIMER))
     sections.extend((f"Historical source revision: `{source.revision}`", f"Original entry: [{record.oi_id}]({original_url})", ""))
     for name, value in record.fields:
         sections.extend((f"## {name}", _render_markdown(value, source), ""))

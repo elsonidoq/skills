@@ -54,9 +54,15 @@ public `preview` rejects the affected record with its source line and a correcti
 Flatten the label in a reviewed source copy and preview again; never rewrite the preserved
 original register merely to make an import pass.
 
+For each originally closed record, preview, pending body and final body include this exact
+visible disclaimer outside the unchanged original excerpt:
+
+> Historical import: the source marked this record closed; its original closure reason is unknown. GitHub's native closure reason is platform metadata, not evidence of a verified fix. This import does not establish that the original problem was resolved.
+
 ## Read-only reconciliation
 
-`reconcile(preview, GhApiTransport(), HOST, confirmed_mappings=None)` obtains one complete,
+`reconcile(preview, GhApiTransport(), HOST, confirmed_mappings=None,
+uncertain_identities=(), verified_observations=())` obtains one complete,
 read-only destination snapshot before any future apply. Its transport uses the explicit target
 only:
 
@@ -74,12 +80,30 @@ readback, or uncertain visibility is `incomplete lookup`, never evidence that a 
 absent or that a create is eligible. Do not refresh auth. This is version-sensitive operational
 guidance, not a claim that an untested target supports another version.
 
-The snapshot excludes REST items with `pull_request`. It compares each raw, exact body marker
-(no title/search/near-match adoption): unchanged title, body, and native open/closed state is
-`no-op` (an originally closed record also requires null `state_reason`); no marker is
-`planned create`; a non-null reason for an originally closed record, title/body/state divergence, duplicate marker, or
-unknown close state is an affected-record `conflict` requiring inspection. It does not reset stale source state,
-merge titles, overwrite human edits, or claim close ownership. A `confirmed_mappings` identity
+The snapshot excludes REST items with `pull_request` and compares raw exact body markers
+(no title/search/near-match adoption). No marker is `planned create`, unless the identity is
+still uncertain. `no-op` requires exact reviewed title/full body/marker/provenance/native state
+and equality with a retained independently verified issue observation, including native reason.
+Supply those prior GET results from the existing operational return as
+`VerifiedIssueObservation(HOST, DESTINATION, API_VERSION, remote_issue)` in
+`verified_observations`; do not invent evidence or introduce a tracking database. Host,
+repository, API version and issue number must match. Missing prior observation, changed reason
+(even between otherwise admissible values), title/body/state divergence, duplicate marker or
+unknown state is an affected-record `conflict` with a review action. Never normalize away a
+disclaimer, unknown sections or human edits. Same-valued intervening human actions cannot be
+excluded by equality alone; this is best-effort observation, not atomic history proof.
+
+For closed records, `completed` is admitted only for the observed github.com / API
+`2022-11-28` mapping. Null readback requires actual independently verified closed/null evidence
+for that same destination/API; nullable close input is not such evidence. `not_planned`,
+`duplicate`, `reopened` and unknown values are not admitted: inspect the affected identity/value
+and review mapping or human changes before further mutation. Other host/API mappings are not
+guessed. No-op still requires the same exact prior observation, not merely an admitted value.
+It does not reset stale source state, merge titles, overwrite human edits, or claim close ownership.
+After a confirmed create/close, `ApplyResult.issue` is its independent GET observation; retain
+it with the host/destination/API in the existing operation return for a later unchanged rerun.
+For a discovered prior issue without that evidence, independently GET and review it rather
+than treating the current listing itself as prior history. A `confirmed_mappings` identity
 → issue-number input reports an `existing-issue mapping` only when a reviewer has explicitly
 chosen that visible non-PR issue; it preserves its body/state and is nonauthoritative. In
 particular an historical link to issue #2 is not a mapping by itself.
@@ -93,17 +117,20 @@ needed, and no exactly-once guarantee or repository-wide lock exists for simulta
 ## Apply boundary
 
 `apply(reviewed, GhApiTransport(), HOST, ApplyAuthorization(HOST, DESTINATION, WRITE_SCOPE))`
-creates only records that were reviewed as `planned create`, remain `planned create` after an
-immediate complete reinspection of that same explicit destination, and have native `open`
-state. The reviewed host, apply `HOST`, authorization host, and authorization destination must
+creates only records that were reviewed as `planned create` and remain `planned create` after
+an immediate complete reinspection of that same explicit destination; it can also finish an
+exact reviewed import-owned pending close. Originally closed records need an applicable native
+reason mapping before any write. The reviewed host, apply `HOST`, authorization host, and authorization destination must
 all exactly match the reviewed `HOST/OWNER/REPO`; the write scope must be non-empty. This is the
 real write boundary, not an implication of previewing.
 For an originally closed record, create uses an explicit `pending` closure provenance marker,
 then independently reads that exact open staged body before one `PATCH` atomically replaces it
 with the final `closed` marker/body and `{"state":"closed","state_reason":null}`. A final
-GET must prove one marker, exact final content, `closed`, and null reason before the report says
-`closed`. The source status remains verbatim in the rendered content; null is used only because
-no historical closure reason is specified. No fix, actor, or timestamp is invented.
+GET must prove exact title, one marker, full final disclaimer-bearing body/provenance,
+`closed` and an admitted native reason before the report says `closed`. Null input means
+unspecified; it does not promise null readback. Native `completed` under the bounded mapping
+is platform metadata, never original history or verified resolution. The source status remains
+verbatim; its original closure reason is unknown. No fix, actor, or timestamp is invented.
 
 Only the exact pending marker/body plus open state and null reason is known import-owned unfinished closure and
 can resume on a later reviewed apply. A final imported body that is later open, an edited pending
@@ -148,17 +175,36 @@ HTTP 422 (`links/0/schema` nil); after adding `gh api --input -`, the third stil
 candidate despite the suppressed POST response. A later owner-approved recovery was limited to
 existing issue #3's exact pending-close path (no new POST or other issue mutation). Current
 read-only GET of #3 observes the expected final body/title and `closed`, but GitHub reports
-`state_reason: "completed"`, not null. Its recovery trace/API semantics have not established a
-null-reason mapping, so this does not change the INCONCLUSIVE status or satisfy T005/V2. Do not
-retry or rely on uncertain-create/closure behavior without review/renewed proof authority. This
-was not a historical apply and made no change to #2; no proof issue is automatically deleted.
+`state_reason: "completed"`, not null. These are old-render observations, not proof of the
+amended disclaimer-bearing render. Original T005/V2 remains INCONCLUSIVE / NOT PASS under its
+original criterion. The prospectively approved native-reason mapping does not retroactively
+change that result. This was not a historical apply and made no change to #2; no proof issue
+is automatically deleted.
 
-The required proof command path remains `python3` importing this helper with that one synthetic
-record, `GhApiTransport()`, helper-boundary response suppression, independent `list_issues`
-(open+closed, excluding PRs), and `get_issue` of exactly one marker candidate. Record
-before/after count, identity/body/state/reason, visibility/concurrency limits, and actual output
-before relying on uncertain-create/closure behavior. Do not run a real register migration or
-delete a proof issue automatically.
+Reassess retained invocation/recovery traces before considering a repeat. Retained actual
+helper observations show suppressed successful POST → invisible marker/deferred result, then
+later exact pending issue #3 → authorized helper close/independent GET, one matching identity
+and no second POST in that recovery. The old invocations did not pass the later-added explicit
+`uncertain_identities` input through another still-invisible apply; permanent composed fixtures
+cover that carry-forward behavior, not a new real visibility experiment.
+
+Read-only amended reassessment uses the actual helper's complete `list_issues` and #3
+`get_issue`, reconstructing the unchanged excerpt with the recorded Source above. It observes
+2 non-PR issues, exactly one marker candidate (#3), exact retained title, closed/completed,
+old body SHA256 `faff577298861a5b3550c90b762462d9f8f8d2189c26559bbf1c46d25c3bca17`.
+The current body lacks the new disclaimer; revised render differs only by its addition.
+Actual `reconcile` with the retained GET and uncertain identity correctly returns body-divergence
+`conflict`, not no-op. Offline fixtures prove exact revised body transmission/readback and
+invisible→carried uncertainty→same-identity recovery, not new remote observations.
+
+Revised exact disclaimer-bearing live readback remains unobserved; the retained trace does
+not establish an actual still-invisible rerun carrying the new input. These are precise A4
+evidence gaps for independent assessment, not automatic new test mandates. Do not call revised
+T005/V2 or dependent cutover accepted while required observations remain unresolved. There is
+no current authority for new POST/PATCH/reopen/close/delete, including adding the disclaimer
+to #3. Ask for a named minimal action or a material acceptance decision rather than replaying
+the proof, guessing permission, weakening criteria or migrating the real register. Reuse
+sufficient unchanged evidence and refresh only genuinely invalidated live observations.
 
 Preview and reconciliation otherwise have zero external writes. Keep the original Markdown
 intact; no source archive/delete or local tracking database is part of this skill. For an
