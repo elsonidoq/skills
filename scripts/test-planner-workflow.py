@@ -2402,7 +2402,18 @@ class OwnerAssignmentDocsTests(unittest.TestCase):
             with self.subTest(path=path):
                 text = (ROOT / path).read_text()
                 self.assertFalse(any(term.casefold() in text.casefold() for term in retired))
-        self.assertFalse((ROOT / "skills/planner/references/profile-selection.md").exists())
+        retired_path = "skills/planner/references/profile-selection.md"
+        with self.subTest(retired_path=retired_path):
+            self.assertFalse((ROOT / retired_path).exists())
+            self.assertNotEqual(subprocess.run(
+                ["git", "ls-files", "--error-unmatch", retired_path], cwd=ROOT,
+                capture_output=True, text=True).returncode, 0,
+                "retired routing policy must be deleted from the index, not merely absent from the worktree")
+        with self.subTest(schema="required reviewer"):
+            schema = (ROOT / "docs/coordinate-implementation-schema.md").read_text()
+            self.assertNotIn("optional `reviewer` object", schema)
+            self.assertNotIn("Omission preserves worker-profile review", schema)
+            self.assertIn("required `reviewer` object", schema)
         requirements = (ROOT / "REQUIREMENTS.md").read_text()
         index = (ROOT / "docs/index.md").read_text()
         self.assertIn("model-assignments.json", requirements)
@@ -2420,6 +2431,44 @@ class OwnerAssignmentDocsTests(unittest.TestCase):
                                 "not an owner reload instruction or automatic restart" in text or
                                 "do not instruct the owner to reload or restart" in text or
                                 "do not reload or restart the current session automatically" in text)
+
+
+class OwnerAssignmentComposedTests(unittest.TestCase):
+    """Bounded assignment-carrier mutations; not provider dispatch proof."""
+
+    def test_roles_require_explicit_distinct_saved_assignment_carriers(self):
+        data = json.loads((ROOT / "skills/planner/references/model-assignments.json").read_text())
+
+        def assert_roles(config):
+            operations = config["operations"]
+            self.assertEqual(operations["planner-parent"], {"inherit": "launched-parent"})
+            for operation in ("brainstorm-assessment", "brainstorm-application", "tinyspec-source",
+                              "tinyspec-tasks", "standard-spec-create", "standard-tasks-create",
+                              "standard-plan-direct", "standard-plan-helper", "standard-overall-review",
+                              "standard-overall-rereview"):
+                self.assertIn("assignment", operations[operation], operation)
+                self.assertNotIn("inherit", operations[operation], operation)
+            self.assertNotEqual(operations["standard-plan-direct"]["assignment"],
+                                operations["standard-overall-review"]["assignment"])
+
+        assert_roles(data)
+        inherited_review = copy.deepcopy(data)
+        inherited_review["operations"]["standard-overall-review"] = {"inherit": "launched-parent"}
+        with self.assertRaises(AssertionError):
+            assert_roles(inherited_review)
+
+    def test_checker_rejects_removed_assignment_carriers(self):
+        texts = checker.load_texts()
+        for key, clause, diagnostic in (
+            ("planner", "## Saved planner assignments", "saved-assignments:"),
+            ("brainstorm", "shared saved `brainstorming` assignment", "brainstorm-assignment:"),
+            ("helper", "`standard-plan-helper` saved assignment", "helper-assignment:"),
+        ):
+            with self.subTest(carrier=clause):
+                changed = dict(texts)
+                changed[key] = changed[key].replace(clause, "REMOVED", 1)
+                self.assertTrue(any(error.startswith(diagnostic)
+                                    for error in checker.check_contracts(changed)))
 
 
 class LinkTests(unittest.TestCase):

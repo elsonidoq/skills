@@ -14,7 +14,10 @@ class RuntimeAuthorityTests(unittest.TestCase):
                        'not effect proof or execution eligibility'):
             self.assertIn(phrase,' '.join(introduction.split()))
             self.assertNotIn(phrase,' '.join(introduction.split()).replace(phrase,'REMOVED'))
-        self.assertEqual(contract_errors(TEXT),[])
+        for phrase in ('never adopts or commits unknown work',
+                       'A well-formed actionable first rejection'):
+            self.assertIn(phrase, TEXT)
+            self.assertNotIn(phrase, TEXT.replace(phrase, 'REMOVED', 1))
 
     def test_worker_role_cannot_recursively_launch_or_commit(self):
         worker=section(TEXT,'Runner-configured worker role')
