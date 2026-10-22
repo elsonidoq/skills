@@ -4,7 +4,7 @@
 
 ## Preparation and approval record
 
-Owner selected TinySpec → Tasks → Implement and authorized task preparation/checkpointing. This is a separate task artifact, not approval. Parent inspection, independent planning review and combined **current-content** source/task approval (including the proposed palette) remain pending. Implementation and visual acceptance have not occurred. Temporary preparation labels are provenance here, not worker instructions.
+Owner selected TinySpec → Tasks → Implement and authorized task preparation/checkpointing. This is a separate task artifact, not approval. Planner-owned parent review is complete as recorded below; combined **current-content** source/task approval (including the proposed palette) remains pending. TinySpec requires no separate independent planning reviewer; the independent implementation review remains mandatory. Implementation and visual acceptance have not occurred. Temporary preparation labels are provenance here, not worker instructions.
 
 Producer verified clean branch `update-workflow-monitor-planned-agent-calls`, task-production baseline `51174c0e19f699a51dae85082c8eb67aa5c220e6`. Source SHA256: `a8f31142f3fcf0c949b131ada3cea776de4f156fe35844b9cd8b606631d92da1`; source itself remains unchanged. Source's older implementation baseline is historical context, not task-production HEAD.
 
@@ -79,6 +79,14 @@ This table maps the unchanged source criteria to task-local pass/evidence/permis
 | Preservation / A5 | T001/V2 closed DTO/old compatibility/nonfatal recording; T002/V2 read-only HTTP/paged-evidence/lineage/metric continuity; T003/V2 unchanged flat DOWN engine; T004/V2 measured geometry/edges/drag/pan/zoom/selection/status-only reuse/stale guards/60-second polling; T005/V2 navigation/history; T006/V1–V2 artifact/security/build/browser regression union. |
 
 All five required behaviors and all five acceptance criteria have concrete REQUIRED mappings; paths, commands and local permission evidence are in the corresponding task entries. These are permanent delivery tests, not an additional eligibility machine.
+
+## Planner-owned review
+
+Reviewed source R1–R5/A1–A5 against all six executable tasks at `e1da00df7d32d4bc6283b73920442d79340be923`: coverage, exclusions, accepted ADR outcomes, dependency order, explicit owned paths, executor-sized outcome boundaries, full-text/dispatch compatibility, exact-identity proof before UI reliance, scoped metric preservation and post-run visual gate are retained. T001–T003 establish independently testable data/projection contracts; T004 delivers rendered lifecycle; T005/T006 separately address nonmetric and metric presentation with their own assertions. No new harness, speculative prototype or layout rewrite is included.
+
+Parent reran both task-order validators and the actual `intake.load_contract` / `verification.commands` read-only checks: PASS, six sequential tasks with 2/1/2/2/2/4 consumed commands. Inspected source/task artifacts, focused commits, package scripts, browser configuration and owned paths. Source digest remains `a8f31142f3fcf0c949b131ada3cea776de4f156fe35844b9cd8b606631d92da1`; executable task content is unchanged. The preparation-status clarification above changes no work instruction, dependency, acceptance, permission or implementation-review gate; it corrects an erroneous reference to an extra planning reviewer.
+
+No substantive planning finding remains. Application tests/build/browser checks and exact-binding implementation proof are NOT RUN; prepared Python/web dependencies remain unavailable. This is planning review, not application verification or execution readiness. Combined approval starts coordinator preflight only as far as existing authority and tools permit; missing verification tools must be resolved without installation or check waiver by inference. Independent full-range implementation review and explicit owner visual acceptance remain separate later requirements.
 
 ## Post-run handoff and acceptance convention
 
