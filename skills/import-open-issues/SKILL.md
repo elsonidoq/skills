@@ -173,8 +173,8 @@ found 0 candidates, so no candidate GET/body/state/reason result exists. The fir
 exposed null issue bodies in real listing (now normalized to empty); the second was rejected with
 HTTP 422 (`links/0/schema` nil); after adding `gh api --input -`, the third still had no visible
 candidate despite the suppressed POST response. A later owner-approved recovery was limited to
-existing issue #3's exact pending-close path (no new POST or other issue mutation). Current
-read-only GET of #3 observes the expected final body/title and `closed`, but GitHub reports
+existing issue #3's exact pending-close path (no new POST or other issue mutation). Its
+read-only GET observed the old final body/title and `closed`, but GitHub reported
 `state_reason: "completed"`, not null. These are old-render observations, not proof of the
 amended disclaimer-bearing render. Original T005/V2 remains INCONCLUSIVE / NOT PASS under its
 original criterion. The prospectively approved native-reason mapping does not retroactively
@@ -188,23 +188,39 @@ and no second POST in that recovery. The old invocations did not pass the later-
 `uncertain_identities` input through another still-invisible apply; permanent composed fixtures
 cover that carry-forward behavior, not a new real visibility experiment.
 
-Read-only amended reassessment uses the actual helper's complete `list_issues` and #3
-`get_issue`, reconstructing the unchanged excerpt with the recorded Source above. It observes
-2 non-PR issues, exactly one marker candidate (#3), exact retained title, closed/completed,
-old body SHA256 `faff577298861a5b3550c90b762462d9f8f8d2189c26559bbf1c46d25c3bca17`.
-The current body lacks the new disclaimer; revised render differs only by its addition.
-Actual `reconcile` with the retained GET and uncertain identity correctly returns body-divergence
+Before the body-only update below, read-only amended reassessment used the actual helper's
+complete `list_issues` and #3 `get_issue`, reconstructing the unchanged excerpt with the recorded
+Source above. It observed 2 non-PR issues, exactly one marker candidate (#3), exact retained
+title, closed/completed, old body SHA256 `faff577298861a5b3550c90b762462d9f8f8d2189c26559bbf1c46d25c3bca17`.
+That body lacked the new disclaimer; revised rendering differed only by its addition.
+Actual `reconcile` with that GET and uncertain identity correctly returned body-divergence
 `conflict`, not no-op. Offline fixtures prove exact revised body transmission/readback and
 invisible→carried uncertainty→same-identity recovery, not new remote observations.
 
-Revised exact disclaimer-bearing live readback remains unobserved; the retained trace does
-not establish an actual still-invisible rerun carrying the new input. These are precise A4
-evidence gaps for independent assessment, not automatic new test mandates. Do not call revised
-T005/V2 or dependent cutover accepted while required observations remain unresolved. There is
-no current authority for new POST/PATCH/reopen/close/delete, including adding the disclaimer
-to #3. Ask for a named minimal action or a material acceptance decision rather than replaying
-the proof, guessing permission, weakening criteria or migrating the real register. Reuse
-sufficient unchanged evidence and refresh only genuinely invalidated live observations.
+A subsequent owner answer, **“Authorize the body-only update to #3”**, allowed exactly one
+body-only PATCH on github.com/elsonidoq/skills#3, preserving closed/completed, then independent
+GET/full-list verification. The actual Python invocation (`python3 /tmp/sol-native-body-only-3.py`,
+ephemeral command artifact) used this production transport, immediate exact-old-body/title/
+marker/state/reason drift checks and JSON `{"body": revised_body}` only. It asserted the render
+differed solely by the approved disclaimer and preserved the original excerpt. No POST,
+reopen/close replay, #2 mutation or migration occurred. `gh` 2.102.0, API `2022-11-28`; counts
+were 2→2 non-PR issues, one candidate (#3). Independent GET and complete listing confirmed
+exact revised title/body/marker, unchanged excerpt, closed/completed and body SHA256
+`e88c4cd85e742d9ebbe1bd87218854ff7fe1cf16c5b5bbbe9577a2b46d330550`.
+Actual helper reconciliation with that independent observation returned `no-op`, with no
+normalization of the old body. This supplies the revised body/readback observation, not a
+new create or closure-transition experiment; the earlier drift observation remains historical.
+
+Independent assessment must compose the retained real invisible-marker deferral and later
+same-identity pending-close recovery with this revised exact live body/readback. Permanent
+actual-helper fixtures establish the explicit uncertainty-input wiring; the old live run did
+not exercise another still-invisible rerun using that later-added input. Do not force a new
+invisibility episode merely as ceremony, or claim it was observed. No additional live risk
+observable has been demonstrated missing here, but revised T005/V2 sufficiency and dependent
+cutover remain pending fresh independent assessment, not self-certification. Original T005/V2
+remains INCONCLUSIVE / NOT PASS under its original criterion. No further live mutation is
+authorized. Retain the declared local owner until boundary acceptance and usable consistent
+routing; reuse sufficient evidence rather than replaying proof or migrating real records.
 
 Preview and reconciliation otherwise have zero external writes. Keep the original Markdown
 intact; no source archive/delete or local tracking database is part of this skill. For an
