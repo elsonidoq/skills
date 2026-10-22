@@ -5,7 +5,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parent))
-from import_open_issues import GhApiTransport, IncompleteLookup, Source, preview, reconcile
+from import_open_issues import ApplyAuthorization, GhApiTransport, IncompleteLookup, Source, apply, preview, reconcile
 
 ROOT = Path(__file__).resolve().parents[3]
 BASELINE_SHA256 = "314b9ddd758d25923105d85c23225293d0a1398b506d1b28925d783a5c3e1c7a"
@@ -174,6 +174,138 @@ class ReconciliationTests(unittest.TestCase):
         unknown = reconcile(proposal, GhApiTransport(unknown_state), "github.com")
         self.assertEqual(unknown.records[0].outcome, "conflict")
         self.assertIn("close ownership", unknown.records[0].detail)
+
+
+class ApplyTests(unittest.TestCase):
+    def _proposal(self):
+        return preview("""## OI-1: One
+- **Status:** open
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+## OI-2: Two
+- **Status:** open
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+## OI-3: Historical closed
+- **Status:** closed
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+""", SOURCE, "dest/repo")
+
+    def _transport(self, issues, calls, lose_create=None, incomplete_list=False, unreadable=None):
+        next_number = [10]
+
+        def fake_gh(argv, stdin):
+            calls.append((argv, stdin))
+            method = argv[argv.index("--method") + 1]
+            path = argv[-1]
+            if method == "GET" and path.endswith("issues?state=all&per_page=100"):
+                if incomplete_list:
+                    raise IncompleteLookup("listing visibility uncertain")
+                return json.dumps([issues])
+            if method == "POST":
+                payload = json.loads(stdin)
+                issue = {"number": next_number[0], "state": "open", "body": payload["body"]}
+                next_number[0] += 1
+                issues.append(issue)
+                if lose_create == payload["title"]:
+                    raise IncompleteLookup("response interrupted after create")
+                return json.dumps(issue)
+            if method == "GET" and "/issues/" in path:
+                number = int(path.rsplit("/", 1)[1])
+                if unreadable == number:
+                    raise IncompleteLookup("readback visibility uncertain")
+                return json.dumps(next(issue for issue in issues if issue["number"] == number))
+            raise AssertionError(argv)
+
+        return GhApiTransport(fake_gh)
+
+    def test_apply_uses_reviewed_exact_preview_and_independent_readback(self):
+        proposal = self._proposal()
+        calls, issues = [], []
+        transport = self._transport(issues, calls)
+        reviewed = reconcile(proposal, transport, "github.com")
+        calls.clear()
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "write only these reviewed open records"))
+        self.assertEqual([item.outcome for item in result.records], ["created", "created", "deferred"])
+        methods = [argv[argv.index("--method") + 1] for argv, _ in calls]
+        self.assertEqual(methods, ["GET", "POST", "GET", "POST", "GET"])
+        posts = [(argv, json.loads(stdin)) for argv, stdin in calls if "POST" in argv]
+        self.assertEqual([payload for _, payload in posts], [{"title": r.title, "body": r.body} for r in proposal.records[:2]])
+        self.assertTrue(all(argv[-1] == "repos/dest/repo/issues" for argv, _ in posts))
+        self.assertEqual(len(issues), 2)
+
+        rerun = reconcile(proposal, transport, "github.com")
+        calls.clear()
+        second = apply(rerun, transport, "github.com", ApplyAuthorization("dest/repo", "reviewed rerun"))
+        self.assertEqual([item.outcome for item in second.records], ["deferred", "deferred", "deferred"])
+        self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
+
+    def test_changed_review_or_remote_content_defers_without_overwrite(self):
+        proposal = self._proposal()
+        calls, issues = [], []
+        transport = self._transport(issues, calls)
+        reviewed = reconcile(proposal, transport, "github.com")
+        issues.append({"number": 7, "state": "open", "body": proposal.records[0].body + "\nhuman update"})
+        calls.clear()
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        self.assertEqual(result.records[0].outcome, "deferred")
+        self.assertIn("reinspection changed", result.records[0].detail)
+        self.assertEqual(result.records[1].outcome, "created")
+        self.assertNotIn("POST", [part for argv, _ in calls[:1] for part in argv])
+        with self.assertRaisesRegex(ValueError, "matching destination"):
+            apply(reviewed, transport, "github.com", ApplyAuthorization("other/repo", "wrong target"))
+
+        # A revised source/preview retains its identity marker but changes the exact body;
+        # it must reconcile as a conflict rather than overwrite the older import.
+        changed_source = Source(SOURCE.host, SOURCE.repository, SOURCE.path, "new-revision")
+        changed_preview = preview("""## OI-1: One
+- **Status:** open
+- **Problem:** revised source
+- **Primary evidence:** e
+- **Resumption condition:** r
+""", changed_source, "dest/repo")
+        changed_reviewed = reconcile(changed_preview, transport, "github.com")
+        self.assertEqual(changed_reviewed.records[0].outcome, "conflict")
+        calls.clear()
+        changed_result = apply(changed_reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "changed preview review"))
+        self.assertEqual(changed_result.records[0].outcome, "deferred")
+        self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
+
+    def test_partial_failure_and_lost_create_are_reconciled_without_second_post(self):
+        proposal = self._proposal()
+        calls, issues = [], []
+        transport = self._transport(issues, calls, lose_create="OI-2: Two")
+        reviewed = reconcile(proposal, transport, "github.com")
+        calls.clear()
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        self.assertEqual([item.outcome for item in result.records], ["created", "created", "deferred"])
+        post_titles = [json.loads(stdin)["title"] for argv, stdin in calls if "POST" in argv]
+        self.assertEqual(post_titles, ["OI-1: One", "OI-2: Two"])
+        self.assertEqual(len([call for call in calls if "POST" in call[0]]), 2)
+        # The second POST succeeded remotely but its response was lost. Recovery lists
+        # open+closed pages and independently GETs the single marker candidate.
+        self.assertEqual([argv[argv.index("--method") + 1] for argv, _ in calls], ["GET", "POST", "GET", "POST", "GET", "GET"])
+
+    def test_uncertain_listing_or_readback_never_retries_a_post(self):
+        proposal = self._proposal()
+        calls, issues = [], []
+        transport = self._transport(issues, calls, incomplete_list=True)
+        reviewed = reconcile(proposal, transport, "github.com")
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        self.assertTrue(all(item.outcome == "deferred" for item in result.records))
+        self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
+
+        calls, issues = [], []
+        transport = self._transport(issues, calls, unreadable=10)
+        reviewed = reconcile(proposal, transport, "github.com")
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        self.assertEqual(result.records[0].outcome, "deferred")
+        self.assertEqual(len([call for call in calls if "POST" in call[0]]), 2)
+        self.assertIn("response was lost", result.records[0].detail)
 
 
 if __name__ == "__main__":

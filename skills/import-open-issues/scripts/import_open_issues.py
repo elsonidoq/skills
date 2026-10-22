@@ -115,6 +115,28 @@ class IncompleteLookup(RuntimeError):
     """The complete destination snapshot could not be established safely."""
 
 
+@dataclass(frozen=True)
+class ApplyAuthorization:
+    """An operator's explicit confirmation of the named destination write scope."""
+
+    destination: str
+    write_scope: str
+
+
+@dataclass(frozen=True)
+class ApplyResult:
+    record: RenderedRecord
+    outcome: str
+    issue: RemoteIssue | None = None
+    detail: str | None = None
+
+
+@dataclass(frozen=True)
+class ApplyReport:
+    preview: Preview
+    records: tuple[ApplyResult, ...]
+
+
 class GhApiTransport:
     """Read-only, explicit-target `gh api` boundary used by reconciliation."""
 
@@ -147,17 +169,42 @@ class GhApiTransport:
             raise IncompleteLookup(f"complete destination lookup unavailable: {error}") from error
         if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
             raise IncompleteLookup("complete destination lookup returned an unexpected paginated response")
-        issues: list[RemoteIssue] = []
-        for page in pages:
-            for item in page:
-                if not isinstance(item, dict) or not isinstance(item.get("number"), int):
-                    raise IncompleteLookup("complete destination lookup returned an invalid issue")
-                body = item.get("body")
-                state = item.get("state")
-                if not isinstance(body, str) or not isinstance(state, str):
-                    raise IncompleteLookup("complete destination lookup omitted issue body or state")
-                issues.append(RemoteIssue(item["number"], state, body, "pull_request" in item))
-        return tuple(issues)
+        return tuple(self._issue(item, "complete destination lookup") for page in pages for item in page)
+
+    @staticmethod
+    def _issue(item: object, operation: str) -> RemoteIssue:
+        if not isinstance(item, dict) or not isinstance(item.get("number"), int):
+            raise IncompleteLookup(f"{operation} returned an invalid issue")
+        body = item.get("body")
+        state = item.get("state")
+        if not isinstance(body, str) or not isinstance(state, str):
+            raise IncompleteLookup(f"{operation} omitted issue body or state")
+        return RemoteIssue(item["number"], state, body, "pull_request" in item)
+
+    def get_issue(self, host: str, destination: str, number: int) -> RemoteIssue:
+        if not isinstance(number, int) or number < 1:
+            raise ValueError("issue number must be positive")
+        argv = (
+            "gh", "api", "--method", "GET", "--hostname", host,
+            "--header", f"X-GitHub-Api-Version: {self.api_version}",
+            f"repos/{destination}/issues/{number}",
+        )
+        try:
+            return self._issue(json.loads(self._execute(argv, None)), "issue readback")
+        except (IncompleteLookup, OSError, json.JSONDecodeError, TypeError, ValueError) as error:
+            raise IncompleteLookup(f"issue readback unavailable: {error}") from error
+
+    def create_issue(self, host: str, destination: str, record: RenderedRecord) -> RemoteIssue:
+        argv = (
+            "gh", "api", "--method", "POST", "--hostname", host,
+            "--header", f"X-GitHub-Api-Version: {self.api_version}",
+            f"repos/{destination}/issues",
+        )
+        payload = json.dumps({"title": record.title, "body": record.body})
+        try:
+            return self._issue(json.loads(self._execute(argv, payload)), "issue create")
+        except (IncompleteLookup, OSError, json.JSONDecodeError, TypeError, ValueError) as error:
+            raise IncompleteLookup(f"issue create outcome unknown: {error}") from error
 
 
 def reconcile(
@@ -203,6 +250,63 @@ def reconcile(
         else:
             results.append(Reconciliation(record, "conflict", issue, "remote body or state diverges; inspect before any change"))
     return ReconciliationPreview(proposal, tuple(results))
+
+
+def _verified_readback(record: RenderedRecord, issue: RemoteIssue) -> ApplyResult:
+    if issue.is_pull_request:
+        return ApplyResult(record, "deferred", issue, "readback resolved to a pull request")
+    if issue.body.count(record.marker) != 1:
+        return ApplyResult(record, "deferred", issue, "readback marker is absent or duplicated")
+    if issue.body != record.body or issue.state != "open":
+        return ApplyResult(record, "deferred", issue, "readback content or open state diverges; preserve remote changes")
+    return ApplyResult(record, "created", issue)
+
+
+def _recover_uncertain_create(record: RenderedRecord, proposal: Preview, transport: GhApiTransport, host: str) -> ApplyResult:
+    snapshot = reconcile(proposal, transport, host)
+    current = next(item for item in snapshot.records if item.record.identity == record.identity)
+    if current.outcome != "no-op" or current.issue is None:
+        return ApplyResult(record, "deferred", detail="create response was lost and complete lookup did not prove one exact open record")
+    try:
+        return _verified_readback(record, transport.get_issue(host, proposal.destination, current.issue.number))
+    except IncompleteLookup as error:
+        return ApplyResult(record, "deferred", current.issue, f"create response was lost; candidate readback unavailable: {error}")
+
+
+def apply(
+    reviewed: ReconciliationPreview,
+    transport: GhApiTransport,
+    host: str,
+    authorization: ApplyAuthorization,
+) -> ApplyReport:
+    """Create only reviewed, currently missing open records; never update or close issues.
+
+    A successful POST is independently read back. A failed POST response is permanently
+    uncertain: it is reconciled once and never retried by this helper.
+    """
+    proposal = reviewed.preview
+    if authorization.destination != proposal.destination or not authorization.write_scope.strip():
+        raise ValueError("apply requires explicit matching destination and non-empty write scope confirmation")
+    immediate = reconcile(proposal, transport, host)
+    reviewed_by_id = {item.record.identity: item for item in reviewed.records}
+    current_by_id = {item.record.identity: item for item in immediate.records}
+    results: list[ApplyResult] = []
+    for record in proposal.records:
+        prior = reviewed_by_id.get(record.identity)
+        current = current_by_id[record.identity]
+        if record.state != "open":
+            results.append(ApplyResult(record, "deferred", detail="closed historical records are unsupported until the closure gate"))
+        elif prior is None or prior.outcome != "planned create":
+            results.append(ApplyResult(record, "deferred", detail="record was not a reviewed planned create"))
+        elif current.outcome != "planned create":
+            results.append(ApplyResult(record, "deferred", current.issue, "immediate target reinspection changed; reconcile before any write"))
+        else:
+            try:
+                created = transport.create_issue(host, proposal.destination, record)
+                results.append(_verified_readback(record, transport.get_issue(host, proposal.destination, created.number)))
+            except IncompleteLookup:
+                results.append(_recover_uncertain_create(record, proposal, transport, host))
+    return ApplyReport(proposal, tuple(results))
 
 
 def parse_markdown(markdown: str) -> tuple[tuple[ParsedRecord, ...], tuple[Diagnostic, ...]]:

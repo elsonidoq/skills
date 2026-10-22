@@ -82,7 +82,31 @@ needed, and no exactly-once guarantee or repository-wide lock exists for simulta
 
 ## Apply boundary
 
-Preview and reconciliation have zero external writes. Before a future apply, require an
+`apply(reviewed, GhApiTransport(), HOST, ApplyAuthorization(DESTINATION, WRITE_SCOPE))`
+creates only records that were reviewed as `planned create`, remain `planned create` after an
+immediate complete reinspection of that same explicit destination, and have native `open`
+state. The authorization destination must exactly equal the preview destination and its write
+scope must be non-empty; this is the real write boundary, not an implication of previewing.
+The helper never creates a closed historical record, edits/reopens/closes an issue, changes a
+title/body/labels/assignees, or adopts a title/near match. Closed records are explicitly
+deferred until T005's closure gate.
+
+A create sends the exact reviewed title and body to the explicit `repos/OWNER/REPO/issues`
+endpoint, then independently GETs the returned issue. Readback must prove exactly one marker,
+identical body, and `open` state. Any changed body, state, duplicate marker, pull request,
+missing response, failed listing/readback, or uncertain visibility is an affected-record
+`deferred` result; it does not overwrite remote content. Earlier verified creates remain in
+the report if a later record fails. There is no rollback, source edit/archive, local state DB,
+or silent closed-record success.
+
+A lost POST response is permanently uncertain. The helper performs a complete all-state
+marker listing and independently GETs a single exact open candidate, but never retries that
+POST. An absent/ambiguous candidate, incomplete listing, or failed candidate GET remains
+`deferred` for remote inspection/owner resolution. Fixtures prove this algorithm and call
+ordering only: uncertain-create behavior is **NOT YET PROVEN remotely** and must not be relied
+on for real uncertain outcomes until T005's selected live proof.
+
+Preview and reconciliation otherwise have zero external writes. Before any apply, require the
 explicit named destination/write scope, reviewed preview, complete open-and-closed marker
 reconciliation, independent readback, and a reviewed choice for any pre-existing overlap.
 Never infer a fix, actor, timestamp, closure reason, or target availability from the
