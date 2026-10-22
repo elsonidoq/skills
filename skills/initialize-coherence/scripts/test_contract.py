@@ -207,6 +207,24 @@ def stage(text, name):
     return text[start:] if end < 0 else text[start:end]
 
 
+def unified_adoption_errors(text):
+    """Static unified-memory adoption guard; not an adoption runner."""
+    adoption = normalized(stage(text, "Adoption"))
+    errors = []
+    for phrase in (
+        "one associated index carries verified technical gotchas and explicit future-directed owner guidance",
+        "read the whole index first, then trigger-matching entries",
+        "do not scaffold a separate coordination or guidelines root",
+        "never replace them with a skeleton or create a separate guidelines system",
+        "implicitly migrate/delete legacy custom stores",
+    ):
+        if phrase not in adoption:
+            errors.append(f"unified-adoption: missing {phrase!r}")
+    if re.search(r"\bcreate guidelines\.md\b|\bpropagate guidance to guidelines\.md\b", adoption):
+        errors.append("unified-adoption-separate-guidelines: prohibited second-store setup or propagation")
+    return errors
+
+
 def check_contract(text):
     errors = []
     if re.findall(r"^## (.+)$", text, re.M) != list(STAGES):
@@ -508,6 +526,35 @@ class DecisionConsultationTests(unittest.TestCase):
                 pattern = r"\s+".join(re.escape(word) for word in phrase.split())
                 changed = text.replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
                 self.assertTrue(any(error.startswith(diagnostic + ":") for error in check_contract(changed)))
+
+
+class UnifiedMemoryAdoptionTests(unittest.TestCase):
+    """Authored unified-memory outputs, not a generator or live adoption simulation."""
+    def test_new_and_refresh_outputs_use_one_custom_association(self):
+        rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
+        expected = {"verified technical gotchas", "explicit future-directed owner guidance"}
+        by_name = {row["name"]: row for row in rows}
+        self.assertEqual(unified_adoption_errors(SKILL.read_text()), [])
+        for name in ("new-adoption-resolving-custom-associations",
+                     "bounded-refresh-preserves-custom-policy-memory-docs"):
+            row = by_name[name]
+            with self.subTest(case=name):
+                self.assertEqual(row["memory_index"], "custom/gotchas/MEMORY.md")
+                self.assertEqual(set(row["memory_kinds"]), expected)
+                self.assertNotIn("GUIDELINES.md", row["after"])
+        self.assertIn("no entries yet", by_name["new-adoption-resolving-custom-associations"]["memory_skeleton"].lower())
+        self.assertIn("preserved", by_name["bounded-refresh-preserves-custom-policy-memory-docs"]["memory_skeleton"].lower())
+
+    def test_second_store_setup_or_propagation_has_named_diagnostic(self):
+        source = SKILL.read_text()
+        self.assertEqual(unified_adoption_errors(source), [])
+        for mutation in ("Create GUIDELINES.md for owner guidance.",
+                         "Propagate guidance to GUIDELINES.md."):
+            with self.subTest(mutation=mutation):
+                changed = source.replace(stage(source, "Adoption"),
+                                         stage(source, "Adoption") + "\n" + mutation, 1)
+                self.assertIn("unified-adoption-separate-guidelines: prohibited second-store setup or propagation",
+                              unified_adoption_errors(changed))
 
 
 class WorkflowOwnershipOutputTests(unittest.TestCase):
