@@ -26,9 +26,11 @@ separate fresh read-only review/rereview sessions. Missing or malformed reviewer
 is an actionable error, never implicit worker-assignment inheritance. Explicitly identical
 worker and reviewer values are allowed; reviewer contexts remain independent.
 The SDK resolves the exact selected model or reports its real error. Before prompting, the
-host checks that SDK-exposed model and effort match the requested assignment; it rejects
-clamping, omission or substitution. SDK-exposed state is not provider-internal execution proof;
-unknown actual execution remains unknown. No config hash, resource pin, binding assessment or
+host checks that SDK-exposed provider, model and effort match the requested assignment; it rejects
+clamping, omission or substitution. Opted-in opened-session and result `before`/`after`
+observations separately expose `requested_assignment` and `sdk_observed_assignment`, each with
+`provider`, `model` and `effort`; unavailable SDK fields are `null` (unknown). SDK-exposed state
+is not provider-internal execution proof; unknown actual execution remains unknown. No config hash, resource pin, binding assessment or
 SDK/Node equality check is required.
 `package-lock.json` remains explicit installation metadata for the tested SDK, not launch
 ceremony. Project-specific selection is in the [operating guide](coordinate-implementation.md).
@@ -189,8 +191,8 @@ The runner supplies a stable `reuseKey` when instructions/settings/authority nee
 that compatibility; a changed key rejects reuse. The host creates or opens that exact `SessionManager` file under
 `.coherence/workflow/sessions`, rebuilds the current resource loader and task callbacks/tools on
 every open, and rejects an identity/resource mismatch rather than adopting an ambient session.
-A result retains text plus fresh before/after observations (session/branch/epoch/entry, available
-counters, and context fields). An adapter explicitly sends `sessionObservations: true` before the
+A result retains text plus fresh before/after observations (requested assignment, SDK-observed
+assignment, session/branch/epoch/entry, available counters, and context fields). An adapter explicitly sends `sessionObservations: true` before the
 host emits the optional standalone opened-identity record; without that opt-in, the host emits only
 legacy record kinds. On opted-in calls, the opened identity precedes invocation, so a terminal
 transport failure retains its existing session and actual cause for inspected targeted resumption;

@@ -202,7 +202,21 @@ function observation(session) {
   const compactionEntries = [...new Map(entries
     .filter(entry => entry?.type === 'compaction' && typeof entry.id === 'string')
     .map(entry => [entry.id, {id: entry.id, summary_usage: entry.usage ?? null}])).values()];
+  // These are SDK construction observations, not provider-side execution proof.
+  // Keep requested and SDK-exposed values distinct even after exact-match guards.
+  const requested = session.coherenceRequestedAssignment;
+  const sdkObservedAssignment = {
+    provider: session.model?.provider ?? null,
+    model: session.model?.id ?? null,
+    effort: session.thinkingLevel ?? null,
+  };
   return {
+    requested_assignment: {
+      provider: requested?.provider ?? null,
+      model: requested?.model ?? null,
+      effort: requested?.effort ?? null,
+    },
+    sdk_observed_assignment: sdkObservedAssignment,
     session_id: session.coherenceSavedSession?.id ?? null,
     branch: session.sessionId ?? session.coherenceSavedSession?.id ?? null,
     epoch: session.coherenceEpoch,

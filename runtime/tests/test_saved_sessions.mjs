@@ -40,7 +40,9 @@ test('new host omits standalone session observations unless the adapter opts in'
   assert.equal(sessionObservationRecord({}, session), null);
   assert.deepEqual(sessionObservationRecord({sessionObservations: true}, session), {
     type: 'session', session: session.coherenceSavedSession,
-    before: {session_id: 'session-1', branch: 'session-1', epoch: 'opened', entry: 'entry-1',
+    before: {requested_assignment: {provider: null, model: null, effort: null},
+      sdk_observed_assignment: {provider: null, model: null, effort: null},
+      session_id: 'session-1', branch: 'session-1', epoch: 'opened', entry: 'entry-1',
       counters: {input: 1}, costs: {estimated_usd: null}, compaction_entries: [],
       headroom: {context_window: 2, effective_reserve: null, occupancy: 1,
         compaction_enabled: null, compaction_applicable: null},
@@ -94,7 +96,12 @@ test('production SDK observations include effective model reserve and applicable
     const session = await createWorkflowSession({project,
       executor: {provider: 'openai', model: 'gpt-4.1', effort: 'off'}}, async () => ({}));
     try {
-      const measured = sessionObservationRecord({sessionObservations: true}, session).before.headroom;
+      const observation = sessionObservationRecord({sessionObservations: true}, session).before;
+      assert.deepEqual(observation.requested_assignment,
+        {provider: 'openai', model: 'gpt-4.1', effort: 'off'});
+      assert.deepEqual(observation.sdk_observed_assignment,
+        {provider: session.model.provider, model: session.model.id, effort: session.thinkingLevel});
+      const measured = observation.headroom;
       const usage = session.getContextUsage();
       assert.equal(measured.effective_reserve, 2345);
       assert.equal(measured.context_window, usage.contextWindow);

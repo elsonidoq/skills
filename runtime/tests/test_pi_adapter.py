@@ -49,6 +49,8 @@ class SDKTransportTests(ProjectTest):
                 records.append(record)
                 if record['type'] == 'session':
                     self.assertIn('session', record)
+                    self.assertEqual(record['before']['requested_assignment'], request['executor'])
+                    self.assertEqual(record['before']['sdk_observed_assignment'], request['executor'])
                 elif record['type'] == 'question':
                     # Original replies have no correlation wrapper.
                     self.assertNotIn('request_id', record)
@@ -56,6 +58,10 @@ class SDKTransportTests(ProjectTest):
                     proc.stdin.flush()
                 elif record['type'] == 'result':
                     self.assertEqual(record['text'], 'legacy complete')
+                    self.assertEqual(record['before']['requested_assignment'], request['executor'])
+                    self.assertEqual(record['before']['sdk_observed_assignment'], request['executor'])
+                    self.assertEqual(record['after']['requested_assignment'], request['executor'])
+                    self.assertEqual(record['after']['sdk_observed_assignment'], request['executor'])
                     break
                 else:
                     self.fail('unexpected legacy record: ' + repr(record))
@@ -124,6 +130,11 @@ class SDKTransportTests(ProjectTest):
         self.assertFalse(thread.is_alive())
         self.assertEqual(outcome, ['steering complete'])
         self.assertEqual(adapter.steering_states.get('direction-1'), 'consumed')
+        assignment = {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off'}
+        self.assertEqual(adapter.last_observation['before']['requested_assignment'], assignment)
+        self.assertEqual(adapter.last_observation['before']['sdk_observed_assignment'], assignment)
+        self.assertEqual(adapter.last_observation['after']['requested_assignment'], assignment)
+        self.assertEqual(adapter.last_observation['after']['sdk_observed_assignment'], assignment)
 
     def test_parent_bridge_relays_only_the_advertised_exact_target(self):
         endpoint = str(self.root/'steering.sock')
