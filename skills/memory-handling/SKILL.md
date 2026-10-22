@@ -1,86 +1,98 @@
 ---
 name: memory-handling
-description: Use when locating, retrieving, or updating the project's memory store — before planning, implementing, reviewing, or closing out work in a suite-adopting project.
+description: Use when locating, retrieving, or updating the project's unified memory store — before planning, implementing, reviewing, or closing out work in a suite-adopting project.
 ---
 
 # Memory Handling
 
-Own the retrieval contract for the project memory store. Memory records **trigger-first
-gotchas**: non-obvious, durable guidance that would surprise an agent who read the code
-and authoritative documentation. Documentation describes current state; memory warns an
-agent *before* an action could trigger a non-obvious problem.
+Own the retrieval and authorized-write contract for the project memory store. One verified
+project association and one index hold two distinct evidence kinds:
 
-Coordination feedback follows the separate shared contract below; missing coordination
-storage is nonblocking and never weakens required adopted gotcha-memory discovery.
+- **Technical gotchas:** verified, non-obvious, durable action-triggered warnings. Each
+  records its trigger, consequence, and evidence pointer.
+- **Owner guidance:** explicit future-directed user feedback. Each records the actual user
+  provenance and a concise future trigger/action.
 
-## Discovering The Store
+Documentation describes current state; memory warns or directs an agent before a relevant
+future action. Guidance never overrides current owner or source authority. Do not disguise
+agent-inferred coordination lessons as gotchas.
 
-Locate the store exactly once per session and reuse the result. The store is
-project-associated when repository instructions `AGENTS.md`/`CLAUDE.md` (including the
-memory-store section written by `initialize-coherence`) or documented project
-configuration name its path. The suite's default convention, when adopted through
-`initialize-coherence`, is a project-owned `memory/` directory with a `MEMORY.md` index and
-entry files; an owner-approved different path is equally valid.
+## Discovering the association
 
-If no store or association can be verified, report that the project has not adopted the
-suite (`memory adoption: missing — run initialize-coherence`) and do not create, guess, or
-modify a global store. Never treat a global agent-memory command, `~/.pi/...` store, or
-similarly named index as project association without repository evidence.
+Locate the one index association exactly once per session and reuse the result. It is verified only
+when repository instructions (`AGENTS.md`/`CLAUDE.md`, including an
+`initialize-coherence` association) or documented project configuration names the index
+and its project-local path. The adopted convention may be `memory/MEMORY.md`, but an
+owner-approved custom index path is equally valid.
 
-## Retrieval Protocol
+Read-time discovery never creates storage. Missing optional storage or STATE is nonblocking:
+do not initialize it. If required project association cannot be verified, report
+`memory adoption: missing — run initialize-coherence` and route through that existing
+adoption process; never guess a path or use global agent memory as a fallback. Never
+create, discover, read, or maintain a separate guidance store or renamed equivalent.
 
-1. **Read the whole index first.** The index is the map: each entry states its trigger and
-   consequence. It is kept small by design, so a full read is cheaper than guessing.
-2. **Open entries only when relevant.** Open an entry in full when the current action
-   matches its trigger, a material decision is being made (scope, architecture, schema,
-   permissions, cost, irreversible behavior), or the work touches files the entry names.
-3. **Cost order:** index → matching entries → nothing else. Do not open the store
-   wholesale.
-4. **Re-check after any memory write** (including writes made by `finish-session` or
-   `compact-memory`): a changed or added trigger can change which entries apply to the
-   current work.
+## Retrieval protocol
 
-## When To Consult
+1. **Read the whole associated index first.** It maps both kinds with compact
+   trigger/relevance pointers.
+2. **Open only relevant entries in full:** when the action matches a trigger, a material
+   decision concerns scope, architecture, schema, permissions, cost, or irreversible
+   behavior, or work touches named files.
+3. **Cost order:** index → matching entries → nothing else. Do not recursively or
+   wholesale load history.
+4. **Recheck after a memory write.** A changed trigger can make another entry relevant.
 
-- On session start, when resuming suite work (`planner`, `coordinate-implementation`).
-- Before planning, before batching implementation, and before the final integration
-  review in `coordinate-implementation`.
-- Before closeout, through `finish-session`.
-- Ad hoc: whenever observable behavior seems surprising, a trigger matches, or a
-  decision could repeat a past failure.
+## When to consult
 
-## Write Protocol
+Consult on session start, when resuming suite work, before planning or batching
+implementation, before the final integration review, and before closeout. Consult ad hoc
+when behavior is surprising, a trigger matches, or a decision could repeat a past failure.
+Executable runs consume applicable approved task constraints and gotchas; this does not
+create an execution-time feedback or routing intake obligation.
 
-- Record only verified, non-obvious, trigger-first gotchas: the trigger (the future
-  action), the consequence (what breaks and why), and the evidence pointer.
-- Supersede an outdated entry rather than editing history silently or duplicating it;
-  keep one index entry per gotcha and repair every inbound reference.
-- Never write completed-work summaries, file inventories, task ledgers, or git-owned
-  metadata; those belong to documentation or git.
-- Never write credentials, tokens, personal data, or sensitive payloads.
-- Classify surplus entries per `compact-memory`: `KEEP`, `MIGRATE` (to an authoritative
-  document), `MERGE`, or `DROP` with a recorded reason.
+## Authorized writes
 
-## Project coordination feedback
+Write a gotcha only when it is verified, non-obvious, durable, action-triggered, and has a
+trigger, consequence, and evidence pointer. Supersede outdated entries rather than silently
+editing history or duplicating an entry.
 
-Executable runs consume technical gotchas and approved constraints carried by task contracts,
-not LLM coordination-feedback/routing obligations. The following explicit-feedback owner is
-for separately authorized planning/manual feedback, never routine runtime paperwork.
+Write owner guidance only for clear, explicit, future-directed user feedback. Preserve its
+actual user provenance and concise future trigger/action. Clear bounded feedback needs no routine
+second approval. Explanation-only questions, ordinary implementation approval, agent
+observations, failed runs, inferred lessons, and no feedback write nothing. Ambiguous
+meaning or scope requires asking before writing; an explicit no-write boundary prevails.
 
-Apply the shared [project coordination contract](references/project-coordination.md).
-Read relevant existing compact guidance; missing coordination store or STATE is nonblocking.
-No auto-initialization, routine summaries/index updates, reflection or inferred lessons.
-Only explicit user future-directed feedback permits bounded project-local guideline changes;
-ambiguity asks before writes, explanation-only/no feedback/no-write boundaries write nothing.
-Keep path/symlink, sensitive-data and dirty/concurrent ownership protections. Required
-gotcha-memory rules above remain separate; do not disguise inferred coordination lessons
-as gotchas or put coordination records into this gotcha index.
+Before an authorized write, establish the local owner and bounded associated paths. Refuse
+outside-project paths, symlink escapes, unreadable or non-file collisions, uncertain local
+ownership, dirty or concurrent content, and secrets or sensitive payloads. Preserve custom
+and unrelated bytes. Re-read and compare the intended baseline immediately before applying;
+concurrent drift or same-file ambiguity stops the affected write. Owner-authorized
+concurrency is valid with explicit path ownership, but overlap or uncertainty stops the
+affected write. An authorized new association may create only its bounded unified
+index/entry structure—never separate guidance, history, run, or STATE scaffolding.
+
+After an actual write, recheck the index and relevant entries. A retained memory change is a
+substantive deliverable and follows the existing
+[task-commit contract](references/task-commit-contract.md); that contract remains the sole
+owner of focused checkpoint behavior.
+
+## No routine bookkeeping
+
+Planning, dispatch, polling, recovery, task/check/commit completion, review, pause, and
+closeout do not authorize memory writes. Do not create or maintain STATE, progress ledgers,
+routine summaries, index refreshes, run/evidence records, reflection, candidate synthesis,
+or evidence-only commits. Leave existing custom and historical content unchanged unless an
+authorized scoped write requires it. Recovery remains owned by its existing coordinator;
+this skill does not copy a recovery protocol.
 
 ## Report
 
-State the verified store location, the index state, the entries consulted and why,
-constraints applied from memory, and any writes or supersessions performed in this
-session.
+State the verified association/index location, entries consulted and why, applicable
+constraints, and any authorized write or supersession. State when association is missing or
+when a write was refused and why.
+
 ## Mandatory task checkpoint
 
-Apply the shared [task-commit contract](references/task-commit-contract.md). Explicitly authorized retained feedback is a substantive deliverable, not routine evidence persistence.
+Apply the shared [task-commit contract](references/task-commit-contract.md). Explicitly
+authorized retained memory feedback is a substantive deliverable, not routine evidence
+persistence.

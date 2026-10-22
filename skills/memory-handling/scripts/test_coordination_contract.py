@@ -1,36 +1,40 @@
 #!/usr/bin/env python3
-"""Feedback-only owner sensitivity and symbolic filesystem decisions, not model obedience."""
+"""Unified-memory instruction sensitivity and symbolic write-safety decisions.
+
+These fixtures do not execute a skill or prove model obedience.
+"""
 from pathlib import Path
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[3]
-TEXT = (ROOT / "skills/memory-handling/references/project-coordination.md").read_text()
+TEXT = (ROOT / "skills/memory-handling/SKILL.md").read_text()
 
 GUARDS = {
-    "Read existing guidance": (
-        "standalone planning/task entry", "not an execution-feedback/routing intake obligation", "Missing store or STATE is nonblocking",
-        "do not auto-initialize", "source criteria → task dependencies/REQUIRED checks → worker brief",
-        "Empty guidance means no applicable guidance", "explicit relevant need",
-        "read it first and open only matching records", "Do not recursively load history",
-        "Missing relevant evidence retains uncertainty",
+    "Discovering the association": (
+        "exactly once per session", "one index", "custom index path", "Read-time discovery never creates storage",
+        "Missing optional storage or STATE is nonblocking", "memory adoption: missing — run initialize-coherence",
+        "never guess a path", "global agent memory as a fallback",
+        "separate guidance store",
     ),
-    "Explicit feedback only": (
-        "explicit user corrective/future-round direction", "without a routine second exact-content approval",
-        "user provenance", "trigger/action", "Ordinary implementation approval, agent observations",
-        "explanation-only questions authorize no feedback write", "No feedback means no write",
-        "Materially ambiguous meaning/scope requires asking", "An explicit no-write boundary prevails",
-        "local owner/allowed paths", "outside-project paths", "symlink escapes",
-        "unreadable/non-file collisions", "dirty and concurrent content", "re-read/compare",
-        "Concurrent drift or same-file ambiguity stops", "secrets/sensitive payloads",
-        "Create only the bounded guidelines owner", "never history/index/run scaffolding",
-        "Recheck relevant guidance after writes", "one focused owned-path commit",
+    "Retrieval protocol": (
+        "Read the whole associated index first", "Open only relevant entries in full",
+        "Do not recursively or", "wholesale load history", "Recheck after a memory write",
+    ),
+    "Authorized writes": (
+        "trigger, consequence, and evidence pointer", "actual user provenance", "future trigger/action",
+        "Clear bounded feedback needs no routine", "Explanation-only questions",
+        "ordinary implementation approval", "agent", "failed runs", "inferred lessons",
+        "Ambiguous", "explicit no-write boundary prevails",
+        "outside-project paths", "symlink escapes", "unreadable or non-file collisions",
+        "uncertain local", "dirty or concurrent content", "secrets or sensitive payloads",
+        "Preserve custom", "Re-read and compare", "concurrent drift",
+        "separate guidance, history, run, or STATE scaffolding", "task-commit contract",
     ),
     "No routine bookkeeping": (
-        "do not authorize STATE creation/edit/removal", "coordination summaries/run records",
-        "history/index updates", "reflection, candidate synthesis or evidence-only commits",
-        "No renamed durable snapshot", "Leave historical records and existing STATE/custom content unchanged",
-        "baseline/result SHAs and verification proof without duplicated persistence",
+        "do not authorize memory writes", "STATE, progress ledgers", "routine summaries",
+        "index refreshes", "run/evidence records", "reflection", "candidate synthesis",
+        "evidence-only commits", "Recovery remains owned by its existing coordinator",
     ),
 }
 
@@ -42,83 +46,94 @@ def contract_errors(text):
         start = text.find(marker)
         end = text.find("\n## ", start + len(marker))
         body = " ".join((text[start:] if end < 0 else text[start:end]).split()) if start >= 0 else ""
-        errors.extend(f"{heading}: missing {c}" for c in clauses if c not in body)
-    for unsafe in ("Automatically initialize coordination memory", "Write a run SUMMARY on completion",
-                   "Refresh the coordination index after every task", "Reflect at blocked pause",
-                   "Commit evidence separately before the next task", "Infer lessons from failed runs"):
+        errors.extend(f"{heading}: missing {clause}" for clause in clauses if clause not in body)
+    for unsafe in (
+        "Create a separate GUIDELINES.md store", "Automatically initialize memory on read",
+        "Write a run SUMMARY on completion", "Refresh the memory index after every task",
+        "Reflect at blocked pause", "Commit evidence separately before the next task",
+        "Infer lessons from failed runs",
+    ):
         if unsafe.lower() in text.lower():
             errors.append("bookkeeping: " + unsafe)
     return errors
 
 
-def feedback_decision(kind, *, no_write=False, safe=True):
-    """Authored symbolic feedback oracle; no skill execution or approval engine."""
-    if no_write or kind in ("none", "explanation", "implementation-approval", "agent-observation"):
+def write_decision(kind, *, no_write=False, safe=True):
+    """Authored symbolic authority oracle; it is not a filesystem write engine."""
+    if no_write or kind in (
+        "none", "explanation", "implementation-approval", "agent-observation", "failed-run", "inferred-lesson",
+    ):
         return "no-write"
     if kind == "ambiguous":
         return "ask/no-write"
-    return "write-guideline" if safe else "stop/no-write"
+    return "write-unified-entry" if safe else "stop/no-write"
 
 
-class CoordinationContractTests(unittest.TestCase):
-    def test_shared_owner_contract(self):
+class UnifiedMemoryContractTests(unittest.TestCase):
+    def test_actual_unified_owner_contract(self):
         self.assertEqual(contract_errors(TEXT), [])
 
-    def test_each_guidance_feedback_safety_and_nonpersistence_guard(self):
+    def test_each_guard_mutation_has_named_diagnostic(self):
         for heading, clauses in GUARDS.items():
             for clause in clauses:
                 with self.subTest(heading=heading, clause=clause):
-                    normalized = " ".join(TEXT.split()).replace(" ## ", "\n## ")
-                    altered = normalized.replace(clause, "REMOVED", 1) + "\n## Footer\n" + clause
-                    self.assertTrue(any(e.startswith(heading + ":") for e in contract_errors(altered)))
+                    altered = TEXT.replace(clause, "REMOVED")
+                    self.assertIn(f"{heading}: missing {clause}", contract_errors(altered))
 
-    def test_routine_bookkeeping_resurrection_mutations(self):
-        for unsafe in ("Automatically initialize coordination memory", "Write a run SUMMARY on completion",
-                       "Refresh the coordination index after every task", "Reflect at blocked pause",
-                       "Commit evidence separately before the next task", "Infer lessons from failed runs"):
-            self.assertIn("bookkeeping: " + unsafe, contract_errors(TEXT + "\n" + unsafe))
+    def test_separate_store_and_bookkeeping_resurrection_mutations_are_rejected(self):
+        for unsafe in (
+            "Create a separate GUIDELINES.md store", "Automatically initialize memory on read",
+            "Write a run SUMMARY on completion", "Refresh the memory index after every task",
+            "Reflect at blocked pause", "Commit evidence separately before the next task",
+            "Infer lessons from failed runs",
+        ):
+            with self.subTest(unsafe=unsafe):
+                self.assertIn("bookkeeping: " + unsafe, contract_errors(TEXT + "\n" + unsafe))
 
-    def test_clear_future_feedback_needs_no_second_approval(self):
-        self.assertEqual(feedback_decision("clear-future-direction"), "write-guideline")
+    def test_authority_matrix(self):
+        self.assertEqual(write_decision("clear-future-direction"), "write-unified-entry")
+        for kind in ("none", "explanation", "implementation-approval", "agent-observation", "failed-run", "inferred-lesson"):
+            self.assertEqual(write_decision(kind), "no-write")
+        self.assertEqual(write_decision("clear-future-direction", no_write=True), "no-write")
+        self.assertEqual(write_decision("ambiguous"), "ask/no-write")
 
-    def test_explanation_no_feedback_approval_observation_and_no_write(self):
-        for kind in ("none", "explanation", "implementation-approval", "agent-observation"):
-            self.assertEqual(feedback_decision(kind), "no-write")
-        self.assertEqual(feedback_decision("clear-future-direction", no_write=True), "no-write")
-        self.assertEqual(feedback_decision("ambiguous"), "ask/no-write")
-
-    def test_dirty_concurrent_path_symlink_sensitive_and_owner_safety_stops(self):
+    def test_path_symlink_sensitive_owner_dirty_and_concurrent_safety_stops(self):
         for gap in ("dirty ownership", "concurrent drift", "outside root", "symlink", "sensitive payload", "unknown owner"):
             with self.subTest(gap=gap):
-                self.assertEqual(feedback_decision("clear-future-direction", safe=False), "stop/no-write")
+                self.assertEqual(write_decision("clear-future-direction", safe=False), "stop/no-write")
 
-    def test_absent_store_no_feedback_no_initialization(self):
+    def test_absent_optional_store_does_not_initialize(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for event in ("planning", "dispatch", "recovery", "review", "closeout", "blocked pause"):
-                self.assertEqual(feedback_decision("none"), "no-write", event)
+                self.assertEqual(write_decision("none"), "no-write", event)
                 self.assertEqual(list(root.iterdir()), [])
 
-    def test_authorized_creation_is_guidelines_only_and_preserves_custom_content(self):
+    def test_authorized_custom_association_creates_one_index_and_entry_preserving_bytes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             custom = root / "custom.txt"
             custom.write_bytes(b"user content\n")
-            self.assertEqual(feedback_decision("clear-future-direction"), "write-guideline")
-            owner = root / "memory/coordination/GUIDELINES.md"
-            owner.parent.mkdir(parents=True)
-            owner.write_text("Trigger: future dispatch. Action: use direct async. User provenance: explicit feedback.\n")
+            self.assertEqual(write_decision("clear-future-direction"), "write-unified-entry")
+            index = root / "owner-selected" / "MEMORY.md"
+            entry = index.parent / "entries" / "parent-turns.md"
+            entry.parent.mkdir(parents=True)
+            index.write_text("# Memory index\n\n- Owner guidance: parent turns → entries/parent-turns.md\n")
+            entry.write_text("User provenance: explicit future feedback.\nTrigger: parent turn.\nAction: notify only for questions or terminal completion.\n")
             self.assertEqual(custom.read_bytes(), b"user content\n")
-            self.assertEqual([p.name for p in owner.parent.iterdir()], ["GUIDELINES.md"])
-            baseline = owner.read_bytes()
-            for kind in ("none", "explanation", "ambiguous"):
-                self.assertNotEqual(feedback_decision(kind), "write-guideline")
-                self.assertEqual(owner.read_bytes(), baseline)
+            self.assertTrue(index.is_file())
+            self.assertTrue(entry.is_file())
+            self.assertEqual(sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()),
+                             ["custom.txt", "owner-selected/MEMORY.md", "owner-selected/entries/parent-turns.md"])
+            baseline = (index.read_bytes(), entry.read_bytes())
+            for kind in ("none", "explanation", "ambiguous", "failed-run"):
+                self.assertNotEqual(write_decision(kind), "write-unified-entry")
+                self.assertEqual((index.read_bytes(), entry.read_bytes()), baseline)
 
-    def test_history_is_selective_no_match_retains_uncertainty(self):
-        index = {"routing": "prior-routing", "unrelated": "prior-other"}
-        self.assertEqual([v for k, v in index.items() if k == "routing"], ["prior-routing"])
-        self.assertEqual([v for k, v in index.items() if k == "no-match"], [])
+    def test_selective_entries_and_recheck_contract_remain(self):
+        index = {"parent-turn": "entries/parent-turns.md", "unrelated": "entries/other.md"}
+        self.assertEqual([value for key, value in index.items() if key == "parent-turn"], ["entries/parent-turns.md"])
+        self.assertEqual([value for key, value in index.items() if key == "no-match"], [])
         self.assertEqual(contract_errors(TEXT), [])
 
 
