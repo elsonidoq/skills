@@ -128,7 +128,7 @@ class TaskGenerationContractTests(unittest.TestCase):
     def test_guidance_changes_dependency_check_and_brief_in_both_adapters(self):
         preflight = TEXT.split("## Preconditions and adapters", 1)[1].split("## Task contract", 1)[0]
         for clause in ("including direct entry without planner", "relevant decision",
-                       "dependency/check and runtime brief", "not merely a link"):
+                       "task-local REQUIRED check and worker brief", "not merely a link"):
             self.assertIn(clause, preflight)
             self.assertNotIn(clause, preflight.replace(clause, "REMOVED", 1))
 
@@ -188,6 +188,20 @@ class TaskGenerationContractTests(unittest.TestCase):
         ):
             with self.subTest(clause=clause):
                 self.assertIn(" ".join(clause.split()), " ".join(review.split()))
+
+    def test_producer_reads_actual_executor_json_before_both_adapter_decompositions(self):
+        guidance = ' '.join(TEXT.split('## Executor guidance', 1)[1].split('## Task contract', 1)[0].split())
+        for clause in (
+            'Before either adapter decomposes work', 'producer itself must read',
+            'exact path supplied in its brief', 'valid worker model and effort',
+            'planner/parent/producer profile, remembered default',
+            'present valid JSON needs no executor-selection question',
+            'path is missing, ambiguous or unreadable', 'worker model/effort is missing or invalid',
+            'affected role, path and problem', 'concrete interfaces, owned paths, earlier dependencies, local checks and real permission/manual gates',
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(' '.join(clause.split()), guidance)
+        self.assertNotIn('qualified seed rubric', TEXT)
 
     def test_executor_sized_recipe_and_planner_review_reference(self):
         """Instruction coverage only; realistic boundary judgments need manual pressure checks."""

@@ -260,12 +260,19 @@ new material owner gates and explicit stop boundaries still prevent unsafe conti
 
 ## Intended executor before decomposition
 
-Use the owner's selected coding model and effort to tailor useful implementation guidance;
-never infer a substitute from the planner/producer/reviewer profile. Executor settings belong
-to actual runtime configuration. Task handoffs follow the shared `task-generation` six-check
-contract, not mandatory execution-intent, compatibility-assessment or provenance metadata.
+Before task decomposition, discover the current project's selected executor JSON path and pass
+that exact path in both direct TinySpec and Standard task-producer briefs. The producer itself
+must read the actual JSON before decomposing work; a planner/parent/producer profile, remembered
+default or brief assertion is not a substitute. A valid selected JSON supplies the worker model
+and effort for bounded implementation guidance, without a redundant executor-selection question.
 
-Apply task-generation's executor-sized outcome recipe using selected configuration and
+If the selected path is missing, ambiguous or unreadable, or its worker model/effort is absent
+or invalid, stop only the affected producer and ask the owner to resolve that role, path and
+problem. Do not recommend or infer a replacement. Executor settings remain in actual runtime
+configuration: task handoffs follow the shared `task-generation` six-check contract, not
+mandatory execution-intent, compatibility-assessment or provenance metadata.
+
+Apply task-generation's executor-sized outcome recipe using the producer-read configuration and
 verified capability guidance, not a model-family hierarchy or a substitute model. Make
 interfaces and non-obvious decisions explicit where the executor needs them; configuration
 alone does not establish granularity. Record bounded scope, choices left open and uncertainty.
@@ -339,9 +346,7 @@ boundaries, task dependencies, checkpoints, verification and coordinator handoff
 these constraints reach tasks through the shared adapter, not just a memory summary. Check that
 approved applicable guidance changes a relevant decision (or explain existing coverage), not merely a link.
 Memory cannot override source requirements or owner authority. Preselection stays read-only;
-no routine coordination persistence, default history intake or raw-outcome promotion. Optional `residual_reasoning` notes
-(low/medium/high with rationale) may inform later owner-selected batch routing;
-absence requires no migration and changes no approval rule.
+no routine coordination persistence, default history intake or raw-outcome promotion.
 
 Pass source constraints, canonical research links, applicable guidelines and stable task-local REQUIRED
 verification needs through both adapters to task generation and coordinator. Each item retains

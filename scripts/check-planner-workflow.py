@@ -186,6 +186,22 @@ def check_contracts(texts):
             "Keep task-specific work and useful checks clear",
             "verify the exact affected operation", "A worker file-tool bound is not a task-contract loader bound",
             "An inference or agreement to a narrowly explained remedy")
+    executor_intake = section(texts["tasks"], "## Executor guidance")
+    require("executor-producer-intake", executor_intake,
+            "Before either adapter decomposes work", "producer itself must read",
+            "exact path supplied in its brief", "valid worker model and effort",
+            "planner/parent/producer profile, remembered\ndefault", "present valid JSON needs no executor-selection\nquestion",
+            "path is missing, ambiguous or unreadable", "worker model/effort is missing or invalid",
+            "affected role, path and problem", "concrete\ninterfaces, owned paths, earlier dependencies, local checks and real permission/manual gates")
+    require("executor-planner-handoff", section(p, "## Intended executor before decomposition"),
+            "discover the current project's selected executor JSON path", "both direct TinySpec and Standard task-producer briefs",
+            "producer itself\nmust read the actual JSON before decomposing work", "planner/parent/producer profile, remembered\ndefault",
+            "missing, ambiguous or unreadable", "worker model/effort is absent\nor invalid", "affected producer", "role, path and\nproblem")
+    require("executor-tiny-handoff", section(texts["tiny"], "## Intended executor before decomposition"),
+            "selected executor JSON path from the planner", "direct task-producer\nbrief", "task producer itself reads that JSON before decomposition",
+            "does not select or copy runtime bindings", "affected task production")
+    reject("retired-routing-leftover", "\n".join((p, texts["tasks"], texts["tiny"])),
+           "qualified seed rubric", "residual_reasoning", "owner-selected batch routing")
     for label, key, selector, clauses in ACCEPTED_ADAPTER_CARRIERS:
         require(label, operational_carrier(texts[key], selector), *clauses)
     require("draft-editing", section(texts["approval"], "## Bounded mechanical corrections"),

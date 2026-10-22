@@ -8,6 +8,39 @@ import re
 MUTATIONS = {"edit", "write", "patch", "apply_patch"}
 
 
+class ExecutorIntakeError(ValueError):
+    """Focused task-producer executor-configuration resolution failure."""
+
+
+def read_executor_for_decomposition(selected_path, *, role, events):
+    """Read a selected executor file before task decomposition in offline traces.
+
+    This intentionally consumes the supplied project path rather than a producer binding;
+    callers record their later decomposition event in the same list.
+    """
+    if not isinstance(selected_path, (str, Path)) or not str(selected_path).strip():
+        raise ExecutorIntakeError(
+            f"{role}: selected executor path is missing or ambiguous; ask the owner to resolve the path")
+    path = Path(selected_path)
+    try:
+        payload = json.loads(path.read_text())
+    except FileNotFoundError:
+        raise ExecutorIntakeError(
+            f"{role}: selected executor path {path} is missing; ask the owner to resolve the path") from None
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ExecutorIntakeError(
+            f"{role}: selected executor path {path} is unreadable or invalid; ask the owner to resolve the path") from exc
+    if not isinstance(payload, dict):
+        raise ExecutorIntakeError(
+            f"{role}: worker assignment in {path} is invalid; ask the owner to resolve the worker assignment")
+    worker = {field: payload.get(field) for field in ("model", "effort")}
+    if not all(isinstance(value, str) and value.strip() for value in worker.values()):
+        raise ExecutorIntakeError(
+            f"{role}: worker assignment in {path} is missing or invalid; ask the owner to resolve the worker assignment")
+    events.append({"type": "executor_read", "role": role, "path": str(path), "worker": worker})
+    return worker
+
+
 def check_assignments(events, expected):
     """Check saved bindings copied into offline stage briefs/calls, not live delegation."""
     errors, seen, failed = [], set(), set()

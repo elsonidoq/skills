@@ -61,11 +61,17 @@ impact, allowed bounds and outstanding validation, never automatic deferral.
 
 ## Intended executor before decomposition
 
-Use the owner's selected model and effort to tailor useful task guidance. Do not silently
-substitute another executor. The executable task handoff follows
-[task-generation](../task-generation/SKILL.md): IDs, work descriptions and optional dependencies,
-not mandatory execution-intent, compatibility-assessment or provenance metadata. Executor
-settings belong to the selected runtime configuration. Existing optional context may remain.
+Carry the current project's selected executor JSON path from the planner into the direct task-producer
+brief; do not replace it with a source-producer model, remembered default or repository-specific
+path. The task producer itself reads that JSON before decomposition under
+[task-generation](../task-generation/SKILL.md); this source does not select or copy runtime bindings.
+If the selected path or worker assignment cannot be resolved, stop only the affected task production
+for the focused owner correction described there.
+
+The executable task handoff follows [task-generation](../task-generation/SKILL.md): IDs, work
+descriptions and optional dependencies, not mandatory execution-intent, compatibility-assessment
+or provenance metadata. Executor settings belong to the selected runtime configuration. Existing
+optional context may remain.
 
 ## Compact source contract
 

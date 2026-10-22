@@ -37,8 +37,6 @@ or uncertain current supersession stops only the affected task mapping. No defau
 intake; explicit relevant retrieval is index-first where useful and retains uncertainty on no
 match. Required gotcha-memory gates remain separate.
 
-Optional residual-reasoning notes describe remaining inference, not an execution assignment or runtime routing.
-Planning selection belongs to the [qualified seed rubric](../planner/references/profile-selection.md).
 Execution uses the owner-selected configured binding without silent substitutions.
 
 Use the adapter matching the producing workflow:
@@ -76,10 +74,19 @@ as unavailable.
 
 ## Executor guidance
 
-Use the owner's selected executor and effort when tailoring useful implementation guidance.
-Do not silently substitute a different model. Executor settings belong to the actual runtime
-configuration, not task eligibility metadata: no execution-intent resolution, compatible-binding
-assessment or provenance receipt is required in tasks. Historical optional context may remain.
+Before either adapter decomposes work, the producer itself must read the current project's selected
+executor JSON at the exact path supplied in its brief. Use that JSON's valid worker model and effort
+for bounded implementation guidance; do not use a planner/parent/producer profile, remembered
+default, or a brief claim that the file was read. A present valid JSON needs no executor-selection
+question.
+
+If the path is missing, ambiguous or unreadable, or the worker model/effort is missing or invalid,
+stop only the affected producer and ask the owner to resolve the affected role, path and problem.
+Do not recommend, infer or silently substitute a model or effort. Executor settings belong to the
+actual runtime configuration, not task eligibility metadata: no execution-intent resolution,
+compatible-binding assessment or provenance receipt is required in tasks. Historical optional
+context may remain. Reading configuration does not replace decomposition: retain concrete
+interfaces, owned paths, earlier dependencies, local checks and real permission/manual gates.
 
 ## Task contract
 

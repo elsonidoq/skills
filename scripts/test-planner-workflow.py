@@ -2178,6 +2178,82 @@ class OwnerAssignmentPlannerTests(unittest.TestCase):
                       "\n".join(trace.check_assignments(events, {"standard-plan-direct": binding})))
 
 
+class OwnerAssignmentExecutorIntakeTests(unittest.TestCase):
+    """Offline producer-read traces, not a model dispatch or availability proof."""
+
+    def test_both_task_producers_read_selected_json_before_decomposition(self):
+        parent = {"model": "parent/different", "effort": "low"}
+        producer = {"model": "producer/different", "effort": "high"}
+        configured = {"model": "fixture/non-default-worker", "effort": "medium"}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "selected-executor.json"
+            path.write_text(json.dumps({"provider": "fixture", **configured}))
+            for adapter, role in (("direct TinySpec", "tinyspec-tasks"),
+                                  ("Standard", "standard-tasks")):
+                with self.subTest(adapter=adapter):
+                    events = []
+                    brief = {"adapter": adapter, "executor_path": str(path),
+                             "parent": parent, "producer": producer}
+                    worker = trace.read_executor_for_decomposition(
+                        brief["executor_path"], role=role, events=events)
+                    events.append({"type": "decompose", "adapter": adapter,
+                                   "worker": worker, "interfaces": ["fixture API"],
+                                   "owned_paths": ["fixture.py"], "checks": ["local fixture"],
+                                   "gates": ["real manual gate"]})
+                    self.assertEqual(worker, configured)
+                    self.assertNotEqual(worker, parent)
+                    self.assertNotEqual(worker, producer)
+                    self.assertEqual([event["type"] for event in events],
+                                     ["executor_read", "decompose"])
+                    self.assertEqual(events[0]["path"], str(path))
+                    self.assertEqual(events[1]["worker"], configured)
+                    self.assertFalse(any(event["type"] == "owner_question" for event in events))
+                    self.assertTrue(all(events[1][field] for field in
+                                        ("interfaces", "owned_paths", "checks", "gates")))
+
+    def test_adapter_intake_contract_rejects_missing_actual_read_carriers(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        changed = dict(texts)
+        changed["tasks"] = changed["tasks"].replace(
+            "producer itself must read the current project's selected\nexecutor JSON", "producer may use the brief", 1)
+        self.assertTrue(any(error.startswith("executor-producer-intake:")
+                            for error in checker.check_contracts(changed)))
+        changed = dict(texts)
+        changed["planner"] = changed["planner"].replace(
+            "both direct TinySpec and Standard task-producer briefs", "only a summary brief", 1)
+        self.assertTrue(any(error.startswith("executor-planner-handoff:")
+                            for error in checker.check_contracts(changed)))
+
+    def test_missing_ambiguous_and_invalid_intake_asks_only_for_affected_resolution(self):
+        cases = (
+            (None, "selected executor path is missing or ambiguous"),
+            ("", "selected executor path is missing or ambiguous"),
+        )
+        for selected_path, problem in cases:
+            with self.subTest(selected_path=selected_path):
+                with self.assertRaisesRegex(trace.ExecutorIntakeError, problem) as raised:
+                    trace.read_executor_for_decomposition(selected_path, role="tinyspec-tasks", events=[])
+                self.assertIn("tinyspec-tasks", str(raised.exception))
+                self.assertIn("ask the owner to resolve", str(raised.exception))
+                self.assertNotRegex(str(raised.exception).lower(), "recommend|default|substitute")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for filename, contents, problem in (
+                ("missing.json", None, "path .* is missing"),
+                ("invalid.json", "{", "unreadable or invalid"),
+                ("worker.json", json.dumps({"model": "worker-only"}), "worker assignment .* missing or invalid"),
+            ):
+                with self.subTest(path=filename):
+                    path = root / filename
+                    if contents is not None:
+                        path.write_text(contents)
+                    with self.assertRaisesRegex(trace.ExecutorIntakeError, problem) as raised:
+                        trace.read_executor_for_decomposition(path, role="standard-tasks", events=[])
+                    self.assertIn("standard-tasks", str(raised.exception))
+                    self.assertIn("ask the owner to resolve", str(raised.exception))
+
+
 class OwnerAssignmentHelperTests(unittest.TestCase):
     """The saved helper binding spans its one managed plan pass; no provider call."""
 
