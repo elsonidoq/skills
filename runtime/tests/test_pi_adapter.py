@@ -71,6 +71,15 @@ class SDKTransportTests(ProjectTest):
             proc.stderr.close()
 
     def test_adapter_multiplexes_steering_while_correlated_question_waits(self):
+        self._real_sdk_callback_steering('question')
+
+    def test_adapter_multiplexes_steering_while_sqlite_claim_waits(self):
+        self._real_sdk_callback_steering('claim')
+
+    def test_adapter_multiplexes_steering_while_sqlite_command_waits(self):
+        self._real_sdk_callback_steering('command')
+
+    def _real_sdk_callback_steering(self, callback_kind):
         host = Path(__file__).resolve().parents[1] / 'pi-host' / 'host.mjs'
         preload = Path(__file__).parent / 'fixtures' / 'steering_adapter_fixture.mjs'
         target = {'run_id': 'run', 'task_id': 'T016', 'invocation_id': 'invocation', 'role': 'task_worker'}
@@ -81,9 +90,21 @@ class SDKTransportTests(ProjectTest):
                             steering_status=lambda status: statuses.append(status))
         outcome = []
         env = {'COHERENCE_HOST_PRELOAD': '1', 'NODE_OPTIONS': '--import=' + str(preload),
+               'COHERENCE_STEERING_CALLBACK': callback_kind,
                'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}
+        def prompt():
+            # Create SQLite on the actual prompt thread, exactly as Store does.
+            with sqlite3.connect(':memory:') as connection:
+                connection.execute('CREATE TABLE callbacks (kind TEXT)')
+                def callback(*_args):
+                    connection.execute('INSERT INTO callbacks VALUES (?)', (callback_kind,))
+                    entered.set()
+                    self.assertTrue(release.wait(10))
+                outcome.append(adapter.prompt('fixture', steering=target, claim=callback, command=callback))
+                if callback_kind != 'question':
+                    self.assertGreater(connection.execute('SELECT count(*) FROM callbacks').fetchone()[0], 0)
         with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, env, clear=False):
-            thread = threading.Thread(target=lambda: outcome.append(adapter.prompt('fixture', steering=target)))
+            thread = threading.Thread(target=prompt)
             thread.start()
             deadline = time.monotonic() + 10
             while (adapter.active_target is None or not entered.is_set()) and time.monotonic() < deadline:

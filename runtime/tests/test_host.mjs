@@ -9,6 +9,7 @@ import { mock, test } from 'node:test';
 import readline from 'node:readline';
 import { AgentSession, createReadTool, createEditTool, createWriteTool, createBashTool } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
 import { createWorkflowSession, mutationTools, promptSession, steeringController } from '../pi-host/host.mjs';
+import {installSteeringProvider} from './fixtures/steering_adapter_fixture.mjs';
 
 test('actual SDK worker exposes ask_owner while independent reviewer remains read-only', async () => {
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-owner-tools-'));
@@ -68,44 +69,45 @@ test('provider-bound routine authority reaches the SDK prompt without sending a 
   assert.equal(received, authority);
 });
 
-test('steering uses the installed SDK queue and matching user event, not queue insertion as consumption', async () => {
+test('steering uses the installed SDK queue and matching user event, not queue insertion as consumption', {timeout: 15000}, async () => {
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-steering-sdk-'));
   const events = [];
   try {
+    const provider = installSteeringProvider('question', project);
+    let enter, release;
+    const entered = new Promise(resolve => { enter = resolve; });
+    const answer = new Promise(resolve => { release = resolve; });
     const session = await createWorkflowSession({project,
-      executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'}}, async () => ({}));
+      executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'}}, async () => { enter(); return answer; });
     try {
       const sdkEvents = [];
       session.subscribe(event => sdkEvents.push(event));
-      // This is the controlled local provider seam: the real SDK queue receives
-      // steer(), then emits its normal user-message event on the next turn.
-      session._isAgentRunActive = true;
-      let consumed;
-      session.agent.steer = message => { consumed = new Promise(resolve => setImmediate(resolve)).then(() =>
-        session._handleAgentEvent({type: 'message_start', message})); };
+      // The registered provider emits an actual ask_owner tool call. Only the
+      // provider response is controlled; public steer and SDK events are real.
+      const prompting = promptSession(session, 'offline steering', () => {});
+      await entered;
       const target = {run_id: 'run', task_id: 'T009', invocation_id: 'invocation', role: 'task_worker'};
       const controller = steeringController({steering: target}, session, event => events.push(event));
       const control = {type: 'steer', request_id: 'direction-1', target: {...target,
         session_id: session.coherenceSavedSession.id}, instruction: '/do not execute'};
       await controller.steer(control);
-      await consumed;
-      assert.ok(sdkEvents.some(event => event.type === 'message_start'), 'installed SDK emitted the user-message event');
-      assert.equal(sdkEvents.find(event => event.type === 'message_start').message.role, 'user');
-      assert.match(JSON.stringify(sdkEvents.find(event => event.type === 'message_start').message.content), /owner-direction/);
-      assert.deepEqual(events.filter(event => event.type === 'steer').map(event => event.status),
-        ['accepted', 'queued', 'consumed']);
-      assert.equal(session._steeringMessages.length, 0, 'actual SDK message_start removes the queued envelope');
-      await controller.steer(control);
-      assert.equal(events.filter(event => event.type === 'steer' && event.request_id === 'direction-1').at(-1).status,
-        'consumed', 'same correlation ID never queues twice');
+      assert.deepEqual(events.filter(event => event.type === 'steer').map(event => event.status), ['accepted', 'queued']);
+      await controller.steer(control); // same ID must not insert twice
       const second = {...control, request_id: 'direction-2'};
       await controller.steer(second);
-      await consumed;
+      assert.equal(events.some(event => event.status === 'consumed'), false, 'pending owner reply remains a gate');
+      release({answer: 'ordinary callback'});
+      assert.equal(await prompting, 'steering complete');
+      const directions = sdkEvents.filter(event => event.type === 'message_start' && event.message.role === 'user' && JSON.stringify(event.message.content).includes('owner-direction'));
+      assert.equal(directions.length, 2, 'real SDK emits exactly one user message for each unique request ID');
+      assert.ok(directions.every(event => JSON.stringify(event.message.content).includes('/do not execute')));
+      const toolEnd = sdkEvents.findIndex(event => event.type === 'tool_execution_end');
+      assert.ok(toolEnd >= 0 && sdkEvents.indexOf(directions[0]) > toolEnd, 'consumption follows the actual tool reply');
       assert.deepEqual([...new Set(events.filter(event => event.type === 'steer' && event.status === 'consumed')
         .map(event => event.request_id))].sort(), ['direction-1', 'direction-2'],
       'identical owner text with a new ID remains distinct');
       controller.close();
-    } finally { session.dispose(); }
+    } finally { session.dispose(); provider.mock.restore(); }
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 

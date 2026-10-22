@@ -31,7 +31,75 @@ test('Pi discovers the project bridge and registers both tools without explicit 
       extension.tools.has('coordinate_implementation_start'));
     assert.ok(bridge, 'normal project discovery must register the bridge start tool');
     assert.ok(bridge.tools.has('coordinate_implementation_reply'));
+    assert.ok(bridge.tools.has('coordinate_implementation_steer'));
   } finally {
+    await fs.rm(root, {recursive: true, force: true});
+  }
+});
+
+test('registered parent steering tool reaches the production adapter, host and real SDK queue while its question waits', {timeout: 20000}, async () => {
+  const {DefaultResourceLoader, SettingsManager} = await import('../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-real-steering-'));
+  const messages = [];
+  const abort = new AbortController();
+  const previous = {...process.env};
+  try {
+    await fs.mkdir(path.join(root, '.pi'), {recursive: true});
+    await fs.symlink(path.join(repository, '.pi/extensions'), path.join(root, '.pi/extensions'));
+    await fs.mkdir(path.join(root, 'scripts'));
+    // Only the launcher is a fixture: it exercises one production PiAdapter
+    // prompt, not an implementation workflow or replacement host dispatcher.
+    const python = path.join(repository, '.pi/workflow-validation/venv/bin/python');
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\ntarget={'run_id':'offline-steering','task_id':'T010','invocation_id':'exact-call','role':'task_worker'}\nadapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'medium'}, question=parent_question)\nassert adapter.enable_parent_steering(target)\nassert adapter.prompt('controlled offline prompt',steering=target)=='steering complete'\nassert adapter.steering_states['direction-1']=='consumed'\nassert adapter.steering_states['direction-2']=='consumed'\n`, {mode: 0o700});
+    process.env.NODE_OPTIONS = '--import=' + path.join(repository, 'runtime/tests/fixtures/steering_adapter_fixture.mjs');
+    process.env.COHERENCE_HOST_PRELOAD = '1';
+    process.env.COHERENCE_NODE = process.execPath;
+    process.env.PI_CODING_AGENT_DIR = path.join(root, 'private-agent');
+    const loader = new DefaultResourceLoader({cwd: root, agentDir: path.join(root, 'parent-agent'),
+      settingsManager: SettingsManager.inMemory(), noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true});
+    await loader.reload();
+    const loaded = loader.getExtensions();
+    assert.deepEqual(loaded.errors, []);
+    const extension = loaded.extensions.find(item => item.tools.has('coordinate_implementation_steer'));
+    assert.ok(extension, 'normal project discovery registered the actual steering tool');
+    loaded.runtime.sendMessage = (message) => messages.push(message);
+    loaded.runtime.getActiveTools = () => [...extension.tools.keys()];
+    const ctx = {cwd: root, sessionManager: {getSessionId: () => 'offline-parent'}};
+    const call = (name, params, signal) => extension.tools.get(name).definition.execute(name, params, signal, undefined, ctx);
+    const until = async predicate => {
+      const end = Date.now() + 15000;
+      while (!predicate()) {
+        assert.ok(Date.now() < end, `timed out waiting for real SDK/bridge event: ${JSON.stringify(messages)}`);
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    };
+    await call('coordinate_implementation_start', {tasks: 'unused', executor: 'unused', run: 'offline-steering'}, abort.signal);
+    await until(() => messages.some(item => item.customType === 'coordinate_implementation_question') && messages.some(item => item.customType === 'coordinate_implementation_target'));
+    const target = messages.find(item => item.customType === 'coordinate_implementation_target').details;
+    assert.equal(target.task_id, 'T010'); assert.equal(target.invocation_id, 'exact-call');
+    const direction = {request_id: 'direction-1', run: 'offline-steering', task_id: target.task_id, invocation_id: target.invocation_id, instruction: '/inert identical direction'};
+    await assert.rejects(call('coordinate_implementation_steer', {...direction, invocation_id: 'successor'}), /exact active worker target unavailable/);
+    assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'accepted');
+    await until(() => messages.some(item => item.customType === 'coordinate_implementation_steering_status' && item.details.status === 'queued'));
+    assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'queued', 'same ID is idempotent');
+    await call('coordinate_implementation_steer', {...direction, request_id: 'direction-2'});
+    await until(() => messages.some(item => item.details?.request_id === 'direction-2' && item.details.status === 'queued'));
+    assert.equal(messages.some(item => item.details?.status === 'consumed'), false, 'steering cannot answer the pending owner question');
+    const question = messages.find(item => item.customType === 'coordinate_implementation_question');
+    await call('coordinate_implementation_reply', {run: 'offline-steering', request_id: question.details.request_id, answer: 'ordinary callback'});
+    await until(() => messages.some(item => item.customType === 'coordinate_implementation_complete'));
+    assert.match(messages.find(item => item.customType === 'coordinate_implementation_complete').content, /exit 0/);
+    for (const id of ['direction-1', 'direction-2']) {
+      const states = messages.filter(item => item.customType === 'coordinate_implementation_steering_status' && item.details.request_id === id);
+      assert.equal(states.at(-1).details.status, 'consumed');
+      assert.ok(states.every(item => item.details.task_id === 'T010' && item.details.invocation_id === 'exact-call'));
+    }
+    await assert.rejects(call('coordinate_implementation_steer', direction), /no matching active/);
+  } finally {
+    abort.abort();
+    for (const key of ['NODE_OPTIONS', 'COHERENCE_HOST_PRELOAD', 'COHERENCE_NODE', 'PI_CODING_AGENT_DIR']) {
+      if (previous[key] === undefined) delete process.env[key]; else process.env[key] = previous[key];
+    }
     await fs.rm(root, {recursive: true, force: true});
   }
 });
