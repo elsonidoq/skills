@@ -415,6 +415,7 @@ class Store:
             if private:
                 item['findings'] = [json.loads(attempt['findings']) for attempt in attempts if attempt['findings'] is not None]
             else:
+                item['references'].pop('saved_session', None)
                 # Parsed actionable findings are safe owner output; raw reviewer JSON stays private.
                 item['findings'] = json.loads(latest['findings']) if latest['findings'] is not None else []
             executions.append(item)

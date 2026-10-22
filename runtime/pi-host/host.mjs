@@ -87,17 +87,23 @@ export function mutationTools(project, ask) {
   ];
 }
 
-export async function createWorkflowSession({project, executor, readOnly = false, savedSession, reuseKey = null}, ask) {
+export async function createWorkflowSession({project, executor, readOnly = false, savedSession, reuseKey = null, reviewRepair = false}, ask) {
   const sessionDir = path.join(project, '.coherence', 'workflow', 'sessions');
   await mkdir(sessionDir, {recursive: true});
   const canonicalSessionDir = await realpath(sessionDir);
   if (reuseKey !== null && typeof reuseKey !== 'string') throw new Error('saved session reuse key must be a string');
   const compatibility = {project: path.resolve(project), provider: executor.provider,
     model: executor.model, effort: executor.effort, readOnly, reuseKey};
+  // Only the runner's explicit review→repair handoff may enable mutation in a
+  // previously read-only session. All other effective resources stay identical.
+  if (reviewRepair && (readOnly || !savedSession || savedSession.compatibility?.readOnly !== true)) {
+    throw new Error('review repair requires a saved read-only reviewer and writable target');
+  }
+  const sourceCompatibility = reviewRepair ? {...compatibility, readOnly: true} : compatibility;
   let sessionManager;
   if (savedSession) {
     if (typeof savedSession !== 'object' || typeof savedSession.id !== 'string' ||
-        typeof savedSession.file !== 'string' || !isDeepStrictEqual(savedSession.compatibility, compatibility)) {
+        typeof savedSession.file !== 'string' || !isDeepStrictEqual(savedSession.compatibility, sourceCompatibility)) {
       throw new Error('saved session identity or effective resources mismatch');
     }
     const sessionFile = await realpath(savedSession.file);

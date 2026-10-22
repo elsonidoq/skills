@@ -301,15 +301,22 @@ class Engine:
             return self.question(text)
         try:
             manual_gates(fix_task, gate_question)
-            request, reuse_key = self._session_request(fix_task, 'fixing_worker')
-            selection = select_session(request, self.session_candidates)
-            selected = next((candidate for candidate in self.session_candidates
-                             if candidate['id'] == selection['session_id']), None)
-            store.history(self.run, None, 'fixer', 'selected', {'execution_id': execution_id,
-                          'trigger_execution_id': trigger_execution_id, 'session_id': selection['session_id'],
-                          'reason': selection['reason'], 'rejected': selection['rejected']})
-            worker = self.adapter(project, self.executor, question=self.question)
+            # Continue the actual reviewer, not a task-worker context. On process
+            # restart the private review outcome supplies the same SDK session.
+            worker = getattr(self, '_review_workers', {}).get(trigger_execution_id)
+            review = next((item for item in store.review_chain(self.run, private=True)['executions']
+                           if item['execution_id'] == trigger_execution_id), None)
+            saved = review['references'].get('saved_session') if review else None
+            if worker is None:
+                worker = self.adapter(project, self.reviewer_executor, question=self.question)
+                worker.saved_session = saved
             worker.lock_fd = self.authority.lock.fileno()
+            saved = getattr(worker, 'saved_session', None)
+            reuse_key = None
+            selection = {'session_id': saved.get('id') if saved else None,
+                         'reason': 'reviewer_repair' if saved else 'legacy_reviewer_repair_fresh', 'rejected': []}
+            store.history(self.run, None, 'fixer', 'selected', {'execution_id': execution_id,
+                          'trigger_execution_id': trigger_execution_id, **selection})
             fixer_chain, last_fixer_invocation = [], [None]
             def prompt_fix(prompt, **kwargs):
                 invocation_id = uuid.uuid4().hex
@@ -338,6 +345,9 @@ class Engine:
                 if getattr(worker, 'parent_steering_available', lambda: False)():
                     worker.enable_parent_steering(steering)
                     kwargs['steering'] = steering
+                session = getattr(worker, 'saved_session', None)
+                if session and session.get('compatibility', {}).get('readOnly') is True:
+                    kwargs['review_repair'] = True
                 try:
                     result = self._prompt_worker(worker, prompt, **kwargs)
                 except BaseException as exc:
@@ -361,15 +371,16 @@ class Engine:
                                         role='fixing_worker', outcome=outcome, selection=selection,
                                         continued=predecessor is not None, expected_session_id=expected_session_id,
                                         fixing_round=1)
-            prompt = ('Correct the actionable findings from one independent review within the original approved '
-                      'task contracts. This is the one assigned fixing round, not a new task, routing operation, '
+            prompt = ('Continue your code review: first make a concise correction plan, then implement fixes '
+                      'for the actionable findings within the original approved task contracts. '
+                      'This is the one assigned fixing round, not a new task, routing operation, '
                       'or permission expansion. Keep the configured executor and authority. Select only explicit '
                       'source/artifact paths from those contracts; preserve unrelated and pre-existing bytes. Run '
                       'applicable required checks. Never stage or commit: the runner owns the focused repair checkpoint.\n'
                       + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
                       'Original task contracts: ' + canonical(original_tasks) + '\nActionable findings: ' + canonical(findings))
             text = prompt_fix(prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
-                                       saved_session=selected['saved_session'] if selected else None, reuse_key=reuse_key)
+                                       saved_session=saved, reuse_key=reuse_key)
             check_occurrences = {}
             def observe(kind, ordinal, code):
                 occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
@@ -435,7 +446,6 @@ class Engine:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.review_outcome(self.run, execution_id, 'approved', findings=[],
                                  references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
-            self._settle_session(fix_task, worker, request, reuse_key, checkpoint)
             return {'execution_id': execution_id, 'checkpoint': checkpoint, 'checks': check_results, 'summary': text}
         except BaseException as exc:
             outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
@@ -529,8 +539,12 @@ class Engine:
                             outcome='settled', selection={'session_id': None, 'reason': 'reviewer_fresh'},
                             review_ordinal=ordinal)
         state = 'approved' if value['approved'] and not value['findings'] else 'rejected'
+        if not hasattr(self, '_review_workers'):
+            self._review_workers = {}
+        self._review_workers[execution_id] = reviewer
         store.review_outcome(self.run, execution_id, state, findings=value['findings'],
-                             references={'base': review_base, 'head': head})
+                             references={'base': review_base, 'head': head,
+                                         'saved_session': getattr(reviewer, 'saved_session', None)})
         review_facts.update({'approved': value['approved'], 'outcome': state,
                              'finding_count': len(value['findings'])})
         recorder.emit(execution_id, 'review', 'passed' if state == 'approved' else 'failed', facts=review_facts)
