@@ -1,5 +1,19 @@
 # Open Issues
 
+## OI-18: Resumed runs cannot append to their existing JSONL metrics artifact
+
+- **Status:** open
+- **Problem:** Bug: a resumed Engine starts without an artifact handle, then attempts exclusive creation of the run's already-existing JSONL file. The resulting optional-recording error is suppressed, leaving later invocation metrics absent. Existing records remain intact; question-triage acceptance does not establish complete resumed-run metrics.
+- **Primary evidence:** [Engine initialization and terminal metric append](../runtime/coherence_workflow/engine.py) reset `metric_artifact` to `None` and call `create_artifact` on the next append. [Artifact creation](../runtime/coherence_workflow/metric_artifacts.py) rejects an existing file. Independent review of question-triage commits through `6a0080f` confirmed this separate source-level gap; the resumed-call fixtures in [test_resume.py](../runtime/tests/test_resume.py) exercise continued execution, not complete JSONL recording.
+- **Resumption condition:** In scoped metrics correction, safely reopen the retained run's artifact under existing writer authority without adopting unknown/replaced bytes; add a focused interrupted/resumed invocation test proving distinct later calls persist and coverage stays honest on recording failure. Preserve nonblocking telemetry and original rows.
+
+## OI-19: Unchanged-check correction detection can repeat ineffective worker calls
+
+- **Status:** open
+- **Problem:** Investigation: the question-triage run repeatedly dispatched same-task correction calls while the required resume test retained the same assertion failures. It ultimately stopped, but did not promptly recognize the ineffective corrections. No new retry quota is requested; determine why existing unchanged-failure detection did not stop sooner.
+- **Primary evidence:** Retained `coordinator-question-triage-1` QT002 history records repeated `test_resume.py` failures and worker returns before exit 2. [Engine.correct_required_checks](../runtime/coherence_workflow/engine.py) compares complete failure-attempt dictionaries; unittest output includes variable elapsed-time text, so equality may differ despite unchanged failures. The exact cause of each repeated dispatch remains to be established; no historical run should be replayed.
+- **Resumption condition:** Inspect the retained check attempts and correction results, then add a tiny offline fixture with identical substantive failure and changing timing output. Correct meaningful unchanged-failure comparison if confirmed, preserving legitimate reasoned corrections, actual command/output history and required-check enforcement without an arbitrary repair budget.
+
 ## OI-1: Repository-memory reconcile has untested concurrency and platform paths
 
 - **Status:** open
