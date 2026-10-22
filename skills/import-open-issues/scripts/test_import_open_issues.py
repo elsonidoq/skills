@@ -108,6 +108,26 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(result.diagnostics, ())
         self.assertIn("`[see [OI-9]](relative.md)`", result.records[0].body)
 
+    def test_parenthesized_link_target_is_an_actionable_public_preview_diagnostic(self):
+        value = "[design](../docs/design(v2).md#part)"
+        text = ("## OI-1: Design\n- **Status:** open\n- **Problem:** " + value
+                + "\n- **Primary evidence:** e\n- **Resumption condition:** r\n")
+        result = preview(text, SOURCE, "dest/repo")
+        self.assertEqual(result.records, ())
+        self.assertEqual(len(result.diagnostics), 1)
+        diagnostic = result.diagnostics[0]
+        self.assertEqual((diagnostic.oi_id, diagnostic.line), ("OI-1", 1))
+        self.assertIn("unsupported parentheses in link target", diagnostic.reason)
+        self.assertIn("percent-encode", diagnostic.reason)
+        self.assertIn("preview again", diagnostic.reason)
+        pinned = SOURCE.blob_url.rsplit("/", 1)[0] + "/design%28v2%29.md#part"
+        encoded = preview(text.replace("../docs/design(v2).md#part", pinned), SOURCE, "dest/repo")
+        self.assertEqual(encoded.diagnostics, ())
+        self.assertIn("[design](" + pinned + ")", encoded.records[0].body)
+        literal = preview(text.replace(value, "`" + value + "`"), SOURCE, "dest/repo")
+        self.assertEqual(literal.diagnostics, ())
+        self.assertIn("`" + value + "`", literal.records[0].body)
+
     def test_multiline_extra_fields_links_and_identity(self):
         text = """## OI-1: Renamed title\n\n- **Status:** open\n- **Problem:** First line\n  second line with [relative](../runtime/a.py#part), [absolute #2](https://github.com/x/y/issues/2), OI-9 and `../code.py`.\n- **Primary evidence:** evidence\n- **Resumption condition:** resume\n- **History:** retained\n"""
         result = preview(text, SOURCE, "dest/repo")

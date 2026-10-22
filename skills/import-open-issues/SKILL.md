@@ -52,7 +52,10 @@ Code spans (including Markdown-looking content) remain unchanged and are not cla
 verified links. Nested link labels (for example `[see [OI-9]](relative.md)`) are unsupported:
 public `preview` rejects the affected record with its source line and a corrective diagnostic.
 Flatten the label in a reviewed source copy and preview again; never rewrite the preserved
-original register merely to make an import pass.
+original register merely to make an import pass. Parentheses inside link targets are also
+unsupported and reject the affected record: use an explicit pinned absolute URL with
+percent-encoded parentheses in a reviewed source copy, then preview again. Code spans remain
+literal; unsupported structures never become successful truncated-link proposals.
 
 For each originally closed record, preview, pending body and final body include this exact
 visible disclaimer outside the unchanged original excerpt:

@@ -20,6 +20,7 @@ _LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 _MARKDOWN_TOKEN = re.compile(r"(?P<ticks>`+).*?(?P=ticks)|\[[^\]]+\]\([^)]+\)", re.S)
 # Code spans are skipped before diagnosing bracket nesting unsupported by _LINK.
 _NESTED_LABEL = re.compile(r"(?P<ticks>`+).*?(?P=ticks)|(?P<nested>\[[^\]\n]*\[)", re.S)
+_PAREN_TARGET = re.compile(r"(?P<ticks>`+).*?(?P=ticks)|(?P<unsupported>\]\([^\)\n]*\()", re.S)
 _OI_REFERENCE = re.compile(r"(?<![\w-])(OI-\d+)(?![\w-])")
 _REQUIRED_FIELDS = ("Status", "Problem", "Primary evidence", "Resumption condition")
 _SENSITIVE = re.compile(r"(?:BEGIN [A-Z ]*PRIVATE KEY|(?:api[_-]?key|token|password|secret)\s*[:=])", re.I)
@@ -504,6 +505,8 @@ def render_record(record: ParsedRecord, source: Source) -> RenderedRecord | Diag
         return Diagnostic(record.line, "sensitive candidate data rejected; fidelity is unavailable", record.oi_id)
     if any(match.group("nested") for _, value in record.fields for match in _NESTED_LABEL.finditer(value)):
         return Diagnostic(record.line, "unsupported nested link label; flatten the label in a reviewed source copy and preview again before importing this record", record.oi_id)
+    if any(match.group("unsupported") for _, value in record.fields for match in _PAREN_TARGET.finditer(value)):
+        return Diagnostic(record.line, "unsupported parentheses in link target; use a reviewed source copy with an explicit pinned absolute URL and percent-encoded parentheses, then preview again", record.oi_id)
     status = fields["Status"].strip().lower()
     if status not in {"open", "closed"}:
         return Diagnostic(record.line, "unmappable status", record.oi_id)
