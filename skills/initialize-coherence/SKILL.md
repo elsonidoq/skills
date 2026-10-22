@@ -389,7 +389,7 @@ completion. Do not promise readiness when requirements or approval gates failed.
 - Revalidate the authoritative expected inventory against actual readable, nonempty files,
   required permissions and resolving references; manifest-only success or CLI exit status is
   insufficient.
-- After global skill changes, tell the user to run `/reload` inside pi.
+- After global skill changes, branch on host activation: in Paseo, prepare a fresh-session handoff; the fresh agent verifies the checkout and loaded required capabilities before launching approved workflow. Do not instruct the owner to run `/reload`, and do not automatically reload, restart or install. Outside Paseo, tell the user to run `/reload` inside pi.
 
 Report instructions/memory paths, requirements recorded and approval evidence.
 Report retained, initialized and intentionally absent owners, validation results,

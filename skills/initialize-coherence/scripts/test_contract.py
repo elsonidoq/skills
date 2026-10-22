@@ -274,6 +274,29 @@ class CandidateTests(unittest.TestCase):
         self.assertTrue(SKILL.exists(), "initialize-coherence candidate missing")
         self.assertEqual(check_contract(SKILL.read_text()), [])
 
+    def test_activation_guidance_is_host_specific_and_regression_sensitive(self):
+        def assert_guidance(source):
+            validation = stage(source, "Validation")
+            paseo = ("in Paseo, prepare a fresh-session handoff; the fresh agent verifies the checkout "
+                     "and loaded required capabilities before launching approved workflow. Do not instruct "
+                     "the owner to run `/reload`, and do not automatically reload, restart or install.")
+            outside = "Outside Paseo, tell the user to run `/reload` inside pi."
+            self.assertIn(paseo, validation)
+            self.assertIn(outside, validation)
+
+        source = SKILL.read_text()
+        assert_guidance(source)
+        for old, new in (
+            ("fresh-session handoff", "current-session reload"),
+            ("Do not instruct the owner to run `/reload`", "Tell the owner to run `/reload`"),
+            ("Outside Paseo, tell the user to run `/reload` inside pi.",
+             "Outside Paseo, prepare a fresh-session handoff."),
+        ):
+            with self.subTest(regression=new):
+                self.assertIn(old, source)
+                with self.assertRaises(AssertionError):
+                    assert_guidance(source.replace(old, new, 1))
+
     def test_frontmatter_single_entry_and_probe_inventory(self):
         text = SKILL.read_text()
         self.assertTrue(text.startswith("---\nname: initialize-coherence\ndescription: Use when"))

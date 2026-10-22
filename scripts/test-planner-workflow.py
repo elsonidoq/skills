@@ -2387,6 +2387,33 @@ class OwnerAssignmentBrainstormTests(unittest.TestCase):
                 self.assertFalse(any(word in message for word in ("recommend", "fallback", "substitute")))
 
 
+class OwnerAssignmentActivationTests(unittest.TestCase):
+    """Active initialization guidance is host-specific; no runtime activation is exercised."""
+
+    def test_initialize_coherence_activation_uses_correct_host_branch(self):
+        def assert_guidance(source):
+            validation = source.split("## Validation", 1)[1]
+            paseo = ("in Paseo, prepare a fresh-session handoff; the fresh agent verifies the checkout "
+                     "and loaded required capabilities before launching approved workflow. Do not instruct "
+                     "the owner to run `/reload`, and do not automatically reload, restart or install.")
+            outside = "Outside Paseo, tell the user to run `/reload` inside pi."
+            self.assertIn(paseo, validation)
+            self.assertIn(outside, validation)
+
+        source = (ROOT / "skills/initialize-coherence/SKILL.md").read_text()
+        assert_guidance(source)
+        for old, new in (
+            ("fresh-session handoff", "current-session reload"),
+            ("Do not instruct the owner to run `/reload`", "Tell the owner to run `/reload`"),
+            ("Outside Paseo, tell the user to run `/reload` inside pi.",
+             "Outside Paseo, prepare a fresh-session handoff."),
+        ):
+            with self.subTest(regression=new):
+                self.assertIn(old, source)
+                with self.assertRaises(AssertionError):
+                    assert_guidance(source.replace(old, new, 1))
+
+
 class OwnerAssignmentDocsTests(unittest.TestCase):
     """Current documentation names saved assignments; historical records stay outside this scope."""
 
