@@ -16,17 +16,6 @@ class RuntimeAuthorityTests(unittest.TestCase):
             self.assertNotIn(phrase,' '.join(introduction.split()).replace(phrase,'REMOVED'))
         self.assertEqual(contract_errors(TEXT),[])
 
-    def test_planning_selection_is_separately_owned(self):
-        self.assertNotIn('references/batch-routing.md',TEXT)
-        planning=ROOT/'skills/planner/references/profile-selection.md'
-        self.assertTrue(planning.is_file())
-        body=planning.read_text()
-        for phrase in ('six-factor assessment','Family rationale','Effort rationale',
-                       'readiness conjunction','Sol with exactly medium supported effort'):
-            self.assertIn(phrase,body)
-        for consumer in ('planner','planning-brainstorming','delegating-architectural-planning'):
-            self.assertIn('references/profile-selection.md',(ROOT/'skills'/consumer/'SKILL.md').read_text())
-
     def test_worker_role_cannot_recursively_launch_or_commit(self):
         worker=section(TEXT,'Runner-configured worker role')
         for phrase in ('Do NOT launch this CLI','stage/commit or manage workflow state','review read-only'):

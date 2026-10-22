@@ -69,15 +69,15 @@ override source/owner authority. No default history intake; explicit relevant re
 index-first where useful and retains uncertainty on no match. Required gotcha-memory gates
 remain separate.
 
-Verify callable question capability before owner gates, and permitted usable
-owner-selected exact profiles before assigning work. Apply the shared routing selection
-below to planning/advisory work; verify the Standard exception at its affected stage. The suite runtime requirements
-are in the global configuration repository's `REQUIREMENTS.md`; configuration names
-alone are not availability evidence. `ask_user` unavailable or failing at a route or
-artifact-approval gate reports `question: UNAVAILABLE` and stops. No inferred answer
-or prose approval substitutes for those tool gates. Verify async delegation and its
-observed budgets before delegating, and inspect failures before retry/resume/relaunch.
-Never silently change selected profiles or install missing capabilities.
+Verify callable question capability before owner gates. Resolve planner-stage bindings from the
+[owner planning assignments](references/model-assignments.md); parent dialogue, inspection,
+TinySpec parent review, and approvals retain the owner-launched parent model and effort.
+The suite runtime requirements are in the global configuration repository's `REQUIREMENTS.md`;
+configuration names alone are not availability evidence. `ask_user` unavailable or failing at a
+route or artifact-approval gate reports `question: UNAVAILABLE` and stops. No inferred answer
+or prose approval substitutes for those tool gates. Verify async delegation and its observed
+budgets before delegating, and inspect failures before retry/resume/relaunch. Never silently
+change a saved assignment or install missing capabilities.
 Standard-only SpecKit/reviewer/constitution checks happen after Standard is selected,
 not as prerequisites for considering TinySpec.
 
@@ -110,31 +110,23 @@ guidance and dependency/version evidence first; detect consequential research ne
 proportional reuse/skip and targeted refresh before design. Verify permitted usable
 research capabilities only when needed; configuration names are not usability proof.
 
-## Shared routing selection
+## Saved planner assignments
 
-Use the [qualified seed rubric](references/profile-selection.md)
-for each planning/advisory invocation, including brainstorming assessment/application,
-TinySpec source/tasks/review, and Standard specification/tasks/independent review.
-Assess all six applicable factors, especially the weakest verification blind spot. Start the
-first proposal with demands/oracles, inspect material evidence or state non-reliance, then compare
-suitable family/effort options before readiness with independent comparative Family and Effort rationales.
-An adequate never-launched proposal may remain pending. Then report readiness/gaps under the shared rubric:
-readiness blocks launch, not suitability; retain the recommendation and ask for bounded authorization or an explicit fallback choice.
-A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
-Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.
-Record the Family rationale, proposed versus owner-selected
-exact binding plus supported effort, applicable approved guidance or none, and inspected-failure
-repair conditions. Verify permissions, tools, callable binding and supported effort at
-assignment and dispatch through the shared readiness conjunction. Copy one exact selected profile unchanged into the direct call or
-helper brief/dispatch; settings or agent defaults overriding selection stop dispatch.
-Missing owner selection or support stops the affected invocation; never silently substitute.
-Record selected versus observed separately; unknown actual model or effort stays unknown.
-Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites.
+`references/model-assignments.json` is the owner-editable source for fresh planner work.
+Resolve its exact model and effort for brainstorming assessment/application, TinySpec source/tasks,
+Standard spec/tasks, the whole direct/helper plan pass, and fresh overall review/rereview.
+Pass the resolved binding unchanged in the invocation and bounded brief; parent-only dialogue,
+inspection, TinySpec review and approvals inherit the owner-launched parent binding in both
+dimensions. Verify the saved binding is permitted and callable for only the affected role at
+dispatch. A missing, malformed, unsupported, or unavailable exact assignment stops that role
+with the resolver's focused owner correction question: do not recommend, infer, substitute, or
+silently use a default.
 
-The sole fixed planning exception is Standard `plan_create`: the owner requires Sol/medium
-for the complete direct/helper pass described below, not a family hierarchy or benchmark claim.
-Resolve the concrete binding from permitted usable runtime options, never a provider/version
-hard-coded here. This exception does not assign implementation-task profiles.
+A correction retains its producing operation's saved assignment. Resume a suitable retained
+producer context when possible; otherwise launch a fresh correction with that same assignment.
+If the saved assignment changed and conflicts with retained producer context, ask the owner for
+a precise stage-specific resolution before correction. Inspect a failed expensive invocation and
+its call before any targeted retry or resume; never blind-retry or relaunch it.
 
 ## Proportionate validation
 
@@ -215,8 +207,10 @@ if unavailable, ask for missing answers, never invent a durable preselection art
 Dependency inspection/research may inform assessment read-only; no dependency docs,
 source, plan or decisions may be persisted. Carry findings in session until selection.
 
-Invoke `planning-brainstorming` in preselection mode with the inspected request/bounds
-and readiness target “informed scope assessment.” Preserve its exact gate result;
+Invoke `planning-brainstorming` in preselection mode with `brainstorm-assessment` for its
+assessment and `brainstorm-application` when applying recorded decisions; resolve and pass each
+saved assignment unchanged in the fresh call and brief, with the inspected request/bounds and
+readiness target “informed scope assessment.” Preserve its exact gate result;
 conduct required owner dialogue yourself, one material item at a time. A settled
 request skips extended dialogue, not assessment. Generic `brainstorming` design-depth
 labels do not select TinySpec/Standard or add an artifact approval before selection.
@@ -302,7 +296,7 @@ to the [bounded mechanical correction contract](references/approval-and-recovery
 transcripts or unrelated history. Missing, unusable or unauthorized delegation stops the
 affected production/correction stage with the exact gap; no inline/local fallback.
 
-Default to direct asynchronous single-stage dispatch with the selected profile unchanged.
+Default to direct asynchronous single-stage dispatch with the resolved saved assignment unchanged.
 Inspect the returned artifact/checkpoint and resolve substantive blockers before the next
 authorized stage. Never prewire dependent source→tasks stages without parent inspection.
 A workflow needs concrete branching, parallel independent work or another earned orchestration
@@ -311,8 +305,9 @@ stage sequence alone is insufficient. State a terse reason in the existing brief
 workflows preserve parent inspection, stage authority, approvals and reviewer independence;
 they do not authorize parallel implementation batches.
 
-Before every direct or delegated TinySpec/Standard stage, supply the bounded source,
-settled and non-obvious constraints **verbatim**, each applicable accepted outcome constraint
+Before every direct or delegated TinySpec/Standard stage, resolve the stage's saved assignment
+and supply it unchanged in the bounded brief and call with the bounded source, settled and
+non-obvious constraints **verbatim**, each applicable accepted outcome constraint
 and source link, cited authorities, governing instructions/principles, applicable memory,
 prior-stage handoff, stage authorization, allowed writes, pending owner flags/answers/deferrals,
 and required evidence. Each stage reads the brief and returns an updated handoff carrying those
@@ -355,15 +350,14 @@ include accessible proof/pass conditions, explicit earlier producer dependencies
 permission/manual gates in the inline REQUIRED brief for both adapters. Missing, weakened or
 unrun REQUIRED proof blocks downstream reliance. Optional checks stay distinct. Preserve item mappings unchanged into the whole task contract before
 coding, including both adapters and legacy producing review/renewal when contracts are inadequate.
-The [qualified seed rubric](references/profile-selection.md)
-also informs planning selection under Shared routing selection; planning-stage bindings are
-not implementation-task assignments. It grants no implementation batching or runtime routing authority.
+Saved planner assignments govern only planning-stage bindings; they are not implementation-task
+assignments and grant no implementation batching or runtime routing authority.
 Missing or ambiguous contracts, including old approved tasks, return to the producing review/approval
 gate for affected review and renewed approval, never fabricated historical requirements.
 
 ### TinySpec path
 
-1. **Source creation — shared routing selection:** delegate `tiny-spec` to a separate fresh
+1. **Source creation — saved assignment:** resolve `tinyspec-source` and delegate `tiny-spec` to a separate fresh
    bounded-context source producer; invoke `tiny-spec` with verified request,
    decisions, source bounds, observed destination, and preparation authorization.
    Supply the shared research contract, findings/capability evidence and bounded
@@ -375,7 +369,7 @@ gate for affected review and renewed approval, never fabricated historical requi
    delegation stops; no parent creation/substantive correction or inline/local fallback.
    Inspect returned compact source and blockers. No SpecKit prerequisite or standalone
    TinySpec approval is required before task production.
-2. **Tasks — shared routing selection:** delegate a separate fresh bounded-context task
+2. **Tasks — saved assignment:** resolve `tinyspec-tasks` and delegate a separate fresh bounded-context task
    producer; invoke `task-generation` direct adapter with TinySpec and
    applicable source links. TinySpec is requirements truth; no SDD forwarding/rereading as
    direct requirements input. Governing instructions/contracts, memory and permission/safety
@@ -383,7 +377,7 @@ gate for affected review and renewed approval, never fabricated historical requi
    creation/substantive correction or inline/local fallback. Create separate tasks using its full contract. Derive docs
    from inspected effects/requirement, not an absent plan. Keep context-coherent work
    consecutive without reordering dependencies or padding distant tasks.
-3. **Review — planner-owned, shared routing selection:** review source-to-task traceability, in-scope coverage,
+3. **Review — planner-owned parent binding:** review source-to-task traceability, in-scope coverage,
    exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
    verification item completeness, explicit and implicit dependencies, and stage feasibility. Record
    fixes, validation results and current content evidence. Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
@@ -414,10 +408,9 @@ shell, or substitute generic Markdown. Verify detected constitution when require
 missing/template-only principles require owner-derived answers and the observed
 constitution capability, then verify repaired output before specification work.
 Missing repair capability, principles, or failed verification stops. Do not reopen
-valid settled principles. Verify permitted usable owner-selected stage bindings and
-an independent reviewer before assigning their work.
+valid settled principles. Verify the saved exact stage binding and independent reviewer availability before assigning their work.
 
-1. **`spec_create` — shared routing selection:** delegate a separate fresh bounded-context
+1. **`spec_create` — saved assignment:** resolve `standard-spec-create` and delegate a separate fresh bounded-context
    specification producer to follow observed specification instructions and
    SDD reference for specification creation only using request/provenance and shared gate result.
    Require complete relevant behavior, approach, constraints and observable acceptance in the
@@ -433,12 +426,11 @@ an independent reviewer before assigning their work.
    results BEFORE
    `ask_user`. Durably record current specification approval before `plan_create`, then
    immediately continue to `plan_create` without another continuation question.
-2. **`plan_create` — Sol/medium:** select the Sol family with exactly **medium** supported effort
-   for the ENTIRE direct/helper pass. Verify a permitted callable Sol binding and medium support
-   at assignment and dispatch; record the exact selected profile and propagate it unchanged
-   through the direct call or helper brief/dispatch. Unavailable Sol/medium stops with the precise
-   binding/support gap; no substitution, settings/default override or standalone helper fallback
-   may bypass this rule. Record observed binding/effort separately; unknown stays unknown.
+2. **`plan_create` — saved assignment:** resolve `standard-plan-direct` for a direct pass or
+   `standard-plan-helper` for the helper pass. Use that resolved exact binding unchanged for the
+   entire direct/helper pass and its brief/dispatch. An unavailable or unsupported saved binding
+   stops only this stage with its focused owner correction question; no substitution, default, or
+   helper fallback may bypass it.
    Delegate a separate fresh bounded-context plan producer. The specification is requirements
    truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct
    requirements input; governing instructions/contracts, memory and permission/safety still
@@ -455,15 +447,15 @@ an independent reviewer before assigning their work.
    in addition to detected SpecKit artifacts. Do not grant arbitrary documentation edits
    or code writes; missing required evidence/authority stops the affected branch.
    When approved work calls for `delegating-architectural-planning`, verify and invoke
-   it as the planner Standard adapter for this ENTIRE pass. Inspect its returned
+   it as the planner Standard adapter for this entire pass. Inspect its returned
    evidence; do not create the plan again. Only when no adapter is invoked delegate
-   the ENTIRE pass to the separate fresh bounded-context selected permitted Sol/medium
-   producer. Never perform it in the parent. Manager-governed
-   Sol/medium, capability stops and approval renewal supersede helper standalone fallbacks.
+   the entire pass to the separate fresh bounded-context producer with the resolved saved
+   assignment. Never perform it in the parent. Saved-assignment capability stops and approval
+   renewal supersede helper standalone fallbacks.
    Any approved specification content change requires renewed specification approval
    with a new executive brief in short bullets before leaving this stage. After renewal,
    continue the affected stage immediately. Material choices remain gates.
-3. **`tasks_create` — shared routing selection:** delegate a separate fresh bounded-context
+3. **`tasks_create` — saved assignment:** resolve `standard-tasks-create` and delegate a separate fresh bounded-context
    task producer to follow observed SpecKit tasks capability under
    `task-generation`. Specification is requirements truth; approved plan is derived sequencing
    only. No SDD forwarding/rereading as direct requirements input; governing instructions/
@@ -477,8 +469,8 @@ an independent reviewer before assigning their work.
    and its correction route; independent review and final approval remain required.
    Include documentation, acceptance, shared context and producer checks without breaking
    prerequisite order or story acceptance boundaries.
-4. **`overall_review` — independent owner-selected reviewer:** use shared routing selection;
-   follow observed analysis
+4. **`overall_review` — independent saved reviewer assignment:** resolve
+   `standard-overall-review` (or `standard-overall-rereview` for a fresh rereview), then follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
    coverage, dependencies, verification item completeness, documentation, integration and approvals.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer

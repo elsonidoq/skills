@@ -8,6 +8,33 @@ import re
 MUTATIONS = {"edit", "write", "patch", "apply_patch"}
 
 
+def check_assignments(events, expected):
+    """Check saved bindings copied into offline stage briefs/calls, not live delegation."""
+    errors, seen, failed = [], set(), set()
+    for event in events:
+        kind = event.get("type")
+        operation = event.get("operation")
+        if kind == "planner_assignment":
+            expected_binding = expected.get(operation)
+            if expected_binding is None:
+                errors.append(f"unexpected planner assignment: {operation}")
+                continue
+            seen.add(operation)
+            for carrier in ("brief", "call"):
+                if event.get(carrier) != expected_binding:
+                    errors.append(f"{operation}: saved assignment changed in {carrier}")
+        elif kind == "planner_invocation_failed" and operation:
+            failed.add(operation)
+        elif kind == "planner_retry" and operation in failed:
+            if not event.get("inspected"):
+                errors.append(f"{operation}: retry without failed invocation inspection")
+            failed.remove(operation)
+    for operation in expected:
+        if operation not in seen:
+            errors.append(f"missing planner assignment: {operation}")
+    return errors
+
+
 def last_bullets(visible):
     """Last visible bullet block, including empty items so old progress cannot stand in."""
     block, last = [], []

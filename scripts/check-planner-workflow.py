@@ -22,25 +22,9 @@ PATHS = {
     "risk": "skills/planner/references/early-risk-reduction.md",
     "research": "skills/planner/references/dependency-research.md",
     "coordination": "skills/memory-handling/references/project-coordination.md",
-    "routing": "skills/planner/references/profile-selection.md",
 }
 
 
-# A7 bounded inventory: each consumer carries A1/A2 pending, A3 first-launch readiness,
-# A4 independent comparison and A5/A6 exact selection through its existing dispatch guards.
-ROUTING_CARRIERS = (
-    ("rubric-planner", "planner", "## Shared routing selection"),
-    ("rubric-helper", "helper", "## Preflight"),
-    ("rubric-brainstorm", "brainstorm", "## Capability preflight"),
-)
-ROUTING_SEQUENCE = (
-    "independent comparative Family and Effort rationales",
-    "Then report readiness/gaps under the shared rubric",
-    "readiness blocks launch, not suitability",
-    "retain the recommendation and ask for bounded authorization or an explicit fallback choice",
-    "fallback needs its own justification, readiness and exact owner selection",
-    "Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate",
-)
 
 # A5 adapter carriers: source acceptance must become a task-local gate/check/brief.
 ACCEPTED_ADAPTER_CARRIERS = (
@@ -168,16 +152,6 @@ def check_contracts(texts):
                          ("tasks", "## Preconditions and adapters")):
         require("parsimony-consumer", section(texts[key], heading), "parsimony.md")
 
-    for label, key, heading in ROUTING_CARRIERS:
-        body = section(texts[key], heading)
-        require(label, body, *ROUTING_SEQUENCE)
-        reject(label, body, "compare only verified alternatives", "verify readiness before proposing",
-               "silently substitute Sol", "always audit provider source before comparison")
-    for label, key, heading in ROUTING_CARRIERS[:1]:
-        require(label, section(texts[key], heading),
-                "Start the first proposal with demands/oracles, inspect material evidence or state non-reliance",
-                "then compare suitable family/effort options before readiness")
-
     p = texts["planner"]
     job_first = section(p, "## Job first; no coordinator bookkeeping")
     require("job-first", job_first,
@@ -262,8 +236,8 @@ def check_contracts(texts):
             "Re-present unanswered questions", "selected depth", "current content/revision evidence",
             "Explicit approved implementation scope", "executable runner alone")
     tiny = section(p, "### TinySpec path")
-    require("tiny-flow", tiny, "**Source creation — shared routing selection", "**Tasks — shared routing selection",
-            "**Review — planner-owned, shared routing selection",
+    require("tiny-flow", tiny, "**Source creation — saved assignment", "**Tasks — saved assignment",
+            "**Review — planner-owned parent binding",
             "invoke `tiny-spec`", "invoke `task-generation` direct adapter",
             "Create separate tasks", "No independent planning", "**Combined approval:**",
             "BEFORE `ask_user`", "Denial returns to review", "No SpecKit prerequisite",
@@ -277,21 +251,21 @@ def check_contracts(texts):
             "verify repaired output", "Missing repair capability", "Do not reopen",
             "never install, simulate slash commands", "Required absent\ncapability stops")
     spec = stage(std, "spec_create")
-    require("spec", spec, "— shared routing selection",  "Clarify only when requested or required",
+    require("spec", spec, "— saved assignment",  "Clarify only when requested or required",
             "BEFORE\n   `ask_user`", "specification approval before `plan_create`",
             "bullet-list executive brief", "immediately continue to `plan_create`")
     plan = stage(std, "plan_create")
-    require("plan", plan, "— Sol/medium",  "same-session pass", "review/fix the specification",
-            "create one plan", "review/fix the produced plan", "ENTIRE pass",
+    require("plan", plan, "— saved assignment",  "same-session pass", "review/fix the specification",
+            "create one plan", "review/fix the produced plan", "entire pass",
             "do not create the plan again", "Only when no adapter is invoked delegate",
             "renewed specification approval", "new executive brief", "do not reorder".capitalize())
     tasks = stage(std, "tasks_create")
-    require("task-stage", tasks, "— shared routing selection",  "authorization to prepare tasks",
+    require("task-stage", tasks, "— saved assignment",  "authorization to prepare tasks",
             "create-only", "producers may draft, revise, shorten and mechanically",
             "without supervisor", "not independent review", "After submission",
             "independent review and final approval remain required", "`overall_review`")
     review = stage(std, "overall_review")
-    require("review", review, "independent owner-selected reviewer", "use shared routing selection", "observed analysis",
+    require("review", review, "independent saved reviewer assignment", "standard-overall-review", "observed analysis",
             "never apply unresolved material defaults", "renew affected approvals",
             "BEFORE `ask_user`", "plan-phase implications", "Missing independent reviewer",
             "bullet-list executive", "immediately proceed to handoff")
@@ -299,54 +273,13 @@ def check_contracts(texts):
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
             "one material item", "recorded owner decisions", "preselection", "read-only",
             "session history", "Only in selected-production", "owner's rationale")
-    # Routing obligations must reach operational consumers, not a summary keyword.
-    routing_link = "[qualified seed rubric](references/profile-selection.md)"
-    selection = section(p, "## Shared routing selection")
-    require("planning-selection", selection, routing_link,
-            "all six applicable factors", "weakest verification blind spot",
-            "Family rationale", "Effort rationale", "proposed versus owner-selected",
-            "one exact selected profile unchanged", "Missing owner selection or support stops",
-            "settings or agent defaults overriding selection stop dispatch",
-            "selected versus observed separately", "unknown actual model or effort stays unknown",
-            "assignment and dispatch", "permissions, tools, callable binding and supported effort",
-            "Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites")
-    require("planning-preflight", section(p, "## Discovery and capability boundary"),
-            "owner-selected exact profiles", "Apply the shared routing selection")
-    for key, heading in (("brainstorm", "## Capability preflight"), ("helper", "## Preflight")):
-        carrier = section(texts[key], heading)
-        require("routing-" + key, carrier, "[qualified seed rubric](../planner/references/profile-selection.md)", "all six",
-                "weakest verification blind spot", "effort independently", "one exact",
-                "owner-selected profile", "permissions, tools", "callable binding and supported effort",
-                "assignment", "dispatch", "selected binding/effort", "unchanged",
-                "missing selection/support", "settings/default", "stops", "never silently substitutes",
-                "proposed", "selected and observed separately", "unknown actual", "stays unknown",
-                "Implementation-only batching, task-count and REQUIRED-item rules")
-    require("routing-brainstorm-assessment", section(b, "## 1. Gate assessment"),
-            "using the preflight's shared routing selection")
-    require("routing-brainstorm-application", section(b, "## 3. Apply decisions"),
-            "with the preflight's\nshared routing selection")
-    adapter = section(texts["helper"], "## Planner Standard adapter contract")
-    for label, carrier in (("plan-profile", plan), ("adapter-profile", adapter)):
-        require(label, carrier, "Sol family with exactly **medium** supported effort", "ENTIRE",
-                "direct/helper pass", "callable Sol binding and medium support",
-                "assignment and dispatch", "selected", "unchanged", "brief/dispatch",
-                "Unavailable Sol/medium stops", "precise", "binding/support gap",
-                "no substitution, settings/default override or standalone",
-                "helper fallback", "may bypass this rule", "observed binding/effort separately",
-                "unknown stays unknown")
-        reject(label, carrier, "fallback is permitted", "use another family", "use an agent default",
-               "standalone selection supersedes", "substitute an available profile")
-    require("plan-profile", plan, "for the ENTIRE direct/helper pass")
-    require("adapter-profile", adapter, "for the ENTIRE\nStandard direct/helper pass", "one same-session pass", "review/fix the approved specification",
-            "once to create the plan", "review/fix the produced plan", "do not direct it to create the plan again",
-            "policies below do not apply to this adapter invocation")
-    require("routing-helper", section(texts["helper"], "## Preflight"),
-            "standalone selection cannot override a manager-governed\nStandard invocation's Sol/medium exception")
-    routing = texts.get("routing", "")
-    require("routing-applicability", section(routing, "## Applicability to planning/advisory invocations"),
-            "same six-factor assessment", "own permissions and output verification",
-            "Implementation-only batching, task-count and REQUIRED-item\nrules do not become planning prerequisites",
-            "cannot bypass a manager-governed Standard rule")
+    assignments = section(p, "## Saved planner assignments")
+    require("saved-assignments", assignments, "model-assignments.json", "TinySpec source/tasks",
+            "Standard spec/tasks", "direct/helper plan pass", "overall review/rereview",
+            "unchanged in the invocation and bounded brief", "owner-launched parent binding",
+            "missing, malformed, unsupported, or unavailable", "focused owner correction question",
+            "do not recommend, infer, substitute", "A correction retains its producing operation's saved assignment",
+            "precise stage-specific resolution", "Inspect a failed expensive invocation")
     for key in ("planner", "brainstorm", "helper"):
         reject("obsolete-planning-class", texts[key], "sonnet-class", "opus-class")
     require("tiny-source", texts["tiny"], "explicit TinySpec selection/preparation authorization",
@@ -365,7 +298,7 @@ def check_contracts(texts):
     require("legacy", a, "inside tasks", "approved spec awaiting plan", "earliest affected Standard",
             "Other documented producer", "Ambiguous/conflicting origin", "retired skills",
             "Missing runtime capabilities")
-    require("batch-handoff", production, "stable task-local REQUIRED", "qualified seed rubric", "canonical research", "not implementation-task assignments")
+    require("batch-handoff", production, "stable task-local REQUIRED", "canonical research", "not implementation-task assignments")
     require("batch-tiny", tiny, "verification item completeness")
     require("batch-standard", review, "verification item completeness")
     require("batch-legacy", a, "inadequate REQUIRED contracts", "producing review/approval gate", "renewed affected approval")
@@ -556,16 +489,11 @@ def check_contracts(texts):
             "No arbitrary workflow", "Do not autonomously loop expensive failed runs")
     require("coordination-intake", section(c, "## Load and Verify"),
             "Missing memory or STATE is nonblocking", "no automatic summaries/indexes")
-    require("routing-comparison", section(texts.get("routing", ""), "## Provisional family and effort choices"),
-            "suitable options even with zero previous launches", "Family explains sufficient capability versus the named adequate alternative",
-            "actual shortfall or select the adequate candidate without an unsupported premium", "pending readiness is not inadequacy",
-            "orchestration overhead", "stateful tooling/recovery",
-            "strict requirement versus a default preference")
     require("runtime-authority", section(c, "# Coordinate Implementation"),
             "SQLite stores ordinary", "not effect proof or execution eligibility")
     dispatch = section(p, "## Selected production and stage handoffs")
     require("stage-dispatch", dispatch, "direct asynchronous single-stage dispatch",
-            "selected profile unchanged", "Inspect the returned artifact/checkpoint",
+            "resolved saved assignment unchanged", "Inspect the returned artifact/checkpoint",
             "before the next authorized stage", "Never prewire dependent source→tasks",
             "concrete branching, parallel independent work or another earned orchestration",
             "direct delegation cannot adequately serve", "single child, convenience wrapper",
@@ -777,8 +705,6 @@ VERIFICATION_CARRIERS = (
      ("practical observables", "generic green suite", "STOP and explicit user approval")),
     ("verification-handoff", "planner", "## Selected production and stage handoffs",
      ("item mappings unchanged", "whole task contract before", "legacy producing review/renewal")),
-    ("verification-oracle", "routing", "## Assess all six factors",
-     ("implementation difficulty", "oracle quality, check cost and observability", "weakest material", "practical combined verification feasibility")),
     ("verification-graph", "coordinator", "## Execute and Integrate",
      ("runner establishes baseline HEAD", "before subsequent mutation or handoff")),
     ("verification-audit", "coordinator", "## Execute and Integrate",
@@ -815,12 +741,6 @@ def load_texts(root=ROOT):
         destinations = re.findall(r"\[dependency research contract\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != research_path.resolve():
             raise ValueError(f"research-reference: {key} shared link missing/unresolvable or wrong owner")
-    routing_path = root / PATHS["routing"]
-    for key in ("planner", "brainstorm", "helper"):
-        destinations = re.findall(r"\[qualified seed rubric\]\(([^)]+)\)", texts[key])
-        if not destinations or any((root / PATHS[key]).parent.joinpath(dest).resolve() != routing_path.resolve()
-                                   for dest in destinations):
-            raise ValueError(f"routing-reference: {key} shared link missing/unresolvable or wrong owner")
     for key, title in (("planner", "SDD reference"), ("tiny", "SDD quality guidance")):
         destinations = re.findall(r"\[" + title + r"\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != (root / PATHS["guidance"]).resolve():

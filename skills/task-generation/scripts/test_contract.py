@@ -151,7 +151,7 @@ class TaskGenerationContractTests(unittest.TestCase):
         review = ' '.join(TEXT.split('## Review and handoff', 1)[1].split())
         self.assertIn('At final planning review, check that executable tasks are authorization-neutral', review)
         planner = (Path(__file__).parents[2] / 'planner' / 'SKILL.md').read_text()
-        for start, end in (('3. **Review — planner-owned', '4. **Combined approval'),
+        for start, end in (('3. **Review — planner-owned parent binding', '4. **Combined approval'),
                            ('4. **`overall_review`', '5. **')):
             stage = planner.split(start, 1)[1].split(end, 1)[0]
             self.assertIn('../task-generation/SKILL.md#authorization-neutral-tasks', stage)

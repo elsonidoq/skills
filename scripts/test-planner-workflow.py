@@ -789,7 +789,6 @@ class InstructionTests(unittest.TestCase):
             ("planner", "No independent planning", "Mandatory independent planning", "tiny-flow:"),
             ("planner", "template-only", "generic", "standard-preflight:"),
             ("planner", "verify repaired output", "assume valid output", "standard-preflight:"),
-            ("planner", "**`spec_create` — shared routing selection", "**`spec_create` — `sonnet-class`", "spec:"),
             ("planner", "specification approval before `plan_create`", "approval later", "spec:"),
             ("planner", "Only when no adapter is invoked", "After the adapter returns", "plan:"),
             ("planner", "do not create the plan again", "create the plan again", "plan:"),
@@ -952,96 +951,6 @@ class InstructionTests(unittest.TestCase):
             run = subprocess.run(["bash", str(HERE / "check-skills-lint.sh"), directory], capture_output=True, text=True)
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertIn("SKIP planner workflow checks", run.stdout)
-
-
-class ActivePlanningRoutingTests(unittest.TestCase):
-    """Consumer-scoped policy mutations; no provider or model-obedience claims."""
-
-    def setUp(self):
-        self.texts = checker.load_texts()
-        self.assertEqual(checker.check_contracts(self.texts), [])
-
-    def mutate(self, key, heading, old, new, diagnostic):
-        changed = dict(self.texts)
-        carrier = (checker.stage(changed[key], heading) if heading == "plan_create"
-                   else checker.section(changed[key], heading))
-        self.assertEqual(carrier.count(old), 1, old)
-        changed[key] = changed[key].replace(carrier, carrier.replace(old, new, 1), 1)
-        errors = checker.check_contracts(changed)
-        self.assertTrue(any(e.startswith(diagnostic + ":") for e in errors), errors)
-
-    def test_standard_exact_family_and_effort_entire_direct_helper_pass(self):
-        for key, heading, label in (("planner", "plan_create", "plan-profile"),
-                                    ("helper", "## Planner Standard adapter contract", "adapter-profile")):
-            for old, new in (("Sol family", "Luna family"),
-                             ("**medium** supported effort", "**low** supported effort"),
-                             ("for the ENTIRE", "for creation-only"),
-                             ("Unavailable Sol/medium stops", "Unavailable Sol/medium falls back"),
-                             ("no substitution, settings/default override or standalone", "allow substitution or standalone"),
-                             ("unchanged", "using an agent default")):
-                with self.subTest(consumer=key, mutant=new):
-                    self.mutate(key, heading, old, new, label)
-
-    def test_restored_class_authority_in_actual_consumers(self):
-        for key, heading, old in (("planner", "### TinySpec path", "**Source creation — shared routing selection"),
-                                  ("brainstorm", "## 1. Gate assessment", "shared routing selection"),
-                                  ("helper", "## Planner Standard adapter contract", "Sol family")):
-            for label in ("sonnet-class", "opus-class"):
-                with self.subTest(consumer=key, label=label):
-                    self.mutate(key, heading, old, label, "obsolete-planning-class")
-
-    def test_selection_and_observed_gates_reach_each_consumer(self):
-        cases = (("planner", "## Shared routing selection", "planning-selection",
-                  ("Family rationale", "Effort rationale", "weakest verification blind spot",
-                   "one exact selected profile unchanged", "Missing owner selection or support stops",
-                   "settings or agent defaults overriding selection stop dispatch",
-                   "unknown actual model or effort stays unknown")),
-                 ("brainstorm", "## Capability preflight", "routing-brainstorm",
-                  ("all six", "effort independently", "missing selection/support", "unknown actual")),
-                 ("helper", "## Preflight", "routing-helper",
-                  ("all six", "effort independently", "missing selection/support", "unknown actual",
-                   "standalone selection cannot override a manager-governed\nStandard invocation's Sol/medium exception")))
-        for key, heading, label, clauses in cases:
-            for clause in clauses:
-                with self.subTest(consumer=key, clause=clause):
-                    self.mutate(key, heading, clause, "removed", label)
-
-    def test_brainstorm_application_and_assessment_wiring(self):
-        for heading, clause, label in (("## 1. Gate assessment", "using the preflight's shared routing selection", "routing-brainstorm-assessment"),
-                                       ("## 3. Apply decisions", "with the preflight's\nshared routing selection", "routing-brainstorm-application")):
-            self.mutate("brainstorm", heading, clause, "using a default", label)
-
-    def test_manager_adapter_bypass_and_duplicate_pass_are_rejected(self):
-        for old, new in (("policies below do not apply to this adapter invocation", "standalone selection supersedes the manager"),
-                         ("once to create the plan", "twice to create the plan"),
-                         ("do not direct it to create the plan again", "direct it to create the plan again")):
-            self.mutate("helper", "## Planner Standard adapter contract", old, new, "adapter-profile")
-        self.mutate("planner", "plan_create", "may bypass this rule", "fallback is permitted", "plan-profile")
-
-    def test_summary_cannot_replace_operational_selection(self):
-        for key, heading, label in (("planner", "## Shared routing selection", "planning-selection"),
-                                    ("helper", "## Planner Standard adapter contract", "adapter-profile")):
-            changed = dict(self.texts)
-            carrier = checker.section(changed[key], heading)
-            changed[key] = changed[key].replace(carrier, heading + "\n", 1) + "\n## Summary only\n" + carrier
-            self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
-
-    def test_shared_router_link_and_applicability_are_required(self):
-        self.mutate("routing", "## Applicability to planning/advisory invocations",
-                    "rules do not become planning prerequisites", "rules become planning prerequisites", "routing-applicability")
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            for path in set(checker.PATHS.values()):
-                target = root / path
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text((ROOT / path).read_text())
-            for key in ("planner", "brainstorm", "helper"):
-                target = root / checker.PATHS[key]
-                original = target.read_text()
-                target.write_text(original.replace("references/profile-selection.md", "references/absent.md"))
-                with self.assertRaisesRegex(ValueError, "routing-reference: " + key):
-                    checker.load_texts(root)
-                target.write_text(original)
 
 
 class DependencyResearchTests(unittest.TestCase):
@@ -2209,6 +2118,66 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
             self.assert_problem(saved_operation, skill, "is absent")
 
 
+class OwnerAssignmentPlannerTests(unittest.TestCase):
+    """Offline planner-stage traces; not proof of provider delegation or obedience."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.assignments = load("planner_assignments", "../skills/planner/scripts/model_assignments.py")
+        cls.path = ROOT / "skills/planner/references/model-assignments.json"
+
+    def test_every_stage_copies_saved_assignment_and_parent_binding_unchanged(self):
+        data = json.loads(self.path.read_text())
+        parent = {"model": "parent/different", "effort": "low"}
+        with tempfile.TemporaryDirectory() as directory:
+            skill = Path(directory) / "planner"; (skill / "references").mkdir(parents=True)
+            (skill / "SKILL.md").write_text("fixture")
+            (skill / "references/model-assignments.json").write_text(json.dumps(data))
+            expected = {operation: self.assignments.resolve(operation, launched_parent=parent,
+                         planner_skill=skill)["requested"] for operation in data["operations"]}
+        events = [{"type": "planner_assignment", "operation": operation,
+                   "brief": binding, "call": binding} for operation, binding in expected.items()]
+        self.assertEqual(trace.check_assignments(events, expected), [])
+        self.assertEqual(expected["planner-parent"], parent)
+        self.assertNotEqual(expected["tinyspec-source"], parent)
+
+    def test_owner_edits_reach_all_linked_stage_traces_and_corrections_keep_origin(self):
+        data = json.loads(self.path.read_text())
+        data["assignments"]["source-and-tasks"] = {"model": "owner/edited", "effort": "high"}
+        with tempfile.TemporaryDirectory() as directory:
+            skill = Path(directory) / "planner"; (skill / "references").mkdir(parents=True)
+            (skill / "SKILL.md").write_text("fixture")
+            (skill / "references/model-assignments.json").write_text(json.dumps(data))
+            operations = [name for name, entry in data["operations"].items()
+                          if entry.get("assignment") == "source-and-tasks"]
+            expected = {name: self.assignments.resolve(name, planner_skill=skill)["requested"]
+                        for name in operations}
+            correction = self.assignments.resolve_correction(operations[0], planner_skill=skill)["requested"]
+        events = [{"type": "planner_assignment", "operation": operation,
+                   "brief": binding, "call": binding} for operation, binding in expected.items()]
+        self.assertEqual(trace.check_assignments(events, expected), [])
+        self.assertTrue(all(binding == {"model": "owner/edited", "effort": "high"}
+                            for binding in expected.values()))
+        self.assertEqual(correction, expected[operations[0]])
+
+    def test_invalid_assignment_is_role_specific_and_retry_requires_inspection(self):
+        data = json.loads(self.path.read_text())
+        del data["assignments"]["standard-review"]
+        with tempfile.TemporaryDirectory() as directory:
+            skill = Path(directory) / "planner"; (skill / "references").mkdir(parents=True)
+            (skill / "SKILL.md").write_text("fixture")
+            (skill / "references/model-assignments.json").write_text(json.dumps(data))
+            with self.assertRaisesRegex(self.assignments.AssignmentError, "standard-overall-review"):
+                self.assignments.resolve("standard-overall-review", planner_skill=skill)
+        binding = {"model": "owner/saved", "effort": "medium"}
+        events = [{"type": "planner_assignment", "operation": "standard-plan-direct",
+                   "brief": binding, "call": binding},
+                  {"type": "planner_invocation_failed", "operation": "standard-plan-direct"},
+                  {"type": "planner_retry", "operation": "standard-plan-direct", "inspected": False}]
+        self.assertIn("retry without failed invocation inspection",
+                      "\n".join(trace.check_assignments(events, {"standard-plan-direct": binding})))
+
+
 class LinkTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
@@ -2439,80 +2408,6 @@ sys.stdin.buffer.read()
             rpc.answer_dialog(request, {"method": "select", "response": {"value": "TinySpec"}})
         with self.assertRaises(ValueError):
             rpc.answer_dialog(request, {"method": "input", "response": {"value": "TinySpec"}})
-
-
-class ComparativeCarrierTests(unittest.TestCase):
-    def test_assessment_before_readiness_actual_consumer_inventory(self):
-        texts = checker.load_texts()
-        self.assertEqual(checker.check_contracts(texts), [])
-        for label, key, heading in checker.ROUTING_CARRIERS:
-            body = checker.section(texts[key], heading)
-            for clause in checker.ROUTING_SEQUENCE:
-                with self.subTest(carrier=label, removed=clause):
-                    changed = dict(texts)
-                    pattern = r'\s+'.join(re.escape(w) for w in clause.split())
-                    changed[key] = changed[key].replace(body, re.sub(pattern, 'REMOVED', body), 1)
-                    # An owner/footer-only copy cannot rescue the actual operational consumer.
-                    changed[key] += '\n## Footer\n' + clause
-                    self.assertTrue(any(e.startswith(label + ': missing') for e in checker.check_contracts(changed)))
-            for reversal in ('compare only verified alternatives', 'verify readiness before proposing',
-                             'silently substitute Sol', 'always audit provider source before comparison'):
-                with self.subTest(carrier=label, reversed=reversal):
-                    changed = dict(texts)
-                    changed[key] = changed[key].replace(body, body + '\n' + reversal + '\n', 1)
-                    self.assertTrue(any(e.startswith(label + ': contradictory') for e in checker.check_contracts(changed)))
-
-    def test_owner_comparison_and_graph_tradeoff_mutations(self):
-        texts = checker.load_texts()
-        self.assertEqual(checker.check_contracts(texts), [])
-        for key, clause, label in (
-            ("routing", "Family explains sufficient capability versus the named adequate alternative", "routing-comparison:"),
-            ("routing", "pending readiness is not inadequacy", "routing-comparison:"),
-            ("routing", "strict requirement versus a default preference", "routing-comparison:"),
-            ("coordinator", "not effect proof or execution eligibility", "runtime-authority:"),
-        ):
-            with self.subTest(clause=clause):
-                changed = dict(texts)
-                changed[key] = changed[key].replace(clause, "REMOVED", 1)
-                self.assertTrue(any(e.startswith(label) for e in checker.check_contracts(changed)))
-
-
-class PlanningSeedPreservationTests(unittest.TestCase):
-    """Planning-only safety from retired execution seed; no callable ranking oracle."""
-    def test_preproposal_completeness_stays_in_planning_owner(self):
-        text = (ROOT / checker.PATHS['routing']).read_text()
-        body = ' '.join(checker.section(text, '## First proposal recipe').split())
-        for clause in (
-            'Before presenting the proposal, check completeness',
-            'all six factors and the weakest adequate oracle',
-            'each family in this rubric is considered or briefly accounted for',
-            'family and effort have separate comparative rationales',
-            'prior launch success is used only as readiness evidence',
-            'ties remain explicit rather than becoming superiority claims',
-            'Repair missing items before asking for profile approval',
-        ):
-            with self.subTest(clause=clause):
-                self.assertIn(clause, body)
-
-
-    def test_six_factors_family_effort_and_evidence_boundaries_survive_owner_move(self):
-        text=(ROOT/checker.PATHS['routing']).read_text()
-        for factor in ('Residual reasoning','Agentic/tool depth','Verification blind spots',
-                       'Scope/coupling','Failure cost/reversibility','Applicable approved guidance'):
-            self.assertIn(factor,checker.section(text,'## Assess all six factors'))
-        body=checker.section(text,'## Provisional family and effort choices')
-        rows=[line.split('|')[1].strip() for line in body.splitlines() if line.startswith('| ')]
-        self.assertEqual(rows[2:6],['Luna','Sol','Astra','Terra'])
-        for clause in ('Family rationale','Effort rationale','Luna/max','no universal ladder',
-                       'family does not imply an effort','no fixed family-to-effort step follows',
-                       'no family ranking follows','neither require equal proposal rows nor enumerate variants'):
-            self.assertIn(clause,body)
-            self.assertNotIn(clause,body.replace(clause,'REMOVED'))
-        evidence=checker.section(text,'## Evidence limits')
-        for clause in ('Unlike harnesses','no row supplies Pi probabilities','causal effort gains',
-                       'Evidence absence/non-reliance is explicit'):
-            self.assertIn(clause,evidence)
-        self.assertIn('cannot bypass a manager-governed Standard rule',text)
 
 
 class RuntimeHandoffTests(unittest.TestCase):
