@@ -83,6 +83,8 @@ class Reader:
         self.database = self.project.joinpath(*_DATABASE_PARTS)
         self._database_identity: tuple[int, int] | None = None
         self._thread = threading.local()
+        self._metric_boundaries: dict[str, tuple[tuple[int, int], int, int, bytes]] = {}
+        self._metric_lock = threading.Lock()
         self._bind_if_present()
 
     def _bind_if_present(self) -> None:
@@ -154,35 +156,51 @@ class Reader:
         for run_id in run_ids:
             path = self._metric_file(run_id)
             try:
-                _owned_directory(self.project / ".coherence")
-                parent = path.parent
-                _owned_directory(parent)
-                info = path.lstat()
-                if path.is_symlink() or not stat.S_ISREG(info.st_mode):
-                    raise ReaderError("unsafe metric artifact")
-                identity = (info.st_dev, info.st_ino, info.st_ctime_ns)
-                fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
-                try:
-                    chunks = []
-                    while chunk := os.read(fd, 65536):
-                        chunks.append(chunk)
-                    opened = os.fstat(fd)
-                finally:
-                    os.close(fd)
-                current = path.lstat()
-                if identity != (opened.st_dev, opened.st_ino, opened.st_ctime_ns) or identity != (current.st_dev, current.st_ino, current.st_ctime_ns):
-                    raise ReaderError("metric artifact changed during read")
-                data = b"".join(chunks)
+                # Keep one append-only boundary per selected Reader, across polls
+                # and HTTP requests (not thread-local and not a second metric store).
+                with self._metric_lock:
+                    _owned_directory(self.project / '.coherence')
+                    _owned_directory(path.parent)
+                    info = path.lstat()
+                    if path.is_symlink() or not stat.S_ISREG(info.st_mode):
+                        raise ReaderError('unsafe metric artifact')
+                    identity = (info.st_dev, info.st_ino)
+                    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+                    try:
+                        chunks = []
+                        remaining = info.st_size
+                        while remaining:
+                            chunk = os.read(fd, min(remaining, 65536))
+                            if not chunk:
+                                break
+                            chunks.append(chunk)
+                            remaining -= len(chunk)
+                        opened = os.fstat(fd)
+                    finally:
+                        os.close(fd)
+                    current = path.lstat()
+                    stamp = (info.st_dev, info.st_ino, info.st_size, info.st_ctime_ns)
+                    if any(stamp != (value.st_dev, value.st_ino, value.st_size, value.st_ctime_ns) for value in (opened, current)) or remaining:
+                        raise ReaderError('metric artifact changed during read')
+                    data = b''.join(chunks)
+                    prior = self._metric_boundaries.get(run_id)
+                    if prior is not None:
+                        prior_identity, observed_length, complete_length, digest = prior
+                        if identity != prior_identity or len(data) < observed_length or hashlib.sha256(data[:complete_length]).digest() != digest:
+                            raise ReaderError('metric_artifact_changed')
+                    complete_length = data.rfind(b'\n') + 1
+                    self._metric_boundaries[run_id] = (identity, len(data), complete_length, hashlib.sha256(data[:complete_length]).digest())
             except FileNotFoundError:
                 result[run_id] = {"coverage": "unavailable", "reasons": ["metric_artifact_missing"], "records": []}
                 continue
-            except (OSError, ReaderError):
-                result[run_id] = {"coverage": "unavailable", "reasons": ["metric_artifact_unavailable"], "records": []}
+            except (OSError, ReaderError) as exc:
+                reason = 'metric_artifact_changed' if str(exc) == 'metric_artifact_changed' else 'metric_artifact_unavailable'
+                result[run_id] = {'coverage': 'unavailable', 'reasons': [reason], 'records': []}
                 continue
             reasons: list[str] = []
             if data and not data.endswith(b"\n"):
                 reasons.append("incomplete_tail")
-                data = data.rsplit(b"\n", 1)[0]
+                data = data[:data.rfind(b'\n') + 1]
             unique: dict[str, dict[str, Any]] = {}
             conflicted: set[str] = set()
             for line in data.splitlines():

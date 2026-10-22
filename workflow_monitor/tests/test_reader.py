@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "runtime"))
 
 from coherence_workflow.store import Authority, git  # local actual script writer fixture
+from coherence_workflow.metric_artifacts import create_artifact
+from coherence_workflow.metrics import interval_record
 from workflow_monitor.reader import Reader
 
 
@@ -40,6 +42,83 @@ class ReaderTests(unittest.TestCase):
                 "INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)",
                 (run, version, "occurrence", "worker", None, "started", 2.0, "{}"),
             )
+
+    def _metric_artifact(self, calls=('one',)):
+        self._record()
+        with Authority(self.project) as owner:
+            artifact = create_artifact(self.project, 'run', authority=owner)
+            for identity in calls:
+                artifact.append({'version': 1, 'run_id': 'run', 'invocation_id': identity, 'task_id': None,
+                    'role': 'worker', 'outcome': 'settled', 'fixing_round': None, 'review_ordinal': None,
+                    'interval': interval_record(None, None), 'before': None, 'after': None,
+                    'selected_session_mode': 'unknown', 'actual_session_mode': 'unknown',
+                    'session_selection_reason': 'fixture', 'actual_session_id': None})
+        return artifact.path
+
+    def test_unterminated_first_metric_record_stays_pending_until_newline(self):
+        path = self._metric_artifact()
+        complete = path.read_bytes()
+        path.write_bytes(complete[:-1])
+        reader = Reader(self.project)
+        pending = reader.open_snapshot('run')['metrics']['run']
+        self.assertEqual(pending['records'], [])
+        self.assertIn('incomplete_tail', pending['reasons'])
+        with path.open('ab') as output:
+            output.write(b'\n')
+        self.assertEqual(len(reader.open_snapshot('run')['metrics']['run']['records']), 1)
+
+    def test_metric_complete_prefix_allows_tail_completion_and_append(self):
+        path = self._metric_artifact(('one', 'two'))
+        first, second = path.read_bytes().splitlines(keepends=True)
+        path.write_bytes(first + second[:-1])
+        reader = Reader(self.project)
+        pending = reader.open_snapshot('run')['metrics']['run']
+        self.assertEqual([row['invocation_id'] for row in pending['records']], ['one'])
+        with path.open('ab') as output:
+            output.write(b'\n')
+        complete = reader.open_snapshot('run')['metrics']['run']
+        self.assertEqual([row['invocation_id'] for row in complete['records']], ['one', 'two'])
+        self.assertNotIn('metric_artifact_changed', complete['reasons'])
+        with path.open('ab') as output:
+            output.write(second.replace(b'"two"', b'"three"'))
+        self.assertEqual(len(reader.open_snapshot('run')['metrics']['run']['records']), 3)
+
+    def test_metric_poll_replacement_is_not_adopted_by_reused_http_reader(self):
+        path = self._metric_artifact()
+        from starlette.testclient import TestClient
+        from workflow_monitor.app import create_app
+        from workflow_monitor.public import run_ref
+        assets = self.project/'assets'; assets.mkdir(); (assets/'index.html').write_text('fixture')
+        reader = Reader(self.project)
+        reference = run_ref('run')
+        client = TestClient(create_app(reader, assets, 8765), base_url='http://127.0.0.1:8765')
+        def metrics():
+            response = client.get('/api/monitor/v1/runs/' + reference + '/snapshot', headers={'sec-fetch-site': 'same-origin', 'x-workflow-monitor': '1'})
+            self.assertEqual(response.status_code, 200)
+            return response.json()['metric_coverage'][reference]
+        self.assertEqual(metrics()['interval_count'], 1)
+        replacement = path.with_suffix('.replacement')
+        replacement.write_bytes(path.read_bytes())
+        os.replace(replacement, path)
+        for _ in range(2):
+            changed = metrics()
+            self.assertEqual(changed['interval_count'], 0)
+            self.assertEqual(changed['availability'], 'unavailable')
+            self.assertIn('metric_artifact_changed', changed['reasons'])
+
+    def test_metric_poll_truncation_and_complete_prefix_rewrite_are_qualified(self):
+        path = self._metric_artifact(('one', 'two'))
+        reader = Reader(self.project)
+        self.assertEqual(len(reader.open_snapshot('run')['metrics']['run']['records']), 2)
+        first = path.read_bytes().splitlines(keepends=True)[0]
+        path.write_bytes(first)
+        self.assertIn('metric_artifact_changed', reader.open_snapshot('run')['metrics']['run']['reasons'])
+        # A newly selected Reader may bind the current artifact, but cannot silently
+        # accept a rewrite of already observed complete bytes at the same inode/length.
+        reader = Reader(self.project)
+        self.assertEqual(len(reader.open_snapshot('run')['metrics']['run']['records']), 1)
+        path.write_bytes(first.replace(b'"one"', b'"new"'))
+        self.assertIn('metric_artifact_changed', reader.open_snapshot('run')['metrics']['run']['reasons'])
 
     def test_wal_snapshot_reads_actual_writer_updates_without_mutation(self):
         self._record()
