@@ -27,5 +27,5 @@ test('displays read freshness, incomplete history, and qualified liveness withou
   await expect(page.getByLabel('Runner liveness')).toHaveText(/Recorded runner live.*does not prove progress/)
   await page.clock.fastForward(60_000)
   await expect(page.getByLabel('Read freshness')).toContainText('Read unavailable')
-  await expect(page.getByLabel('Read freshness')).toContainText('read_unavailable, incomplete_history')
+  await expect(page.getByLabel('Read freshness')).toContainText('Read unavailable, Incomplete history')
 })
