@@ -33,6 +33,8 @@ def metric_record(run, invocation, mode, actual, *, partial=False):
                 'total_tokens': field(12), 'estimated_usd': field(.25),
                 'compactions': {'entry_ids': ['compact-one'], 'count': 1, 'unknown_reason': None},
                 'summary_overhead': {'entries': [{'entry_id': 'compact-one', 'unknown_reason': None, 'usage': {'input': 1, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 3, 'cacheWrite1h': 0, 'reasoning': 1, 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0, 'total': 0}}}], 'unknown_reason': None, 'included_in_sdk_deltas': True}}
+    if run == 'metrics-excluded':
+        interval['summary_overhead']['included_in_sdk_deltas'] = False
     if partial:
         interval['tokens']['output'] = {'value': None, 'unknown_reason': 'missing_end', 'provenance': 'fixture'}
     return {'version': 1, 'run_id': run, 'invocation_id': invocation, 'task_id': 'one', 'role': 'worker', 'outcome': 'settled', 'fixing_round': None, 'review_ordinal': None, 'interval': interval, 'before': before, 'after': after, 'selected_session_mode': mode, 'session_selection_reason': 'fixture-selection', 'actual_session_mode': actual, 'actual_session_id': 'session-one'}
@@ -67,7 +69,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                        'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),
             {'provider': 'fixture', 'model': 'offline', 'effort': 'medium', 'reviewer': {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}}, adapter=CorrectionAdapter,
             question=lambda _: 'fixture correction', paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'merged-edge', 'relation-styles', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'metrics-excluded', 'merged-edge', 'relation-styles', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(descriptor({'tasks': [{'id': 'edge', 'description': 'Prepare usable input'}],
@@ -191,7 +193,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                         emit(recorder, 'review', 'review', 'failed', task=None, role='reviewer', approved=False, finding_count=2, review_base=base, review_head=base)
                     emit(recorder, 'terminal', 'terminal', 'failed' if run == 'stopping' else 'passed', task=None, head=base)
             if run == 'success' or run.startswith('metrics-'):
-                modes = {'success': ('fresh', 'fresh'), 'metrics-reused': ('reused_from_earlier_task', 'reused_from_earlier_task'), 'metrics-continued': ('continued_same_task', 'continued_same_task'), 'metrics-unknown': ('unknown', 'unknown'), 'metrics-partial': ('fresh', 'fresh')}
+                modes = {'success': ('fresh', 'fresh'), 'metrics-reused': ('reused_from_earlier_task', 'reused_from_earlier_task'), 'metrics-continued': ('continued_same_task', 'continued_same_task'), 'metrics-unknown': ('unknown', 'unknown'), 'metrics-partial': ('fresh', 'fresh'), 'metrics-excluded': ('fresh', 'fresh')}
                 artifact = create_artifact(project, run, authority=owner)
                 artifact.append(metric_record(run, f'{run}-worker', *modes[run], partial=run == 'metrics-partial'))
                 if run == 'metrics-partial':

@@ -108,6 +108,28 @@ test('production computed lifecycle colors and declared recorded mixed connector
   await page.screenshot({ path: testInfo.outputPath('production-mixed-relations.png'), fullPage: true })
 })
 
+test('compaction inclusion uncertainty is honest and never changes totals', async ({ page }) => {
+  for (const [run, text] of [['success', 'This summary is already included in This call and is not added again.'], ['metrics-excluded', 'This summary is not included in the recorded call deltas. Do not infer a combined total.'], ['metrics-unverified', 'Inclusion in the recorded call deltas is unverified. Do not infer a combined total.']] as const) {
+    // The artifact writer requires a boolean; exercise the nullable public DTO
+    // branch by changing only inclusion on an otherwise real HTTP readback.
+    if (run === 'metrics-unverified') await page.route('**/snapshot', async route => {
+      const response = await fetch(route.request().url(), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
+      expect(response.ok).toBe(true)
+      const body = await response.json()
+      for (const activity of body.activities ?? []) if (activity.metrics?.summary_overhead) activity.metrics.summary_overhead.included_in_sdk_deltas = null
+      await route.fulfill({ json: body })
+    })
+    await page.goto(`/runs/id-${run === 'metrics-unverified' ? 'success' : run}`)
+    await page.locator('.react-flow__node').first().click()
+    const details = page.getByLabel('Selected execution details')
+    await expect(details).toContainText(text)
+    await expect(details).toContainText('Total tokens: 12')
+    await expect(details).toContainText('Total tokens: known subtotal 12; complete total 12')
+    await expect(details).toContainText('Total tokens: 3')
+    await expect(details).not.toContainText('Total tokens: 15')
+  }
+})
+
 test('renders scoped ordinary metrics from fixture JSONL through production HTTP', async ({ page }, testInfo) => {
   await page.goto('/runs/id-success')
   const worker = page.locator('.react-flow__node').first()
