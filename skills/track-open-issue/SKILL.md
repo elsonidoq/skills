@@ -1,52 +1,109 @@
 ---
 name: track-open-issue
-description: Use when verified unresolved work needs recording in `docs/open_issues.md`.
+description: Use when verified unresolved work needs recording in the project's explicit GitHub Issues target.
 ---
 
 # Track Open Issue
 
-Record the issue candidate or source artifact named in the user's request in `docs/open_issues.md`. Do not modify
-product code, tests, generated assets, deployment state, or unrelated artifacts.
+Record a verified unresolved-work candidate in the explicitly configured GitHub Issues
+repository. Do not modify product code, tests, generated assets, deployment state, or
+unrelated issues. A bare `#N` or `OI-N` is not an identity: report native issues as a
+repository-qualified `HOST/OWNER/REPO#N` and URL.
 
-## Inputs and Evidence
+## Candidate and target
 
-Read every named source artifact. Extract or ask for only the minimum missing information needed to record an issue:
+Read every named source artifact. Retain, or ask only for, the minimum candidate facts:
 
-- a concrete unresolved problem, classified as a bug, risk, shortcut, missing capability, or investigation;
-- primary evidence that verifies the problem or, for an investigation, verifies the uncertainty and names the evidence
-  needed to resolve it; and
-- a resumption condition: the next action, prerequisite, or observation that makes work resumable.
+- a concrete unresolved problem, classified as a bug, risk, shortcut, missing capability,
+  or investigation where that classification is verified or supported;
+- primary evidence for the problem (or for the uncertainty and needed evidence); and
+- a resumption condition: the next action, prerequisite, or observation.
 
-If the request is absent, unreadable, or insufficient, ask a concise question and do not write anything. Track only
-verified unresolved work. Do not state an unverified claim as fact; record the uncertainty, its known evidence, and the
-evidence required to resolve it. Exclude credentials, tokens, personal data, and sensitive payloads.
+Keep uncertainty explicit; do not promote an unverified claim to fact or include credentials,
+tokens, personal data, or sensitive payloads.
 
-## Record in the Local Register
+Resolve `HOST`, `OWNER`, and `REPO` from current project instructions/configuration, then
+confirm the same target from verified remote evidence. Do not infer a target from a bare
+number, an `origin` name alone, or another repository's issue URL. Missing or conflicting
+target evidence requires a concise question about that target only.
 
-1. Read applicable repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the existing register when
-   present. Preserve its identifiers, templates, statuses, and ownership rules.
-2. Search `docs/open_issues.md` for duplicate or overlapping entries using the problem, affected area, and primary
-   evidence. Inspect likely matches and their current status. Update the matching issue when appropriate; otherwise
-   create one new entry. Do not duplicate a full narrative.
-3. Before editing an existing register, inspect its initial dirty state and content. Do not edit a pre-existing dirty
-   target without explicit owner approval. Re-read it immediately before applying a patch and stop if it changed
-   concurrently.
-4. When the register does not exist, initialize `docs/open_issues.md` with the `OI-N` convention, where `N` is the
-   next unused positive identifier after inspecting existing entries. For a new entry, use status `open` and include
-   `Status`, `Problem`, `Primary evidence`, and `Resumption condition`.
-5. Do not close, reopen, reassign, or change unrelated entries.
+Before any remote operation, check that `gh` is usable, authenticated for the explicit host,
+and can read the target's issues without printing token values. For example, use
+`gh auth status --hostname "$HOST"` and an explicit `gh api --method GET` target query.
+Do not install `gh`, refresh authentication, change credentials, or use an implicit default
+repository. A current authorization to write issues must be explicit for this target and
+operation; successful reads or an ADMIN-looking field do not establish it.
 
-## Validate and Report
+If target, `gh`, authentication, issue capability, or required write authority is unavailable,
+return `issue tracking: UNAVAILABLE` or `deferred`, together with the candidate, evidence,
+resumption condition, missing capability/authority, and corrective action. Do not create or
+fall back to a persistent local register.
 
-Re-read the created or updated entry. Verify its `OI-N` reference resolves, its status, problem, primary evidence,
-and resumption condition are present, and it has not duplicated an existing entry.
+## Discover overlap
 
-Report one outcome: `created`, `updated`, `deduplicated`, `deferred`, or `not recorded`. State:
+For a verified candidate and usable read capability, inspect likely overlaps by problem,
+affected area, and primary evidence across **all open and closed issues**. Use the explicit
+target and complete pagination, for example:
 
-- the `docs/open_issues.md` location and issue reference;
-- the primary evidence, status, and resumption condition; and
-- any required owner action.
+```sh
+gh api --method GET --hostname "$HOST" --paginate \
+  "repos/$OWNER/$REPO/issues?state=all&per_page=100"
+```
 
-## Mandatory task checkpoint
+Exclude pull requests from this REST listing. Inspect every returned page and likely issue
+body/comments as needed; GitHub's default open-only listing and a result limit are not full
+discovery. Never deduplicate, merge, or reopen solely from a title or partial similarity.
+A closed overlap remains evidence for the report and is not automatically reopened.
 
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). A verified local-register update is a bounded retained deliverable; investigation without such a write creates no empty commit.
+The intended body states the verified problem and category where supported, primary evidence,
+resumption condition, and uncertainty. Prepare Markdown in a local body file and pass it with
+`--body-file`; do not interpolate Markdown into a shell command, use `eval`, upload
+attachments, or add labels, assignees, projects, parent/blocked-by relations, or unrelated
+fields. An authorized create is explicitly targeted, for example:
+
+```sh
+gh issue create --repo "$HOST/$OWNER/$REPO" --title "$title" --body-file "$body_file"
+```
+
+## Create, scoped change, and state transitions
+
+Create only when there is current explicit issue-write authority for this target and no exact
+existing match. For an exact match, report `deduplicated`, or make only a narrowly authorized
+change to the intended fields.
+
+Before any scoped body overwrite or state transition, immediately GET the exact issue and
+compare it with the content/state inspected for the proposed operation. Build a replacement
+body by preserving unknown sections; do not erase comments/history, labels, assignees, or
+unrelated state. If the issue changed, is ambiguous, or cannot be safely preserved, stop that
+overwrite and report `deferred` with reinspection/review action. This read/check is not an
+atomic compare-and-swap guarantee.
+
+Close only with recorded evidence tied to the issue's problem and current close authority.
+Reopen only with a verified recurrence or resumption basis and current reopen authority. Record
+the basis in the intended issue fields and do not change unrelated issues. An authorized close
+without outcome evidence is an operation confirmation, not a verified fix.
+
+After every create, update, close, or reopen, independently GET the exact issue by number:
+
+```sh
+gh api --method GET --hostname "$HOST" "repos/$OWNER/$REPO/issues/$number"
+```
+
+Confirm the exact qualified URL/identity, intended problem/evidence/resumption content, and
+intended state. Readback failure or unknown mutation response leaves verification unknown:
+do not blindly retry a possibly successful mutation. Instead return the qualified candidate and
+reconciliation action (GET/list complete open+closed results, then inspect the exact issue).
+Separate remote operation confirmation from proof that the underlying problem is resolved.
+
+## Report and checkpoint boundary
+
+Report exactly one outcome: `created`, `updated`, `deduplicated`, `deferred`, or `not recorded`.
+Include the qualified target/URL when known, candidate/evidence/resumption, intended and observed
+state, any uncertainty, and required owner action.
+
+External-only issue work creates no empty Git commit. If this skill produces an authorized
+retained repository deliverable, follow the focused task checkpoint contract at
+[`task-commit-contract`](../memory-handling/references/task-commit-contract.md); preserve real
+manual gates, explicit authority, unrelated work, hooks, and signing. Local small fixtures are
+allowed under routine authority, but they do not prove live GitHub behavior or grant external
+write authority.
