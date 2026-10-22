@@ -51,14 +51,14 @@ Use the SDD quality guidance to prepare source-producer briefs, not downstream r
 inputs. The source must retain complete relevant behavior, approach, constraints and observable
 acceptance; unresolved material gaps return through existing gates.
 
-Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
-during initial understanding, including standalone/direct entry: consult relevant existing
-compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
-routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
-future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
-explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Apply [save-adr](../save-adr/SKILL.md)'s
-consult/propagate contract before affected planning; read the
+Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
+including standalone/direct entry: retrieve relevant guidance from the verified unified index
+without auto-initialization; missing optional storage or STATE is nonblocking. Carry relevant
+explicit owner guidance, alongside gotchas, through source observables → dependencies or
+gates → task-local REQUIRED checks → worker/reviewer briefs; no default history intake,
+execution-time feedback routing, routine persistence, reflection, inferred lessons, or STATE
+maintenance. Preserve its explicit-feedback authority and path/symlink, sensitive-data, and
+dirty/concurrent safeguards. Apply [save-adr](../save-adr/SKILL.md)'s consult/propagate contract before affected planning; read the
 whole discovered decision index, then relevant accepted records in full and needed
 supersession links; fresh/resumed contexts re-establish applicability rather than claiming a
 prior read. Carry each applicable accepted outcome constraint and source link through source

@@ -24,17 +24,15 @@ that conflicts with an accepted outcome stops the affected continuation through 
 and approval-renewal gates. Compatible helper/mechanism cleanup that preserves the outcome needs
 no new gate.
 
-Apply the [project coordination contract](../memory-handling/references/project-coordination.md)
-during initial understanding, including standalone/direct entry: consult relevant existing
-compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
-routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
-future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
-explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Carry exact applicable constraints
-and evidence references through source observables → dependencies/REQUIRED checks → brief;
-verify their effect on a relevant decision, never override source/owner authority. No default
-history intake; explicit relevant retrieval is index-first where useful and retains uncertainty
-on no match. Required gotcha-memory gates remain separate.
+Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
+including standalone/direct entry: retrieve relevant guidance from the verified unified index
+without auto-initialization; missing optional storage or STATE is nonblocking. Carry relevant
+explicit owner guidance, alongside gotchas, through source observables → dependencies or
+gates → task-local REQUIRED checks → worker/reviewer briefs; preserve its explicit-feedback
+authority and local path/symlink, sensitive-data, and dirty/concurrent safeguards. No default
+history intake, execution-time feedback routing, routine persistence, reflection, inferred
+lessons, or STATE maintenance. Verify their effect on a relevant decision, never override
+source/owner authority.
 
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
 verify it is readable or stop with a missing-install report. Standalone entry applies

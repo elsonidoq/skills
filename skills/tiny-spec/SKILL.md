@@ -18,14 +18,14 @@ instructions, governing principles and applicable memory via discoverable
 stops with a report; no invented path, model binding or project policy. Preserve dirty
 and unrelated content; inspect existing source immediately before changing it.
 
-Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
-during initial understanding, including standalone/direct entry: consult relevant existing
-compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
-routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
-future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
-explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Apply [save-adr](../save-adr/SKILL.md)'s
-consult/propagate contract. On direct entry and fresh/resumed
+Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
+including standalone/direct entry: retrieve relevant guidance from the verified unified index
+without auto-initialization; missing optional storage or STATE is nonblocking. Carry relevant
+explicit owner guidance, alongside gotchas, through source observables → dependencies or
+gates → task-local REQUIRED checks → worker/reviewer briefs; no default history intake,
+execution-time feedback routing, routine persistence, reflection, inferred lessons, or STATE
+maintenance. Preserve its explicit-feedback authority and path/symlink, sensitive-data, and
+dirty/concurrent safeguards. Apply [save-adr](../save-adr/SKILL.md)'s consult/propagate contract. On direct entry and fresh/resumed
 production, re-establish relevant accepted authority and current supersession before carrying
 exact applicable constraints and source links into source acceptance: each relevant source
 observable must yield its task dependency or gate, task-local REQUIRED check and worker brief,
