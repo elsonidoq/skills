@@ -50,6 +50,22 @@ class PreviewTests(unittest.TestCase):
         self.assertIn("## Problem\n" + value + "\n\n## Primary evidence\nevidence\ncontinuation\n", transformed)
         self.assertEqual(record.original_excerpt, text.rstrip("\n"))
 
+    def test_existing_links_source_anchors_and_code_are_not_rewritten_as_oi_mentions(self):
+        value = ('[OI-9](relative.md#part) [OI-8](#source-anchor) '
+                 '[OI-7](https://example.org/OI-7) OI-6 '
+                 '`[OI-5](relative.md) OI-4` ``[OI-3](#part) `OI-2` ``')
+        text = ("## OI-1: Links\n- **Status:** open\n- **Problem:** " + value
+                + "\n- **Primary evidence:** e\n- **Resumption condition:** r\n")
+        record = preview(text, SOURCE, "dest/repo").records[0]
+        transformed = record.body.split("## Original Markdown excerpt", 1)[0]
+        base = SOURCE.blob_url.rsplit("/", 1)[0]
+        expected = (f'[OI-9]({base}/relative.md#part) [OI-8]({SOURCE.blob_url}#source-anchor) '
+                    f'[OI-7](https://example.org/OI-7) [OI-6]({SOURCE.blob_url}) '
+                    '`[OI-5](relative.md) OI-4` ``[OI-3](#part) `OI-2` ``')
+        self.assertIn("## Problem\n" + expected + "\n", transformed)
+        self.assertNotIn("[[OI-", transformed)
+        self.assertIn(value, record.original_excerpt)
+
     def test_multiline_extra_fields_links_and_identity(self):
         text = """## OI-1: Renamed title\n\n- **Status:** open\n- **Problem:** First line\n  second line with [relative](../runtime/a.py#part), [absolute #2](https://github.com/x/y/issues/2), OI-9 and `../code.py`.\n- **Primary evidence:** evidence\n- **Resumption condition:** resume\n- **History:** retained\n"""
         result = preview(text, SOURCE, "dest/repo")

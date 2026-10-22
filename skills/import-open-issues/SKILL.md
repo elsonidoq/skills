@@ -43,9 +43,11 @@ an explicit fidelity limitation.
 
 Relative Markdown links are resolved from the source-file directory to immutable pinned blob
 URLs with anchors and link text retained. Absolute URLs (including existing GitHub issue URLs)
-remain unchanged. OI references become source-qualified immutable source links; they do not
-create task/issue relationships. Inline code paths are retained as code and are not claimed
-as verified links.
+remain unchanged. Anchor-only links resolve against the pinned source file, not the destination
+issue. Bare OI references become source-qualified immutable source links; existing link labels
+and targets are not rewritten as OI mentions. They do not create task/issue relationships.
+Code spans (including Markdown-looking content) remain unchanged and are not claimed as
+verified links.
 
 ## Read-only reconciliation
 

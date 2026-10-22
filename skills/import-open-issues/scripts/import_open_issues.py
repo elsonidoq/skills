@@ -16,6 +16,7 @@ from urllib.parse import quote
 _HEADING = re.compile(r"^## (OI-\d+):\s+(.+?)\s*$")
 _FIELD = re.compile(r"^- \*\*(.+?):\*\*\s*(.*)$")
 _LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+_MARKDOWN_TOKEN = re.compile(r"(?P<ticks>`+).*?(?P=ticks)|\[[^\]]+\]\([^)]+\)", re.S)
 _OI_REFERENCE = re.compile(r"(?<![\w-])(OI-\d+)(?![\w-])")
 _REQUIRED_FIELDS = ("Status", "Problem", "Primary evidence", "Resumption condition")
 _SENSITIVE = re.compile(r"(?:BEGIN [A-Z ]*PRIVATE KEY|(?:api[_-]?key|token|password|secret)\s*[:=])", re.I)
@@ -415,8 +416,10 @@ def _entry_url(source: Source, record: ParsedRecord) -> str:
 def _render_markdown(value: str, source: Source) -> str:
     def link(match: re.Match[str]) -> str:
         text, target = match.groups()
-        if target.startswith(("http://", "https://", "#", "mailto:")):
+        if target.startswith(("http://", "https://", "mailto:")):
             return match.group(0)
+        if target.startswith("#"):
+            return f"[{text}]({source.blob_url}{target})"
         target_path, separator, anchor = target.partition("#")
         if not target_path or target_path.startswith(("/", "//")):
             return match.group(0)
@@ -426,13 +429,19 @@ def _render_markdown(value: str, source: Source) -> str:
         url = f"https://{source.host}/{source.repository}/blob/{quote(source.revision, safe='')}/{quote(resolved, safe='/')}"
         return f"[{text}]({url}{'#' + anchor if separator else ''})"
 
-    linked = _LINK.sub(link, value)
-    # Never alter code spans: paths there are evidence, not verified links.
-    parts = re.split(r"(`[^`]*`)", linked)
-    for i in range(0, len(parts), 2):
-        # The referenced title may be unavailable, so link to the immutable file
-        # instead of inventing an unreliable heading anchor.
-        parts[i] = _OI_REFERENCE.sub(lambda m: f"[{m.group(1)}]({source.blob_url})", parts[i])
+    # Transform only plain mentions between complete code/link tokens. Never run
+    # OI substitution inside link labels/targets or link rewriting inside code.
+    def mentions(text: str) -> str:
+        return _OI_REFERENCE.sub(lambda m: f"[{m.group(1)}]({source.blob_url})", text)
+
+    parts: list[str] = []
+    end = 0
+    for token in _MARKDOWN_TOKEN.finditer(value):
+        parts.append(mentions(value[end:token.start()]))
+        text = token.group(0)
+        parts.append(text if text.startswith("`") else _LINK.sub(link, text))
+        end = token.end()
+    parts.append(mentions(value[end:]))
     return "".join(parts)
 
 
