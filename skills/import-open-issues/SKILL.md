@@ -66,9 +66,9 @@ absent or that a create is eligible. Do not refresh auth. This is version-sensit
 guidance, not a claim that an untested target supports another version.
 
 The snapshot excludes REST items with `pull_request`. It compares each raw, exact body marker
-(no title/search/near-match adoption): unchanged body and native open/closed state is `no-op`;
-no marker is `planned create`; body/state divergence, duplicate marker, or unknown close state
-is an affected-record `conflict` requiring inspection. It does not reset stale source state,
+(no title/search/near-match adoption): unchanged title, body, and native open/closed state is
+`no-op`; no marker is `planned create`; title/body/state divergence, duplicate marker, or
+unknown close state is an affected-record `conflict` requiring inspection. It does not reset stale source state,
 merge titles, overwrite human edits, or claim close ownership. A `confirmed_mappings` identity
 → issue-number input reports an `existing-issue mapping` only when a reviewer has explicitly
 chosen that visible non-PR issue; it preserves its body/state and is nonauthoritative. In
@@ -82,11 +82,12 @@ needed, and no exactly-once guarantee or repository-wide lock exists for simulta
 
 ## Apply boundary
 
-`apply(reviewed, GhApiTransport(), HOST, ApplyAuthorization(DESTINATION, WRITE_SCOPE))`
+`apply(reviewed, GhApiTransport(), HOST, ApplyAuthorization(HOST, DESTINATION, WRITE_SCOPE))`
 creates only records that were reviewed as `planned create`, remain `planned create` after an
 immediate complete reinspection of that same explicit destination, and have native `open`
-state. The authorization destination must exactly equal the preview destination and its write
-scope must be non-empty; this is the real write boundary, not an implication of previewing.
+state. The reviewed host, apply `HOST`, authorization host, and authorization destination must
+all exactly match the reviewed `HOST/OWNER/REPO`; the write scope must be non-empty. This is the
+real write boundary, not an implication of previewing.
 For an originally closed record, create uses an explicit `pending` closure provenance marker,
 then independently reads that exact open staged body before one `PATCH` atomically replaces it
 with the final `closed` marker/body and `{"state":"closed","state_reason":null}`. A final
@@ -102,10 +103,12 @@ never adopts a title/near match, changes labels/assignees, or modifies existing 
 issue #2.
 
 A create sends the reviewed title and body to the explicit `repos/OWNER/REPO/issues` endpoint,
-then independently GETs it. A lost POST response is permanently uncertain: the helper performs
-a complete all-state marker listing and independently GETs one exact candidate, but never retries
-that POST. A lost close response is similarly resolved only by its final GET, never a second
-PATCH. Earlier verified results remain in the report if a later record fails. There is no remote
+then independently GETs it, confirming exact title as well as marker/body/state. A lost POST
+response is permanently uncertain: the helper performs a complete all-state marker listing and
+independently GETs one exact candidate, but never retries that POST. Carry every deferred
+uncertain identity into a later `reconcile(..., uncertain_identities={...})`; an absent marker
+for one of those identities remains deferred until explicit human resolution, never a new create.
+A lost close response is similarly resolved only by its final GET, never a second PATCH. Earlier verified results remain in the report if a later record fails. There is no remote
 rollback: code rollback cannot undo a create/update/close, and recovery reconciles rather than
 deletes or silently restoring local authority.
 
@@ -114,7 +117,8 @@ deletes or silently restoring local authority.
 The production interface is Python: import `preview`, `reconcile`, and `apply` from
 `scripts/import_open_issues.py`; it has no standalone CLI. Default operation is offline
 `preview`; `reconcile` is an explicit read-only target lookup; only `apply` with an exact
-`ApplyAuthorization(destination, write_scope)` can write. Before a future real apply, obtain
+`ApplyAuthorization(host, destination, write_scope)` matching the reviewed host and destination
+can write. Before a future real apply, obtain
 explicit destination/scope authority, review dry-run diagnostics/counts, choose any OI-4/#2
 overlap mapping, run complete open+closed reconciliation, and independently map full
 content/state/count readback. Human-confirmed adoption preserves existing content: no automatic
@@ -131,9 +135,13 @@ the helper reported `deferred`, suppression occurred, and an independent all-sta
 found 0 candidates, so no candidate GET/body/state/reason result exists. The first invocation
 exposed null issue bodies in real listing (now normalized to empty); the second was rejected with
 HTTP 422 (`links/0/schema` nil); after adding `gh api --input -`, the third still had no visible
-candidate despite the suppressed POST response. Do not retry or rely on uncertain-create/closure
-behavior without review/renewed proof authority. This was not a historical apply and made no
-change to #2; no proof issue is automatically deleted.
+candidate despite the suppressed POST response. A later owner-approved recovery was limited to
+existing issue #3's exact pending-close path (no new POST or other issue mutation). Current
+read-only GET of #3 observes the expected final body/title and `closed`, but GitHub reports
+`state_reason: "completed"`, not null. Its recovery trace/API semantics have not established a
+null-reason mapping, so this does not change the INCONCLUSIVE status or satisfy T005/V2. Do not
+retry or rely on uncertain-create/closure behavior without review/renewed proof authority. This
+was not a historical apply and made no change to #2; no proof issue is automatically deleted.
 
 The required proof command path remains `python3` importing this helper with that one synthetic
 record, `GhApiTransport()`, helper-boundary response suppression, independent `list_issues`
@@ -143,4 +151,7 @@ before relying on uncertain-create/closure behavior. Do not run a real register 
 delete a proof issue automatically.
 
 Preview and reconciliation otherwise have zero external writes. Keep the original Markdown
-intact; no source archive/delete or local tracking database is part of this skill.
+intact; no source archive/delete or local tracking database is part of this skill. For an
+authorized retained repository deliverable, follow the focused
+[`task-commit-contract`](../memory-handling/references/task-commit-contract.md); external-only
+work creates no empty commit and current runner ownership may retain staging/commit authority.

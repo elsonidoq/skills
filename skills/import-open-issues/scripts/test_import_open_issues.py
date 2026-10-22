@@ -65,7 +65,11 @@ class PreviewTests(unittest.TestCase):
         self.assertIn("duplicate OI identity", reasons)
         self.assertIn("unsafe Markdown", reasons)
         self.assertIn("sensitive candidate data rejected", reasons)
+        self.assertNotIn("DO_NOT_EXPORT", reasons)
         self.assertNotIn("DO_NOT_EXPORT", "\n".join(r.body for r in result.records))
+        status_secret = preview(valid.replace("Status:** open", "Status:** token=DO_NOT_EXPORT"), SOURCE, "dest/repo")
+        self.assertEqual(status_secret.records, ())
+        self.assertEqual(status_secret.diagnostics[0].reason, "sensitive candidate data rejected; fidelity is unavailable")
         self.assertEqual(result.counts["unmappable"], 4)
 
     def test_missing_structure_does_not_drop_valid_records_or_claim_completeness(self):
@@ -103,11 +107,11 @@ class ReconciliationTests(unittest.TestCase):
             self.assertEqual(argv[argv.index("--method") + 1], "GET")
             self.assertNotIn("POST", argv)
             return json.dumps([[
-                {"number": 1, "state": "open", "body": one.body},
-                {"number": 2, "state": "open", "body": two.marker.replace("OI-2", "OI-20")},
-                {"number": 3, "state": "open", "body": two.body, "pull_request": {"url": "x"}},
-                {"number": 4, "state": "open", "body": None},
-            ], [{"number": 9, "state": "closed", "body": two.body}]])
+                {"number": 1, "title": one.title, "state": "open", "body": one.body},
+                {"number": 2, "title": two.title, "state": "open", "body": two.marker.replace("OI-2", "OI-20")},
+                {"number": 3, "title": two.title, "state": "open", "body": two.body, "pull_request": {"url": "x"}},
+                {"number": 4, "title": "unrelated", "state": "open", "body": None},
+            ], [{"number": 9, "title": two.title, "state": "closed", "body": two.body}]])
 
         result = reconcile(proposal, GhApiTransport(fake_gh), "github.com")
         self.assertEqual([item.outcome for item in result.records], ["no-op", "no-op"])
@@ -141,15 +145,20 @@ class ReconciliationTests(unittest.TestCase):
 
         def snapshot(argv, stdin):
             return json.dumps([[
-                {"number": 1, "state": "open", "body": one.body},
-                {"number": 2, "state": "open", "body": "human issue #2, no import marker"},
-                {"number": 3, "state": "closed", "body": two.body + "\nhuman edit"},
-                {"number": 4, "state": "closed", "body": two.body},
+                {"number": 1, "title": one.title, "state": "open", "body": one.body},
+                {"number": 2, "title": "human issue #2", "state": "open", "body": "human issue #2, no import marker"},
+                {"number": 3, "title": two.title, "state": "closed", "body": two.body + "\nhuman edit"},
+                {"number": 4, "title": two.title, "state": "closed", "body": two.body},
             ]])
 
         result = reconcile(proposal, GhApiTransport(snapshot), "github.com", {one.identity: 2})
         self.assertEqual(result.records[0].outcome, "no-op")  # exact marker wins over title/mapping
-        self.assertEqual(result.records[1].outcome, "conflict")  # changed body plus a second exact marker
+        self.assertEqual(result.records[1].outcome, "conflict")
+        title_changed = json.loads(snapshot((), None))
+        title_changed[0][0]["title"] = "human title edit"
+        title_conflict = reconcile(proposal, GhApiTransport(lambda _argv, _stdin: json.dumps(title_changed)), "github.com")
+        self.assertEqual(title_conflict.records[0].outcome, "conflict")
+        self.assertIn("title diverges", title_conflict.records[0].detail)  # changed body plus a second exact marker
         mapped = reconcile(preview("""## OI-4: Overlap
 - **Status:** open
 - **Problem:** p
@@ -170,7 +179,7 @@ class ReconciliationTests(unittest.TestCase):
         self.assertIn("diverges", divergent.records[0].detail)
 
         def unknown_state(argv, stdin):
-            return json.dumps([[{"number": 8, "state": "unknown", "body": one.body}]])
+            return json.dumps([[{"number": 8, "title": one.title, "state": "unknown", "body": one.body}]])
 
         unknown = reconcile(proposal, GhApiTransport(unknown_state), "github.com")
         self.assertEqual(unknown.records[0].outcome, "conflict")
@@ -209,7 +218,7 @@ class ApplyTests(unittest.TestCase):
                 return json.dumps([issues])
             if method == "POST":
                 payload = json.loads(stdin)
-                issue = {"number": next_number[0], "state": "open", "body": payload["body"]}
+                issue = {"number": next_number[0], "title": payload["title"], "state": "open", "body": payload["body"]}
                 next_number[0] += 1
                 issues.append(issue)
                 if lose_create == payload["title"]:
@@ -237,7 +246,7 @@ class ApplyTests(unittest.TestCase):
         transport = self._transport(issues, calls)
         reviewed = reconcile(proposal, transport, "github.com")
         calls.clear()
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "write only these reviewed open records"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "write only these reviewed open records"))
         self.assertEqual([item.outcome for item in result.records], ["created", "created", "closed"])
         methods = [argv[argv.index("--method") + 1] for argv, _ in calls]
         self.assertEqual(methods, ["GET", "POST", "GET", "POST", "GET", "POST", "GET", "GET", "PATCH", "GET"])
@@ -248,7 +257,7 @@ class ApplyTests(unittest.TestCase):
 
         rerun = reconcile(proposal, transport, "github.com")
         calls.clear()
-        second = apply(rerun, transport, "github.com", ApplyAuthorization("dest/repo", "reviewed rerun"))
+        second = apply(rerun, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "reviewed rerun"))
         self.assertEqual([item.outcome for item in second.records], ["deferred", "deferred", "deferred"])
         self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
 
@@ -259,23 +268,23 @@ class ApplyTests(unittest.TestCase):
         by_id = {record.title.split(":", 1)[0]: record for record in proposal.records}
         # An existing historical #2 reference is never an implicit adoption.  A reviewer
         # mapping makes that one record non-createable and leaves the foreign body intact.
-        issues = [{"number": 2, "state": "closed", "body": "human issue #2, no import marker"}]
+        issues = [{"number": 2, "title": "human issue #2", "state": "closed", "body": "human issue #2, no import marker"}]
         calls = []
         transport = self._transport(issues, calls, lose_create=by_id["OI-1"].title)
         mapped = reconcile(proposal, transport, "github.com", {by_id["OI-4"].identity: 2})
         self.assertEqual(next(item for item in mapped.records if item.record is by_id["OI-4"]).outcome,
                          "existing-issue mapping")
-        self.assertEqual(issues[0], {"number": 2, "state": "closed", "body": "human issue #2, no import marker"})
+        self.assertEqual(issues[0], {"number": 2, "title": "human issue #2", "state": "closed", "body": "human issue #2, no import marker"})
 
         reviewed = reconcile(proposal, transport, "github.com")
         calls.clear()
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "reviewed original register"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "reviewed original register"))
         self.assertEqual([item.outcome for item in result.records].count("created"), 16)
         self.assertEqual([item.outcome for item in result.records].count("closed"), 3)
         self.assertEqual([json.loads(stdin)["title"] for argv, stdin in calls if "POST" in argv],
                          [record.title for record in proposal.records])
         self.assertEqual(sum("POST" in argv for argv, _ in calls), 19)
-        self.assertEqual(issues[0], {"number": 2, "state": "closed", "body": "human issue #2, no import marker"})
+        self.assertEqual(issues[0], {"number": 2, "title": "human issue #2", "state": "closed", "body": "human issue #2, no import marker"})
         for record in proposal.records:
             remote = next(issue for issue in issues if issue.get("body") == record.body)
             self.assertEqual(remote["state"], record.state)
@@ -285,7 +294,7 @@ class ApplyTests(unittest.TestCase):
         # review remains safe and emits no further mutation.
         rerun = reconcile(proposal, transport, "github.com")
         calls.clear()
-        repeated = apply(rerun, transport, "github.com", ApplyAuthorization("dest/repo", "unchanged rerun"))
+        repeated = apply(rerun, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "unchanged rerun"))
         self.assertTrue(all(item.outcome == "deferred" for item in repeated.records))
         self.assertFalse(any(method in argv for argv, _ in calls for method in ("POST", "PATCH")))
 
@@ -294,15 +303,19 @@ class ApplyTests(unittest.TestCase):
         calls, issues = [], []
         transport = self._transport(issues, calls)
         reviewed = reconcile(proposal, transport, "github.com")
-        issues.append({"number": 7, "state": "open", "body": proposal.records[0].body + "\nhuman update"})
+        issues.append({"number": 7, "title": proposal.records[0].title, "state": "open", "body": proposal.records[0].body + "\nhuman update"})
         calls.clear()
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "scoped write"))
         self.assertEqual(result.records[0].outcome, "deferred")
         self.assertIn("reinspection changed", result.records[0].detail)
         self.assertEqual(result.records[1].outcome, "created")
         self.assertNotIn("POST", [part for argv, _ in calls[:1] for part in argv])
-        with self.assertRaisesRegex(ValueError, "matching destination"):
-            apply(reviewed, transport, "github.com", ApplyAuthorization("other/repo", "wrong target"))
+        with self.assertRaisesRegex(ValueError, "matching host, destination"):
+            apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "other/repo", "wrong target"))
+        with self.assertRaisesRegex(ValueError, "matching host, destination"):
+            apply(reviewed, transport, "github.com", ApplyAuthorization("github.example", "dest/repo", "wrong host"))
+        with self.assertRaisesRegex(ValueError, "matching host, destination"):
+            apply(reviewed, transport, "github.example", ApplyAuthorization("github.example", "dest/repo", "unreviewed host"))
 
         # A revised source/preview retains its identity marker but changes the exact body;
         # it must reconcile as a conflict rather than overwrite the older import.
@@ -316,8 +329,42 @@ class ApplyTests(unittest.TestCase):
         changed_reviewed = reconcile(changed_preview, transport, "github.com")
         self.assertEqual(changed_reviewed.records[0].outcome, "conflict")
         calls.clear()
-        changed_result = apply(changed_reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "changed preview review"))
+        changed_result = apply(changed_reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "changed preview review"))
         self.assertEqual(changed_result.records[0].outcome, "deferred")
+        self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
+
+    def test_uncertain_create_identity_blocks_a_later_planned_create(self):
+        proposal = preview("""## OI-1: One
+- **Status:** open
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+""", SOURCE, "dest/repo")
+        record = proposal.records[0]
+        calls = []
+
+        def gh(argv, stdin):
+            calls.append((argv, stdin))
+            method = argv[argv.index("--method") + 1]
+            if method == "GET":
+                return json.dumps([[]])
+            if method == "POST":
+                raise IncompleteLookup("response interrupted after possible create")
+            raise AssertionError(argv)
+
+        transport = GhApiTransport(gh)
+        reviewed = reconcile(proposal, transport, "github.com")
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "scoped write"))
+        self.assertEqual(result.records[0].outcome, "deferred")
+        self.assertEqual(len([1 for argv, _ in calls if "POST" in argv]), 1)
+
+        # A later reconciliation must carry the returned uncertain identity; even when
+        # listing has recovered and finds no marker, it cannot send a second POST.
+        blocked = reconcile(proposal, transport, "github.com", uncertain_identities={record.identity})
+        self.assertEqual(blocked.records[0].outcome, "deferred")
+        calls.clear()
+        blocked_apply = apply(blocked, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "scoped retry"))
+        self.assertEqual(blocked_apply.records[0].outcome, "deferred")
         self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
 
     def test_partial_failure_and_lost_create_are_reconciled_without_second_post(self):
@@ -326,7 +373,7 @@ class ApplyTests(unittest.TestCase):
         transport = self._transport(issues, calls, lose_create="OI-2: Two")
         reviewed = reconcile(proposal, transport, "github.com")
         calls.clear()
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "scoped write"))
         self.assertEqual([item.outcome for item in result.records], ["created", "created", "closed"])
         post_titles = [json.loads(stdin)["title"] for argv, stdin in calls if "POST" in argv]
         self.assertEqual(post_titles, ["OI-1: One", "OI-2: Two", "OI-3: Historical closed"])
@@ -340,14 +387,14 @@ class ApplyTests(unittest.TestCase):
         calls, issues = [], []
         transport = self._transport(issues, calls, incomplete_list=True)
         reviewed = reconcile(proposal, transport, "github.com")
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "scoped write"))
         self.assertTrue(all(item.outcome == "deferred" for item in result.records))
         self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
 
         calls, issues = [], []
         transport = self._transport(issues, calls, unreadable=10)
         reviewed = reconcile(proposal, transport, "github.com")
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "scoped write"))
         self.assertEqual(result.records[0].outcome, "deferred")
         self.assertEqual(len([call for call in calls if "POST" in call[0]]), 3)
         self.assertIn("response was lost", result.records[0].detail)
@@ -365,7 +412,7 @@ class ClosedResumeTests(unittest.TestCase):
     def test_known_pending_close_resumes_once_but_human_reopen_or_unknown_ownership_defers(self):
         proposal = self._proposal()
         record = proposal.records[0]
-        issues = [{"number": 9, "state": "open", "body": record.pending_close_body}]
+        issues = [{"number": 9, "title": record.title, "state": "open", "body": record.pending_close_body}]
         calls = []
 
         def gh(argv, stdin):
@@ -385,7 +432,7 @@ class ClosedResumeTests(unittest.TestCase):
         transport = GhApiTransport(gh)
         reviewed = reconcile(proposal, transport, "github.com")
         self.assertEqual(reviewed.records[0].outcome, "pending close")
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "resume one known pending close"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "resume one known pending close"))
         self.assertEqual(result.records[0].outcome, "closed")
         self.assertEqual(issues[0]["state_reason"], None)
         self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
@@ -412,7 +459,7 @@ class ClosedResumeTests(unittest.TestCase):
             if method == "GET" and path.endswith("issues?state=all&per_page=100"):
                 return json.dumps([issues])
             if method == "POST":
-                issues.append({"number": 10, "state": "open", "body": record.pending_close_body})
+                issues.append({"number": 10, "title": record.title, "state": "open", "body": record.pending_close_body})
                 raise IncompleteLookup("create response lost after create")
             if method == "PATCH":
                 issues[0].update({"body": record.body, "state": "closed", "state_reason": None})
@@ -427,17 +474,17 @@ class ClosedResumeTests(unittest.TestCase):
 
         transport = GhApiTransport(gh)
         reviewed = reconcile(proposal, transport, "github.com")
-        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "one closed proof fixture"))
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "one closed proof fixture"))
         self.assertEqual(result.records[0].outcome, "closed")
         self.assertEqual(len([1 for argv, _ in calls if "POST" in argv]), 1)
         self.assertEqual(issues[0]["state"], "closed")
 
         # An unavailable final readback is deferred, not converted into a second create.
-        issues[:] = [{"number": 11, "state": "open", "body": record.pending_close_body}]
+        issues[:] = [{"number": 11, "title": record.title, "state": "open", "body": record.pending_close_body}]
         phase.update(close_lost=False, readback_fails=True)
         calls.clear()
         pending = reconcile(proposal, transport, "github.com")
-        deferred = apply(pending, transport, "github.com", ApplyAuthorization("dest/repo", "one pending close fixture"))
+        deferred = apply(pending, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "one pending close fixture"))
         self.assertEqual(deferred.records[0].outcome, "deferred")
         self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
 

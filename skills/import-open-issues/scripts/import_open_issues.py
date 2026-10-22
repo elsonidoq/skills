@@ -10,7 +10,7 @@ import json
 import posixpath
 import re
 import subprocess
-from typing import Callable, Mapping
+from typing import Callable, Collection, Mapping
 from urllib.parse import quote
 
 _HEADING = re.compile(r"^## (OI-\d+):\s+(.+?)\s*$")
@@ -98,6 +98,7 @@ class Preview:
 @dataclass(frozen=True)
 class RemoteIssue:
     number: int
+    title: str
     state: str
     body: str
     is_pull_request: bool = False
@@ -115,8 +116,10 @@ class Reconciliation:
 @dataclass(frozen=True)
 class ReconciliationPreview:
     preview: Preview
+    host: str
     records: tuple[Reconciliation, ...]
     lookup_error: str | None = None
+    uncertain_identities: frozenset[str] = frozenset()
 
 
 class IncompleteLookup(RuntimeError):
@@ -127,6 +130,7 @@ class IncompleteLookup(RuntimeError):
 class ApplyAuthorization:
     """An operator's explicit confirmation of the named destination write scope."""
 
+    host: str
     destination: str
     write_scope: str
 
@@ -183,18 +187,19 @@ class GhApiTransport:
     def _issue(item: object, operation: str) -> RemoteIssue:
         if not isinstance(item, dict) or not isinstance(item.get("number"), int):
             raise IncompleteLookup(f"{operation} returned an invalid issue")
+        title = item.get("title")
         body = item.get("body")
         state = item.get("state")
         # GitHub represents an issue with no description as JSON null; it cannot
         # contain an import marker, so normalize it for exact marker comparison.
         if body is None:
             body = ""
-        if not isinstance(body, str) or not isinstance(state, str):
-            raise IncompleteLookup(f"{operation} omitted issue body or state")
+        if not isinstance(title, str) or not isinstance(body, str) or not isinstance(state, str):
+            raise IncompleteLookup(f"{operation} omitted issue title, body, or state")
         state_reason = item.get("state_reason")
         if state_reason is not None and not isinstance(state_reason, str):
             raise IncompleteLookup(f"{operation} returned an invalid state reason")
-        return RemoteIssue(item["number"], state, body, "pull_request" in item, state_reason)
+        return RemoteIssue(item["number"], title, state, body, "pull_request" in item, state_reason)
 
     def get_issue(self, host: str, destination: str, number: int) -> RemoteIssue:
         if not isinstance(number, int) or number < 1:
@@ -239,17 +244,19 @@ def reconcile(
     transport: GhApiTransport,
     host: str,
     confirmed_mappings: Mapping[str, int] | None = None,
+    uncertain_identities: Collection[str] = (),
 ) -> ReconciliationPreview:
     """Compare a local preview with one complete read-only remote issue snapshot.
 
     This performs no create, update, close, or other mutation.  A mapping is only a
     caller-supplied reviewed choice for an already-existing issue; it never adopts by title.
     """
+    unresolved_uncertainties = frozenset(uncertain_identities)
     try:
         issues = transport.list_issues(host, proposal.destination)
     except IncompleteLookup as error:
         detail = str(error)
-        return ReconciliationPreview(proposal, tuple(Reconciliation(record, "incomplete lookup", detail=detail) for record in proposal.records), detail)
+        return ReconciliationPreview(proposal, host, tuple(Reconciliation(record, "incomplete lookup", detail=detail) for record in proposal.records), detail, unresolved_uncertainties)
 
     by_number = {issue.number: issue for issue in issues if not issue.is_pull_request}
     mappings = confirmed_mappings or {}
@@ -267,18 +274,23 @@ def reconcile(
                 results.append(Reconciliation(record, "existing-issue mapping", issue, "reviewed mapping; preserve remote body and state"))
             continue
         if not matches:
-            results.append(Reconciliation(record, "planned create"))
+            if record.identity in unresolved_uncertainties:
+                results.append(Reconciliation(record, "deferred", detail="previous create outcome remains uncertain; resolve the exact identity before another create"))
+            else:
+                results.append(Reconciliation(record, "planned create"))
             continue
         issue = matches[0]
         if issue.state not in {"open", "closed"}:
             results.append(Reconciliation(record, "conflict", issue, "unknown remote state; inspect close ownership"))
+        elif issue.title != record.title:
+            results.append(Reconciliation(record, "conflict", issue, "remote title diverges; inspect before any change"))
         elif issue.body == record.body and issue.state == record.state:
             results.append(Reconciliation(record, "no-op", issue))
         elif record.state == "closed" and issue.body == record.pending_close_body and issue.state == "open":
             results.append(Reconciliation(record, "pending close", issue, "recognized import-owned closure is unfinished"))
         else:
             results.append(Reconciliation(record, "conflict", issue, "remote body or state diverges; inspect before any change"))
-    return ReconciliationPreview(proposal, tuple(results))
+    return ReconciliationPreview(proposal, host, tuple(results), uncertain_identities=unresolved_uncertainties)
 
 
 def _verified_open_readback(record: RenderedRecord, issue: RemoteIssue) -> ApplyResult:
@@ -287,8 +299,8 @@ def _verified_open_readback(record: RenderedRecord, issue: RemoteIssue) -> Apply
         return ApplyResult(record, "deferred", issue, "readback resolved to a pull request")
     if issue.body.count(record.marker) != 1:
         return ApplyResult(record, "deferred", issue, "readback marker is absent or duplicated")
-    if issue.body != expected_body or issue.state != "open":
-        return ApplyResult(record, "deferred", issue, "readback content or open state diverges; preserve remote changes")
+    if issue.title != record.title or issue.body != expected_body or issue.state != "open":
+        return ApplyResult(record, "deferred", issue, "readback title, content, or open state diverges; preserve remote changes")
     return ApplyResult(record, "created", issue)
 
 
@@ -307,8 +319,8 @@ def _close_after_verified_pending(record: RenderedRecord, proposal: Preview, tra
         final = transport.get_issue(host, proposal.destination, number)
     except IncompleteLookup as error:
         return ApplyResult(record, "deferred", staged.issue, f"closure readback unavailable: {error}")
-    if final.is_pull_request or final.body.count(record.marker) != 1 or final.body != record.body or final.state != "closed" or final.state_reason is not None:
-        return ApplyResult(record, "deferred", final, "closure readback did not prove exact closed content with null state reason")
+    if final.is_pull_request or final.title != record.title or final.body.count(record.marker) != 1 or final.body != record.body or final.state != "closed" or final.state_reason is not None:
+        return ApplyResult(record, "deferred", final, "closure readback did not prove exact title, closed content, and null state reason")
     return ApplyResult(record, "closed", final)
 
 
@@ -338,9 +350,9 @@ def apply(
     uncertain: it is reconciled once and never retried by this helper.
     """
     proposal = reviewed.preview
-    if authorization.destination != proposal.destination or not authorization.write_scope.strip():
-        raise ValueError("apply requires explicit matching destination and non-empty write scope confirmation")
-    immediate = reconcile(proposal, transport, host)
+    if authorization.host != host or reviewed.host != host or authorization.destination != proposal.destination or not authorization.write_scope.strip():
+        raise ValueError("apply requires explicit matching host, destination, and non-empty write scope confirmation")
+    immediate = reconcile(proposal, transport, host, uncertain_identities=reviewed.uncertain_identities)
     reviewed_by_id = {item.record.identity: item for item in reviewed.records}
     current_by_id = {item.record.identity: item for item in immediate.records}
     results: list[ApplyResult] = []
@@ -425,13 +437,13 @@ def render_record(record: ParsedRecord, source: Source) -> RenderedRecord | Diag
     missing = [name for name in _REQUIRED_FIELDS if name not in fields]
     if missing:
         return Diagnostic(record.line, f"missing required field(s): {', '.join(missing)}", record.oi_id)
-    status = fields["Status"].strip().lower()
-    if status not in {"open", "closed"}:
-        return Diagnostic(record.line, f"unmappable status: {fields['Status']!r}", record.oi_id)
     if _UNSAFE.search(record.excerpt):
         return Diagnostic(record.line, "unsafe Markdown structure rejected", record.oi_id)
     if _SENSITIVE.search(record.excerpt):
         return Diagnostic(record.line, "sensitive candidate data rejected; fidelity is unavailable", record.oi_id)
+    status = fields["Status"].strip().lower()
+    if status not in {"open", "closed"}:
+        return Diagnostic(record.line, "unmappable status", record.oi_id)
     identity = f"{source.host}/{source.repository}:{source.path}:{record.oi_id}"
     marker = f"<!-- import-open-issues: {identity} -->"
     original_url = _entry_url(source, record)
