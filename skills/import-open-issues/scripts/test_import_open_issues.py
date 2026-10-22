@@ -106,6 +106,7 @@ class ReconciliationTests(unittest.TestCase):
                 {"number": 1, "state": "open", "body": one.body},
                 {"number": 2, "state": "open", "body": two.marker.replace("OI-2", "OI-20")},
                 {"number": 3, "state": "open", "body": two.body, "pull_request": {"url": "x"}},
+                {"number": 4, "state": "open", "body": None},
             ], [{"number": 9, "state": "closed", "body": two.body}]])
 
         result = reconcile(proposal, GhApiTransport(fake_gh), "github.com")
@@ -214,6 +215,13 @@ class ApplyTests(unittest.TestCase):
                 if lose_create == payload["title"]:
                     raise IncompleteLookup("response interrupted after create")
                 return json.dumps(issue)
+            if method == "PATCH" and "/issues/" in path:
+                number = int(path.rsplit("/", 1)[1])
+                payload = json.loads(stdin)
+                self.assertEqual(payload["state_reason"], None)
+                issue = next(issue for issue in issues if issue["number"] == number)
+                issue.update({"body": payload["body"], "state": payload["state"], "state_reason": payload["state_reason"]})
+                return json.dumps(issue)
             if method == "GET" and "/issues/" in path:
                 number = int(path.rsplit("/", 1)[1])
                 if unreadable == number:
@@ -230,13 +238,13 @@ class ApplyTests(unittest.TestCase):
         reviewed = reconcile(proposal, transport, "github.com")
         calls.clear()
         result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "write only these reviewed open records"))
-        self.assertEqual([item.outcome for item in result.records], ["created", "created", "deferred"])
+        self.assertEqual([item.outcome for item in result.records], ["created", "created", "closed"])
         methods = [argv[argv.index("--method") + 1] for argv, _ in calls]
-        self.assertEqual(methods, ["GET", "POST", "GET", "POST", "GET"])
+        self.assertEqual(methods, ["GET", "POST", "GET", "POST", "GET", "POST", "GET", "GET", "PATCH", "GET"])
         posts = [(argv, json.loads(stdin)) for argv, stdin in calls if "POST" in argv]
-        self.assertEqual([payload for _, payload in posts], [{"title": r.title, "body": r.body} for r in proposal.records[:2]])
+        self.assertEqual([payload for _, payload in posts], [{"title": r.title, "body": r.body} for r in proposal.records[:2]] + [{"title": proposal.records[2].title, "body": proposal.records[2].pending_close_body}])
         self.assertTrue(all(argv[-1] == "repos/dest/repo/issues" for argv, _ in posts))
-        self.assertEqual(len(issues), 2)
+        self.assertEqual(len(issues), 3)
 
         rerun = reconcile(proposal, transport, "github.com")
         calls.clear()
@@ -282,13 +290,13 @@ class ApplyTests(unittest.TestCase):
         reviewed = reconcile(proposal, transport, "github.com")
         calls.clear()
         result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
-        self.assertEqual([item.outcome for item in result.records], ["created", "created", "deferred"])
+        self.assertEqual([item.outcome for item in result.records], ["created", "created", "closed"])
         post_titles = [json.loads(stdin)["title"] for argv, stdin in calls if "POST" in argv]
-        self.assertEqual(post_titles, ["OI-1: One", "OI-2: Two"])
-        self.assertEqual(len([call for call in calls if "POST" in call[0]]), 2)
+        self.assertEqual(post_titles, ["OI-1: One", "OI-2: Two", "OI-3: Historical closed"])
+        self.assertEqual(len([call for call in calls if "POST" in call[0]]), 3)
         # The second POST succeeded remotely but its response was lost. Recovery lists
         # open+closed pages and independently GETs the single marker candidate.
-        self.assertEqual([argv[argv.index("--method") + 1] for argv, _ in calls], ["GET", "POST", "GET", "POST", "GET", "GET"])
+        self.assertEqual([argv[argv.index("--method") + 1] for argv, _ in calls], ["GET", "POST", "GET", "POST", "GET", "GET", "POST", "GET", "GET", "PATCH", "GET"])
 
     def test_uncertain_listing_or_readback_never_retries_a_post(self):
         proposal = self._proposal()
@@ -304,8 +312,97 @@ class ApplyTests(unittest.TestCase):
         reviewed = reconcile(proposal, transport, "github.com")
         result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "scoped write"))
         self.assertEqual(result.records[0].outcome, "deferred")
-        self.assertEqual(len([call for call in calls if "POST" in call[0]]), 2)
+        self.assertEqual(len([call for call in calls if "POST" in call[0]]), 3)
         self.assertIn("response was lost", result.records[0].detail)
+
+
+class ClosedResumeTests(unittest.TestCase):
+    def _proposal(self):
+        return preview("""## OI-9: Historical closed
+- **Status:** closed
+- **Problem:** p
+- **Primary evidence:** e
+- **Resumption condition:** r
+""", SOURCE, "dest/repo")
+
+    def test_known_pending_close_resumes_once_but_human_reopen_or_unknown_ownership_defers(self):
+        proposal = self._proposal()
+        record = proposal.records[0]
+        issues = [{"number": 9, "state": "open", "body": record.pending_close_body}]
+        calls = []
+
+        def gh(argv, stdin):
+            calls.append((argv, stdin))
+            method, path = argv[argv.index("--method") + 1], argv[-1]
+            if method == "GET" and path.endswith("issues?state=all&per_page=100"):
+                return json.dumps([issues])
+            if method == "GET":
+                return json.dumps(issues[0])
+            if method == "PATCH":
+                payload = json.loads(stdin)
+                self.assertEqual(payload, {"body": record.body, "state": "closed", "state_reason": None})
+                issues[0].update({"body": record.body, "state": "closed", "state_reason": None})
+                return json.dumps(issues[0])
+            raise AssertionError(argv)
+
+        transport = GhApiTransport(gh)
+        reviewed = reconcile(proposal, transport, "github.com")
+        self.assertEqual(reviewed.records[0].outcome, "pending close")
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "resume one known pending close"))
+        self.assertEqual(result.records[0].outcome, "closed")
+        self.assertEqual(issues[0]["state_reason"], None)
+        self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
+
+        # A final import body reopened by a human (or a body with no recognized pending
+        # provenance) is never reset by stale historical source state.
+        issues[0].update({"body": record.body, "state": "open"})
+        reopened = reconcile(proposal, transport, "github.com")
+        self.assertEqual(reopened.records[0].outcome, "conflict")
+        self.assertIn("diverges", reopened.records[0].detail)
+        issues[0].update({"body": record.pending_close_body + "\nhuman edit", "state": "open"})
+        unknown = reconcile(proposal, transport, "github.com")
+        self.assertEqual(unknown.records[0].outcome, "conflict")
+
+    def test_lost_create_and_close_response_or_readback_never_create_twice(self):
+        proposal = self._proposal()
+        record = proposal.records[0]
+        issues, calls = [], []
+        phase = {"close_lost": True, "readback_fails": False}
+
+        def gh(argv, stdin):
+            calls.append((argv, stdin))
+            method, path = argv[argv.index("--method") + 1], argv[-1]
+            if method == "GET" and path.endswith("issues?state=all&per_page=100"):
+                return json.dumps([issues])
+            if method == "POST":
+                issues.append({"number": 10, "state": "open", "body": record.pending_close_body})
+                raise IncompleteLookup("create response lost after create")
+            if method == "PATCH":
+                issues[0].update({"body": record.body, "state": "closed", "state_reason": None})
+                if phase["close_lost"]:
+                    raise IncompleteLookup("close response lost after close")
+                return json.dumps(issues[0])
+            if method == "GET":
+                if phase["readback_fails"]:
+                    raise IncompleteLookup("final readback unavailable")
+                return json.dumps(issues[0])
+            raise AssertionError(argv)
+
+        transport = GhApiTransport(gh)
+        reviewed = reconcile(proposal, transport, "github.com")
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "one closed proof fixture"))
+        self.assertEqual(result.records[0].outcome, "closed")
+        self.assertEqual(len([1 for argv, _ in calls if "POST" in argv]), 1)
+        self.assertEqual(issues[0]["state"], "closed")
+
+        # An unavailable final readback is deferred, not converted into a second create.
+        issues[:] = [{"number": 11, "state": "open", "body": record.pending_close_body}]
+        phase.update(close_lost=False, readback_fails=True)
+        calls.clear()
+        pending = reconcile(proposal, transport, "github.com")
+        deferred = apply(pending, transport, "github.com", ApplyAuthorization("dest/repo", "one pending close fixture"))
+        self.assertEqual(deferred.records[0].outcome, "deferred")
+        self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
 
 
 if __name__ == "__main__":

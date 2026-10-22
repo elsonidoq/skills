@@ -87,28 +87,60 @@ creates only records that were reviewed as `planned create`, remain `planned cre
 immediate complete reinspection of that same explicit destination, and have native `open`
 state. The authorization destination must exactly equal the preview destination and its write
 scope must be non-empty; this is the real write boundary, not an implication of previewing.
-The helper never creates a closed historical record, edits/reopens/closes an issue, changes a
-title/body/labels/assignees, or adopts a title/near match. Closed records are explicitly
-deferred until T005's closure gate.
+For an originally closed record, create uses an explicit `pending` closure provenance marker,
+then independently reads that exact open staged body before one `PATCH` atomically replaces it
+with the final `closed` marker/body and `{"state":"closed","state_reason":null}`. A final
+GET must prove one marker, exact final content, `closed`, and null reason before the report says
+`closed`. The source status remains verbatim in the rendered content; null is used only because
+no historical closure reason is specified. No fix, actor, or timestamp is invented.
 
-A create sends the exact reviewed title and body to the explicit `repos/OWNER/REPO/issues`
-endpoint, then independently GETs the returned issue. Readback must prove exactly one marker,
-identical body, and `open` state. Any changed body, state, duplicate marker, pull request,
-missing response, failed listing/readback, or uncertain visibility is an affected-record
-`deferred` result; it does not overwrite remote content. Earlier verified creates remain in
-the report if a later record fails. There is no rollback, source edit/archive, local state DB,
-or silent closed-record success.
+Only the exact pending marker/body plus open state is known import-owned unfinished closure and
+can resume on a later reviewed apply. A final imported body that is later open, an edited pending
+body, duplicate marker, unexpected state/reason, pull request, failed listing/readback, or any
+other ambiguity is `conflict`/`deferred`: never reset a possible human close/reopen. The helper
+never adopts a title/near match, changes labels/assignees, or modifies existing overlap such as
+issue #2.
 
-A lost POST response is permanently uncertain. The helper performs a complete all-state
-marker listing and independently GETs a single exact open candidate, but never retries that
-POST. An absent/ambiguous candidate, incomplete listing, or failed candidate GET remains
-`deferred` for remote inspection/owner resolution. Fixtures prove this algorithm and call
-ordering only: uncertain-create behavior is **NOT YET PROVEN remotely** and must not be relied
-on for real uncertain outcomes until T005's selected live proof.
+A create sends the reviewed title and body to the explicit `repos/OWNER/REPO/issues` endpoint,
+then independently GETs it. A lost POST response is permanently uncertain: the helper performs
+a complete all-state marker listing and independently GETs one exact candidate, but never retries
+that POST. A lost close response is similarly resolved only by its final GET, never a second
+PATCH. Earlier verified results remain in the report if a later record fails. There is no remote
+rollback: code rollback cannot undo a create/update/close, and recovery reconciles rather than
+deletes or silently restoring local authority.
 
-Preview and reconciliation otherwise have zero external writes. Before any apply, require the
-explicit named destination/write scope, reviewed preview, complete open-and-closed marker
-reconciliation, independent readback, and a reviewed choice for any pre-existing overlap.
-Never infer a fix, actor, timestamp, closure reason, or target availability from the
-historical text. Keep the original Markdown intact; no source archive/delete or local tracking
-database is part of this skill.
+## Operational walkthrough
+
+The production interface is Python: import `preview`, `reconcile`, and `apply` from
+`scripts/import_open_issues.py`; it has no standalone CLI. Default operation is offline
+`preview`; `reconcile` is an explicit read-only target lookup; only `apply` with an exact
+`ApplyAuthorization(destination, write_scope)` can write. Before a future real apply, obtain
+explicit destination/scope authority, review dry-run diagnostics/counts, choose any OI-4/#2
+overlap mapping, run complete open+closed reconciliation, and independently map full
+content/state/count readback. Human-confirmed adoption preserves existing content: no automatic
+merge or close of #2. Keep the original Markdown intact; optional static mappings are
+nonauthoritative.
+
+T005/V2 selected proof (2026-10-22): **INCONCLUSIVE / NOT PASS.** The owner-authorized
+`python3` helper invocation used one synthetic closed `OI-9005` record with
+`Source("github.com", "elsonidoq/skills", "proof/t005-live-proof.md",
+"t005-live-proof-20261022")`, destination `elsonidoq/skills`, and a wrapper that suppressed a
+successful POST response only at the helper boundary. `gh version 2.102.0 (2026-09-30)` and REST
+API version `2022-11-28` were used. Independent complete non-PR counts were 1 before and 1 after;
+the helper reported `deferred`, suppression occurred, and an independent all-state marker lookup
+found 0 candidates, so no candidate GET/body/state/reason result exists. The first invocation
+exposed null issue bodies in real listing (now normalized to empty); the second was rejected with
+HTTP 422 (`links/0/schema` nil); after adding `gh api --input -`, the third still had no visible
+candidate despite the suppressed POST response. Do not retry or rely on uncertain-create/closure
+behavior without review/renewed proof authority. This was not a historical apply and made no
+change to #2; no proof issue is automatically deleted.
+
+The required proof command path remains `python3` importing this helper with that one synthetic
+record, `GhApiTransport()`, helper-boundary response suppression, independent `list_issues`
+(open+closed, excluding PRs), and `get_issue` of exactly one marker candidate. Record
+before/after count, identity/body/state/reason, visibility/concurrency limits, and actual output
+before relying on uncertain-create/closure behavior. Do not run a real register migration or
+delete a proof issue automatically.
+
+Preview and reconciliation otherwise have zero external writes. Keep the original Markdown
+intact; no source archive/delete or local tracking database is part of this skill.
