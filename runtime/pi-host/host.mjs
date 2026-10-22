@@ -100,6 +100,9 @@ export async function createWorkflowSession({project, executor, readOnly = false
     throw new Error('review repair requires a saved read-only reviewer and writable target');
   }
   const sourceCompatibility = reviewRepair ? {...compatibility, readOnly: true} : compatibility;
+  // Retain the reviewer's resource policy after writer tools are enabled, also
+  // on subsequent corrective prompts. Old saved reviews gain this marker here.
+  const reviewerContext = readOnly || reviewRepair || savedSession?.reviewerContext === true;
   let sessionManager;
   if (savedSession) {
     if (typeof savedSession !== 'object' || typeof savedSession.id !== 'string' ||
@@ -124,7 +127,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
     // No ambient extension may add a writer to the independent reviewer or
     // bypass the runner's focused checkpoint. Ordinary context/skills still load.
     noExtensions: true,
-    noSkills: readOnly,
+    noSkills: reviewerContext,
     noPromptTemplates: true,
     extensionFactories: [pi => {
       if (!readOnly) for (const tool of mutationTools(project, ask)) pi.registerTool(tool);
@@ -177,7 +180,8 @@ export async function createWorkflowSession({project, executor, readOnly = false
     // Only runner-private identity is retained. Every open above recreated the
     // current task's resource loader, callbacks, tools, and mutation scope.
     session.coherenceRequestedAssignment = {...executor};
-    session.coherenceSavedSession = {id: sessionManager.getSessionId(), file: sessionManager.getSessionFile(), compatibility};
+    session.coherenceSavedSession = {id: sessionManager.getSessionId(), file: sessionManager.getSessionFile(), compatibility,
+      ...(reviewerContext ? {reviewerContext: true} : {})};
     session._coherenceSessionManager = sessionManager;
     return session;
   } catch (error) {

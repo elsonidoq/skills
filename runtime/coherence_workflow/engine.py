@@ -319,6 +319,7 @@ class Engine:
                           'trigger_execution_id': trigger_execution_id, **selection})
             fixer_chain, last_fixer_invocation = [], [None]
             def prompt_fix(prompt, **kwargs):
+                prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + prompt
                 invocation_id = uuid.uuid4().hex
                 predecessor = last_fixer_invocation[0]
                 chain = [*fixer_chain, invocation_id]
@@ -377,7 +378,7 @@ class Engine:
                       'or permission expansion. Keep the configured executor and authority. Select only explicit '
                       'source/artifact paths from those contracts; preserve unrelated and pre-existing bytes. Run '
                       'applicable required checks. Never stage or commit: the runner owns the focused repair checkpoint.\n'
-                      + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority() + '\n'
+                      + _DECISION_CONSTRAINTS + self.paid_authority() + '\n'
                       'Original task contracts: ' + canonical(original_tasks) + '\nActionable findings: ' + canonical(findings))
             text = prompt_fix(prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
                                        saved_session=saved, reuse_key=reuse_key)

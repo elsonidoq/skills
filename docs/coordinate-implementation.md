@@ -149,7 +149,7 @@ instructions; the transport has no size cap. A runner may reuse only a returned 
 successful idle settlement and preceding verified checkpoint. Reuse also requires an explicit
 nonempty matching `context_group` and unchanged role, worktree, executor, resources,
 instructions, settings and authority; task text or callback identity alone are not mismatches.
-`fresh_only` and each independent review select fresh. Review→repair is a continuation of the selected review, not cross-task candidate reuse; it keeps all effective resources except the explicitly enabled writer tools unchanged. Candidates sort by latest successful settlement then
+`fresh_only` and each independent review select fresh. Review→repair is a continuation of the selected review, not cross-task candidate reuse; it keeps all effective resources except the explicitly enabled writer tools unchanged, including disabled skill discovery through subsequent corrective prompts. Every repair prompt carries the current-launch implementation authority and shared routine permissions/exclusions. Candidates sort by latest successful settlement then
 stable ID. Reuse needs measured effective headroom (context window minus effective reserve minus
 occupancy) at least `min_free_tokens_before_compaction`, whose configurable default is 150000.
 Unknown, invalid, disabled or inapplicable compaction/headroom facts select fresh rather than

@@ -284,6 +284,12 @@ class BoundedChainTests(ProjectTest):
                                               'compatibility': {'readOnly': True}}
                         return '{"approved":false,"findings":["owned.txt:1 - defect"]}'
                     return '{"approved":true,"findings":[]}'
+                if 'Actionable findings:' in prompt or 'Actual failed attempt:' in prompt:
+                    case.assertIn('Current execution authority:', prompt)
+                    case.assertIn('Historical planning-only', prompt)
+                    case.assertIn('explicit manual gates', prompt)
+                    case.assertIn('Routine authority:', prompt)
+                    case.assertIn('never authorizes global installs', prompt)
                 if 'Actionable findings:' in prompt:
                     case.assertEqual(self.saved_session['id'], 'review-context')
                     case.assertTrue(kwargs['review_repair'])

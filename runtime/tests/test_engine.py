@@ -250,7 +250,7 @@ else:
                 if kwargs.get('read_only'):
                     prompts.append(prompt)
                     return '{"approved":false,"findings":["fix.txt:1 - original defect"]}' if len(prompts) == 1 else '{"approved":true,"findings":[]}'
-                if prompt.startswith('Continue your code review:'):
+                if 'Continue your code review:' in prompt:
                     raise Blocked('original defect')
                 if '"id":"fix"' in prompt:
                     kwargs['claim']('fix.txt')

@@ -100,16 +100,28 @@ test('saved worker ignores mismatched persisted SDK assignment while retaining r
 
 test('explicit review repair retains transcript and identity while enabling only scoped writer tools', async () => {
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-review-repair-'));
+  const skillDescription = 'REPAIR_SKILL_DISCOVERY_MUST_STAY_DISABLED';
   const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'};
   const request = {project, executor};
   try {
+    const skillDir = path.join(project, '.pi', 'skills', 'repair-fixture');
+    await fs.mkdir(skillDir, {recursive: true});
+    await fs.writeFile(path.join(skillDir, 'SKILL.md'),
+      `---\nname: repair-fixture\ndescription: ${skillDescription}\n---\nFixture instructions.\n`);
+    const worker = await createWorkflowSession(request, async () => ({}));
+    try { assert.ok(worker.systemPrompt.includes(skillDescription)); }
+    finally { worker.dispose(); }
     const reviewer = await createWorkflowSession({...request, readOnly: true}, async () => ({}));
     let savedSession;
     try {
+      assert.ok(!reviewer.systemPrompt.includes(skillDescription));
       reviewer._coherenceSessionManager.appendMessage({role: 'assistant',
         content: [{type: 'text', text: 'warm review findings'}], stopReason: 'stop',
         api: 'test', provider: 'fixture', model: 'fixture', usage: {}});
       savedSession = structuredClone(reviewer.coherenceSavedSession);
+      assert.equal(savedSession.reviewerContext, true);
+      // Historical read-only identities have no resource-policy marker.
+      delete savedSession.reviewerContext;
     } finally { reviewer.dispose(); }
     await assert.rejects(createWorkflowSession({...request, savedSession}, async () => ({})),
       /effective resources mismatch/);
@@ -117,6 +129,14 @@ test('explicit review repair retains transcript and identity while enabling only
     try {
       assert.equal(repaired.coherenceSavedSession.id, savedSession.id);
       assert.equal(repaired.getLastAssistantText(), 'warm review findings');
+      assert.ok(!repaired.systemPrompt.includes(skillDescription));
+      const continued = await createWorkflowSession({...request,
+        savedSession: structuredClone(repaired.coherenceSavedSession)}, async () => ({}));
+      try {
+        assert.equal(continued.coherenceSavedSession.id, savedSession.id);
+        assert.ok(!continued.systemPrompt.includes(skillDescription));
+        assert.ok(continued.getActiveToolNames().includes('edit'));
+      } finally { continued.dispose(); }
       assert.ok(repaired.getActiveToolNames().includes('edit'));
       assert.ok(repaired.getActiveToolNames().includes('bash'));
       assert.equal(repaired.coherenceSavedSession.compatibility.readOnly, false);
