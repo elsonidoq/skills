@@ -544,6 +544,22 @@ class ExternalIssueOwnerTests(unittest.TestCase):
             with self.subTest(case=name):
                 self.assertIn(normalized(expectation), normalized(carrier))
 
+    def test_optional_jev_inherits_the_external_issue_owner_boundary(self):
+        # Jev triage is advisory: the base workflow remains the single routing path,
+        # whose managed current contract requires a qualified GitHub target or an
+        # actionable unavailable/deferred result rather than a local register.
+        jev = (ROOT / "skills/finish-session-jev/SKILL.md").read_text()
+        self.assertIn("read the installed sibling\n`../finish-session/SKILL.md` in full", jev)
+        discovery = stage(SKILL.read_text(), "Discovery")
+        for clause in (
+            "explicitly configured GitHub Issues target is an external owner",
+            "issue tracking: UNAVAILABLE",
+            "do not create or require `docs/open_issues.md`",
+            "do not claim that owner/readiness is satisfied or fall back to a local tracker",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(normalized(clause), normalized(discovery))
+
     def test_external_owner_guards_reject_deletion(self):
         text = SKILL.read_text()
         self.assertEqual(check_contract(text), [])

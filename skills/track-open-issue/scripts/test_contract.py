@@ -69,6 +69,15 @@ class ScenarioTests(unittest.TestCase):
             self.assertIn("candidate/evidence/resumption", result)
             self.assertNotIn("local", result)
 
+    def test_closeout_candidate_deferred_output_remains_qualified_and_actionable(self):
+        # Base/optional-Jev routing supplies a candidate; this direct consumer owns the
+        # capability boundary and must return its facts rather than a local substitute.
+        result = self.decide(target=True, gh=True, auth=True, issues=True, write=False)
+        self.assertEqual(result, "deferred: candidate/evidence/resumption/write authority")
+        self.assertIn("`HOST/OWNER/REPO#N`", TEXT)
+        self.assertIn("After every create, update, close, or reopen, independently GET", TEXT)
+        self.assertNotIn("local fallback", result)
+
     def test_concurrent_body_change_stops_scoped_overwrite(self):
         result = self.decide(drift=True)
         self.assertEqual(result, "deferred: reinspection/review; preserve unrelated fields")

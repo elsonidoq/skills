@@ -252,6 +252,43 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual([item.outcome for item in second.records], ["deferred", "deferred", "deferred"])
         self.assertNotIn("POST", [part for argv, _ in calls for part in argv])
 
+    def test_actual_original_register_preserves_full_lifecycle_and_overlap_boundary(self):
+        original = (ROOT / "docs/open_issues.md").read_text()
+        proposal = preview(original, SOURCE, "dest/repo")
+        self.assertEqual(proposal.counts, {"records": 19, "open": 16, "closed": 3, "unmappable": 0})
+        by_id = {record.title.split(":", 1)[0]: record for record in proposal.records}
+        # An existing historical #2 reference is never an implicit adoption.  A reviewer
+        # mapping makes that one record non-createable and leaves the foreign body intact.
+        issues = [{"number": 2, "state": "closed", "body": "human issue #2, no import marker"}]
+        calls = []
+        transport = self._transport(issues, calls, lose_create=by_id["OI-1"].title)
+        mapped = reconcile(proposal, transport, "github.com", {by_id["OI-4"].identity: 2})
+        self.assertEqual(next(item for item in mapped.records if item.record is by_id["OI-4"]).outcome,
+                         "existing-issue mapping")
+        self.assertEqual(issues[0], {"number": 2, "state": "closed", "body": "human issue #2, no import marker"})
+
+        reviewed = reconcile(proposal, transport, "github.com")
+        calls.clear()
+        result = apply(reviewed, transport, "github.com", ApplyAuthorization("dest/repo", "reviewed original register"))
+        self.assertEqual([item.outcome for item in result.records].count("created"), 16)
+        self.assertEqual([item.outcome for item in result.records].count("closed"), 3)
+        self.assertEqual([json.loads(stdin)["title"] for argv, stdin in calls if "POST" in argv],
+                         [record.title for record in proposal.records])
+        self.assertEqual(sum("POST" in argv for argv, _ in calls), 19)
+        self.assertEqual(issues[0], {"number": 2, "state": "closed", "body": "human issue #2, no import marker"})
+        for record in proposal.records:
+            remote = next(issue for issue in issues if issue.get("body") == record.body)
+            self.assertEqual(remote["state"], record.state)
+            self.assertIn(record.original_excerpt, remote["body"])
+
+        # The lost OI-1 POST response was reconciled, not reposted; a later unchanged
+        # review remains safe and emits no further mutation.
+        rerun = reconcile(proposal, transport, "github.com")
+        calls.clear()
+        repeated = apply(rerun, transport, "github.com", ApplyAuthorization("dest/repo", "unchanged rerun"))
+        self.assertTrue(all(item.outcome == "deferred" for item in repeated.records))
+        self.assertFalse(any(method in argv for argv, _ in calls for method in ("POST", "PATCH")))
+
     def test_changed_review_or_remote_content_defers_without_overwrite(self):
         proposal = self._proposal()
         calls, issues = [], []
