@@ -97,6 +97,12 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                 continue
             if run.startswith('review-'):
                 owner.store.review_dispatch(run, 'private-review-two', role='reviewer', review_ordinal=2, fixing_round=1, review_base=base, review_head=base)
+                if run == 'review-dispatched':
+                    # Observation loss does not erase the exact retained metric interval.
+                    artifact = create_artifact(project, run, authority=owner)
+                    record = metric_record(run, 'private-review-two', 'fresh', 'fresh')
+                    record.update(task_id=None, role='reviewer', review_ordinal=2, fixing_round=1)
+                    artifact.append(record)
                 if run != 'review-dispatched':
                     facts = {'role': 'reviewer', 'execution_id': 'private-review-two', 'review_ordinal': 2, 'review_base': base, 'review_head': base}
                     emit(recorder, 'review-two', 'review', 'started', task=None, **facts)

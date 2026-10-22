@@ -85,6 +85,43 @@ test('producer readback reconciles ordinal-two dispatch and qualifies observed l
   await expect(page.locator('.react-flow__node').filter({ hasText: 'Final review' })).toContainText('Not started; run stopped')
 })
 
+test('unobserved ordinal-two reviewer retains exact call metrics in Details', async ({ page }, testInfo) => {
+  const headers = { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' }
+  const { runs } = await (await fetch('http://127.0.0.1:4174/api/monitor/v1/runs', { headers })).json()
+  const run = runs.find((item: { display_id: string }) => item.display_id === 'review-dispatched')
+  const input = await (await fetch(`http://127.0.0.1:4174/api/monitor/v1/runs/${run.ref}/snapshot`, { headers })).json()
+  const execution = input.chain.find((item: { review_ordinal: number }) => item.review_ordinal === 2)
+  const activity = input.activities.find((item: { invocation_id: string }) => item.invocation_id === execution.execution_id)
+  expect(activity.occurrence_ref).toBeNull()
+  expect(activity.metrics.total_tokens.value).toBe(12)
+  expect(activity.ref).not.toBe(activity.invocation_id)
+  await page.goto('/runs/id-review-dispatched')
+  const reviewer = page.locator('.react-flow__node').filter({ hasText: 'Review 2' })
+  await expect(reviewer).toHaveCount(1)
+  await expect(page.locator('.react-flow__node')).toHaveCount(5)
+  await reviewer.click()
+  const details = page.getByLabel('Selected execution details')
+  await expect(details).toContainText('Role: Reviewer; outcome: Recorded.')
+  await expect(details).toContainText('Total tokens: 12')
+  await expect(details).toContainText('Total tokens: known subtotal 12; complete total 12')
+  await expect(details).not.toContainText('private-review-two')
+  await expect(details).not.toContainText('Metrics unavailable: no recorded metric evidence')
+  await details.getByRole('heading', { name: 'This call', exact: true }).scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('production-unobserved-review-metrics.png'), fullPage: true })
+})
+
+test('ordinary task correction reports its recorded metric role', async ({ page }, testInfo) => {
+  await page.goto('/runs/id-metrics-composed')
+  await page.locator('.react-flow__node').filter({ hasText: 'Worker — Correction 1' }).first().click()
+  const details = page.getByLabel('Selected execution details')
+  await expect(details).toContainText('Role: Corrective worker; outcome: Recorded.')
+  await expect(details).toContainText('Total tokens: 12')
+  await expect(details).toContainText('Total tokens: known subtotal 24; complete total Unavailable')
+  await expect(details).not.toContainText('corrective_worker')
+  await details.getByRole('heading', { name: 'This call', exact: true }).scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('production-ordinary-correction-metrics.png'), fullPage: true })
+})
+
 test('production computed lifecycle colors and declared recorded mixed connectors', async ({ page }, testInfo) => {
   const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 240, 194)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(238, 242, 246)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'Task 1', 'rgb(255, 240, 194)']] as const
   for (const [run, title, color] of colors) {
