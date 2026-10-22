@@ -49,8 +49,8 @@ test('registered parent steering tool reaches the production adapter, host and r
     await fs.mkdir(path.join(root, 'scripts'));
     // Only the launcher is a fixture: it exercises one production PiAdapter
     // prompt, not an implementation workflow or replacement host dispatcher.
-    const python = path.join(repository, '.pi/workflow-validation/venv/bin/python');
-    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\ntarget={'run_id':'offline-steering','task_id':'T010','invocation_id':'exact-call','role':'task_worker'}\nadapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'medium'}, question=parent_question)\nassert adapter.enable_parent_steering(target)\nassert adapter.prompt('controlled offline prompt',steering=target)=='steering complete'\nassert adapter.steering_states['direction-1']=='consumed'\nassert adapter.steering_states['direction-2']=='consumed'\n`, {mode: 0o700});
+    const python = path.join(repository, 'runtime/.venv/bin/python');
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\ntarget={'run_id':'offline-steering','task_id':'T010','invocation_id':'exact-call','role':'task_worker'}\nadapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'off'}, question=parent_question)\nassert adapter.enable_parent_steering(target)\nassert adapter.prompt('controlled offline prompt',steering=target)=='steering complete'\nassert adapter.steering_states['direction-1']=='consumed'\nassert adapter.steering_states['direction-2']=='consumed'\n`, {mode: 0o700});
     process.env.NODE_OPTIONS = '--import=' + path.join(repository, 'runtime/tests/fixtures/steering_adapter_fixture.mjs');
     process.env.COHERENCE_HOST_PRELOAD = '1';
     process.env.COHERENCE_NODE = process.execPath;
@@ -62,7 +62,11 @@ test('registered parent steering tool reaches the production adapter, host and r
     assert.deepEqual(loaded.errors, []);
     const extension = loaded.extensions.find(item => item.tools.has('coordinate_implementation_steer'));
     assert.ok(extension, 'normal project discovery registered the actual steering tool');
-    loaded.runtime.sendMessage = (message) => messages.push(message);
+    const wakeups = [];
+    loaded.runtime.sendMessage = (message, options) => {
+      messages.push(message);
+      wakeups.push({message, options});
+    };
     loaded.runtime.getActiveTools = () => [...extension.tools.keys()];
     const ctx = {cwd: root, sessionManager: {getSessionId: () => 'offline-parent'}};
     const call = (name, params, signal) => extension.tools.get(name).definition.execute(name, params, signal, undefined, ctx);
@@ -95,6 +99,11 @@ test('registered parent steering tool reaches the production adapter, host and r
       assert.ok(states.every(item => item.details.task_id === 'T010' && item.details.invocation_id === 'exact-call'));
     }
     await assert.rejects(call('coordinate_implementation_steer', direction), /no matching active/);
+    for (const {message, options} of wakeups) {
+      const shouldWake = ['coordinate_implementation_question', 'coordinate_implementation_complete'].includes(message.customType);
+      assert.equal(options.triggerTurn, shouldWake, message.customType);
+      assert.equal(options.deliverAs, shouldWake ? 'followUp' : undefined, message.customType);
+    }
   } finally {
     abort.abort();
     for (const key of ['NODE_OPTIONS', 'COHERENCE_HOST_PRELOAD', 'COHERENCE_NODE', 'PI_CODING_AGENT_DIR']) {
@@ -191,6 +200,7 @@ test('missing parent reply capability stops the actual CLI before storage or SDK
     while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
       await new Promise(resolve => setTimeout(resolve, 10));
     assert.match(messages.at(-1).message.content, /exit 2/);
+    assert.equal(messages.at(-1).options.triggerTurn, true, 'terminal errors must wake the parent');
     await assert.rejects(fs.access(value.marker), {code: 'ENOENT'});
     await assert.rejects(fs.access(path.join(value.project, '.coherence')), {code: 'ENOENT'});
     assert.equal(messages.some(item => item.message.customType === 'coordinate_implementation_question'), false);

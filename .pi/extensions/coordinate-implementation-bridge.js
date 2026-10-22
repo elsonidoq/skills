@@ -69,7 +69,7 @@ export default function coordinateImplementationBridge(pi) {
           content: `Coordinate implementation direction ${requestId}: unknown.`,
           details: {run: bridge.run, request_id: requestId, status: 'unknown',
             task_id: target.task_id, invocation_id: target.invocation_id}},
-          {triggerTurn: true, deliverAs: 'followUp'});
+          {triggerTurn: false});
       }
     }
   };
@@ -84,10 +84,11 @@ export default function coordinateImplementationBridge(pi) {
       if (request.type === 'steering_target') {
         if (!exactTarget(request.target) || request.target.run_id !== bridge.run) { send(socket, {error: 'invalid active steering target'}); return; }
         bridge.target = {target: request.target, socket};
+        // Keep task/steering telemetry visible without waking the parent agent.
         pi.sendMessage({customType: 'coordinate_implementation_target', display: true,
           content: `Coordinate implementation active target: ${request.target.task_id}/${request.target.invocation_id}.`,
           details: {run: bridge.run, task_id: request.target.task_id, invocation_id: request.target.invocation_id, role: request.target.role}},
-          {triggerTurn: true, deliverAs: 'followUp'});
+          {triggerTurn: false});
         return;
       }
       if (request.type === 'steering_closed') {
@@ -106,7 +107,7 @@ export default function coordinateImplementationBridge(pi) {
         content: `Coordinate implementation direction ${request.request_id}: ${request.status}.`,
         details: {run: bridge.run, request_id: request.request_id, status: request.status,
           task_id: direction.target.task_id, invocation_id: direction.target.invocation_id}},
-        {triggerTurn: true, deliverAs: 'followUp'});
+        {triggerTurn: false});
       return;
     }
     if (!request || !['ready', 'question'].includes(request.type) || request.token !== bridge.token ||
