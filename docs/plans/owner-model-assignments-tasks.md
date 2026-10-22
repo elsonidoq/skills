@@ -185,9 +185,22 @@ review/approval gates, not silent upstream repair.
 
 ## Planning review and owner approval
 
-Owner selected TinySpec preparation. Source is committed; separate tasks are now produced.
-The latest combined approval was CANCELLED. Planner inspection and combined current-content
-source/task/scope approval of this revision remain pending. Implementation is not authorized.
-Parent will inspect these tasks and obtain combined approval before launching the coordinator
-with the existing selected executor file. No
-separate source-approval or commit-permission question is required for this preparation.
+Owner selected TinySpec preparation. Following the cancelled earlier approval and task revision,
+planner inspected the source, actual task diff, dependency validation and focused checkpoints.
+The owner then answered **“Approve and implement”** through `ask_user`, approving the source at
+`2379b47d9c9b3ce6b527ae561be2ac660b6fe7ec` and revised human/executable tasks at
+`3aba06b7c49c4f776331d1f8004d505dd464654f`. This supersedes the earlier cancelled gate for this
+reviewed scope only and authorizes immediate coordinator execution with the unchanged selected
+`.pi/workflow-executor.json`, followed by fresh independent final review.
+
+Approved content evidence: source SHA256
+`ba1c29e1de79e934ef634de57076e8791c41d8a61182f655103dcf9f0e1e609f`;
+executable tasks SHA256 `01e944fd6e256a95f80af7649e5841cf67d2d3c2ee9c4568f6c8dffb0955e703`.
+The human task contract is the content at `3aba06b`; this approval-section-only update changes
+no task instructions, acceptance, dependencies or assignment. Baseline planner checker failures
+and their 34 fixture failures were disclosed before approval; relevant failures remain blockers.
+No provider probes, installs, branches/worktrees, deployments or unrelated changes are authorized.
+
+Immediately following approval, the owner reiterated removal of model-rubric, guideline and
+benchmark leftovers. This reinforces A5/T008/T009's complete active-consumer cleanup and final
+review scope; historical research/approvals remain historical, never current selection authority.
