@@ -19,13 +19,17 @@ API list used in the one owner question. Missing, denied or mismatched scope sto
 provider launch. Credentials, task descriptions and historical rows are never approval. The accepted unchanged
 scope/exclusions are prompt context for all roles, not a receipt, budget service or persistent permission store.
 
-`--executor` is ordinary JSON containing worker `provider`, `model`, `effort`, with an
-optional `reviewer` object containing its own `provider`, `model`, `effort`. The engine
-passes the worker profile to implementation sessions and the reviewer profile to the
-separate fresh read-only review session. Omission preserves worker-profile review for
-compatibility; an explicitly malformed reviewer profile is an error, not a fallback.
-The SDK resolves each actual selected model or reports its real error. No observed-versus-requested
-proof, config hash, resource pin, binding assessment or SDK/Node equality check.
+`--executor` is ordinary JSON containing worker `provider`, `model`, `effort`, with a
+required `reviewer` object containing its own `provider`, `model`, `effort`. The engine
+passes the worker assignment to implementation/fixer sessions and the reviewer assignment to
+separate fresh read-only review/rereview sessions. Missing or malformed reviewer configuration
+is an actionable error, never implicit worker-assignment inheritance. Explicitly identical
+worker and reviewer values are allowed; reviewer contexts remain independent.
+The SDK resolves the exact selected model or reports its real error. Before prompting, the
+host checks that SDK-exposed model and effort match the requested assignment; it rejects
+clamping, omission or substitution. SDK-exposed state is not provider-internal execution proof;
+unknown actual execution remains unknown. No config hash, resource pin, binding assessment or
+SDK/Node equality check is required.
 `package-lock.json` remains explicit installation metadata for the tested SDK, not launch
 ceremony. Project-specific selection is in the [operating guide](coordinate-implementation.md).
 The monitoring descriptor's `requested_executor` still describes the worker profile; it
