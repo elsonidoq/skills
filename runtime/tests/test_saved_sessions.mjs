@@ -92,7 +92,7 @@ test('production SDK observations include effective model reserve and applicable
         modelOverrides: {'openai/gpt-4.1': {reserveTokens: 2345}}},
     }));
     const session = await createWorkflowSession({project,
-      executor: {provider: 'openai', model: 'gpt-4.1', effort: 'medium'}}, async () => ({}));
+      executor: {provider: 'openai', model: 'gpt-4.1', effort: 'off'}}, async () => ({}));
     try {
       const measured = sessionObservationRecord({sessionObservations: true}, session).before.headroom;
       const usage = session.getContextUsage();

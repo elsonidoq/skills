@@ -10,7 +10,20 @@ import { createAgentSession, createEditToolDefinition, createWriteToolDefinition
   DefaultResourceLoader, getAgentDir, ModelRuntime, SessionManager }
   from '@earendil-works/pi-coding-agent';
 
+function enforceExactAssignment(session, requested) {
+  const observed = {provider: session.model?.provider, model: session.model?.id,
+    effort: session.thinkingLevel};
+  if (observed.provider !== requested.provider || observed.model !== requested.model ||
+      observed.effort !== requested.effort) {
+    throw new Error('workflow executor prompt operation exact SDK assignment mismatch before provider prompt: requested ' +
+      `${requested.provider}/${requested.model} effort ${requested.effort}; observed ` +
+      `${observed.provider ?? 'missing'}/${observed.model ?? 'missing'} effort ${observed.effort ?? 'missing'}. ` +
+      'Correct the executor model and effort to an SDK-supported exact assignment.');
+  }
+}
+
 export async function promptSession(session, prompt, emit) {
+  if (session.coherenceRequestedAssignment) enforceExactAssignment(session, session.coherenceRequestedAssignment);
   const unsubscribe = session.subscribe(event => {
     if (['tool_execution_start', 'tool_execution_end', 'compaction_start', 'compaction_end',
       'auto_compaction_start', 'auto_compaction_end', 'auto_retry_start', 'auto_retry_end'].includes(event.type)) {
@@ -149,16 +162,22 @@ export async function createWorkflowSession({project, executor, readOnly = false
     tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner', 'cleanup_artifact'],
     sessionManager, resourceLoader,
   });
-  await session.bindExtensions({});
-  if (!readOnly && !session.getActiveToolNames().includes('ask_owner')) {
+  try {
+    await session.bindExtensions({});
+    enforceExactAssignment(session, executor);
+    if (!readOnly && !session.getActiveToolNames().includes('ask_owner')) {
+      throw new Error('Worker ask_owner tool unavailable; enable it in the SDK worker tool list before execution');
+    }
+    // Only runner-private identity is retained. Every open above recreated the
+    // current task's resource loader, callbacks, tools, and mutation scope.
+    session.coherenceRequestedAssignment = {...executor};
+    session.coherenceSavedSession = {id: sessionManager.getSessionId(), file: sessionManager.getSessionFile(), compatibility};
+    session._coherenceSessionManager = sessionManager;
+    return session;
+  } catch (error) {
     session.dispose();
-    throw new Error('Worker ask_owner tool unavailable; enable it in the SDK worker tool list before execution');
+    throw error;
   }
-  // Only runner-private identity is retained. Every open above recreated the
-  // current task's resource loader, callbacks, tools, and mutation scope.
-  session.coherenceSavedSession = {id: sessionManager.getSessionId(), file: sessionManager.getSessionFile(), compatibility};
-  session._coherenceSessionManager = sessionManager;
-  return session;
 }
 
 function observation(session) {

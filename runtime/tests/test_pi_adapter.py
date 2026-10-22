@@ -35,7 +35,7 @@ class SDKTransportTests(ProjectTest):
             # This deliberately predates sessionObservations and steering: it is
             # the original one-request/one-uncorrelated-callback transport.
             request = {'project': str(self.project), 'executor': {'provider': 'openai', 'model': 'gpt-4o-mini',
-                       'effort': 'medium'}, 'prompt': 'ordinary prompt', 'readOnly': False,
+                       'effort': 'off'}, 'prompt': 'ordinary prompt', 'readOnly': False,
                        # Existing observation opt-in is deliberately not steering consent.
                        'sessionObservations': True}
             proc.stdin.write(json.dumps(request) + '\n')
@@ -85,7 +85,7 @@ class SDKTransportTests(ProjectTest):
         target = {'run_id': 'run', 'task_id': 'T016', 'invocation_id': 'invocation', 'role': 'task_worker'}
         entered, release = threading.Event(), threading.Event()
         statuses = []
-        adapter = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'medium'},
+        adapter = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off'},
                             question=lambda question: (entered.set(), release.wait(5), 'ordinary callback')[-1],
                             steering_status=lambda status: statuses.append(status))
         outcome = []
@@ -183,6 +183,16 @@ print(json.dumps({'type':'result','text':'complete'}),flush=True)
                              [('claim',), ('command',), ('cleanup',), ('question',)])
         finally:
             connection.close()
+
+    def test_exact_sdk_assignment_error_remains_actionable_in_existing_transport(self):
+        """Host rejects SDK clamping before prompt; adapter preserves the ordinary error."""
+        host = Path(__file__).resolve().parents[1] / 'pi-host' / 'host.mjs'
+        adapter = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'medium'})
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), \
+             patch.dict(os.environ, {'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}, clear=False):
+            with self.assertRaisesRegex(Blocked,
+                r'exact SDK assignment mismatch before provider prompt: requested openai/gpt-4o-mini effort medium; observed openai/gpt-4o-mini effort off\. Correct the executor model and effort to an SDK-supported exact assignment'):
+                adapter.prompt('must not reach a provider')
 
     def test_local_path_error_can_be_corrected_same_host_conversation(self):
         body = '''print(json.dumps({'type':'claim','path':'bad.txt'}),flush=True)

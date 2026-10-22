@@ -15,7 +15,7 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-owner-tools-'));
   try {
     // Resolve local model metadata only: no prompt, provider request or authentication refresh.
-    const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'};
+    const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'};
     for (const readOnly of [false, true]) {
       const session = await createWorkflowSession({project, executor, readOnly}, async () => ({answer: 'fixture'}));
       try {
@@ -31,9 +31,45 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 
-test('saved worker reopens after Python-style key sorting but rejects changed resources', async () => {
+test('exact SDK assignment rejects missing or clamped effort and post-construction drift before prompt', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-exact-assignment-'));
+  let promptCalls = 0;
+  const prompt = mock.method(AgentSession.prototype, 'prompt', async () => { promptCalls++; });
+  try {
+    for (const executor of [
+      {provider: 'openai', model: 'missing-model', effort: 'off'},
+      {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'},
+    ]) {
+      await assert.rejects(createWorkflowSession({project, executor}, async () => ({})),
+        /Model not found|exact SDK assignment mismatch/);
+    }
+    assert.equal(promptCalls, 0, 'invalid construction must not reach a provider prompt');
+
+    const executor = {provider: 'openai', model: 'gpt-5', effort: 'medium'};
+    const session = await createWorkflowSession({project, executor}, async () => ({}));
+    try {
+      assert.equal(session.model.id, executor.model);
+      assert.equal(session.thinkingLevel, executor.effort);
+      session.setThinkingLevel('low');
+      await assert.rejects(() => promptSession(session, 'must not prompt', () => {}),
+        /requested openai\/gpt-5 effort medium; observed openai\/gpt-5 effort low/);
+      const auth = mock.method(session.modelRuntime, 'checkAuth', async () => ({}));
+      try {
+        await session.setModel(session.modelRuntime.getModel('openai', 'gpt-4o-mini'));
+      } finally { auth.mock.restore(); }
+      await assert.rejects(() => promptSession(session, 'must not prompt', () => {}),
+        /requested openai\/gpt-5 effort medium; observed openai\/gpt-4o-mini effort off/);
+      assert.equal(promptCalls, 0, 'last prompt boundary must reject post-construction drift');
+    } finally { session.dispose(); }
+  } finally {
+    prompt.mock.restore();
+    await fs.rm(project, {recursive: true, force: true});
+  }
+});
+
+test('saved worker ignores mismatched persisted SDK assignment while retaining requested exact binding', async () => {
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-session-order-'));
-  const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'};
+  const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'};
   const request = {project, executor, reuseKey: 'same-task'};
   try {
     const created = await createWorkflowSession(request, async () => ({}));
@@ -41,12 +77,18 @@ test('saved worker reopens after Python-style key sorting but rejects changed re
     try {
       created._coherenceSessionManager.appendMessage({role: 'assistant', content: [], stopReason: 'stop',
         api: 'test', provider: 'fixture', model: 'fixture', usage: {}});
+      // A stale transcript must not override the explicit executor assignment.
+      created._coherenceSessionManager.appendModelChange('openai', 'gpt-5');
+      created._coherenceSessionManager.appendThinkingLevelChange('low');
       savedSession = JSON.parse(JSON.stringify(created.coherenceSavedSession));
     } finally { created.dispose(); }
     savedSession.compatibility = Object.fromEntries(Object.entries(savedSession.compatibility).sort());
     const reopened = await createWorkflowSession({...request, savedSession}, async () => ({}));
-    try { assert.equal(reopened.coherenceSavedSession.id, savedSession.id); }
-    finally { reopened.dispose(); }
+    try {
+      assert.equal(reopened.coherenceSavedSession.id, savedSession.id);
+      assert.equal(reopened.model.id, executor.model);
+      assert.equal(reopened.thinkingLevel, executor.effort);
+    } finally { reopened.dispose(); }
     for (const [key, value] of Object.entries({project: '/different', provider: 'different', model: 'different',
       effort: 'low', readOnly: true, reuseKey: 'different', extra: true})) {
       await assert.rejects(createWorkflowSession({...request,
@@ -78,7 +120,7 @@ test('steering uses the installed SDK queue and matching user event, not queue i
     const entered = new Promise(resolve => { enter = resolve; });
     const answer = new Promise(resolve => { release = resolve; });
     const session = await createWorkflowSession({project,
-      executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'}}, async () => { enter(); return answer; });
+      executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'}}, async () => { enter(); return answer; });
     try {
       const sdkEvents = [];
       session.subscribe(event => sdkEvents.push(event));
@@ -123,7 +165,7 @@ test('opted-in host dispatches a control while a correlated callback remains pen
   const records = [];
   const send = value => child.stdin.write(JSON.stringify(value) + '\n');
   try {
-    send({project: root, executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'medium'},
+    send({project: root, executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'},
       prompt: 'fixture', steering: target});
     const lines = readline.createInterface({input: child.stdout});
     for await (const line of lines) {
