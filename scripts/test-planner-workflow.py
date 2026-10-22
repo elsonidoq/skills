@@ -2097,6 +2097,118 @@ class CompleteBriefTests(unittest.TestCase):
                 self.assertEqual(result.returncode, expected, result.stdout)
 
 
+class OwnerAssignmentConfigTests(unittest.TestCase):
+    """Actual owner assignment JSON resolution and installed-symlink discovery only."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.assignments = load(
+            "model_assignments", "../skills/planner/scripts/model_assignments.py")
+        cls.canonical = ROOT / "skills/planner/references/model-assignments.json"
+
+    def fixture_skill(self, directory, contents=None):
+        skill = Path(directory) / "unrelated-project" / "skills" / "planner"
+        (skill / "references").mkdir(parents=True)
+        (skill / "SKILL.md").write_text("fixture planner")
+        target = skill / "references/model-assignments.json"
+        target.write_text(self.canonical.read_text() if contents is None else contents)
+        return skill, target
+
+    def assert_problem(self, operation, skill, expected):
+        with self.assertRaisesRegex(self.assignments.AssignmentError, expected) as raised:
+            self.assignments.resolve(operation, planner_skill=skill)
+        message = str(raised.exception)
+        self.assertIn(operation, message)
+        self.assertIn("model-assignments.json", message)
+        self.assertIn("Ask the owner to correct", message)
+        self.assertNotRegex(message.lower(), r"recommend|fallback|substitute")
+
+    def test_actual_json_resolves_every_listed_operation_and_inheritance(self):
+        actual = json.loads(self.canonical.read_text())
+        parent = {"model": "owner/launched", "effort": "low"}
+        self.assertIsInstance(actual["operations"], dict)
+        self.assertTrue(actual["operations"])
+        for operation in actual["operations"]:
+            with self.subTest(operation=operation):
+                resolved = self.assignments.resolve(operation, launched_parent=parent)
+                self.assertEqual(resolved["operation"], operation)
+                self.assertEqual(resolved["path"], str(self.canonical))
+                self.assertEqual(set(resolved["requested"]), {"model", "effort"})
+        inherited = [name for name, entry in actual["operations"].items()
+                     if entry.get("inherit") == "launched-parent"]
+        self.assertEqual(len(inherited), 1)
+        resolved_parent = self.assignments.resolve(inherited[0], launched_parent=parent)
+        self.assertEqual(resolved_parent["requested"], parent)
+        self.assertEqual(resolved_parent["source"], "launched-parent")
+        self.assertNotIn("worker", self.canonical.read_text())
+        self.assertNotIn("reviewer", self.canonical.read_text())
+
+    def test_shared_edits_and_corrections_use_actual_json_references(self):
+        actual = json.loads(self.canonical.read_text())
+        linked = {}
+        for operation, entry in actual["operations"].items():
+            if "assignment" in entry:
+                linked.setdefault(entry["assignment"], []).append(operation)
+        name, operations = next((name, operations) for name, operations in linked.items()
+                                if len(operations) > 1)
+        with tempfile.TemporaryDirectory() as directory:
+            skill, target = self.fixture_skill(directory)
+            before = {operation: self.assignments.resolve(operation, planner_skill=skill)
+                      for operation in operations}
+            edited = json.loads(target.read_text())
+            edited["assignments"][name]["model"] = "example/owner-edited"
+            target.write_text(json.dumps(edited))
+            for operation in operations:
+                with self.subTest(operation=operation):
+                    resolved = self.assignments.resolve(operation, planner_skill=skill)
+                    self.assertEqual(resolved["requested"]["model"], "example/owner-edited")
+                    self.assertNotEqual(resolved["requested"], before[operation]["requested"])
+            corrected = self.assignments.resolve_correction(operations[0], planner_skill=skill)
+            self.assertEqual(corrected["requested"],
+                             self.assignments.resolve(operations[0], planner_skill=skill)["requested"])
+            self.assertNotIn("repair", edited)
+
+    def test_installer_symlink_discovers_canonical_file_from_unrelated_home(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory) / "home"
+            destinations = home / "skills"
+            destinations.mkdir(parents=True)
+            guidance = Path(directory) / "guide.md"
+            guidance.write_text("fixture guidance")
+            with mock.patch.dict(os.environ, {"HOME": str(home)}, clear=False), contextlib.redirect_stdout(io.StringIO()):
+                links.install(ROOT / "skills", guidance, destinations, home / "docs",
+                              home / "backups", home / "settings.json")
+            installed = destinations / "planner"
+            self.assertTrue(installed.is_symlink())
+            self.assertEqual(self.assignments.assignment_path(installed / "SKILL.md"), self.canonical)
+            resolved = self.assignments.resolve("brainstorm-assessment", planner_skill=installed / "SKILL.md")
+            self.assertEqual(resolved["path"], str(self.canonical))
+            self.assertFalse((home / "settings.json").exists())
+
+    def test_invalid_assignments_are_operation_specific_and_do_not_infer(self):
+        actual = json.loads(self.canonical.read_text())
+        saved_operation = next(name for name, entry in actual["operations"].items()
+                               if "assignment" in entry)
+        with tempfile.TemporaryDirectory() as directory:
+            skill, target = self.fixture_skill(directory)
+            target.unlink()
+            self.assert_problem(saved_operation, skill, "file is absent")
+            target.write_text("{")
+            self.assert_problem(saved_operation, skill, "malformed")
+            target.write_text(json.dumps(actual))
+            self.assert_problem("absent-operation", skill, "no assignment")
+            ambiguous = json.loads(target.read_text())
+            ambiguous["operations"][saved_operation] = {
+                "inherit": "launched-parent", "assignment": "brainstorming"}
+            target.write_text(json.dumps(ambiguous))
+            self.assert_problem(saved_operation, skill, "exactly one")
+            absent = json.loads(self.canonical.read_text())
+            missing_name = absent["operations"][saved_operation]["assignment"]
+            del absent["assignments"][missing_name]
+            target.write_text(json.dumps(absent))
+            self.assert_problem(saved_operation, skill, "is absent")
+
+
 class LinkTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)

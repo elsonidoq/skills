@@ -1,0 +1,55 @@
+{
+  "assignments": {
+    "brainstorming": {
+      "model": "openai-codex/gpt-5.6-terra",
+      "effort": "medium"
+    },
+    "source-and-tasks": {
+      "model": "openai-codex/gpt-6.1-sol",
+      "effort": "medium"
+    },
+    "standard-plan": {
+      "model": "openai-codex/gpt-6-astra",
+      "effort": "medium"
+    },
+    "standard-review": {
+      "model": "openai-codex/gpt-6.1-sol",
+      "effort": "medium"
+    }
+  },
+  "operations": {
+    "planner-parent": {
+      "inherit": "launched-parent"
+    },
+    "brainstorm-assessment": {
+      "assignment": "brainstorming"
+    },
+    "brainstorm-application": {
+      "assignment": "brainstorming"
+    },
+    "tinyspec-source": {
+      "assignment": "source-and-tasks"
+    },
+    "tinyspec-tasks": {
+      "assignment": "source-and-tasks"
+    },
+    "standard-spec-create": {
+      "assignment": "source-and-tasks"
+    },
+    "standard-tasks-create": {
+      "assignment": "source-and-tasks"
+    },
+    "standard-plan-direct": {
+      "assignment": "standard-plan"
+    },
+    "standard-plan-helper": {
+      "assignment": "standard-plan"
+    },
+    "standard-overall-review": {
+      "assignment": "standard-review"
+    },
+    "standard-overall-rereview": {
+      "assignment": "standard-review"
+    }
+  }
+}
