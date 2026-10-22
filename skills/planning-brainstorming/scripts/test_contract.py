@@ -32,18 +32,22 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
         self.assertIn("re-present the saved agenda", self.text)
         self.assertIn("Record owner deferrals", self.text)
 
-    def test_capability_stop_and_portable_binding(self):
-        self.assertIn("owner-selected profile", self.text)
-        self.assertIn("[qualified seed rubric](../planner/references/profile-selection.md)", self.text)
-        self.assertIn("effort independently", self.text)
-        self.assertIn("unknown actual model or effort stays unknown", self.text)
-        self.assertNotIn("sonnet-class", self.text)
-        self.assertNotIn("opus-class", self.text)
+    def test_shared_saved_assignment_dispatch_and_capability_stop(self):
+        self.assertIn("`brainstorm-assessment` or `brainstorm-application`", self.text)
+        self.assertIn("[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)", self.text)
+        self.assertIn("shared saved `brainstorming` assignment", self.text)
+        self.assertIn("exact binding\nunchanged in the bounded brief and dispatch", self.text)
+        self.assertIn("permitted and callable only\nat dispatch", self.text)
+        self.assertIn("focused owner-correction question and no\ncandidate recommendation, inference, substitution, or fallback", self.text)
+        self.assertIn("The parent still\nconducts owner dialogue", self.text)
+        self.assertIn("Only in selected-production or legacy-repair mode", self.text)
         self.assertIn("missing capability and stop before downstream production", self.text)
         self.assertIn("ask in prose and end the turn", self.text)
         self.assertIn("do not continue downstream or infer an", self.text)
-        self.assertNotIn("openai-", self.text)
-        self.assertNotIn("anthropic/", self.text)
+        for retired in ("qualified seed rubric", "six applicable factors", "family/effort",
+                        "Family and Effort rationales", "shared readiness conjunction",
+                        "owner-selected profile"):
+            self.assertNotIn(retired, self.text)
 
 
 if __name__ == "__main__":

@@ -273,6 +273,17 @@ def check_contracts(texts):
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
             "one material item", "recorded owner decisions", "preselection", "read-only",
             "session history", "Only in selected-production", "owner's rationale")
+    require("brainstorm-assignment", b,
+            "`brainstorm-assessment` or `brainstorm-application`",
+            "[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
+            "shared saved `brainstorming` assignment", "exact binding\nunchanged in the bounded brief and dispatch",
+            "permitted and callable only\nat dispatch",
+            "focused owner-correction question and no\ncandidate recommendation, inference, substitution, or fallback",
+            "The parent still\nconducts owner dialogue",
+            "Only in selected-production or legacy-repair mode")
+    reject("brainstorm-retired-routing", b, "qualified seed rubric", "six applicable factors",
+           "family/effort", "Family and Effort rationales", "shared readiness conjunction",
+           "owner-selected profile")
     assignments = section(p, "## Saved planner assignments")
     require("saved-assignments", assignments, "model-assignments.json", "TinySpec source/tasks",
             "Standard spec/tasks", "direct/helper plan pass", "overall review/rereview",

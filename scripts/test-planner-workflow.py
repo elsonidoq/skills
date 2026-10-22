@@ -2178,6 +2178,67 @@ class OwnerAssignmentPlannerTests(unittest.TestCase):
                       "\n".join(trace.check_assignments(events, {"standard-plan-direct": binding})))
 
 
+class OwnerAssignmentBrainstormTests(unittest.TestCase):
+    """Both brainstorming consumers use one saved choice; no owner dialogue is delegated."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.assignments = load("brainstorm_assignments", "../skills/planner/scripts/model_assignments.py")
+        cls.config = ROOT / "skills/planner/references/model-assignments.json"
+        cls.skill = ROOT / "skills/planning-brainstorming/SKILL.md"
+
+    def fixture(self, directory, data):
+        planner = Path(directory) / "planner"
+        (planner / "references").mkdir(parents=True)
+        (planner / "SKILL.md").write_text("fixture")
+        (planner / "references/model-assignments.json").write_text(json.dumps(data))
+        return planner
+
+    def test_assessment_and_application_share_saved_choice_after_fixture_edit(self):
+        data = json.loads(self.config.read_text())
+        skill_before = self.skill.read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            planner = self.fixture(directory, data)
+            def dispatch(operation):
+                binding = self.assignments.resolve(operation, planner_skill=planner)["requested"]
+                return {"operation": operation, "brief": binding, "call": binding}
+
+            before = [dispatch("brainstorm-assessment"), dispatch("brainstorm-application")]
+            data["assignments"]["brainstorming"] = {"model": "owner/updated", "effort": "high"}
+            (planner / "references/model-assignments.json").write_text(json.dumps(data))
+            after = [dispatch("brainstorm-assessment"), dispatch("brainstorm-application")]
+
+        for captured in (before, after):
+            self.assertEqual(captured[0]["brief"], captured[0]["call"])
+            self.assertEqual(captured[1]["brief"], captured[1]["call"])
+            self.assertEqual(captured[0]["brief"], captured[1]["brief"])
+        self.assertNotEqual(before[0]["brief"], after[0]["brief"])
+        self.assertEqual(after[0]["brief"], {"model": "owner/updated", "effort": "high"})
+        self.assertEqual(self.skill.read_bytes(), skill_before)
+
+    def test_missing_or_invalid_choice_stops_only_affected_operation_without_candidates(self):
+        cases = (
+            ("missing assessment operation", "brainstorm-assessment",
+             lambda data: data["operations"].pop("brainstorm-assessment")),
+            ("missing shared choice", "brainstorm-application",
+             lambda data: data["assignments"].pop("brainstorming")),
+            ("invalid shared choice", "brainstorm-assessment",
+             lambda data: data["assignments"].update(brainstorming={"model": "", "effort": "high"})),
+        )
+        for label, operation, mutation in cases:
+            with self.subTest(case=label):
+                data = json.loads(self.config.read_text())
+                mutation(data)
+                with tempfile.TemporaryDirectory() as directory:
+                    planner = self.fixture(directory, data)
+                    with self.assertRaises(self.assignments.AssignmentError) as raised:
+                        self.assignments.resolve(operation, planner_skill=planner)
+                message = str(raised.exception).lower()
+                self.assertIn(operation, message)
+                self.assertIn("ask the owner to correct", message)
+                self.assertFalse(any(word in message for word in ("recommend", "fallback", "substitute")))
+
+
 class LinkTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)

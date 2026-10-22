@@ -14,19 +14,18 @@ Before using this skill, verify that the runtime can ask the owner questions and
 planner can retain the selected source bounds, decisions, deferrals and handoff. In
 preselection mode retain interim answers in available session history, while allowing
 read-only inspection of existing project evidence; in selected-production or legacy
-repair mode use established project artifacts. Use the
-[qualified seed rubric](../planner/references/profile-selection.md) for gate
-assessment and decision application: assess all six applicable factors, including the
-weakest verification blind spot, and justify family and supported effort independently.
-Compare suitable family/effort options before readiness, including a smaller never-launched pending proposal,
-with independent comparative Family and Effort rationales. Then report readiness/gaps under the shared rubric:
-readiness blocks launch, not suitability; retain the recommendation and ask for bounded authorization or an explicit fallback choice.
-A fallback needs its own justification, readiness and exact owner selection; no silent fallback.
-Reuse applicable passive proof; deeper source inspection is conditional, not a routine audit gate.
-Verify one exact owner-selected profile, permissions, tools, callable binding and supported effort at assignment
-and dispatch through the shared readiness conjunction. Copy the selected binding/effort unchanged into each invocation; a settings/default
-override or missing selection/support stops, never silently substitutes. Record proposed,
-selected and observed separately; unknown actual model or effort stays unknown.
+repair mode use established project artifacts.
+
+Before gate assessment or authorized decision application, resolve the caller's
+`brainstorm-assessment` or `brainstorm-application` operation through the planner's
+[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments).
+Both operations use the shared saved `brainstorming` assignment. Pass its exact binding
+unchanged in the bounded brief and dispatch; verify it is permitted and callable only
+at dispatch. A missing, malformed, unsupported, or unavailable assignment stops that
+affected operation with the contract's focused owner-correction question and no
+candidate recommendation, inference, substitution, or fallback. The parent still
+conducts owner dialogue. This selection does not authorize implementation work.
+
 Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites. If a required capability is unavailable, report the
 missing capability and stop before downstream production. When the runtime's permitted fallback
 is prose interaction, ask in prose and end the turn; do not continue downstream or infer an
@@ -59,7 +58,7 @@ brainstorming's design-depth labels do not replace the planner's mandatory user 
 
 Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply before raising material owner questions. Applicable accepted outcome constraints and source links inform readiness and whether an owner question is material; they do not replace current bounded-source content or existing material-question authority.
 
-Have bounded work using the preflight's shared routing selection return a first line
+Have bounded work using the shared saved `brainstorming` assignment return a first line
 that is exactly one of:
 
 - `NO_BRAINSTORM_NEEDED` — direction is settled, or remaining ambiguity is mechanical or
@@ -94,8 +93,8 @@ is never permission to infer a material decision.
 
 ## 3. Apply decisions
 
-Only in selected-production or legacy-repair mode, use bounded work with the preflight's
-shared routing selection to apply exactly the recorded owner decisions to the supplied bounded source. Update only
+Only in selected-production or legacy-repair mode, use bounded work with the shared saved
+`brainstorming` assignment to apply exactly the recorded owner decisions to the supplied bounded source. Update only
 claims affected by those decisions: settled decisions, outcome,
 acceptance criteria, exclusions, and open questions as applicable. Preserve the source's
 format; add a concise deferred note when the owner deferred work. Do not invent scope,
