@@ -170,17 +170,18 @@ class Engine:
         """Commit only this run's closed JSONL after every worker/reviewer call drained."""
         artifact = {'status': 'not_created'}
         if self.metric_artifact is not None:
-            finalizer = MetricArtifactFinalizer(
-                self.authority.project, artifact_relative(self.run),
-                lambda: read_artifact(self.authority.project, self.run, strict=True),
-                expected_identity=self.metric_artifact.identity,
-                expected_bytes=self.metric_artifact.path.read_bytes())
+            finalizer = None
             try:
+                finalizer = MetricArtifactFinalizer(
+                    self.authority.project, artifact_relative(self.run),
+                    lambda: read_artifact(self.authority.project, self.run, strict=True),
+                    expected_identity=self.metric_artifact.identity,
+                    expected_bytes=self.metric_artifact.path.read_bytes())
                 committed = finalizer.commit()
             except BaseException as exc:
                 # A hook may have committed before reporting failure. Inspect once, never retry.
                 try:
-                    committed = finalizer.reconcile()
+                    committed = finalizer.reconcile() if finalizer is not None else None
                 except BaseException as reconcile_error:
                     committed = None
                     exc = reconcile_error
