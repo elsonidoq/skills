@@ -169,6 +169,21 @@ DECISION_RULES = {
         "do not incidentally refresh a project merely because `save-adr` is consulted"]),
 }
 
+ISSUE_OWNER_RULES = {
+    "github-issue-owner": ("Discovery", [
+        "Resolve the unresolved-work owner from project routing.",
+        "An explicitly configured GitHub Issues target is an external owner, not a local documentation file",
+        "do not create or require `docs/open_issues.md`",
+        "Confirm the explicit target and usable `gh`, authenticated issue-read capability as specified by `track-open-issue`.",
+        "Missing or conflicting target, `gh`, authentication, or issue capability is an actionable `issue tracking: UNAVAILABLE` gap",
+        "do not claim that owner/readiness is satisfied or fall back to a local tracker.",
+    ]),
+    "github-issue-owner-association": ("Adoption", [
+        "canonical unresolved-work register via `track-open-issue`",
+        "explicitly configured GitHub Issues target remains external and does not require a local register",
+    ]),
+}
+
 POLICY_RULES = {
     "policy-selection": ("Preflight", ["Full initialization is the default", "Only explicit policy-only refresh intent",
         "targeted dirty ownership", "missing capability required for the bounded operation stops it"]),
@@ -214,7 +229,7 @@ def check_contract(text):
     for diagnostic, pattern in (UNSAFE | BOOKKEEPING_UNSAFE).items():
         if re.search(pattern, normalized(text)):
             errors.append(f"{diagnostic}: contradictory permission")
-    for diagnostic, (name, phrases) in (SPECKIT_RULES | POLICY_RULES | DECISION_RULES).items():
+    for diagnostic, (name, phrases) in (SPECKIT_RULES | POLICY_RULES | DECISION_RULES | ISSUE_OWNER_RULES).items():
         body = normalized(stage(text, name))
         for phrase in phrases:
             if normalized(phrase) not in body:
@@ -508,6 +523,37 @@ class DecisionConsultationTests(unittest.TestCase):
                 pattern = r"\s+".join(re.escape(word) for word in phrase.split())
                 changed = text.replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
                 self.assertTrue(any(error.startswith(diagnostic + ":") for error in check_contract(changed)))
+
+
+class ExternalIssueOwnerTests(unittest.TestCase):
+    """Static owner association cases; they do not probe GitHub or authenticate."""
+
+    def test_external_owner_and_actionable_gap_cases(self):
+        text = SKILL.read_text()
+        discovery = stage(text, "Discovery")
+        adoption = stage(text, "Adoption")
+        cases = {
+            "configured-github-owner": (discovery, "An explicitly configured GitHub Issues target is an external owner, not a local documentation file"),
+            "no-local-register": (discovery, "do not create or require `docs/open_issues.md`"),
+            "missing-or-conflicting-target": (discovery, "Missing or conflicting target"),
+            "missing-gh-or-auth": (discovery, "`gh`, authentication, or issue capability is an actionable `issue tracking: UNAVAILABLE` gap"),
+            "no-fallback-or-false-readiness": (discovery, "do not claim that owner/readiness is satisfied or fall back to a local tracker"),
+            "approved-external-association": (adoption, "explicitly configured GitHub Issues target remains external and does not require a local register"),
+        }
+        for name, (carrier, expectation) in cases.items():
+            with self.subTest(case=name):
+                self.assertIn(normalized(expectation), normalized(carrier))
+
+    def test_external_owner_guards_reject_deletion(self):
+        text = SKILL.read_text()
+        self.assertEqual(check_contract(text), [])
+        for diagnostic, (name, phrases) in ISSUE_OWNER_RULES.items():
+            with self.subTest(boundary=diagnostic):
+                phrase = phrases[0]
+                body = stage(text, name)
+                pattern = r"\s+".join(re.escape(word) for word in phrase.split())
+                changed = text.replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
+                self.assertTrue(any(error.startswith(diagnostic + ": missing") for error in check_contract(changed)))
 
 
 class WorkflowOwnershipOutputTests(unittest.TestCase):

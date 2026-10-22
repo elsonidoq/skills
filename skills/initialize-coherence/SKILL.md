@@ -81,10 +81,17 @@ not block unrelated legacy work.
   of an authoritative owner. Map only verified project-specific material change
   categories to authoritative owners; reference owner content rather than duplicate
   it. Do not claim a generic category applies without evidence.
+- Resolve the unresolved-work owner from project routing. An explicitly configured GitHub
+  Issues target is an external owner, not a local documentation file: do not create or
+  require `docs/open_issues.md`. Confirm the explicit target and usable `gh`, authenticated
+  issue-read capability as specified by `track-open-issue`. Missing or conflicting target,
+  `gh`, authentication, or issue capability is an actionable `issue tracking: UNAVAILABLE`
+  gap with its corrective action; do not claim that owner/readiness is satisfied or fall
+  back to a local tracker.
 - If conventions do not name equivalent owners, obtain owner choices for
   documentation root, index mechanism, architecture/schema/routing/unresolved-work/deployment
   locations and formats. Do not assume a `docs/` layout or create owners before those
-  choices. Preserve the suite's canonical unresolved-work register described below.
+  choices.
 
 **SpecKit project-asset discovery (full initialization, read-only).**
 
@@ -246,7 +253,9 @@ and `compact-memory` can cite it. Record:
 - Recovery association: preserve any existing STATE/custom content and document its existing
   location when applicable; no STATE initialization or upkeep. Reference installed execution
   and approval/recovery owners above, not a project-local workflow ledger. Keep pi sessions
-  as the conversation record and the canonical unresolved-work register via `track-open-issue`.
+  as the conversation record and the canonical unresolved-work register via `track-open-issue`;
+  its explicitly configured GitHub Issues target remains external and does not require a local
+  register.
 - Documentation: Record documentation owners and the documentation-routing guide
   discovered here.
 
