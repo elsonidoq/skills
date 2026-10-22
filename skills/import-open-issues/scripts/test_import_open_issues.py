@@ -66,6 +66,27 @@ class PreviewTests(unittest.TestCase):
         self.assertNotIn("[[OI-", transformed)
         self.assertIn(value, record.original_excerpt)
 
+    def test_nested_labels_are_actionable_public_preview_diagnostics(self):
+        for value in ("[see [OI-9]](relative.md)", "[see [deep [OI-9]]](relative.md#part)"):
+            with self.subTest(value=value):
+                text = ("## OI-1: Nested\n- **Status:** open\n- **Problem:** " + value
+                        + "\n- **Primary evidence:** e\n- **Resumption condition:** r\n")
+                result = preview(text, SOURCE, "dest/repo")
+                self.assertEqual(result.records, ())
+                self.assertEqual(len(result.diagnostics), 1)
+                diagnostic = result.diagnostics[0]
+                self.assertEqual((diagnostic.oi_id, diagnostic.line), ("OI-1", 1))
+                self.assertIn("unsupported nested link label", diagnostic.reason)
+                self.assertIn("flatten the label", diagnostic.reason)
+                self.assertIn("preview again", diagnostic.reason)
+        # Markdown-looking code remains literal; normal adjacent links are not nested.
+        text = ("## OI-1: Literal\n- **Status:** open\n- **Problem:** "
+                "`[see [OI-9]](relative.md)` [one](one.md) [two](two.md)\n"
+                "- **Primary evidence:** e\n- **Resumption condition:** r\n")
+        result = preview(text, SOURCE, "dest/repo")
+        self.assertEqual(result.diagnostics, ())
+        self.assertIn("`[see [OI-9]](relative.md)`", result.records[0].body)
+
     def test_multiline_extra_fields_links_and_identity(self):
         text = """## OI-1: Renamed title\n\n- **Status:** open\n- **Problem:** First line\n  second line with [relative](../runtime/a.py#part), [absolute #2](https://github.com/x/y/issues/2), OI-9 and `../code.py`.\n- **Primary evidence:** evidence\n- **Resumption condition:** resume\n- **History:** retained\n"""
         result = preview(text, SOURCE, "dest/repo")

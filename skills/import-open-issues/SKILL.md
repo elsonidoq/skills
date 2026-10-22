@@ -49,7 +49,10 @@ remain unchanged. Anchor-only links resolve against the pinned source file, not 
 issue. Bare OI references become source-qualified immutable source links; existing link labels
 and targets are not rewritten as OI mentions. They do not create task/issue relationships.
 Code spans (including Markdown-looking content) remain unchanged and are not claimed as
-verified links.
+verified links. Nested link labels (for example `[see [OI-9]](relative.md)`) are unsupported:
+public `preview` rejects the affected record with its source line and a corrective diagnostic.
+Flatten the label in a reviewed source copy and preview again; never rewrite the preserved
+original register merely to make an import pass.
 
 ## Read-only reconciliation
 
