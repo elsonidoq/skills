@@ -61,13 +61,24 @@ links into each actual worker brief, alongside its local REQUIRED items:
   [coordination guidelines](../../memory/coordination/GUIDELINES.md) have no approved guidance.
   They supply no routing defaults or authority for memory/ledger writes. Historical research
   and approval records remain unchanged and discoverable as historical. OpenCode is excluded.
-- Latest explicit owner clarification: delete obsolete test cases, fixtures and checker rules
-  enforcing retired routing/selection/eligibility contracts. This is a radical contract change,
-  not a compatibility exercise: no shims, aliases, stale-heading preservation or text hacks.
-  Add focused new owner-JSON/exact-dispatch/producer-read assertions. Retain meaningful current
-  permission, approval-provenance, dependency, checkpoint, REQUIRED-check and reviewer-independence
-  coverage. Classify stale baseline diagnostics against current guarantees: delete obsolete
-  assertions, never resurrect retired eligibility language or drop real safety merely to green.
+- **Every worker targets ZERO FAILING RELEVANT TESTS at its own checkpoint**, not zero
+  failures for deliberately removed behavior. Before acceptance classify each affected
+  test/checker rule/fixture against the approved source:
+  1. Still-required behavior: retain meaningful coverage; the relevant test must pass.
+  2. Behavior deliberately retired by **this task**: **DELETE enforcement immediately in
+     this task**, not in final T009. This is a radical contract change, not compatibility:
+     no shims, aliases, stale-heading preservation, camouflaged retired assertions or
+     production hacks to pass obsolete tests. Add focused NEW tests of the new contract.
+  3. Materially uncertain scope/authority/classification: investigate the source, then return
+     the precise blocker/necessary owner decision; never delete blindly.
+  Ordinary technical classification is worker authority, not a per-test owner ceremony.
+  Each worker returns brief source-grounded classification/deletion/current-check evidence
+  in its existing task result, not a ledger. Preserve meaningful current permissions,
+  approval provenance, dependencies, checkpoints, history, REQUIRED checks, exact dispatch
+  and reviewer independence. Never mark a retained failing relevant test passed or obsolete
+  solely to green. Report unrelated baseline failures honestly, without chasing them under
+  unrelated tasks. Do not demand the pre-migration broad suite pass. T009 audits leftovers
+  and redundant tests and verifies composed relevant coverage; it is not first deletion owner.
 
 Checks may use existing isolated fixtures, not real user configuration or provider access.
 The concrete early risk is SDK effort clamping/overrides and implicit reviewer inheritance:
@@ -78,8 +89,11 @@ Requested binding, SDK-exposed observation and unknown actual must remain distin
 ## Bounded outcomes and dependencies
 
 Each task includes its own tests, relevant local documentation, diff inspection and focused
-checkpoint. The JSON's exact owned paths restrict mutation. Shared paths are dependency-ordered;
-the existing runner executes sequentially. No task depends on unfinished downstream acceptance.
+checkpoint. The JSON's exact owned paths restrict mutation, including immediate deletion of
+obsolete enforcement caused by that task. Shared paths are dependency-ordered; the existing
+runner executes sequentially, with no overlapping/concurrent writers. Existing dependencies
+already order every newly shared enforcement path; no extra sequencing gate is needed.
+No task depends on unfinished downstream acceptance.
 
 | ID | Outcome / bounded interface | Depends | REQUIRED source mapping and observable |
 | --- | --- | --- | --- |
@@ -96,15 +110,44 @@ the existing runner executes sequentially. No task depends on unfinished downstr
 The splits follow independently testable config, SDK, engine and existing skill-consumer seams,
 not milestone/phase labels or a task quota. In particular T002 cannot be replaced by static
 planner traces, and T001/T004 focused checks do not require migrated downstream consumers.
-Broad planner checks belong to T009, when all active contracts and docs exist. T009 delivers
-maintained checker behavior, not a separate evidence/report-only deliverable.
+Broad planner commands are run and reported at T009 when all active contracts and docs exist;
+acceptance requires zero failing **relevant** tests/rules, not fictional green for unrelated
+baseline failures. T009 delivers maintained checker behavior, not a separate evidence-only task.
+
+### Immediate enforcement ownership and current checks
+
+All rows apply the three-way classification above at their own boundary. The executable
+scopes specify the affected test/checker/fixture paths and require classification/deletion/
+current-check evidence in each ordinary task result.
+
+| Task | Local enforcement ownership / relevant-check boundary |
+| --- | --- |
+| T001 | Canonical config/discovery tests in the existing planner module; delete only enforcement retired by this config outcome, not unmigrated consumer contracts. Focused config tests and retained relevant discovery checks. |
+| T002 | Host/saved-session/adapter cases and fixtures: delete silent clamp/default/override expectations now; retain transport/tools/steering/saved-identity safety. An incidental unsupported effort in a still-valid transport fixture can be corrected without retaining a clamping assertion. Actual SDK and relevant adapter checks. |
+| T003 | Engine/CLI/review/resume/authority fixture modules: delete implicit-reviewer-inheritance cases now; keep current guarantees, changing incidental executor setup only. New actual-engine role tests, adapter/authority checks and retained relevant methods from changed fixture modules, not unconditional broad module green. |
+| T004 | Shared planner checker/tests, batching contract test and planner-dependent task-authoring safety test. Delete retired planner and indivisible cross-consumer selection/fixed-Sol/link/eligibility assertions immediately, including affected mixed mutations; keep real approval/dependency/review safety. Focused planner and retained relevant safety checks; no stale-heading rescue. |
+| T005 | Brainstorming contract script plus shared checker/tests: delete rubric/rationale/readiness enforcement in assessment/application now; preserve current question/mode/unknown-actual safety and add new assignment coverage. |
+| T006 | Helper rules/mutations in shared checker/tests: delete remaining old fixed-Sol/family/readiness/fallback enforcement now; retain single-plan, producer/parent and approval-renewal checks. |
+| T007 | Task-generation contract script, shared checker/tests and traces: delete retired rubric/intent/compatibility/default-executor enforcement now; preserve source truth, neutral authoring, required/manual gates and outcome sizing; add producer-local read/order checks. |
+| T008 | Docs/link rules in shared checker/tests and initialization test/fixture owner: delete removed-file/model-mapping/readiness and obsolete owner-/reload assertions now; preserve historical snapshots/provenance and current setup safeguards. Focused new doc tests and retained relevant initialization methods, not unconditional full initialization green. |
+| T009 | Complete maintained-checker migration, inspect earlier local deletions and audit affected active consumers for obsolete/redundant leftovers. Delete owned leftovers, report exact out-of-ownership correction if needed. Run composed relevant coverage plus all source-required broad commands with honest unrelated-baseline diagnostics. |
+
+No worker receives whole-repository deletion authority. For mixed tests, delete retired
+assertions/cases rather than disguising them; preserve genuinely current safety with meaningful
+scoped coverage. New focused classes must observe their own seam, not depend on a global
+old-contract-suite-green setup. A broad run's unrelated baseline failure is still reported
+FAIL; it neither becomes PASS nor authorizes deleting current safety.
 
 ## Verification conventions and baseline
 
 Python 3.12.3 and the existing `.pi/workflow-validation/venv/bin/python` are present. Runtime
 checks follow [the operating guide](../coordinate-implementation.md)'s existing convention:
 `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests` with `python -B -m unittest`.
-Use the JSON check arrays and focused classes added in the existing test module; no new harness.
+Use the JSON check arrays and focused classes added in the existing test modules; no new
+harness. Arrays target current relevant checks after classification and immediate local deletion.
+Also run retained relevant existing methods and report exact commands. At T009 run the
+source-required checker, full planner test command and skill lint as well as composed relevant
+checks; distinguish any unrelated baseline failures from the scoped passing results.
 
 At source baseline `2379b47`, before task production:
 
@@ -122,12 +165,14 @@ At source baseline `2379b47`, before task production:
 - Producer ran existing `test_worker_authority` using the runtime convention: **PASS**, two
   tests covering initial/corrective authority and tiny isolated database permissions.
 
-T001/T004–T007 add independently passing focused classes without requiring the broad checker
-or deleting unrelated tests to green. T008 has its own focused fixture/manual review. T009
-deletes obsolete routing/selection/eligibility tests, fixtures and rules and adds focused new
-assignment tests. Classify pre-existing coordinator diagnostics against current guarantees:
-delete obsolete assertions, or check equivalent actual current safety without text hacks,
-stale headings, compatibility shims or resurrected eligibility language. A substantive unrelated gap is a reported blocker,
+Every T001–T008 worker classifies and deletes obsolete affected enforcement immediately,
+adds new contract coverage and passes all retained relevant checks at its checkpoint; it does
+not defer deletion to T009 or require an unfinished broad migration to pass. T009 audits
+leftovers/redundancy and composes relevant checks. Classify pre-existing coordinator diagnostics
+against current guarantees: delete obsolete assertions, or test genuinely current safety,
+without text hacks, stale headings, compatibility shims or resurrected eligibility language.
+Report unrelated baseline failures without chasing them here. Material uncertainty requires
+source investigation then a precise blocker; retained relevant failures block acceptance,
 not permission for runtime rewrite or removal of dirty-work/owner-input safeguards.
 
 Required evidence is actual commands/results, captured arguments/state/trace where mapped,
@@ -141,7 +186,8 @@ review/approval gates, not silent upstream repair.
 ## Planning review and owner approval
 
 Owner selected TinySpec preparation. Source is committed; separate tasks are now produced.
-Planner inspection and combined current-content source/task/scope approval remain pending.
-Implementation is not yet authorized. Parent will inspect these tasks and obtain combined
-approval before launching the coordinator with the existing selected executor file. No
+The latest combined approval was CANCELLED. Planner inspection and combined current-content
+source/task/scope approval of this revision remain pending. Implementation is not authorized.
+Parent will inspect these tasks and obtain combined approval before launching the coordinator
+with the existing selected executor file. No
 separate source-approval or commit-permission question is required for this preparation.
