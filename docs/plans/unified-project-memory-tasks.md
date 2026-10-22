@@ -136,9 +136,26 @@ Actual planning validation:
   historical URL accessibility: **NOT RUN**. Runtime work is excluded; exact local Git retrieval,
   not remote publication, is the historical-provenance acceptance boundary.
 
-Combined current-source/tasks/scope approval is pending. It must explicitly cover removing the
-41 old records and retired reference without relocation, precise Git historical references,
-unified quote preservation and memory-only constitutional alignment. No implementation or
-historical deletion/relocation is authorized by preparation or this review. The owner's current
-boundary remains **planning only**; approval returns the reviewed handoff without starting the
-coordinator. Later implementation requires actual launch authority and applicable gates.
+### Combined owner approval — planning-only handoff
+
+Owner approved the reviewed source, tasks and proposed scope with **“OK. I approve”**, after
+confirming that Coherence is reusable across many projects and must use only each project's own
+associated memory, never a suite/global memory or second guidance store. This clarification is
+already covered by T001–T004; this approval record changes no task requirement.
+
+Approved content is the source and canonical JSON at the SHA256 identities above, and the human
+task/review presentation at commit `72829f6d879a0786b9dcbfde58d2a289cc02cc5f` (SHA256 before
+this approval addition: `095d75f8de64aa2b95179b9b48b1a66efa5da624fc1c7c9ac88c117dcd6ef723`).
+Approval covers the proposed seven-task scope, including removal of the 41 obsolete coordination
+records and retired reference without relocation, precise Git historical references, unified quote
+preservation and memory-only constitutional alignment. It does not authorize performing those
+changes in this planning session.
+
+The request remains **planning only**. Return this approved handoff without launching the
+coordinator or deleting/relocating records. Later implementation needs explicit launch authority
+and the existing applicable gates. Use `docs/plans/unified-project-memory-tasks.json` and the
+unchanged `.pi/workflow-executor.json`; preserve exact owned paths, fifteen REQUIRED items,
+current-content approval, checkpoint safety and the runner's fresh independent full-range review.
+Global skill activation in Paseo remains a fresh-session handoff with checkout/current-approval/
+loaded-capability verification, never automatic reload/restart. No implementation acceptance is
+claimed by this approval.
