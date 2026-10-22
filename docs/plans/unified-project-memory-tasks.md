@@ -159,3 +159,42 @@ current-content approval, checkpoint safety and the runner's fresh independent f
 Global skill activation in Paseo remains a fresh-session handoff with checkout/current-approval/
 loaded-capability verification, never automatic reload/restart. No implementation acceptance is
 claimed by this approval.
+
+### Bounded checkpoint-regression correction — current recovery authority
+
+After the later implementation launch, `unified-project-memory-sdk-ready` stopped at T002
+with the unchanged failing required check `python3 scripts/test-task-commit-contract.py`.
+T001 is committed at `fb410a716dc4958854ced8d79b7db9e26ee12494`; the nine original T002
+owned paths remain dirty, uncommitted and outside this correction's ownership. Recovery
+preparation baseline is `cce6aac2dc193033fd82af39b82a5c769b651e83`.
+
+The owner answered **“Approve bounded correction”** through `ask_user`: repair the stale
+checkpoint regression without skipping/waiving the required check, changing operative policy,
+weakening checkpoint/approval safety or losing unrelated historical/custom bytes. This is
+current bounded repair authority, not a rewrite of the historical planning-only approval above
+or a change to any of the seven original task semantics.
+
+Inspected failure: `RuntimePolicyCompatibilityTests.test_historical_custom_and_original_source_bytes_preserved`
+requires `earliest affected producing renewal`, absent already at original run baseline
+`90d152f4822c11091fc84d31c884028d4ae6d9d3`. The actual recovery contract retains earliest
+invalid-gate/affected-stage renewal and original-source/approval safeguards. The test's blanket
+memory freeze also conflicts with the already-approved index update and exact 41 legacy deletions.
+
+The [single corrective task R001](unified-project-memory-checkpoint-repair.json) owns only
+`scripts/test-task-commit-contract.py`. It repairs stale recovery text assertions and scopes
+memory preservation to allow only those approved changes, retaining frozen source/task/approval/
+evidence assertions, unrelated/custom bytes and actual checkpoint safety. Full checkpoint tests,
+checkpoint checker and diff whitespace must pass; local isolated pre/post-cleanup cases preserve
+regression sensitivity without performing cleanup. No extra approval round is needed for ordinary
+mechanical choices within this owner-approved correction. Parent inspection of this supplement
+precedes its launch.
+
+Use an ordinary separate runner start with unchanged `.pi/workflow-executor.json`; do not edit
+the original JSON or immutable stored parsed input to expand original task ownership, and do not
+modify runtime/SQLite/state. The repair run checkpoints/reviews its sole test-file change while
+leaving all nine T002 dirty paths untouched/unstaged. After its verified checkpoint/review, the
+parent resumes the original run with its original input; its existing full-range independent
+final review covers the repair. Preserve current failed-check evidence; if the actual runtime
+cannot isolate these operations safely, report the precise blocker rather than mutate state or
+adopt the dirty T002 paths. This task producer prepares/commits planning deliverables only and
+does not launch either run or implement the test correction.
