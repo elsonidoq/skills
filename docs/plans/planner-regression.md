@@ -184,23 +184,23 @@ engine/browser/external-project trial is authorized or run. In Paseo, global ski
 a fresh-session handoff; do not reload or restart the current session automatically. Fresh independent
 final implementation review remains required under the existing workflow, separate from this bounded documentation check.
 
-## Project coordination feedback and context-first recovery assurance
+## Unified project memory and context-first recovery assurance
 
-The [canonical feedback contract](../../skills/memory-handling/references/project-coordination.md)
-owns relevant existing guidance and explicit future-directed user feedback only. Missing
-store/STATE is nonblocking. No auto-init, routine summaries/index updates, reflection,
-evidence-only checkpoints or automatic STATE maintenance. Existing records/custom content
-stay unchanged. Required adopted gotcha-memory gates remain separate.
+[Memory Handling](../../skills/memory-handling/SKILL.md) owns one associated index for
+relevant verified gotchas and explicit future-directed user guidance. Missing store/STATE is
+nonblocking. No auto-init, routine summaries/index updates, reflection, evidence-only
+checkpoints or automatic STATE maintenance. Existing records/custom content stay unchanged;
+whole-index-first retrieval, selective entries and recheck-after-write remain required.
 
 | Acceptance seam | Named offline evidence |
 | --- | --- |
-| Feedback decisions/safety | `test_clear_future_feedback_needs_no_second_approval`, `test_explanation_no_feedback_approval_observation_and_no_write`, `test_dirty_concurrent_path_symlink_sensitive_and_owner_safety_stops`, guidelines-only temporary storage and scoped removal/resurrection mutations in `test_coordination_contract.py` |
+| Guidance decisions/safety | `test_authority_matrix`, `test_path_symlink_sensitive_owner_dirty_and_concurrent_safety_stops`, `test_authorized_custom_association_creates_one_index_and_entry_preserving_bytes`, unified associated-index storage and scoped removal/resurrection mutations in `test_coordination_contract.py` |
 | Context-first recovery | `test_summary_insufficient_fresh_and_uncertain_context`, `test_active_unrecorded_unknown_and_inspected_failure`, seven `GitScenarioTests` in `test_state_contract.py`; no snapshot writes or duplicated commits |
 | Cheap plan trust | `test_administrative_loops_and_trust_only_acceptance_fail`, scoped actionable-guard mutations in `test_intake_contract.py`; `PreparationTraceTests` and item-specific acceptance/repair cases in `test_batching_contract.py` |
 | Substantive checkpoints | `scripts/check-task-commit-contract.py` and `scripts/test-task-commit-contract.py`: real temporary-Git scoped commits, unrelated staged/unstaged preservation, hook failures, ambiguous ownership and existing-SHA recovery without evidence-only commits |
 | Consumer/stage convergence | `scripts/check-planner-workflow.py` and `scripts/test-planner-workflow.py`: consumer resurrection, direct/earned workflow and parent-inspection negatives; onboarding immutable historical-source and bounded-refresh fixtures |
 
-Run the existing suite entry plus the separate feedback test:
+Run the existing suite entry plus the unified-memory contract test:
 `PYTHONDONTWRITEBYTECODE=1 bash scripts/check-skills-lint.sh` and
 `PYTHONDONTWRITEBYTECODE=1 python3 skills/memory-handling/scripts/test_coordination_contract.py`.
 Static mutations and symbolic scenarios show instruction consistency, not live obedience,
@@ -355,7 +355,7 @@ deterministic test success does not imply deployment checks.
 - Pre-change static suite baseline: PASS.
 - Historical refactor candidate deterministic checks: see planner-refactor validation record.
 - Delegation/complete-brief correction: static checker PASS and 111 offline tests PASS;
-  item-level proof/checkpoints in [run evidence](../../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
+  item-level proof/checkpoints in [run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
   Fresh independent final review: READY, no findings; all ten required items satisfied within
   offline/manual bounds. This is contract sensitivity evidence, not live model-obedience proof.
 - RPC driver against synthetic process: covered by offline tests.

@@ -690,10 +690,10 @@ class ProportionateValidationTests(unittest.TestCase):
 
     def test_batch_profile_feedback_and_diagnosed_repair_carriers(self):
         for key, clause, diagnostic in (
-            ("coordination", "explicit user corrective/future-round direction", "coordination-feedback"),
-            ("coordination", "No feedback means no write", "coordination-feedback"),
-            ("coordinator", "Do not autonomously loop expensive failed runs", "coordination-routing"),
-            ("coordinator", "No arbitrary workflow", "coordination-routing"),
+            ("memory", "ordinary implementation approval", "unified-memory-owner"),
+            ("memory", "no feedback write nothing", "unified-memory-owner"),
+            ("coordinator", "Do not autonomously loop expensive failed runs", "unified-memory-routing"),
+            ("coordinator", "No arbitrary workflow", "unified-memory-routing"),
         ):
             self.assert_clause_required(key, clause, diagnostic)
 
@@ -1166,13 +1166,91 @@ class DependencyResearchTests(unittest.TestCase):
         self.assertIn("Carry findings in session until selection", pre)
 
 
-class ProjectCoordinationWiringTests(unittest.TestCase):
-    """Wiring checks for mandatory project-local memory; no live agent/SpecKit calls."""
+class UnifiedMemoryPlanningTests(unittest.TestCase):
+    """Unified planning-carrier sensitivity; no live agent/SpecKit calls."""
 
-    def test_shared_reference_is_required_not_summary_only(self):
+    def test_memory_owner_is_required_not_a_retired_reference(self):
         texts = checker.load_texts()
-        del texts["coordination"]
-        self.assertTrue(any(e.startswith("coordination-reference:") for e in checker.check_contracts(texts)))
+        changed = dict(texts)
+        changed["memory"] = "# Summary only\n"
+        self.assertTrue(any(e.startswith("unified-memory-owner:") for e in checker.check_contracts(changed)))
+
+    def test_each_planning_carrier_requires_actual_propagation(self):
+        texts = checker.load_texts()
+        for key, heading, label in (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
+                                    ("tiny", "## Inputs and preflight", "unified-memory-tiny"),
+                                    ("tasks", "## Preconditions and adapters", "unified-memory-tasks"),
+                                    ("helper", "## Preflight", "unified-memory-helper")):
+            for clause in ("alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs"):
+                with self.subTest(carrier=key, removed=clause):
+                    changed = dict(texts)
+                    body = checker.section(changed[key], heading)
+                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+    def test_custom_installed_skill_links_resolve_to_memory_handling(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            for name in ("memory-handling", "planner", "tiny-spec", "task-generation", "delegating-architectural-planning"):
+                (target / name).symlink_to(ROOT / "skills" / name, target_is_directory=True)
+            owner = ROOT / checker.PATHS["memory"]
+            for name in ("planner", "tiny-spec", "task-generation", "delegating-architectural-planning"):
+                self.assertEqual((target / name / "../memory-handling/SKILL.md").resolve(), owner.resolve())
+                self.assertIn("One verified", (target / name / "../memory-handling/SKILL.md").read_text())
+
+
+class UnifiedMemoryCompositionTests(unittest.TestCase):
+    """Active-carrier convergence only; historical and fixture bytes remain valid inputs."""
+
+    def test_active_carriers_share_one_index_without_second_store_operations(self):
+        self.assertEqual(checker.composed_unified_memory_errors(checker.load_texts()), [])
+
+    def test_renamed_second_store_operations_have_named_diagnostics(self):
+        for key, mutation in (
+            ("planner", "Create an independent feedback ledger for planning guidance."),
+            ("adoption", "Propagate a second coordination guidance store."),
+        ):
+            with self.subTest(carrier=key):
+                changed = checker.load_texts()
+                heading = next(heading for name, heading, _ in checker.UNIFIED_MEMORY_CARRIERS if name == key)
+                body = checker.section(changed[key], heading)
+                changed[key] = changed[key].replace(body, body + "\n" + mutation, 1)
+                self.assertIn(f"unified-memory-composition: {key} restores a second-store operation",
+                              checker.composed_unified_memory_errors(changed))
+
+
+class UnifiedMemoryRepositoryTests(unittest.TestCase):
+    """Repository association and current owner guidance, not parent-wakeup runtime tests."""
+
+    guidance = ("Routine task transitions/completions and steering-status updates must not wake the parent agent or require acknowledgment. "
+                "Only agent questions and terminal workflow completion, whether success or error, should trigger a parent turn.")
+
+    def test_repository_has_one_operational_memory_association_and_verbatim_guidance(self):
+        index = (ROOT / "memory/MEMORY.md").read_text()
+        self.assertIn(self.guidance, index)
+        self.assertIn("Explicit current owner feedback", index)
+        self.assertEqual(checker.repository_memory_errors(), [])
+
+    def test_repository_guard_rejects_missing_guidance_or_second_store_policy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for path in ("AGENTS.md", "README.md", "REQUIREMENTS.md", "docs/index.md", "memory/MEMORY.md"):
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text((ROOT / path).read_text())
+            index = root / "memory/MEMORY.md"
+            index.write_text(index.read_text().replace(self.guidance, "REMOVED", 1))
+            self.assertTrue(any(error.startswith("unified-memory-repository: memory/MEMORY.md")
+                                for error in checker.repository_memory_errors(root)))
+            index.write_text((ROOT / "memory/MEMORY.md").read_text())
+            agents = root / "AGENTS.md"
+            agents.write_text(agents.read_text() + "\nPlanning guidance is in memory/coordination/.\n")
+            self.assertTrue(any(error == "unified-memory-repository: AGENTS.md restores an operative second-store path"
+                                for error in checker.repository_memory_errors(root)))
+
+
+class ProjectCoordinationWiringTests(unittest.TestCase):
+    """Compatibility name for unified-memory coordinator wiring checks."""
 
     def test_routine_consumer_bookkeeping_resurrection_fails(self):
         texts = checker.load_texts()
@@ -1184,18 +1262,7 @@ class ProjectCoordinationWiringTests(unittest.TestCase):
                 with self.subTest(consumer=key, clause=clause):
                     changed = dict(texts)
                     changed[key] += "\n" + clause
-                    self.assertTrue(any(e.startswith("coordination-unsafe-" + key + ":") for e in checker.check_contracts(changed)))
-
-    def test_all_distributed_consumers_resolve_coordination_owner(self):
-        with tempfile.TemporaryDirectory() as directory:
-            target = Path(directory)
-            for name in ("memory-handling", "planner", "tiny-spec", "task-generation", "coordinate-implementation"):
-                (target / name).symlink_to(ROOT / "skills" / name, target_is_directory=True)
-            owner = ROOT / checker.PATHS["coordination"]
-            for name in ("memory-handling", "planner", "tiny-spec", "task-generation", "coordinate-implementation"):
-                relative = "references/project-coordination.md" if name == "memory-handling" else "../memory-handling/references/project-coordination.md"
-                self.assertEqual((target / name / relative).resolve(), owner.resolve())
-                self.assertIn("# Project coordination memory", (target / name / relative).read_text())
+                    self.assertTrue(any(e.startswith("unified-memory-unsafe-" + key + ":") for e in checker.check_contracts(changed)))
 
     def test_no_reflection_or_extra_checkpoint_and_feedback_guards(self):
         texts = checker.load_texts()
@@ -1203,10 +1270,10 @@ class ProjectCoordinationWiringTests(unittest.TestCase):
         self.assertNotIn("### Coordination evidence checkpoint", text)
         self.assertNotIn("## Coordination reflection and guideline approval", text)
         self.assertIn("No extra evidence-only checkpoint", " ".join(text.split()))
-        for clause in ("No feedback means no write", "without a routine second exact-content approval", "never history/index/run scaffolding"):
+        for clause in ("ordinary implementation approval", "Explanation-only questions", "no feedback write nothing"):
             changed = dict(texts)
-            changed["coordination"] = re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", changed["coordination"])
-            self.assertTrue(any(e.startswith("coordination-feedback:") for e in checker.check_contracts(changed)))
+            changed["memory"] = re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", changed["memory"])
+            self.assertTrue(any(e.startswith("unified-memory-owner:") for e in checker.check_contracts(changed)))
 
 
 class StageDispatchTests(unittest.TestCase):

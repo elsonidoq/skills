@@ -1,0 +1,38 @@
+{
+  "tasks": [
+    {
+      "id": "R001",
+      "outcome": "Repair stale checkpoint compatibility regressions while preserving scoped history, approval recovery and actual checkpoint safety.",
+      "depends": [],
+      "owned_paths": ["scripts/test-task-commit-contract.py"],
+      "worker_brief": "Read docs/plans/unified-project-memory-tinyspec.md, the bounded correction approval/recovery section of docs/plans/unified-project-memory-tasks.md, the actual test and its existing checker, and the relevant approval-and-recovery/checkpoint contracts read-only. Original source A2/A3/A5/A6 remain truth. Preserve accepted ADR-0003 (docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md#decision): current launch authority, authorization-neutral work, actual gates and unchanged historical approvals. Preserve ADR-0004 (docs/decisions/ADR-0004-shared-routine-worker-permissions.md#decision): ordinary scoped fixes and small isolated local fixtures need no repeated approval, retaining data/resource/credential/external-action limits. Use the selected .pi/workflow-executor.json unchanged. This is one independently checkpointed regression repair, not a replacement for any original task or a new planning stage.",
+      "scope": "Change ONLY scripts/test-task-commit-contract.py. RuntimePolicyCompatibilityTests.test_historical_custom_and_original_source_bytes_preserved asserts the nonexistent phrase 'earliest affected producing renewal'; it was already absent at original run baseline 90d152f4822c11091fc84d31c884028d4ae6d9d3. Replace stale text expectations with assertions of the actual unchanged recovery semantics: earliest invalid gate, affected producing review/approval renewal and original source/approval origin with active/unknown-writer reconciliation. Do not change operative policy to recreate old strings. Replace the blanket immutable 'memory' tree expectation with narrowly scoped preservation that permits only the source-approved memory/MEMORY.md update and deletion of exactly the 41 legacy memory/coordination paths enumerated in the TinySpec. Allow unchanged legacy bytes before cleanup or their approved deletion after cleanup; do not allow edits/rewrites, new files, renames/relocation, wildcard exclusions or deletion outside that exact inventory. An index change is only the already-approved unified-memory/guidance change, not arbitrary data loss. Keep every other memory/custom/history path protected and retain the original historical comparison baseline 5ec94a87ffc4cc5747adaf93e290c2cf8526e594 and frozen STATE, original task/source/approval/evidence/initialization fixture assertions. Preserve substantive worker-versus-runner checkpoint responsibility, no-waiver, focused ownership, signing/hooks, interruption/recovery and unrelated staged/unstaged protection assertions and mutation sensitivity; never skip the check, swallow errors, reset the baseline to current HEAD or drop safety assertions to obtain green. Keep repair-local before/after/negative cases in this same existing test file; use bounded temporary fixtures, no new test framework. The actual repository must pass before cleanup; simulate the approved post-cleanup state in an isolated fixture now, without deleting or editing real memory. Original T007 already reruns this full suite after actual approved cleanup.",
+      "preserve_unrelated_work": "The original run unified-project-memory-sdk-ready is stopped at T002 after the inspected unchanged failed checkpoint test. T001 is committed as fb410a716dc4958854ced8d79b7db9e26ee12494. All nine original T002 paths are pre-existing dirty and remain read-only/unadopted/unstaged by this repair: docs/best_practices_spec_driven_development.md, scripts/check-planner-workflow.py, scripts/test-planner-workflow.py, skills/coordinate-implementation/SKILL.md, skills/delegating-architectural-planning/SKILL.md, skills/memory-handling/references/task-commit-contract.md, skills/planner/SKILL.md, skills/task-generation/SKILL.md and skills/tiny-spec/SKILL.md. Do not repair or commit them, even when reading their contracts for assertions. If the sole test-file target is no longer clean/unambiguously owned, stop that edit and report the exact conflict. Do not alter the original task JSON, its immutable stored input, source, approvals, executor/configuration, runtime/SQLite/state, memory or historical records. Do not stage/commit or launch children; the ordinary runner owns the focused test-file checkpoint and fresh review. No install, paid/live/provider/runtime probes, external actions, push, reload/restart, STATE/progress/evidence records or routine memory writes. Unexpected substantive scope/authority gaps stop affected work, not a silent expansion.",
+      "checks": [
+        ["env", "PYTHONDONTWRITEBYTECODE=1", "python3", "scripts/test-task-commit-contract.py"],
+        ["env", "PYTHONDONTWRITEBYTECODE=1", "python3", "scripts/check-task-commit-contract.py"],
+        ["git", "diff", "--check"]
+      ],
+      "required": [
+        {
+          "id": "R001/V1",
+          "source": "A3,A6; ADR-0003",
+          "pass": "The stale phrase assertion is replaced by meaningful checks of actual unchanged earliest-invalid-gate/affected-stage renewal, original-source/approval and active/unknown-writer semantics. Assertions still fail when those substantive protections are removed; no operative policy or original approved task semantics change.",
+          "evidence": "Full test/checker output plus reviewed sole-file diff and focused clause-removal cases in the existing test module. Static carrier sensitivity is not model-obedience or runtime proof."
+        },
+        {
+          "id": "R001/V2",
+          "source": "A2,A5",
+          "pass": "The same scoped preservation assertion accepts the actual pre-cleanup state and an isolated approved post-cleanup fixture (only approved index update and exact 41 legacy deletions). Representative unauthorized legacy modification, extra memory addition/deletion or unrelated/custom historical-byte change fails. Unchanged legacy records remain byte-preserved until deletion. Original frozen source/task/approval/evidence/STATE/fixture assertions and baseline are retained; no broad memory exemption.",
+          "evidence": "Passing positive pre/post and negative preservation cases exercising the actual repaired assertion in bounded local fixtures, exact inventory comparison against the source, and actual no-memory-write diff. The real post-cleanup rerun remains in unchanged original T007 checks, not a prerequisite to accepting this repair's isolated proof."
+        },
+        {
+          "id": "R001/V3",
+          "source": "A2,A6; ADR-0003; ADR-0004",
+          "pass": "Full python3 scripts/test-task-commit-contract.py and python3 scripts/check-task-commit-contract.py pass without skipped/waived safety checks, with git diff --check clean. The sole implementation edit/checkpoint/review scope is scripts/test-task-commit-contract.py; nine T002 dirty paths and all other pre-existing content remain byte-identical and unstaged by this repair. Existing runner checkpoint and fresh review are retained; original run's full-range final review includes this repair after resume.",
+          "evidence": "Actual command exits/output, sole-file diff and runner focused checkpoint/review result, protected dirty-path comparison in existing return. No separate evidence artifact or runtime-state modification. A failure remains a failure and is diagnosed within scope or returned precisely."
+        }
+      ]
+    }
+  ]
+}

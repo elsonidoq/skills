@@ -2,7 +2,7 @@
 
 Producer: planner / TinySpec direct adapter. Owner-approved; accepted with the explicitly approved T004/V3 preservation-proof limitation.
 Source: [TinySpec](comparative-routing-learning-tinyspec.md), A1–A7.
-Approval/routing/checkpoints: [run summary](../../memory/coordination/evidence/2026-10-09-comparative-routing-learning/SUMMARY.md).
+Approval/routing/checkpoints: [run summary](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-09-comparative-routing-learning/SUMMARY.md).
 
 ## Shared bounds and execution
 

@@ -19,7 +19,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Approved requirement/design and acceptance criteria | Existing subject-specific plan and task artifacts linked below; do not create competing owners |
 | Consequential decision records and accepted decision constraints | [Decision index](decisions/index.md) owns this repository's ADRs; [Save ADR](../skills/save-adr/SKILL.md) preserves decision status, provenance and supersession |
 | Historical model-routing research and its applicability limits | [Model Family Routing Research](../specs/001-model-family-routing/research.md) and [Batch Routing Contracts Research](../specs/002-batch-routing-contracts/research.md) remain discoverable historical records; they are not current assignment policy. |
-| Project-local explicit feedback guidance and selective history | [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md); actual guidelines/evidence stay in each project-local store; this repository uses `memory/coordination/` |
+| Project-local technical gotchas and explicit future-directed owner guidance | [Memory Handling](../skills/memory-handling/SKILL.md); one associated project index carries both kinds with selective retrieval and explicit-feedback authority |
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Context-first implementation recovery | [Coordinator recovery contract](../skills/coordinate-implementation/SKILL.md#recover-context); summary/recent context then selective artifact/Git/check/runtime reconstruction, no automatic STATE writes |
 | Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
@@ -27,17 +27,16 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Current task progress, historical SQLite and SDK interfaces | [Runtime schema owner](coordinate-implementation-schema.md) |
 | Local read-only workflow monitor package preparation, launch, rollback, correction lookup, and HTTP boundary | [Workflow monitor README](../workflow_monitor/README.md) |
 
-This repository's marked [Coherence adoption contract](../AGENTS.md) associates its
-[gotcha-memory index](../memory/MEMORY.md) at `memory/`; it currently records no gotchas.
-Coordination memory remains a separate project-local explicit-feedback store at
-`memory/coordination/`; consult relevant existing guidance without auto-initialization. No
-default suite-level database is created by adoption. The executable workflow has a
+This repository's marked [Coherence adoption contract](../AGENTS.md) associates its single
+[project-memory index](../memory/MEMORY.md) at `memory/` for gotchas and explicit
+future-directed owner guidance. Consult relevant entries selectively without auto-initialization.
+No default suite-level database is created by adoption. The executable workflow has a
 [separate schema owner](coordinate-implementation-schema.md) and thin executable interface;
 adoption never initializes execution state in unrelated projects. The legacy port retains its own boundaries.
 
 ## Project Guidance
 
-- [Project Constitution](../.specify/memory/constitution.md): Portable global assets, feedback-only coordination memory and current-content approval and pragmatic verification.
+- [Project Constitution](../.specify/memory/constitution.md): Portable global assets, unified project memory and current-content approval and pragmatic verification.
 - [Initialize Coherence](../skills/initialize-coherence/SKILL.md): Proposal-first suite adoption/memory and bounded documentation structural readiness.
 - [Save ADR](../skills/save-adr/SKILL.md): Canonical discovery, save, consultation and propagation contract for consequential decisions; before affected work, read the selected project's whole decision index and relevant accepted records. This repository's owner-selected store is [docs/decisions/](decisions/index.md); other projects retain their own routing.
 - [Planner](../skills/planner/SKILL.md): Single coordination entry point, scope assessment, user-selected depth, fresh delegated artifact creation, bounded mechanical correction, complete approval briefs and handoff.
@@ -48,7 +47,7 @@ adoption never initializes execution state in unrelated projects. The legacy por
 - [Executable implementation entry](../skills/coordinate-implementation/SKILL.md): Thin CLI/interactive facade; sequential runtime uses selected executors, actual project checks/manual gates, focused commits and independent review. [Operating](coordinate-implementation.md) and [schema](coordinate-implementation-schema.md) owners cover actual interfaces/cutover/rollback.
 - [Saved planning assignments](../skills/planner/references/model-assignments.json): Canonical owner-selected bindings for planning roles. Each assigned operation carries its exact saved binding unchanged in its bounded brief and dispatch; missing, malformed, unsupported or unavailable assignments stop only that operation for owner correction.
 - [Approval and Recovery](../skills/planner/references/approval-and-recovery.md): Current-content approvals and legacy repair checkpoints.
-- [Project Coordination Memory](../skills/memory-handling/references/project-coordination.md): Relevant existing guidance, selective history and explicit future-directed user feedback; no routine persistence or inferred learning.
+- [Memory Handling](../skills/memory-handling/SKILL.md): Relevant gotchas and explicit future-directed user guidance in one associated index; no routine persistence or inferred learning.
 - [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md): Mandatory focused checkpoints for authorized retained tasks, coordinator recovery/fresh-agent boundaries, and truthful static/Git-fixture limits.
 - [Early Risk Reduction](../skills/planner/references/early-risk-reduction.md): Selective early tested executable proofs, explicit production consumption, evidence lifetime and disproof replanning.
 - [Dependency Research](../skills/planner/references/dependency-research.md): Shared repository-first evidence, proportional reuse/version refresh, discoverable technical ownership and bounded persistence for TinySpec and Standard, including direct/standalone entry.
@@ -62,7 +61,7 @@ adoption never initializes execution state in unrelated projects. The legacy por
 - [Plans directory index](plans/index.md): Direct plan records and the nested review index.
 - [Pragmatic planning — TinySpec](plans/pragmatic-planning-tinyspec.md): outcome-oriented decomposition, proportional proof and tagged informational prototypes; exact-content approval in [review](plans/reviews/pragmatic-planning-review.md).
 - [Pragmatic planning — tasks](plans/pragmatic-planning-tasks.md): one coherent contract/regression/operative-doc delivery; A1–A6 REQUIRED evidence and gates preserved, execution-profile selection and independent final review remain required.
-- [Planner delegation and complete approval briefs — TinySpec](plans/planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs; current-content owner approval and execution evidence in [run SUMMARY](../memory/coordination/evidence/planner-delegation-approval/SUMMARY.md), independent final review accepted within documented offline limits.
+- [Planner delegation and complete approval briefs — TinySpec](plans/planner-delegation-approval-tinyspec.md): delegated creation/correction and complete scope/stage/task briefs; current-content owner approval and execution evidence in [run SUMMARY](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/planner-delegation-approval/SUMMARY.md), independent final review accepted within documented offline limits.
 - [Planner delegation and complete approval briefs — tasks](plans/planner-delegation-approval-tasks.md): three approved dependency-ordered contract, regression and documentation units; checkpoints and REQUIRED dispositions in the linked source's run evidence, not historical pending labels.
 - [Mandatory Task Commits — TinySpec](plans/mandatory-task-commits-tinyspec.md): Authoritative pragmatic checkpoint scope and A1–A7 acceptance; no runtime extension gate.
 - [Mandatory Task Commits — Tasks](plans/mandatory-task-commits-tasks.md): Separate dependency-aware task contracts derived from the TinySpec.

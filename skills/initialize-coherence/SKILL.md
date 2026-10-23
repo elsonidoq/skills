@@ -5,7 +5,7 @@ description: Use when adopting Coherence on a project, refreshing its suite cont
 
 # Initialize Coherence
 
-One onboarding entry point for suite adoption, project memory and documentation
+One onboarding entry point for suite adoption, unified project memory and documentation
 structure. Structural readiness is not substantive documentation completion.
 Follow the stages below; approvals authorize only their stated bounded writes.
 
@@ -228,14 +228,15 @@ and `compact-memory` can cite it. Record:
   needs explicit approved supersession; compatible cleanup that preserves the outcome does not.
   The actual project decision owner/index remains authoritative; this managed consultation does
   not create an unapproved store or replace a custom owner.
-- Memory: default `<project-root>/memory/` with `memory/MEMORY.md` and entry files;
-  owner-chosen paths remain valid. Follow `memory-handling` trigger-first retrieval:
-  Read the whole index first, then trigger-matching entries. Recheck after any memory
-  write. No global-store substitution.
-- Coordination: consult relevant existing compact guidance; missing store is nonblocking.
-  Only explicit future-directed user feedback authorizes bounded guidelines storage, not
-  auto-init, routine summaries/index updates, reflection or inferred lessons. Preserve local
-  path/symlink, sensitive-data and dirty/concurrent ownership protections.
+- Unified memory: default `<project-root>/memory/` with `memory/MEMORY.md` and entry
+  files; owner-chosen paths remain valid. One associated index carries verified technical
+  gotchas and explicit future-directed owner guidance. Follow `memory-handling` trigger-first
+  retrieval: Read the whole index first, then trigger-matching entries; open only relevant
+  entries and recheck after any memory write. Guidance
+  needs actual user provenance and never follows from routine approval, reflection or
+  inferred lessons. No global-store substitution, separate guideline root, auto-init or
+  routine summaries/index updates; preserve local path/symlink, sensitive-data and
+  dirty/concurrent ownership protections.
 - Executable runtime: report optional explicit isolated Python/SDK setup and approved skill/
   settings resource root. Missing dependency/auth/containment blocks execution, never silent
   provisioning or task mass conversion. Core standalone CLI has no Paseo dependency; selected
@@ -251,19 +252,23 @@ and `compact-memory` can cite it. Record:
   discovered here.
 
 Create the approved memory skeleton only for new adoption: only the header, contract
-rules, and a no-gotchas-yet placeholder—never fabricated facts.
+rules, and a no-gotchas-yet placeholder. The unified skeleton's compact rules also cover
+authorized owner guidance, with no guidance entries yet—never fabricated facts, feedback or
+guidance. Do not scaffold a separate coordination or guidelines root.
 
 For older adoption, propose a bounded refresh. Refresh only owner-approved bounds
-of the marked suite-owned section; preserve custom memory paths, docs, policy and every unrelated byte.
-Preserve the discovered decision owner/index as well. Add managed decision consultation only through a new adoption or an explicitly
-approved bounded refresh with its exact diff; do not incidentally refresh a project merely because
-`save-adr` is consulted.
+of the marked suite-owned section; preserve custom memory paths, docs, policy and every
+unrelated byte, including existing index/content. Preserve the discovered decision owner/index
+as well. Add managed
+decision consultation only through a new adoption or an explicitly approved bounded refresh
+with its exact diff; do not incidentally refresh a project merely because `save-adr` is consulted.
 For unmarked, ambiguously customized, dirty or concurrently changed sections, show
 exact bounds/diff and obtain approval; a concurrent change first stops the patch
 under Preflight. Do not globally rename references, overwrite local modifications,
-convert old artifacts or approvals, authorize substantive documentation through
-refresh, or reset the memory store. Preserve the existing memory store and index
-on refresh, never replace them with a skeleton.
+convert old artifacts or approvals, authorize substantive documentation through refresh,
+or reset the memory store. Do not implicitly migrate/delete legacy custom stores. Preserve
+the existing memory store and index on refresh, never replace them with a skeleton or create
+a separate guidelines system.
 
 For association changes, Adoption writes are limited to approved instructions/memory; do not create
 documentation directories or planning artifacts in this stage.
@@ -369,9 +374,10 @@ unrelated work or no-op checkpoint: no empty commit. Do not audit missing unrela
 SpecKit or memory structure for this result. Full-initialization validation below retains its
 applicable obligations; policy-only has no substantive documentation handoff.
 
-Re-read approved instructions and the whole memory index; then relevant trigger entries.
-Verify marked contract, associated store path, resolving index, no fabricated gotchas
-and no unrelated changes. Validate only introduced documentation paths/headings/links/references,
+Re-read approved instructions and the whole memory index; then relevant trigger entries,
+including technical-gotcha or owner-guidance entries. Verify marked contract, associated store
+path, resolving index, no fabricated gotchas and no unrelated changes; it is one associated
+index and has no fabricated guidance. Validate only introduced documentation paths/headings/links/references,
 not a repository-wide audit.
 
 Structural readiness requires approved instructions/memory association/index,

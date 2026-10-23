@@ -21,9 +21,24 @@ PATHS = {
     "requirements": "REQUIREMENTS.md",
     "risk": "skills/planner/references/early-risk-reduction.md",
     "research": "skills/planner/references/dependency-research.md",
-    "coordination": "skills/memory-handling/references/project-coordination.md",
 }
 
+
+# Final unified-memory composition inspects only active carrier files. Historical plans,
+# negative assertions, and inert fixture bytes are deliberately outside this boundary.
+UNIFIED_MEMORY_CARRIERS = (
+    ("memory", "# Memory Handling", ("One verified\nproject association and one index", "two distinct evidence kinds")),
+    ("planner", "## Discovery and capability boundary", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("tiny", "## Inputs and preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("tasks", "## Preconditions and adapters", ("verified unified", "explicit owner guidance, alongside gotchas")),
+    ("helper", "## Preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("coordinator", "# Coordinate Implementation", ("Memory Handling remains the unified owner", "execution-time feedback/routing")),
+    ("adoption", "## Adoption", ("One associated index carries verified technical\n  gotchas and explicit future-directed owner guidance", "Do not scaffold a separate coordination or guidelines root")),
+)
+SECOND_STORE_REINTRODUCTION = re.compile(
+    r"\b(?:create|discover|read|maintain|propagate|use)\b.{0,100}\b(?:separate|second|independent)\b.{0,100}\b(?:guidance|coordination|feedback|memory)\b.{0,100}\b(?:store|root|index|ledger)\b",
+    re.I,
+)
 
 
 # A5 adapter carriers: source acceptance must become a task-local gate/check/brief.
@@ -390,8 +405,8 @@ def check_contracts(texts):
     require("docs", texts["docs"], "fresh read-only investigation sub-agent", "database-schema", "empty/template shells",
             "not substantive implementation authorization", "Before calling `ask_user`",
             "explicit TinySpec/Standard choice", "dirty-target/concurrent-edit")
-    require("memory", texts["memory"], "Read the whole index first", "index → matching entries",
-            "project-associated", "Never treat a global")
+    require("memory", texts["memory"], "Read the whole associated index first", "index → matching entries",
+            "project-local path", "global agent memory")
     require("guidance", texts["guidance"], "reasoning complexity and coordination cost",
             "Always present both paths", "not a routing rule")
     reject("obsolete-sizing", texts["guidance"], "all three** conditions", "At least eight expected tasks")
@@ -492,39 +507,29 @@ def check_contracts(texts):
             "explicit bounded owner deferral through existing gates", "Record impact, allowed bounds and outstanding validation",
             "not fabricate evidence or waive unrelated gates")
     reject("research-failure", failure, "Use model recollection when required research is unavailable")
-    # Feedback-only obligations belong at actual entry boundaries, not a footer.
-    q = texts.get("coordination", "")
-    if not q:
-        errors.append("coordination-reference: required shared carrier missing or empty")
-    entries = (("planner", "## Discovery and capability boundary", "coordination-early"),
-               ("tiny", "## Inputs and preflight", "coordination-tiny"),
-               ("tasks", "## Preconditions and adapters", "coordination-tasks"),
-               ("helper", "## Preflight", "coordination-helper"),
-               ("memory", "## Project coordination feedback", "coordination-memory"))
+    # Unified-memory obligations belong at actual entry boundaries, not a footer.
+    entries = (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
+               ("tiny", "## Inputs and preflight", "unified-memory-tiny"),
+               ("tasks", "## Preconditions and adapters", "unified-memory-tasks"),
+               ("helper", "## Preflight", "unified-memory-helper"))
     for key, heading, label in entries:
         body = section(texts[key], heading)
-        require(label, body, "project coordination contract", "missing", "nonblocking",
-                "future-directed feedback" if key != "memory" else "future-directed feedback",
-                "dirty/concurrent", "no-write")
-    require("coordination-handoff", production, "both TinySpec and Standard stage briefs",
+        require(label, body, "Memory Handling", "unified index", "nonblocking",
+                "alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs",
+                "default history intake", "execution-time feedback routing")
+    require("unified-memory-owner", texts["memory"],
+            "One verified", "two distinct evidence kinds", "Owner guidance",
+            "Read the whole associated index first", "clear, explicit, future-directed user feedback",
+            "Explanation-only questions, ordinary implementation approval", "no feedback write nothing",
+            "No routine bookkeeping")
+    require("unified-memory-handoff", production, "both TinySpec and Standard stage briefs",
             "source observables/acceptance", "task dependencies, checkpoints, verification and coordinator handoff",
             "Memory cannot override source requirements or owner authority")
-    require("coordination-guidelines", section(q, "## Read existing guidance"),
-            "Missing store or STATE is nonblocking", "do not auto-initialize",
-            "source criteria → task dependencies/REQUIRED checks → worker brief", "explicit relevant need",
-            "read it first and open only matching records", "Missing relevant evidence retains uncertainty")
-    require("coordination-feedback", section(q, "## Explicit feedback only"),
-            "explicit user corrective/future-round direction", "without a routine second exact-content approval",
-            "user provenance", "No feedback means no write", "Materially ambiguous", "no-write boundary",
-            "symlink escapes", "dirty and concurrent content", "Concurrent drift", "secrets/sensitive payloads",
-            "never history/index/run scaffolding", "one focused owned-path commit")
-    require("coordination-nonpersistence", section(q, "## No routine bookkeeping"),
-            "do not authorize STATE creation/edit/removal", "history/index updates", "reflection",
-            "evidence-only commits", "No renamed durable snapshot")
-    require("coordination-routing", section(c, "## Execute and Integrate"),
+    require("unified-memory-routing", section(c, "## Execute and Integrate"),
             "No arbitrary workflow", "Do not autonomously loop expensive failed runs")
-    require("coordination-intake", section(c, "## Load and Verify"),
-            "Missing memory or STATE is nonblocking", "no automatic summaries/indexes")
+    require("unified-memory-intake", section(c, "## Load and Verify"),
+            "Missing memory or STATE is nonblocking", "no automatic summaries/indexes",
+            "execution-time feedback/routing")
     require("runtime-authority", section(c, "# Coordinate Implementation"),
             "SQLite stores ordinary", "not effect proof or execution eligibility")
     dispatch = section(p, "## Selected production and stage handoffs")
@@ -535,8 +540,8 @@ def check_contracts(texts):
             "direct delegation cannot adequately serve", "single child, convenience wrapper",
             "stage sequence alone is insufficient", "parent inspection, stage authority, approvals and reviewer independence",
             "do not authorize parallel implementation batches")
-    for key in ("planner", "tiny", "tasks", "helper", "memory", "coordinator", "coordination", "adoption"):
-        reject("coordination-unsafe-" + key, texts.get(key, ""),
+    for key in ("planner", "tiny", "tasks", "helper", "memory", "coordinator", "adoption"):
+        reject("unified-memory-unsafe-" + key, texts.get(key, ""),
                "Automatically initialize coordination memory", "Write a run SUMMARY on completion",
                "Refresh the coordination index after every task", "Reflect at blocked pause",
                "Commit evidence separately before the next task", "Infer lessons from failed runs",
@@ -749,8 +754,8 @@ VERIFICATION_CARRIERS = (
     ("verification-repair", "coordinator", "## Execute and Integrate",
      ("No arbitrary workflow", "Do not autonomously loop expensive failed runs",
       "Never blindly replay a Git commit")),
-    ("verification-feedback-owner", "coordination", "## Explicit feedback only",
-     ("Ordinary implementation approval, agent observations", "explanation-only questions", "No feedback means no write")),
+    ("verification-feedback-owner", "memory", "## Authorized writes",
+     ("ordinary implementation approval, agent\nobservations", "Explanation-only questions", "no feedback write nothing")),
 )
 
 
@@ -761,18 +766,15 @@ def load_texts(root=ROOT):
     research_path = root / PATHS["research"]
     if not research_path.is_file():
         raise ValueError("research-reference: required shared reference unavailable")
-    coordination_path = root / PATHS["coordination"]
-    if not coordination_path.is_file():
-        raise ValueError("coordination-reference: required shared reference unavailable")
     texts = {key: (root / path).read_text() for key, path in PATHS.items()}
     for key in ("planner", "tiny", "helper", "tasks"):
         destinations = re.findall(r"\[early risk reduction\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != risk_path.resolve():
             raise ValueError(f"risk-reference: {key} shared link missing/unresolvable or wrong owner")
-    for key in ("memory", "planner", "tiny", "tasks", "coordinator", "helper"):
-        destinations = re.findall(r"\[project coordination contract\]\(([^)]+)\)", texts[key])
-        if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != coordination_path.resolve():
-            raise ValueError(f"coordination-reference: {key} shared link missing/unresolvable or wrong owner")
+    for key in ("planner", "tiny", "tasks", "helper"):
+        destinations = re.findall(r"\[Memory Handling\]\(([^)]+)\)", texts[key])
+        if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != (root / PATHS["memory"]).resolve():
+            raise ValueError(f"unified-memory-reference: {key} shared link missing/unresolvable or wrong owner")
     for key in ("planner", "tiny", "helper"):
         destinations = re.findall(r"\[dependency research contract\]\(([^)]+)\)", texts[key])
         if len(destinations) != 1 or (root / PATHS[key]).parent.joinpath(destinations[0]).resolve() != research_path.resolve():
@@ -805,6 +807,47 @@ ACTIVE_EXECUTION_CONSUMERS = (
 )
 
 
+def composed_unified_memory_errors(texts):
+    """Reject active second-store behavior without scanning historical/proposal bytes."""
+    errors = []
+    for key, heading, clauses in UNIFIED_MEMORY_CARRIERS:
+        body = section(texts[key], heading)
+        for clause in clauses:
+            if " ".join(clause.split()) not in " ".join(body.split()):
+                errors.append(f"unified-memory-composition: {key} missing {clause!r}")
+        for match in SECOND_STORE_REINTRODUCTION.finditer(body):
+            prefix = body[max(0, match.start() - 20):match.start()]
+            if not re.search(r"(?:no|never|do not)\s*$", prefix, re.I):
+                errors.append(f"unified-memory-composition: {key} restores a second-store operation")
+    return errors
+
+
+def repository_memory_errors(root=ROOT):
+    """Check this repository's unified-memory association, not a project adoption engine."""
+    errors = []
+    sources = {
+        "AGENTS.md": ("its single index for verified trigger-first gotchas and explicit future-directed owner\n  guidance",),
+        "README.md": ("One verified association/index carries technical gotchas and explicit future-directed owner",),
+        "REQUIREMENTS.md": ("one approved project-memory\nassociation and index for verified technical gotchas and explicit future-directed owner guidance",),
+        "docs/index.md": ("single\n[project-memory index]", "[Memory Handling](../skills/memory-handling/SKILL.md)"),
+    }
+    for path, clauses in sources.items():
+        text = (root / path).read_text()
+        for clause in clauses:
+            if clause not in text:
+                errors.append(f"unified-memory-repository: {path} missing {clause!r}")
+    for path in ("AGENTS.md", "README.md", "REQUIREMENTS.md"):
+        if "memory/coordination/" in (root / path).read_text():
+            errors.append(f"unified-memory-repository: {path} restores an operative second-store path")
+    index = (root / "memory/MEMORY.md").read_text()
+    guidance = ("Routine task transitions/completions and steering-status updates must not wake the parent agent or require acknowledgment. "
+                "Only agent questions and terminal workflow completion, whether success or error, should trigger a parent turn.")
+    for clause in ("## Owner guidance", guidance, "Explicit current owner feedback"):
+        if clause not in index:
+            errors.append(f"unified-memory-repository: memory/MEMORY.md missing {clause!r}")
+    return errors
+
+
 def active_consumer_errors(root=ROOT):
     errors=[]
     for path in ACTIVE_EXECUTION_CONSUMERS:
@@ -828,7 +871,9 @@ def main():
             errors=active_consumer_errors(args.root)
             for path in ACTIVE_EXECUTION_CONSUMERS:print('ActiveConsumersTests: inspected '+path)
         else:
-            errors = check_contracts(load_texts(args.root))
+            texts = load_texts(args.root)
+            errors = (check_contracts(texts) + composed_unified_memory_errors(texts)
+                      + repository_memory_errors(args.root))
     except (OSError, ValueError) as exc:
         errors = [str(exc)]
     for error in errors:

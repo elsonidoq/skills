@@ -5,7 +5,7 @@ Source checkpoint: `7fc07816978c33cf4ca9ce94883d7e9e695a82e5`; factual source ev
 checkpoint: `9008b5cedd0e3008b3058d751b1e47049feb6ac8`.
 Status: prepared for combined source/task review and exact-content owner approval;
 **not implementation authorization**. Task preparation was explicitly authorized.
-[Run evidence](../../memory/coordination/evidence/2026-10-08-state-current-only/SUMMARY.md)
+[Run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-08-state-current-only/SUMMARY.md)
 records production validation/checkpoints; final approval identity belongs in its reviewed
 handoff, not a self-hash in this mutable artifact.
 
@@ -23,7 +23,7 @@ index/worktree ownership and allowed paths before writes. Required capabilities:
 inspection/editing, Git with usable commit prerequisites, Python 3 and the existing fixtures;
 no provider calls, SpecKit, Jev or installation required for this change. Use the existing
 [checkpoint contract](../../skills/memory-handling/references/task-commit-contract.md) and
-[coordination evidence contract](../../skills/memory-handling/references/project-coordination.md):
+[coordination evidence contract](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/skills/memory-handling/references/project-coordination.md):
 verified path-limited task commit, then a distinct evidence-only checkpoint in the same run
 SUMMARY/index before later work/handoff. Missing capability, permission or REQUIRED evidence
 is **NOT VERIFIED**, stopping affected acceptance. Do not weaken approved criteria.

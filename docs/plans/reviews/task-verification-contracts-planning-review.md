@@ -102,7 +102,7 @@ A1–A15 coverage and **12 REQUIRED references**. PASS: `git diff --check`; base
 identity and explicit path inventory inspected. These baseline successes establish that existing
 local execution/check infrastructure is feasible, **not** that future feature checks already pass.
 Post-write link/scope/digest/whitespace validation and focused review/evidence checkpoint SHAs
-are recorded in the [same run evidence](../../../memory/coordination/evidence/2026-10-07-task-verification-contracts/SUMMARY.md).
+are recorded in the [same run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-07-task-verification-contracts/SUMMARY.md).
 
 NOT RUN: future named implementation cases, expanded/mutated fixtures, full lint, live provider
 support/callability/obedience/performance, manual runtime user approval, stronger implementation

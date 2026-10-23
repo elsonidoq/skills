@@ -35,12 +35,10 @@ documentation owners and indexes exist.
 1. Affected authoritative documentation describes what is built now.
 2. Discovered work deliberately left unresolved has one canonical owner: `docs/open_issues.md`.
 3. For a deployed project, deploy-time work pending since the last confirmed deploy has one canonical owner.
-4. Memory contains only trigger-first gotchas not apparent from code and authoritative documentation.
+4. The one verified project memory association/index may contain verified trigger-first gotchas and explicitly authorized future owner guidance; each retains its distinct evidence and authority.
 5. The memory index remains usable.
 6. A project with a persistent database has authoritative schema documentation that describes its current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable.
-7. No automatic STATE maintenance or coordination summaries/index updates/reflection.
-   Coordination memory stores only explicit user feedback intended to change future rounds,
-   never agent-inferred lessons (including lessons disguised as gotchas).
+7. No automatic STATE maintenance, coordination summaries, routine index updates, or reflection. Only explicit future-directed user feedback may authorize guidance; never infer lessons or disguise them as gotchas.
 
 ## Safety Rules
 
@@ -100,7 +98,8 @@ during closeout.
 | Current convention, contract, invariant, module shape, API behavior, operational procedure, user-facing fact, or database schema | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
 | Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | `docs/open_issues.md`, through `track-open-issue`. |
 | Verified action required around a future deployment | The established deploy runbook, or the documented deployment-step owner when it is the local owner. |
-| Non-obvious trap, counterintuitive rationale, failed approach, or user rule that would surprise an agent who read the code and docs | The project's memory store. |
+| Verified non-obvious trap, counterintuitive rationale, or failed approach that would surprise an agent who read the code and docs | The project's memory store as a technical gotcha. |
+| Explicit future-directed user guidance | The same project's memory association/index, only under the `memory-handling` authorized-guidance rule and with user provenance. |
 
 If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, treat the verified uncertainty and its missing evidence as an investigation candidate.
 
@@ -129,13 +128,13 @@ Record a verified prerequisite even when part of its procedure is unknown. Each 
 
 For `not deployed` or `unknown`, report the state and any evidence gap. Do not create hypothetical deployment work.
 
-## Step 5: Memory and Compaction, Only When Available
+## Step 5: Unified Memory and Compaction, Only When Available
 
-Enter this step only when a verified finding routes to memory or an already-discovered project instruction requires a closeout index check. Otherwise report `not needed` without searching for a memory store.
+Enter this step only when a verified technical-gotcha finding routes to memory, explicit future-directed user feedback may authorize guidance, or an already-discovered project instruction requires a closeout index check. Otherwise report `not needed` without searching for a memory store.
 
-Apply the repository's memory/documentation distinction from its instructions. If none exists, use this rule: documentation explains current state; memory warns a future agent before an action could trigger a non-obvious problem.
+Use the same verified project association/index for both kinds. A technical gotcha remains a verified, non-obvious, action-triggered warning with trigger, consequence, and evidence; explicit owner guidance retains its actual user provenance and concise future trigger/action and need not meet the gotcha-surprise test. No feedback means no guidance write. Do not infer guidance from implementation work, observations, failed runs, explanations, or closeout reflection.
 
-Discover the memory store and index before writing, following the `memory-handling` skill's discovery rule. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project; a store named by the `initialize-coherence` contract section is valid association. A global memory command, `~/.pi/...` store, or similarly named index is not evidence of association. Update a related memory rather than duplicating it. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
+Discover the memory store and index before writing, following the `memory-handling` skill's discovery rule. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project; a store named by the `initialize-coherence` contract section is valid association. A global memory command, `~/.pi/...` store, or similarly named index is not evidence of association. Read the whole index first, selectively open relevant entries, update or reuse a related entry rather than duplicating it, and recheck after an actual write. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
 
 After all memory writes, check any threshold or hook explicitly configured for that verified project memory. If no
 threshold is breached, report `not needed`. If one is breached, use a compactor only when its definition explicitly
@@ -144,18 +143,19 @@ has been inspected for dirty-target and concurrent-edit protection. Record its p
 and compare them immediately before invoking it. When no such compactor is available, report `compaction needed`
 with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
 
-## Step 6: Explicit Feedback Only
+## Step 6: Explicit Guidance Authority Only
 
 Do not create, edit or remove STATE during closeout; leave custom/concurrent content untouched.
-Do not create routine coordination summaries, refresh indexes, reflect or commit evidence-only
-records. Only explicit future-directed user feedback follows the
-[project coordination contract](../memory-handling/references/project-coordination.md): clear
-bounded feedback may authorize a project-local guideline write without a routine second gate;
-ambiguous feedback asks, explanation-only/no feedback/no-write boundaries write nothing.
-Keep local path/symlink, sensitive-data and dirty/concurrent ownership protections.
-Missing coordination store or STATE is nonblocking. Recovery starts with available summary/
-recent context and selective authoritative artifact/Git/check/runtime reconstruction; reconcile
-active/unknown children before replacement, never guess completion or blindly retry.
+Do not create routine summaries, refresh indexes, reflect, or commit evidence-only records.
+Apply the `memory-handling` skill's unified guidance authority: clear bounded explicit
+future-directed user feedback may authorize a project-local guidance entry in the verified
+association/index without a routine second gate; ambiguity asks before writing, and
+explanation-only, no-feedback, or explicit no-write boundaries write nothing. Keep guidance
+separate from technical-gotcha evidence even though both share the index. Keep local
+path/symlink, sensitive-data and dirty/concurrent ownership protections. Missing optional
+memory storage or STATE is nonblocking. Recovery starts with available summary/recent context
+and selective authoritative artifact/Git/check/runtime reconstruction; reconcile active/unknown
+children before replacement, never guess completion or blindly retry.
 
 ## Step 7: Validate Only What You Changed
 
@@ -178,7 +178,7 @@ State separately whether the session's work is implemented, verified, and deploy
 - unresolved items and the issue-tracking result
 - deployment state and prerequisites added, or why none were added
 - memories written or updated and compaction status
-- any explicitly authorized feedback write, or `not needed`; STATE remains untouched
+- any explicitly authorized guidance write, or `not needed`; STATE remains untouched
 - changed-reference validation
 - deliberately skipped candidates, uncertain session attribution, and unverifiable claims
 

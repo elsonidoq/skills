@@ -267,6 +267,59 @@ class BoundedChainTests(ProjectTest):
             self.assertEqual(fixer_calls[1]['correction_chain'], [call['invocation_id'] for call in fixer_calls])
             self.assertTrue(all(call['fixing_round'] == 1 for call in fixer_calls))
 
+    def test_reviewer_context_and_model_survive_repair_and_check_correction(self):
+        project, calls, instances = self.project, [], []
+        case = self
+        class Adapter:
+            def __init__(self, _project, executor, **_kwargs):
+                self.executor = executor
+                self.saved_session = None
+                instances.append(self)
+            def prompt(self, prompt, **kwargs):
+                calls.append((self, kwargs))
+                if kwargs.get('read_only'):
+                    case.assertIsNone(self.saved_session)  # Both reviews start fresh.
+                    if 'owned.txt' not in project.joinpath('owned.txt').read_text():
+                        self.saved_session = {'id': 'review-context', 'file': '/private/review.jsonl',
+                                              'compatibility': {'readOnly': True}}
+                        return '{"approved":false,"findings":["owned.txt:1 - defect"]}'
+                    return '{"approved":true,"findings":[]}'
+                if 'Actionable findings:' in prompt or 'Actual failed attempt:' in prompt:
+                    case.assertIn('Current execution authority:', prompt)
+                    case.assertIn('Historical planning-only', prompt)
+                    case.assertIn('explicit manual gates', prompt)
+                    case.assertIn('Routine authority:', prompt)
+                    case.assertIn('never authorizes global installs', prompt)
+                if 'Actionable findings:' in prompt:
+                    case.assertEqual(self.saved_session['id'], 'review-context')
+                    case.assertTrue(kwargs['review_repair'])
+                    case.assertIn('correction plan', prompt)
+                    self.saved_session = {**self.saved_session, 'compatibility': {'readOnly': False}}
+                    kwargs['claim']('owned.txt')
+                    project.joinpath('owned.txt').write_text('broken\n')
+                elif 'Actual failed attempt:' in prompt:
+                    case.assertNotIn('review_repair', kwargs)
+                    project.joinpath('owned.txt').write_text('owned.txt fixed\n')
+                else:
+                    kwargs['claim']('owned.txt')
+                    project.joinpath('owned.txt').write_text('initial\n')
+                return 'fixture'
+        contract = admit([{'id': 'task', 'description': 'fixture', 'owned_paths': ['owned.txt'],
+                           'checks': [['/bin/sh', '-c', '! grep -q broken owned.txt']]}])
+        with Authority(project) as owner:
+            result = Engine(owner, 'warm-review', contract, EXECUTOR, adapter=Adapter).invoke()
+            public = owner.store.review_chain('warm-review')
+            private = owner.store.review_chain('warm-review', private=True)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(len(instances), 3)  # Worker, reviewer/repairer, final reviewer.
+        self.assertIs(calls[1][0], calls[2][0])
+        self.assertIs(calls[2][0], calls[3][0])
+        self.assertEqual(calls[2][0].executor, EXECUTOR['reviewer'])
+        self.assertIsNot(calls[1][0], calls[4][0])
+        self.assertTrue(calls[4][1]['read_only'])
+        self.assertNotIn('saved_session', public['executions'][0]['references'])
+        self.assertEqual(private['executions'][0]['references']['saved_session']['id'], 'review-context')
+
     def test_final_rejection_stops_after_two_reviews_and_one_fixer(self):
         class Adapter:
             reviews = 0

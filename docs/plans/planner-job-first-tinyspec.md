@@ -5,7 +5,7 @@
 The owner reports that agents obsess over bookkeeping instead of advancing planner
 stages. The owner selected TinySpec and approved the five-bullet task scope in this
 session. Exact combined artifact approval and routing belong to
-[run evidence](../../memory/coordination/evidence/2026-10-08-planner-job-first/SUMMARY.md).
+[run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-08-planner-job-first/SUMMARY.md).
 
 ## Scope and approach
 

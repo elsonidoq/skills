@@ -9,7 +9,7 @@ unchanged. No child delegation. Read AGENTS, constitution, source and tasks:
   `f5d89ff5dd4b4bf26628c05e21150213f3a8c07c8c975f61499d92233fbdd568`.
 - [Approved tasks](comparative-routing-learning-tasks.md), initial SHA256
   `f03394b8695893dcb229b00d8e59034e14b56f8538ac1f213ef82b3befc6a8a5`.
-- [Approval/routing/evidence](../../memory/coordination/evidence/2026-10-09-comparative-routing-learning/SUMMARY.md).
+- [Approval/routing/evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-09-comparative-routing-learning/SUMMARY.md).
 
 Planner/TinySpec origin; explicit combined approval and batch/reviewer approval obtained
 through ask_user. All four tasks authorized, but this invocation owns only T001/T002.

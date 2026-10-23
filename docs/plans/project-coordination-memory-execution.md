@@ -3,7 +3,7 @@
 Historical record of the initial optional-store implementation. The owner's subsequent
 mandatory initialization correction supersedes optional setup and handoff-only persistence.
 Current source/authority, actual initialization commit and correction evidence are in
-[`memory/coordination/evidence/2026-10-05-mandatory-initialization/SUMMARY.md`](../../memory/coordination/evidence/2026-10-05-mandatory-initialization/SUMMARY.md).
+[`memory/coordination/evidence/2026-10-05-mandatory-initialization/SUMMARY.md`](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-05-mandatory-initialization/SUMMARY.md).
 
 ## Current-content combined approval
 

@@ -18,10 +18,11 @@ def section(text, heading):
 GUARDS = {
     'Load and Verify': ('exactly six linter checks', 'reserves nothing', 'Optional context stays intact'),
     'Prepare Approved Execution': ('owner-selected executor/effort', 'without silent substitutions'),
-    'Execute and Integrate': ('Never adopt existing dirty files', 'normal Git hooks/signing',
+    'Execute and Integrate': ('It never adopts or commits unknown work',
+                              'preserve pre-existing/unknown bytes', 'normal Git hooks/signing',
                               'No extra evidence-only checkpoint', 'no empty commit'),
     'Review and Acceptance': ('fresh independent reviewer context', 'only read/search tools',
-                              'Concrete findings stop acceptance'),
+                              'Review 2 rejection stops honestly'),
     'Runner-configured worker role': ('Do NOT launch this CLI', 'stage/commit or manage workflow state',
                                       'review read-only'),
 }

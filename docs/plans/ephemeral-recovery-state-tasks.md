@@ -2,7 +2,7 @@
 
 Direct TinySpec adapter; [source](ephemeral-recovery-state-tinyspec.md), A1–A6;
 source checkpoint ca2d2af. Preparation authorized; implementation pending combined approval.
-[Run evidence](../../memory/coordination/evidence/2026-10-08-ephemeral-recovery-state/SUMMARY.md)
+[Run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-08-ephemeral-recovery-state/SUMMARY.md)
 records review, approval identities and checkpoints.
 
 ## Shared context

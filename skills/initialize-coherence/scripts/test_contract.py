@@ -207,6 +207,36 @@ def stage(text, name):
     return text[start:] if end < 0 else text[start:end]
 
 
+SECOND_STORE_OPERATION = re.compile(
+    r"\b(?:create|discover|read|maintain|propagate|use)\b.{0,100}\b(?:separate|second|independent)\b.{0,100}\b(?:guidance|coordination|feedback|memory)\b.{0,100}\b(?:store|root|index|ledger)\b",
+    re.I,
+)
+
+
+def unified_adoption_errors(text):
+    """Static unified-memory adoption guard; not an adoption runner."""
+    raw_adoption = stage(text, "Adoption")
+    adoption = normalized(raw_adoption)
+    errors = []
+    for phrase in (
+        "one associated index carries verified technical gotchas and explicit future-directed owner guidance",
+        "read the whole index first, then trigger-matching entries",
+        "do not scaffold a separate coordination or guidelines root",
+        "never replace them with a skeleton or create a separate guidelines system",
+        "implicitly migrate/delete legacy custom stores",
+    ):
+        if phrase not in adoption:
+            errors.append(f"unified-adoption: missing {phrase!r}")
+    if re.search(r"\bcreate guidelines\.md\b|\bpropagate guidance to guidelines\.md\b", adoption):
+        errors.append("unified-adoption-separate-guidelines: prohibited second-store setup or propagation")
+    for match in SECOND_STORE_OPERATION.finditer(raw_adoption):
+        prefix = raw_adoption[max(0, match.start() - 20):match.start()]
+        if not re.search(r"(?:no|never|do not)\s*$", prefix, re.I):
+            errors.append("unified-adoption-separate-guidelines: prohibited second-store setup or propagation")
+            break
+    return errors
+
+
 def check_contract(text):
     errors = []
     if re.findall(r"^## (.+)$", text, re.M) != list(STAGES):
@@ -326,7 +356,7 @@ class CandidateTests(unittest.TestCase):
                 self.assertNotIn(retired, text, path)
             self.assertIn("initialize-coherence", text, path)
         memory = normalized((ROOT / "skills/memory-handling/SKILL.md").read_text())
-        for phrase in ("memory adoption: missing — run initialize-coherence", "do not create, guess, or modify a global store", "read the whole index first", "index → matching entries"):
+        for phrase in ("memory adoption: missing — run initialize-coherence", "never guess a path or use global agent memory as a fallback", "read the whole associated index first", "index → matching entries"):
             self.assertIn(phrase, memory)
         compact = normalized((ROOT / "skills/compact-memory/SKILL.md").read_text())
         for phrase in ("no verified project memory store", "do not create a memory store or modify global memory", "stop on a concurrent change", "fresh, independent backup"):
@@ -361,10 +391,13 @@ class CandidateTests(unittest.TestCase):
         gotchas = (ROOT / "memory/MEMORY.md").read_text()
         self.assertIn("<!-- coherence-suite-contract:start -->", agents)
         self.assertIn("associated store is `memory/`", normalized(agents))
-        self.assertIn("No project gotchas recorded yet.", gotchas)
-        self.assertIn("[gotcha-memory index](../memory/MEMORY.md)", index)
+        self.assertIn("## Owner guidance", gotchas)
+        self.assertIn("Explicit current owner feedback", gotchas)
+        self.assertIn("[project-memory index](../memory/MEMORY.md)", index)
+        self.assertIn("single", normalized(index))
+        self.assertIn("Memory Handling", index)
+        self.assertNotIn("coordination memory remains a separate", normalized(index))
         self.assertIn("[Plans directory index](plans/index.md)", index)
-        self.assertIn("coordination memory remains a separate", normalized(index))
         self.assertIn("no default suite-level database is created by adoption", normalized(index))
         self.assertIn("[Runtime schema owner](coordinate-implementation-schema.md)", index)
         self.assertIn("thin executable interface", normalized(index))
@@ -508,6 +541,82 @@ class DecisionConsultationTests(unittest.TestCase):
                 pattern = r"\s+".join(re.escape(word) for word in phrase.split())
                 changed = text.replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
                 self.assertTrue(any(error.startswith(diagnostic + ":") for error in check_contract(changed)))
+
+
+class UnifiedMemoryAdoptionTests(unittest.TestCase):
+    """Authored unified-memory outputs, not a generator or live adoption simulation."""
+    def assert_memory_outputs(self, row):
+        index = row["memory_index"]
+        self.assertEqual(index, "custom/gotchas/MEMORY.md")
+        self.assertIn(index, row["after"])
+        self.assertNotIn("GUIDELINES.md", row["after"])
+        before, after = row["files_before"], row["files_after"]
+        self.assertIn(index, after, "authored custom index output is missing")
+        # New adoption adds only its approved index; refresh writes no memory files.
+        self.assertEqual(set(after), set(before) | {index}, "unexpected second store or file")
+        for path, content in before.items():
+            self.assertEqual(after[path].encode(), content.encode(), f"custom bytes lost: {path}")
+        body = after[index]
+        for heading in ("## Technical gotchas", "## Owner guidance"):
+            self.assertIn(heading, body)
+        rules = normalized(body)
+        for clause in ("read the whole index first", "only relevant entries", "recheck after writes",
+                       "verified technical gotchas", "explicit future-directed owner guidance",
+                       "user provenance", "only explicit user feedback authorizes guidance"):
+            self.assertIn(clause, rules)
+        for target in re.findall(r"\]\(([^)]+)\)", body):
+            self.assertIn(str(Path(index).parent / target), after, "unresolvable selective entry")
+        if index not in before:
+            # Skeletons describe authority without fabricating entries or owner feedback.
+            self.assertIn("No gotchas yet.", body)
+            self.assertIn("No guidance entries yet.", body)
+            self.assertNotRegex(body, r"(?m)^- \*\*(?:Trigger|Action|Provenance):")
+
+    def test_new_and_refresh_outputs_use_one_custom_association(self):
+        rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
+        self.assertEqual(unified_adoption_errors(SKILL.read_text()), [])
+        for row in rows:
+            if row["route"] == "full":
+                with self.subTest(case=row["name"]):
+                    self.assert_memory_outputs(row)
+
+    def test_authored_memory_outputs_reject_content_loss_and_second_store(self):
+        rows = json.loads((HERE / "fixtures/workflow-ownership-outputs.json").read_text())
+        for row in rows:
+            if row["route"] != "full":
+                continue
+            index = row["memory_index"]
+            mutations = {
+                "guidance omitted": lambda files: files.__setitem__(index, files[index].split("## Owner guidance")[0]),
+                "guidance kind omitted": lambda files: files.__setitem__(index, files[index].replace("explicit future-directed owner guidance", "inferred lessons")),
+                "guidance authority omitted": lambda files: files.__setitem__(index, files[index].replace("Only explicit user feedback authorizes guidance", "Routine approval authorizes guidance")),
+                "index missing": lambda files: files.pop(index),
+                "second store initialized": lambda files: files.__setitem__("custom/feedback/INDEX.md", "# Guidance\n"),
+            }
+            if index in row["files_before"]:
+                mutations.update({
+                    "index replaced by skeleton": lambda files: files.__setitem__(index, rows[0]["files_after"][index]),
+                    "custom index content lost": lambda files: files.__setitem__(index, files[index].replace("Local note: preserve export aliases.\n", "")),
+                    "selective entry lost": lambda files: files.__setitem__("custom/gotchas/cli.md", ""),
+                })
+            for name, mutate in mutations.items():
+                with self.subTest(case=row["name"], mutation=name):
+                    changed = dict(row, files_after=dict(row["files_after"]))
+                    mutate(changed["files_after"])
+                    with self.assertRaises(AssertionError):
+                        self.assert_memory_outputs(changed)
+
+    def test_second_store_setup_or_propagation_has_named_diagnostic(self):
+        source = SKILL.read_text()
+        self.assertEqual(unified_adoption_errors(source), [])
+        for mutation in ("Create GUIDELINES.md for owner guidance.",
+                         "Propagate guidance to GUIDELINES.md.",
+                         "Propagate an independent coordination guidance store."):
+            with self.subTest(mutation=mutation):
+                changed = source.replace(stage(source, "Adoption"),
+                                         stage(source, "Adoption") + "\n" + mutation, 1)
+                self.assertIn("unified-adoption-separate-guidelines: prohibited second-store setup or propagation",
+                              unified_adoption_errors(changed))
 
 
 class WorkflowOwnershipOutputTests(unittest.TestCase):

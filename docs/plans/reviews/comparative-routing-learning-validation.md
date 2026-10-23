@@ -1,7 +1,7 @@
 # Comparative routing and actionable learning — bounded validation
 
 T003 evidence for [source](../comparative-routing-learning-tinyspec.md), [tasks](../comparative-routing-learning-tasks.md)
-and [run record](../../../memory/coordination/evidence/2026-10-09-comparative-routing-learning/SUMMARY.md).
+and [run record](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-09-comparative-routing-learning/SUMMARY.md).
 Scope comparison: baseline `ff74a9e111d325ccc823cbbe6b93b408b3064077`; B1 producer commits
 `32227744d30d875dd2703c401093619c59cbcc52` and `2e7acbd9a4a2171dee352cf3d4cf53ff99fd2d67`;
 source digest and normalized task contract remained unchanged (completed checkbox only).

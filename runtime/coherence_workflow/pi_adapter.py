@@ -198,7 +198,7 @@ class PiAdapter:
             raise Blocked('steering target is unavailable: ' + str(exc)) from None
 
     def prompt(self, prompt, *, claim=None, command=None, cleanup=None, read_only=False, saved_session=None,
-               reuse_key=None, steering=None):
+               reuse_key=None, steering=None, review_repair=False):
         """Run one prompt, optionally reopening only a runner-provided private session."""
         self.last_interval = None
         self.last_observation = None
@@ -211,6 +211,8 @@ class PiAdapter:
                    # Explicit opt-in keeps an updated host compatible with
                    # controllers that predate this transport record.
                    'sessionObservations': True}
+        if review_repair:
+            request['reviewRepair'] = True
         if steering is not None:
             # This is deliberately independent from sessionObservations: only
             # this adapter opts into the multiplexed callback/control protocol.

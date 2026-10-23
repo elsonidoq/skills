@@ -61,7 +61,7 @@ Explicit T001→T002→T003 dependencies are valid; implicit producers, verified
 - **PASS:** `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py` — static instructions only.
 - **PASS:** `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py` — **89 tests**, existing static/fixture maintenance checks; not behavioral obedience.
 - **PASS (rerun on correction):** task-order, planner static checker and **89 planner tests** at current source/task revision and same local Python/Git environment; prior static output is not substituted for changed artifact validation. Focused inline local source/task links, A1–A6 and nine stable unique REQUIRED references/current digest checks; manual traceability/exclusions/implicit dependencies/normative-consumer/weakest-oracle/gate/feasibility review; `git diff --check` at each retained production/evidence boundary.
-- Final review/index link/digest/path inventory validation and focused checkpoints are retained in the [run evidence](../../../memory/coordination/evidence/2026-10-07-coordinator-dispatch-readiness/SUMMARY.md).
+- Final review/index link/digest/path inventory validation and focused checkpoints are retained in the [run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-07-coordinator-dispatch-readiness/SUMMARY.md).
 - **NOT RUN:** future implementation cases/suites/lint, fresh independent implementation review, runtime/provider/live behavior/callability canary, elapsed-time/performance measurement. Neither unavailable observations nor planned checks are claimed PASS. No unrelated failure to repair.
 
 ## Parent combined-approval brief (proposed, not asked)
