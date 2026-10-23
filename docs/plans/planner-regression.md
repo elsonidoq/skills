@@ -44,6 +44,36 @@ Limits: these are offline contract/resolver checks and manual source/config insp
 They do not prove model obedience, live binding availability, sandboxing, or the later
 stage/correction/approval behavior consumed by T002.
 
+## T002 Standard `spec_review` integration
+
+`python3 scripts/check-planner-workflow.py` and
+`python3 scripts/test-planner-workflow.py` exercise the actual maintained Standard-stage
+carrier and existing checker/test suite. The stage inventory is now
+`spec_create → ordinary clarification/parent inspection → spec_review → answer
+incorporation → existing specification approval → plan_create → tasks_create →
+independent overall_review/final approval`. Focused mutations reject deletion or folding
+of the operational `spec_review` carrier even with a summary retained, reordering,
+approval bypass, writable/nonfresh review wording, wrong saved operation/fallback,
+parent repair, automatic rereview, and lost producer-correction/recovery rules. The
+static trace is explicitly labelled carrier/order evidence only. TinySpec, the later
+independent review, both Standard approvals, authorization-neutral tasks, and the
+ordinary isolated-check boundaries remain covered by the existing suite.
+
+**A–D behavioral acceptance: NOT RUN / UNAVAILABLE.** Pi 0.87.1 is installed and the
+current harness exposes `ask_user`, but no paid application/test API use is approved for
+this run. The required fresh exact-bound reviewer invocation, actual source-producer
+correction, real owner answers/cancellation, and real approval therefore were not run.
+A saved assignment/configuration name is not evidence that the exact provider/profile,
+read-only tools, async interface, reviewer binding, or producer interface is callable;
+no substitute, fabricated answer, simulated approval, or model call was used. A future
+separately authorized isolated run must reverify those interfaces, capture actual
+source/spec/context input identity and before/after spec comparison, run authored A/B/C
+cases (telemetry purpose, batch failure alternatives, and explicit zero/context-answered
+selectivity), and observe D's one-at-a-time dialogue, producer Q&A correction,
+approval-before-plan, zero skip, and material cancellation stop. The candidate historical
+pre-correction gap/source pair remains **NOT VERIFIED**; no historical evaluator input
+was used.
+
 Fixture tasks demonstrate shared syntax only: they lack real source/review/authorization
 and must not be executed. Existing dependency-parser tests cover IDs, gaps, duplicates,
 self/forward/missing prerequisites and story continuity. Manual/semantic review still checks

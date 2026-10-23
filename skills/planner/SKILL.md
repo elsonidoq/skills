@@ -426,12 +426,43 @@ valid settled principles. Verify the saved exact stage binding and independent r
    are chosen; carry evidence-backed constraints/checks, not invented dependency rules.
    Reflect settled
    decisions. Clarify only when requested or required by the detected workflow;
-   mechanical gaps are resolved by the delegate, material choices go to the owner. Inspect
-   specification, then provide a bullet-list executive brief including clarification
-   results BEFORE
-   `ask_user`. Durably record current specification approval before `plan_create`, then
-   immediately continue to `plan_create` without another continuation question.
-2. **`plan_create` — saved assignment:** resolve `standard-plan-direct` for a direct pass or
+   mechanical gaps are resolved by the delegate, material choices go to the owner. Finish
+   after that ordinary clarification and parent inspection of the exact current specification:
+   do not approve or plan here.
+2. **`spec_review` — independent saved reviewer assignment:** resolve
+   `standard-spec-review` and verify the exact saved provider/model:effort is actually
+   permitted and callable, with the installed async delegation interface, a fresh context,
+   the reviewer’s read-only tool/profile, and source-producer and `ask_user` capabilities.
+   Package/profile names alone are insufficient. A missing, unsupported, or unavailable
+   exact binding stops only this review with the resolver’s focused owner correction; do
+   not substitute, route to another reviewer, or fall back.
+
+   Dispatch exactly that saved binding unchanged, with `async: true`, and bind its report
+   to the runtime invocation. Give the fresh independent reviewer only the request, exact
+   current specification path/content identity, relevant context/constraints/accepted
+   decisions/memory, and [the canonical review prompt](references/spec-review.md). Do not
+   include producer rationale, transcript, or unrelated history. Require findings only;
+   no writes, implementation, external action, or delegation. Parent compares the exact
+   specification before and after review and inspects the returned report; reviewer and
+   parent never substantively repair the specification.
+
+   For each unresolved material finding, parent asks one concrete `ask_user` question at
+   a time, retaining its scenario, alternatives, and consequences; discard queued
+   questions made unnecessary by earlier answers. An unanswered or cancelled material
+   answer stops affected planning with no inferred default. Send actual answers to the
+   originating `standard-spec-create` producer: resume a suitable context or dispatch a
+   fresh bounded correction with that same producing assignment. The producer updates
+   relevant requirements/scenarios/acceptance and existing Clarifications/session
+   `Q: … → A: …` convention, removes contradictions, validates and checkpoints; parent
+   inspects the returned change. Do not rerun ordinary clarification taxonomy for answered
+   questions or automatically rereview. Explicit owner stops/deferrals use existing gates
+   with the unresolved impact; they never release a material dependency automatically.
+
+   With explicit zero findings, skip question interaction. After zero or inspected producer
+   incorporation, present the existing current-specification executive brief and `ask_user`
+   approval gate. Durably record that approval before `plan_create`, then immediately
+   continue to `plan_create` without a second continuation or review approval.
+3. **`plan_create` — saved assignment:** resolve `standard-plan-direct` for a direct pass or
    `standard-plan-helper` for the helper pass. Use that resolved exact binding unchanged for the
    entire direct/helper pass and its brief/dispatch. An unavailable or unsupported saved binding
    stops only this stage with its focused owner correction question; no substitution, default, or
@@ -460,7 +491,7 @@ valid settled principles. Verify the saved exact stage binding and independent r
    Any approved specification content change requires renewed specification approval
    with a new executive brief in short bullets before leaving this stage. After renewal,
    continue the affected stage immediately. Material choices remain gates.
-3. **`tasks_create` — saved assignment:** resolve `standard-tasks-create` and delegate a separate fresh bounded-context
+4. **`tasks_create` — saved assignment:** resolve `standard-tasks-create` and delegate a separate fresh bounded-context
    task producer to follow observed SpecKit tasks capability under
    `task-generation`. Specification is requirements truth; approved plan is derived sequencing
    only. No SDD forwarding/rereading as direct requirements input; governing instructions/
@@ -474,7 +505,7 @@ valid settled principles. Verify the saved exact stage binding and independent r
    and its correction route; independent review and final approval remain required.
    Include documentation, acceptance, shared context and producer checks without breaking
    prerequisite order or story acceptance boundaries.
-4. **`overall_review` — independent saved reviewer assignment:** resolve
+5. **`overall_review` — independent saved reviewer assignment:** resolve
    `standard-overall-review` (or `standard-overall-rereview` for a fresh rereview), then follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
    coverage, dependencies, verification item completeness, documentation, integration and approvals.

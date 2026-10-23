@@ -274,7 +274,7 @@ def check_contracts(texts):
             "standalone\n   TinySpec approval", "Record\n   fixes",
             "brief bullet-list executive summary", "immediately proceed to handoff")
     std = section(p, "### Standard path")
-    positions = [std.find(f"**`{s}`") for s in ("spec_create", "plan_create", "tasks_create", "overall_review")]
+    positions = [std.find(f"**`{s}`") for s in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review")]
     if -1 in positions or positions != sorted(positions):
         errors.append("standard-order: missing/reordered operational stages")
     require("standard-preflight", std, "constitution", "template-only", "owner-derived",
@@ -282,8 +282,27 @@ def check_contracts(texts):
             "never install, simulate slash commands", "Required absent\ncapability stops")
     spec = stage(std, "spec_create")
     require("spec", spec, "— saved assignment",  "Clarify only when requested or required",
-            "BEFORE\n   `ask_user`", "specification approval before `plan_create`",
-            "bullet-list executive brief", "immediately continue to `plan_create`")
+            "ordinary clarification and parent inspection", "do not approve or plan here")
+    spec_review = stage(std, "spec_review")
+    require("spec-review", spec_review,
+            "independent saved reviewer assignment", "standard-spec-review",
+            "exact saved provider/model:effort", "actually permitted and callable",
+            "installed async delegation interface", "fresh context", "read-only tool/profile",
+            "source-producer and `ask_user` capabilities", "Package/profile names alone are insufficient",
+            "stops only this review", "do not substitute, route to another reviewer, or fall back",
+            "Dispatch exactly that saved binding unchanged", "async: true",
+            "bind its report to the runtime invocation", "exact\n   current specification path/content identity",
+            "Do not\n   include producer rationale, transcript, or unrelated history",
+            "no writes, implementation, external action, or delegation", "before and after review",
+            "reviewer and\n   parent never substantively repair", "one concrete `ask_user` question at\n   a time",
+            "scenario, alternatives, and consequences", "discard queued", "unanswered or cancelled material",
+            "no inferred default", "originating `standard-spec-create` producer", "same producing assignment",
+            "requirements/scenarios/acceptance", "Q: … → A: …", "removes contradictions, validates and checkpoints",
+            "Do not rerun ordinary clarification taxonomy", "automatically rereview", "unresolved impact",
+            "never release a material dependency automatically", "explicit zero findings", "skip question interaction",
+            "existing current-specification executive brief and `ask_user`\n   approval gate",
+            "Durably record that approval before `plan_create`", "immediately continue to `plan_create`",
+            "without a second continuation or review approval")
     plan = stage(std, "plan_create")
     require("plan", plan, "— saved assignment",  "same-session pass", "review/fix the specification",
             "create one plan", "review/fix the produced plan", "entire pass",
@@ -337,6 +356,14 @@ def check_contracts(texts):
             "No universal\ntotal-bullet cap", "Every actual ordered plan stage separately",
             "Every actual task ID separately", "name the next", "immediately continue to the next authorized phase",
             "same session unless the owner explicitly requested planning-only")
+    require("spec-review-recovery", a,
+            "Standard spec ready", "distinct `spec_review`", "do not approve or plan yet",
+            "Standard spec review returns zero", "Skip question interaction", "existing specification approval",
+            "Standard spec review has findings", "Ask one material question at a time",
+            "originating producer incorporates answered decisions", "Source/spec/context drift invalidates only",
+            "earliest affected boundary", "originating source/spec/context, alternatives",
+            "scenario, consequences and owner rationale", "no recommendation, automatic deferral",
+            "clarification-taxonomy rerun, default, or\nrereview releases it")
     require("legacy", a, "inside tasks", "approved spec awaiting plan", "earliest affected Standard",
             "Other documented producer", "Ambiguous/conflicting origin", "retired skills",
             "Missing runtime capabilities")
@@ -714,6 +741,7 @@ DELEGATION_CARRIERS = (
     ("delegate-tiny-tasks", "planner", "item:2. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/substantive correction or inline/local fallback")),
     ("delegate-tiny-correction", "planner", "item:3. **Review", ("Delegate uncertain or substantive source/task corrections", "originating context or a fresh bounded correction delegate", "no parent substantive", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
     ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "unauthorized specification delegation stops", "no parent creation/substantive correction or inline/local", "mechanical gaps are resolved by the delegate")),
+    ("delegate-spec-review", "planner", "stage:spec_review", ("independent saved reviewer assignment", "standard-spec-review", "Dispatch exactly that saved binding unchanged", "async: true", "fresh independent reviewer", "no writes, implementation, external action, or delegation", "reviewer and\n   parent never substantively repair", "originating `standard-spec-create` producer", "same producing assignment", "no inferred default")),
     ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "unauthorized plan delegation stops", "no parent production/substantive repair", "inline/local fallback", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
     ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "unauthorized task", "delegation stops", "no parent task creation/substantive correction or inline/local fallback")),
     ("delegate-overall-correction", "planner", "stage:overall_review", ("Delegate uncertain or substantive task-level and", "originating producer", "fresh bounded correction delegate", "independent reviewer", "does not become the producer", "No parent substantive artifact edits", "unauthorized", "correction delegation stops", "no inline/local fallback")),

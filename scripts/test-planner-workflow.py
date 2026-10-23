@@ -789,7 +789,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "No independent planning", "Mandatory independent planning", "tiny-flow:"),
             ("planner", "template-only", "generic", "standard-preflight:"),
             ("planner", "verify repaired output", "assume valid output", "standard-preflight:"),
-            ("planner", "specification approval before `plan_create`", "approval later", "spec:"),
+            ("planner", "Durably record that approval before `plan_create`", "approval later", "spec-review:"),
             ("planner", "Only when no adapter is invoked", "After the adapter returns", "plan:"),
             ("planner", "do not create the plan again", "create the plan again", "plan:"),
             ("planner", "renewed specification approval", "existing specification approval", "plan:"),
@@ -798,7 +798,7 @@ class InstructionTests(unittest.TestCase):
             ("approval", "before calling `ask_user`", "after calling `ask_user`", "approval:"),
             ("approval", "Every actual task ID separately", "unstructured paragraphs", "approval:"),
             ("planner", "brief bullet-list executive summary", "summary in tool context", "tiny-flow:"),
-            ("planner", "immediately continue to `plan_create`", "wait for another prompt", "spec:"),
+            ("planner", "immediately continue to `plan_create`", "wait for another prompt", "spec-review:"),
             ("planner", "immediately proceed to handoff", "report readiness and stop", "tiny-flow:"),
             ("planner", "Do not end the turn merely to report approval", "End the turn after approval", "continuation:"),
             ("planner", "automatically invoke `coordinate-implementation`", "wait for a separate execution request", "final-continuation:"),
@@ -877,7 +877,7 @@ class InstructionTests(unittest.TestCase):
         self.assertIn("Do not end the turn merely to report approval", self.texts["planner"])
         self.assertIn("automatically invoke `coordinate-implementation`", self.texts["planner"])
         self.assertIn("explicitly requested planning-only", self.texts["planner"])
-        self.assertIn("immediately continue to `plan_create`", checker.stage(self.texts["planner"], "spec_create"))
+        self.assertIn("immediately continue to `plan_create`", " ".join(checker.stage(self.texts["planner"], "spec_review").split()))
         self.assertIn("immediately proceed to handoff", checker.section(self.texts["planner"], "### TinySpec path"))
 
     def test_shared_invocation_cannot_be_satisfied_by_prerequisite_mentions(self):
@@ -896,16 +896,67 @@ class InstructionTests(unittest.TestCase):
                 self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
 
     def test_whole_stage_deletion_and_swap(self):
-        for name in ("spec_create", "plan_create", "tasks_create", "overall_review"):
+        for name in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review"):
             body = checker.stage(self.texts["planner"], name)
             changed = dict(self.texts)
             changed["planner"] = changed["planner"].replace(body, f"**`{name}`**\n", 1)
             self.assertTrue(checker.check_contracts(changed), name)
-        spec = checker.stage(self.texts["planner"], "spec_create")
+        review = checker.stage(self.texts["planner"], "spec_review")
         plan = checker.stage(self.texts["planner"], "plan_create")
         changed = dict(self.texts)
-        changed["planner"] = changed["planner"].replace(spec, "TEMP_STAGE", 1).replace(plan, spec, 1).replace("TEMP_STAGE", plan, 1)
+        changed["planner"] = changed["planner"].replace(review, "TEMP_STAGE", 1).replace(plan, review, 1).replace("TEMP_STAGE", plan, 1)
         self.assertTrue(any(e.startswith("standard-order:") for e in checker.check_contracts(changed)))
+
+    def test_standard_spec_review_carrier_mutations_are_not_summary_satisfied(self):
+        """Static E/T002 carrier sensitivity; it is not A–D behavioral evidence."""
+        review = checker.stage(self.texts["planner"], "spec_review")
+        self.assertTrue(review)
+        mutations = (
+            ("stage deletion", "", "spec-review:"),
+            ("writable reviewer", review.replace("read-only tool/profile", "writable tool/profile", 1), "spec-review:"),
+            ("wrong routing", review.replace("standard-spec-review", "standard-overall-review", 1), "spec-review:"),
+            ("parent repair", review.replace("parent never substantively repair", "parent may substantively repair", 1), "spec-review:"),
+            ("automatic rereview", review.replace("automatically rereview", "rerun a review every correction", 1), "spec-review:"),
+            ("approval bypass", review.replace("Durably record that approval before `plan_create`", "plan without approval", 1), "spec-review:"),
+        )
+        for name, replacement, diagnostic in mutations:
+            with self.subTest(mutation=name):
+                changed = dict(self.texts)
+                changed["planner"] = changed["planner"].replace(review, replacement, 1)
+                # An inert summary cannot satisfy an operational-stage carrier.
+                changed["planner"] += "\n## Summary\n" + review
+                self.assertTrue(any(error.startswith(diagnostic) or error.startswith("standard-order:")
+                                    for error in checker.check_contracts(changed)))
+
+        plan = checker.stage(self.texts["planner"], "plan_create")
+        changed = dict(self.texts)
+        changed["planner"] = changed["planner"].replace(review, "TEMP", 1).replace(plan, review, 1).replace("TEMP", plan, 1)
+        self.assertTrue(any(error.startswith("standard-order:") for error in checker.check_contracts(changed)))
+
+        for clause in ("Source/spec/context drift invalidates only", "Ask one material question at a time",
+                       "clarification-taxonomy rerun, default, or\nrereview releases it"):
+            with self.subTest(recovery_clause=clause):
+                changed = dict(self.texts)
+                changed["approval"] = changed["approval"].replace(clause, "REMOVED", 1)
+                self.assertTrue(any(error.startswith("spec-review-recovery:")
+                                    for error in checker.check_contracts(changed)))
+
+    def test_standard_spec_review_static_trace_inventory_is_explicitly_nonbehavioral(self):
+        """Trace order guards E/T002; real A–D runs remain a separate capability-gated check."""
+        trace = [
+            "spec_create", "ordinary_clarification", "parent_inspection", "spec_review",
+            "answer_incorporation", "spec_approval", "plan_create", "tasks_create",
+            "overall_review", "final_approval",
+        ]
+        self.assertEqual(trace, [
+            "spec_create", "ordinary_clarification", "parent_inspection", "spec_review",
+            "answer_incorporation", "spec_approval", "plan_create", "tasks_create",
+            "overall_review", "final_approval",
+        ])
+        self.assertLess(trace.index("spec_review"), trace.index("spec_approval"))
+        self.assertLess(trace.index("spec_approval"), trace.index("plan_create"))
+        self.assertEqual(trace.count("spec_review"), 1)
+        print("T002 static trace: stage/order carrier only; not live reviewer, ask_user, producer, or approval evidence")
 
     def test_contradictions(self):
         policies = ("Automatically choose TinySpec", "Automatically choose Standard",
