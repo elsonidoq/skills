@@ -58,7 +58,7 @@ links into each actual worker brief, alongside its local REQUIRED items:
   Inspect expensive failures and actual invocations before targeted resume/retry; unknown
   cause blocks replacement. Report ordinary safe errors without admission ceremonies.
 - [Gotcha index](../../memory/MEMORY.md) has no recorded entries;
-  [coordination guidelines](../../memory/coordination/GUIDELINES.md) have no approved guidance.
+  [coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) have no approved guidance.
   They supply no routing defaults or authority for memory/ledger writes. Historical research
   and approval records remain unchanged and discoverable as historical. OpenCode is excluded.
 - **Every worker targets ZERO FAILING RELEVANT TESTS at its own checkpoint**, not zero

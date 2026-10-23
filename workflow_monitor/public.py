@@ -62,14 +62,21 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                "phase_id": row["phase_id"], "label": _text(row.get("label"), row["phase_id"]), "pre_recording": row.get("pre_recording") is True}
               for row in graph.get("phases", [])]
     tasks = [{"ref": _ref("task", row["run_id"], row["task_id"]), "run_ref": _ref("run", row["run_id"]),
-              "task_id": row["task_id"], "label": _text(row.get("label"), row["task_id"]), "summary": _text(row.get("summary"), "Task execution"),
+              "task_id": row["task_id"], "label": _text(row.get("label"), row["task_id"]),
+              "work_description": row.get("work_description") if isinstance(row.get("work_description"), str) else None,
               "prerequisite_refs": [_ref("task", row["run_id"], prerequisite) for prerequisite in row.get("depends", [])]}
              for row in graph.get("tasks", [])]
+    planned_reviews = {run["run_id"] for run in graph.get("runs", [])
+                       if isinstance(run.get("description"), dict) and run["description"].get("initial_review") == {"planned": True}}
     review_definitions = [{"ref": _ref("review_definition", row["run_id"], row["phase_id"]),
                            "run_ref": _ref("run", row["run_id"]),
                            "phase_ref": _ref("phase", row["run_id"], row["phase_id"]),
+                           # Initial review is declared after every retained planned task.
+                           "prerequisite_refs": [_ref("task", row["run_id"], task["task_id"])
+                                                 for task in graph.get("tasks", []) if task.get("run_id") == row["run_id"]],
                            "label": "Planned independent review — not an agent call."}
-                          for row in graph.get("phases", []) if row.get("phase_id") == "review"]
+                          for row in graph.get("phases", [])
+                          if row.get("phase_id") == "review" and row["run_id"] in planned_reviews]
     records = []
     for row in graph.get("observations", []):
         facts = row.get("facts") if isinstance(row.get("facts"), dict) else {}
@@ -136,6 +143,22 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
                                    for attempt in item.get("attempts", []) if isinstance(attempt, dict)],
                       "commit_refs": {key: _sha(value) for key, value in item.get("commit_refs", {}).items()
                                       if key in {"base", "head", "commit"} and _sha(value)}})
+    # A fixing execution is one assigned correction round, not a model call.  Keep
+    # it as typed history/Details data; exact individual calls live in activities.
+    fixing_rounds = []
+    for item in graph.get("fixing_rounds", []):
+        if not isinstance(item, dict) or not isinstance(item.get("run_id"), str) or not isinstance(item.get("execution_id"), str):
+            continue
+        run_id, execution_id = item["run_id"], item["execution_id"]
+        fixing_rounds.append({"ref": _ref("fixing_round", run_id, execution_id), "run_ref": _ref("run", run_id),
+                              "execution_id": execution_id,
+                              "fixing_round": item.get("fixing_round") if type(item.get("fixing_round")) is int else None,
+                              "outcome": item.get("outcome") if item.get("outcome") in {"approved", "rejected", "failed", "interrupted", "dispatched"} else "unknown",
+                              "trigger_ref": _ref("execution", run_id, item["trigger_execution_id"]) if isinstance(item.get("trigger_execution_id"), str) else None,
+                              "predecessor_ref": _ref("execution", run_id, item["predecessor_execution_id"]) if isinstance(item.get("predecessor_execution_id"), str) else None,
+                              "attempts": [{"outcome": attempt.get("outcome") if attempt.get("outcome") in {"dispatched", "approved", "rejected", "failed", "interrupted"} else "unknown",
+                                            "uncertain": attempt.get("uncertain") is True}
+                                           for attempt in item.get("attempts", []) if isinstance(attempt, dict)]})
     chain_acceptance = { _ref("run", run_id): {"state": value.get("state") if value.get("state") in {"accepted", "unknown"} else "unknown",
                           "terminal_execution_ref": _ref("execution", run_id, value["execution_id"]) if isinstance(value.get("execution_id"), str) else None,
                           "range": {"base": _sha(value.get("base")), "head": _sha(value.get("head"))}}
@@ -240,7 +263,9 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
         if role == "unknown":
             continue
         activity = {"ref": _ref("activity", item["run_id"], item["invocation_id"]), "run_ref": _ref("run", item["run_id"]),
-                    "invocation_id": item["invocation_id"], "occurrence_ref": _ref("occ", item["run_id"], item["occurrence_id"]),
+                    "invocation_id": item["invocation_id"],
+                    "occurrence_ref": _ref("occ", item["run_id"], item["occurrence_id"]) if isinstance(item.get("occurrence_id"), str) else None,
+                    "observation": "recorded" if isinstance(item.get("occurrence_id"), str) else "unobserved_dispatch",
                     "task_ref": _ref("task", item["run_id"], item["task_id"]) if isinstance(item.get("task_id"), str) else None,
                     "role": role, "invocation_kind": item.get("invocation_kind") if item.get("invocation_kind") in {"task_worker", "corrective_worker"} else "unknown",
                     "outcome": item.get("outcome") if item.get("outcome") in {"returned", "failed", "interrupted"} else "unknown",
@@ -260,7 +285,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
     return {"monitor_version": 1, "state": "ok", "runs": public_runs, "phases": phases, "tasks": tasks,
             "review_definitions": review_definitions, "occurrences": occurrences, "records": records, "edges": edges,
             "unknown_records": unknown, "inventory": inventory, "followups": followups, "chain": chain,
-            "chain_acceptance": chain_acceptance, "activities": activities,
+            "fixing_rounds": fixing_rounds, "chain_acceptance": chain_acceptance, "activities": activities,
             'metric_artifacts': {_ref('run', run_id): {'status': value.get('status'),
                 'path': value.get('path') if value.get('path') == '.coherence/metrics/run-' + hashlib.sha256(run_id.encode('utf-8')).hexdigest() + '.jsonl' else None,
                 'sha': _sha(value.get('sha'))} for run_id, value in graph.get('metric_artifacts', {}).items()

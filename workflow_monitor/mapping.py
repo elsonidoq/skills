@@ -54,7 +54,7 @@ def _valid_facts(facts: dict[str, Any]) -> bool:
 def _descriptor(row: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
     """Return only a complete, closed declared plan; never repair a partial one."""
     description = _object(row.get("description"))
-    if description is None or description.get("version") != 1:
+    if description is None or description.get("version") != 1 or description.get("description_version") != 3:
         return None, "description_invalid"
     phases, tasks = description.get("phases"), description.get("tasks")
     if not isinstance(phases, list) or not isinstance(tasks, list) or not tasks:
@@ -65,12 +65,19 @@ def _descriptor(row: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]
         return None, "description_invalid"
     task_ids = [task.get("id") for task in tasks if isinstance(task, dict)]
     if (len(task_ids) != len(tasks) or any(not isinstance(value, str) or not value for value in task_ids) or
-            len(set(task_ids)) != len(task_ids)):
+            len(set(task_ids)) != len(task_ids) or
+            any(set(task) != {"id", "depends", "label", "work_description"} or
+                not isinstance(task.get("label"), str) or not task["label"] or
+                (task.get("work_description") is not None and not isinstance(task.get("work_description"), str))
+                for task in tasks)):
         return None, "description_invalid"
     dependencies = {task["id"]: task.get("depends") for task in tasks}
     if any(not isinstance(values, list) or any(not isinstance(value, str) or value not in dependencies or value == task_id
                                                 for value in values) or len(set(values)) != len(values)
            for task_id, values in dependencies.items()):
+        return None, "description_invalid"
+    initial_review = description.get("initial_review")
+    if initial_review is not None and initial_review != {"planned": True}:
         return None, "description_invalid"
     remaining = {task_id: set(values) for task_id, values in dependencies.items()}
     while remaining:
@@ -133,8 +140,8 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
                 unknown.append({"run_id": run_id, "seq": None, "code": "task_invalid"})
                 continue
             task_id = task["id"]
-            tasks.append({"run_id": run_id, "task_id": task_id, "label": task.get("label"), "summary": task.get("summary"),
-                          "depends": task.get("depends")})
+            tasks.append({"run_id": run_id, "task_id": task_id, "label": task.get("label"),
+                          "work_description": task.get("work_description"), "depends": task.get("depends")})
             if isinstance(task.get("depends"), list):
                 for prerequisite in task["depends"]:
                     if isinstance(prerequisite, str):
@@ -190,12 +197,15 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(detail, dict):
             continue
         run_id, execution_id = detail.get("run_id"), detail.get("execution_id")
-        rows = execution_occurrences.get((run_id, execution_id))
-        if not isinstance(run_id, str) or not isinstance(execution_id, str) or not rows:
+        rows = execution_occurrences.get((run_id, execution_id), [])
+        if not isinstance(run_id, str) or not isinstance(execution_id, str):
             continue
         attempt = {key: detail.get(key) for key in ("attempt_seq", "outcome", "uncertain", "findings", "commit_refs")}
         current = chain_by_execution.get((run_id, execution_id))
         if current is None:
+            # A persisted reviewer execution is exact dispatch evidence even when
+            # optional observation recording failed.  A fixer execution remains a
+            # round notice below; it is not an individual model invocation.
             chain_by_execution[(run_id, execution_id)] = {**detail, "attempts": [attempt],
                                                            "occurrence_ids": sorted({row["occurrence_id"] for row in rows})}
         else:
@@ -203,7 +213,12 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             # Reader order is the append-only attempt sequence, so later is the current
             # outcome while the earlier authorized diagnostic/review history remains.
             current.update({key: value for key, value in detail.items() if key != "attempt_seq"})
-    chain = list(chain_by_execution.values())
+    all_chain = list(chain_by_execution.values())
+    # Review executions identify reviewer calls.  Fixer executions identify only
+    # the assigned round: its individual calls come exclusively from exact
+    # fixer_invocation history or recorded invocation IDs.
+    fixing_rounds = [item for item in all_chain if item.get("role") == "fixer"]
+    chain = [item for item in all_chain if item.get("role") == "reviewer"]
     known_executions = {(row["run_id"], row["execution_id"]) for row in chain}
     for item in chain:
         run_id, execution_id = item["run_id"], item["execution_id"]
@@ -263,6 +278,35 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
             continue
         by_invocation[(occurrence["run_id"], invocation_id)] = activity
         activities.append(activity)
+    # Dispatch history can prove a scheduled worker/reviewer call even when the
+    # optional observation row is absent.  It never supplies a call for a fixer
+    # round; only a retained fixer_invocation identity does that.
+    dispatches = snapshot.get("dispatches") if isinstance(snapshot.get("dispatches"), dict) else {}
+    round_by_execution = {(item["run_id"], item["execution_id"]): item for item in fixing_rounds}
+    for run_id, calls in dispatches.items():
+        if not isinstance(run_id, str) or not isinstance(calls, list):
+            continue
+        for call in calls:
+            if not isinstance(call, dict):
+                continue
+            invocation_id, role = call.get("invocation_id"), call.get("role")
+            if not isinstance(invocation_id, str) or not invocation_id or role not in {"worker", "fixing_worker", "reviewer"}:
+                continue
+            key = (run_id, invocation_id)
+            if key in by_invocation:
+                continue
+            execution_id = call.get("execution_id") if isinstance(call.get("execution_id"), str) else None
+            fixing_round = round_by_execution.get((run_id, execution_id))
+            activity = {"run_id": run_id, "invocation_id": invocation_id, "occurrence_id": None,
+                        "task_id": call.get("task_id") if isinstance(call.get("task_id"), str) else None,
+                        "role": role, "invocation_kind": None, "selected_input_checkpoints": None,
+                        "correction_chain": [], "predecessor_invocation_id": None,
+                        "trigger_execution_id": (call.get("trigger_execution_id") if isinstance(call.get("trigger_execution_id"), str)
+                                                 else fixing_round.get("trigger_execution_id") if fixing_round else None),
+                        "outcome": "unknown", "error_category": None, "support_invocation_id": None,
+                        "stopped_by_invocation_id": None, "record_refs": [], "dispatch_observed": False}
+            by_invocation[key] = activity
+            activities.append(activity)
     metric_sets = snapshot.get("metrics") if isinstance(snapshot.get("metrics"), dict) else {}
     for activity in activities:
         metric_set = metric_sets.get(activity["run_id"])
@@ -373,8 +417,8 @@ def normalize(snapshot: dict[str, Any]) -> dict[str, Any]:
     return {"state": "ok", "runs": runs, "phases": phases, "tasks": tasks, "occurrences": occurrences,
             "observations": observations, "edges": edges, "unknown_records": unknown,
             "unsupported_run_ids": list(snapshot.get("unsupported_run_ids", [])), "followups": followups,
-            "review_acceptance": review_acceptance, "chain": chain, "chain_acceptance": chain_acceptance,
-            "activities": activities, "metric_aggregates": aggregates,
+            "review_acceptance": review_acceptance, "chain": chain, "fixing_rounds": fixing_rounds,
+            "chain_acceptance": chain_acceptance, "activities": activities, "metric_aggregates": aggregates,
             "metric_artifacts": snapshot.get('metric_artifacts', {}),
             "metrics": {run_id: {"coverage": value.get("coverage"), "reasons": value.get("reasons", []),
                                    "interval_count": len(value.get("records", [])) if isinstance(value.get("records"), list) else 0,

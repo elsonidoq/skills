@@ -68,7 +68,7 @@ load-bearing code/contracts/tests and applicable memory, then brainstorm only ma
 uncertainty. Before depth selection this is read-only: no coordination auto-init,
 routine summaries/index updates, evidence-only commits, reflection or STATE maintenance.
 Consult relevant existing guidance through the
-[shared contract](../skills/memory-handling/references/project-coordination.md); missing store
+[Memory Handling](../skills/memory-handling/SKILL.md); missing store
 is nonblocking. Only explicit future-directed user feedback permits bounded guideline writes.
 
 Assess reasoning complexity and coordination cost, not estimated diff size or a fixed

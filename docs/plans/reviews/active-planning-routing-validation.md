@@ -20,7 +20,7 @@ T002 evidence: `c4d13740194c26c90727b792d85867cde10ff77a` (T003 baseline).
 T003 artifact/discovery and separate evidence checkpoints follow; their exact SHAs and final
 review range are returned in the worker handoff. Review **baseline..final HEAD**, not a clean-tree diff;
 the substantive code/doc producer range is already baseline..`0fd2c67499e94827173bf672e3d3d98f52519163`.
-The [existing run summary](../../../memory/coordination/evidence/2026-10-06-active-planning-routing/SUMMARY.md)
+The [existing run summary](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-06-active-planning-routing/SUMMARY.md)
 owns task/evidence outcomes and pending review disposition; no new coordination evidence store/file.
 
 Requested/selected worker: `openai-codex/gpt-6.1-sol:medium` (parent preflight evidence).

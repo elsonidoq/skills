@@ -156,5 +156,5 @@ in pi; planning-artifact production alone does not change installed skills.
 
 Source and separate tasks are independently verified retained deliverables with focused
 commits and distinct factual evidence checkpoints. Their digests and planner-owned review
-belong in [this run's SUMMARY](../../memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md),
+belong in [this run's SUMMARY](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-07-early-risk-reduction/SUMMARY.md),
 not recursive hashes here. Combined owner approval remains required before implementation.

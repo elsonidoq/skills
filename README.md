@@ -15,7 +15,7 @@ scripts/install.sh --probe  # additionally invokes one model; authorize separate
 
 Foreign entries at installation destinations are preserved and reported, not overwritten.
 Retired links are backed up only when their target proves they belong to this checkout.
-After installation or global skill changes, in Paseo prepare a fresh-session handoff instead; the fresh agent verifies the checkout and loaded capabilities before work. Do not reload or restart the current Paseo session automatically.
+After installation or global skill changes, in Paseo prepare a fresh-session handoff instead; the fresh agent verifies the checkout, revision, current approval and loaded capabilities before work. Do not reload or restart the current Paseo session automatically.
 
 On a project, use [Initialize Coherence](skills/initialize-coherence/SKILL.md)
 (`initialize-coherence`) for proposal-first suite instructions, project memory association,
@@ -183,7 +183,7 @@ loop. An ordinary writer lock prevents cooperating overlap; SDK tools are not an
 sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
 After adopting changed global skills/prompts in Paseo, prepare a fresh-session handoff instead of reloading or restarting the current session.
 
-## Context-first recovery and coordination feedback
+## Context-first recovery and owner guidance
 
 No automatic STATE maintenance or routine coordination summaries/index updates,
 evidence-only commits or reflection. Existing STATE/custom content and historical evidence
@@ -193,14 +193,14 @@ Active/unknown children require reconciliation before replacement; inspect failu
 retry, never guess completion, repeat commits or blindly relaunch. See the
 [recovery contract](skills/coordinate-implementation/SKILL.md#recover-context).
 
-Consult relevant existing project-local guidance through the
-[feedback contract](skills/memory-handling/references/project-coordination.md).
-Missing store/STATE is nonblocking. Only explicit user corrective/future-round feedback
-permits compact guideline changes; clear feedback needs no routine second approval,
-ambiguity asks and explanation-only/no feedback/explicit no-write means no write.
-Respect local ownership/path/symlink, sensitive-data and dirty/concurrent protections;
-create only needed guidelines storage, never history/index/run scaffolding.
-Required adopted gotcha-memory discovery/retrieval stays separate.
+Consult relevant project memory through [Memory Handling](skills/memory-handling/SKILL.md).
+One verified association/index carries technical gotchas and explicit future-directed owner
+guidance. Missing store/STATE is nonblocking. Only explicit user corrective/future-round
+feedback permits compact guidance changes; clear feedback needs no routine second approval,
+ambiguity asks and explanation-only/no feedback/explicit no-write means no write. Respect
+local ownership/path/symlink, sensitive-data and dirty/concurrent protections; never create
+history/index/run scaffolding or a second guidance store. Read the adopted index first and
+keep technical-gotcha retrieval distinct from guidance authority.
 
 Planner defaults to direct async stage → parent artifact/checkpoint inspection → next
 authorized stage with the saved assignment unchanged. A workflow needs earned branching,
@@ -234,8 +234,8 @@ read-only RPC smoke testing, full behavioral scenarios and evidence limitations.
 are not proof of model obedience; live tests require separate authorization.
 
 Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
-describes current behavior, gotcha memory contains only verified non-obvious warnings,
-project-local coordination memory records only explicit future-directed user feedback. This repository's
+describes current behavior; one project-local memory index carries verified non-obvious
+warnings and explicit future-directed user guidance. This repository's
 canonical active unresolved-work tracker is [GitHub Issues](https://github.com/elsonidoq/skills/issues),
 explicit target `github.com/elsonidoq/skills`, through `track-open-issue`. `docs/open_issues.md` is
 preserved historical source only; actual historical migration is **NOT RUN**. A future import needs

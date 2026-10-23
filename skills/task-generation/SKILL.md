@@ -21,14 +21,14 @@ creates the task artifact. If a required source, preparation authorization, appl
 approval, or capability is missing, report the missing evidence and stop rather than inventing
 an artifact.
 
-Apply the shared [project coordination contract](../memory-handling/references/project-coordination.md)
-during initial understanding, including direct entry without planner: consult relevant existing
-compact guidelines; missing store or STATE is nonblocking. Do not auto-initialize, persist
-routine summaries/indexes, reflect, infer lessons or maintain STATE. Only explicit user
-future-directed feedback authorizes bounded project-local guideline changes; ambiguity asks,
-explanation-only/no feedback/no-write boundaries write nothing. Preserve local path/symlink,
-sensitive-data and dirty/concurrent ownership safeguards. Apply [save-adr](../save-adr/SKILL.md)'s
-consult/propagate contract. On direct entry and fresh/resumed
+Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
+including direct entry without planner: retrieve relevant guidance from the verified unified
+index without auto-initialization; missing optional storage or STATE is nonblocking. Carry
+relevant explicit owner guidance, alongside gotchas, through source observables → dependencies
+or gates → task-local REQUIRED checks → worker/reviewer briefs; no default history intake,
+execution-time feedback routing, routine persistence, reflection, inferred lessons, or STATE
+maintenance. Preserve its explicit-feedback authority and path/symlink, sensitive-data, and
+dirty/concurrent safeguards. Apply [save-adr](../save-adr/SKILL.md)'s consult/propagate contract. On direct entry and fresh/resumed
 production, re-establish relevant accepted authority and current supersession. Both adapters
 carry exact applicable constraints and source links from source observables into the task's
 dependency or gate, task-local REQUIRED check and worker brief; verify the relevant decision

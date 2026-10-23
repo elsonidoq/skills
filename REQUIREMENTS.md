@@ -35,7 +35,7 @@ against an existing repository. Missing usable CLI or unknown safe recipe blocks
 do not silently install/upgrade tooling. Conflict/drift/failure stops without readiness,
 automatic retry or destructive rollback; report partial outputs. Other missing runtime prerequisites
 retain stop/report behavior. TinySpec/direct tasking still does not require SpecKit, and
-Standard capability gates remain. In Paseo, changed tools or extensions require a fresh-session handoff; the fresh agent verifies the checkout and loaded capabilities without an automatic reload or restart.
+Standard capability gates remain. In Paseo, changed tools or extensions require a fresh-session handoff; the fresh agent verifies the checkout, revision, current approval and loaded capabilities without an automatic reload or restart.
 
 Explicit policy-only parsimony refresh on an already-adopted project is narrower than full
 initialization. It requires applicable runtime/question, approval-contract, safe path/readability,
@@ -46,7 +46,7 @@ missing capability required for that operation does. Full default new/compatible
 retain their applicable documentation, SpecKit and structural readiness duties.
 
 After later integration, use the existing [setup procedure](README.md#setup). Installation alone does not refresh existing project
-instructions. In Paseo, changed tools or extensions require a fresh-session handoff and fresh-agent checkout/capability verification; no automatic reload or restart occurs. Only in an explicitly selected authorized project, request initialize-coherence
+instructions. In Paseo, changed tools or extensions require a fresh-session handoff and fresh-agent checkout/revision/current-approval/capability verification; no automatic reload or restart occurs. Only in an explicitly selected authorized project, request initialize-coherence
 policy-only refresh, compare actual canonical policy text, approve the exact bounded diff and
 separately approve dirty exact overlap. Retain custom/equivalent owners and overrides; drift stops.
 Verify `policy refresh applied` / `policy already current`, never full initialization/Standard
@@ -116,22 +116,23 @@ Settings examples are neither current owner assignments nor capability proof.
 
 ## Memory contract
 
-Successful adoption through `initialize-coherence` establishes an approved project-memory
-association and index, or validates a compatible existing one. Merely invoking initialization
-does not establish readiness: missing capabilities, denied approval or missing structure block
-it. Owner-selected paths remain valid; bounded refresh preserves existing memory and custom
-policy. Retrieval and write rules live in `memory-handling`; `compact-memory`, `finish-session`,
-`planner`, `tiny-spec`, `coordinate-implementation`, and `initialize-coherence` reference it.
-A missing required gotcha association routes to `initialize-coherence`, never a guessed global store.
+Successful adoption through `initialize-coherence` establishes one approved project-memory
+association and index for verified technical gotchas and explicit future-directed owner guidance,
+or validates a compatible existing one. Merely invoking initialization does not establish
+readiness: missing capabilities, denied approval or missing structure block it. Owner-selected
+paths remain valid; bounded refresh preserves existing memory and custom policy. Retrieval and
+write rules live in [Memory Handling](skills/memory-handling/SKILL.md); `compact-memory`,
+`finish-session`, `planner`, `tiny-spec`, `coordinate-implementation`, and
+`initialize-coherence` reference it. A missing required association routes to
+`initialize-coherence`, never a guessed global store.
 
-Coordination memory is project-local explicit feedback only, separate from adopted gotchas.
-The [shared contract](skills/memory-handling/references/project-coordination.md) owns relevant
-existing guideline consultation and bounded user-feedback writes. Missing store/STATE is
-nonblocking; no auto-init, routine summaries/index updates, evidence-only commits, reflection
-or inferred lessons. Clear future corrective feedback can authorize a minimal guideline
-without routine second approval; ambiguity asks, explanation-only/no feedback/no-write writes
-nothing. Preserve local ownership/path/symlink, sensitive-data and dirty/concurrent safeguards.
-Only a needed guidelines owner may be created, never history/index/run scaffolding.
+Read the whole associated index first, then relevant entries, and recheck it after a write.
+Missing store/STATE is nonblocking; no auto-init, routine summaries/index updates, evidence-only
+commits, reflection or inferred lessons. Only explicit future-directed user feedback can
+authorize guidance changes; clear feedback needs no routine second approval, ambiguity asks,
+and explanation-only/no feedback/no-write writes nothing. Preserve local ownership/path/symlink,
+sensitive-data and dirty/concurrent safeguards. Never create a second guidance store or
+history/index/run scaffolding.
 
 ## Context-first recovery
 

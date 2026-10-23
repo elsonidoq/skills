@@ -12,9 +12,11 @@ project's experience from silently changing another project's workflow.
 ### II. Evidence Before Guidance
 
 Agents MUST distinguish observed outcomes from inferred reusable guidance, preserve uncertainty
-and counterevidence, and avoid treating a single failure as a permanent routing rule. Growing
-historical evidence MUST be selectively retrievable rather than loaded in full during routine
-planning. Compact guidance MUST not become a transcript or substitute for current source evidence.
+and counterevidence, and avoid treating a single failure as a permanent routing rule. One
+project-associated memory index carries verified technical gotchas and explicit
+future-directed owner guidance; entries remain selectively retrievable rather than loaded in
+full during routine planning. Compact guidance MUST not become a transcript or substitute for
+current source evidence.
 
 ### III. Explicit Authority
 
@@ -54,26 +56,25 @@ For authorized executable Coordinate Implementation runs, workers may propose/pr
 ### VI. Compatibility and Ownership
 
 New capabilities MUST preserve existing TinySpec, Standard, and documented legacy workflows
-unless an explicit approved change says otherwise. Coordination memory stores only explicit
-user feedback intended to change future rounds, never agent-inferred lessons. Missing store
-or STATE MUST NOT block otherwise authorized execution. There MUST NOT be automatic
-initialization, routine summaries/index updates, reflection or evidence-only commits.
-Relevant existing compact guidance is consulted; explicit relevant history retrieval is
-selective, index-first where useful. Only needed bounded guidelines ownership may be created
-for authorized feedback, never history/index/run scaffolding. Preserve local path/symlink,
-sensitive-data, custom, dirty and concurrent ownership safeguards. Keep gotchas, feedback,
-substantive task/runtime evidence, documentation and Git ownership distinct.
+unless an explicit approved change says otherwise. One verified project-associated memory index
+stores technical gotchas and only explicit user feedback intended to guide future rounds, never
+agent-inferred lessons. Missing store or STATE MUST NOT block otherwise authorized execution.
+There MUST NOT be automatic initialization, routine summaries/index updates, reflection or
+evidence-only commits. Read the index first and retrieve relevant entries selectively; no
+second guidance store or history/index/run scaffolding may be created for authorized feedback.
+Preserve local path/symlink, sensitive-data, custom, dirty and concurrent ownership safeguards.
+Keep gotchas, guidance, substantive task/runtime evidence, documentation and Git ownership
+distinct.
 
 ## Project Constraints
 
 The repository's `AGENTS.md` governs global portability and skill-use policy;
 `REQUIREMENTS.md` owns runtime prerequisites and saved planning-assignment requirements; `docs/index.md` routes
-other documentation. Reuse a coordination root declared in the current project's instructions
-or configuration; otherwise use `<project-root>/memory/coordination/`. Resolve the current project
-root from its selected repository/workspace, never from the global skill installation. Every
-coordination destination MUST stay inside that project. Gotcha-memory adoption remains a separate
-contract and MUST NOT be implicitly initialized by coordination-store setup. Do not store secrets, tokens, personal data,
-or sensitive payloads in memory or execution evidence. Prefer bounded skill changes when sufficient. The owner-approved Coordinate Implementation migration permits the existing sequential Python/SQLite task executor plus a thin official Pi SDK host for implementation only; it does not authorize a generalized platform, automatic installations, planning-workflow rewrite or other runtime extensions.
+other documentation. Discover the project-associated memory index from current project
+instructions or configuration and keep it inside the selected repository/workspace, never the
+global skill installation. Do not guess, globally substitute or implicitly initialize that
+association. Do not store secrets, tokens, personal data, or sensitive payloads in memory or
+execution evidence. Prefer bounded skill changes when sufficient. The owner-approved Coordinate Implementation migration permits the existing sequential Python/SQLite task executor plus a thin official Pi SDK host for implementation only; it does not authorize a generalized platform, automatic installations, planning-workflow rewrite or other runtime extensions.
 
 ## Development Workflow
 
@@ -93,7 +94,16 @@ expanded guidance, PATCH for non-semantic clarification. Review compliance again
 changed surfaces before final artifact approval; document justified exceptions rather than
 silently weakening a rule.
 
-**Version**: 4.1.1 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-20
+**Version**: 4.2.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-22
+
+Amendment 4.2.0 records the owner-approved unified-memory alignment: one verified
+project-associated index carries technical gotchas and explicit future-directed owner guidance.
+It preserves index-first selective retrieval, explicit-feedback authority and existing safety,
+non-bookkeeping, checkpoint and recovery boundaries; it does not authorize a second store,
+routine memory writes or runtime changes. MINOR reflects the material consolidation of memory
+policy. Rationale: prevent planning, execution preparation and closeout from recreating a
+separate coordination-guidance subsystem while retaining the distinct evidence and authority
+rules.
 
 Amendment 4.1.1 removes the one-time restriction on delivery through the runtime
 being changed, at the owner's explicit direction. It is not a general workflow

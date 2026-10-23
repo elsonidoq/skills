@@ -6,6 +6,8 @@
 .selection-details p { font-size: .85rem; }
 .execution-node { width: 180px; min-height: 70px; box-sizing: border-box; border: 2px solid #64748b; border-radius: .4rem; padding: .6rem; background: #eef2f6; }
 .execution-node small { display: block; margin-top: .3rem; font-size: .7rem; }
+.pending { background: #e5e7eb !important; border-color: #6b7280 !important; }
+.running { background: #dcecff !important; border-color: #1769aa !important; }
 .success { background: #dcf5e4 !important; border-color: #247342 !important; }
 .failed { background: #ffe5e5 !important; border-color: #ad3030 !important; }
 .waiting { background: #fff0c2 !important; border-color: #9a6900 !important; }
@@ -17,7 +19,9 @@
 .progress-failed, .progress-blocked { background: #ffe5e5; }
 .progress-running { background: #fff0c2; }
 .execution-node.selected { outline: 3px solid #1769aa; outline-offset: 3px; box-shadow: 0 0 0 6px #dcecff; }
-.dependency-edge .react-flow__edge-path { stroke: #5f4bb6; stroke-dasharray: 5 3; }
+.declared-edge .react-flow__edge-path { stroke: #5f4bb6; stroke-dasharray: 6 4; stroke-width: 2; }
+.recorded-edge .react-flow__edge-path { stroke: #1769aa; stroke-dasharray: none; stroke-width: 2; }
+.mixed-edge .react-flow__edge-path { stroke: #28756b; stroke-dasharray: 8 3 2 3; stroke-width: 3; }
 .attachment-edge .react-flow__edge-path { stroke: #1769aa; }
 .sequence-edge .react-flow__edge-path { stroke: #64748b; }
 .correction-edge .react-flow__edge-path { stroke: #9a6900; stroke-dasharray: 2 3; }

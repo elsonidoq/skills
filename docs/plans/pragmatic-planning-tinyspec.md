@@ -39,7 +39,7 @@ twelve tasks were never mandated.
 Reuse local contracts; skip external dependency research: no new dependency/API decision.
 Inspected [constitution](../../.specify/memory/constitution.md), [writing-skills](../../skills/writing-skills/SKILL.md)
 and [SDD](../best_practices_spec_driven_development.md) support bounded portability.
-[Memory](../../memory/MEMORY.md)/[coordination](../../memory/coordination/GUIDELINES.md): no gotchas/approved guidance; no writes.
+[Memory](../../memory/MEMORY.md)/[coordination](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md): no gotchas/approved guidance; no writes.
 
 ## Required correction
 

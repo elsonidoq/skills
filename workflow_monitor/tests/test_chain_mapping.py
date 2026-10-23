@@ -175,6 +175,10 @@ class ChainMappingTests(ProjectTest):
                 record.update(run_id='scoped', invocation_id=identity, task_id='two' if identity == 'wrong' else task,
                               role='reviewer' if reviewer else 'corrective_worker' if kind == 'corrective_worker' else 'worker')
                 artifact.append(record)
+            # Persisted reviewer dispatch remains visible even if the optional
+            # observation and metric records were never written.
+            owner.store.review_dispatch('scoped', 'reviewer-unobserved', role='reviewer', review_ordinal=2, fixing_round=1,
+                                        review_base=base, review_head=base)
             owner.store.history('scoped', None, 'metric_artifact', 'failed', {'status': 'failed', 'path': str(artifact.path.relative_to(self.project)), 'error': 'PRIVATE-PATH/error'})
         from starlette.testclient import TestClient
         from workflow_monitor.app import create_app
@@ -182,7 +186,8 @@ class ChainMappingTests(ProjectTest):
         reader = Reader(self.project)
         raw = reader.open_snapshot('scoped')
         self.assertIn('missing_expected_invocations', raw['metrics']['scoped']['reasons'])
-        self.assertEqual(len(raw['metrics']['scoped']['dispatches']), 7)
+        self.assertEqual(len(raw['metrics']['scoped']['dispatches']), 8)
+        self.assertIn('reviewer-unobserved', {item['invocation_id'] for item in raw['dispatches']['scoped']})
         dto = minimize(normalize(raw))
         reference = dto['runs'][0]['ref']
         client = TestClient(create_app(reader, assets, 8765), base_url='http://127.0.0.1:8765')
@@ -190,6 +195,8 @@ class ChainMappingTests(ProjectTest):
         calls = {item['invocation_id']: item for item in selected['activities']}
         self.assertEqual(calls['correction']['metrics']['total_tokens']['value'], 3)
         self.assertEqual(calls['reviewer']['metrics']['total_tokens']['value'], 3)
+        self.assertEqual(calls['reviewer-unobserved']['observation'], 'unobserved_dispatch')
+        self.assertIsNone(calls['reviewer-unobserved']['occurrence_ref'])
         self.assertNotIn('total_tokens', calls['wrong']['metrics'])
         task = calls['correction']['task_metrics']
         self.assertEqual(task['fields']['total_tokens']['known_subtotal'], 6)
@@ -207,7 +214,7 @@ class ChainMappingTests(ProjectTest):
         committed = minimize(normalize(reader.open_snapshot('scoped')))
         self.assertEqual(committed['metric_artifacts'][reference]['sha'], base)
         self.assertEqual(committed['chain_acceptance'][reference]['range'], selected['chain_acceptance'][reference]['range'])
-        self.assertEqual(committed['chain_acceptance'][reference]['state'], 'accepted')
+        self.assertEqual(committed['chain_acceptance'][reference]['state'], 'unknown')
         self.assertNotIn('PRIVATE', repr(committed))
 
     def test_four_engine_scenarios_project_only_actual_closed_chain_facts(self):
@@ -265,19 +272,23 @@ class ChainMappingTests(ProjectTest):
         by_run = {run["display_id"]: run["ref"] for run in dto["runs"]}
         repaired = [item for item in dto["chain"] if item["run_ref"] == by_run["repaired"]]
         self.assertEqual([(item["role"], item["outcome"], item["review_ordinal"]) for item in repaired],
-                         [("reviewer", "rejected", 1), ("fixer", "approved", 1), ("reviewer", "approved", 2)])
+                         [("reviewer", "rejected", 1), ("reviewer", "approved", 2)])
+        rounds = [item for item in dto["fixing_rounds"] if item["run_ref"] == by_run["repaired"]]
+        self.assertEqual([(item["fixing_round"], item["outcome"]) for item in rounds], [(1, "approved")])
         self.assertEqual(repaired[0]["findings"], ["owned.txt:1 - safe defect"])
-        self.assertTrue(repaired[1]["trigger_ref"])
-        self.assertTrue(any(edge["type"] == "chain_check" for edge in dto["edges"]))
+        self.assertTrue(rounds[0]["trigger_ref"])
+        self.assertTrue(any(call["role"] == "fixing_worker" for call in dto["activities"]))
         failed_checks = [record for record in dto["records"] if record["run_ref"] == by_run["repaired"] and record["kind"] == "failed" and record["exit_code"] == 1]
         self.assertEqual(len(failed_checks), 1)
         self.assertEqual(dto["chain_acceptance"][by_run["repaired"]]["state"], "accepted")
         self.assertTrue(dto["chain_acceptance"][by_run["repaired"]]["terminal_execution_ref"])
         self.assertEqual([item["role"] for item in dto["chain"] if item["run_ref"] == by_run["approved"]], ["reviewer"])
         self.assertEqual([(item["role"], item["outcome"]) for item in dto["chain"] if item["run_ref"] == by_run["final"]],
-                         [("reviewer", "rejected"), ("fixer", "approved"), ("reviewer", "rejected")])
+                         [("reviewer", "rejected"), ("reviewer", "rejected")])
+        self.assertEqual([(item["fixing_round"], item["outcome"]) for item in dto["fixing_rounds"] if item["run_ref"] == by_run["final"]], [(1, "approved")])
         self.assertEqual([(item["role"], item["outcome"]) for item in dto["chain"] if item["run_ref"] == by_run["fixer-failure"]],
-                         [("reviewer", "rejected"), ("fixer", "failed")])
+                         [("reviewer", "rejected")])
+        self.assertEqual([(item["fixing_round"], item["outcome"]) for item in dto["fixing_rounds"] if item["run_ref"] == by_run["fixer-failure"]], [(1, "failed")])
         # The selected HTTP boundary must scope newly added chain data as well as
         # occurrences/edges, even when several runs share one underlying reader.
         from starlette.testclient import TestClient
@@ -292,46 +303,15 @@ class ChainMappingTests(ProjectTest):
             self.assertEqual(response.status_code, 200)
             selected = response.json()
             self.assertEqual({item['run_ref'] for item in selected['chain']}, {reference})
+            self.assertTrue({item['run_ref'] for item in selected['fixing_rounds']} <= {reference})
             self.assertEqual(set(selected['chain_acceptance']), {reference})
-            selected_view = json.loads(subprocess.check_output([
-                'node', '--experimental-strip-types', '--input-type=module', '-e',
-                "import {graphFor} from './workflow_monitor/web/src/graph.ts'; "
-                "let data=''; for await (const chunk of process.stdin) data+=chunk; "
-                "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
-                input=json.dumps(selected).encode(), cwd=ROOT))
-            rendered_chain = {node['id'] for node in selected_view['nodes'] if 'chain-node' in node.get('className', '')}
-            self.assertEqual(rendered_chain, {item['ref'] for item in selected['chain'] if item['role'] != 'fixer' or len(item['occurrence_refs']) == 1})
 
-        # The production helper consumes the closed DTO, rather than task-plan or
-        # routine-check records. Exact recorded worker input survives as an actual
-        # edge; checks/checkpoints remain history, not graph activity.
-        view = json.loads(subprocess.check_output([
-            'node', '--experimental-strip-types', '--input-type=module', '-e',
-            "import {graphFor} from './workflow_monitor/web/src/graph.ts'; "
-            "let data=''; for await (const chunk of process.stdin) data+=chunk; "
-            "console.log(JSON.stringify(graphFor(JSON.parse(data), [], [])))"],
-            input=json.dumps(dto).encode(), cwd=ROOT))
-        nodes = {node['id'] for node in view['nodes']}
+        # Fixing-call lineage is exact invocation evidence; the round itself has no
+        # synthetic call identity or graph representation in this readback task.
         repaired_fixer_calls = [call for call in dto['activities'] if call['run_ref'] == by_run['repaired'] and call['role'] == 'fixing_worker']
         self.assertGreater(len(repaired_fixer_calls), 1)
         for call in repaired_fixer_calls:
             self.assertEqual(call.get('trigger_ref'), repaired[0]['ref'])
-            self.assertTrue(any(edge['source'] == repaired[0]['ref'] and edge['target'] == call['ref']
-                                and 'recorded-correction-trigger' in edge['data']['relations'] for edge in view['edges']))
-        self.assertFalse(any(edge['source'] in {call['ref'] for call in repaired_fixer_calls} and edge['target'] == repaired[2]['ref'] for edge in view['edges']))
-        self.assertFalse(any('planned' in node.get('className', '') for node in view['nodes']))
-        self.assertFalse(any(edge['data']['relation'] in ('chain_check', 'chain_checkpoint') for edge in view['edges']))
-        represented = {}
-        for execution in dto['chain']:
-            for occurrence_ref in execution['occurrence_refs']:
-                represented.setdefault((execution['run_ref'], occurrence_ref), []).append(execution['ref'])
-        for activity in dto['activities']:
-            aliases = represented.get((activity['run_ref'], activity['occurrence_ref']), [])
-            if len(aliases) != 1:
-                self.assertIn(activity['ref'], nodes)
-            for producer in activity['input_refs'] if activity['ref'] in nodes else []:
-                self.assertTrue(any(edge['source'] == producer and edge['target'] == activity['ref']
-                                    and 'recorded-input' in edge['data']['relations'] for edge in view['edges']))
         self.assertNotIn("PRIVATE-SENTINEL", repr(dto))
         self.assertNotIn("PRIVATE-WORKER-ANSWER", repr(dto))
 

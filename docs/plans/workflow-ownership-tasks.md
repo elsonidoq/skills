@@ -14,7 +14,7 @@ Apply repository instructions/constitution, [task semantics](../../skills/task-g
 [early-risk reduction](../../skills/planner/references/early-risk-reduction.md) and
 [task checkpoints](../../skills/memory-handling/references/task-commit-contract.md).
 The whole [memory index](../../memory/MEMORY.md) has no gotchas; existing
-[coordination guidelines](../../memory/coordination/GUIDELINES.md) have no approved guidance.
+[coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) have no approved guidance.
 Local inspected contracts suffice; no new dependency research or prototype is warranted.
 The risk is contradictory text/unsafe semantic drift, addressed by actual-diff inspection and
 focused permanent static/mutation fixtures inside delivery, not live probes.

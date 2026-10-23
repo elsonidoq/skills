@@ -1,7 +1,7 @@
 # Planner job-first — tasks
 
 Source: [TinySpec](planner-job-first-tinyspec.md), A1–A5.
-Authorization/review: [run evidence](../../memory/coordination/evidence/2026-10-08-planner-job-first/SUMMARY.md).
+Authorization/review: [run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-08-planner-job-first/SUMMARY.md).
 
 - [ ] T001 — Job-first planner contract and focused regression
 

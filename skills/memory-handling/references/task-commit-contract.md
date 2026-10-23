@@ -85,12 +85,12 @@ an interception guarantee.
 Return each task/attempt baseline, result SHA, checks and outcomes with concrete
 command/output/artifact references in existing task/runtime/session conventions.
 No automatic STATE maintenance, routine summaries/index updates, reflection or separate
-evidence-only checkpoint is required. Missing coordination store is nonblocking.
+evidence-only checkpoint is required. Missing optional memory storage is nonblocking.
 On interruption reconcile actual commits and check evidence; recover a successful SHA
 without duplicating its task commit. Inspect failed run/invocation before targeted retry;
 unknown cause stops. Later defects need dependency analysis and separately verified
-correction tasks, never automatic rollback. Feedback-only memory follows the
-[project coordination contract](project-coordination.md).
+correction tasks, never automatic rollback. Authorized memory guidance follows
+[Memory Handling](../SKILL.md).
 
 Operational assertions can check instructions, and temporary-Git fixtures can demonstrate Git
 protocol cases such as scoped commits, hook failures and unrelated-work preservation. Neither

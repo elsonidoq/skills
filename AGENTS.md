@@ -97,13 +97,13 @@ rules above for reusable skills and commands.
   `coordinate-implementation` → `finish-session`. TinySpec uses `tiny-spec`, separate
   tasks and combined approval; Standard uses installed SpecKit and specification/final
   approval gates. Neither automatically creates an Epic.
-- Gotcha memory: this repository's associated store is `memory/`, with `MEMORY.md` as
-  its index and optional trigger-first entries. Follow `memory-handling`: read the whole
-  index first, then only matching entries; recheck it after writes. Do not substitute
-  global memory. Planning/manual feedback guidance is in
-  `memory/coordination/`; executable runs consume approved task constraints, not routing feedback.
-  Missing store is nonblocking. Only explicit future-directed user
-  feedback authorizes guideline changes, never agent-inferred lessons or routine records.
+- Unified memory: this repository's associated store is `memory/`, with `MEMORY.md` as
+  its single index for verified trigger-first gotchas and explicit future-directed owner
+  guidance. Follow `memory-handling`: read the whole index first, then only matching
+  entries; recheck it after writes. Do not substitute global memory. Missing store is
+  nonblocking. Only explicit future-directed user feedback authorizes guidance changes,
+  never agent-inferred lessons or routine records; executable runs consume approved task
+  constraints, not execution-time feedback routing.
 - Consequential decisions: before affected planning or changes, use `save-adr` to discover
   the decision owner from this project's routing, read its whole index and relevant accepted
   records, and carry applicable accepted outcomes/source links into briefs and reviews.
@@ -152,8 +152,8 @@ rules above for reusable skills and commands.
 - **Paseo activation:** In Paseo-hosted sessions the owner cannot execute Pi slash
   commands such as `/reload`. Do not instruct the owner to run `/reload`. When changed
   extensions or tools must be loaded, prepare a fresh-session handoff; the fresh agent
-  verifies the checkout and loaded capabilities before launching approved workflow. Do
-  not automatically reload or restart the current session.
+  verifies the checkout, revision, current approval and loaded capabilities before
+  launching approved workflow. Do not automatically reload or restart the current session.
 
 <!-- coherence-parsimony:start -->
 ### Parsimony and Actionable Checks

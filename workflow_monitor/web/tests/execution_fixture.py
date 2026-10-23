@@ -2,6 +2,7 @@
 from pathlib import Path
 import sys
 import tempfile
+import os
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT), str(ROOT / 'runtime')]
@@ -11,6 +12,7 @@ from coherence_workflow.intake import admit
 from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.metric_artifacts import create_artifact
 from coherence_workflow.store import Authority, git
+from coherence_workflow.processes import process_identity
 from workflow_monitor.app import create_app
 from workflow_monitor.reader import Reader
 import uvicorn
@@ -31,6 +33,8 @@ def metric_record(run, invocation, mode, actual, *, partial=False):
                 'total_tokens': field(12), 'estimated_usd': field(.25),
                 'compactions': {'entry_ids': ['compact-one'], 'count': 1, 'unknown_reason': None},
                 'summary_overhead': {'entries': [{'entry_id': 'compact-one', 'unknown_reason': None, 'usage': {'input': 1, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 3, 'cacheWrite1h': 0, 'reasoning': 1, 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0, 'total': 0}}}], 'unknown_reason': None, 'included_in_sdk_deltas': True}}
+    if run == 'metrics-excluded':
+        interval['summary_overhead']['included_in_sdk_deltas'] = False
     if partial:
         interval['tokens']['output'] = {'value': None, 'unknown_reason': 'missing_end', 'provenance': 'fixture'}
     return {'version': 1, 'run_id': run, 'invocation_id': invocation, 'task_id': 'one', 'role': 'worker', 'outcome': 'settled', 'fixing_round': None, 'review_ordinal': None, 'interval': interval, 'before': before, 'after': after, 'selected_session_mode': mode, 'session_selection_reason': 'fixture-selection', 'actual_session_mode': actual, 'actual_session_id': 'session-one'}
@@ -46,7 +50,8 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     base = git(project, 'rev-parse', 'HEAD').decode().strip()
     presentation = descriptor({'tasks': [{'id': 'one', 'depends': []}, {'id': 'two', 'depends': ['one']}, {'id': 'three', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'T001'}, 'two': {'label': 'T002'}, 'three': {'label': 'T003'}}}}, {})
     # Simulate already-retained prose; no producer behavior is changed.
-    presentation['tasks'][0]['summary'] = '<img src=x onerror=alert(1)> Recorded workflow explanation ' * 12
+    presentation['tasks'][0]['work_description'] = '<img src=x onerror=alert(1)> Recorded workflow explanation opaque-invocation-identity ' * 12
+    presentation['tasks'][1]['work_description'] = None
     with Authority(project) as owner:
         class CorrectionAdapter:
             calls = 0
@@ -62,13 +67,13 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
         Engine(owner, 'engine-correction', admit({'monitor': {'correction_of': {'run_id': 'original', 'review_execution_id': 'review-id'}},
             'tasks': [{'id': 'fix', 'description': 'Correct original result', 'owned_paths': ['correction.txt'],
                        'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),
-            {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}, adapter=CorrectionAdapter,
+            {'provider': 'fixture', 'model': 'offline', 'effort': 'medium', 'reviewer': {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}}, adapter=CorrectionAdapter,
             question=lambda _: 'fixture correction', paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'merged-edge', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'metrics-excluded', 'merged-edge', 'relation-styles', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(descriptor({'tasks': [{'id': 'edge', 'description': 'Prepare usable input'}],
-                'monitor': {'tasks': {'edge': {'label': 'Prepare result'}}}}, {}) if run == 'merged-edge' else presentation)
+                'monitor': {'tasks': {'edge': {'label': 'Prepare result'}}}}, {}) if run == 'merged-edge' else presentation, runner_identity=process_identity(os.getpid(), 'offline-fixture'))
             emit(recorder, 'terminal', 'terminal', 'started', task=None, baseline=base)
             if run == 'merged-edge':
                 inputs = [{'checkpoint_occurrence_id': 'edge-checkpoint', 'task_id': 'edge',
@@ -81,6 +86,33 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     for state in ('started', 'returned'):
                         emit(recorder, identity, 'worker', state, task='edge', role='worker', invocation_id=identity,
                              invocation_kind=kind, selected_input_checkpoints=selected, correction_chain=chain)
+                continue
+            if run == 'relation-styles':
+                for identity, task in [('first', 'one'), ('second', 'two'), ('third', 'three')]:
+                    selected = [] if task == 'one' else [{'checkpoint_occurrence_id': 'first-checkpoint', 'task_id': 'one', 'producer_invocation_id': 'first', 'correction_chain': ['first']}]
+                    for state in ('started', 'returned'):
+                        emit(recorder, identity, 'worker', state, task=task, role='worker', invocation_id=identity, invocation_kind='task_worker', selected_input_checkpoints=selected, correction_chain=[identity])
+                    if task == 'one':
+                        emit(recorder, 'first-checkpoint', 'checkpoint', 'passed', task=task, baseline=base, head=base, no_change=True, producer_invocation_id=identity, correction_chain=[identity])
+                continue
+            if run.startswith('review-'):
+                owner.store.review_dispatch(run, 'private-review-two', role='reviewer', review_ordinal=2, fixing_round=1, review_base=base, review_head=base)
+                if run == 'review-dispatched':
+                    # Observation loss does not erase the exact retained metric interval.
+                    artifact = create_artifact(project, run, authority=owner)
+                    record = metric_record(run, 'private-review-two', 'fresh', 'fresh')
+                    record.update(task_id=None, role='reviewer', review_ordinal=2, fixing_round=1)
+                    artifact.append(record)
+                if run != 'review-dispatched':
+                    facts = {'role': 'reviewer', 'execution_id': 'private-review-two', 'review_ordinal': 2, 'review_base': base, 'review_head': base}
+                    emit(recorder, 'review-two', 'review', 'started', task=None, **facts)
+                    if run == 'review-waiting':
+                        emit(recorder, 'review-question', 'review', 'question_requested', task=None, parent_occurrence_id='review-two')
+                    if run in ('review-returned', 'review-conflict'):
+                        emit(recorder, 'review-two', 'review', 'returned', task=None, **facts)
+                        owner.store.review_outcome(run, 'private-review-two', 'rejected', findings=['Correct the result'], references={'base': base, 'head': base})
+                    if run == 'review-conflict':
+                        emit(recorder, 'review-two', 'review', 'failed', task=None, **facts)
                 continue
             if run == 'metrics-composed':
                 conflicting_record = None
@@ -167,7 +199,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                         emit(recorder, 'review', 'review', 'failed', task=None, role='reviewer', approved=False, finding_count=2, review_base=base, review_head=base)
                     emit(recorder, 'terminal', 'terminal', 'failed' if run == 'stopping' else 'passed', task=None, head=base)
             if run == 'success' or run.startswith('metrics-'):
-                modes = {'success': ('fresh', 'fresh'), 'metrics-reused': ('reused_from_earlier_task', 'reused_from_earlier_task'), 'metrics-continued': ('continued_same_task', 'continued_same_task'), 'metrics-unknown': ('unknown', 'unknown'), 'metrics-partial': ('fresh', 'fresh')}
+                modes = {'success': ('fresh', 'fresh'), 'metrics-reused': ('reused_from_earlier_task', 'reused_from_earlier_task'), 'metrics-continued': ('continued_same_task', 'continued_same_task'), 'metrics-unknown': ('unknown', 'unknown'), 'metrics-partial': ('fresh', 'fresh'), 'metrics-excluded': ('fresh', 'fresh')}
                 artifact = create_artifact(project, run, authority=owner)
                 artifact.append(metric_record(run, f'{run}-worker', *modes[run], partial=run == 'metrics-partial'))
                 if run == 'metrics-partial':

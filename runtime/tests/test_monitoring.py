@@ -15,7 +15,11 @@ EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
 
 class MonitoringStorageTests(ProjectTest):
     def test_closed_append_survives_reopen_and_ordinary_progress(self):
-        contract = {'tasks': [{'id': 'one', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'Public'}}}}
+        work = 'Implement the complete retained work description. ' * 12
+        contract = {'tasks': [{'id': 'one', 'depends': [], 'outcome': work,
+                               'prompt': 'PRIVATE-PROMPT', 'answers': ['PRIVATE-ANSWER'],
+                               'payload': {'credential': 'PRIVATE-CREDENTIAL'}}],
+                    'monitor': {'tasks': {'one': {'label': 'Public'}}}}
         with Authority(self.project) as owner:
             owner.store.start('run', self.base)
             rec = Recorder(owner.store, 'run')
@@ -32,8 +36,12 @@ class MonitoringStorageTests(ProjectTest):
             self.assertEqual([row['kind'] for row in record['observations']], ['started', 'returned'])
             self.assertEqual(record['observations'][0]['occurrence_id'], occurrence)
             retained = json.loads(record['run']['description'])
-            self.assertEqual(retained['tasks'][0]['label'], 'Public')
-            self.assertEqual(retained['description_version'], 2)
+            self.assertEqual(retained['tasks'][0], {'id': 'one', 'depends': [], 'label': 'Public', 'work_description': work})
+            self.assertEqual(retained['description_version'], 3)
+            self.assertEqual(retained['initial_review'], {'planned': True})
+            self.assertNotIn('PRIVATE-PROMPT', json.dumps(retained))
+            self.assertNotIn('PRIVATE-ANSWER', json.dumps(retained))
+            self.assertNotIn('PRIVATE-CREDENTIAL', json.dumps(retained))
             self.assertTrue(any(phase['pre_recording'] for phase in retained['phases']))
             self.assertTrue(any(phase['possible_branches'] for phase in retained['phases']))
             self.assertEqual(dict(owner.store.db.execute('SELECT * FROM execution_tasks').fetchone()), before)
@@ -60,7 +68,9 @@ class MonitoringStorageTests(ProjectTest):
 
     def test_invalid_optional_metadata_and_append_failure_do_not_veto_progress(self):
         contract = {'tasks': [{'id': 'one'}], 'monitor': {'tasks': {'one': {'label': ['private']}}}}
-        self.assertEqual(descriptor(contract, {})['tasks'][0]['label'], 'Task')
+        retained = descriptor(contract, {})
+        self.assertEqual(retained['tasks'][0]['label'], 'Task')
+        self.assertIsNone(retained['tasks'][0]['work_description'])
         with Authority(self.project) as owner:
             owner.store.start('run', self.base)
             rec = Recorder(owner.store, 'run')

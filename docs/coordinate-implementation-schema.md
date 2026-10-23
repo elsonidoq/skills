@@ -21,8 +21,10 @@ scope/exclusions are prompt context for all roles, not a receipt, budget service
 
 `--executor` is ordinary JSON containing worker `provider`, `model`, `effort`, with a
 required `reviewer` object containing its own `provider`, `model`, `effort`. The engine
-passes the worker assignment to implementation/fixer sessions and the reviewer assignment to
-separate fresh read-only review/rereview sessions. Missing or malformed reviewer configuration
+passes the worker assignment to implementation sessions and the reviewer assignment to
+fresh read-only review/rereview sessions. Actionable first-review findings continue in that
+reviewer's saved session with scoped writer tools, a correction plan and implementation;
+the recorded `fixer` stage uses the reviewer model, not a separate worker-model agent. Missing or malformed reviewer configuration
 is an actionable error, never implicit worker-assignment inheritance. Explicitly identical
 worker and reviewer values are allowed; reviewer contexts remain independent.
 The SDK resolves the exact selected model or reports its real error. Before prompting, the
@@ -53,7 +55,7 @@ Inputs preserve the parsed original contract/order, selected executor, settled a
 
 A failed required-check attempt is returned only to the same task's corrective worker context; a later real pass is required before checkpointing, while an unavailable safe correction retains its actual blocker. A whitespace, source, hook, or Git checkpoint failure likewise retains its actual error, returns to that same task for safe correction, reruns affected required checks, and retries with normal hooks/signing intact. If a commit reports failure/interruption, the runner first reconciles that operation's selected paths, attempted parent, and actual HEAD; a matching completed checkpoint retains its SHA without recommit, while another or unrecoverable result reports the exact blocker. Required original-input, history, and progress writes are atomic operation-local boundaries: after a SQLite failure the store re-reads that operation, retains a known completed result without replay, or makes one safe write correction before the dependent mutation. An unrecoverable or unreadable result reports the affected persistence operation and never launches/replays task tools, commits, or invented history. Optional monitoring, metrics, and telemetry writes remain nonblocking reported gaps and never use this required-data boundary. New terminal-call metrics are JSONL-only: no prompts, answers, transcripts, session paths, or SQLite metric mirror. Status/history derives its qualified JSONL subtotal and coverage from exact ordinary dispatch identities; missing or failed optional appends remain partial rather than zero or an invoice claim. State is ordinary running/complete/failed/interrupted/abandoned history,
 not proof of liveness, effect settlement or dispatch eligibility. IDs distinguish new runs; existing runs are not replayed.
-SQLite errors report the actual operation. A review/fixer dispatch is persisted before its dependent invocation; reopen retains the original rejection, attempts, consumed two-review/one-fixing-round slots and immutable completed task checkpoints. A findings-free first approval completes; only a well-formed actionable first rejection dispatches the one fixer and then a fresh second reviewer. Safe normalization preserves only an actual result; malformed, interrupted, uncertain, nonactionable, unrecoverable fixer/checkpoint, or second-review rejection stops without another dispatch. The scoped fixer retains its own execution ID, explicit review predecessor, check attempts, interval and focused checkpoint/parent rather than changing original task membership or checkpoint identity. Correctable fixer check/checkpoint failures return to that same fixing context and require affected real passes before its checkpoint. An uncertain invocation is not success or replay permission. Optional monitor facts never provide this authority. Safe CLI owner history exposes parsed actionable findings and range/commit references, never raw reviewer payloads, prompts, or answers. No graph saver, attempt selection or effect ledger
+SQLite errors report the actual operation. A review/fixer dispatch is persisted before its dependent invocation; reopen retains the original rejection, attempts, consumed two-review/one-fixing-round slots and immutable completed task checkpoints. A findings-free first approval completes; only a well-formed actionable first rejection dispatches the one fixer and then a fresh second reviewer. Safe normalization preserves only an actual result; malformed, interrupted, uncertain, nonactionable, unrecoverable fixer/checkpoint, or second-review rejection stops without another dispatch. The scoped fixer retains its own execution ID, explicit review predecessor, check attempts, interval and focused checkpoint/parent rather than changing original task membership or checkpoint identity. Correctable fixer check/checkpoint failures return to that same fixing context and require affected real passes before its checkpoint. An uncertain invocation is not success or replay permission. Optional monitor facts never provide this authority. Review outcomes privately retain the returned SDK session identity for reopening before repair; repair keeps skill discovery disabled as in the initial review. Safe CLI owner history exposes parsed actionable findings and range/commit references, never saved SDK identities, raw reviewer payloads, prompts, or answers. No graph saver, attempt selection or effect ledger
 is consumed to run new work. The writer lock is the ordinary per-worktree
 `coherence-workflow.lock`, held by the runner and inherited by its active SDK host.
 
@@ -86,10 +88,17 @@ Engine terminal-call boundaries attribute each actual worker/corrective/fixer/re
 New runs may additionally retain a closed `execution_monitor_runs` descriptor and ordered
 `execution_observations`. These are append-only best-effort monitoring facts: registration or
 append failures warn safely and never alter normal progress, checks, Git, or errors. Descriptors
-retain only declared task IDs/dependencies and explicitly supplied public presentation; observations
-retain closed phase/kind/fact fields, never prompts, answers, commands, output, findings, or errors.
-Descriptor version 2 records actual review execution IDs/ordinals, explicit trigger and predecessor execution
-IDs, fixer-owned check/checkpoint IDs, review range/outcome/count, and existing checkpoint hashes.
+retain declared task IDs/dependencies, safe optional labels, and complete explicit task
+`outcome`/`description` work text; missing work text remains unknown, not reconstructed from
+summaries or current files. Descriptor version 3 also retains explicit `initial_review: {planned: true}`
+intent, separately from generic phase vocabulary. It never retains arbitrary task objects or prompts.
+The viewer's planned task/review projection accepts version 3 only; older descriptors expose no
+plan, so their calls cannot receive task numbers from that projection. Stored history is not
+migrated or backfilled.
+Observations retain closed phase/kind/fact fields, never prompts, answers, commands, output,
+findings, or errors. Recorded facts include actual review execution IDs/ordinals, explicit trigger
+and predecessor execution IDs, fixer-owned check/checkpoint IDs, review range/outcome/count,
+and existing checkpoint hashes.
 A question's parent occurrence is callback lineage, not execution causality. The descriptor declares
 only the closed vocabulary; it does not assert any stage ran. Missing legacy links stay unknown: no
 backfill or inference from descriptor, role name, timestamp, or `correction_of` is permitted.
@@ -127,7 +136,11 @@ parent occurrence ID. They never retain question or answer text; a send is not a
 Recorder callbacks are independently best effort at requested, returned, sent and delivery-failed points;
 their failures cannot prevent a terminal answer or replace a transport error.
 Read-only status/history exposes recording version, stable occurrence IDs and review base/head ranges when
-present; the monitor's public chain DTO identifies only executions with matching emitted occurrences and attaches acceptance only to its explicit terminal reviewer ID and recorded range. Absent or corrupt monitoring is reported unknown. Explicit abandon preserves prior progress/error
+present; the monitor's public chain DTO retains known dispatched review executions even without
+matching observations. Exact same-run execution/invocation identity reconciles their activities
+and call metrics; a fixing-round dispatch alone does not prove an individual prompt occurred.
+Acceptance attaches only to its explicit terminal reviewer ID and recorded range. Absent or corrupt
+monitoring is reported unknown. Explicit abandon preserves prior progress/error
 history and appends an `abandoned` observation when the run was registered.
 
 ## Historical records

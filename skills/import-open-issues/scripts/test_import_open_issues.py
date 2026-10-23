@@ -8,8 +8,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from import_open_issues import ApplyAuthorization, GhApiTransport, IncompleteLookup, Source, VerifiedIssueObservation, apply, preview, reconcile
 
 ROOT = Path(__file__).resolve().parents[3]
-BASELINE_SHA256 = "314b9ddd758d25923105d85c23225293d0a1398b506d1b28925d783a5c3e1c7a"
-SOURCE = Source("github.com", "elsonidoq/skills", "docs/open_issues.md", "952e39b813a443caeb7417e63c170e219a433dbd")
+# Main added OI-20 and evidence to OI-19/OI-15 before this branch's cutover.
+# Preserve that merged historical source exactly, excluding only the cutover notice.
+BASELINE_SHA256 = "2dcf1acb8664e1486edee7c717ba8fc7562d53dc1c480da403a7c8a6afdc8d1c"
+SOURCE = Source("github.com", "elsonidoq/skills", "docs/open_issues.md", "9e0fbe9aebf29165779062d2f7ce84c4626fd229")
 CUTOVER_NOTICE = (
     "<!-- issue-tracking-cutover:start -->\n"
     "> Historical source only, not an active tracker. Active unresolved work is owned by\n"
@@ -41,8 +43,8 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(retained_original.encode()).hexdigest(), BASELINE_SHA256)
         result = preview(original, SOURCE, "elsonidoq/skills")
         self.assertEqual(result.diagnostics, ())
-        self.assertEqual([r.title.split(":", 1)[0] for r in result.records], ["OI-18", "OI-19", *[f"OI-{n}" for n in range(1, 18)]])
-        self.assertEqual(result.counts, {"records": 19, "open": 16, "closed": 3, "unmappable": 0})
+        self.assertEqual([r.title.split(":", 1)[0] for r in result.records], ["OI-18", "OI-19", "OI-20", *[f"OI-{n}" for n in range(1, 18)]])
+        self.assertEqual(result.counts, {"records": 20, "open": 17, "closed": 3, "unmappable": 0})
         by_id = {r.title.split(":", 1)[0]: r for r in result.records}
         self.assertEqual({key for key, value in by_id.items() if value.state == "closed"}, {"OI-6", "OI-7", "OI-12"})
         for record in result.records:
@@ -52,12 +54,12 @@ class PreviewTests(unittest.TestCase):
                 self.assertIn(field, dict(record.fields))
                 self.assertIn(dict(record.fields)[field], record.body)
             self.assertIn("Original Markdown excerpt", record.body)
-            self.assertIn("952e39b813a443caeb7417e63c170e219a433dbd", record.body)
+            self.assertIn(SOURCE.revision, record.body)
         self.assertIn("Latest verification (owner-controlled assignments)", dict(by_id["OI-15"].fields))
         self.assertIn("Temporary logs may expire", by_id["OI-8"].body)
         self.assertIn("not a confirmed", by_id["OI-5"].body)
         self.assertIn("[GitHub issue #2](https://github.com/elsonidoq/skills/issues/2)", by_id["OI-4"].body)
-        self.assertIn("[OI-5](https://github.com/elsonidoq/skills/blob/952e39b813a443caeb7417e63c170e219a433dbd/docs/open_issues.md)", by_id["OI-6"].body)
+        self.assertIn(f"[OI-5](https://github.com/elsonidoq/skills/blob/{SOURCE.revision}/docs/open_issues.md)", by_id["OI-6"].body)
         self.assertTrue(by_id["OI-18"].original_entry_url.endswith("#oi-18-resumed-runs-cannot-append-to-their-existing-jsonl-metrics-artifact"))
 
     def test_closed_disclaimer_is_exact_visible_and_outside_original_excerpt(self):
@@ -150,9 +152,9 @@ class PreviewTests(unittest.TestCase):
         result = preview(text, SOURCE, "dest/repo")
         record = result.records[0]
         self.assertEqual(record.identity, "github.com/elsonidoq/skills:docs/open_issues.md:OI-1")
-        self.assertIn("https://github.com/elsonidoq/skills/blob/952e39b813a443caeb7417e63c170e219a433dbd/runtime/a.py#part", record.body)
+        self.assertIn(f"https://github.com/elsonidoq/skills/blob/{SOURCE.revision}/runtime/a.py#part", record.body)
         self.assertIn("[absolute #2](https://github.com/x/y/issues/2)", record.body)
-        self.assertIn("[OI-9](https://github.com/elsonidoq/skills/blob/952e39b813a443caeb7417e63c170e219a433dbd/docs/open_issues.md)", record.body)
+        self.assertIn(f"[OI-9](https://github.com/elsonidoq/skills/blob/{SOURCE.revision}/docs/open_issues.md)", record.body)
         self.assertIn("`../code.py`", record.body)
         self.assertIn(("History", "retained"), record.fields)
         renamed = preview(text.replace("Renamed title", "Revised title"), SOURCE, "dest/repo").records[0]
@@ -396,7 +398,7 @@ class ApplyTests(unittest.TestCase):
     def test_actual_original_register_preserves_full_lifecycle_and_overlap_boundary(self):
         original = (ROOT / "docs/open_issues.md").read_text()
         proposal = preview(original, SOURCE, "dest/repo")
-        self.assertEqual(proposal.counts, {"records": 19, "open": 16, "closed": 3, "unmappable": 0})
+        self.assertEqual(proposal.counts, {"records": 20, "open": 17, "closed": 3, "unmappable": 0})
         by_id = {record.title.split(":", 1)[0]: record for record in proposal.records}
         # An existing historical #2 reference is never an implicit adoption.  A reviewer
         # mapping makes that one record non-createable and leaves the foreign body intact.
@@ -411,11 +413,11 @@ class ApplyTests(unittest.TestCase):
         reviewed = reconcile(proposal, transport, "github.com")
         calls.clear()
         result = apply(reviewed, transport, "github.com", ApplyAuthorization("github.com", "dest/repo", "reviewed original register"))
-        self.assertEqual([item.outcome for item in result.records].count("created"), 16)
+        self.assertEqual([item.outcome for item in result.records].count("created"), 17)
         self.assertEqual([item.outcome for item in result.records].count("closed"), 3)
         self.assertEqual([json.loads(stdin)["title"] for argv, stdin in calls if "POST" in argv],
                          [record.title for record in proposal.records])
-        self.assertEqual(sum("POST" in argv for argv, _ in calls), 19)
+        self.assertEqual(sum("POST" in argv for argv, _ in calls), 20)
         self.assertEqual(issues[0], {"number": 2, "title": "human issue #2", "state": "closed", "body": "human issue #2, no import marker"})
         for record in proposal.records:
             remote = next(issue for issue in issues if issue.get("body") == record.body)

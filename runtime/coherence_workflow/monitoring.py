@@ -123,14 +123,25 @@ def _closed_facts(phase, kind, facts):
 
 
 def descriptor(contract, executor, revision=None):
-    """Return a closed retained description; private task prose is never copied."""
+    """Return a closed retained description for a new recording only."""
     try:
         return _descriptor(contract, executor, revision)
     except Exception:
         _warn("recording description unavailable")
-        return {"version": RECORDING_VERSION, "description_version": 2, "phases": list(PHASE_DESCRIPTORS),
-                "tasks": [], "requested_executor": {}, "correction_of": None,
+        return {"version": RECORDING_VERSION, "description_version": 3, "phases": list(PHASE_DESCRIPTORS),
+                "tasks": [], "initial_review": {"planned": True}, "requested_executor": {}, "correction_of": None,
                 "runtime_revision": None, "runtime_revision_reason": "unknown"}
+
+
+def _work_description(task):
+    """Keep only explicit task work prose, never a summary or arbitrary task payload."""
+    if not isinstance(task, dict):
+        return None
+    for key in ("outcome", "description"):
+        value = task.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return None
 
 
 def _descriptor(contract, executor, revision=None):
@@ -138,18 +149,20 @@ def _descriptor(contract, executor, revision=None):
     monitor = contract.get("monitor") if isinstance(contract, dict) else None
     presentation = monitor.get("tasks", {}) if isinstance(monitor, dict) and isinstance(monitor.get("tasks"), dict) else {}
     for task in contract.get("tasks", []):
-        item = presentation.get(task.get("id"), {}) if isinstance(presentation, dict) else {}
+        item = presentation.get(task.get("id"), {}) if isinstance(task, dict) and isinstance(presentation, dict) else {}
         item = item if isinstance(item, dict) else {}
-        tasks.append({"id": task.get("id"), "depends": list(task.get("depends", [])),
+        tasks.append({"id": task.get("id") if isinstance(task, dict) else None,
+                      "depends": list(task.get("depends", [])) if isinstance(task, dict) and isinstance(task.get("depends", []), list) else [],
                       "label": _label(item.get("label"), "Task"),
-                      "summary": _label(item.get("executive_summary"), "Task execution", 240)})
+                      "work_description": _work_description(task)})
     correction = monitor.get("correction_of") if isinstance(monitor, dict) else None
     if not (isinstance(correction, dict) and isinstance(correction.get("run_id"), str) and isinstance(correction.get("review_execution_id"), str)):
         correction = None
     requested = {k: executor.get(k) for k in ("provider", "model", "effort")} if isinstance(executor, dict) else {}
-    # This declares a closed vocabulary, not an executed review/fixing stage.
-    return {"version": RECORDING_VERSION, "description_version": 2, "phases": list(PHASE_DESCRIPTORS),
-            "tasks": tasks, "requested_executor": requested, "correction_of": correction,
+    # This is explicit initial independent-review intent, not generic phase vocabulary
+    # and not evidence that an agent call was dispatched.
+    return {"version": RECORDING_VERSION, "description_version": 3, "phases": list(PHASE_DESCRIPTORS),
+            "tasks": tasks, "initial_review": {"planned": True}, "requested_executor": requested, "correction_of": correction,
             "runtime_revision": revision if _sha(revision) else None,
             "runtime_revision_reason": None if _sha(revision) else "unknown"}
 

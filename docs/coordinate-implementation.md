@@ -137,19 +137,19 @@ or operation trailers, hook/filter admission, hidden repair quotas, arbitrary ti
 The final reviewer is a fresh, read-only SDK session, not the worker context. It receives the
 actual full committed range, tasks, and the same routine-authority defaults/exclusions, with only
 read/search tools for source continuation. Authority does not prove checks or acceptance. Findings stop acceptance and are reported honestly with commits retained. A well-formed actionable first
-rejection automatically uses the separately bounded one-round fixer; a findings-free approval completes without it.
+rejection continues that same reviewer session for one correction round: the reviewer makes a concise plan and implements its fixes using the configured reviewer model, not the task-worker model. A findings-free approval completes without repair.
 Malformed, interrupted, uncertain, or nonactionable review results stop without fixing; safe deterministic normalization
-may only recover the actual review result. The fixer receives the original task contracts,
-configured executor/authority, explicit source/artifact scope and the actual findings; its checks
+may only recover the actual review result. The runner explicitly enables scoped writer tools only for the review→repair continuation, retaining the review transcript and SDK session identity. The repair prompt receives the original task contracts,
+unchanged authority, explicit source/artifact scope and the actual findings; its checks
 and focused checkpoint retain a distinct execution identity and explicit predecessor. Correctable
 check/checkpoint errors stay inside that assigned round and rerun affected checks before its
-checkpoint. This primitive neither routes work nor starts a recursive CLI/review loop; final chain control dispatches one fresh Review 2 after a successful fixer and remains bounded to two actual reviews and one fixer across resume. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
+checkpoint. The existing `fixer` history role identifies this repair stage, not a separate executor-model agent. A process restart before repair reopens the privately retained reviewer session; historical outcomes without a saved session can only use a fresh reviewer-model repair session, without claiming warm-context reuse. This primitive neither routes work nor starts a recursive CLI/review loop; final chain control dispatches one fresh read-only Review 2 after a successful repair and remains bounded to two actual reviews and one repair round across resume. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
 workflow fatal condition. SDK tools truncate long output with their normal continuation
 instructions; the transport has no size cap. A runner may reuse only a returned private saved session identity from the same run after a
 successful idle settlement and preceding verified checkpoint. Reuse also requires an explicit
 nonempty matching `context_group` and unchanged role, worktree, executor, resources,
 instructions, settings and authority; task text or callback identity alone are not mismatches.
-`fresh_only` and every reviewer select fresh. Candidates sort by latest successful settlement then
+`fresh_only` and each independent review select fresh. Review→repair is a continuation of the selected review, not cross-task candidate reuse; it keeps all effective resources except the explicitly enabled writer tools unchanged, including disabled skill discovery through subsequent corrective prompts. Every repair prompt carries the current-launch implementation authority and shared routine permissions/exclusions. Candidates sort by latest successful settlement then
 stable ID. Reuse needs measured effective headroom (context window minus effective reserve minus
 occupancy) at least `min_free_tokens_before_compaction`, whose configurable default is 150000.
 Unknown, invalid, disabled or inapplicable compaction/headroom facts select fresh rather than

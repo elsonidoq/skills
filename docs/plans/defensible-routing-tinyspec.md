@@ -48,7 +48,7 @@ historical research record. These are retained local qualified evidence, suffici
 process-policy design; no new dependency or external research is needed. Runtime pins remain
 pi 0.87.x (tested 0.87.1), pi-subagents 0.73.1 and pi-ask-user 0.15.1, not new installations.
 The associated [memory index](../../memory/MEMORY.md) is empty; the
-[coordination guidelines](../../memory/coordination/GUIDELINES.md) contain no approved guidance.
+[coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) contain no approved guidance.
 No success history or project calibration may be invented from either.
 
 Apply the installed [TinySpec](../../skills/tiny-spec/SKILL.md),

@@ -27,9 +27,9 @@ mechanism constraint and source link into both briefs. Known supplied constraint
 contract packaging; absent decision storage alone does not block unrelated work. Contradictory
 accepted authority or uncertain current supersession stops only the affected continuation.
 Missing memory or STATE is nonblocking. Preserve existing STATE/custom content and history;
-no automatic summaries/indexes, reflection or inferred feedback. The separate
-[project coordination contract](../memory-handling/references/project-coordination.md) retains
-feedback-only ownership for manual/planning work.
+no automatic summaries/indexes, reflection, inferred feedback, or execution-time feedback/routing
+intake. Memory Handling remains the unified owner for planning/manual feedback authority; execution
+consumes only approved constraints and gotchas.
 
 ## Prepare Approved Execution
 
@@ -105,7 +105,7 @@ The SDK is an instruction-managed coding tool, not an adversarial filesystem/com
 
 Inspect the actual diff and preserve unrelated staged/unstaged/untracked work. The runner creates
 one focused verified owned-path checkpoint per implementation/repair task before subsequent mutation or handoff.
-It uses explicit paths and normal Git hooks/signing; failed hooks/signing, whitespace, source, or ownership errors return their actual cause to the same task for safe correction, then rerun affected required checks and retry normally—never configure around them. After a reported-failed or interrupted commit, reconcile that operation's selected paths, attempted parent, and actual commit before retry; retain a matching SHA without recommit. An unsafe/out-of-scope action or unrecoverable signing/authority issue reports its exact blocker. No skip/defer, No-Git fallback, broad staging, reset,
+It uses explicit paths and normal Git hooks/signing; failed hooks/signing, whitespace, source, or ownership errors return their actual cause to the same task for safe correction; ownership conflict blocks the affected checkpoint. Then rerun affected required checks and retry normally—never configure around them. After a reported-failed or interrupted commit, reconcile that operation's selected paths, attempted parent, and actual commit before retry; retain a matching SHA without recommit. An unsafe/out-of-scope action or unrecoverable signing/authority issue reports its exact blocker. No skip/defer, No-Git fallback, broad staging, reset,
 cleanup or history rewrite. Read-only/no-change makes no empty commit. No extra evidence-only checkpoint.
 Dependencies release after the producer's real focused checkpoint, not an approval envelope.
 Never blindly replay a Git commit after interruption; inspect the actual resulting commit first.
@@ -118,7 +118,7 @@ After task checkpoints, use one fresh independent reviewer context with only rea
 not the worker's conversation. Its review scope carries applicable accepted outcomes, explicit mechanism
 constraints and source links, and compares the actual change (including simplification or deletion)
 with them. Review the actual full committed range and relevant files with continuation; no
-provenance/evidence hash or SQL disposition is required. A findings-free approval completes immediately. A well-formed actionable first rejection automatically dispatches exactly one configured-authority fixer within original scope, runs its applicable checks and focused checkpoint, then obtains one fresh read-only Review 2 over the original base→actual head. Formatting/tool issues use safe same-invocation correction or deterministic normalization of the actual result only; they never invent a verdict or launch a fixer. Malformed, interrupted, uncertain, nonactionable, fixer/checkpoint-unrecoverable, or Review 2 rejection stops honestly with retained work and actual findings/references. Across resume, retain at most two actual reviews and one fixing round; do not relabel findings as resolved, substitute the writer as reviewer, claim unperformed checks, or start another repair loop.
+provenance/evidence hash or SQL disposition is required. A findings-free approval completes immediately. A well-formed actionable first rejection continues the same reviewer session with explicitly enabled scoped writer tools: the reviewer first plans corrections, then implements fixes within original scope using the configured reviewer model. The runner runs applicable checks and creates the focused checkpoint, then obtains one fresh read-only Review 2 over the original base→actual head. The existing `fixer` history role records this correction stage, not a separate task-worker-model agent. Before repair, a process restart reopens the private saved reviewer identity; historical outcomes without that identity use a fresh reviewer-model repair session without claiming warm context. Formatting/tool issues use safe same-invocation correction or deterministic normalization of the actual result only; they never invent a verdict or launch a fixer. Malformed, interrupted, uncertain, nonactionable, fixer/checkpoint-unrecoverable, or Review 2 rejection stops honestly with retained work and actual findings/references. Across resume, retain at most two actual reviews and one fixing round; do not relabel findings as resolved, substitute the repair author for the fresh final reviewer, claim unperformed checks, or start another repair loop.
 
 ## Runner-configured worker role
 

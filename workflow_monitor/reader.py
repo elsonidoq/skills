@@ -321,6 +321,9 @@ class Reader:
                 invocation_id = (facts.get('invocation_id') or (facts.get('execution_id') if facts.get('role') == 'reviewer' else None)) if isinstance(facts, dict) else None
                 if isinstance(invocation_id, str) and invocation_id:
                     expected.setdefault(row["run_id"], set()).add(invocation_id)
+            # Dispatch records are a separate source of exact call identity.  They
+            # survive optional monitor-observation loss, but never invent an
+            # individual fixer call from a fixing-round execution.
             dispatches: dict[str, dict[str, dict[str, Any]]] = {row['run_id']: {} for row in supported}
             artifacts = {}
             for run_id in dispatches:
@@ -345,10 +348,13 @@ class Reader:
                             identity = detail.get('invocation_id')
                             if isinstance(identity, str) and identity:
                                 dispatches[run_id][identity] = {'invocation_id': identity, 'task_id': row['task_id'],
-                                    'role': 'fixing_worker' if row['kind'] == 'fixer_invocation' else (detail.get('role', 'worker') if detail.get('role', 'worker') in {'worker', 'fixing_worker'} else 'unknown')}
+                                    'role': 'fixing_worker' if row['kind'] == 'fixer_invocation' else (detail.get('role', 'worker') if detail.get('role', 'worker') in {'worker', 'fixing_worker'} else 'unknown'),
+                                    'execution_id': detail.get('execution_id') if isinstance(detail.get('execution_id'), str) else None}
                 if 'execution_review_executions' in tables:
-                    for row in connection.execute("SELECT execution_id FROM execution_review_executions WHERE run_id=? AND role='reviewer'", (run_id,)):
-                        dispatches[run_id][row['execution_id']] = {'invocation_id': row['execution_id'], 'task_id': None, 'role': 'reviewer'}
+                    for row in connection.execute("SELECT execution_id, review_ordinal, fixing_round, trigger_execution_id, predecessor_execution_id FROM execution_review_executions WHERE run_id=? AND role='reviewer'", (run_id,)):
+                        dispatches[run_id][row['execution_id']] = {'invocation_id': row['execution_id'], 'task_id': None, 'role': 'reviewer',
+                            'execution_id': row['execution_id'], 'review_ordinal': row['review_ordinal'], 'fixing_round': row['fixing_round'],
+                            'trigger_execution_id': row['trigger_execution_id'], 'predecessor_execution_id': row['predecessor_execution_id']}
             observed_expected = {key: set(value) for key, value in expected.items()}
             for run_id, calls in dispatches.items():
                 expected.setdefault(run_id, set()).update(calls)
@@ -360,8 +366,9 @@ class Reader:
                     if value['coverage'] == 'complete':
                         value['coverage'] = 'partial'
             return {"state": "ok", "runs": supported, "unsupported_run_ids": unsupported,
-                    "observations": observations, "review_details": review_details, "metrics": metrics,
-                    "metric_artifacts": artifacts}
+                    "observations": observations, "review_details": review_details,
+                    "dispatches": {run_id: list(calls.values()) for run_id, calls in dispatches.items()},
+                    "metrics": metrics, "metric_artifacts": artifacts}
         except (sqlite3.Error, OSError, ValueError):
             return {"state": "unavailable", "code": "read_failed"}
         finally:

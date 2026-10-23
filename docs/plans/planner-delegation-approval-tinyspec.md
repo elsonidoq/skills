@@ -61,7 +61,7 @@ Repository-derived facts, inspected at baseline
   rejects briefs outside 4–6 items. There is no `scripts/check-planner-trace.py` at this
   baseline: the actual trace checker is `scripts/planner-trace.py`.
 - The whole [gotcha index](../../memory/MEMORY.md) has no entries and
-  [coordination guidelines](../../memory/coordination/GUIDELINES.md) have no approved
+  [coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) have no approved
   guidance; no history was needed or loaded. No project lesson or model-success claim
   is inferred.
 

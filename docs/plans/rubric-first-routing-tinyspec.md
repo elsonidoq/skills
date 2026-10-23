@@ -55,7 +55,7 @@ Preserve [AGENTS](../../AGENTS.md), [constitution](../../.specify/memory/constit
 [early risk reduction](../../skills/planner/references/early-risk-reduction.md), and
 [task checkpoints](../../skills/memory-handling/references/task-commit-contract.md).
 The adopted [memory index](../../memory/MEMORY.md) has no gotchas; relevant
-[coordination guidelines](../../memory/coordination/GUIDELINES.md) have no approved
+[coordination guidelines](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/GUIDELINES.md) have no approved
 guidance. Apply explicit none with uncertainty; do not fabricate learned history.
 
 Excluded: model diversity quotas, fixed universal model ladders/defaults, benchmark-only

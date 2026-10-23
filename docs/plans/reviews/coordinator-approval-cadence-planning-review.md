@@ -6,7 +6,7 @@ Producer: planner, TinySpec. Planning profile: selected and environment-observed
 
 - [Source](../coordinator-approval-cadence-tinyspec.md), commit `37eb12a`, SHA-256 `42899605f88dc92663914d0ce7dd2c35c5017048585e50dcf401718af700ea16`.
 - [Tasks](../coordinator-approval-cadence-tasks.md), commit `b702f8d`, SHA-256 `e55a6c2c015085d80fe0f577dbe784bd6f0dcd5faa45a3309b2d7fa43820ce3e`.
-- Evidence: [planning run](../../../memory/coordination/evidence/2026-10-06-coordinator-approval-cadence/SUMMARY.md).
+- Evidence: [planning run](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/2026-10-06-coordinator-approval-cadence/SUMMARY.md).
 
 ## Review results
 
