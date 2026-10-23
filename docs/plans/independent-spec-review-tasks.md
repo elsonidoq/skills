@@ -10,13 +10,36 @@ owns the exact work instructions, owned paths and task-local REQUIRED checks.
 
 ### Approval record
 
-Owner selected TinySpec through `ask_user` and authorized task preparation. Parent
-inspected the source; separate task inspection and combined artifact approval are next.
-This delivery does not assert that review or approval has occurred. Owner requested
-**planning only, including after final planning approval**: no implementation or live
-feature evaluation is authorized by this preparation run. Keep that temporary boundary
-here/in the eventual approval record, not in executable task descriptions or check
-permissions. No live feature evaluation was run during task preparation.
+Owner selected TinySpec through `ask_user` and authorized task preparation. On
+2026-10-23, after the parent presented the source/scope, each ordered T001–T003 outcome,
+exclusions, review results and limitations, the owner answered **“Approve planning-only
+handoff”** through `ask_user`. This approves the source and task scope below for handoff,
+**not implementation or live feature evaluation**. The next operation is this final
+planning handoff, then stop; do not launch the coordinator.
+
+Approved content at `d36bbf060f1f6db091a6adab9ff42c415e6a2a44`:
+
+- `independent-spec-review-tinyspec.md`: SHA256
+  `0a182750336b9c295c366f02f3feb6202200a817748511179bd2de9a1a2bc769`.
+- `independent-spec-review-tasks.json`: SHA256
+  `fcac751add6868ee1b6af673900ca0832ee32ffce5c2dd8864d63ec700397ddc`.
+- This human presentation before adding this approval record: SHA256
+  `9e5b5d02593dbeb2baf28b277ba9c1aa124dfc969833145173a9cca242d4f223`.
+  Only this approval section changed afterward; executable instructions, outcomes,
+  dependencies and acceptance remain unchanged. Git preserves the compared bytes.
+
+Parent review passed source A–E coverage, task boundaries/dependencies, owned-path
+sequencing, accepted ADR constraints, neutral executable instructions and preservation
+of existing approvals/TinySpec/late review. JSON and Markdown dependency validators,
+actual runner read-only intake, local linked-file existence and `git diff --check`
+passed. Feature regression/live behavioral checks were NOT RUN; historical known-gap
+pair remains NOT VERIFIED. These are future implementation acceptance, not claims of
+feature completion. No live feature evaluation ran during preparation.
+
+Keep this temporary planning-only boundary in approval/handoff context, not executable
+task descriptions or check permissions. Later implementation needs explicit scoped
+launch authority and the selected configuration, original review/acceptance requirements
+and actual capability/manual gates; this approval does not supply launch authority.
 
 ## Shared implementation context
 
