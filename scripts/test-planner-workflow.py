@@ -760,6 +760,29 @@ class InstructionTests(unittest.TestCase):
     def test_candidate_contract(self):
         self.assertEqual(checker.check_contracts(self.texts), [])
 
+    def test_managed_entry_carriers_reject_shortcuts_and_summary_substitutes(self):
+        """E/T003 static entry sensitivity, not live A–D behavioral acceptance."""
+        for label, key, selector, clauses in checker.MANAGED_ENTRY_CARRIERS:
+            body = checker.operational_carrier(self.texts[key], selector)
+            self.assertTrue(body, label)
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    changed = dict(self.texts)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    replacement = re.sub(pattern, "REMOVED", body, count=1)
+                    changed[key] = changed[key].replace(body, replacement, 1)
+                    # The original text outside the actual frontmatter/Outline carrier is inert.
+                    changed[key] += "\n## Summary only\n" + body
+                    self.assertTrue(any(error.startswith(label + ":")
+                                        for error in checker.check_contracts(changed)))
+
+        changed = dict(self.texts)
+        frontmatter = checker.operational_carrier(changed["specify"], "frontmatter")
+        changed["specify"] = changed["specify"].replace("agent: planner", "agent: speckit.plan", 1)
+        changed["specify"] += "\n## Summary only\n" + frontmatter
+        self.assertTrue(any(error.startswith("managed-specify-handoff:")
+                            for error in checker.check_contracts(changed)))
+
     def test_route_sections_do_not_overlap(self):
         tiny = checker.section(self.texts["planner"], "### TinySpec path")
         standard = checker.section(self.texts["planner"], "### Standard path")
@@ -2194,6 +2217,24 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
             self.assertEqual(corrected["requested"],
                              self.assignments.resolve(operations[0], planner_skill=skill)["requested"])
             self.assertNotIn("repair", edited)
+
+    def test_installed_whole_skill_keeps_canonical_review_prompt_link(self):
+        """E/T003 isolated packaging readback; no real installation is touched."""
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory) / "home"
+            destinations = home / "skills"
+            guidance = Path(directory) / "guide.md"
+            guidance.write_text("fixture guidance")
+            with contextlib.redirect_stdout(io.StringIO()):
+                links.install(ROOT / "skills", guidance, destinations, home / "docs",
+                              home / "backups", home / "settings.json")
+            installed = destinations / "planner"
+            self.assertTrue(installed.is_symlink())
+            skill = (installed / "SKILL.md").read_text()
+            self.assertIn("[the canonical review prompt](references/spec-review.md)", skill)
+            prompt = installed / "references/spec-review.md"
+            self.assertTrue(prompt.is_file())
+            self.assertIn("# Standard specification skeptical review", prompt.read_text())
 
     def test_installer_symlink_discovers_canonical_file_from_unrelated_home(self):
         with tempfile.TemporaryDirectory() as directory:

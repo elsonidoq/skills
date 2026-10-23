@@ -11,15 +11,16 @@ specification approval or planning artifacts on it:
 
 1. **Principles:** Read governing product, architecture, quality, and security rules. Do not invent missing policy.
 2. **Specify:** Define what must be true and why, without prescribing implementation unless a technical choice is already settled.
-3. **Clarify:** Remove ambiguity and resolve material choices before planning.
-4. **Approve specification:** Obtain and record human approval of the current specification.
-5. **Plan:** Define architecture, interfaces, data flow, sequencing, risks, migration or rollout, and verification.
-6. **Tasks:** Derive dependency-aware, independently verifiable implementation tasks from the approved plan.
-7. **Analyze:** Check source -> specification -> plan -> tasks traceability, consistency, completeness, dependencies, and exclusions.
-8. **Approve reviewed artifacts:** Record human approval after analysis and before implementation handoff.
-9. **Implement and verify:** Execute tasks against the approved artifacts; update artifacts or seek a decision when implementation reveals a material conflict.
+3. **Clarify:** Remove ambiguity and resolve material choices before planning when required.
+4. **Review specification:** Under `planner`, run the distinct independent `spec_review`; the reviewer reports findings only and has no edit authority, while the originating producer incorporates actual owner answers.
+5. **Approve specification:** Obtain and record human approval of the current specification after that review or incorporation.
+6. **Plan:** Define architecture, interfaces, data flow, sequencing, risks, migration or rollout, and verification.
+7. **Tasks:** Derive dependency-aware, independently verifiable implementation tasks from the approved plan.
+8. **Analyze:** Check source -> specification -> plan -> tasks traceability, consistency, completeness, dependencies, and exclusions.
+9. **Approve reviewed artifacts:** Record human approval after analysis and before implementation handoff.
+10. **Implement and verify:** Execute tasks against the approved artifacts; update artifacts or seek a decision when implementation reveals a material conflict.
 
-Resume at the earliest missing, stale, or inconsistent stage. Artifact status never substitutes for validating its content and links.
+Resume at the earliest missing, stale, or inconsistent stage. Under planner, raw standalone SpecKit remains available but is outside this independently reviewed Standard guarantee; use planner rather than a wrapper or new slash command when that guarantee is needed. Artifact status never substitutes for validating its content and links.
 
 ## Designing AI-Friendly Specifications for Solo Builders
 
@@ -41,7 +42,7 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 - Ask a human when alternatives materially change product scope, architecture, privacy, permissions, irreversible behavior, cost, or a settled requirement.
 - Present concrete options, relevant tradeoffs, and a recommendation; record the decision and rationale in the applicable artifact.
 - Do not choose speculatively to keep the workflow moving.
-- In Standard, planning must not begin until the specification and clarification results have explicit human approval. TinySpec resolves material choices but does not add a separate pre-task source approval.
+- In planner-managed Standard, planning must not begin until the distinct independent specification review has completed, the producer has incorporated any answered material findings, and the current specification has explicit human approval. The reviewer has no edit authority. TinySpec resolves material choices but does not add a separate pre-task source approval.
 
 ### Planning, Tasks, and Analysis
 

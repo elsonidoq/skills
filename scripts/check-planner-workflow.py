@@ -21,6 +21,10 @@ PATHS = {
     "requirements": "REQUIREMENTS.md",
     "risk": "skills/planner/references/early-risk-reduction.md",
     "research": "skills/planner/references/dependency-research.md",
+    "specify": ".pi/prompts/speckit.specify.md",
+    "clarify": ".pi/prompts/speckit.clarify.md",
+    "plan_prompt": ".pi/prompts/speckit.plan.md",
+    "readme": "README.md",
 }
 
 
@@ -89,6 +93,9 @@ def stage(text, name):
 
 def operational_carrier(text, selector):
     """Bound an actual operational stage/adapter; summary wording cannot satisfy it."""
+    if selector == "frontmatter":
+        match = re.match(r"\A---\n.*?\n---", text, re.S)
+        return match.group(0) if match else ""
     if selector.startswith("stage:"):
         return stage(section(text, "### Standard path"), selector[6:])
     if selector.startswith("item:"):
@@ -103,6 +110,40 @@ def operational_carrier(text, selector):
     return section(text, selector)
 
 # Focused workflow-ownership boundaries; these are textual checks, not semantic oracles.
+MANAGED_ENTRY_CARRIERS = (
+    ("managed-specify-handoff", "specify", "frontmatter", (
+        "agent: planner", "Continue managed Standard workflow",
+        "independent spec review and current-spec approval before planning",
+    )),
+    ("managed-specify-outline", "specify", "## Outline", (
+        "Return: SUCCESS to `planner`", "distinct independent `spec_review`",
+        "current-specification approval before `plan_create`",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-specify-completion", "specify", "## Completion Report", (
+        "return control for the distinct `spec_review`", "Raw standalone SpecKit",
+    )),
+    ("managed-clarify-outline", "clarify", "## Outline", (
+        "Under `planner`, return after required clarification", "distinct independent `spec_review`",
+        "never grants the read-only reviewer edit authority",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-clarify-completion", "clarify", "## Completion Report", (
+        "return control for distinct review and current-specification approval",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-plan-setup", "plan_prompt", "## Outline", (
+        "Under `planner`, do not run setup or create planning artifacts", "distinct independent `spec_review`",
+        "current-specification approval is recorded", "Return the unmet boundary to planner",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-plan-context", "plan_prompt", "## Outline", (
+        "load the current approved FEATURE_SPEC only after that boundary",
+        "reviewer is read-only and does not edit it",
+    )),
+)
+
+
 MECHANICAL_CARRIERS = (
     ("planner", "## Selected production and stage handoffs"),
     ("planner", "item:3. **Review"),
@@ -152,6 +193,20 @@ def check_contracts(texts):
         for phrase in phrases:
             if phrase.lower() in text.lower():
                 errors.append(f"{label}: contradictory {phrase!r}")
+
+    for label, key, selector, clauses in MANAGED_ENTRY_CARRIERS:
+        require(label, operational_carrier(texts[key], selector), *clauses)
+    reject("managed-specify-handoff", operational_carrier(texts["specify"], "frontmatter"),
+           "agent: speckit.plan")
+    require("managed-readme", texts["readme"],
+            "Use `planner` for the managed Standard guarantee", "independent specification review",
+            "current-specification approval before planning", "Raw standalone SpecKit commands remain",
+            "outside that planner guarantee", "does not add a\nwrapper command or change their installer/runtime",
+            "later plan helper\n  review/fix pass is not that specification review and does not trigger it again")
+    require("managed-sdd-lifecycle", section(texts["guidance"], "## SDD Role and Lifecycle"),
+            "Review specification", "distinct independent `spec_review`", "reviewer reports findings only",
+            "originating producer incorporates actual owner answers", "outside this independently reviewed Standard guarantee",
+            "rather than a wrapper or new slash command", "reviewer reports findings only and has no edit authority")
 
     require("parsimony-policy", texts.get("parsimony", ""),
             "smallest working solution", "legitimate behavior prevented",

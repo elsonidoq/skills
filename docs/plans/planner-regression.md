@@ -79,6 +79,47 @@ and must not be executed. Existing dependency-parser tests cover IDs, gaps, dupl
 self/forward/missing prerequisites and story continuity. Manual/semantic review still checks
 implicit producers, acceptance meaning, saved-assignment propagation, exclusions and documentation truth.
 
+## T003 managed SpecKit entry composition
+
+Actual local commands: `PYTHONDONTWRITEBYTECODE=1 python3
+scripts/check-planner-workflow.py` passed (static instructions only),
+`PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py` passed 166 offline
+tests, and `git diff --check` passed. The checker now reads the actual Specify frontmatter
+and Outline/completion, Clarify Outline/completion, and Plan Outline carriers. Focused
+mutations reject a restored direct-plan handoff, a missing return/review/approval prerequisite,
+lost reviewer read-only boundary, and summary-only replacement. It also retains the existing
+planner carrier checks for TinySpec, late independent `overall_review`, both Standard approvals
+and current-content renewal/earliest-invalid recovery, neutral tasks, and shared bounded
+routine-test permissions. These are static composition guards, not an added startup linter or
+per-stage acknowledgement. The broader `PYTHONDONTWRITEBYTECODE=1 bash
+scripts/check-skills-lint.sh` was also run but is **not green** for two inherited, out-of-scope
+failures: `initialize-coherence/scripts/test_contract.py` expects the absent tracked
+`docs/open_issues.md` historical link target, and `task-generation/scripts/test_contract.py`
+still expects `overall_review` to be stage 4 although T002 inserted `spec_review`. Neither
+failure is caused by these owned-path edits; no non-owned repair was made.
+
+The suite's existing whole-skill isolated installer fixture installed `skills/` into a temporary
+home only, read the installed `planner/SKILL.md`, resolved its canonical
+`references/spec-review.md` link, and read the canonical review prompt. No real installation,
+resolver, runtime, global binding, or installer mutation occurred. Manual comparison of the
+changed prompt/docs carriers with `planner` and approval/recovery confirmed planner-only
+independent review → producer incorporation → current-spec approval → plan ordering; raw
+standalone SpecKit is explicitly outside that guarantee. The later helper review/fix pass is
+not represented as `spec_review` and does not cause automatic repeated review. The narrow diff
+contains no model/provider hardcode and no installer/runtime edit.
+
+**A–D behavioral acceptance remains NOT RUN / UNAVAILABLE.** T002's real-interface limits
+remain applicable: this task changed entry guidance, not the reviewer profile, revision or
+context boundary, and no paid application/test API is approved. Static tests and isolated
+packaging are not live evidence and do not mark A–D passed. If a later changed entry boundary
+invalidates release-order evidence, rerun only that bounded live boundary with actual owner
+answers/approval and exact verified capabilities; do not fabricate or substitute it.
+
+For Paseo activation after this prompt/skill change, prepare a fresh-session handoff naming
+the checkout, revision, current approval and loaded capabilities. The fresh agent verifies
+those facts before launching approved workflow. Do not use `/reload`, mutate installation, or
+automatically restart this session.
+
 Instruction mutations delete gates/constraints, change classes, remove renewals, permit
 adapter double creation, remove stage bodies, swap stages and insert contradictory policies.
 Trace mutations test tool-context-only briefs, hidden reasoning, post-question summaries,

@@ -1,9 +1,9 @@
 ---
 description: Create or update the feature specification from a natural language feature description.
 handoffs:
-  - label: Build Technical Plan
-    agent: speckit.plan
-    prompt: Create a plan for the spec. I am building with...
+  - label: Continue managed Standard workflow
+    agent: planner
+    prompt: Continue the managed Standard workflow from this specification, including independent spec review and current-spec approval before planning.
   - label: Clarify Spec Requirements
     agent: speckit.clarify
     prompt: Clarify specification requirements
@@ -141,7 +141,7 @@ Given that feature description, do this:
        Use observable qualitative outcomes; quantitative targets only when source-backed
        Each criterion must be verifiable without implementation details
     7. Identify Key Entities (if data involved)
-    8. Return: SUCCESS (spec ready for planning)
+    8. Return: SUCCESS to `planner` after specification creation and any clarification it requires. Under `planner`, do not begin planning from this prompt: planner runs the distinct independent `spec_review`, incorporates answered findings through the producer, and obtains existing current-specification approval before `plan_create`. Raw standalone SpecKit use remains available, but is outside planner's independently reviewed Standard guarantee.
 
 7. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
 
@@ -192,7 +192,7 @@ Given that feature description, do this:
 
    c. **Handle Validation Results**:
 
-      - **If all items pass**: Mark checklist complete and proceed to the Mandatory Post-Execution Hooks section
+      - **If all items pass**: Mark checklist complete and proceed to the Mandatory Post-Execution Hooks section. Under planner, return there rather than suggesting direct planning; its distinct review and current-specification approval remain next.
 
       - **If items fail (excluding [NEEDS CLARIFICATION])**:
         1. List the failing items and specific issues
@@ -277,7 +277,7 @@ Report completion to the user with:
 - `SPECIFY_FEATURE_DIRECTORY` — the feature directory path
 - `SPEC_FILE` — the spec file path
 - Checklist results summary
-- Readiness for the next phase (`/speckit.clarify` or `/speckit.plan`)
+- Under planner, return control for the distinct `spec_review` and existing current-specification approval before planning. Raw standalone SpecKit may proceed through its vendor flow, but does not receive planner's independently reviewed Standard guarantee.
 
 **NOTE:** Branch creation is handled by the `before_specify` hook (git extension). Spec directory and file creation are always handled by this core command.
 
