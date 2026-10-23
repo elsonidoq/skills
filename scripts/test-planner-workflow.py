@@ -2184,6 +2184,54 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
             target.write_text(json.dumps(absent))
             self.assert_problem(saved_operation, skill, "is absent")
 
+    def assert_spec_review_prompt(self, text):
+        for clause in (
+            "Product intent and relevant behavioral completeness are review\nperspectives, not a checklist.",
+            "**zero findings**", "no more than **five** highest-impact unresolved\ndecisions, ranked by importance.", "concrete scenario", "reasonable divergent assumptions or\nbehaviors", "their consequences", "specific question, preferably with meaningful\nalternatives", "already answered\nby supplied context, implementation questions, and generic questions.",
+            "exact current specification path and content identity", "relevant context, constraints, accepted decisions, and memory", "Do not provide producer rationale, a producer transcript, or unrelated history.",
+            "independent from the specification producer.", "no writes, implementation changes,\nexternal actions, or further delegation.", "operational boundary, not a security sandbox", "including `bash`,\ncan still act outside it.", "Bind the report output to the runtime invocation",
+        ):
+            self.assertIn(" ".join(clause.split()), " ".join(text.split()))
+
+    def test_skeptical_spec_review_prompt_contract_and_mutations(self):
+        prompt = (ROOT / "skills/planner/references/spec-review.md").read_text()
+        self.assert_spec_review_prompt(prompt)
+        for removed in (
+            "**zero findings**", "no more than **five**", "already answered", "independent from",
+            "no writes, implementation changes,", "operational boundary, not a security sandbox",
+        ):
+            with self.subTest(removed=removed):
+                self.assertIn(removed, prompt)
+                with self.assertRaises(AssertionError):
+                    self.assert_spec_review_prompt(prompt.replace(removed, "REMOVED", 1))
+
+    def test_standard_spec_review_resolves_shared_binding_and_rejects_bad_exact_binding(self):
+        actual = json.loads(self.canonical.read_text())
+        self.assertEqual(actual["operations"]["standard-spec-review"],
+                         {"assignment": "standard-review"})
+        resolved = self.assignments.resolve("standard-spec-review")
+        overall = self.assignments.resolve("standard-overall-review")
+        self.assertEqual(resolved["source"], "standard-review")
+        self.assertEqual(resolved["requested"], overall["requested"])
+        with tempfile.TemporaryDirectory() as directory:
+            skill, target = self.fixture_skill(directory)
+            edited = json.loads(target.read_text())
+            edited["assignments"]["standard-review"] = {
+                "model": "example/owner-edited", "effort": "high"}
+            target.write_text(json.dumps(edited))
+            self.assertEqual(self.assignments.resolve("standard-spec-review", planner_skill=skill)["requested"],
+                             {"model": "example/owner-edited", "effort": "high"})
+            missing = json.loads(target.read_text())
+            del missing["operations"]["standard-spec-review"]
+            target.write_text(json.dumps(missing))
+            self.assert_problem("standard-spec-review", skill, "no assignment")
+            target.write_text("{")
+            self.assert_problem("standard-spec-review", skill, "malformed")
+            unavailable = json.loads(self.canonical.read_text())
+            unavailable["assignments"]["standard-review"] = {"model": "", "effort": "medium"}
+            target.write_text(json.dumps(unavailable))
+            self.assert_problem("standard-spec-review", skill, "needs nonempty model and effort")
+
 
 class OwnerAssignmentPlannerTests(unittest.TestCase):
     """Offline planner-stage traces; not proof of provider delegation or obedience."""

@@ -27,6 +27,23 @@ python3 skills/task-generation/scripts/check-task-order.py scripts/fixtures/plan
 git diff --check
 ```
 
+## T001 skeptical specification review contract
+
+Scoped offline result: `python3 scripts/test-planner-workflow.py OwnerAssignmentConfigTests -v`
+passed 6 tests, including prompt-rule mutations and the actual generic resolver lookup for
+`standard-spec-review`; `git diff --check` passed. Fixture owner edits propagate through the
+existing `standard-review` assignment. Missing operation, malformed JSON, and an unavailable
+(empty) exact binding report the affected operation and corrective action without a fallback.
+
+Manual E/T001 review: the one maintained prompt contains the source core, treats read-only as
+an instruction rather than a `bash` security sandbox, and forbids writes, implementation,
+external actions, and delegation. The exact config diff adds only the operation reference; it
+neither changes an assignment value nor hardcodes a portable model binding.
+
+Limits: these are offline contract/resolver checks and manual source/config inspection only.
+They do not prove model obedience, live binding availability, sandboxing, or the later
+stage/correction/approval behavior consumed by T002.
+
 Fixture tasks demonstrate shared syntax only: they lack real source/review/authorization
 and must not be executed. Existing dependency-parser tests cover IDs, gaps, duplicates,
 self/forward/missing prerequisites and story continuity. Manual/semantic review still checks

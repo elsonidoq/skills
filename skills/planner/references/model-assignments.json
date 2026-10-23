@@ -50,6 +50,9 @@
     },
     "standard-overall-rereview": {
       "assignment": "standard-review"
+    },
+    "standard-spec-review": {
+      "assignment": "standard-review"
     }
   }
 }
