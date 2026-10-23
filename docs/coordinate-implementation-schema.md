@@ -86,10 +86,17 @@ Engine terminal-call boundaries attribute each actual worker/corrective/fixer/re
 New runs may additionally retain a closed `execution_monitor_runs` descriptor and ordered
 `execution_observations`. These are append-only best-effort monitoring facts: registration or
 append failures warn safely and never alter normal progress, checks, Git, or errors. Descriptors
-retain only declared task IDs/dependencies and explicitly supplied public presentation; observations
-retain closed phase/kind/fact fields, never prompts, answers, commands, output, findings, or errors.
-Descriptor version 2 records actual review execution IDs/ordinals, explicit trigger and predecessor execution
-IDs, fixer-owned check/checkpoint IDs, review range/outcome/count, and existing checkpoint hashes.
+retain declared task IDs/dependencies, safe optional labels, and complete explicit task
+`outcome`/`description` work text; missing work text remains unknown, not reconstructed from
+summaries or current files. Descriptor version 3 also retains explicit `initial_review: {planned: true}`
+intent, separately from generic phase vocabulary. It never retains arbitrary task objects or prompts.
+The viewer's planned task/review projection accepts version 3 only; older descriptors expose no
+plan, so their calls cannot receive task numbers from that projection. Stored history is not
+migrated or backfilled.
+Observations retain closed phase/kind/fact fields, never prompts, answers, commands, output,
+findings, or errors. Recorded facts include actual review execution IDs/ordinals, explicit trigger
+and predecessor execution IDs, fixer-owned check/checkpoint IDs, review range/outcome/count,
+and existing checkpoint hashes.
 A question's parent occurrence is callback lineage, not execution causality. The descriptor declares
 only the closed vocabulary; it does not assert any stage ran. Missing legacy links stay unknown: no
 backfill or inference from descriptor, role name, timestamp, or `correction_of` is permitted.
@@ -127,7 +134,11 @@ parent occurrence ID. They never retain question or answer text; a send is not a
 Recorder callbacks are independently best effort at requested, returned, sent and delivery-failed points;
 their failures cannot prevent a terminal answer or replace a transport error.
 Read-only status/history exposes recording version, stable occurrence IDs and review base/head ranges when
-present; the monitor's public chain DTO identifies only executions with matching emitted occurrences and attaches acceptance only to its explicit terminal reviewer ID and recorded range. Absent or corrupt monitoring is reported unknown. Explicit abandon preserves prior progress/error
+present; the monitor's public chain DTO retains known dispatched review executions even without
+matching observations. Exact same-run execution/invocation identity reconciles their activities
+and call metrics; a fixing-round dispatch alone does not prove an individual prompt occurred.
+Acceptance attaches only to its explicit terminal reviewer ID and recorded range. Absent or corrupt
+monitoring is reported unknown. Explicit abandon preserves prior progress/error
 history and appends an `abandoned` observation when the run was registered.
 
 ## Historical records

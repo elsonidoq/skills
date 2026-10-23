@@ -10,7 +10,9 @@ missing work text remains unknown. The descriptor also records explicit initial 
 review intent separately from generic review phase vocabulary. It never retains task objects,
 prompts, answers, credentials, or arbitrary payloads. Closed public DTOs expose only these
 fields, so a missing work text or review intent is not replaced from summaries or current
-files.
+files. Updating the viewer does not upgrade existing recordings: an older descriptor has no
+supported planned-task projection, so its calls do not acquire task numbers or planned slots.
+Use a new recording from the updated runtime to inspect those features; no history is backfilled.
 
 Install the exact dependencies from `requirements.lock` in a prepared isolated Python
 environment; starting the viewer never installs or builds anything. From the repository
