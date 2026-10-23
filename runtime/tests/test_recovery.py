@@ -35,9 +35,8 @@ class HistoricalProgressTests(ProjectTest):
             db = self.legacy(owner)
             operations = db.execute('SELECT * FROM wf_operations').fetchall()
             alarms = db.execute('SELECT * FROM wf_alarms').fetchall()
-            observed = status(self.project, 'old')
-            self.assertEqual(observed['execution_support'], 'historical-read-only')
-            self.assertEqual(observed['operations'][0]['phase'], 'intent')
+            with self.assertRaisesRegex(Blocked, 'run not found: old'):
+                status(self.project, 'old')
             self.assertFalse(db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_attempts'").fetchone())
             owner.store.abandon('old')
             self.assertEqual(db.execute('SELECT state,reservation FROM wf_runs').fetchone()[:], ('ABANDONED', 0))
@@ -191,4 +190,5 @@ class HistoricalProgressTests(ProjectTest):
             self.legacy(owner)
             with self.assertRaisesRegex(Blocked, 'fresh run ID'):
                 owner.store.start('old', self.base)
-        self.assertEqual(status(self.project, 'old')['run']['reservation'], 1)
+        with self.assertRaisesRegex(Blocked, 'run not found: old'):
+            status(self.project, 'old')

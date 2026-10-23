@@ -6,6 +6,7 @@ import os
 from pathlib import Path, PurePosixPath
 import sqlite3
 import subprocess
+import tempfile
 import uuid
 import time
 
@@ -48,9 +49,57 @@ def git(project, *args):
         raise Blocked("Git operation failed: " + result.stderr.decode(errors="replace"))
     return result.stdout
 
+def execution_schema(db):
+    """Recognize the core execution format, not optional later recording tables."""
+    required = {
+        'execution_runs': {'run_id', 'state', 'baseline', 'result', 'error'},
+        'execution_tasks': {'run_id', 'task_id', 'state', 'baseline', 'result', 'details'},
+    }
+    return all(columns <= {row[1] for row in db.execute('PRAGMA table_info(' + table + ')')}
+               for table, columns in required.items())
+
+
+def prepare_database(path, *, quarantine=False):
+    """Called under the worktree lock, before Store can add execution tables."""
+    for suffix in ('', '-wal', '-shm', '-journal'):
+        safe_path(path.parent, path.name + suffix)
+    if not path.exists() or path.stat().st_size == 0:
+        return None
+    db = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True)
+    db.row_factory = sqlite3.Row
+    try:
+        if execution_schema(db):
+            return None
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table'").fetchone():
+            return None  # A genuinely empty SQLite database is fresh storage.
+        if not quarantine:
+            raise Blocked('unsupported workflow database format; start a new run to quarantine it and create clean storage')
+        from .processes import inspect_recorded_writers
+        inspect_recorded_writers(db, 'quarantine')
+    finally:
+        db.close()
+    # Fold committed WAL pages into the main file before separating any sidecars.
+    # A busy checkpoint means an active SQLite reader/writer: leave storage in place.
+    db = sqlite3.connect(path.as_uri() + '?mode=rw', uri=True, timeout=0)
+    try:
+        if db.execute('PRAGMA wal_checkpoint(TRUNCATE)').fetchone()[0]:
+            raise Blocked('quarantine refused: workflow database is busy; stop its SQLite users and start again')
+    finally:
+        db.close()
+    archive = Path(tempfile.mkdtemp(prefix='quarantine-', dir=path.parent))
+    try:
+        for suffix in ('-wal', '-shm', '-journal', ''):
+            source = safe_path(path.parent, path.name + suffix)
+            if source.exists():
+                source.rename(archive / source.name)
+    except OSError as exc:
+        raise Blocked('quarantine incomplete at ' + str(archive) + '; inspect retained files before starting again: ' + str(exc)) from exc
+    return archive
+
+
 class Authority:
     """An exclusive ordinary writer lock; old bindings are not launch eligibility."""
-    def __init__(self, project, *, wait=False):
+    def __init__(self, project, *, wait=False, quarantine_unsupported=False):
         self.project = Path(project).resolve(strict=True)
         if Path(git(self.project, 'rev-parse', '--show-toplevel').decode().strip()).resolve() != self.project:
             raise Blocked('project must be the Git worktree root')
@@ -64,6 +113,7 @@ class Authority:
             root = safe_path(self.project, '.coherence/workflow')
             root.mkdir(mode=0o700, parents=True, exist_ok=True)
             self.database = safe_path(self.project, '.coherence/workflow/workflow.sqlite')
+            self.quarantined_database = prepare_database(self.database, quarantine=quarantine_unsupported)
             fd = os.open(self.database, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
             os.close(fd)
             self.store = Store(self.database, self)

@@ -11,7 +11,7 @@ import uuid
 from .engine import Engine, usage_summary
 from .intake import load_contract
 from .pi_adapter import PiAdapter, parent_question, terminal_question
-from .store import Authority, Blocked, Store, canonical, read_history
+from .store import Authority, Blocked, Store, canonical, execution_schema
 
 
 def _selected_providers(executor):
@@ -53,6 +53,8 @@ def _safe_history_details(value):
 def _metric_invocation_ids(db, run):
     """Read exact dispatch identities from ordinary history, never usage tables."""
     identifiers = []
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_history'").fetchone():
+        return identifiers
     for kind in ('worker_invocation', 'fixer_invocation'):
         for row in db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind=? ORDER BY seq", (run, kind)):
             try:
@@ -74,7 +76,9 @@ def status(project, run):
     db.row_factory = sqlite3.Row
     try:
         db.execute('BEGIN')
-        if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_runs'").fetchone():
+        if not execution_schema(db):
+            raise Blocked('unsupported workflow database format; start a new run to quarantine it and create clean storage')
+        else:
             row = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if row:
                 has_inputs = db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_run_inputs'").fetchone()
@@ -114,7 +118,7 @@ def status(project, run):
                 except (sqlite3.Error, ValueError, TypeError):
                     result['monitoring'] = {'state': 'unknown'}
                 return result
-        return read_history(db, run)
+        raise Blocked('workflow run not found: ' + run + '; select an existing execution run ID')
     finally:
         db.close()
 
@@ -197,7 +201,10 @@ def main(argv=None):
         run_id = args.run or uuid.uuid4().hex
         question = attached_question(run_id)
         paid_scope = settle_paid_scope(contract, executor, question or terminal_question)
-        with Authority(args.project, wait=True) as authority:
+        with Authority(args.project, wait=True, quarantine_unsupported=True) as authority:
+            if authority.quarantined_database:
+                print('Unsupported workflow database quarantined at ' + str(authority.quarantined_database)
+                      + '; created clean execution storage', file=sys.stderr)
             writer_entered = True
             result = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
                             paid_scope=paid_scope, **({'question': question} if question else {})).invoke()
