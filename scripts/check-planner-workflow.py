@@ -264,7 +264,8 @@ def check_contracts(texts):
             "path is missing, ambiguous or unreadable", "worker model/effort is missing or invalid",
             "affected role, path and problem", "concrete\ninterfaces, owned paths, earlier dependencies, local checks and real permission/manual gates")
     require("executor-planner-handoff", section(p, "## Intended executor before decomposition"),
-            "discover the current project's selected executor JSON path", "both direct TinySpec and Standard task-producer briefs",
+            "resolve the current project's selected executor JSON path once", "both direct TinySpec and Standard task-producer briefs",
+            "scripts/resolve-workflow-executor.py --project PROJECT_ROOT", "exact absolute stdout path unchanged",
             "producer itself\nmust read the actual JSON before decomposing work", "planner/parent/producer profile, remembered\ndefault",
             "missing, ambiguous or unreadable", "worker model/effort is absent\nor invalid", "affected producer", "role, path and\nproblem")
     require("executor-tiny-handoff", section(texts["tiny"], "## Intended executor before decomposition"),

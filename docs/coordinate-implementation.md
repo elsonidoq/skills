@@ -33,14 +33,28 @@ For **this repository**, every launch (including continuations/corrections) supp
 bridge: Terra/medium workers and Sol 6.1/medium reviewers. Other projects retain their own
 configuration. Existing historical reviewer nodes are not changed retroactively.
 
+The canonical project-local configuration is `<project-root>/.pi/workflow-executor.json`.
+Resolve it once from the suite checkout, then pass the exact absolute path downstream:
+
 ```sh
+executor=$(python3 scripts/resolve-workflow-executor.py --project /absolute/project) || exit
+# Explicit override: add --executor config/custom.json (relative to the project, not cwd),
+# or --executor /absolute/selected.json. See --help.
 scripts/coordinate-implementation intake --tasks /tmp/tasks.json
 scripts/coordinate-implementation start --project /absolute/project \
-  --tasks /tmp/tasks.json --executor /tmp/executor.json --run fix-title
+  --tasks /tmp/tasks.json --executor "$executor" --run fix-title
 scripts/coordinate-implementation status --project /absolute/project --run fix-title
 scripts/coordinate-implementation resume --project /absolute/project --run FAILED_OR_INTERRUPTED_RUN
 # status/history include monitoring recording version, stable occurrence IDs, and safe review ranges when available
 ```
+
+The resolver requires only Python's standard library, prints only the absolute selected path on
+success, and sends actionable failures to stderr with a nonzero exit. It reads existing JSON and
+checks nonempty provider/model/effort strings, including an optional reviewer profile; it never
+creates/copies configuration, searches outside the selected path, falls back after an explicit
+override fails, authenticates providers or invokes a model. Downstream reads/validation still
+apply; resolution does not prove runtime/provider availability. Resume uses retained executor
+input rather than selecting new configuration.
 
 Set `COHERENCE_PYTHON` only if the dependencies are in a selected environment. Source execution
 uses the suite-relative SDK host; installed execution uses its packaged host. `COHERENCE_NODE`

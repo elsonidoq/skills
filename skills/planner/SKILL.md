@@ -260,8 +260,15 @@ new material owner gates and explicit stop boundaries still prevent unsafe conti
 
 ## Intended executor before decomposition
 
-Before task decomposition, discover the current project's selected executor JSON path and pass
-that exact path in both direct TinySpec and Standard task-producer briefs. The producer itself
+Before task decomposition, resolve the current project's selected executor JSON path once with
+`python3 scripts/resolve-workflow-executor.py --project PROJECT_ROOT` from the suite checkout
+(the script is [here](../../scripts/resolve-workflow-executor.py)). Supply `--executor PATH` only
+for an explicit override; relative overrides are project-root-relative. Otherwise the resolver uses
+only `PROJECT_ROOT/.pi/workflow-executor.json`. Pass its exact absolute stdout path unchanged
+in both direct TinySpec and Standard task-producer briefs and the coordinator handoff. Never search
+neighboring repositories, home directories, other worktrees or historical task files; never fall
+back after an override fails. Resolution reads/validates existing configuration without creating
+or copying it, authenticating providers, invoking models or substituting selections. The producer itself
 must read the actual JSON before decomposing work; a planner/parent/producer profile, remembered
 default or brief assertion is not a substitute. A valid selected JSON supplies the worker model
 and effort for bounded implementation guidance, without a redundant executor-selection question.
