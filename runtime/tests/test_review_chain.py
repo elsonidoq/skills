@@ -164,7 +164,7 @@ class ChainHistoryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":false,"findings":["owned.txt:1 - actionable defect"]}'
+                    return '{"approved":false,"findings":["owned.txt:1 - actionable defect [basis: correctness]"]}'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('changed\n')
                 return 'PRIVATE-WORKER-ANSWER'
@@ -177,7 +177,7 @@ class ChainHistoryTests(ProjectTest):
         observed = status(project, 'reviewed')
         review = observed['review_chain']['executions'][0]
         self.assertEqual(review['state'], 'rejected')
-        self.assertEqual(review['findings'], ['owned.txt:1 - actionable defect'])
+        self.assertEqual(review['findings'], ['owned.txt:1 - actionable defect [basis: correctness]'])
         self.assertEqual(review['references']['base'], self.base)
         rendered = json.dumps(observed)
         self.assertNotIn('PRIVATE-TASK-TEXT', rendered)
@@ -203,6 +203,86 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(calls, [False, True])
 
+    def test_suggestions_are_nonblocking_and_status_projects_them_separately(self):
+        calls = []
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                calls.append(kwargs.get('read_only', False))
+                return ('{"approved":true,"findings":[],"suggestions":["consider a follow-up test"]}'
+                        if kwargs.get('read_only') else 'worker answer')
+        contract = admit({'tasks': [{'id': 'private', 'description': 'PRIVATE task text'}]})
+        with Authority(self.project) as owner:
+            result = Engine(owner, 'suggestions-only', contract, EXECUTOR, adapter=Adapter).invoke()
+        observed = status(self.project, 'suggestions-only')
+        review = observed['review_chain']['executions'][0]
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(calls, [False, True])
+        self.assertEqual(review['findings'], [])
+        self.assertEqual(review['suggestions'], ['consider a follow-up test'])
+        self.assertNotIn('PRIVATE task text', json.dumps(observed))
+
+    def test_positive_blockers_and_negative_empty_stop_without_a_fixer(self):
+        for name, verdict in (
+            ('positive-blocker', '{"approved":true,"findings":["owned.txt:1 - corrupts saved state [basis: data-safety]"]}'),
+            ('negative-empty', '{"approved":false,"findings":[],"suggestions":["consider naming cleanup"]}'),
+        ):
+            with self.subTest(name=name):
+                calls = []
+                class Adapter:
+                    def __init__(self, *_args, **_kwargs): pass
+                    def prompt(self, _prompt, **kwargs):
+                        calls.append(kwargs.get('read_only', False))
+                        return verdict if kwargs.get('read_only') else 'worker answer'
+                with Authority(self.project) as owner:
+                    with self.assertRaisesRegex(Blocked, 'actionable rejection'):
+                        Engine(owner, name, admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
+                               EXECUTOR, adapter=Adapter).invoke()
+                    chain = owner.store.review_chain(name)
+                self.assertEqual(calls, [False, True])
+                self.assertEqual(chain['fixing_round_count'], 0)
+
+    def test_malformed_review_types_stop_without_fixer(self):
+        malformed = ('{"approved":"yes","findings":[]}',
+                     '{"approved":true,"findings":"not a list"}',
+                     '{"approved":true,"findings":[],"suggestions":"not a list"}',
+                     '{"approved":false,"findings":["owned.txt:1 - lacks basis"]}',
+                     '{"approved":true,"findings":[],"suggestions":["credential risk remains"]}')
+        for ordinal, verdict in enumerate(malformed):
+            with self.subTest(verdict=verdict):
+                calls = []
+                class Adapter:
+                    def __init__(self, *_args, **_kwargs): pass
+                    def prompt(self, _prompt, **kwargs):
+                        calls.append(kwargs.get('read_only', False))
+                        return verdict if kwargs.get('read_only') else 'worker answer'
+                with Authority(self.project) as owner:
+                    with self.assertRaisesRegex(Blocked, 'reviewer result|review blocker|are blockers'):
+                        Engine(owner, 'malformed-' + str(ordinal), admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
+                               EXECUTOR, adapter=Adapter).invoke()
+                    chain = owner.store.review_chain('malformed-' + str(ordinal))
+                self.assertEqual(calls, [False, True])
+                self.assertTrue(chain['uncertain'])
+                self.assertEqual(chain['fixing_round_count'], 0)
+
+    def test_interrupted_review_is_uncertain_and_never_dispatches_fixer(self):
+        calls = []
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                calls.append(kwargs.get('read_only', False))
+                if kwargs.get('read_only'):
+                    raise KeyboardInterrupt
+                return 'worker answer'
+        with Authority(self.project) as owner:
+            with self.assertRaises(KeyboardInterrupt):
+                Engine(owner, 'interrupted-review', admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
+                       EXECUTOR, adapter=Adapter).invoke()
+            chain = owner.store.review_chain('interrupted-review')
+        self.assertEqual(calls, [False, True])
+        self.assertTrue(chain['uncertain'])
+        self.assertEqual(chain['fixing_round_count'], 0)
+
     def test_actionable_rejection_repairs_once_then_fresh_rereview(self):
         project, calls = self.project, []
         class Adapter:
@@ -215,7 +295,7 @@ class BoundedChainTests(ProjectTest):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
                     calls.append(('review', id(self), kwargs))
-                    return '```json\n{"approved":false,"findings":["owned.txt:1 - synthetic defect"]}\n```' if Adapter.reviews == 1 else '{"approved":true,"findings":[]}'
+                    return '```json\n{"approved":false,"findings":["owned.txt:1 - synthetic defect [basis: correctness]"]}\n```' if Adapter.reviews == 1 else '{"approved":true,"findings":[]}'
                 if 'Actionable findings:' in _prompt:
                     Adapter.fixer_prompts += 1
                     kwargs['claim']('owned.txt')
@@ -282,7 +362,7 @@ class BoundedChainTests(ProjectTest):
                     if 'owned.txt' not in project.joinpath('owned.txt').read_text():
                         self.saved_session = {'id': 'review-context', 'file': '/private/review.jsonl',
                                               'compatibility': {'readOnly': True}}
-                        return '{"approved":false,"findings":["owned.txt:1 - defect"]}'
+                        return '{"approved":false,"findings":["owned.txt:1 - defect [basis: correctness]"]}'
                     return '{"approved":true,"findings":[]}'
                 if 'Actionable findings:' in prompt or 'Actual failed attempt:' in prompt:
                     case.assertIn('Current execution authority:', prompt)
@@ -327,8 +407,8 @@ class BoundedChainTests(ProjectTest):
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
-                    return ('{"approved":false,"findings":["owned.txt:1 - first"]}' if Adapter.reviews == 1
-                            else '{"approved":false,"findings":["owned.txt:2 - final"]}')
+                    return ('{"approved":false,"findings":["owned.txt:1 - first [basis: correctness]"]}' if Adapter.reviews == 1
+                            else '{"approved":false,"findings":["owned.txt:2 - final [basis: correctness]"]}')
                 return 'synthetic worker'
         with Authority(self.project) as owner:
             with self.assertRaisesRegex(Blocked, 'final'):
@@ -336,7 +416,7 @@ class BoundedChainTests(ProjectTest):
                        EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
             chain = owner.store.review_chain('final-rejection')
         self.assertEqual((chain['review_count'], chain['fixing_round_count']), (2, 1))
-        self.assertEqual(chain['executions'][-1]['findings'], ['owned.txt:2 - final'])
+        self.assertEqual(chain['executions'][-1]['findings'], ['owned.txt:2 - final [basis: correctness]'])
 
     def test_unrecoverable_fixer_failure_never_launches_second_review(self):
         class Adapter:
@@ -345,7 +425,7 @@ class BoundedChainTests(ProjectTest):
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
-                    return '{"approved":false,"findings":["owned.txt:1 - defect"]}'
+                    return '{"approved":false,"findings":["owned.txt:1 - defect [basis: correctness]"]}'
                 if 'Actionable findings:' in _prompt:
                     raise Blocked('synthetic fixer failure')
                 return 'synthetic worker'

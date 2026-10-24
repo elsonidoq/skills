@@ -174,6 +174,8 @@ class Store:
         CREATE TABLE IF NOT EXISTS execution_review_inputs(
             run_id TEXT NOT NULL, execution_id TEXT NOT NULL, input_checkpoints TEXT NOT NULL,
             PRIMARY KEY(run_id, execution_id));
+        CREATE TABLE IF NOT EXISTS execution_review_suggestions(
+            attempt_seq INTEGER PRIMARY KEY, suggestions TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS execution_usage_memberships(
             run_id TEXT NOT NULL, task_id TEXT NOT NULL, dispatched_at REAL NOT NULL,
             PRIMARY KEY(run_id, task_id));
@@ -429,30 +431,45 @@ class Store:
             return dispatched and row is not None and row['input_checkpoints'] == saved_inputs
         self._required_write('review dispatch history', write, completed)
 
-    def review_outcome(self, run, execution_id, state, *, findings=None, uncertainty=False, references=None):
+    def review_outcome(self, run, execution_id, state, *, findings=None, suggestions=None, uncertainty=False, references=None):
         if state not in ('approved', 'rejected', 'failed', 'interrupted'):
             raise Blocked('invalid review execution outcome')
         if not isinstance(findings, list) or any(not isinstance(item, str) for item in findings):
             raise Blocked('review findings must be a list of strings')
+        if suggestions is None:
+            suggestions = []
+        if not isinstance(suggestions, list) or any(not isinstance(item, str) for item in suggestions):
+            raise Blocked('review suggestions must be a list of strings')
         refs = canonical(references or {})
-        saved_findings = canonical(findings)
+        saved_findings, saved_suggestions = canonical(findings), canonical(suggestions)
         def write():
             with self.transaction() as db:
                 if not db.execute('SELECT 1 FROM execution_review_executions WHERE run_id=? AND execution_id=?',
                                   (run, execution_id)).fetchone():
                     raise Blocked('review outcome has no recorded dispatch')
-                db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
-                           (run, execution_id, state, int(uncertainty), saved_findings, refs, time.time()))
+                attempt = db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
+                                     (run, execution_id, state, int(uncertainty), saved_findings, refs, time.time()))
+                db.execute('INSERT INTO execution_review_suggestions(attempt_seq,suggestions) VALUES(?,?)',
+                           (attempt.lastrowid, saved_suggestions))
         def completed():
-            return bool(self.db.execute('SELECT 1 FROM execution_review_attempts WHERE run_id=? AND execution_id=? AND state=? AND uncertainty=? AND findings=? AND reference_json=?',
-                                        (run, execution_id, state, int(uncertainty), saved_findings, refs)).fetchone())
+            row = self.db.execute('SELECT seq FROM execution_review_attempts WHERE run_id=? AND execution_id=? AND state=? AND uncertainty=? AND findings=? AND reference_json=? ORDER BY seq DESC LIMIT 1',
+                                  (run, execution_id, state, int(uncertainty), saved_findings, refs)).fetchone()
+            return row is not None and bool(self.db.execute(
+                'SELECT 1 FROM execution_review_suggestions WHERE attempt_seq=? AND suggestions=?',
+                (row['seq'], saved_suggestions)).fetchone())
         self._required_write('review outcome history', write, completed)
 
     def review_chain(self, run, *, private=False):
         executions = []
+        suggestions_table = bool(self.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_review_suggestions'").fetchone())
         for row in self.db.execute('SELECT * FROM execution_review_executions WHERE run_id=? ORDER BY dispatched_at,execution_id', (run,)):
-            attempts = [dict(item) for item in self.db.execute('SELECT state,uncertainty,findings,reference_json FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (run, row['execution_id']))]
-            latest = attempts[-1] if attempts else {'state': 'unknown', 'uncertainty': 1, 'findings': None, 'reference_json': '{}'}
+            attempts = [dict(item) for item in self.db.execute('SELECT seq,state,uncertainty,findings,reference_json FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (run, row['execution_id']))]
+            for attempt in attempts:
+                suggestion = (self.db.execute('SELECT suggestions FROM execution_review_suggestions WHERE attempt_seq=?',
+                                              (attempt['seq'],)).fetchone() if suggestions_table else None)
+                attempt['suggestions'] = suggestion['suggestions'] if suggestion is not None else '[]'
+            latest = attempts[-1] if attempts else {'state': 'unknown', 'uncertainty': 1, 'findings': None, 'suggestions': '[]', 'reference_json': '{}'}
             item = {'execution_id': row['execution_id'], 'role': row['role'], 'review_ordinal': row['review_ordinal'],
                     'fixing_round': row['fixing_round'], 'trigger_execution_id': row['trigger_execution_id'],
                     'predecessor_execution_id': row['predecessor_execution_id'], 'state': latest['state'],
@@ -464,10 +481,12 @@ class Store:
                 item['input_checkpoints'] = json.loads(inputs['input_checkpoints'])
             if private:
                 item['findings'] = [json.loads(attempt['findings']) for attempt in attempts if attempt['findings'] is not None]
+                item['suggestions'] = [json.loads(attempt['suggestions']) for attempt in attempts]
             else:
                 item['references'].pop('saved_session', None)
-                # Parsed actionable findings are safe owner output; raw reviewer JSON stays private.
+                # Parsed findings/suggestions are safe owner output; raw reviewer JSON stays private.
                 item['findings'] = json.loads(latest['findings']) if latest['findings'] is not None else []
+                item['suggestions'] = json.loads(latest['suggestions'])
             executions.append(item)
         return {'executions': executions, 'review_count': sum(item['role'] == 'reviewer' for item in executions),
                 'fixing_round_count': sum(item['role'] == 'fixer' for item in executions),

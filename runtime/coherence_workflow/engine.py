@@ -3,6 +3,7 @@ import inspect
 import json
 import math
 import os
+import re
 import uuid
 
 from .git_effects import FocusedGit, MetricArtifactFinalizer
@@ -456,7 +457,7 @@ class Engine:
 
     @staticmethod
     def _review_value(text):
-        """Parse only an actual reviewer verdict; fenced JSON is a safe normalization."""
+        """Parse an actual reviewer verdict; fenced JSON is safe normalization only."""
         if not isinstance(text, str):
             raise _ReviewFormat('reviewer result must be text')
         normalized = text.strip()
@@ -467,11 +468,20 @@ class Engine:
             value = json.loads(normalized)
         except ValueError:
             raise _ReviewFormat('reviewer returned invalid JSON; review remains incomplete: ' + text) from None
+        findings, suggestions = value.get('findings') if isinstance(value, dict) else None, value.get('suggestions', []) if isinstance(value, dict) else None
         if (not isinstance(value, dict) or type(value.get('approved')) is not bool
-                or not isinstance(value.get('findings'), list)
-                or any(not isinstance(item, str) or not item.strip() for item in value['findings'])):
-            raise _ReviewFormat('reviewer result needs boolean approved and a nonempty-string list of findings')
-        return value
+                or not isinstance(findings, list) or not isinstance(suggestions, list)
+                or any(not isinstance(item, str) or not item.strip() for item in findings + suggestions)):
+            raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
+        # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
+        # where the defect is, its concrete impact, and why it violates accepted work.
+        pattern = re.compile(r'^\S+:\d+\s+-\s+.+\s+\[basis:\s*(?:requirement|correctness|security|data-safety)\]$')
+        if any(not pattern.match(item.strip()) for item in findings):
+            raise _ReviewFormat('review blocker needs location, concrete impact, and [basis: requirement|correctness|security|data-safety]')
+        if any(re.search(r'\b(?:crash(?:es|ed|ing)?|hang(?:s|ing)?|credential(?:s)?|false unavailable|target risk)\b', item, re.I)
+               for item in suggestions):
+            raise _ReviewFormat('crash, hang, target-risk, credential-risk, and false-unavailable observations are blockers, not suggestions')
+        return {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
 
     @staticmethod
     def _review_inputs(checkpoints):
@@ -518,14 +528,17 @@ class Engine:
                 'so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. '
                 + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
                 + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. '
-                'Return only a JSON object {"approved":true,"findings":[]} or '
-                '{"approved":false,"findings":["path:line - defect"]}. Never approve if there is a material unresolved finding.\n'
+                'Return only JSON: {"approved":true,"findings":[],"suggestions":[]} (suggestions may be omitted) or '
+                '{"approved":false,"findings":["path:line - concrete impact [basis: correctness]"]}. '
+                'Use findings only for blockers: each needs a location, concrete impact, and basis of requirement, correctness, security, or data-safety. '
+                'Put only nonblocking advice in suggestions; crashes, hangs, target/credential risks, and false-unavailable observations are blockers. Never approve when blockers exist.\n'
                 'Tasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff,
                 read_only=True)
             value = self._review_value(text)
         except BaseException as exc:
             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-            store.review_outcome(self.run, execution_id, state, findings=[], uncertainty=state != 'failed',
+            store.review_outcome(self.run, execution_id, state, findings=[], suggestions=[],
+                                 uncertainty=state != 'failed' or isinstance(exc, _ReviewFormat),
                                  references={'base': review_base, 'head': head})
             recorder.emit(execution_id, 'review', state, facts={
                 'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
@@ -543,7 +556,7 @@ class Engine:
         if not hasattr(self, '_review_workers'):
             self._review_workers = {}
         self._review_workers[execution_id] = reviewer
-        store.review_outcome(self.run, execution_id, state, findings=value['findings'],
+        store.review_outcome(self.run, execution_id, state, findings=value['findings'], suggestions=value['suggestions'],
                              references={'base': review_base, 'head': head,
                                          'saved_session': getattr(reviewer, 'saved_session', None)})
         review_facts.update({'approved': value['approved'], 'outcome': state,
@@ -565,7 +578,8 @@ class Engine:
                                                     input_checkpoints=self._review_inputs(checkpoints))
         else:
             review_id, review, state = reviews[0]['execution_id'], {'approved': reviews[0]['state'] == 'approved',
-                'findings': reviews[0]['findings'][-1] if reviews[0].get('findings') else []}, reviews[0]['state']
+                'findings': reviews[0]['findings'][-1] if reviews[0].get('findings') else [],
+                'suggestions': reviews[0]['suggestions'][-1] if reviews[0].get('suggestions') else []}, reviews[0]['state']
         if not reviews:
             reviews = [item for item in store.review_chain(self.run, private=True)['executions'] if item['role'] == 'reviewer']
         if state == 'approved':
@@ -595,7 +609,8 @@ class Engine:
                                                          trigger_execution_id=fixer['execution_id'], predecessor_execution_id=fixer['execution_id'])
         else:
             final_review, final_state = {'approved': reviews[1]['state'] == 'approved',
-                'findings': reviews[1]['findings'][-1] if reviews[1].get('findings') else []}, reviews[1]['state']
+                'findings': reviews[1]['findings'][-1] if reviews[1].get('findings') else [],
+                'suggestions': reviews[1]['suggestions'][-1] if reviews[1].get('suggestions') else []}, reviews[1]['state']
         if final_state != 'approved':
             raise Blocked('independent final review findings (commits retained): ' + canonical(final_review))
         if len(reviews) > 1:
