@@ -1,229 +1,247 @@
-# One workflow monitor for projects and worktrees — implementation tasks
+# One workflow monitor across projects and worktrees — tasks
 
-## Source and executor
+## Requirements and approval record
 
-Requirements truth: [expanded TinySpec](workflow-monitor-multiproject-tinyspec.md), **A1–A9**.
-Source SHA256: `62ce55635ae46cabe083aaeda554f8e7575045dec72a2dda5a2141c2cee3373f`.
-Clean source/task-revision baseline: `74f3e624b739d307114d7fa7abf6588b615f5da5`.
-[Executable JSON](workflow-monitor-multiproject-tasks.json) replaces the obsolete five-task
-A1–A6 decomposition; task IDs below describe this expanded revision, not prior assignments.
-Producer reread [actual executor](../../.pi/workflow-executor.json) before decomposition:
-`openai-codex/gpt-5.6-terra` / medium workers; fresh independent final reviewers
-`openai-codex/gpt-6.1-sol` / medium. Saved tinyspec-tasks Sol/medium is unchanged and
-is not the implementation assignment.
+Requirements truth: the whole [simplified TinySpec](workflow-monitor-multiproject-tinyspec.md),
+organized around **G1 one server**, **G2 explicit stopped-source preservation**, and
+**G3 unchanged viewing after removal without data damage**.
+Source baseline: `0b690eafe4b202db073924de8df260fb95da310b`.
+Source SHA256: `02ef30d6e4c291b7d732c22cd86ed7c9a2c8b55beedca0592928ed45648f57c4`.
+[Executable JSON](workflow-monitor-multiproject-tasks.json) replaces the stale native-DB
+merge decomposition. These six IDs describe this revision, not historical assignments.
 
-## Shared worker brief
+**Approval record:** preparation only; parent source inspection and fresh independent
+source-intent review reported zero findings. Regenerated tasks require parent inspection,
+independent planning review and combined current-content owner planning approval. This
+artifact claims neither implementation approval nor application check execution.
+
+Producer read [the actual executor](../../.pi/workflow-executor.json) before decomposition:
+`openai-codex/gpt-5.6-terra` / medium workers, fresh
+`openai-codex/gpt-6.1-sol` / medium reviewers. Saved tinyspec-tasks Sol/medium is unchanged;
+it is the producer assignment, not an implementation binding.
+
+## Shared scope and execution boundaries
 
 Owner constraints (verbatim):
-> Do not make any modification in how the website actually shows the workflow, this is just a modification to be able to run just one server and monitor all projects
+
+> Do not make any modification in how the website actually shows the workflow
 
 > I want to be able to merge the workflow history that was created in a worktree to the main worktree before deleting the worktree
 
 > preserve both, create new ids using <workflow-name or hash>-<old id>
 
-Preserve the workflow renderer/interpretation: graph/layout, Details, metrics, status/acceptance,
-followups/history/pagination, ordering/filtering, freshness and 60-second polling. Selection/source/
-origin context belongs outside it. Immediate-child projects only; discover linked sources through
-Git registration/common/admin identity, never a hardcoded Paseo root, recursive scan or prune.
-Default `~/projects`, `--projects-root`, one numeric-loopback server, no old CLI/URL compatibility.
-Keep protected read-only web routes, closed DTOs/errors, fixed assets and pinned safe identities.
-Browser inputs are discovered opaque refs, never paths; HTTP never discloses absolute paths, Git
-internals, private inputs or raw discovery errors.
-No web merge button/route, execution control, startup/poll writes, source store creation/repair,
-watchers, dependency churn, generalized importer or automatic setup/install/build/deploy.
-Explicit prepared verification builds below are not startup builds.
+Owner-selected meaning: **separate preserved recordings under main, combined monitor**, not
+physical consolidation. Preserve internal IDs/relationships/metric hashes; qualify public IDs
+and routing only. Preserve graph/layout, nodes/edges, Details, labels, execution versus
+acceptance, metrics/coverage, explicit followups, pagination/filter/order, freshness and
+60-second polling. Project selection/source context stays outside the renderer.
 
-Only explicit CLI apply adds native main monitoring rows/metrics plus minimal provenance/recovery
-metadata; no source/existing destination overwrite/deletion, whole-DB replacement, private runnable
-inputs/session copy or imported resume authority. Preserve unrelated legacy data. Imported IDs are
-prefixed, reserved and nonexecutable. Reuse must match content **and translated relationship targets**;
-B1→A1 remains while changed A requires B2→A2 even with unchanged B payload. Finite SCC allocation
-uses original internal edges/external chosen targets, not recursively hashed cycle IDs. Exact repeat
-must converge without new copies. SQLite alone is not atomic JSONL publication: actual interruptions,
-uncertain COMMIT returns and readback after isolated source removal remain REQUIRED evidence.
+Immediate-child projects plus Git-registered linked worktrees, including external/spaced
+Paseo paths; default expanded `~/projects` with `--projects-root`. No recursive/Paseo scan,
+arbitrary symlink escape, automatic discovery-refresh obligation or worktree navigation level.
+Read-only loopback web retains safe ownership/binding checks, fixed assets, protected routes,
+closed DTOs/errors and raw shell validation. Browser values select opaque refs, never paths;
+no absolute paths, Git internals, private payloads or raw exceptions are public. No store
+creation/migration/repair or preservation/control route on launch/read/poll.
 
-[ADR-0003](../decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md): worker briefs
-consume current launch authority, not historical phase text. [ADR-0004](../decisions/ADR-0004-shared-routine-worker-permissions.md): bounded isolated Git/SQLite/JSONL/local-server tests, including
-removal of explicitly created test worktrees only, require no routine reapproval. No actual owner
-worktree merge/removal, paid/provider call, deployment/push or unrelated service/data operation.
-Prepared Python/Node/local Chrome prerequisites are not installed automatically; unavailable checks
-are NOT RUN, not waived. Failures block affected reliance; correct in scope or return material
-scope/contract changes for existing review, never weaken A7/A8 durability/security after failure.
+Only explicit stopped capture writes new command-owned separate storage under verified main,
+with ordinary lock coordination. Preserve source/main native DB/files/metrics/private data/Git
+index and existing history/captures. No native-live-DB imports, internal-ID translation,
+runtime imported-ID guards, SCC/version propagation, incremental synchronization, generalized
+archive/import framework, automatic preservation/deletion/pruning, Git merges, SDK session
+copying, runtime/resume redesign, legacy rejection machinery, dependency upgrades or automatic
+setup/install/build/deploy/provider calls. Explicit verification builds below are not startup
+builds. Storage naming/routes/module factoring are bounded implementation choices.
 
-Read whole associated [memory index](../../memory/MEMORY.md): only routine-notification guidance
-applies, no technical gotchas or memory writes. Read whole ADR index and both accepted records.
-Changes are restricted to owned paths for each outcome; shared docs/fixtures follow dependencies.
-Workers **do not stage or commit**: executable runner owns each focused verified checkpoint under
-[task-commit contract](../../skills/memory-handling/references/task-commit-contract.md), then fresh
-independent read-only full-range final review uses selected Sol/medium. No worker launches agents.
-Commands below run from repository root using prepared interpreter and actual PYTHONPATH.
-Proposed new helper/test module paths are deliverables, never claimed existing prerequisites.
+[ADR-0003](../decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md): use current
+runner launch authority, not historical phase restrictions. Executable instructions are neutral.
+[ADR-0004](../decisions/ADR-0004-shared-routine-worker-permissions.md): bounded isolated
+Git/SQLite/WAL/JSONL/local-server/browser fixtures, including removal of explicitly created
+fixture worktrees only, need no routine reapproval. No actual owner-data preserve/removal,
+paid/live workflows, unrelated service/data operations, push or deployment. Use prepared
+Python/Node/browser; missing prerequisites/checks are NOT RUN, failures block affected reliance,
+not unrelated seams. Correct ordinary in-scope failures; material requirement/scope changes
+return to existing review/approval rather than weakening evidence.
 
-## Decomposition and proof boundaries
+Whole [memory index](../../memory/MEMORY.md), [ADR index](../decisions/index.md) and both
+accepted ADRs were read. Only routine-parent-notification guidance matched; no technical
+gotcha or memory write applies. JSON outcomes inline necessary constraints, pass conditions,
+commands/evidence and permissions because workers do not receive top-level metadata.
+Workers stay in explicit owned paths and preserve unrelated work; **no worker stages,
+commits or delegates**. Runner owns focused verified checkpoints and fresh independent
+read-only final review under the [shared checkpoint contract](../../skills/memory-handling/references/task-commit-contract.md).
+Commands run from repository root. New helper/test paths below are deliverables, not asserted
+existing prerequisites. Owned directory `web/tests` permits bounded adaptations in the existing
+harness, not a new harness; shared-file edits follow predecessors.
 
-`T001 → T002 → T003 → T004 → T005 → T006 → T007 → T008 → T009 → T010 → T011`.
-Registry → scoped transport → launcher → usable browser → dynamic discovery are separate observable
-contracts. T004 first composes real two-project/main-linked monitoring, before merge work. Merge has
-separate consistent capture/locks, finite relationship-aware allocation/typed DB translation, metric
-translation, imported-ID runtime protection, publication/reconciliation/readback and CLI delivery.
-T010 proves actual multi-file publication, uncertain completion and main-only post-removal meaning
-before command reliance; T011 composes CLI→Reader/HTTP→existing browser at first usable command.
-These interfaces bound Terra/medium context without bundling a full importer/viewer milestone.
-Serial dependencies also order shared schema/README/test ownership; no unrelated concurrency ban.
-Tests/docs/teardown remain within delivery; no tests-only milestones or prototype/cleanup chain.
-No disposable prototype is justified: permanent production-helper fixtures expose the actual risks.
-No new infrastructure, invented caps, recursive hash convergence loop or exhaustive matrix.
+## Goal-oriented delivery and dependencies
 
-## Tasks
+G1 is delivered by T001 → T004 → T005 → T006. G2 by T002 → T003.
+G3 consumes that preserved binding/capture in T004 and closes production viewing in T006.
+T001 and T002 have independent observables; T003 joins them. T004 depends on T003
+(and thus T002), then T005 → T006. No task-count quota or obsolete eleven-task architecture.
 
-- [ ] T001 Group main and Git-registered source worktrees in a retained registry
-  - **Depends**: None
-  - **Outcome**: Deliver workflow_monitor/projects.py using actual Git registration/common/admin identity: validate expanded/resolved root; inspect regular nonsymlink immediate canonical child roots, deduplicate repositories/aliases and derive main from Git, not branch/cwd/name. Group main plus registered linked sources, including external/spaced/Paseo-style paths, without a Paseo scan root. Use safe machine-readable path parsing. Expose refreshable closed project {ref,label} and source {ref,label,main/linked qualification} inventories and project/source resolution; refs derive from canonical identities and remain stable across polls/restarts. Keep missing/prunable/unreadable registrations honestly unavailable without pruning or replacement scans; bad source must not hide healthy main/others. Retain one Reader per source including no-store binding; root/Git errors differ from authoritative empty results. Inventory discovery does not snapshot every store. Revalidate pinned directory/admin/DB identities before use; removal/reappearance/replacement must not reset bindings. This is read-only repository discovery; exclude transport/browser and merge. Document grouping/binding/discovery in README.
-  - **Owned paths**: `workflow_monitor/projects.py`, `workflow_monitor/tests/test_projects.py`, `workflow_monitor/README.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_projects workflow_monitor.tests.test_reader`
-  - **REQUIRED T001/V1** (A1; A2; A5): Actual helper groups main and external registered linked sources under one project, handles spaced paths and multiple root aliases, includes no-store and missing/prunable registration qualification, excludes nonprojects/nested repositories/symlink children. Stable refs/labels survive refresh/restart; next refresh reflects registration/project changes without all-store scans or hardcoded Paseo path. Invalid root is actionable --projects-root error; empty root succeeds; root/Git failure is not empty. **Evidence:** Permanent test_projects over real tiny Git repositories/worktrees, closed inventory and no-snapshot-scan assertions; no mocked list as sole oracle.
-  - **REQUIRED T001/V2** (A2; A3; A5): Per-source Reader is retained, sees first legitimate store later, and preserves worktree/admin/DB/metric identity protection across polls. Missing/replaced/retargeted binding never silently adopts successor data; unhealthy source does not hide healthy data and observation creates no source store or writes. **Evidence:** Actual-helper lifetime/replacement/no-store tests plus existing Reader safety regressions and fixture DB/metric byte comparison.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
+The consequential risk is complete/private consistent capture reopened without source paths.
+Permanent actual preserved-Reader tests in T002 and helper/CLI WAL/JSONL/publication tests in
+T003 establish that seam before HTTP/browser reliance. Known bounded Git/SQLite/file APIs
+need no disposable prototype/proof/consumer/cleanup chain. T006 runs composed
+CLI → preserved Reader → project HTTP → production browser after isolated source removal
+at the first usable browser boundary. Tests, docs and routine teardown stay with each outcome.
 
-- [ ] T002 Serve grouped inventories and source-isolated scoped HTTP
-  - **Depends**: T001
-  - **Outcome**: Consume T001 project/source registry. Change create_app to registry, moving sanitized last-safe/last-success into source-local observation state. GET /api/monitor/v1/projects and /api/monitor/v1/projects/{project_ref}/worktrees return closed inventories; /api/monitor/v1/projects/{project_ref}/runs lists this project sources only, with each run source-qualified and per-source unavailable status, not hidden healthy runs. Run operations use /api/monitor/v1/projects/{project_ref}/worktrees/{source_ref}/runs/{run_ref} plus /snapshot, /history, /records/{record_ref}, /followups; retain snapshot/cursor/limit semantics and normalization/paging/explicit source-local followups. No-store/empty has no runs; first store uses same Reader. Support only browser /, /projects/{project_ref}, /projects/{project_ref}/worktrees/{source_ref}/runs/id-<percent-encoded actual ID>; raw validation precedes slash decoding, run ID decodes once. Preserve fixed assets and protected read-only API, remove unscoped routes, no HTML catch-all or merge/control endpoints. Unknown API refs are closed errors; valid shell shapes permit client unavailable state. Adapt existing Python create_app consumers and execution_fixture.py binding to registry; preserve substantive presentation/history/lineage/privacy/safety checks. Add real two-project plus main/linked Reader/HTTP isolation tests. Update README routes/security/grouped inventory; exclude launcher/browser.
-  - **Owned paths**: `workflow_monitor/app.py`, `workflow_monitor/projects.py`, `workflow_monitor/tests/test_projects.py`, `workflow_monitor/tests/test_http.py`, `workflow_monitor/tests/test_reader.py`, `workflow_monitor/tests/test_chain_mapping.py`, `workflow_monitor/tests/test_execution_presentation.py`, `workflow_monitor/tests/test_history.py`, `workflow_monitor/tests/test_lineage.py`, `workflow_monitor/tests/test_observation.py`, `workflow_monitor/tests/test_delivery.py`, `workflow_monitor/web/tests/execution_fixture.py`, `workflow_monitor/README.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_projects workflow_monitor.tests.test_http workflow_monitor.tests.test_reader workflow_monitor.tests.test_chain_mapping workflow_monitor.tests.test_execution_presentation workflow_monitor.tests.test_history workflow_monitor.tests.test_lineage workflow_monitor.tests.test_observation workflow_monitor.tests.test_delivery`
-  - **REQUIRED T002/V1** (A2; A3; A6): Grouped project inventory exposes source refs/labels/status, reads only addressed project sources and reports unhealthy sources without hiding healthy runs. Same run IDs/run refs/snapshot tokens/record refs in another source or project never mix snapshots, page/record/followup lookup, metrics or last-safe freshness. Retained no-store Reader later reads first store. **Evidence:** Actual main/linked/second-project stores with distinguishable facts and collisions through registry/Reader/HTTP; representative endpoint, failed-read fallback and no-store assertions.
-  - **REQUIRED T002/V2** (A5; A6): Exactly-once raw encoded slash shell works; malformed encoding/extra segments/traversal/unknown refs cannot open paths or unrelated sources. Old routes have no implicit source. Fixed assets, no HTML API fallback, Host/Fetch Metadata/header and closed error/DTO/security headers remain; no merge/control/write route. Replaced bindings are not adopted and observed DB/metric bytes remain unchanged. **Evidence:** Adapted focused HTTP real raw-path and safety/asset-substitution tests; response-key/error and byte assertions retain existing protections rather than an exhaustive new matrix.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
+### G1 foundation: live project recordings
 
-- [ ] T003 Launch one prepared root-configured loopback server
-  - **Depends**: T002
-  - **Outcome**: Consume registry and scoped create_app. Replace --project with optional --projects-root DIRECTORY default expanded ~/projects; preserve required --assets, port default and safe Uvicorn settings. Validate invalid root before bind without creating root/store; empty root serves. Keep normal module and declared prepared console entry behavior. Test default/override/help/legacy rejection/safe bind and real bounded subprocess from unrelated cwd with absolute assets and package availability (explicit PYTHONPATH for uninstalled module allowed), reaching two child projects on one port. Tear down only test child server. Document prepared commands/default/cwd/errors and stop-monitor-only rollback (not rollback of future imports). Exclude frontend and merge command.
-  - **Owned paths**: `workflow_monitor/__main__.py`, `workflow_monitor/tests/test_launch.py`, `workflow_monitor/README.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_launch workflow_monitor.tests.test_delivery`
-  - **REQUIRED T003/V1** (A1; A5; A6): Default/override/help match --projects-root; --project rejected; invalid root before bind is actionable, empty root usable. Prepared launch from unrelated cwd serves both projects on 127.0.0.1 with existing safe Uvicorn options and no auto setup/build/store creation. **Evidence:** Actual launcher assertions plus prepared interpreter subprocess reaching real registry/app, captured inventory/help/errors and README comparison; no install.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
+- [ ] T001 Discover projects and registered live recordings
+  - **Depends**: none
+  - **Outcome**: deliver `projects.py` inventory/resolution using canonical Git common/admin
+    identity, safe registered-path parsing and stable opaque project/recording refs. Group
+    main/linked sources, derive main from registration, deduplicate aliases. Root validation,
+    empty/no-store/unavailable states remain honest; retain Readers, reveal first legitimate
+    store later and never silently rebind replaced storage. Project listing does not scan
+    snapshots. Exclude HTTP/UI/capture writes. README follows actual discovery behavior.
+  - **Owned paths**: `workflow_monitor/projects.py`, `workflow_monitor/tests/test_projects.py`,
+    `workflow_monitor/README.md`.
+  - **REQUIRED G1 pass/evidence**: real tiny two-repository Git/SQLite fixtures with registered
+    external spaced worktree, colliding IDs, canonical aliases, nested/symlink exclusions,
+    unhealthy source alongside healthy, no-store-to-store and replacement checks; compare
+    existing bytes/no creations. No routine fixture gate; no owner-data actions.
+  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_projects workflow_monitor.tests.test_reader`.
 
-- [ ] T004 Navigate source-qualified workflows without changing the renderer
-  - **Depends**: T003
-  - **Outcome**: Consume T002/T003. Add project selector and source labels outside renderer; / asks for project, bare project picks existing newest finite-time run across available sources with deterministic ties and replaceState to full scoped URL. Use project/source/run selection key everywhere, all API calls including followups and both history paths. Direct opens/reload/Back/Forward/filter preserve exact source/run; unknown/missing/unavailable address stays with honest state, never substitution. Switching project/source/run invalidates async inventory/snapshot/history/layout and clears obsolete selection-local runs/filter/graph/Details/lineage/layout measurements/positions/viewport; same-source/run status polls preserve viewport/drag/selection. Adapt existing production fixture to real main + external linked worktree + another project with equal run IDs and distinct facts; adapt browser probes/URLs, not compatibility. At this first usable viewer boundary compose actual Reader/HTTP/built browser switching, direct/history, representative unchanged graph/Details/history/followups and delayed old-source response rejection. Preserve graph.ts/layout.ts/rendering functions and content, only selector styling. Update navigation docs. Periodic discovery lifecycle is T005.
-  - **Owned paths**: `workflow_monitor/web/src/main.tsx`, `workflow_monitor/web/src/style.css`, `workflow_monitor/web/tests/execution_fixture.py`, `workflow_monitor/web/tests/test_chain.spec.ts`, `workflow_monitor/web/tests/test_execution.spec.ts`, `workflow_monitor/web/tests/test_graph.spec.ts`, `workflow_monitor/web/tests/test_history.spec.ts`, `workflow_monitor/web/tests/test_lineage.spec.ts`, `workflow_monitor/web/tests/test_navigation.spec.ts`, `workflow_monitor/web/tests/test_observation.spec.ts`, `workflow_monitor/README.md`
-  - **Checks**:
-    - `npm --prefix workflow_monitor/web run build`
-    - `npm --prefix workflow_monitor/web test -- test_navigation.spec.ts test_execution.spec.ts test_chain.spec.ts test_history.spec.ts test_lineage.spec.ts test_observation.spec.ts test_graph.spec.ts`
-  - **REQUIRED T004/V1** (A4; A6; A9 (monitoring portion)): Production browser explicitly selects project, shows distinguishable main/linked/other-project equal-ID workflows with visible source context, exact scoped direct reload/Back/Forward, filtering and representative graph/Details/history/followups unchanged. Delayed old-source inventory/snapshot/history/layout cannot overwrite selection even with same run ref; reset local state, preserve unknown address. **Evidence:** Permanent production fixture navigation assertions and affected existing renderer/geometry/metric tests; return composed distinct-fact and stale-response observations, not screenshot/mock-only proof.
-  - **REQUIRED T004/V2** (A4; A5; A6): Every request is project/source-qualified, run/snapshot polling remains 60000 ms and selection-preserving with status-only viewport/drag/selection reuse. No workflow renderer/layout/status/metric redesign; README matches URLs/selection. **Evidence:** Build/type output, scoped network assertions and existing representative unchanged-view regressions; advance existing test clock, inspect focused diff.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
+### G2 foundation: source-independent preserved readback
 
-- [ ] T005 Refresh registered sources and unavailable selections honestly
+- [ ] T002 Read one explicit preserved recording without its source
+  - **Depends**: none
+  - **Outcome**: explicit safe preserved binding anchored under verified main `.coherence`,
+    minimal metadata/identity/path and preparation-versus-complete contract in `recordings.py`.
+    Adapt Reader narrowly; it cannot currently read arbitrary archives. Reuse read/normalize
+    behavior without source/admin/process/metric paths. Internal IDs/order/review/followup
+    links and metric hashes stay intact; historical commitments remain facts, liveness is
+    historical/unknown. No generalized archive layer or changed mapping/renderer semantics.
+    Update only affected recording-storage guidance.
+  - **Owned paths**: `workflow_monitor/recordings.py`, `workflow_monitor/reader.py`,
+    `workflow_monitor/tests/test_recordings.py`, `workflow_monitor/tests/test_reader.py`,
+    `docs/coordinate-implementation-schema.md`.
+  - **REQUIRED G2/G3 pass/evidence**: permanent real SQLite/JSONL round trip through Reader
+    and existing normalize/minimize after removal of isolated source/registration; complete
+    binding survives, pending is ineligible, unsafe/replaced storage not adopted, unknown/
+    unsupported/partial/malformed/absent evidence remains qualified, recorded relationships
+    cannot bind elsewhere, no reads write data. Compare original source/main bytes.
+    ADR-0004 fixture removal allowed; failed seam proof blocks capture reliance.
+  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_recordings workflow_monitor.tests.test_reader workflow_monitor.tests.test_mapping workflow_monitor.tests.test_lineage`.
+
+### G2 delivery: explicit verified stopped capture
+
+- [ ] T003 Preserve a stopped worktree through an explicit verified CLI
+  - **Depends**: T001, T002
+  - **Outcome**: `preserve.py` module/console command `workflow-monitor-preserve
+    --source-worktree PATH` infers/reports distinct registered same-repository main. Acquire
+    ordinary writer lock without source `Authority` construction/migration; reject busy
+    without signalling and hold through verification. Consistent committed SQLite including
+    WAL plus associated metric bytes; detect replacement/drift. Monitor-only descriptors,
+    ordered observations including unknown/incomplete, reviews/attempts/input checkpoints,
+    typed dispatch/metric-artifact history; no private runnable/session/unrelated data.
+    Preserve JSONL partial tails/missing qualifications; existing unsafe/unreadable artifact
+    fails. Complete-only no-overwrite publication from small private preparation, followed
+    by actual preserved Reader facts/metric verification. Stable identity/repeat reuses;
+    changed stopped source is mismatch, never incremental update/version: retain both and
+    tell owner source differs and must be retained pending resolution. Public prefixes with
+    stable hash disambiguation, internal identity unchanged. Success reports IDs/metrics/
+    verified readback; errors name operation/correction, never declare deletion safe.
+    Failed/interrupted/unknown runs eligible; missing liveness telemetry alone not blocking.
+  - **Owned paths**: `workflow_monitor/preserve.py`, `workflow_monitor/recordings.py`,
+    `workflow_monitor/tests/test_preserve.py`, `workflow_monitor/tests/test_recordings.py`,
+    `workflow_monitor/pyproject.toml`, `workflow_monitor/README.md`,
+    `docs/coordinate-implementation-schema.md`.
+  - **REQUIRED G2/G3 pass/evidence**: permanent actual helper/subprocess CLI real Git/SQLite/WAL/
+    JSONL tests compare retained facts/order/review/followup/dispatch and metric bytes/coverage,
+    unknown/unsupported/private exclusion and source/main files/rows/index/history invariants;
+    distinct colliding old IDs survive without internal rewrite. Actual lock, source drift,
+    repeat/reopen, publication interruption/uncertain completion prove pending invisible,
+    no overwrite/duplicate on retry and actionable mismatch. No exhaustive fault framework.
+    README/storage docs match command/stopped/repeat/errors/commitment/no-delete/no-resume
+    limits. Only isolated fixture capture/removal; failed safety/readback blocks consumers.
+  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_preserve workflow_monitor.tests.test_recordings workflow_monitor.tests.test_reader`.
+
+### G1/G3 delivery: scoped combined observation
+
+- [ ] T004 Serve project-scoped combined live and preserved workflows
+  - **Depends**: T001, T003
+  - **Outcome**: scoped project inventory, combined run inventory and existing snapshot/
+    history/record/followup operations using recording-qualified refs. Normalize per recording
+    before public qualification; preserve local relationship/metric meaning. Per-recording
+    fallback/last-success/freshness/pages, unknown address never substitutes. Reload reveals
+    completed captures; pending invisible, healthy sources survive unavailable peers. Project
+    plus qualified-run browser shell, raw validation/exactly-once decode, no worktree hierarchy.
+    Retain closed protected read-only DTOs/assets/errors and privacy; adapt existing Python
+    app consumers and production fixture transport without dropping substantive assertions.
+  - **Owned paths**: `workflow_monitor/app.py`, `workflow_monitor/projects.py`,
+    `workflow_monitor/tests/test_projects.py`, `workflow_monitor/tests/test_http.py`,
+    `workflow_monitor/tests/test_reader.py`, `workflow_monitor/tests/test_chain_mapping.py`,
+    `workflow_monitor/tests/test_execution_presentation.py`, `workflow_monitor/tests/test_history.py`,
+    `workflow_monitor/tests/test_lineage.py`, `workflow_monitor/tests/test_observation.py`,
+    `workflow_monitor/tests/test_delivery.py`, `workflow_monitor/web/tests/execution_fixture.py`,
+    `workflow_monitor/README.md`.
+  - **REQUIRED G1/G3 pass/evidence**: actual two-project/main/external-linked/preserved
+    colliding histories through production HTTP. CLI capture then fixture source removal
+    still serves snapshot/pages/record/followup/metrics and unchanged main; cross-recording
+    refs/cursors/caches/fallback cannot leak. Historical liveness honest, reload sees complete
+    capture, pending invisible. Retain HTTP/path/asset security checks and byte/no-write
+    comparisons. Bounded fixture server/removal allowed; no owner-data actions.
+  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_projects workflow_monitor.tests.test_http workflow_monitor.tests.test_reader workflow_monitor.tests.test_chain_mapping workflow_monitor.tests.test_execution_presentation workflow_monitor.tests.test_history workflow_monitor.tests.test_lineage workflow_monitor.tests.test_observation workflow_monitor.tests.test_delivery`.
+
+- [ ] T005 Launch one prepared server from an unrelated cwd
   - **Depends**: T004
-  - **Outcome**: Consume T004 selection guards and T002 refreshing inventories. Poll project/source discovery at existing 60-second cadence, without all-project snapshot reads/watchers/new timer framework. Show new/removed projects and Git registrations next successful poll; selected missing source/project keeps address, clears viewer and becomes unavailable, never substitute. Root/Git read error is not authoritative empty list. Keep no-store/empty sources visible and first legitimate store appearing via retained Reader; delayed obsolete responses cannot resurrect removed selection. Extend existing real production fixture for bounded registration/store lifecycle and timer advancement; keep same-source status refresh behavior. Document refresh/errors/no-store states with delivery.
-  - **Owned paths**: `workflow_monitor/web/src/main.tsx`, `workflow_monitor/web/tests/execution_fixture.py`, `workflow_monitor/web/tests/test_navigation.spec.ts`, `workflow_monitor/web/tests/test_observation.spec.ts`, `workflow_monitor/README.md`
-  - **Checks**:
-    - `npm --prefix workflow_monitor/web run build`
-    - `npm --prefix workflow_monitor/web test -- test_navigation.spec.ts test_observation.spec.ts`
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_projects workflow_monitor.tests.test_http workflow_monitor.tests.test_launch`
-  - **REQUIRED T005/V1** (A2; A3; A4; A6): Startup/60000-ms inventory polling shows new/removes missing projects and external registrations without restart; unavailable selected source/project retains URL with cleared viewer. Root/Git failure does not masquerade as empty or select another source. Empty/no-store is honest and first store appears on later poll with same Reader; late source results remain rejected. **Evidence:** Focused production navigation/observation lifecycle assertions over actual Git fixtures with clock advancement plus unchanged helper/HTTP evidence; no new harness.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
+  - **Outcome**: replace project binding with `--projects-root DIRECTORY`, expanded `~/projects`
+    default; retain prepared `--assets`, port and safe numeric-loopback options. Unrelated cwd
+    launch works; actionable bad root error without creation, empty root usable. Update
+    README invocation/default/error/stop behavior; no install/build/runtime on launch.
+  - **Owned paths**: `workflow_monitor/__main__.py`, `workflow_monitor/tests/test_launch.py`,
+    `workflow_monitor/tests/test_delivery.py`, `workflow_monitor/README.md`.
+  - **REQUIRED G1 pass/evidence**: actual prepared module/entry-equivalent subprocess and HTTP
+    from unrelated cwd with isolated HOME/two-repository root; default/configured root,
+    one port, empty/bad root, assets/security assertions and no-write comparisons.
+    No mandatory legacy-rejection campaign. Isolated local server/teardown allowed.
+  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_launch workflow_monitor.tests.test_delivery workflow_monitor.tests.test_http`.
 
-- [ ] T006 Capture a consistent typed merge source without setup side effects
+### G1–G3 production acceptance: unchanged viewer after fixture removal
+
+- [ ] T006 Select projects in the unchanged viewer and prove post-removal history
   - **Depends**: T005
-  - **Outcome**: Consume T001 canonical Git registration/main resolution; deliver workflow_monitor/merge_source.py with narrowly scoped lock-only source/target acquisition in stable order and read-only capture/preview interfaces for later merge. Source/main must be distinct registered worktrees of same repository; infer/report main, never arbitrary destination. Preview must create no DB/directories/lock files and must not use Authority. Apply lock-only helper uses ordinary admin coherence-workflow.lock, fails busy promptly with wait-for-source/main-writer correction; hold both through later publication/readback. Capture read-only SQLite transaction/backup view including committed WAL and closed retained monitoring runs/observations/review executions/attempts/inputs plus only Reader-consumed started worker/fixer dispatch identity and metric_artifact history fields. Exclude execution_run_inputs, runnable execution_runs/tasks, private prompts/SDK sessions, legacy usage/wf_* data. Check actual schema-defined fields/versions; actionable affected conversion error for unknown identity-bearing contract, not blanket version rejection. Return immutable content/origin/sequence/relationship/artifact facts and safe identity/content recheck operations; retain qualified incomplete/failed histories. Recorded live or unverifiable changing writer/evidence cannot yield deletion-ready consistent capture merely because lock obtained; reuse existing read-only liveness inspection where applicable. Preserve source bytes/no checkpoint/quarantine/migration. Document captured/excluded tables, preview/locking/source-retention contract in schema and README. Exclude allocation/destination publication/CLI.
-  - **Owned paths**: `workflow_monitor/merge_source.py`, `workflow_monitor/projects.py`, `workflow_monitor/tests/test_merge_source.py`, `workflow_monitor/README.md`, `docs/coordinate-implementation-schema.md`
+  - **Outcome**: project selector then combined workflows in existing browser, source context
+    outside renderer, project/qualified-run URLs. Preserve direct-open/reload/Back/Forward,
+    exactly-once decoding, local substring filter/newest finite default, honest unknown URLs.
+    Invalidate stale fetch/layout and selection-local history/metrics on switches; same-run
+    refresh preserves viewport/drag/selection and 60-second polling. Adapt existing production
+    navigation/storage harness and route fixtures without weakening assertions. At this first
+    usable boundary compose actual CLI → preserved Reader → scoped HTTP → production browser,
+    removing only isolated source/registration then reloading inventory. README/storage docs
+    follow actual launch/selection/preserve/readback/repeat/mismatch/error/no-delete/no-resume.
+  - **Owned paths**: `workflow_monitor/web/src/main.tsx`, `workflow_monitor/web/src/style.css`,
+    `workflow_monitor/web/tests`, `workflow_monitor/README.md`,
+    `docs/coordinate-implementation-schema.md`. CSS only for selection/context, not workflow
+    styling; graph/layout/dependencies excluded.
+  - **REQUIRED G1 pass/evidence**: one production server/browser, two immediate-child projects
+    and real external/spaced linked worktree, colliding selections, navigation/reload/stale
+    response/filter/default/unknown URL and representative same-run viewport/poll checks.
+    Build actual assets; inspect renderer/graph/layout/dependency diff for unchanged presentation.
+  - **REQUIRED G2/G3 pass/evidence**: real CLI fixture capture then isolated source/admin
+    removal; ordinary project selector still opens unchanged main and independently prefixed
+    colliding preserved workflows. Inspect graph/Details, rejection→fix→rereview, explicit
+    cross-run followup within recording, paged history, call/run metrics and partial/unknown
+    qualifications. No fabricated liveness/success/acceptance/commitment or ref/cache leakage;
+    original bytes/main unchanged, no private capture payloads, observation restart removes
+    nothing. Reuse T003 safety proof and existing browser harness, not mocks/screenshots alone.
+    Bounded fixture removal/servers allowed; no owner-data actions or prerequisite downloads.
+    Failed composed proof blocks G3 acceptance/real-data reliance.
   - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_merge_source workflow_monitor.tests.test_projects workflow_monitor.tests.test_reader`
-  - **REQUIRED T006/V1** (A7; A8; A6): Real same-repository linked source capture sees committed WAL data and complete allowed monitoring/review/ordered dispatch facts, includes failed/incomplete runs but excludes seeded private authority/prompt/session/legacy data. Dry-run capture creates no locks/stores/directories; no Authority/setup/quarantine or source DB checkpoint. Wrong repository/main/self/unsafe paths and unsupported identity-bearing fields produce specific operation/schema correction. **Evidence:** Permanent actual-helper tests using real Git/SQLite WAL/JSONL fixture and sentinel private data; compare source rows/files/content before/after, preview tree diff and captured field set.
-  - **REQUIRED T006/V2** (A8; ADR-0003; ADR-0004): Busy source and busy target ordinary writer locks fail promptly without signaling; lock acquisition order is stable and release on error is correct. Recorded live writer or changing/unknown metric state cannot report consistent preservation; quiescent failed/interrupted history can. Source/target identity and content rechecks reject drift through held-lock capture. **Evidence:** Tiny process/flock contention tests on both worktrees and actual file-change/WAL cases; assert actionable errors/source retention and no false successful capture. Shared bounded permissions and neutral task instructions need no routine reapproval.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
-
-- [ ] T007 Allocate relationship-aware import groups and translate typed database identities
-  - **Depends**: T006
-  - **Outcome**: Consume T006 retained source capture. Deliver workflow_monitor/merge_identity.py: minimal destination provenance/reservation schema, whole-source deterministic prefixed ID/sequence plan and typed DB-row translation, not a general importer. Every import uses <workflow-name or hash>-<old id>; distinct origins/content/target mappings preserve both with deterministic hash disambiguation against actual occupied native/import IDs and metric paths, including tracked/staged/dirty files. Origin/content/metric digest, translated unresolved targets, SCC allocation-group key, chosen IDs and sequence mapping are persisted for exact retries. Process finite source reference graph by referenced SCC groups before dependents; group key uses sorted origins/content, typed original internal edges and chosen external targets/qualifications, not recursive imported-ID hashing. Reuse only verified destination content plus unchanged group internal/external translated relations; changed referenced A forces new unchanged-payload B copy B2->A2, retaining B1->A1; exact repeat/unrelated added run cannot duplicate prior imports. Allocate necessary cycle member IDs together then translate internal links. Translate only table run_id and descriptor correction_of.run_id here; run-local execution/invocation/task/checkpoint/chain/session/branch/epoch/Git/text identity stays exact. Out-of-set correction stays unresolved to original origin, never accidentally native equal-ID target. Destination integer seq allocation preserves source order/provenance without renumbering old rows. Tests use actual captured rows and destination SQLite metadata/occupied paths; minimal reservation writes under caller locks only, no visible imported rows or metric publication. Document schema/group/reuse/integrity behavior.
-  - **Owned paths**: `workflow_monitor/merge_identity.py`, `workflow_monitor/tests/test_merge_identity.py`, `workflow_monitor/README.md`, `docs/coordinate-implementation-schema.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_merge_identity workflow_monitor.tests.test_merge_source`
-  - **REQUIRED T007/V1** (A7; A8): Actual helper produces prefix-preserve-both mapping for native/source equal IDs and distinct origins, deterministic collision/file disambiguation and ordered observation/history/attempt seq mapping; only schema-defined run references change, local IDs/text/hash facts do not. Missing correction targets remain unresolved against unrelated same-ID native rows. Reservation survives reopen; prior destination content drift/missing evidence is integrity error, never overwrite/reuse. **Evidence:** Real source-capture/destination-SQLite allocation and typed-row comparisons, occupied ID/metric path fixtures and reopen/repeat assertions.
-  - **REQUIRED T007/V2** (A8; corrected P1): Relationship-aware reuse yields B1->A1 initially; changed A plus byte-unchanged B yields A2 and B2->A2, preserving old copies. Linked chain propagates changed targets finitely; cyclic SCC allocates together without recursive hash nonconvergence and remains cyclic/qualified. Exact repeats reuse all members; unrelated added runs do not duplicate unchanged groups. **Evidence:** Permanent test_merge_identity over production allocation/translation and persisted real SQLite maps, with deterministic counts/mappings for chain/cycle/repeat/changed-target cases. Consumer T010 must additionally publish/remove-source/readback this proof, not treat plan-only output as A8 completion.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
-
-- [ ] T008 Translate complete metric evidence without changing meaning or claiming commitment
-  - **Depends**: T007
-  - **Outcome**: Consume T006 snapshot and T007 chosen mapping. Deliver workflow_monitor/merge_metrics.py preparing translated JSONL evidence in bounded private staging: exact imported-run-ID hash filename and only typed row run_id changes. Reuse the existing closed metric contract/validation behavior rather than arbitrary replacement; keep new merge helpers usable from the existing prepared monitor package, without an undeclared runtime-package prerequisite or importing writer code into web startup. Preserve all invocation/role/values/before-after/session/coverage and original source commitment/hash/status as provenance; translated destination bytes are not thereby Git committed/reviewed. Absent evidence stays absent/qualified; invalid, conflicting or unterminated associated artifact blocks that run preservation with retain-source corrective diagnostic, never truncate/count complete or omit required file. Recheck safe regular source identity/content during capture/preparation. Keep preexisting main tracked/staged/dirty/unknown paths untouched and report occupancy to allocation for deterministic disambiguation before reservation; only matching owned pending bytes can later be reconciled. Return prepared bytes/digests/availability for T010 publisher; no final-file/DB visibility or Git actions. Document source versus destination artifact provenance and blockers.
-  - **Owned paths**: `workflow_monitor/merge_metrics.py`, `workflow_monitor/merge_identity.py`, `workflow_monitor/tests/test_merge_metrics.py`, `workflow_monitor/tests/test_merge_identity.py`, `workflow_monitor/README.md`, `docs/coordinate-implementation-schema.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_merge_metrics workflow_monitor.tests.test_merge_identity`
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v test_metric_artifacts`
-  - **REQUIRED T008/V1** (A7; A8): Actual JSONL preparation uses translated run hash/row ID and retains exact metric values/membership/session context and honest partial/absent coverage. Source committed facts stay provenance, not destination committed claim; private/unrecognized payloads fail closed. Invalid/unterminated/conflicting required artifact reports preservation blocker without truncated success. **Evidence:** Real complete/partial/absent/invalid-tail metric fixture tests of production helper, expected translated-byte/logical comparisons and existing closed metric contract regression.
-  - **REQUIRED T008/V2** (A8): Tracked/staged/dirty/unknown occupied destination files are unchanged and cause deterministic disambiguation, not adoption/overwrite; source change/replacement during read is rejected. Staging holds only owned prepared bytes and is not final/complete visibility. **Evidence:** Actual Git index/file sentinel checks and identity/content drift cases; verify source and old target bytes/index unchanged, actionable errors and prepared artifact hashes.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
-
-- [ ] T009 Reserve imported IDs against runtime execution without changing launch behavior otherwise
-  - **Depends**: T008
-  - **Outcome**: Consume T007 minimal reservation/provenance table contract. Add optional-table-aware imported-ID rejection at normal Store.start and Store.resume/CLI resume before dispatch or progress/history mutation, including pending reservations. Do not import/create runnable inputs/tasks/runs or add a new runtime mode. Preserve ordinary execution behavior/databases without merge metadata, old tables, locks/hooks/signing and no provider launch. Handle native monitor-only destination storage created by explicit import before Authority quarantine/setup: imported history/reservations must never be quarantined away or bypassed by start/resume, while normal fresh-ID execution may add only its usual execution tables in place. Use narrow recognition/early guard for this actual format, not a new admission framework. CLI guards must reject imports before engine invocation; error tells caller imported monitoring history is nonresumable and to choose a fresh run ID. Tests may synthesize real reservation rows from T007 schema and use existing offline adapter seams; no real SDK/provider calls. Document narrow reservation/nonexecution contract in schema and README. Exclude publisher and merge command.
-  - **Owned paths**: `runtime/coherence_workflow/store.py`, `runtime/coherence_workflow/cli.py`, `runtime/tests/test_imported_run_ids.py`, `runtime/tests/test_cli.py`, `runtime/tests/test_resume.py`, `runtime/tests/test_database_compatibility.py`, `workflow_monitor/README.md`, `docs/coordinate-implementation-schema.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v test_imported_run_ids test_cli test_resume test_database_compatibility`
-  - **REQUIRED T009/V1** (A7; A8; A6): Pending/completed imported IDs cannot start or resume: no engine/provider call, new execution input/progress/task/history or imported acceptance mutation. Optional-table absent native start/resume continues normally; monitor-only imported destination is not quarantined or its reservation bypassed before guards, and fresh-ID startup preserves imported monitoring data on the same DB inode. Ordinary prior history and legacy tables unchanged. **Evidence:** Actual Store and CLI offline regression with real SQLite reservation schema, sentinel dispatch adapter and before/after rows; retained native CLI/resume regressions. No task-owned Git stage/commit instructions for workers.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
-
-- [ ] T010 Publish and reconcile native monitoring imports with verified main readback
-  - **Depends**: T009
-  - **Outcome**: Consume T006 locks/snapshot, T007 persisted relationship-aware allocation, T008 metric preparation and T009 reservation protection. Deliver workflow_monitor/merge_import.py: under both held locks revalidate, reserve exact origin/group/IDs, stage translated artifacts, publish only absent final metric paths with no-overwrite and ordinary durable file/parent flushes, then insert complete native monitoring rows and mark import complete in one target transaction on existing DB inode. Only absent destination monitor storage/necessary schema may be created by explicit apply, preserving native/legacy rows/files; no source Authority or whole DB replacement. Pending rows/files must never appear as complete runs. Exact retry reconciles owned pending bytes and DB state after interruptions/uncertain COMMIT return; no duplicate allocation/committed import, unknown-file deletion/adoption or unrelated rollback. Missing/changed prior imported data is actionable integrity failure. Hold source/target locks through reopen verification and preserve source unchanged. Read main via actual Reader after publication; adapt Reader/mapping/public/app only as narrowly necessary for closed import origin/metric provenance outside renderer and unknown/historical imported liveness, never inherited live claim or new destination Git commitment. Prove translation and durable multi-file boundaries BEFORE CLI reliance: actual colliding source/native runs with rejection/fix/rereview, followup, multi-page order, coverage, failed/incomplete history, then remove only isolated test source and compare main meaning. Include corrected B2->A2 and chain/cycle published readback. Record precise operation/correction on any failure, never deletion-safe result. Document publication/visibility/retry/readback/durability limits in schema and README.
-  - **Owned paths**: `workflow_monitor/merge_import.py`, `workflow_monitor/merge_identity.py`, `workflow_monitor/merge_metrics.py`, `workflow_monitor/reader.py`, `workflow_monitor/mapping.py`, `workflow_monitor/public.py`, `workflow_monitor/app.py`, `workflow_monitor/tests/test_merge_import.py`, `workflow_monitor/tests/test_merge_identity.py`, `workflow_monitor/tests/test_merge_metrics.py`, `workflow_monitor/tests/test_reader.py`, `workflow_monitor/tests/test_mapping.py`, `workflow_monitor/tests/test_public.py`, `workflow_monitor/tests/test_http.py`, `workflow_monitor/README.md`, `docs/coordinate-implementation-schema.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_merge_import workflow_monitor.tests.test_merge_identity workflow_monitor.tests.test_merge_metrics workflow_monitor.tests.test_merge_source workflow_monitor.tests.test_reader workflow_monitor.tests.test_mapping workflow_monitor.tests.test_public workflow_monitor.tests.test_http`
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v test_imported_run_ids`
-  - **REQUIRED T010/V1** (A7; A8): Real import reopens native main Reader with translated rejection/fix/rereview, explicit review/checkpoint/followup/range/acceptance meaning, multi-page source order and exact metric values/coverage intact after isolated source removal. Native target rows/files/legacy data remain unchanged; no private runnable authority/session copy, invented success/acceptance/destination commitment or transferred live identity. **Evidence:** Permanent actual publisher->reopened Reader/normalization/HTTP tests, typed logical fact/count/sequence/metric comparisons before/after fixture removal; existing safety/public DTO regressions and imported-ID tests.
-  - **REQUIRED T010/V2** (A8; corrected P1): Published B1->A1 survives; source A changes while B bytes stay unchanged, repeat publishes A2/B2->A2 and preserves both versions. After fixture source removal latest translated followups/acceptance match source meaning. Chain and cyclic group publication terminates deterministically, keeps cyclic qualification and exact repeat/reopen creates no new rows/files. **Evidence:** Real capture/allocate/metric/publish/readback tests, saved origin/group/sequence mapping and logical followup/acceptance assertions; not plan-only or recursive fixed-point simulation.
-  - **REQUIRED T010/V3** (A8): Actual failure around metric file publication and target DB completion, including COMMIT accepted but caller reports error/uncertain return, never exposes pending as complete or duplicates imports. Retry reconciles exact owned bytes/IDs and converges. Busy source/target locks, committed WAL snapshot, source metric change, preexisting tracked/dirty artifacts and missing/changed prior imported data preserve old bytes/history and yield actionable failures; source never removed on failure. Existing DB inode is retained and required file/parent flushes occur before visibility. **Evidence:** Permanent tiny process/reopen fault-injection tests exercising real files/SQLite commit (not mocked transaction-only success), Reader visibility at boundaries, source/target sentinel comparisons, lock contention and exact retry counts. No atomic DB+JSONL/power-loss guarantee beyond documented durable ordering.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
-
-- [ ] T011 Expose explicit merge CLI and demonstrate preserved workflows through the existing website
-  - **Depends**: T010
-  - **Outcome**: Consume verified T010 publisher/readback and T004/T005 production selection. Deliver prepared python -m workflow_monitor.merge and workflow-monitor-merge entry point in existing pyproject, --source-worktree PATH [--dry-run], infer verified registered main destination. Dry-run only validates/reports plan/conflicts without lock/storage creation; apply reacquires ordinary locks/revalidates rather than trusting preview. Use actual source/group/metric/publisher helpers, no duplicate importer, web merge/control route or automatic invocation. Closed diagnostics report origins/imported IDs/counts/availability/verified outcome, not private payloads; failures exit unsuccessfully with operation/correction and source retention, no deletion-safe claim; success covers only captured snapshot, never deletes/grants source deletion or stages/commits artifacts. Show bounded origin/historical context near project/source/run selection, not graph/Details redesign. At first usable command boundary extend existing fixture with actual CLI->main Reader/HTTP->built browser: main + external/Paseo-style linked source and another project, colliding run identities; preview/apply/exact repeat, ordinary polling shows only verified complete import, remove only isolated source and see preserved graph/Details/history/review/metrics plus original main workflow. Include relationship-aware changed-target published case via T010 proof reuse where valid; no real owner merge/removal or new harness. Update README full prepared CLI/options/errors/recovery/source-retention/nonresume/rollback and schema actual entry/provenance/visibility contract. Return real evidence for fresh independent read-only full-range Sol/medium review through existing workflow; do not launch reviewers from task worker.
-  - **Owned paths**: `workflow_monitor/merge.py`, `workflow_monitor/pyproject.toml`, `workflow_monitor/tests/test_merge_cli.py`, `workflow_monitor/web/src/main.tsx`, `workflow_monitor/web/tests/execution_fixture.py`, `workflow_monitor/web/tests/test_navigation.spec.ts`, `workflow_monitor/web/tests/test_observation.spec.ts`, `workflow_monitor/README.md`, `docs/coordinate-implementation-schema.md`
-  - **Checks**:
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_merge_cli workflow_monitor.tests.test_merge_import workflow_monitor.tests.test_http workflow_monitor.tests.test_launch`
-    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v test_imported_run_ids`
+    - `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest discover -s workflow_monitor/tests -t . -v`
     - `npm --prefix workflow_monitor/web run build`
-    - `npm --prefix workflow_monitor/web test -- test_navigation.spec.ts test_observation.spec.ts test_execution.spec.ts test_chain.spec.ts test_history.spec.ts test_lineage.spec.ts test_graph.spec.ts`
-  - **REQUIRED T011/V1** (A6; A7; A8): Prepared CLI help/options/console entry and module match docs, infer same-repository main, preview makes no files, apply revalidates stale preview. Actual imported IDs/counts/metrics verified; exact repeat is no-op, invalid/busy/drift/publication/readback fails with operation/corrective action and no source deletion/success claim. No automatic Git commit, server merge/control/write route or imported execution. **Evidence:** Actual bounded subprocess CLI tests over temporary real worktrees/SQLite/JSONL with captured closed result/help/exit/readback and tree/index comparisons; compare README/schema to actual CLI/storage.
-  - **REQUIRED T011/V2** (A4; A6; A7; A8; A9): Actual CLI->Reader/HTTP->production browser sees grouped main/external source workflows with equal IDs and unchanged viewer, imported prefixed copies after verified publication/poll, then preserved graph/Details/history/review/metrics after isolated source removal plus untouched original main workflow. Exact repeated merge has no duplicate main imports; source-unavailable/stale results never leak into main. Origin context is outside renderer; imported liveness/commitment remains historical/qualified. **Evidence:** Extend existing production navigation/observation fixture and representative renderer tests; observe distinct facts before/after isolated source removal, expected IDs/counts, paged history/review/metrics and ordinary poll visibility. Reuse still-valid A4/T010 changed-target/durability evidence, rerun affected checks only; provide full-range review inputs, not an application acceptance or owner deletion authorization claim.
-  - **Permissions**: ADR-0004 bounded temporary Git/SQLite/JSONL fixtures and numeric-loopback servers allowed, including removal of explicitly created isolated test worktrees only; no actual owner-worktree merge/removal, unrelated data/services, install/setup, paid/provider calls, deployment or push. No routine verification reapproval.
+    - `npm --prefix workflow_monitor/web test` (existing fixture invokes prepared `.venv/bin/python`).
 
-## Source coverage
+## Validation and next gate
 
-| Source | REQUIRED task-local mappings |
-| --- | --- |
-| A1 default/root/cwd/one server | T001/V1; T003/V1 |
-| A2 main/registered linked grouping/refresh | T001/V1–V2; T002/V1; T005/V1 |
-| A3 per-source APIs/fallback/no-store isolation | T001/V2; T002/V1; T005/V1 |
-| A4 scoped browser/navigation/unchanged view/poll | T004/V1–V2; T005/V1; T011/V2 |
-| A5 read-only HTTP/path/identity protections | T001/V1–V2; T002/V2; T003/V1; T004/V2 |
-| A6 prepared checks/canonical usage and schema | T002–T005 local mappings; T006/V1; T009/V1; T011/V1–V2 |
-| A7 native preserved history/metrics/nonexecution | T006/V1; T007/V1; T008/V1; T009/V1; T010/V1; T011/V1–V2 |
-| A8 collision/relationship-aware repeat/locks/durability | T006/V1–V2; T007/V1–V2; T008/V1–V2; T009/V1; T010/V1–V3; T011/V1–V2 |
-| A9 full explicit CLI/post-removal browser outcome | T004/V1 monitoring portion; T010/V1–V2 storage prerequisite; T011/V2 composed acceptance |
-
-Each REQUIRED pass condition/evidence/permission is repeated verbatim in JSON; its listed task
-checks are the smallest scheduled executable checks. JSON outcomes inline the shared brief, not
-just top-level context a runner might omit. A7/A8 proof is not replaced by plan/static output or
-generic green. One observed check may satisfy multiple mappings without duplicate execution;
-reuse unchanged evidence and rerun changed-state-invalidated cases.
-
-## Human approval record
-
-Owner authorized expanded task preparation under TinySpec → Tasks. This is a planning-only
-revision, not implementation or real-data merge/removal authority. Old combined approval question
-was cancelled; tasks were never approved. New combined **planning-only** approval is pending
-parent artifact/checkpoint inspection and task review; no standalone TinySpec approval or automatic
-rereview gate is added. Parent presents each task outcome separately.
-
-Expanded independent intent review `/tmp/workflow-monitor-worktrees-intent-review.md` found **ONE
-P1**, not zero. Parent inspected correction `74f3e62` and disposed P1 as addressed at specification
-level: relationship-aware B2→A2 reuse plus finite SCC allocation. Runtime proof remains REQUIRED
-under T007/V2 and T010/V2–V3/A8; no implementation acceptance is inferred. The old zero-findings
-review applies only to superseded scope. Session-local review path is evidence, not a durable
-executable prerequisite. No application tests/build/setup/real merge/removal or workflow launch
-occurred in task production. Temporary approval/phase status is confined to this section.
+The task producer validates JSON/Markdown task parsing/dependencies, human–machine outcome/
+owned-path/check equivalence, source digest, G1–G3 coverage, local links and focused diff.
+These are planning checks only. Actual application tests/build/browser/setup/preservation/
+removal are NOT RUN by task preparation. Parent review and combined owner planning approval
+come next; no implementation launch is implied. The JSON `required` mappings provide compact
+pass/evidence/permission summaries; task-local outcomes independently carry executable context.
