@@ -964,22 +964,102 @@ class InstructionTests(unittest.TestCase):
                 self.assertTrue(any(error.startswith("spec-review-recovery:")
                                     for error in checker.check_contracts(changed)))
 
+    def assert_standard_spec_review_carrier_trace(self, planner):
+        """Extract instruction order, not a model execution or semantic obedience trace."""
+        standard = checker.section(planner, "### Standard path")
+        inventory = re.findall(r"(?m)^\d+\. \*\*`([^`]+)`", standard)
+        expected_stages = ["spec_create", "spec_review", "plan_create", "tasks_create", "overall_review"]
+        self.assertEqual(inventory, expected_stages, "Standard operational stage inventory")
+        # Locate actual action clauses inside each operational carrier. Summaries outside
+        # Standard and references to a later stage cannot supply a missing action.
+        actions = {
+            "spec_create": (
+                ("ordinary_clarification", "after that ordinary clarification"),
+                ("parent_inspection", "parent inspection of the exact current specification"),
+            ),
+            "spec_review": (
+                ("review_dispatch", "Dispatch exactly that saved binding unchanged"),
+                ("owner_question", "parent asks one concrete `ask_user` question at a time"),
+                ("producer_correction", "Send actual answers to the originating `standard-spec-create` producer"),
+                ("answer_incorporation", "The producer updates relevant requirements/scenarios/acceptance"),
+                ("correction_inspection", "parent inspects the returned change"),
+                ("zero_skip", "With explicit zero findings, skip question interaction"),
+                ("spec_approval", "present the existing current-specification executive brief and `ask_user` approval gate"),
+                ("record_spec_approval", "Durably record that approval before `plan_create`"),
+            ),
+            "plan_create": (("plan_producer", "Delegate a separate fresh bounded-context plan producer"),),
+            "tasks_create": (("task_producer", "delegate a separate fresh bounded-context task producer"),),
+            "overall_review": (
+                ("overall_inspection", "inspect source → spec → plan → tasks traceability"),
+                ("final_approval", "obtain current overall approval"),
+            ),
+        }
+        observed = []
+        for name in inventory:
+            body = " ".join(checker.stage(standard, name).split())
+            positions = []
+            for event, clause in actions[name]:
+                self.assertEqual(body.count(clause), 1, f"{name}: missing/duplicate {event}")
+                positions.append((body.index(clause), event))
+            actual = [event for _, event in sorted(positions)]
+            self.assertEqual(actual, [event for event, _ in actions[name]], f"{name}: action order")
+            observed.extend([name, *actual])
+        return observed
+
     def test_standard_spec_review_static_trace_inventory_is_explicitly_nonbehavioral(self):
-        """Trace order guards E/T002; real A–D runs remain a separate capability-gated check."""
-        trace = [
-            "spec_create", "ordinary_clarification", "parent_inspection", "spec_review",
-            "answer_incorporation", "spec_approval", "plan_create", "tasks_create",
-            "overall_review", "final_approval",
+        observed = self.assert_standard_spec_review_carrier_trace(self.texts["planner"])
+        print("T002 carrier-derived static trace (zero_skip is an alternative branch, not a live event): "
+              + " → ".join(observed)
+              + "; not live reviewer, ask_user, producer, or approval evidence")
+
+    def test_standard_spec_review_carrier_trace_rejects_changed_actions_and_order(self):
+        planner = self.texts["planner"]
+        review = checker.stage(planner, "spec_review")
+        summary = "\n## Summary only\n" + review
+        mutations = [
+            ("deleted stage", planner.replace(review, "", 1)),
+            ("folded stage", planner.replace(
+                "2. **`spec_review` — independent saved reviewer assignment:** resolve\n", "", 1)),
+            ("missing question", planner.replace("parent asks one concrete `ask_user` question at\n   a time", "REMOVED", 1)),
+            ("missing correction inspection", planner.replace("parent\n   inspects the returned change", "REMOVED", 1)),
+            ("missing zero skip", planner.replace("With explicit zero findings, skip question interaction", "REMOVED", 1)),
+            ("missing approval", planner.replace("Durably record that approval before `plan_create`", "REMOVED", 1)),
         ]
-        self.assertEqual(trace, [
-            "spec_create", "ordinary_clarification", "parent_inspection", "spec_review",
-            "answer_incorporation", "spec_approval", "plan_create", "tasks_create",
-            "overall_review", "final_approval",
-        ])
-        self.assertLess(trace.index("spec_review"), trace.index("spec_approval"))
-        self.assertLess(trace.index("spec_approval"), trace.index("plan_create"))
-        self.assertEqual(trace.count("spec_review"), 1)
-        print("T002 static trace: stage/order carrier only; not live reviewer, ask_user, producer, or approval evidence")
+        for label, first, second in (
+            ("correction before owner answer", "For each unresolved material finding", "Send actual answers"),
+            ("approval before incorporation", "The producer updates", "Durably record that approval"),
+        ):
+            # Swap complete carrier paragraphs rather than inventing an unrelated trace.
+            paragraphs = review.split("\n\n")
+            left = next(i for i, paragraph in enumerate(paragraphs) if first in paragraph)
+            right = next(i for i, paragraph in enumerate(paragraphs) if second in paragraph)
+            if left == right:
+                # The owner-question and correction clauses share a paragraph.
+                body = paragraphs[left]
+                boundary = body.index(second)
+                paragraphs[left] = body[boundary:] + "\n" + body[:boundary]
+            else:
+                paragraphs[left], paragraphs[right] = paragraphs[right], paragraphs[left]
+            mutations.append((label, planner.replace(review, "\n\n".join(paragraphs), 1)))
+        plan = checker.stage(planner, "plan_create")
+        mutations.append(("plan before review", planner.replace(review, "TEMP_STAGE", 1)
+                          .replace(plan, review, 1).replace("TEMP_STAGE", plan, 1)))
+        diagnostics = {
+            "deleted stage": "Standard operational stage inventory",
+            "folded stage": "Standard operational stage inventory",
+            "missing question": "spec_review: missing/duplicate owner_question",
+            "missing correction inspection": "spec_review: missing/duplicate correction_inspection",
+            "missing zero skip": "spec_review: missing/duplicate zero_skip",
+            "missing approval": "spec_review: missing/duplicate record_spec_approval",
+            "correction before owner answer": "spec_review: action order",
+            "approval before incorporation": "spec_review: action order",
+            "plan before review": "Standard operational stage inventory",
+        }
+        for label, changed in mutations:
+            with self.subTest(mutation=label):
+                self.assertNotEqual(changed, planner, "Mutation must change the actual carrier")
+                with self.assertRaisesRegex(AssertionError, re.escape(diagnostics[label])):
+                    self.assert_standard_spec_review_carrier_trace(changed + summary)
 
     def test_contradictions(self):
         policies = ("Automatically choose TinySpec", "Automatically choose Standard",
