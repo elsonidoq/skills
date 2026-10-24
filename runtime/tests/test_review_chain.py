@@ -266,14 +266,17 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(calls, [False, True])
 
-    def test_suggestions_are_nonblocking_and_status_projects_them_separately(self):
+    def test_risk_word_suggestions_are_nonblocking_and_status_projects_them_separately(self):
+        suggestions = ['consider crash regression coverage', 'consider hang regression coverage',
+                       'Consider adding regression coverage for invalid credentials',
+                       'consider target risk regression coverage',
+                       'consider false unavailable regression coverage']
         calls = []
         class Adapter:
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 calls.append(kwargs.get('read_only', False))
-                return ('{"approved":true,"findings":[],"suggestions":["consider a follow-up test"]}'
-                        if kwargs.get('read_only') else 'worker answer')
+                return json.dumps({'approved': True, 'findings': [], 'suggestions': suggestions}) if kwargs.get('read_only') else 'worker answer'
         contract = admit({'tasks': [{'id': 'private', 'description': 'PRIVATE task text'}]})
         with Authority(self.project) as owner:
             result = Engine(owner, 'suggestions-only', contract, EXECUTOR, adapter=Adapter).invoke()
@@ -282,12 +285,21 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(calls, [False, True])
         self.assertEqual(review['findings'], [])
-        self.assertEqual(review['suggestions'], ['consider a follow-up test'])
+        self.assertEqual(review['suggestions'], suggestions)
         self.assertNotIn('PRIVATE task text', json.dumps(observed))
+
+    def test_risk_word_suggestions_are_valid_parser_output(self):
+        suggestions = ['crash', 'hang', 'credential', 'target risk', 'false unavailable']
+        self.assertEqual(Engine._review_value(json.dumps({'approved': True, 'findings': [], 'suggestions': suggestions})),
+                         {'approved': True, 'findings': [], 'suggestions': suggestions})
 
     def test_positive_blockers_and_negative_empty_stop_without_a_fixer(self):
         for name, verdict in (
-            ('positive-blocker', '{"approved":true,"findings":["owned.txt:1 - corrupts saved state [basis: data-safety]"]}'),
+            ('positive-crash', '{"approved":true,"findings":["owned.txt:1 - crashes on missing input"]}'),
+            ('positive-hang', '{"approved":true,"findings":["owned.txt:1 - hangs while waiting for input"]}'),
+            ('positive-credential', '{"approved":true,"findings":["owned.txt:1 - exposes credentials in output"]}'),
+            ('positive-target', '{"approved":true,"findings":["owned.txt:1 - applies changes to the wrong target"]}'),
+            ('positive-data-safety', '{"approved":true,"findings":["owned.txt:1 - corrupts saved state [basis: data-safety]"]}'),
             ('negative-empty', '{"approved":false,"findings":[],"suggestions":["consider naming cleanup"]}'),
         ):
             with self.subTest(name=name):
@@ -302,7 +314,7 @@ class BoundedChainTests(ProjectTest):
                         Engine(owner, name, admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
                                EXECUTOR, adapter=Adapter).invoke()
                     chain = owner.store.review_chain(name)
-                if name == 'positive-blocker':
+                if name.startswith('positive-'):
                     self.assertEqual(calls, [False, True, False, True])
                     self.assertEqual(chain['fixing_round_count'], 1)
                 else:
@@ -314,7 +326,7 @@ class BoundedChainTests(ProjectTest):
                      '{"approved":true,"findings":"not a list"}',
                      '{"approved":true,"findings":[],"suggestions":"not a list"}',
                      '{"approved":false,"findings":["no location or concrete impact"]}',
-                     '{"approved":true,"findings":[],"suggestions":["credential risk remains"]}')
+                     '{"approved":true,"findings":[],"suggestions":[""]}')
         for ordinal, verdict in enumerate(malformed):
             with self.subTest(verdict=verdict):
                 calls = []
@@ -324,7 +336,7 @@ class BoundedChainTests(ProjectTest):
                         calls.append(kwargs.get('read_only', False))
                         return verdict if kwargs.get('read_only') else 'worker answer'
                 with Authority(self.project) as owner:
-                    with self.assertRaisesRegex(Blocked, 'reviewer result|review blocker|are blockers'):
+                    with self.assertRaisesRegex(Blocked, 'reviewer result|review blocker'):
                         Engine(owner, 'malformed-' + str(ordinal), admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
                                EXECUTOR, adapter=Adapter).invoke()
                     chain = owner.store.review_chain('malformed-' + str(ordinal))

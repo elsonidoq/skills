@@ -604,9 +604,6 @@ class Engine:
         if any(not pattern.match(item.strip()) for item in findings):
             raise _ReviewFormat('review blocker needs a path:line location and concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
-        if any(re.search(r'\b(?:crash(?:es|ed|ing)?|hang(?:s|ing)?|credential(?:s)?|false unavailable|target risk)\b', item, re.I)
-               for item in suggestions):
-            raise _ReviewFormat('crash, hang, target-risk, credential-risk, and false-unavailable observations are blockers, not suggestions')
         return {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
 
     @staticmethod
