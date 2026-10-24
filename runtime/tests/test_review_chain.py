@@ -423,6 +423,12 @@ class BoundedChainTests(ProjectTest):
                     case.assertIn('explicit manual gates', prompt)
                     case.assertIn('Routine authority:', prompt)
                     case.assertIn('never authorizes global installs', prompt)
+                    case.assertIn('concise correction plan', prompt)
+                    case.assertIn('directly related adverse failure paths', prompt)
+                    case.assertIn('integrated result against the original acceptance', prompt)
+                    case.assertIn('Original task contracts:', prompt)
+                    case.assertIn('Paid application/test APIs approved for this unchanged run only', prompt)
+                    case.assertIn('not independent acceptance', prompt)
                 if 'Actionable findings:' in prompt:
                     case.assertEqual(self.saved_session['id'], 'review-context')
                     case.assertTrue(kwargs['review_repair'])
@@ -440,7 +446,8 @@ class BoundedChainTests(ProjectTest):
         contract = admit([{'id': 'task', 'description': 'fixture', 'owned_paths': ['owned.txt'],
                            'checks': [['/bin/sh', '-c', '! grep -q broken owned.txt']]}])
         with Authority(project) as owner:
-            result = Engine(owner, 'warm-review', contract, EXECUTOR, adapter=Adapter).invoke()
+            result = Engine(owner, 'warm-review', contract, EXECUTOR, adapter=Adapter,
+                            paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
             public = owner.store.review_chain('warm-review')
             private = owner.store.review_chain('warm-review', private=True)
         self.assertEqual(result['status'], 'complete')

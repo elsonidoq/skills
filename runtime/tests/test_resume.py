@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import os
 import subprocess
 import sys
 from unittest.mock import patch
@@ -15,6 +16,11 @@ from fixtures.support import ProjectTest
 
 EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
             'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
+
+# CLI resume fixtures are detached local runs, not descendants of a host's active bridge.
+_DETACHED_BRIDGE = {name: '' for name in (
+    'COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+    'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}
 
 
 class SameRunResumeTests(ProjectTest):
@@ -61,7 +67,7 @@ class SameRunResumeTests(ProjectTest):
                 if kwargs.get('read_only'):
                     if len(calls) == 2:
                         self.saved_session = saved
-                        return '{"approved":false,"findings":["fixture defect"]}'
+                        return '{"approved":false,"findings":["owned.txt:1 - fixture defect [basis: correctness]"]}'
                     case.assertIsNone(self.saved_session)
                     return '{"approved":true,"findings":[]}'
                 if 'Actionable findings:' in prompt:
@@ -157,7 +163,7 @@ class SameRunResumeTests(ProjectTest):
                 return 'second'
 
         output = io.StringIO()
-        with patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
+        with patch.dict(os.environ, _DETACHED_BRIDGE), patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
             self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'resume-run']), 0)
         result = json.loads(output.getvalue())
         self.assertEqual(result['status'], 'complete')
@@ -311,7 +317,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
                 return 'continued partial task'
 
         output = io.StringIO()
-        with patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
+        with patch.dict(os.environ, _DETACHED_BRIDGE), patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
             self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'partial-resume']), 0)
         result = json.loads(output.getvalue())
         self.assertEqual(result['status'], 'complete')

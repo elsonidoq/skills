@@ -261,17 +261,24 @@ class Engine:
                 '. Ask before using any additional paid application/test API, including one discovered '
                 'during execution; do not ask again for unchanged scope. ')
 
-    def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id, terminal_stop=None):
-        """Run the one already-authorized review repair without routing another workflow.
+    def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id,
+                review_ordinal=1, fixing_round=1, predecessor_execution_id=None, terminal_stop=None):
+        """Run one already-authorized repair assignment without selecting another round.
 
-        The caller supplies the actual first-review execution and fixer identity.  This
-        method deliberately leaves original task rows/checkpoints alone: it records a
-        distinct fixer execution, its scoped checks, and its focused repair checkpoint.
+        The caller supplies the rejecting review, assigned fixer identity, and (where
+        applicable) its retained round. This primitive deliberately leaves original task
+        rows/checkpoints alone: it records a distinct fixer execution, its scoped checks,
+        and its focused repair checkpoint. Lifecycle/grant selection remains its caller.
         """
         if (not isinstance(findings, list) or not findings or any(not isinstance(item, str) or not item for item in findings)
                 or not isinstance(trigger_execution_id, str) or not trigger_execution_id
-                or not isinstance(execution_id, str) or not execution_id):
-            raise Blocked('fixing execution needs actionable findings and explicit execution IDs')
+                or not isinstance(execution_id, str) or not execution_id
+                or not isinstance(review_ordinal, int) or review_ordinal < 1
+                or not isinstance(fixing_round, int) or fixing_round < 1):
+            raise Blocked('fixing execution needs actionable findings, explicit execution IDs, and positive assigned rounds')
+        predecessor_execution_id = predecessor_execution_id or trigger_execution_id
+        if not isinstance(predecessor_execution_id, str) or not predecessor_execution_id:
+            raise Blocked('fixing execution needs an explicit predecessor execution ID')
         project, store = self.authority.project, self.authority.store
         original_tasks = self.contract['tasks']
         paths = []
@@ -289,8 +296,8 @@ class Engine:
         if any('owned_paths' in task for task in original_tasks):
             fix_task['owned_paths'] = sorted(set(paths))
         head = git(project, 'rev-parse', 'HEAD').decode().strip()
-        store.review_dispatch(self.run, execution_id, role='fixer', review_ordinal=1, fixing_round=1,
-                              trigger_execution_id=trigger_execution_id, predecessor_execution_id=trigger_execution_id,
+        store.review_dispatch(self.run, execution_id, role='fixer', review_ordinal=review_ordinal, fixing_round=fixing_round,
+                              trigger_execution_id=trigger_execution_id, predecessor_execution_id=predecessor_execution_id,
                               review_base=review_base, review_head=head)
         focused = FocusedGit(project, fix_task)
         claimed_paths = set()
@@ -319,8 +326,18 @@ class Engine:
             store.history(self.run, None, 'fixer', 'selected', {'execution_id': execution_id,
                           'trigger_execution_id': trigger_execution_id, **selection})
             fixer_chain, last_fixer_invocation = [], [None]
+            repair_context = (
+                'Stay within the original approved task contracts and explicit owned paths. First make a concise '
+                'correction plan; examine directly related adverse failure paths and the integrated result against '
+                'the original acceptance, then make only bounded fixes. This assigned repair is not independent '
+                'acceptance, a new task, routing operation, or permission expansion. Material scope, complexity, '
+                'verification, or permission expansion must stop for the owner; do not speculate or rewrite broadly. '
+                'The runner owns required/manual checks and the focused checkpoint: never stage or commit, bypass '
+                'checks/hooks/signing, or adopt unrelated/pre-existing bytes.\n'
+                + _DECISION_CONSTRAINTS + self.paid_authority() + '\nOriginal task contracts: '
+                + canonical(original_tasks) + '\n')
             def prompt_fix(prompt, **kwargs):
-                prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + prompt
+                prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + repair_context + prompt
                 invocation_id = uuid.uuid4().hex
                 predecessor = last_fixer_invocation[0]
                 chain = [*fixer_chain, invocation_id]
@@ -328,8 +345,8 @@ class Engine:
                 public = {
                     'role': 'fixing_worker', 'execution_id': execution_id, 'invocation_id': invocation_id,
                     'invocation_kind': 'corrective_worker' if predecessor else 'task_worker',
-                    'selected_input_checkpoints': [], 'correction_chain': chain, 'fixing_round': 1,
-                    'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': trigger_execution_id,
+                    'selected_input_checkpoints': [], 'correction_chain': chain, 'fixing_round': fixing_round,
+                    'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': predecessor_execution_id,
                 }
                 if predecessor:
                     public['predecessor_invocation_id'] = predecessor
@@ -372,15 +389,9 @@ class Engine:
                     self._append_metric(worker, invocation_id=invocation_id, task_id=fix_task['id'],
                                         role='fixing_worker', outcome=outcome, selection=selection,
                                         continued=predecessor is not None, expected_session_id=expected_session_id,
-                                        fixing_round=1)
-            prompt = ('Continue your code review: first make a concise correction plan, then implement fixes '
-                      'for the actionable findings within the original approved task contracts. '
-                      'This is the one assigned fixing round, not a new task, routing operation, '
-                      'or permission expansion. Keep the configured executor and authority. Select only explicit '
-                      'source/artifact paths from those contracts; preserve unrelated and pre-existing bytes. Run '
-                      'applicable required checks. Never stage or commit: the runner owns the focused repair checkpoint.\n'
-                      + _DECISION_CONSTRAINTS + self.paid_authority() + '\n'
-                      'Original task contracts: ' + canonical(original_tasks) + '\nActionable findings: ' + canonical(findings))
+                                        fixing_round=fixing_round)
+            prompt = ('Continue the rejecting review in this assigned repair round. Keep the configured reviewer '
+                      'executor and its scoped writer transition.\nActionable findings: ' + canonical(findings))
             text = prompt_fix(prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
                                        saved_session=saved, reuse_key=reuse_key)
             check_occurrences = {}
