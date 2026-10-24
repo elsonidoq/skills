@@ -106,6 +106,59 @@ class ChainRecordingTests(ProjectTest):
             self.assertIn('gap', [row['kind'] for row in store.monitor('gap')['observations']])
 
 
+class OwnerPairPrimitiveTests(ProjectTest):
+    def _rejection(self, store, run='pair'):
+        store.review_dispatch(run, 'review-2', review_ordinal=2, fixing_round=1,
+                              review_base=self.base, review_head=self.base)
+        store.review_outcome(run, 'review-2', 'rejected', findings=['owned.txt:1 - retained defect'],
+                             references={'base': self.base, 'head': self.base})
+
+    def test_owner_pair_grant_is_durable_and_consumed_once_for_assigned_identities(self):
+        authority = {'review_policy': 'owner-pair-v1'}
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('pair', self.base, authority=authority)
+            self._rejection(store)
+            grant = store.authorize_owner_pair('pair', 'grant-1', rejecting_execution_id='review-2',
+                                               review_base=self.base, review_head=self.base, original_scope='original-scope',
+                                               fixer_execution_id='fix-2', reviewer_execution_id='review-3')
+            reserved = store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2',
+                                                       review_base=self.base, review_head=self.base, original_scope='original-scope')
+            self.assertEqual((grant['grant_id'], reserved['fixer_execution_id']), ('grant-1', 'fix-2'))
+        with Authority(self.project) as owner:
+            store = owner.store
+            self.assertEqual(store.review_policy('pair'), 'owner-pair-v1')
+            self.assertEqual(store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2',
+                                                             review_base=self.base, review_head=self.base,
+                                                             original_scope='original-scope')['fixer_execution_id'], 'fix-2')
+            with self.assertRaisesRegex(Blocked, 'scope'):
+                store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2', review_base=self.base,
+                                               review_head=self.base, original_scope='wrong-scope')
+            rows = list(store.db.execute("SELECT state FROM execution_history WHERE run_id='pair' AND kind='review_pair_reservation'"))
+            self.assertEqual([row['state'] for row in rows], ['fixer_reserved'])
+
+    def test_pair_reviewer_requires_same_grant_successful_fixer_and_unknown_policy_stops(self):
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('pair', self.base, authority={'review_policy': 'owner-pair-v1'})
+            self._rejection(store)
+            store.authorize_owner_pair('pair', 'grant', rejecting_execution_id='review-2', review_base=self.base,
+                                       review_head=self.base, original_scope='scope', fixer_execution_id='fix-2', reviewer_execution_id='review-3')
+            store.reserve_owner_pair_fixer('pair', 'grant', rejecting_execution_id='review-2', review_base=self.base,
+                                           review_head=self.base, original_scope='scope')
+            with self.assertRaisesRegex(Blocked, 'successful fixer'):
+                store.reserve_owner_pair_reviewer('pair', 'grant', fixer_execution_id='fix-2')
+            store.review_dispatch('pair', 'fix-2', role='fixer', review_ordinal=1, fixing_round=1,
+                                  trigger_execution_id='review-2', predecessor_execution_id='review-2',
+                                  review_base=self.base, review_head=self.base)
+            store.review_outcome('pair', 'fix-2', 'approved', findings=[], references={'base': self.base, 'head': self.base})
+            self.assertEqual(store.reserve_owner_pair_reviewer('pair', 'grant', fixer_execution_id='fix-2')['reviewer_execution_id'], 'review-3')
+            store.start('unknown', self.base, contract={'tasks': []}, authority={'review_policy': 'future-policy'})
+            store.finish('unknown', 'failed', error='interrupted fixture')
+            with self.assertRaisesRegex(Blocked, 'unsupported retained review policy'):
+                store.resume('unknown')
+
+
 class ChainHistoryTests(ProjectTest):
     def test_reopen_retains_rejection_attempts_consumed_limits_and_immutable_checkpoint(self):
         with Authority(self.project) as owner:

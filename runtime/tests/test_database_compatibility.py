@@ -18,6 +18,14 @@ from fixtures.support import ProjectTest
 class DatabaseCompatibilityTests(ProjectTest):
     def setUp(self):
         super().setUp()
+        # These CLI/database tests exercise unattached operation.  A parent-session bridge
+        # inherited from the surrounding test runner is an unrelated transport input.
+        self.bridge_environment = patch.dict(os.environ, {
+            'COHERENCE_PARENT_BRIDGE_SOCKET': '', 'COHERENCE_PARENT_BRIDGE_TOKEN': '',
+            'COHERENCE_PARENT_BRIDGE_SESSION': '', 'COHERENCE_PARENT_BRIDGE_RUN': '',
+        })
+        self.bridge_environment.start()
+        self.addCleanup(self.bridge_environment.stop)
         self.database = self.project / '.coherence/workflow/workflow.sqlite'
         self.database.parent.mkdir(parents=True)
 

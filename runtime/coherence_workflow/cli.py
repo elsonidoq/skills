@@ -89,8 +89,11 @@ def status(project, run):
                     for item in db.execute('SELECT * FROM execution_tasks WHERE run_id=? ORDER BY rowid', (run,))]}
                 if inputs:
                     contract = json.loads(inputs['contract'])
+                    authority = json.loads(db.execute('SELECT authority FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()['authority'])
+                    policy = authority.get('review_policy') if isinstance(authority, dict) else None
                     result['input'] = {'task_ids': [task['id'] for task in contract.get('tasks', [])],
-                                       'review_base': inputs['review_base']}
+                                       'review_base': inputs['review_base'],
+                                       'review_policy': policy if policy is not None else 'historical-two-review-one-fixer'}
                     result['history'] = [
                         {'task_id': item['task_id'], 'kind': item['kind'], 'state': item['state'],
                          'details': _safe_history_details(item['details'])}
@@ -100,7 +103,24 @@ def status(project, run):
                     # This is the safe owner result: parsed actionable findings and range/commit
                     # references, never raw reviewer payloads, prompts, or answers.
                     result['review_chain'] = Store.review_chain(type('Reader', (), {'db': db})(), run)
-                    if result['review_chain']['executions'] and result['run']['error']:
+                if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_history'").fetchone():
+                    pairs = []
+                    for item in db.execute("SELECT kind,state,details FROM execution_history WHERE run_id=? AND kind IN ('review_pair_grant','review_pair_reservation') ORDER BY seq", (run,)):
+                        try:
+                            facts = json.loads(item['details'])
+                        except (TypeError, ValueError):
+                            continue
+                        pairs.append({'kind': item['kind'], 'state': item['state'], **{key: facts[key] for key in
+                                      ('grant_id', 'rejecting_execution_id', 'review_base', 'review_head', 'original_scope',
+                                       'fixer_execution_id', 'reviewer_execution_id') if key in facts}})
+                    if pairs:
+                        latest = pairs[-1]
+                        next_stage = {'authorized': 'reserve_assigned_fixer', 'fixer_reserved': 'assigned_fixer',
+                                      'reviewer_reserved': 'assigned_fresh_reviewer'}.get(latest['state'], 'blocked')
+                        result['review_authorization'] = {'events': pairs, 'next_stage': next_stage}
+                    elif any(item['state'] == 'rejected' and not item['uncertain'] for item in result.get('review_chain', {}).get('executions', [])):
+                        result['review_authorization'] = {'events': [], 'next_stage': 'owner_authorization_required'}
+                    if result.get('review_chain', {}).get('executions') and result['run']['error']:
                         result['run']['error'] = 'review outcome recorded; see review_chain'
                 try:
                     monitored = db.execute('SELECT recording_version FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()

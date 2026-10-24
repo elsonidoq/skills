@@ -63,7 +63,8 @@ class RunInputHistoryTests(ProjectTest):
         self.assertEqual(checkpoints[0]['parent'], self.base)
 
         observed = status(project, 'retained')
-        self.assertEqual(observed['input'], {'task_ids': ['first', 'second'], 'review_base': self.base})
+        self.assertEqual(observed['input'], {'task_ids': ['first', 'second'], 'review_base': self.base,
+                                             'review_policy': 'historical-two-review-one-fixer'})
         self.assertIn(1, [row['details'].get('exit_code') for row in observed['history']])
         self.assertNotIn('PRIVATE original task text', json.dumps(observed))
         self.assertNotIn('PRIVATE worker answer', json.dumps(observed))
