@@ -187,6 +187,26 @@ owns proposed behavior/acceptance; current behavior above is not changed by this
 Verify prepared versions before future execution; this evidence grants no setup,
 installation or application-build permission.
 
+## Stopped-source capture preparation
+
+The later explicit preservation command uses `capture_stopped(source_worktree, private_dir)`
+to prepare (not publish) one monitor-only recording. The source must be a stopped, registered
+linked worktree; the helper verifies its distinct registered main, takes the ordinary source
+`coherence-workflow.lock` without constructing the runtime writer, and retains that lock until
+the consumer has read the prepared files and the context exits. `private_dir` is a new
+command-owned directory below `main/.coherence`, so it is not discoverable as completed history.
+The returned capture exposes the verified main/origin identity, private `monitor.sqlite` and
+`metrics/` paths, a content fingerprint/retained-facts summary, and `verify_unchanged()`.
+
+The private SQLite retains monitor descriptors, ordered observations, review executions/attempts/
+input checkpoints, and only Reader-consumed worker/fixer dispatch and metric-artifact history.
+It retains original internal IDs/order and copies associated JSONL metric bytes exactly, including
+partial or malformed tails; absent artifacts stay absent. It excludes runtime progress, run inputs,
+other history/tables, SDK sessions and prompts. An unreadable existing metric, source replacement,
+or drift fails with a retain-source correction rather than claiming deletion is safe. A successful
+context exit performs a final source check before unlocking. This helper never publishes,
+overwrites a prior capture, modifies native source/main data, or provides a CLI.
+
 The reader opens short SQLite `mode=ro` snapshots for exactly one canonical Git
 worktree and does not import or invoke the workflow writer. It never copies a database,
 checkpoints WAL, signals a process, repairs recording gaps, or falls back to legacy history.

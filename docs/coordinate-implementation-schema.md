@@ -147,6 +147,17 @@ history and appends an `abandoned` observation when the run was registered.
 
 ## Preserved monitor recordings
 
+A later explicit preservation command may first use the monitor-only
+`capture_stopped(source_worktree, private_dir)` helper. It verifies a distinct registered main,
+acquires the stopped source's ordinary `coherence-workflow.lock` without constructing or
+migrating `Authority`, and keeps it through consumer readback and the successful context-exit
+source-drift check. Its new private directory is below `main/.coherence`, is not discoverable,
+and contains only monitor descriptors, ordered observations, review execution/attempt/input facts,
+Reader-consumed typed dispatch/metric-artifact history, and byte-identical associated metrics.
+It excludes run inputs, runnable progress, unrelated history/tables and SDK/private prompt data.
+Absent metrics remain absent; existing unreadable/unsafe metrics or source identity/content drift
+fail actionably while retaining source and prior history. The helper neither publishes nor deletes.
+
 A later explicit preservation command may publish one monitor-only recording below a
 verified main worktree at `.coherence/preserved-recordings/<recording-id>/`.  A Reader
 recognizes only an owned, non-symlinked `recording.json` with the closed v1 fields
