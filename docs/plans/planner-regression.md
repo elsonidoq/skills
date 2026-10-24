@@ -18,6 +18,24 @@ PASS (12 tests); `python3 scripts/check-planner-workflow.py` PASS;
 `python3 scripts/test-planner-workflow.py` PASS (167 tests); `git diff --check` PASS.
 No live evaluation, delegation or additional review loop was performed.
 
+## Complete findings, progressive presentation
+
+Spec Review returns all material unresolved decisions, ranked by impact and grouped
+into meaningful areas when useful; zero remains valid. Definition-of-done gaps share
+that report. There is no reviewer discovery quota. The coordinator reports the total
+and areas, surfaces five initially, and offers all findings or a grouped overview.
+Questions remain one at a time; earlier answers can eliminate later questions. The
+coordinator retains the full report in existing context and presents further batches
+until material decisions are resolved or explicitly owner-deferred with consequences
+and permitted planning bounds. No extra approval, tracker or automatic rereview is added.
+
+Existing prompt-contract assertions and negative mutations cover uncapped/selective
+review, total/area disclosure, all/grouped views, retained remainder, continuation past
+five answers and the remaining-decision planning gate. These are static checks, not
+live-model evidence; owner-directed ordinary use/iteration remains the evaluation path.
+Historical source/task descriptions of a five-finding cap are superseded by this
+owner-requested behavior, not rewritten as current requirements.
+
 ## What the checks prove
 
 `bash scripts/check-skills-lint.sh` runs frontmatter lint, operational instruction

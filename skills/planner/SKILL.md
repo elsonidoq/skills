@@ -443,12 +443,18 @@ valid settled principles. Verify the saved exact stage binding and independent r
    decisions/memory, and [the canonical review prompt](references/spec-review.md). Do not
    include producer rationale, transcript, or unrelated history. Review definition of
    done for observable completion aligned with user intent, using existing acceptance
-   criteria rather than requiring a new heading; material gaps share the five-finding
-   limit and existing question/correction flow. Require findings only;
+   criteria rather than requiring a new heading; include all material gaps in the same
+   ranked findings and existing question/correction flow, with no discovery cap.
+   Require findings only;
    no writes, implementation, external action, or delegation. Parent compares the exact
    specification before and after review and inspects the returned report; reviewer and
    parent never substantively repair the specification.
 
+   Parent reports the total findings and meaningful areas, then surfaces the five most
+   important findings initially (or all if fewer). Offer to show all findings or a grouped
+   overview on request; these views summarize findings, not additional approval gates.
+   Retain the complete returned findings in existing session/report context, not a new
+   persistent tracker. Five is a presentation batch, not a discovery or resolution limit.
    For each unresolved material finding, parent asks one concrete `ask_user` question at
    a time, retaining its scenario, alternatives, and consequences; discard queued
    questions made unnecessary by earlier answers. An unanswered or cancelled material
@@ -459,8 +465,12 @@ valid settled principles. Verify the saved exact stage binding and independent r
    conditions affected by the answers, and existing Clarifications/session
    `Q: … → A: …` convention, removes contradictions, validates and checkpoints; parent
    inspects the returned change. Do not rerun ordinary clarification taxonomy for answered
-   questions or automatically rereview. Explicit owner stops/deferrals use existing gates
-   with the unresolved impact; they never release a material dependency automatically.
+   questions or automatically rereview. After each presentation batch, surface the next
+   highest-impact remaining findings; do not stop merely because five were answered.
+   Before planning, every remaining material decision must be answered or explicitly
+   deferred by the owner with consequences and permitted planning bounds recorded.
+   Explicit owner stops/deferrals use existing gates with the unresolved impact; they
+   never release a material dependency automatically.
 
    With explicit zero findings, skip question interaction. After zero or inspected producer
    incorporation, present the existing current-specification executive brief and `ask_user`
