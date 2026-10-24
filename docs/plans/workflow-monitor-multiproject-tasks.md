@@ -8,14 +8,16 @@ organized around **G1 one server**, **G2 explicit stopped-source preservation**,
 Source baseline: `0b690eafe4b202db073924de8df260fb95da310b`.
 Source SHA256: `02ef30d6e4c291b7d732c22cd86ed7c9a2c8b55beedca0592928ed45648f57c4`.
 [Executable JSON](workflow-monitor-multiproject-tasks.json) replaces the stale native-DB
-merge decomposition. These six IDs describe this revision, not historical assignments.
+merge decomposition. These seven IDs describe this revision, not historical assignments.
 
 **Approval record:** preparation only; parent source inspection and fresh independent
-source-intent review reported zero findings. Regenerated tasks require parent inspection,
-independent planning review and combined current-content owner planning approval. This
-artifact claims neither implementation approval nor application check execution.
+source-intent review reported zero findings. Independent task review subsequently reported
+**ONE P1**: split consistent/private source capture from publication/repeat/readback plus CLI.
+This bounded correction addresses that decomposition only; parent inspection/disposition and
+combined current-content owner planning approval remain pending. It does not claim a new
+zero-findings verdict, implementation approval or application check execution.
 
-Producer read [the actual executor](../../.pi/workflow-executor.json) before decomposition:
+Producer reread [the actual executor](../../.pi/workflow-executor.json) before this correction:
 `openai-codex/gpt-5.6-terra` / medium workers, fresh
 `openai-codex/gpt-6.1-sol` / medium reviewers. Saved tinyspec-tasks Sol/medium is unchanged;
 it is the producer assignment, not an implementation binding.
@@ -76,15 +78,18 @@ harness, not a new harness; shared-file edits follow predecessors.
 
 ## Goal-oriented delivery and dependencies
 
-G1 is delivered by T001 → T004 → T005 → T006. G2 by T002 → T003.
-G3 consumes that preserved binding/capture in T004 and closes production viewing in T006.
-T001 and T002 have independent observables; T003 joins them. T004 depends on T003
-(and thus T002), then T005 → T006. No task-count quota or obsolete eleven-task architecture.
+G1 is delivered by T001 → T005 → T006 → T007. G2 by T002 → T003 → T004.
+G3 consumes that preserved binding/capture/publication in T005 and closes viewing in T007.
+T001 and T002 are independent; T003 consumes both for verified stopped-source capture.
+T004 consumes T003 Capture and T002 Reader for publication/repeat/readback plus thin CLI.
+T005 depends on T001 and completed T004, then T006 → T007. This single split corrects
+review P1 at a real capture contract, without other substantive decomposition changes.
 
 The consequential risk is complete/private consistent capture reopened without source paths.
-Permanent actual preserved-Reader tests in T002 and helper/CLI WAL/JSONL/publication tests in
-T003 establish that seam before HTTP/browser reliance. Known bounded Git/SQLite/file APIs
-need no disposable prototype/proof/consumer/cleanup chain. T006 runs composed
+Permanent actual preserved-Reader tests in T002, helper WAL/JSONL/privacy/lock tests in T003
+and publication/repeat/readback/CLI tests in T004 establish separately checkpointable seams
+before HTTP/browser reliance. Known bounded Git/SQLite/file APIs need no disposable
+prototype/proof/consumer/cleanup chain. T007 runs composed
 CLI → preserved Reader → project HTTP → production browser after isolated source removal
 at the first usable browser boundary. Tests, docs and routine teardown stay with each outcome.
 
@@ -128,43 +133,84 @@ at the first usable browser boundary. Tests, docs and routine teardown stay with
     ADR-0004 fixture removal allowed; failed seam proof blocks capture reliance.
   - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_recordings workflow_monitor.tests.test_reader workflow_monitor.tests.test_mapping workflow_monitor.tests.test_lineage`.
 
-### G2 delivery: explicit verified stopped capture
+### G2 capture: consistent private stopped-source contract
 
-- [ ] T003 Preserve a stopped worktree through an explicit verified CLI
+- [ ] T003 Capture a consistent private stopped-source recording
   - **Depends**: T001, T002
-  - **Outcome**: `preserve.py` module/console command `workflow-monitor-preserve
-    --source-worktree PATH` infers/reports distinct registered same-repository main. Acquire
-    ordinary writer lock without source `Authority` construction/migration; reject busy
-    without signalling and hold through verification. Consistent committed SQLite including
-    WAL plus associated metric bytes; detect replacement/drift. Monitor-only descriptors,
-    ordered observations including unknown/incomplete, reviews/attempts/input checkpoints,
-    typed dispatch/metric-artifact history; no private runnable/session/unrelated data.
-    Preserve JSONL partial tails/missing qualifications; existing unsafe/unreadable artifact
-    fails. Complete-only no-overwrite publication from small private preparation, followed
-    by actual preserved Reader facts/metric verification. Stable identity/repeat reuses;
-    changed stopped source is mismatch, never incremental update/version: retain both and
-    tell owner source differs and must be retained pending resolution. Public prefixes with
-    stable hash disambiguation, internal identity unchanged. Success reports IDs/metrics/
-    verified readback; errors name operation/correction, never declare deletion safe.
-    Failed/interrupted/unknown runs eligible; missing liveness telemetry alone not blocking.
+  - **Outcome**: deliver `preserve_source.py`, excluding publication/retry/CLI. Infer distinct
+    registered same-repository main via T001; use T002 prepared recording layout. Small
+    context-managed `capture_stopped(source_worktree, private_dir)` returns Capture containing
+    verified main/origin identity, prepared monitor SQLite/associated metric paths, stable
+    origin/content fingerprint, retained-facts/metric-qualification summary and
+    `verify_unchanged()`. `private_dir` is new command-owned preparation under verified main,
+    invisible to complete discovery. This local helper result is not a persisted interchange
+    schema/framework or disposable subsystem. Capture owns ordinary source writer lock until
+    context exit, including consumer publication and final readback; check source identity/
+    content before publication and finally on successful context exit after readback, before
+    lock release.
+    No source `Authority` construction/migration or writer signalling. Consistent committed
+    SQLite including WAL; monitor-only descriptors, ordered observations including unknown/
+    incomplete, reviews/attempts/input checkpoints and typed dispatch/metric-artifact history.
+    No raw runtime DB/mixed-purpose private history, runnable inputs/progress, unrelated or
+    session data. Keep internal identity/relationships/hashes/historical commitment facts.
+    Exact JSONL bytes including partial/malformed tails; absent honest, existing unreadable/
+    unsafe artifact fails. Failed/interrupted/unknown eligible, absent liveness telemetry
+    alone not blocking. Errors name operation/correction, retain source, never deletion-safe.
+    README/storage guidance covers actual subset/privacy/layout/lock lifetime.
+  - **Owned paths**: `workflow_monitor/preserve_source.py`,
+    `workflow_monitor/tests/test_preserve_source.py`, `workflow_monitor/README.md`,
+    `docs/coordinate-implementation-schema.md`.
+  - **REQUIRED G2/G3 pass/evidence**: permanent actual helper real Git/SQLite/WAL/JSONL tests
+    compare retained facts/order/reviews/followups/dispatch, metric bytes/coverage, unknown/
+    unsupported qualifications, private exclusion and preexisting source/main rows/files/
+    index/history. Actual busy lock, consumer-lifetime contention, source SQLite/metric drift/
+    replacement and exit/error tests prove held lock, checks and release. Preparation stays
+    invisible; no prior bytes change. Checkpoint this outcome without publisher/CLI. No
+    exhaustive fault framework; ADR-0004 isolated fixtures only, no owner-data actions;
+    failed capture evidence blocks T004 reliance.
+  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_preserve_source workflow_monitor.tests.test_recordings workflow_monitor.tests.test_reader`.
+
+### G2 delivery: complete publication and verified explicit command
+
+- [ ] T004 Publish verified captures with repeat-safe readback and explicit CLI
+  - **Depends**: T002, T003
+  - **Outcome**: deliver `preserve.py` prepared module/console command
+    `workflow-monitor-preserve --source-worktree PATH`, consuming T003 Capture rather than
+    reimplementing source capture, and T002 preserved Reader. Report inferred main. Within
+    Capture context retain its source lock through `verify_unchanged()` before complete-only
+    no-overwrite publication under main `.coherence`, reopened Reader comparison to retained-
+    facts/metric summary and final drift check on successful context exit; only then
+    report success. If final drift check fails, no successful-preservation claim or automatic
+    rollback/deletion; retain source and any newly completed bytes for inspection. Pending
+    private preparation is invisible. Stable origin/content identity makes exact repeat
+    verify/reuse without duplicate, including interrupted/uncertain publication retry.
+    Changed stopped source is mismatch, not incremental sync/version: retain both and tell
+    owner source differs and must be retained pending resolution. Distinct colliding old IDs
+    survive with `<workflow-name or hash>-<old id>` public IDs and stable hash disambiguation;
+    internal IDs/relationships/metric hashes unchanged. Source-independent preserved Reader
+    verifies facts/metric qualifications; commitments remain historical, liveness unknown.
+    Success reports identities/metrics/verified readback; failures identify operation/correction,
+    never deletion-safe. README/storage docs match actual stopped/repeat/errors/no-delete/
+    no-resume command and limits, with no broader schema/framework.
   - **Owned paths**: `workflow_monitor/preserve.py`, `workflow_monitor/recordings.py`,
     `workflow_monitor/tests/test_preserve.py`, `workflow_monitor/tests/test_recordings.py`,
     `workflow_monitor/pyproject.toml`, `workflow_monitor/README.md`,
     `docs/coordinate-implementation-schema.md`.
-  - **REQUIRED G2/G3 pass/evidence**: permanent actual helper/subprocess CLI real Git/SQLite/WAL/
-    JSONL tests compare retained facts/order/review/followup/dispatch and metric bytes/coverage,
-    unknown/unsupported/private exclusion and source/main files/rows/index/history invariants;
-    distinct colliding old IDs survive without internal rewrite. Actual lock, source drift,
-    repeat/reopen, publication interruption/uncertain completion prove pending invisible,
-    no overwrite/duplicate on retry and actionable mismatch. No exhaustive fault framework.
-    README/storage docs match command/stopped/repeat/errors/commitment/no-delete/no-resume
-    limits. Only isolated fixture capture/removal; failed safety/readback blocks consumers.
-  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_preserve workflow_monitor.tests.test_recordings workflow_monitor.tests.test_reader`.
+  - **REQUIRED G2/G3 pass/evidence**: permanent actual publication/subprocess CLI real Git/
+    SQLite/WAL/JSONL tests reuse T003 capture proof and compare facts/bytes/coverage/private
+    exclusion plus source/main/index/prior-history invariants. Collisions, repeat/reopen,
+    publication interruption/uncertain completion prove pending invisible and no overwrite/
+    duplicate. Controlled source drift during final Reader verification prevents success;
+    later-source mismatch retains both with actionable retain-source diagnostic. Actual
+    Reader readback does not depend on source paths; no fabricated success/acceptance/
+    liveness/new commitment. No exhaustive fault framework. ADR-0004 fixture capture/removal
+    only, no owner-data actions; failed safety/readback blocks dependent acceptance.
+  - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_preserve workflow_monitor.tests.test_preserve_source workflow_monitor.tests.test_recordings workflow_monitor.tests.test_reader`.
 
 ### G1/G3 delivery: scoped combined observation
 
-- [ ] T004 Serve project-scoped combined live and preserved workflows
-  - **Depends**: T001, T003
+- [ ] T005 Serve project-scoped combined live and preserved workflows
+  - **Depends**: T001, T004
   - **Outcome**: scoped project inventory, combined run inventory and existing snapshot/
     history/record/followup operations using recording-qualified refs. Normalize per recording
     before public qualification; preserve local relationship/metric meaning. Per-recording
@@ -188,8 +234,8 @@ at the first usable browser boundary. Tests, docs and routine teardown stay with
     comparisons. Bounded fixture server/removal allowed; no owner-data actions.
   - **Check**: `PYTHONPATH=runtime:runtime/tests workflow_monitor/.venv/bin/python -B -m unittest -v workflow_monitor.tests.test_projects workflow_monitor.tests.test_http workflow_monitor.tests.test_reader workflow_monitor.tests.test_chain_mapping workflow_monitor.tests.test_execution_presentation workflow_monitor.tests.test_history workflow_monitor.tests.test_lineage workflow_monitor.tests.test_observation workflow_monitor.tests.test_delivery`.
 
-- [ ] T005 Launch one prepared server from an unrelated cwd
-  - **Depends**: T004
+- [ ] T006 Launch one prepared server from an unrelated cwd
+  - **Depends**: T005
   - **Outcome**: replace project binding with `--projects-root DIRECTORY`, expanded `~/projects`
     default; retain prepared `--assets`, port and safe numeric-loopback options. Unrelated cwd
     launch works; actionable bad root error without creation, empty root usable. Update
@@ -204,8 +250,8 @@ at the first usable browser boundary. Tests, docs and routine teardown stay with
 
 ### G1–G3 production acceptance: unchanged viewer after fixture removal
 
-- [ ] T006 Select projects in the unchanged viewer and prove post-removal history
-  - **Depends**: T005
+- [ ] T007 Select projects in the unchanged viewer and prove post-removal history
+  - **Depends**: T006
   - **Outcome**: project selector then combined workflows in existing browser, source context
     outside renderer, project/qualified-run URLs. Preserve direct-open/reload/Back/Forward,
     exactly-once decoding, local substring filter/newest finite default, honest unknown URLs.
@@ -229,7 +275,8 @@ at the first usable browser boundary. Tests, docs and routine teardown stay with
     cross-run followup within recording, paged history, call/run metrics and partial/unknown
     qualifications. No fabricated liveness/success/acceptance/commitment or ref/cache leakage;
     original bytes/main unchanged, no private capture payloads, observation restart removes
-    nothing. Reuse T003 safety proof and existing browser harness, not mocks/screenshots alone.
+    nothing. Reuse T003 capture/T004 publication safety proof and existing browser harness,
+    not mocks/screenshots alone.
     Bounded fixture removal/servers allowed; no owner-data actions or prerequisite downloads.
     Failed composed proof blocks G3 acceptance/real-data reliance.
   - **Checks**:
@@ -242,6 +289,7 @@ at the first usable browser boundary. Tests, docs and routine teardown stay with
 The task producer validates JSON/Markdown task parsing/dependencies, human–machine outcome/
 owned-path/check equivalence, source digest, G1–G3 coverage, local links and focused diff.
 These are planning checks only. Actual application tests/build/browser/setup/preservation/
-removal are NOT RUN by task preparation. Parent review and combined owner planning approval
-come next; no implementation launch is implied. The JSON `required` mappings provide compact
-pass/evidence/permission summaries; task-local outcomes independently carry executable context.
+removal are NOT RUN by task preparation. Parent inspection/disposition of the one-P1
+correction and combined owner planning approval come next; no automatic rereview loop or
+implementation launch is implied. JSON `required` mappings provide compact pass/evidence/
+permission summaries; task-local outcomes independently carry executable context.
