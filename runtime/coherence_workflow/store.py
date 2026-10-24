@@ -456,6 +456,20 @@ class Store:
             "SELECT 1 FROM execution_history WHERE run_id=? AND kind='review_pair_reservation' AND state='reviewer_reserved' AND details=?", (run, encoded)).fetchone()))
         return facts
 
+    def owner_pair_for_rejection(self, run, *, rejecting_execution_id, review_base, review_head, original_scope):
+        """Return the one retained grant/reservation matching this exact rejection."""
+        matched = None
+        for row in self.db.execute("SELECT kind,state,details FROM execution_history WHERE run_id=? AND kind IN ('review_pair_grant','review_pair_reservation') ORDER BY seq", (run,)):
+            try:
+                facts = json.loads(row['details'])
+            except (TypeError, ValueError):
+                continue
+            if all(facts.get(key) == value for key, value in {
+                'rejecting_execution_id': rejecting_execution_id, 'review_base': review_base,
+                'review_head': review_head, 'original_scope': original_scope}.items()):
+                matched = {**facts, 'state': row['state'], 'kind': row['kind']}
+        return matched
+
     def resume(self, run):
         """Reopen one actually failed/interrupted run from its retained input/history."""
         from .processes import inspect_recorded_writers
@@ -562,17 +576,18 @@ class Store:
                                               not isinstance(input_checkpoints, list) or
                                               not all(_review_input(item) for item in input_checkpoints)):
             raise Blocked('only the first reviewer may retain explicit selected input checkpoints')
-        if review_ordinal not in (1, 2) or fixing_round not in (0, 1):
-            raise Blocked('review chain exceeds two reviews or one fixing round')
+        if not isinstance(review_ordinal, int) or review_ordinal < 1 or not isinstance(fixing_round, int) or fixing_round < 0:
+            raise Blocked('review execution needs positive ordinal/round values')
         if role == 'reviewer' and fixing_round != review_ordinal - 1:
             raise Blocked('review ordinal and fixing round are inconsistent')
-        if role == 'fixer' and fixing_round != 1:
-            raise Blocked('fixer must consume the one fixing round')
+        if role == 'fixer' and (fixing_round < 1 or fixing_round > review_ordinal):
+            raise Blocked('fixer needs a positive assigned fixing round')
         prior = self.review_chain(run, private=True)
         if prior['uncertain']:
             raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
-        if sum(item['role'] == 'reviewer' for item in prior['executions']) >= 2 or (role == 'fixer' and any(item['role'] == 'fixer' for item in prior['executions'])):
-            raise Blocked('review chain limit already consumed; do not dispatch another review/fixing round')
+        if self.review_policy(run) == 'historical-two-review-one-fixer':
+            if sum(item['role'] == 'reviewer' for item in prior['executions']) >= 2 or (role == 'fixer' and any(item['role'] == 'fixer' for item in prior['executions'])):
+                raise Blocked('review chain limit already consumed; do not dispatch another review/fixing round')
         references = canonical({'base': review_base, 'head': review_head})
         saved_inputs = canonical(input_checkpoints) if input_checkpoints is not None else None
         def write():

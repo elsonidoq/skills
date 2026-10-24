@@ -1,4 +1,5 @@
 """Sequential task/check/Git execution, with one fresh read-only final reviewer."""
+import hashlib
 import inspect
 import json
 import math
@@ -511,10 +512,11 @@ class Engine:
         return selected
 
     def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
-                trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None):
+                trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
+                execution_id=None):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
-        execution_id = uuid.uuid4().hex
+        execution_id = execution_id or uuid.uuid4().hex
         store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
                               fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
                               predecessor_execution_id=predecessor_execution_id,
@@ -576,62 +578,102 @@ class Engine:
         return execution_id, value, state
 
     def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base, terminal_stop=None):
-        """Continue the one persisted review/fix chain without consuming a new slot."""
+        """Select the last eligible persisted stage; owner grants add one pair only."""
         store = self.authority.store
-        chain = store.review_chain(self.run, private=True)
-        if chain['uncertain']:
-            raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
-        reviews = [item for item in chain['executions'] if item['role'] == 'reviewer']
-        fixers = [item for item in chain['executions'] if item['role'] == 'fixer']
-        head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-        if not reviews:
-            review_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1,
-                                                    input_checkpoints=self._review_inputs(checkpoints))
-        else:
-            review_id, review, state = reviews[0]['execution_id'], {'approved': reviews[0]['state'] == 'approved',
-                'findings': reviews[0]['findings'][-1] if reviews[0].get('findings') else [],
-                'suggestions': reviews[0]['suggestions'][-1] if reviews[0].get('suggestions') else []}, reviews[0]['state']
-        if not reviews:
-            reviews = [item for item in store.review_chain(self.run, private=True)['executions'] if item['role'] == 'reviewer']
-        if state == 'approved':
-            if len(reviews) != 1:
-                raise Blocked('review chain has no eligible completion stage')
-            head = reviews[0]['references'].get('head')
+        policy = store.review_policy(self.run)
+        scope = hashlib.sha256(canonical(self.contract['tasks']).encode()).hexdigest()
+
+        def value(item):
+            return {'approved': item['state'] == 'approved',
+                    'findings': item['findings'][-1] if item.get('findings') else [],
+                    'suggestions': item['suggestions'][-1] if item.get('suggestions') else []}
+
+        def complete(item, review):
+            head = item['references'].get('head')
             if not isinstance(head, str) or not head:
                 raise Blocked('approved review is missing its actually reviewed head; inspect retained review history')
             store.finish(self.run, 'complete', head)
             recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
             return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
                     'checkpoints': checkpoints, 'review': review, 'usage': self.usage_summary()}
-        if state != 'rejected' or review['approved'] or not review['findings']:
-            raise Blocked('independent review was not an actionable rejection (commits retained): ' + canonical(review))
-        if not fixers:
-            fix_id = uuid.uuid4().hex
-            self.run_fix(review['findings'], trigger_execution_id=review_id, review_base=review_base,
-                         recorder=recorder, execution_id=fix_id, terminal_stop=terminal_stop)
-            fixers = [item for item in store.review_chain(self.run, private=True)['executions'] if item['role'] == 'fixer']
-        fixer = fixers[0]
-        if fixer['state'] != 'approved':
-            raise Blocked('fixing round remains incomplete or failed; commits retained')
-        if len(reviews) == 1:
+
+        while True:
+            chain = store.review_chain(self.run, private=True)
+            if chain['uncertain']:
+                raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
+            executions = chain['executions']
+            if not executions:
+                head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
+                self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1,
+                             input_checkpoints=self._review_inputs(checkpoints))
+                continue
+            last = executions[-1]
+            review = value(last)
+            if last['role'] == 'reviewer':
+                if last['state'] == 'approved':
+                    return complete(last, review)
+                if last['state'] != 'rejected' or review['approved'] or not review['findings']:
+                    raise Blocked('independent review was not an actionable rejection (commits retained): ' + canonical(review))
+                ordinal, round_ = last['review_ordinal'], last['fixing_round'] + 1
+                if policy == 'historical-two-review-one-fixer' and ordinal != 1:
+                    raise Blocked('independent final review findings (commits retained): ' + canonical(review))
+                fixer_id = uuid.uuid4().hex
+                grant = None
+                if policy == 'owner-pair-v1' and ordinal > 1:
+                    head = last['references'].get('head')
+                    grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=last['execution_id'],
+                                                           review_base=review_base, review_head=head, original_scope=scope)
+                    if grant is None:
+                        context = {'rejecting_execution': last['execution_id'], 'review_base': review_base,
+                                   'review_head': head, 'scope': scope,
+                                   'effect': 'Authorize exactly one scoped repair and one fresh full-range review; no repeat grant.'}
+                        question = ('Independent review rejected execution ' + last['execution_id'] + ' for original range ' +
+                                    review_base + '..' + head + '. Authorize exactly one scoped repair plus fresh full-range review? [yes/no]')
+                        try:
+                            try:
+                                answer = self.question(question, owner_only=True, decision_context=context)
+                            except TypeError:
+                                answer = self.question(question)
+                        except BaseException as exc:
+                            store.history(self.run, None, 'review_pair_decision', 'unavailable', context)
+                            raise Blocked('owner authorization unavailable; no repair/review pair dispatched: ' + str(exc)) from exc
+                        if not isinstance(answer, str) or answer.strip().lower() not in ('yes', 'y'):
+                            store.history(self.run, None, 'review_pair_decision', 'denied', context)
+                            raise Blocked('owner did not authorize an additional repair/review pair; blockers retained')
+                        grant = store.authorize_owner_pair(self.run, uuid.uuid4().hex,
+                            rejecting_execution_id=last['execution_id'], review_base=review_base, review_head=head,
+                            original_scope=scope, fixer_execution_id=fixer_id, reviewer_execution_id=uuid.uuid4().hex)
+                    fixer_id = grant['fixer_execution_id']
+                    current = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
+                    if current != grant['review_head']:
+                        raise Blocked('review target drifted after owner authorization; inspect and renew affected authority before dispatch')
+                    store.reserve_owner_pair_fixer(self.run, grant['grant_id'], rejecting_execution_id=last['execution_id'],
+                                                   review_base=review_base, review_head=grant['review_head'], original_scope=scope)
+                self.run_fix(review['findings'], trigger_execution_id=last['execution_id'], review_base=review_base,
+                             recorder=recorder, execution_id=fixer_id, review_ordinal=ordinal,
+                             fixing_round=round_, predecessor_execution_id=last['execution_id'], terminal_stop=terminal_stop)
+                continue
+            # A successful fixer alone never accepts delivery: reserve/dispatch its exact fresh reviewer.
+            if last['state'] != 'approved':
+                raise Blocked('fixing round remains incomplete or failed; commits retained')
+            ordinal, round_ = last['review_ordinal'] + 1, last['fixing_round']
+            reviewer_id = None
+            if policy == 'owner-pair-v1' and round_ > 1:
+                grant = next((item for item in reversed(executions) if item['role'] == 'reviewer' and
+                              item['execution_id'] == last['trigger_execution_id']), None)
+                if grant is None:
+                    raise Blocked('assigned fixer has no retained rejecting review')
+                facts = store.owner_pair_for_rejection(self.run, rejecting_execution_id=grant['execution_id'],
+                    review_base=review_base, review_head=grant['references'].get('head'), original_scope=scope)
+                if facts is None:
+                    raise Blocked('assigned fixer has no retained owner pair grant')
+                reviewer_id = store.reserve_owner_pair_reviewer(self.run, facts['grant_id'], fixer_execution_id=last['execution_id'])['reviewer_execution_id']
             head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-            _, final_review, final_state = self._review(recorder=recorder, review_base=review_base, head=head,
-                                                         ordinal=2, fixing_round=1,
-                                                         trigger_execution_id=fixer['execution_id'], predecessor_execution_id=fixer['execution_id'])
-        else:
-            final_review, final_state = {'approved': reviews[1]['state'] == 'approved',
-                'findings': reviews[1]['findings'][-1] if reviews[1].get('findings') else [],
-                'suggestions': reviews[1]['suggestions'][-1] if reviews[1].get('suggestions') else []}, reviews[1]['state']
-        if final_state != 'approved':
-            raise Blocked('independent final review findings (commits retained): ' + canonical(final_review))
-        if len(reviews) > 1:
-            head = reviews[1]['references'].get('head')
-            if not isinstance(head, str) or not head:
-                raise Blocked('approved final review is missing its actually reviewed head; inspect retained review history')
-        store.finish(self.run, 'complete', head)
-        recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
-        return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
-                'checkpoints': checkpoints, 'review': final_review, 'usage': self.usage_summary()}
+            repaired_head = last['references'].get('head')
+            if not isinstance(repaired_head, str) or head != repaired_head:
+                raise Blocked('review target drifted after repair; inspect affected continuation before dispatch')
+            self._review(recorder=recorder, review_base=review_base, head=head, ordinal=ordinal, fixing_round=round_,
+                         trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'], execution_id=reviewer_id)
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store
@@ -647,7 +689,8 @@ class Engine:
             raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
         if not self.resume:
             store.start(self.run, base, contract=self.contract, executor=self.input_executor,
-                        authority={'paid_scope': self.paid_scope, 'routine_authority': True}, review_base=review_base)
+                        authority={'paid_scope': self.paid_scope, 'routine_authority': True,
+                                   'review_policy': 'owner-pair-v1'}, review_base=review_base)
         recorder = Recorder(store, self.run)
         try:
             identity = process_identity(os.getpid(), self.run)
