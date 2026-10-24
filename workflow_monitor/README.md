@@ -4,6 +4,24 @@
 workflow snapshots. It imports no workflow writer, never creates or migrates a store,
 and has no execution or control routes.
 
+## Project discovery
+
+The multi-project inventory is read-only. It validates an expanded projects root as a
+readable non-symlink directory, considers only its immediate non-symlink child Git
+worktree roots, then uses `git worktree list --porcelain -z` to include that repository's
+registered linked worktrees (including external paths with spaces). It never recursively
+scans projects or Paseo directories and never follows an arbitrary root-child symlink.
+
+Registered worktrees are grouped by canonical Git common-directory identity. The registered
+main is identified by its admin directory, not by a branch, current directory, or directory
+name; canonical aliases are listed once. Each live worktree has one retained Reader and an
+opaque project/recording reference. Labels are only `main` or `linked`; browser-facing code
+must use references, never paths. Listing does not open every database snapshot or create a
+store. An empty valid root is usable, while an invalid root is an actionable error. A missing
+store is reported honestly and the same Reader can observe its first legitimate later store;
+a Reader that has observed a replaced store reports it unavailable rather than adopting it.
+
+
 New recordings use descriptor version 3. Each task retains its label, declared
 prerequisites, and the complete explicit `outcome`/`description` work text when supplied;
 missing work text remains unknown. The descriptor also records explicit initial independent
