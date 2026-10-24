@@ -113,13 +113,40 @@ def status(project, run):
                         pairs.append({'kind': item['kind'], 'state': item['state'], **{key: facts[key] for key in
                                       ('grant_id', 'rejecting_execution_id', 'review_base', 'review_head', 'original_scope',
                                        'fixer_execution_id', 'reviewer_execution_id') if key in facts}})
-                    if pairs:
-                        latest = pairs[-1]
-                        next_stage = {'authorized': 'reserve_assigned_fixer', 'fixer_reserved': 'assigned_fixer',
-                                      'reviewer_reserved': 'assigned_fresh_reviewer'}.get(latest['state'], 'blocked')
+                    chain = result.get('review_chain', {})
+                    executions = chain.get('executions', [])
+                    next_stage = 'initial_review'
+                    if executions:
+                        last = executions[-1]
+                        next_stage = 'blocked'
+                        if not chain.get('uncertain'):
+                            if last['role'] == 'reviewer' and last['state'] == 'approved':
+                                next_stage = 'complete' if row['state'] == 'complete' else 'finalize_reviewed_head'
+                            elif last['role'] == 'fixer' and last['state'] == 'approved':
+                                next_stage = 'assigned_fresh_reviewer'
+                            elif last['role'] == 'reviewer' and last['state'] == 'rejected' and last['findings']:
+                                if last['review_ordinal'] == 1:
+                                    next_stage = 'automatic_fixer'
+                                elif result.get('input', {}).get('review_policy') == 'owner-pair-v1':
+                                    grant = next((pair for pair in reversed(pairs)
+                                                  if pair['rejecting_execution_id'] == last['execution_id']), None)
+                                    next_stage = ('reserve_assigned_fixer' if grant and grant['state'] == 'authorized'
+                                                  else 'assigned_fixer' if grant and grant['state'] == 'fixer_reserved'
+                                                  else 'owner_authorization_required' if grant is None else 'blocked')
+                            elif last['role'] == 'fixer' and last['state'] == 'dispatched' and last['fixing_round'] > 1:
+                                calls = {}
+                                for event in db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='fixer_invocation' ORDER BY seq", (run,)):
+                                    facts = json.loads(event['details'])
+                                    if facts.get('execution_id') == last['execution_id']:
+                                        calls[facts['invocation_id']] = event['state']
+                                if all(state == 'returned' for state in calls.values()):
+                                    next_stage = 'reconcile_assigned_fixer' if calls else 'assigned_fixer'
+                    unsupported = result.get('input', {}).get('review_policy') not in (
+                        None, 'owner-pair-v1', 'historical-two-review-one-fixer')
+                    if unsupported or row['state'] == 'abandoned':
+                        next_stage = 'blocked'
+                    if pairs or executions or unsupported:
                         result['review_authorization'] = {'events': pairs, 'next_stage': next_stage}
-                    elif any(item['state'] == 'rejected' and not item['uncertain'] for item in result.get('review_chain', {}).get('executions', [])):
-                        result['review_authorization'] = {'events': [], 'next_stage': 'owner_authorization_required'}
                     if result.get('review_chain', {}).get('executions') and result['run']['error']:
                         result['run']['error'] = 'review outcome recorded; see review_chain'
                 try:

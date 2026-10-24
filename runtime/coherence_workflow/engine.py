@@ -7,7 +7,7 @@ import os
 import re
 import uuid
 
-from .git_effects import FocusedGit, MetricArtifactFinalizer
+from .git_effects import FocusedGit, MetricArtifactFinalizer, path_has_preexisting_changes
 from .metric_artifacts import (MetricArtifactError, artifact_relative, create_artifact,
                                read_artifact, summarize_artifact)
 from .metrics import interval_record
@@ -15,7 +15,7 @@ from .monitoring import Recorder, descriptor
 from .pi_adapter import PiAdapter, terminal_question
 from .processes import process_identity
 from .sessions import select_session
-from .store import Blocked, canonical, git
+from .store import Blocked, canonical, git, safe_path
 from .verification import CheckFailure, commands, manual_gates, run_checks
 
 
@@ -262,8 +262,15 @@ class Engine:
                 '. Ask before using any additional paid application/test API, including one discovered '
                 'during execution; do not ask again for unchanged scope. ')
 
+    @staticmethod
+    def _repair_blobs(project, paths):
+        """Capture only already selected repair paths, never discover ownership."""
+        return {name: (git(project, 'hash-object', '--path=' + name, '--', name).decode().strip()
+                       if safe_path(project, name).exists() else None) for name in paths}
+
     def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id,
-                review_ordinal=1, fixing_round=1, predecessor_execution_id=None, terminal_stop=None):
+                review_ordinal=1, fixing_round=1, predecessor_execution_id=None, terminal_stop=None,
+                recovered=None):
         """Run one already-authorized repair assignment without selecting another round.
 
         The caller supplies the rejecting review, assigned fixer identity, and (where
@@ -297,10 +304,13 @@ class Engine:
         if any('owned_paths' in task for task in original_tasks):
             fix_task['owned_paths'] = sorted(set(paths))
         head = git(project, 'rev-parse', 'HEAD').decode().strip()
-        store.review_dispatch(self.run, execution_id, role='fixer', review_ordinal=review_ordinal, fixing_round=fixing_round,
-                              trigger_execution_id=trigger_execution_id, predecessor_execution_id=predecessor_execution_id,
-                              review_base=review_base, review_head=head)
-        focused = FocusedGit(project, fix_task)
+        if recovered is None:
+            store.review_dispatch(self.run, execution_id, role='fixer', review_ordinal=review_ordinal, fixing_round=fixing_round,
+                                  trigger_execution_id=trigger_execution_id, predecessor_execution_id=predecessor_execution_id,
+                                  review_base=review_base, review_head=head)
+        focused = FocusedGit(project, fix_task, resume_facts=(recovered or {}).get('facts'))
+        if recovered and recovered.get('baseline'):
+            focused.base = recovered['baseline']
         claimed_paths = set()
         def claim(name):
             if name not in claimed_paths:
@@ -309,7 +319,8 @@ class Engine:
         def gate_question(text):
             return self.question(text)
         try:
-            manual_gates(fix_task, gate_question)
+            if not recovered or not recovered.get('returned'):
+                manual_gates(fix_task, gate_question)
             # Continue the actual reviewer, not a task-worker context. On process
             # restart the private review outcome supplies the same SDK session.
             worker = getattr(self, '_review_workers', {}).get(trigger_execution_id)
@@ -326,7 +337,8 @@ class Engine:
                          'reason': 'reviewer_repair' if saved else 'legacy_reviewer_repair_fresh', 'rejected': []}
             store.history(self.run, None, 'fixer', 'selected', {'execution_id': execution_id,
                           'trigger_execution_id': trigger_execution_id, **selection})
-            fixer_chain, last_fixer_invocation = [], [None]
+            fixer_chain = list((recovered or {}).get('invocations', []))
+            last_fixer_invocation = [fixer_chain[-1] if fixer_chain else None]
             repair_context = (
                 'Stay within the original approved task contracts and explicit owned paths. First make a concise '
                 'correction plan; examine directly related adverse failure paths and the integrated result against '
@@ -381,7 +393,9 @@ class Engine:
                     raise
                 else:
                     store.history(self.run, fix_task['id'], 'fixer_invocation', 'returned',
-                                  {'invocation_id': invocation_id, 'execution_id': execution_id})
+                                  {'invocation_id': invocation_id, 'execution_id': execution_id,
+                                   'baseline': focused.base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
+                                   **focused.facts(), 'blobs': self._repair_blobs(project, focused.task_edited)})
                     recorder.emit(occurrence, 'worker', 'returned', task_id=fix_task['id'], facts=public)
                     fixer_chain[:] = chain
                     last_fixer_invocation[0] = invocation_id
@@ -393,8 +407,9 @@ class Engine:
                                         fixing_round=fixing_round)
             prompt = ('Continue the rejecting review in this assigned repair round. Keep the configured reviewer '
                       'executor and its scoped writer transition.\nActionable findings: ' + canonical(findings))
-            text = prompt_fix(prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
-                                       saved_session=saved, reuse_key=reuse_key)
+            text = '' if recovered and recovered.get('returned') else prompt_fix(
+                prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
+                saved_session=saved, reuse_key=reuse_key)
             check_occurrences = {}
             def observe(kind, ordinal, code):
                 occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
@@ -407,9 +422,13 @@ class Engine:
                 previous = None
                 while True:
                     try:
+                        store.history(self.run, None, 'fixer_checks', 'started', {'execution_id': execution_id})
                         results = run_checks(project, fix_task, lock_fd=self.authority.lock.fileno(), observe=observe,
                             completed=lambda state, attempt: store.history(self.run, None, 'fixer_check', state,
                                 {'execution_id': execution_id, **attempt}))
+                        store.history(self.run, None, 'fixer_checks', 'passed', {
+                            'execution_id': execution_id, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
+                            'blobs': self._repair_blobs(project, focused.task_edited)})
                         return results
                     except CheckFailure as failure:
                         if failure.attempt == previous:
@@ -428,6 +447,12 @@ class Engine:
                 recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=fix_task['id'], facts={
                     'baseline': focused.base, 'execution_id': execution_id})
                 try:
+                    selected = sorted(name for name in focused.task_edited if path_has_preexisting_changes(project, name))
+                    blobs = self._repair_blobs(project, selected)
+                    store.history(self.run, None, 'fixer_checkpoint', 'started', {
+                        'execution_id': execution_id, 'baseline': focused.base,
+                        'parent': git(project, 'rev-parse', 'HEAD').decode().strip(),
+                        'paths': selected, 'artifacts': sorted(focused.known_artifacts), 'blobs': blobs})
                     checkpoint = focused.checkpoint()
                 except BaseException as exc:
                     store.history(self.run, None, 'fixer_checkpoint', 'failed',
@@ -467,6 +492,94 @@ class Engine:
                                  references={'base': review_base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip()})
             raise
 
+    def _recover_assigned_fix(self, item, review_base):
+        """Reconcile only an additional reserved repair, never replay a paid call."""
+        project, store = self.authority.project, self.authority.store
+        execution_id = item['execution_id']
+        trigger = next((entry for entry in store.review_chain(self.run, private=True)['executions']
+                        if entry['execution_id'] == item['trigger_execution_id']), None)
+        grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=item['trigger_execution_id'],
+            review_base=review_base, review_head=trigger['references'].get('head') if trigger else None,
+            original_scope=store.review_scope(self.run))
+        if grant is None or grant['fixer_execution_id'] != execution_id or grant['state'] != 'fixer_reserved':
+            raise Blocked('retained repair lacks its exact consumed owner grant; inspect authorization before continuation')
+        events = []
+        for row in store.db.execute('SELECT kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (self.run,)):
+            facts = json.loads(row['details'])
+            if facts.get('execution_id') == execution_id:
+                events.append((row['kind'], row['state'], facts))
+        calls = {}
+        for kind, state, facts in events:
+            if kind == 'fixer_invocation':
+                calls[facts['invocation_id']] = (state, facts)
+        if any(state != 'returned' for state, _ in calls.values()):
+            raise Blocked('assigned repair invocation is uncertain or failed; inspect its recorded cause before targeted continuation')
+        head = git(project, 'rev-parse', 'HEAD').decode().strip()
+        if not calls:
+            if head != item['references'].get('head'):
+                raise Blocked('reserved repair target drifted; inspect affected continuation before dispatch')
+            return {}
+        returned = list(calls.values())[-1][1]
+        if not all(key in returned for key in ('paths', 'artifacts', 'baseline', 'head', 'blobs')):
+            raise Blocked('returned repair is missing owned-path/effect facts; inspect it without replaying the fixer')
+        limits = [path for task in self.contract['tasks'] for path in task.get('owned_paths', [])]
+        if any('owned_paths' in task for task in self.contract['tasks']):
+            if any(not any(name == path.rstrip('/') or name.startswith(path.rstrip('/') + '/') for path in limits)
+                   for name in returned['paths']):
+                raise Blocked('retained repair paths exceed original scope; inspect ownership before continuation')
+        recovered = {'returned': True, 'baseline': returned['baseline'], 'invocations': list(calls),
+                     'facts': {'paths': returned['paths'], 'artifacts': returned['artifacts']}}
+        checkpoints = [(state, facts) for kind, state, facts in events if kind == 'fixer_checkpoint']
+        check_events = [(state, facts) for kind, state, facts in events if kind == 'fixer_checks']
+        checks = [state for state, _ in check_events]
+        if checkpoints:
+            state, checkpoint = checkpoints[-1]
+            if state not in ('passed', 'started') or not checks or checks[-1] != 'passed':
+                raise Blocked('repair checks/checkpoint are incomplete or failed; inspect actual effects before targeted continuation')
+            if state == 'passed':
+                if head != checkpoint['sha'] or not set(checkpoint['paths']) <= set(returned['paths']):
+                    raise Blocked('retained repair checkpoint target/paths drifted; inspect the exact SHA and ownership')
+                focused = FocusedGit(project, {}, resume_facts=recovered['facts'])
+                focused.base = checkpoint['baseline']
+                if checkpoint['no_change']:
+                    if head != checkpoint['baseline']:
+                        raise Blocked('no-change repair checkpoint drifted; inspect retained head')
+                else:
+                    focused._checkpoint_result(head, checkpoint['parent'], checkpoint['paths'])
+            else:
+                if not set(checkpoint['paths']) <= set(returned['paths']):
+                    raise Blocked('repair checkpoint paths do not match returned ownership; inspect retained effects')
+                if head == checkpoint['parent']:
+                    if self._repair_blobs(project, checkpoint['paths']) != checkpoint.get('blobs'):
+                        raise Blocked('repair checkpoint source bytes drifted; preserve them and inspect ownership before continuation')
+                    return recovered
+                focused = FocusedGit(project, {}, resume_facts=recovered['facts'])
+                focused.base = checkpoint['baseline']
+                focused.checkpoint_parent, focused.checkpoint_paths = checkpoint['parent'], checkpoint['paths']
+                matched = focused.reconcile_checkpoint()
+                if matched is None:
+                    raise Blocked('repair commit effects are missing or uncertain; inspect actual parent/SHA without recommitting')
+                for name, expected in checkpoint.get('blobs', {}).items():
+                    entries = git(project, 'ls-tree', head, '--', name).decode().split()
+                    actual = entries[2] if entries else None
+                    if actual != expected:
+                        raise Blocked('repair commit bytes differ from retained checkpoint intent; inspect target drift')
+                if 'blobs' not in checkpoint:
+                    raise Blocked('repair checkpoint lacks exact content facts; inspect effects without recommitting')
+                checkpoint = {**matched, 'parent': checkpoint['parent']}
+                store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
+            store.review_outcome(self.run, execution_id, 'approved', findings=[],
+                                 references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
+            return None
+        if head != returned['head']:
+            raise Blocked('returned repair target drifted; inspect effects before checks/checkpoint')
+        if checks and checks[-1] != 'passed':
+            raise Blocked('repair check completion is uncertain; inspect actual check effects before targeted continuation')
+        effects = check_events[-1][1] if check_events else returned
+        if (effects.get('head') != head or self._repair_blobs(project, returned['paths']) != effects.get('blobs')):
+            raise Blocked('returned repair source bytes drifted; preserve them and inspect ownership before continuation')
+        return recovered
+
     @staticmethod
     def _review_value(text):
         """Parse an actual reviewer verdict; fenced JSON is safe normalization only."""
@@ -487,9 +600,10 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
         # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
         # where the defect is, its concrete impact, and why it violates accepted work.
-        pattern = re.compile(r'^\S+:\d+\s+-\s+.+\s+\[basis:\s*(?:requirement|correctness|security|data-safety)\]$')
+        pattern = re.compile(r'^\S+:\d+\s+-\s+\S')
         if any(not pattern.match(item.strip()) for item in findings):
-            raise _ReviewFormat('review blocker needs location, concrete impact, and [basis: requirement|correctness|security|data-safety]')
+            raise _ReviewFormat('review blocker needs a path:line location and concrete defect/impact')
+        # Basis is described in ordinary defect prose, not a mandatory suffix.
         if any(re.search(r'\b(?:crash(?:es|ed|ing)?|hang(?:s|ing)?|credential(?:s)?|false unavailable|target risk)\b', item, re.I)
                for item in suggestions):
             raise _ReviewFormat('crash, hang, target-risk, credential-risk, and false-unavailable observations are blockers, not suggestions')
@@ -542,7 +656,7 @@ class Engine:
                 + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
                 + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. '
                 'Return only JSON: {"approved":true,"findings":[],"suggestions":[]} (suggestions may be omitted) or '
-                '{"approved":false,"findings":["path:line - concrete impact [basis: correctness]"]}. '
+                '{"approved":false,"findings":["path:line - concrete defect, impact and accepted basis in ordinary prose"]}. '
                 'Use findings only for blockers: each needs a location, concrete impact, and basis of requirement, correctness, security, or data-safety. '
                 'Put only nonblocking advice in suggestions; crashes, hangs, target/credential risks, and false-unavailable observations are blockers. Never approve when blockers exist.\n'
                 'Tasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff,
@@ -608,6 +722,17 @@ class Engine:
                              input_checkpoints=self._review_inputs(checkpoints))
                 continue
             last = executions[-1]
+            if (policy == 'owner-pair-v1' and last['role'] == 'fixer' and
+                    last['fixing_round'] > 1 and last['state'] == 'dispatched'):
+                recovered = self._recover_assigned_fix(last, review_base)
+                if recovered is not None:
+                    rejection = next(item for item in executions if item['execution_id'] == last['trigger_execution_id'])
+                    self.run_fix(value(rejection)['findings'], trigger_execution_id=rejection['execution_id'],
+                        review_base=review_base, recorder=recorder, execution_id=last['execution_id'],
+                        review_ordinal=last['review_ordinal'], fixing_round=last['fixing_round'],
+                        predecessor_execution_id=last['predecessor_execution_id'], terminal_stop=terminal_stop,
+                        recovered=recovered)
+                continue
             review = value(last)
             if last['role'] == 'reviewer':
                 if last['state'] == 'approved':
@@ -628,12 +753,11 @@ class Engine:
                                    'review_head': head, 'scope': scope,
                                    'effect': 'Authorize exactly one scoped repair and one fresh full-range review; no repeat grant.'}
                         question = ('Independent review rejected execution ' + last['execution_id'] + ' for original range ' +
-                                    review_base + '..' + head + '. Authorize exactly one scoped repair plus fresh full-range review? [yes/no]')
+                                    review_base + '..' + head + ', original task scope ' + scope +
+                                    '. Authorize exactly one scoped repair plus fresh full-range review with the configured models, '
+                                    'not a repeat grant? [yes/no]')
                         try:
-                            try:
-                                answer = self.question(question, owner_only=True, decision_context=context)
-                            except TypeError:
-                                answer = self.question(question)
+                            answer = self.question(question, owner_only=True, decision_context=context)
                         except BaseException as exc:
                             store.history(self.run, None, 'review_pair_decision', 'unavailable', context)
                             raise Blocked('owner authorization unavailable; no repair/review pair dispatched: ' + str(exc)) from exc

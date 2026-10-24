@@ -444,7 +444,7 @@ class PiAdapter:
                 proc.stdout.close()
 
 
-def terminal_question(question):
+def terminal_question(question, *, owner_only=False, decision_context=None):
     if not sys.stdin.isatty():
         raise Blocked('owner input needed: ' + question + '; run interactively to answer; partial work retained')
     return input(question + '\n> ')

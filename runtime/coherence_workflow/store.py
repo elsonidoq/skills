@@ -1,6 +1,7 @@
 """Worktree writer lock, ordinary progress, and read-only historical access."""
 from contextlib import contextmanager
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -325,6 +326,20 @@ class Store:
         if not isinstance(findings, list) or not findings:
             raise Blocked('pair authorization rejection has no actionable findings')
 
+    def review_scope(self, run):
+        saved = self.input(run)
+        return hashlib.sha256(canonical(saved['contract'].get('tasks', [])).encode()).hexdigest()
+
+    def _pair_rejection(self, run, execution_id, review_base, review_head, original_scope):
+        self._actionable_rejection(run, execution_id, review_base, review_head)
+        chain = self.review_chain(run, private=True)
+        rejection = next(item for item in chain['executions'] if item['execution_id'] == execution_id)
+        if rejection['review_ordinal'] < 2 or original_scope != self.review_scope(run):
+            raise Blocked('pair grant needs a later rejection and the retained original scope; inspect original inputs')
+        if chain['uncertain']:
+            raise Blocked('pair grant cannot continue an uncertain stage; inspect invocation history')
+        return rejection, chain
+
     @staticmethod
     def _pair_identity(value, name):
         if not isinstance(value, str) or not value:
@@ -342,7 +357,12 @@ class Store:
             'reviewer_execution_id': reviewer_execution_id}.items()}
         if values['fixer_execution_id'] == values['reviewer_execution_id']:
             raise Blocked('pair authorization needs distinct fixer and fresh reviewer identities')
-        self._actionable_rejection(run, values['rejecting_execution_id'], values['review_base'], values['review_head'])
+        rejection, chain = self._pair_rejection(run, values['rejecting_execution_id'], values['review_base'],
+                                               values['review_head'], values['original_scope'])
+        if chain['executions'][-1]['execution_id'] != rejection['execution_id']:
+            raise Blocked('pair authorization must follow the latest settled rejection; inspect retained chain')
+        if any(item['execution_id'] in (fixer_execution_id, reviewer_execution_id) for item in chain['executions']):
+            raise Blocked('pair identities already belong to an execution; select fresh assigned identities')
         facts = {'grant_id': values['grant_id'], 'decision': 'affirmative_actual_owner',
                  'rejecting_execution_id': values['rejecting_execution_id'], 'review_base': values['review_base'],
                  'review_head': values['review_head'], 'original_scope': values['original_scope'],
@@ -359,8 +379,9 @@ class Store:
                         prior = json.loads(row['details'])
                     except (TypeError, ValueError):
                         continue
-                    if prior.get('grant_id') == values['grant_id']:
-                        raise Blocked('pair grant identity is already retained with different facts')
+                    if (prior.get('grant_id') == values['grant_id'] or
+                            prior.get('rejecting_execution_id') == values['rejecting_execution_id']):
+                        raise Blocked('pair grant/rejection is already authorized; reuse its exact retained pair')
                 self._history_insert(db, run, None, 'review_pair_grant', 'authorized', encoded, time.time())
         def completed():
             return bool(self.db.execute("SELECT 1 FROM execution_history WHERE run_id=? AND kind='review_pair_grant' AND state='authorized' AND details=?",
@@ -373,7 +394,7 @@ class Store:
         if self.review_policy(run) != 'owner-pair-v1':
             raise Blocked('retained review policy does not permit an additional owner pair')
         self._pair_identity(grant_id, 'grant identity')
-        self._actionable_rejection(run, rejecting_execution_id, review_base, review_head)
+        rejection, chain = self._pair_rejection(run, rejecting_execution_id, review_base, review_head, original_scope)
         rows = self.db.execute("SELECT details,state FROM execution_history WHERE run_id=? AND kind IN ('review_pair_grant','review_pair_reservation') ORDER BY seq", (run,)).fetchall()
         grant = reservation = None
         for row in rows:
@@ -386,6 +407,10 @@ class Store:
                     'review_head': review_head, 'original_scope': original_scope}
         if grant is None or any(grant.get(key) != value for key, value in expected.items()):
             raise Blocked('pair grant does not match rejection, range, or original scope')
+        last = chain['executions'][-1]
+        if last['execution_id'] != rejection['execution_id']:
+            if (last['execution_id'] != grant['fixer_execution_id'] or last['state'] != 'dispatched'):
+                raise Blocked('pair fixer reservation cannot replace a started, failed, or completed stage; inspect retained invocation')
         if reservation is not None:
             if reservation.get('fixer_execution_id') != grant['fixer_execution_id']:
                 raise Blocked('pair grant was consumed by a different fixer')
@@ -435,6 +460,9 @@ class Store:
                                 (run, fixer_execution_id)).fetchone()
         if fixer is None or fixer['state'] != 'approved' or fixer['uncertainty']:
             raise Blocked('pair reviewer needs the grant-assigned successful fixer')
+        chain = self.review_chain(run, private=True)
+        if chain['uncertain'] or chain['executions'][-1]['execution_id'] != fixer_execution_id:
+            raise Blocked('pair reviewer must immediately follow its successful fixer; inspect retained chain')
         facts = {**reservation, 'reviewer_execution_id': reservation['reviewer_execution_id']}
         encoded = canonical(facts)
         def write():
@@ -588,6 +616,33 @@ class Store:
         if self.review_policy(run) == 'historical-two-review-one-fixer':
             if sum(item['role'] == 'reviewer' for item in prior['executions']) >= 2 or (role == 'fixer' and any(item['role'] == 'fixer' for item in prior['executions'])):
                 raise Blocked('review chain limit already consumed; do not dispatch another review/fixing round')
+        else:
+            last = prior['executions'][-1] if prior['executions'] else None
+            if last is None:
+                if (role, review_ordinal, fixing_round, trigger_execution_id, predecessor_execution_id) != ('reviewer', 1, 0, None, None):
+                    raise Blocked('review chain must start with fresh Review 1; correct the assigned stage')
+            else:
+                expected_role, expected_state = ('fixer', 'rejected') if last['role'] == 'reviewer' else ('reviewer', 'approved')
+                expected_ordinal = last['review_ordinal'] + (role == 'reviewer')
+                expected_round = last['fixing_round'] + (role == 'fixer')
+                if (role != expected_role or last['state'] != expected_state or
+                        review_ordinal != expected_ordinal or fixing_round != expected_round or
+                        trigger_execution_id != last['execution_id'] or predecessor_execution_id != last['execution_id'] or
+                        review_base != last['references'].get('base') or review_head != last['references'].get('head')):
+                    raise Blocked('review dispatch has unsupported causal order/range; inspect the last settled stage')
+                if role == 'fixer' and not (last.get('findings') and last['findings'][-1]):
+                    raise Blocked('fixer dispatch needs an actionable settled rejection; inspect review findings')
+                if fixing_round > 1:
+                    rejection_id = last['execution_id'] if role == 'fixer' else last['trigger_execution_id']
+                    rejection = next((item for item in prior['executions'] if item['execution_id'] == rejection_id), None)
+                    grant = self.owner_pair_for_rejection(run, rejecting_execution_id=rejection_id,
+                        review_base=review_base, review_head=rejection['references'].get('head') if rejection else None,
+                        original_scope=self.review_scope(run))
+                    reserved = 'fixer_reserved' if role == 'fixer' else 'reviewer_reserved'
+                    if (grant is None or grant['state'] != reserved or
+                            grant[role + '_execution_id'] != execution_id or
+                            (role == 'reviewer' and grant['fixer_execution_id'] != last['execution_id'])):
+                        raise Blocked('review dispatch needs its exact retained owner grant/reservation; authorize and reserve the assigned pair')
         references = canonical({'base': review_base, 'head': review_head})
         saved_inputs = canonical(input_checkpoints) if input_checkpoints is not None else None
         def write():

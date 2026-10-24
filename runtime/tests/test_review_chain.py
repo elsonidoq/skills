@@ -1,4 +1,6 @@
 """Synthetic store/engine review-chain retention tests; no real workflow runs."""
+import contextlib
+import io
 import json
 from unittest.mock import patch
 
@@ -108,7 +110,15 @@ class ChainRecordingTests(ProjectTest):
 
 class OwnerPairPrimitiveTests(ProjectTest):
     def _rejection(self, store, run='pair'):
+        store.review_dispatch(run, 'review-1', review_base=self.base, review_head=self.base)
+        store.review_outcome(run, 'review-1', 'rejected', findings=['owned.txt:1 - requests crash'],
+                             references={'base': self.base, 'head': self.base})
+        store.review_dispatch(run, 'fix-1', role='fixer', review_ordinal=1, fixing_round=1,
+                              trigger_execution_id='review-1', predecessor_execution_id='review-1',
+                              review_base=self.base, review_head=self.base)
+        store.review_outcome(run, 'fix-1', 'approved', findings=[], references={'base': self.base, 'head': self.base})
         store.review_dispatch(run, 'review-2', review_ordinal=2, fixing_round=1,
+                              trigger_execution_id='fix-1', predecessor_execution_id='fix-1',
                               review_base=self.base, review_head=self.base)
         store.review_outcome(run, 'review-2', 'rejected', findings=['owned.txt:1 - retained defect'],
                              references={'base': self.base, 'head': self.base})
@@ -120,17 +130,17 @@ class OwnerPairPrimitiveTests(ProjectTest):
             store.start('pair', self.base, authority=authority)
             self._rejection(store)
             grant = store.authorize_owner_pair('pair', 'grant-1', rejecting_execution_id='review-2',
-                                               review_base=self.base, review_head=self.base, original_scope='original-scope',
+                                               review_base=self.base, review_head=self.base, original_scope=store.review_scope('pair'),
                                                fixer_execution_id='fix-2', reviewer_execution_id='review-3')
             reserved = store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2',
-                                                       review_base=self.base, review_head=self.base, original_scope='original-scope')
+                                                       review_base=self.base, review_head=self.base, original_scope=store.review_scope('pair'))
             self.assertEqual((grant['grant_id'], reserved['fixer_execution_id']), ('grant-1', 'fix-2'))
         with Authority(self.project) as owner:
             store = owner.store
             self.assertEqual(store.review_policy('pair'), 'owner-pair-v1')
             self.assertEqual(store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2',
                                                              review_base=self.base, review_head=self.base,
-                                                             original_scope='original-scope')['fixer_execution_id'], 'fix-2')
+                                                             original_scope=store.review_scope('pair'))['fixer_execution_id'], 'fix-2')
             with self.assertRaisesRegex(Blocked, 'scope'):
                 store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2', review_base=self.base,
                                                review_head=self.base, original_scope='wrong-scope')
@@ -143,12 +153,12 @@ class OwnerPairPrimitiveTests(ProjectTest):
             store.start('pair', self.base, authority={'review_policy': 'owner-pair-v1'})
             self._rejection(store)
             store.authorize_owner_pair('pair', 'grant', rejecting_execution_id='review-2', review_base=self.base,
-                                       review_head=self.base, original_scope='scope', fixer_execution_id='fix-2', reviewer_execution_id='review-3')
+                                       review_head=self.base, original_scope=store.review_scope('pair'), fixer_execution_id='fix-2', reviewer_execution_id='review-3')
             store.reserve_owner_pair_fixer('pair', 'grant', rejecting_execution_id='review-2', review_base=self.base,
-                                           review_head=self.base, original_scope='scope')
+                                           review_head=self.base, original_scope=store.review_scope('pair'))
             with self.assertRaisesRegex(Blocked, 'successful fixer'):
                 store.reserve_owner_pair_reviewer('pair', 'grant', fixer_execution_id='fix-2')
-            store.review_dispatch('pair', 'fix-2', role='fixer', review_ordinal=1, fixing_round=1,
+            store.review_dispatch('pair', 'fix-2', role='fixer', review_ordinal=2, fixing_round=2,
                                   trigger_execution_id='review-2', predecessor_execution_id='review-2',
                                   review_base=self.base, review_head=self.base)
             store.review_outcome('pair', 'fix-2', 'approved', findings=[], references={'base': self.base, 'head': self.base})
@@ -303,7 +313,7 @@ class BoundedChainTests(ProjectTest):
         malformed = ('{"approved":"yes","findings":[]}',
                      '{"approved":true,"findings":"not a list"}',
                      '{"approved":true,"findings":[],"suggestions":"not a list"}',
-                     '{"approved":false,"findings":["owned.txt:1 - lacks basis"]}',
+                     '{"approved":false,"findings":["no location or concrete impact"]}',
                      '{"approved":true,"findings":[],"suggestions":["credential risk remains"]}')
         for ordinal, verdict in enumerate(malformed):
             with self.subTest(verdict=verdict):
@@ -549,6 +559,244 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(len(grants), 1)
         self.assertEqual(grants[0]['rejecting_execution_id'], chain['executions'][2]['execution_id'])
         self.assertTrue(all(item['references']['base'] == self.base for item in chain['executions'] if item['role'] == 'reviewer'))
+
+
+class ReviewBoundaryRegressionTests(ProjectTest):
+    """Exercise the actual store/engine boundary with disposable Git and reopen."""
+    _rejection = OwnerPairPrimitiveTests._rejection
+    def test_dispatch_requires_causal_grant_and_single_pair(self):
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('pair', self.base, authority={'review_policy': 'owner-pair-v1'})
+            self._rejection(store)
+            kwargs = dict(role='fixer', review_ordinal=2, fixing_round=2,
+                          trigger_execution_id='review-2', predecessor_execution_id='review-2',
+                          review_base=self.base, review_head=self.base)
+            with self.assertRaisesRegex(Blocked, 'grant/reservation'):
+                store.review_dispatch('pair', 'unapproved', **kwargs)
+            grant = dict(rejecting_execution_id='review-2', review_base=self.base, review_head=self.base,
+                         original_scope=store.review_scope('pair'), fixer_execution_id='fix-2', reviewer_execution_id='review-3')
+            with self.assertRaisesRegex(Blocked, 'scope'):
+                store.authorize_owner_pair('pair', 'wrong-scope', **{**grant, 'original_scope': 'different'})
+            store.authorize_owner_pair('pair', 'grant', **grant)
+            with self.assertRaisesRegex(Blocked, 'already authorized'):
+                store.authorize_owner_pair('pair', 'duplicate', **{**grant, 'fixer_execution_id': 'other-fix', 'reviewer_execution_id': 'other-review'})
+            with self.assertRaisesRegex(Blocked, 'grant/reservation'):
+                store.review_dispatch('pair', 'fix-2', **kwargs)
+            store.reserve_owner_pair_fixer('pair', 'grant', **{key: grant[key] for key in
+                ('rejecting_execution_id', 'review_base', 'review_head', 'original_scope')})
+            with self.assertRaisesRegex(Blocked, 'grant/reservation'):
+                store.review_dispatch('pair', 'wrong-fixer', **kwargs)
+            with self.assertRaisesRegex(Blocked, 'causal'):
+                store.review_dispatch('pair', 'fix-2', **{**kwargs, 'predecessor_execution_id': 'review-1'})
+            store.review_dispatch('pair', 'fix-2', **kwargs)
+            with self.assertRaisesRegex(Blocked, 'successful fixer'):
+                store.reserve_owner_pair_reviewer('pair', 'grant', fixer_execution_id='fix-2')
+            store.review_outcome('pair', 'fix-2', 'failed', findings=[], suggestions=['optional naming cleanup'],
+                                 references={'base': self.base, 'head': self.base, 'saved_session': 'PRIVATE-SAVED-SESSION'})
+            with self.assertRaisesRegex(Blocked, 'started, failed, or completed'):
+                store.reserve_owner_pair_fixer('pair', 'grant', **{key: grant[key] for key in
+                    ('rejecting_execution_id', 'review_base', 'review_head', 'original_scope')})
+            with self.assertRaisesRegex(Blocked, 'causal'):
+                store.review_dispatch('pair', 'review-3', review_ordinal=3, fixing_round=2,
+                    trigger_execution_id='fix-2', predecessor_execution_id='fix-2', review_base=self.base, review_head=self.base)
+        self.assertEqual(status(self.project, 'pair')['review_authorization']['next_stage'], 'blocked')
+        from coherence_workflow.cli import main
+        for action in ('status', 'history'):
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(main([action, '--project', str(self.project), '--run', 'pair']), 0)
+            rendered = output.getvalue()
+            observed = json.loads(rendered)
+            self.assertEqual(observed['review_authorization']['next_stage'], 'blocked')
+            self.assertEqual(observed['review_chain']['executions'][-1]['suggestions'], ['optional naming cleanup'])
+            self.assertEqual(observed['review_chain']['executions'][-1]['findings'], [])
+            self.assertNotIn('PRIVATE-SAVED-SESSION', rendered)
+
+    def test_compatible_findings_need_no_literal_basis_suffix(self):
+        finding = 'file.py:12 - dereferencing the missing record crashes requests'
+        self.assertEqual(Engine._review_value(json.dumps({'approved': False, 'findings': [finding]})),
+                         {'approved': False, 'findings': [finding], 'suggestions': []})
+
+    def test_owner_only_transport_never_retries_as_routine(self):
+        for mode in ('legacy', 'internal-error', 'no', '', 'cancel', 'ambiguous'):
+            run, calls, questions = 'owner-' + mode, [], []
+            class Adapter:
+                reviews = 0
+                def __init__(self, *_args, **_kwargs): pass
+                def prompt(self, _prompt, **kwargs):
+                    calls.append(kwargs.get('read_only', False))
+                    if kwargs.get('read_only'):
+                        return '{"approved":false,"findings":["owned.txt:1 - requests crash on missing record"]}'
+                    return 'fixture'
+            def question(text, **kwargs):
+                questions.append(kwargs)
+                if mode == 'internal-error':
+                    raise TypeError('owner capability failed internally')
+                return mode
+            if mode == 'legacy':
+                def question(text):
+                    questions.append({})
+                    return 'yes'  # A routine callback must never be invoked for consent.
+            with Authority(self.project) as owner:
+                with self.assertRaisesRegex(Blocked, 'owner authorization unavailable|did not authorize'):
+                    Engine(owner, run, admit([{'id': 'task', 'description': 'fixture'}]), EXECUTOR,
+                           adapter=Adapter, question=question).invoke()
+                self.assertEqual(owner.store.review_chain(run)['fixing_round_count'], 1)
+                self.assertEqual(owner.store.db.execute("SELECT count(*) FROM execution_history WHERE run_id=? AND kind='review_pair_grant'", (run,)).fetchone()[0], 0)
+            self.assertEqual(calls, [False, True, False, True])
+            self.assertEqual(len(questions), 0 if mode == 'legacy' else 1)
+            if questions:
+                self.assertTrue(questions[0]['owner_only'])
+
+    def test_additional_round_reopen_boundaries_retain_exact_pair_and_effects(self):
+        # Each subcase has its own run and chain; a simulated process death suppresses
+        # exception-handler outcome writes, just as an actual killed process would.
+        from coherence_workflow.git_effects import FocusedGit
+        from coherence_workflow.store import git
+        class ProcessDeath(BaseException): pass
+        boundaries = ('authorized', 'reserved', 'dispatched', 'invocation_started', 'returned',
+                      'check_started', 'checks_passed', 'commit', 'checkpoint_passed', 'fixer_complete', 'reviewer_reserved',
+                      'review_complete', 'missing_facts', 'source_drift', 'commit_drift')
+        for boundary in boundaries:
+            with self.subTest(boundary=boundary):
+                # Use a separate disposable repo per scenario, including unrelated index bytes.
+                case = ProjectTest()
+                case.setUp()
+                self.addCleanup(case.doCleanups)
+                project, base = case.project, case.base
+                calls, questions, crashed = [], [], [False]
+                contract = admit([{'id': 'original', 'description': 'fixture', 'owned_paths': ['owned.txt'],
+                                   'checks': [['/bin/sh', '-c', 'test -s owned.txt']]}])
+                class Adapter:
+                    reviews = 0
+                    fixes = 0
+                    def __init__(self, *_args, **_kwargs): pass
+                    def prompt(self, prompt, **kwargs):
+                        if kwargs.get('read_only'):
+                            Adapter.reviews += 1
+                            calls.append(('review', Adapter.reviews, prompt))
+                            return ('{"approved":false,"findings":["owned.txt:1 - crashes on adjacent missing input"]}'
+                                    if Adapter.reviews < 3 else '{"approved":true,"findings":[],"suggestions":["optional cleanup"]}')
+                        if 'Actionable findings:' in prompt:
+                            Adapter.fixes += 1
+                            calls.append(('fix', Adapter.fixes, prompt))
+                            kwargs['claim']('owned.txt')
+                            project.joinpath('owned.txt').write_text('repair-' + str(Adapter.fixes) + '\n')
+                        else:
+                            calls.append(('worker', 0, prompt))
+                            kwargs['claim']('owned.txt')
+                            project.joinpath('owned.txt').write_text('initial\n')
+                        return 'PRIVATE repair answer'
+                def question(text, **kwargs):
+                    questions.append(kwargs)
+                    return 'yes'
+                def die():
+                    crashed[0] = True
+                    raise ProcessDeath(boundary)
+                project.joinpath('other.txt').write_text('unrelated staged sentinel\n')
+                git(project, 'add', '--', 'other.txt')
+                project.joinpath('untracked-sentinel').write_text('untracked sentinel\n')
+                with Authority(project) as owner:
+                    store = owner.store
+                    original_history, original_dispatch = store.history, store.review_dispatch
+                    original_outcome = store.review_outcome
+                    original_authorize, original_reserve = store.authorize_owner_pair, store.reserve_owner_pair_fixer
+                    original_reviewer_reserve = store.reserve_owner_pair_reviewer
+                    original_checkpoint = FocusedGit.checkpoint
+                    def is_extra(execution_id):
+                        row = store.db.execute('SELECT fixing_round FROM execution_review_executions WHERE run_id=? AND execution_id=?', ('recovery', execution_id)).fetchone()
+                        return row is not None and row['fixing_round'] == 2
+                    def history(run, task, kind, state, details):
+                        if crashed[0]:
+                            raise ProcessDeath(boundary)
+                        extra = is_extra(details.get('execution_id'))
+                        if extra and boundary == 'missing_facts' and (kind, state) == ('fixer_invocation', 'returned'):
+                            details = {key: value for key, value in details.items() if key != 'paths'}
+                        result = original_history(run, task, kind, state, details)
+                        names = {('fixer_invocation', 'started'): 'invocation_started',
+                                 ('fixer_invocation', 'returned'): 'returned', ('fixer_checks', 'passed'): 'checks_passed',
+                                 ('fixer_checks', 'started'): 'check_started', ('fixer_checkpoint', 'passed'): 'checkpoint_passed'}
+                        selected = ('returned' if boundary in ('missing_facts', 'source_drift') else boundary)
+                        if not crashed[0] and extra and names.get((kind, state)) == selected:
+                            die()
+                        return result
+                    def dispatch(run, execution_id, **kwargs):
+                        result = original_dispatch(run, execution_id, **kwargs)
+                        if not crashed[0] and boundary == 'dispatched' and kwargs.get('role') == 'fixer' and kwargs['fixing_round'] == 2:
+                            die()
+                        return result
+                    def outcome(run, execution_id, state, **kwargs):
+                        if crashed[0]:
+                            raise ProcessDeath(boundary)
+                        result = original_outcome(run, execution_id, state, **kwargs)
+                        if is_extra(execution_id) and state == 'approved':
+                            role = store.db.execute('SELECT role FROM execution_review_executions WHERE execution_id=?', (execution_id,)).fetchone()['role']
+                            if boundary == ('fixer_complete' if role == 'fixer' else 'review_complete'):
+                                die()
+                        return result
+                    def authorize(*args, **kwargs):
+                        result = original_authorize(*args, **kwargs)
+                        if boundary == 'authorized': die()
+                        return result
+                    def reserve(*args, **kwargs):
+                        result = original_reserve(*args, **kwargs)
+                        if boundary == 'reserved': die()
+                        return result
+                    def reserve_reviewer(*args, **kwargs):
+                        result = original_reviewer_reserve(*args, **kwargs)
+                        if boundary == 'reviewer_reserved': die()
+                        return result
+                    def checkpoint(focused):
+                        result = original_checkpoint(focused)
+                        if boundary in ('commit', 'commit_drift') and focused.task['id'].startswith('fix-') and Adapter.fixes == 2:
+                            die()
+                        return result
+                    with patch.object(store, 'history', side_effect=history), patch.object(store, 'review_dispatch', side_effect=dispatch), \
+                         patch.object(store, 'review_outcome', side_effect=outcome), patch.object(store, 'authorize_owner_pair', side_effect=authorize), \
+                         patch.object(store, 'reserve_owner_pair_fixer', side_effect=reserve), \
+                         patch.object(store, 'reserve_owner_pair_reviewer', side_effect=reserve_reviewer), patch.object(FocusedGit, 'checkpoint', checkpoint):
+                        with self.assertRaises(ProcessDeath):
+                            Engine(owner, 'recovery', contract, EXECUTOR, adapter=Adapter, question=question).invoke()
+                    before = git(project, 'rev-parse', 'HEAD').decode().strip()
+                    initial_checkpoints = store.completed_checkpoints('recovery')
+                    initial_grants = [row['details'] for row in store.db.execute("SELECT details FROM execution_history WHERE kind='review_pair_grant'")]
+                if boundary == 'source_drift':
+                    project.joinpath('owned.txt').write_text('unrelated later bytes\n')
+                if boundary == 'commit_drift':
+                    git(project, 'commit', '--allow-empty', '--only', '-m', 'incoming unrelated commit')
+                with Authority(project) as owner:
+                    engine = Engine(owner, 'recovery', contract, EXECUTOR, adapter=Adapter, question=question, resume=True)
+                    blocked = {'invocation_started': 'uncertain or failed', 'check_started': 'check completion is uncertain',
+                               'missing_facts': 'missing owned-path', 'source_drift': 'source bytes drifted',
+                               'commit_drift': 'commit effects are missing or uncertain'}
+                    if boundary in blocked:
+                        before_calls = len(calls)
+                        with self.assertRaisesRegex(Blocked, blocked[boundary]):
+                            engine.invoke()
+                        self.assertEqual(len(calls), before_calls)
+                        self.assertEqual(Adapter.fixes, 1 if boundary == 'invocation_started' else 2)
+                        if boundary == 'invocation_started':
+                            self.assertEqual(status(project, 'recovery')['review_authorization']['next_stage'], 'blocked')
+                        if boundary == 'source_drift':
+                            self.assertEqual(project.joinpath('owned.txt').read_text(), 'unrelated later bytes\n')
+                    else:
+                        result = engine.invoke()
+                        self.assertEqual(result['status'], 'complete')
+                        self.assertEqual((Adapter.fixes, Adapter.reviews, len(questions)), (2, 3, 1))
+                        if boundary in ('commit', 'checkpoint_passed', 'fixer_complete', 'reviewer_reserved', 'review_complete'):
+                            self.assertEqual(result['sha'], before)
+                        chain = owner.store.review_chain('recovery')
+                        self.assertEqual((chain['review_count'], chain['fixing_round_count']), (3, 2))
+                        self.assertEqual(chain['executions'][-1]['references'], {'base': base, 'head': result['sha']})
+                        self.assertEqual(status(project, 'recovery')['review_authorization']['next_stage'], 'complete')
+                        self.assertIn('Range: ' + base + '..' + result['sha'], [entry[2] for entry in calls if entry[:2] == ('review', 3)][0])
+                        self.assertEqual(git(project, 'rev-list', '--count', base + '..' + result['sha']).decode().strip(), '3')
+                    self.assertEqual(owner.store.completed_checkpoints('recovery'), initial_checkpoints)
+                    self.assertEqual([row['details'] for row in owner.store.db.execute("SELECT details FROM execution_history WHERE kind='review_pair_grant'")], initial_grants)
+                self.assertEqual(project.joinpath('other.txt').read_text(), 'unrelated staged sentinel\n')
+                self.assertEqual(git(project, 'diff', '--cached', '--name-only').decode().strip(), 'other.txt')
+                self.assertEqual(project.joinpath('untracked-sentinel').read_text(), 'untracked sentinel\n')
 
 
 class FixExecutionTests(ProjectTest):
