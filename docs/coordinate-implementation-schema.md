@@ -145,6 +145,27 @@ Acceptance attaches only to its explicit terminal reviewer ID and recorded range
 monitoring is reported unknown. Explicit abandon preserves prior progress/error
 history and appends an `abandoned` observation when the run was registered.
 
+## Preserved monitor recordings
+
+A later explicit preservation command may publish one monitor-only recording below a
+verified main worktree at `.coherence/preserved-recordings/<recording-id>/`.  A Reader
+recognizes only an owned, non-symlinked `recording.json` with the closed v1 fields
+`version`, `state: "complete"`, `recording_id`, and opaque `origin_id`, plus its
+`monitor.sqlite` and `metrics/` directory.  Private preparation or malformed/pending
+metadata is not discoverable or readable as history.  The two opaque IDs are stable
+recording/origin identity for later qualified routing; metadata contains no source or
+Git-admin path.
+
+The preserved Reader pins metadata/database identity, verifies main on every read, and
+uses the preserved metric bytes while retaining internal run IDs, observation order,
+review/followup references and original metric-hash naming.  It does not require the
+stopped source, its Git admin, process, or metric paths, and it reports preserved runner
+liveness as unknown rather than liveness of main.  Missing, partial, malformed, or
+unsupported evidence remains qualified by the existing read/normalization behavior.
+Copied artifact commitment references remain historical facts, not commits on main.
+Readers create, migrate, repair, or import nothing; publication/capture is a later
+explicit operation and must not write main's native live database.
+
 ## Historical records
 
 All historical `wf_*` and LangGraph tables/rows remain readable in place. No automatic rewrite,

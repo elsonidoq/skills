@@ -16,6 +16,8 @@ import subprocess
 import threading
 from typing import Any
 
+from .recordings import PreservedBinding, RecordingError, bind
+
 
 SUPPORTED_RECORDING_VERSION = 1
 _SAFE_FINDING = __import__("re").compile(r"^[A-Za-z0-9_./-]+(?::[1-9][0-9]*)? - [^\r\n]+$")
@@ -74,18 +76,35 @@ class Reader:
     the later mapper, not browser DTOs.
     """
 
-    def __init__(self, project: str | os.PathLike[str]):
+    def __init__(self, project: str | os.PathLike[str], preserved_recording: str | None = None):
         self.project = Path(project).resolve(strict=True)
         if _git(self.project, "--show-toplevel") != self.project:
             raise ReaderError("project must be the Git worktree root")
         self._admin = _git(self.project, "--absolute-git-dir")
         _owned_regular(self._admin / "HEAD")
-        self.database = self.project.joinpath(*_DATABASE_PARTS)
+        try:
+            self._preserved: PreservedBinding | None = bind(self.project, preserved_recording) if preserved_recording is not None else None
+        except RecordingError as exc:
+            raise ReaderError(str(exc)) from exc
+        self.database = self._preserved.database if self._preserved else self.project.joinpath(*_DATABASE_PARTS)
+        self._metrics = self._preserved.metrics if self._preserved else self.project / ".coherence" / "metrics"
         self._database_identity: tuple[int, int] | None = None
         self._thread = threading.local()
         self._metric_boundaries: dict[str, tuple[tuple[int, int], int, int, bytes]] = {}
         self._metric_lock = threading.Lock()
         self._bind_if_present()
+
+    @classmethod
+    def preserved(cls, main: str | os.PathLike[str], recording_id: str) -> "Reader":
+        """Open one explicit complete preserved recording under verified ``main``."""
+        return cls(main, preserved_recording=recording_id)
+
+    @property
+    def recording_identity(self) -> tuple[str, str] | None:
+        """Opaque ``(recording_id, origin_id)`` for later recording-qualified routing."""
+        if self._preserved is None:
+            return None
+        return self._preserved.recording_id, self._preserved.origin_id
 
     def _bind_if_present(self) -> None:
         try:
@@ -97,10 +116,16 @@ class Reader:
     def _check_binding(self) -> tuple[int, int]:
         if _git(self.project, "--show-toplevel") != self.project or _git(self.project, "--absolute-git-dir") != self._admin:
             raise ReaderError("worktree identity changed")
-        current = self.project
-        for part in _DATABASE_PARTS[:-1]:
-            current = current / part
-            _owned_directory(current)
+        if self._preserved is not None:
+            try:
+                self._preserved.check()
+            except RecordingError as exc:
+                raise ReaderError(str(exc)) from exc
+        else:
+            current = self.project
+            for part in _DATABASE_PARTS[:-1]:
+                current = current / part
+                _owned_directory(current)
         if self.database.is_symlink():
             raise ReaderError("store path contains symlink")
         stat = _owned_regular(self.database)
@@ -115,7 +140,7 @@ class Reader:
 
     def _metric_file(self, run_id: str) -> Path:
         digest = hashlib.sha256(run_id.encode("utf-8")).hexdigest()
-        return self.project / ".coherence" / "metrics" / f"run-{digest}.jsonl"
+        return self._metrics / f"run-{digest}.jsonl"
 
     @staticmethod
     def _metric_record(value: object, run_id: str) -> dict[str, Any] | None:
@@ -159,7 +184,7 @@ class Reader:
                 # Keep one append-only boundary per selected Reader, across polls
                 # and HTTP requests (not thread-local and not a second metric store).
                 with self._metric_lock:
-                    _owned_directory(self.project / '.coherence')
+                    _owned_directory(path.parent.parent)
                     _owned_directory(path.parent)
                     info = path.lstat()
                     if path.is_symlink() or not stat.S_ISREG(info.st_mode):
@@ -262,6 +287,10 @@ class Reader:
             run_rows = [dict(row) for row in connection.execute(
                 "SELECT run_id, recording_version, description, started_at, runner_identity "
                 "FROM execution_monitor_runs" + where + " ORDER BY started_at, run_id", params)]
+            if self._preserved is not None:
+                # A copied identity is historical evidence, never a main-worktree runner.
+                for row in run_rows:
+                    row["runner_identity"] = None
             supported = [row for row in run_rows if row["recording_version"] == SUPPORTED_RECORDING_VERSION]
             unsupported = [row["run_id"] for row in run_rows if row["recording_version"] != SUPPORTED_RECORDING_VERSION]
             if not supported:
@@ -340,7 +369,9 @@ class Reader:
                         if row['kind'] == 'metric_artifact':
                             status = detail.get('status')
                             if status in {'not_created', 'failed', 'committed', 'committed_after_reported_error', 'no_content'}:
-                                expected_path = self._metric_file(run_id).relative_to(self.project).as_posix()
+                                # History retains its original metric commitment path; the
+                                # preserved physical location is deliberately not a main path.
+                                expected_path = (Path('.coherence') / 'metrics' / self._metric_file(run_id).name).as_posix()
                                 artifacts[run_id] = {'status': status,
                                     'path': expected_path if detail.get('path') == expected_path or detail.get('paths') == [expected_path] else None,
                                     'sha': detail.get('sha') if isinstance(detail.get('sha'), str) and _HASH.fullmatch(detail['sha']) else None}
