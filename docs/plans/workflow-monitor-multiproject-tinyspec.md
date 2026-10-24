@@ -44,8 +44,11 @@ Original source checkpoint `fd89605` / SHA256
 `3d8df9845dc95bcb4108f23bdffa2b66d12cf157a35d74e038ce9322db083f84` and its ZERO-finding
 intent review cover **only the old scope**. The combined approval question was cancelled;
 no source/task approval exists. Existing [tasks](workflow-monitor-multiproject-tasks.md)
-and [JSON](workflow-monitor-multiproject-tasks.json) are stale and must be revised after
-parent inspection and a **fresh independent intent-focused read-only source review**.
+and [JSON](workflow-monitor-multiproject-tasks.json) are stale. The expanded-scope independent
+intent review at `43afa2d` found one material P1: payload-only reuse could preserve an obsolete
+translated correction target. This bounded correction addresses that finding; parent
+inspection/disposition precedes task revision. No zero-findings or approval claim is made,
+and no automatic rereview gate is added.
 This amendment is preparation only, not implementation or real-data merge permission.
 The saved source-producer binding remains `openai-codex/gpt-6.1-sol` / medium, separate
 from the intended implementation executor `.pi/workflow-executor.json`, which the task
@@ -193,7 +196,8 @@ after successful reads only that source's sanitized last-safe view may remain wi
 Imported copies are normal main-worktree history, not a second archive viewer. Retain origin
 metadata outside the renderer. While source still exists, its original and main's imported
 copy may both be listed with distinct source/ID context; no cross-worktree deduplication
-framework is needed. Repeating a merge must not create another imported copy in main.
+framework is needed. Repeating unchanged content and translated relationship targets must
+not create another imported copy in main.
 
 ### Explicit history merge into main
 
@@ -226,12 +230,31 @@ No broader runtime behavior change is authorized.
 **Identity and ordering.** Every imported run receives `<workflow-name or hash>-<old id>`.
 Use a safe readable source/workflow prefix where unambiguous, otherwise stable origin/hash
 disambiguation. Save a small destination provenance map of repository/source identity,
-original run ID, per-run retained-payload/metric snapshot digest, chosen imported ID and
-relevant sequence mappings. Unrelated new source runs must not duplicate unchanged imports.
-Generate mappings for the whole source set before translating links. Same origin + exact
-source payload reuses its verified mapping as a no-op; distinct origins or changed source
-snapshots get distinct deterministic hash-qualified IDs, preserving earlier imports and
-main history. Actual occupied IDs/files, including preexisting tracked/dirty artifacts,
+original run ID, per-run retained-payload/metric snapshot digest, translated relationship
+targets (including unresolved qualifications), allocation-group identity, chosen imported
+ID and relevant sequence mappings. Reuse requires both unchanged retained content **and
+unchanged translated relationship targets**, with verified destination content. Unrelated
+new source runs must not duplicate unchanged imports. Generate the whole source mapping
+before publishing translated rows. A changed referenced import requires a new dependent
+copy even when that dependent's own source payload is unchanged: if B corrects A, preserve
+B₁→A₁ and allocate B₂→A₂ when A becomes A₂, rather than reusing B₁ against the latest A₂.
+Preserve all prior imports and native main history; never update their links in place.
+
+Resolve the finite graph of schema-defined source run references in dependency order.
+Treat each strongly connected component (a cycle, or one acyclic run) as one allocation
+group, processing referenced groups before their dependents. Its deterministic key uses
+sorted member origins/content digests, typed internal edges expressed in original source
+identities, and already chosen external translated targets/qualifications—not recursively
+hashed imported IDs within the cycle. Reuse a prior group only when member content and
+all internal/external translated links match its verified mapping. Otherwise allocate the
+group's necessary new IDs together, then translate its internal links with that complete
+mapping. Changed targets thereby propagate through dependent groups in one finite traversal;
+cycles remain historically cyclic/qualified, not inferred acceptance. Stable group keys and
+persisted mappings make an exact repeat reuse the same result, with no arbitrary hard cap,
+recursive hash fixed-point search or generalized graph/import framework.
+
+Distinct origins, changed payloads or changed relationship-target mappings get distinct
+deterministic hash-qualified IDs. Actual occupied IDs/files, including preexisting tracked/dirty artifacts,
 trigger deterministic disambiguation, never overwrite/adoption of unknown bytes. Persist
 chosen allocation so an interrupted retry cannot allocate another duplicate. Missing or
 changed already-imported destination content is an actionable integrity error, not a
@@ -310,7 +333,7 @@ checks; one check may establish several criteria without repeated evidence cerem
 | A5 | Server remains protected read-only HTTP with fixed assets, raw exactly-once run-ID handling and no arbitrary browser filesystem paths or merge/control routes; drift never silently rebinds. | Adapt focused HTTP/launcher/Reader boundary tests: raw encoded slash, malformed/extra segments/unknown refs, replacement, Host/Fetch Metadata/header, closed DTO/errors and asset substitution. Compare observed source DB/metric content; keep existing safety assertions rather than new exhaustive matrix. |
 | A6 | Prepared delivery and docs accurately describe project/worktree selection and separate merge operation; no workflow renderer/runtime redesign or dependency churn. | Focused prepared Python tests, `npm --prefix workflow_monitor/web run build`, affected existing Playwright cases and boundary diff inspection. Update canonical monitor README and storage schema with actual CLI/options/paths, origin/visibility, errors, recovery, no-resume/source-retention and durability limits. |
 | A7 | Explicit CLI merge preserves source recorded workflows/review/followup/order/metrics in native main history; successful readback is unchanged in meaning after source removal, and main's preexisting history stays intact. Imported runs cannot resume/launch or claim new success/acceptance/Git artifact commitment. | Actual merge helper/CLI over real Git-linked worktrees and SQLite + JSONL: representative rejection→fix→rereview, followup and multi-page history. Reopen main Reader, compare translated logical facts, ranges, metrics/coverage and ordered evidence; then remove only the isolated test source and read main again. Assert old target rows/files/legacy data unchanged, no private authority/session copy and imported resume/start-ID reservation behavior. No real owner worktree removal. |
-| A8 | Both distinct equal-ID histories survive with prefixed imported IDs. Typed cross-run/metric identities stay correct; exact repeats do not duplicate. Changed snapshots and occupied prefixes/artifacts preserve both versions without overwrite. Busy/change/error/interruption never reports false completion or destroys source/target history. | Permanent actual merge tests with colliding run IDs and source-linked relations, preexisting tracked/dirty destination metrics, deterministic allocation/repeat/reopen, changed source snapshot and unresolved reference. Focused interruption at metric publication and DB completion plus uncertain-return reconciliation; busy source/target locks, WAL source snapshot and a changing metric exercise actual boundaries. Assert source unchanged, pending invisible, no arbitrary replacement, actionable failure and exact retry convergence. |
+| A8 | Both distinct equal-ID histories survive with prefixed imported IDs. Typed cross-run/metric identities stay correct; exact repeats do not duplicate. Changed payloads or translated relationship targets create necessary new copies, preserving prior versions; occupied prefixes/artifacts never cause overwrite. Busy/change/error/interruption never reports false completion or destroys source/target history. | Permanent actual merge tests with colliding run IDs and source-linked relations, preexisting tracked/dirty destination metrics, deterministic allocation/repeat/reopen, changed source snapshot and unresolved reference. Include B₁→A₁, then changed A with byte-unchanged source B: preserve old imports, allocate B₂→A₂, remove the isolated source and verify latest translated followups/acceptance against source meaning. Extend to a linked chain and cycle to prove finite deterministic group allocation, preserving cyclic qualification; exact repeat converges without new copies. Focused interruption at metric publication and DB completion plus uncertain-return reconciliation; busy source/target locks, WAL source snapshot and a changing metric exercise actual boundaries. Assert source unchanged, pending invisible, no arbitrary replacement, actionable failure and exact retry convergence. |
 | A9 | Owner's whole outcome works: choose project, see main and Paseo-style linked workflows unchanged; explicitly merge, remove isolated source, then see preserved history/metrics from main with no duplicate imports from repeated merge. | Smallest composed CLI→real main Reader/HTTP→production-browser extension of current fixture. Observe translated colliding workflows, representative graph/Details/history/review and metrics before/after isolated source removal, plus original destination workflow. Assert ordinary server polling publishes only verified complete imports and old source failures never leak across selection. Reuse A4/A7 proof where still valid; no extra harness. |
 
 ## Risk selection, sequencing and gates
@@ -328,8 +351,9 @@ Registry/source identity precedes scoped HTTP/browser use; translation/provenanc
 precede merge publication; publication/readback checks precede A9 and any real merge/deletion
 reliance. Task producer owns granular executor-sized outcomes and adapts old tasks/fixtures
 rather than preserving obsolete single-source interfaces. Existing source/task review is
-invalid for expanded merge/linked-discovery scope; fresh intent review and regenerated tasks
-must cover A1–A9 before renewed combined approval. No implementation or real-data command
+invalid for expanded merge/linked-discovery scope; the independent review's P1 correction
+requires parent inspection/disposition, then regenerated tasks must cover A1–A9 before
+renewed combined approval. No implementation or real-data command
 was run to produce this source.
 
 No remaining material owner choice is hidden: the prefix-preserve-both decision is settled.
