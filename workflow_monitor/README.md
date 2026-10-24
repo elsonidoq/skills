@@ -39,18 +39,23 @@ use the system Python. Build the local web assets first; this is an explicit pre
 
 ```sh
 npm --prefix workflow_monitor/web run build
-workflow_monitor/.venv/bin/python -m workflow_monitor --project /canonical/worktree --assets "$PWD/workflow_monitor/web/dist" --port 8765
+workflow_monitor/.venv/bin/python -m workflow_monitor --projects-root "$HOME/projects" --assets "$PWD/workflow_monitor/web/dist" --port 8765
 ```
 
-The package also declares the equivalent `workflow-monitor` console entry point for a
-separately prepared local installation. It uses the same required `--project` and
-`--assets` arguments; neither form installs dependencies, builds assets, or starts the
-workflow runtime. Keep `requirements.lock` with the package metadata when preparing
-that isolated environment. A missing build root, missing `index.html`, symlinked root,
-or non-directory asset root stops before binding with a fixed actionable diagnostic;
-rebuild to a regular local `dist/` directory and retry.
+`--projects-root` defaults to the expanded `~/projects`, so it may be omitted when that
+is the intended inventory root. It must already be a readable, regular directory; a
+missing, unreadable, symlinked, or non-directory root stops before binding with an
+actionable `--projects-root` diagnostic and is never created. An empty valid root starts
+normally and reports an empty inventory. The package also declares the equivalent
+`workflow-monitor` console entry point for a separately prepared local installation. It
+uses the same required `--assets` argument and optional `--projects-root`; neither form
+installs dependencies, builds assets, creates a workflow store, or starts the workflow
+runtime. Keep `requirements.lock` with the package metadata when preparing that isolated
+environment. A missing build root, missing `index.html`, symlinked root, or non-directory
+asset root stops before binding with a fixed actionable diagnostic; rebuild to a regular
+local `dist/` directory and retry.
 
-Then open `http://127.0.0.1:8765/` in a local browser. The left selector and selected-run banner use readable numbered run labels; opaque references remain internal for API requests and URL routing. The graph retains one stable planned worker slot for every known task and a separately planned final independent review, then reconciles each slot only with its unique exact recorded initial call. Later plans remain visible while earlier calls run. Corrective prompts and later reviews appear only when exact recorded evidence exists; fixing rounds are not fabricated as calls. Declared prerequisites (including planned review completion) are distinct from recorded causal/input relations. Missing, ambiguous, or cyclic relations remain qualified rather than guessed. Details lead with the recorded action, outcome, blocker and findings. Missing, malformed, partial or unsupported records remain unavailable or qualified rather than repaired into a completed graph.
+Then open `http://127.0.0.1:8765/` in a local browser. One launcher uses this one loopback port for every project discovered under the selected root; it can be started from any working directory after the package and assets are prepared. The left selector and selected-run banner use readable numbered run labels; opaque references remain internal for API requests and URL routing. The graph retains one stable planned worker slot for every known task and a separately planned final independent review, then reconciles each slot only with its unique exact recorded initial call. Later plans remain visible while earlier calls run. Corrective prompts and later reviews appear only when exact recorded evidence exists; fixing rounds are not fabricated as calls. Declared prerequisites (including planned review completion) are distinct from recorded causal/input relations. Missing, ambiguous, or cyclic relations remain qualified rather than guessed. Details lead with the recorded action, outcome, blocker and findings. Missing, malformed, partial or unsupported records remain unavailable or qualified rather than repaired into a completed graph.
 
 The browser URL identifies a run by its actual displayed ID as `/runs/id-<percent-encoded ID>`; the client decodes that component once, looks it up exactly in the inventory, and only then uses the opaque API reference. A successful nonempty root inventory replaces `/` with its newest finite-epoch run (descending, deterministic ID ties; unknown times last). Different selections push history, repeated selections do not, and Back/Forward clears obsolete graph/Details work before loading the addressed run. Unknown, removed, or unavailable IDs remain in the address bar with an honest unavailable state rather than selecting a substitute. The run-ID filter is a case-insensitive local substring filter: it neither changes the selected URL/history nor sends a server search, and it explicitly reports selected-outside-filter and no-match states. Polling remains at 60 seconds and never steals the current selection for a newer row.
 
@@ -128,7 +133,7 @@ relations do not establish current full-range acceptance. Supporting
 checks/checkpoints remain available in agent Details and paginated history.
 
 The launcher binds only `127.0.0.1`; it has no host, reload, debug, proxy, database, or
-asset-building overrides. Stopping it is the rollback: it closes observation only and leaves
+asset-building overrides. Stop it with `Ctrl-C`; this closes observation only and leaves
 Git, authoritative SQLite rows, and any writer untouched. It serves only the fixed startup asset inventory (not
 sourcemaps, symlinks, directories, or arbitrary files). Rebuilding the active asset directory replaces hashed JS/CSS filenames but does not refresh that startup inventory: the HTML can load while its assets return JSON 404 responses and browser MIME errors. Finish the build before starting/restarting the monitor, or serve a separate copy of the built assets for a stable preview while another process rebuilds. Restart only the monitor, not the workflow worker or Pi session.
 

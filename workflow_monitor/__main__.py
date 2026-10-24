@@ -7,7 +7,8 @@ from pathlib import Path
 import uvicorn
 
 from .app import create_app
-from .reader import Reader, ReaderError
+from .projects import Projects
+from .reader import ReaderError
 
 
 def _port(value: str) -> int:
@@ -22,12 +23,16 @@ def _port(value: str) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Serve read-only workflow monitor snapshots on numeric loopback.")
-    parser.add_argument("--project", required=True, metavar="CANONICAL_WORKTREE")
+    parser.add_argument("--projects-root", default=str(Path.home() / "projects"), metavar="DIRECTORY")
     parser.add_argument("--assets", required=True, metavar="BUILD_ROOT")
     parser.add_argument("--port", type=_port, default=8765)
     args = parser.parse_args(argv)
     try:
-        app = create_app(Reader(Path(args.project)), Path(args.assets), args.port)
+        projects = Projects(args.projects_root)
+    except (OSError, ValueError, ReaderError) as exc:
+        parser.error(f"--projects-root: {exc}")
+    try:
+        app = create_app(projects, Path(args.assets), args.port)
     except (OSError, ValueError, ReaderError) as exc:
         parser.error(str(exc))
     uvicorn.run(app, host="127.0.0.1", port=args.port, reload=False, access_log=False,
