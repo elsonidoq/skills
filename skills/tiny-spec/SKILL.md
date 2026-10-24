@@ -128,7 +128,11 @@ reliance blockers for source/task review, with affected approval renewal. Do not
 planner applied the shared contract on direct entry or imply separate consumer/cleanup tasks.
 
 Do not embed an implementation task checklist. A separate task file is mandatory:
-planner invokes `task-generation`'s direct adapter after this artifact. Acceptance
+planner first obtains a fresh independent read-only specification review focused on user-intent
+fidelity under its [shared review contract](../planner/SKILL.md#shared-specification-review-contract),
+then invokes `task-generation`'s direct adapter after necessary source-producer corrections.
+Unresolved material intent gaps stop task generation. This applies on direct/standalone entry
+as well: return to planner for review, rather than skipping review or inventing a binding. Acceptance
 criteria describe behavior; tasks describe work units and their evidence. Tasks link
 to this source rather than duplicating it wholesale. No SpecKit prerequisite exists
 for TinySpec; installation alone does not change its depth.
@@ -140,8 +144,8 @@ constraints → checks, capability/permission gaps and explicit deferral bounds.
 Return source verification needs for stable task-local REQUIRED items in task generation,
 with pass criteria, smallest sufficient checks, expected evidence and manual/permission gates.
 Preserve the selected executor settings separately from task work; no per-task routing requirements.
-Planner owns source/task review and
-one combined approval, including an executive brief before `ask_user`. A standalone
+Planner coordinates independent specification review, evaluates findings and owns parent
+task review and one combined approval, including an executive brief before `ask_user`. A standalone
 TinySpec approval before task production is not required. Report source production,
 not readiness for implementation or feature acceptance.
 

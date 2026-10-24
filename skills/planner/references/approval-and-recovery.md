@@ -46,7 +46,8 @@ not unrelated implementation.
 | Event | Consequence |
 | --- | --- |
 | Owner chooses depth | Preparation authorization only; persist then immediately start selected source production |
-| TinySpec ready | Generate separate tasks; no intermediate approval gate |
+| TinySpec ready | Run fresh independent read-only specification review for user-intent fidelity before separate tasks; no intermediate approval gate |
+| TinySpec specification review complete | Parent evaluates findings, owner resolves material decisions, source producer corrects and parent inspects; zero/resolved findings proceed to tasks, unresolved material intent gaps stop task generation |
 | TinySpec/tasks reviewed | Bullet brief then combined source/task/scope approval; immediately start coordinator unless explicitly planning-only |
 | Standard spec ready | Complete required ordinary clarification and parent inspection, then run distinct `spec_review`; do not approve or plan yet |
 | Standard spec review returns zero | Skip question interaction; bullet brief then existing specification approval; immediately start planning |
@@ -70,7 +71,10 @@ Unanswered `spec_review` questions retain their originating source/spec/context,
 scenario, consequences and owner rationale. Ask one at a time and remove later queued questions
 that an earlier answer resolves. A cancelled or unanswered material answer stops only affected
 planning; no recommendation, automatic deferral, clarification-taxonomy rerun, default, or
-rereview releases it. Zero findings go directly to the existing specification approval gate.
+rereview releases it. Neither path progresses with unresolved material intent gaps. Zero
+findings go directly to tasks for TinySpec or the existing specification approval gate for
+Standard. Findings are not reviewer approval; necessary substantive corrections remain with
+the source producer. No separate TinySpec approval or automatic rereview loop is added.
 Delegate uncertain or substantive artifact corrections to that originating producer context
 when supported and suitable; otherwise use a fresh bounded correction delegate.
 No parent artifact authoring or substantive task-level or upstream repair, including legacy recovery.

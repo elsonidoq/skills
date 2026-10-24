@@ -71,14 +71,14 @@ remain separate.
 
 Verify callable question capability before owner gates. Resolve planner-stage bindings from the
 [owner planning assignments](references/model-assignments.md); parent dialogue, inspection,
-TinySpec parent review, and approvals retain the owner-launched parent model and effort.
+TinySpec parent task review, and approvals retain the owner-launched parent model and effort.
 The suite runtime requirements are in the global configuration repository's `REQUIREMENTS.md`;
 configuration names alone are not availability evidence. `ask_user` unavailable or failing at a
 route or artifact-approval gate reports `question: UNAVAILABLE` and stops. No inferred answer
 or prose approval substitutes for those tool gates. Verify async delegation and its observed
 budgets before delegating, and inspect failures before retry/resume/relaunch. Never silently
 change a saved assignment or install missing capabilities.
-Standard-only SpecKit/reviewer/constitution checks happen after Standard is selected,
+Standard-only SpecKit/constitution checks happen after Standard is selected,
 not as prerequisites for considering TinySpec.
 
 Treat source claims as claims. Verify load-bearing positive and negative claims at
@@ -114,9 +114,9 @@ research capabilities only when needed; configuration names are not usability pr
 
 `references/model-assignments.json` is the owner-editable source for fresh planner work.
 Resolve its exact model and effort for brainstorming assessment/application, TinySpec source/tasks,
-Standard spec/tasks, the whole direct/helper plan pass, and fresh overall review/rereview.
+Standard spec/tasks, both independent specification reviews, the whole direct/helper plan pass, and fresh overall review/rereview.
 Pass the resolved binding unchanged in the invocation and bounded brief; parent-only dialogue,
-inspection, TinySpec review and approvals inherit the owner-launched parent binding in both
+inspection, TinySpec parent task review and approvals inherit the owner-launched parent binding in both
 dimensions. Verify the saved binding is permitted and callable for only the affected role at
 dispatch. A missing, malformed, unsupported, or unavailable exact assignment stops that role
 with the resolver's focused owner correction question: do not recommend, infer, substitute, or
@@ -360,6 +360,31 @@ assignments and grant no implementation batching or runtime routing authority.
 Missing or ambiguous contracts, including old approved tasks, return to the producing review/approval
 gate for affected review and renewed approval, never fabricated historical requirements.
 
+### Shared specification-review contract
+
+Both paths require one fresh independent read-only specification review, primarily for
+fidelity to user intent, after source creation and before downstream production. Use
+[the canonical review prompt](references/spec-review.md). Give the reviewer the original
+user request, actual owner clarifications/decisions, relevant constraints/accepted decisions/
+memory, and the exact current specification path/content identity with readable content.
+Do not supply producer rationale, conclusions, or full unrelated transcripts. Verify the
+saved exact binding is permitted and callable with async delegation, fresh context and a
+read-only reviewer profile; missing capability or binding stops only this operation for
+owner correction, never substitution. Dispatch the resolved binding unchanged in brief and
+call with `async: true`, bind its report to the invocation, and compare source content before
+and after review. The reviewer returns ranked findings or explicit zero findings; it neither
+edits nor approves. Parent evaluates evidence and dispositions, not reviewer approval.
+
+Resolve straightforward fidelity defects without unnecessary owner questions; send substantive
+corrections to the source producer under its saved producing assignment, resuming suitable
+context or using a fresh bounded correction delegate. Material decisions go to the owner via
+one focused `ask_user` question at a time. Parent inspects producer corrections against the
+request, actual answers and findings. Neither path may progress beyond specification review
+with unresolved material intent gaps. An explicit bounded owner deferral can exclude affected
+work from progression but cannot release reliance on an unresolved gap. Keep findings and
+dispositions in existing session/report context, not a new tracker. No automatic rereview loop
+or additional approval gate; actual invalidating drift follows existing recovery rules.
+
 ### TinySpec path
 
 1. **Source creation — saved assignment:** resolve `tinyspec-source` and delegate `tiny-spec` to a separate fresh
@@ -373,8 +398,15 @@ gate for affected review and renewed approval, never fabricated historical requi
    material gaps return through existing gates. Missing, unusable or unauthorized source
    delegation stops; no parent creation/substantive correction or inline/local fallback.
    Inspect returned compact source and blockers. No SpecKit prerequisite or standalone
-   TinySpec approval is required before task production.
-2. **Tasks — saved assignment:** resolve `tinyspec-tasks` and delegate a separate fresh bounded-context task
+   TinySpec approval is required before task production; independent specification review is.
+2. **Specification review — independent saved reviewer assignment:** resolve `tinyspec-spec-review`
+   and follow the shared specification-review contract above with the compact TinySpec as the
+   exact specification. Use a fresh reviewer independent of the `tinyspec-source` producer.
+   Evaluate all findings and inspect necessary producer corrections before task generation.
+   Return substantive corrections to `tinyspec-source` with its same saved assignment.
+   Explicit zero findings skips question interaction; resolved findings proceed directly to
+   tasks, not a separate TinySpec approval. Unresolved material intent gaps stop task generation.
+3. **Tasks — saved assignment:** resolve `tinyspec-tasks` and delegate a separate fresh bounded-context task
    producer; invoke `task-generation` direct adapter with TinySpec and
    applicable source links. TinySpec is requirements truth; no SDD forwarding/rereading as
    direct requirements input. Governing instructions/contracts, memory and permission/safety
@@ -382,22 +414,23 @@ gate for affected review and renewed approval, never fabricated historical requi
    creation/substantive correction or inline/local fallback. Create separate tasks using its full contract. Derive docs
    from inspected effects/requirement, not an absent plan. Keep context-coherent work
    consecutive without reordering dependencies or padding distant tasks.
-3. **Review — planner-owned parent binding:** review source-to-task traceability, in-scope coverage,
+4. **Review — planner-owned parent binding:** review source-to-task traceability, in-scope coverage,
    exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
    verification item completeness, explicit and implicit dependencies, and stage feasibility. Record
    fixes, validation results and current content evidence. Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
    to proven-equivalent mechanical repairs. Delegate uncertain or substantive source/task corrections
    to suitable originating context or a fresh bounded correction delegate; no parent substantive
    task-level or upstream repair. Missing, unusable or unauthorized correction delegation stops; no
-   inline/local fallback. No independent planning
-   reviewer is required for this path; implementation's independent review is unchanged.
+   inline/local fallback. No additional independent task-planning reviewer is required for
+   this path; the preceding independent specification review and implementation's independent
+   review remain required.
    Apply the dependency evidence/permission review above before combined approval.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable task instructions.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries.
    Source carries needs; separate tasks carry only independently necessary work units.
-4. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
+5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
    obtain explicit approval of current TinySpec/source, tasks, and implementation scope,
    stating that approval starts the coordinator next unless planning-only was requested.
    Persist that answer against current content, then immediately proceed to handoff and
@@ -430,7 +463,8 @@ valid settled principles. Verify the saved exact stage binding and independent r
    after that ordinary clarification and parent inspection of the exact current specification:
    do not approve or plan here.
 2. **`spec_review` — independent saved reviewer assignment:** resolve
-   `standard-spec-review` and verify the exact saved provider/model:effort is actually
+   `standard-spec-review`, apply the shared specification-review contract above (this is
+   Standard's existing review, not an additional review), and verify the exact saved provider/model:effort is actually
    permitted and callable, with the installed async delegation interface, a fresh context,
    the reviewer’s read-only tool/profile, and source-producer and `ask_user` capabilities.
    Package/profile names alone are insufficient. A missing, unsupported, or unavailable
@@ -438,10 +472,11 @@ valid settled principles. Verify the saved exact stage binding and independent r
    not substitute, route to another reviewer, or fall back.
 
    Dispatch exactly that saved binding unchanged, with `async: true`, and bind its report
-   to the runtime invocation. Give the fresh independent reviewer only the request, exact
+   to the runtime invocation. Give the fresh independent reviewer only the original user
+   request, actual owner clarifications/decisions, exact
    current specification path/content identity, relevant context/constraints/accepted
    decisions/memory, and [the canonical review prompt](references/spec-review.md). Do not
-   include producer rationale, transcript, or unrelated history. Review definition of
+   include producer rationale, transcript, or unrelated history or producer conclusions. Review definition of
    done for observable completion aligned with user intent, using existing acceptance
    criteria rather than requiring a new heading; include all material gaps in the same
    ranked findings and existing question/correction flow, with no discovery cap.
@@ -455,7 +490,8 @@ valid settled principles. Verify the saved exact stage binding and independent r
    overview on request; these views summarize findings, not additional approval gates.
    Retain the complete returned findings in existing session/report context, not a new
    persistent tracker. Five is a presentation batch, not a discovery or resolution limit.
-   For each unresolved material finding, parent asks one concrete `ask_user` question at
+   Resolve evident fidelity defects through the shared producer-correction route, not owner
+   questions. For each unresolved material decision, parent asks one concrete `ask_user` question at
    a time, retaining its scenario, alternatives, and consequences; discard queued
    questions made unnecessary by earlier answers. An unanswered or cancelled material
    answer stops affected planning with no inferred default. Send actual answers to the

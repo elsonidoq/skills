@@ -99,20 +99,25 @@ presents an approximate scope assessment. This phase is read-only. It always pre
 paths and stops for your explicit choice; the recommendation does not choose for you.
 
 ```text
-                         ┌→ TinySpec → Tasks → Review → Combined approval ───┐
+                         ┌→ TinySpec → Spec review → Tasks → Parent review → Combined approval ─┐
 Request → Planner → Choose│                                                   ├→ coordinate-implementation
                          └→ SpecKit Specify → Spec review → Spec approval → Plan → Tasks ──┤
                                                                → Analyze → Final approval ─┘
 ```
 
 - **TinySpec:** compact context, scope, decisions, approach, acceptance and validation;
-  mandatory separate tasks. Planner reviews both before one combined approval. No SpecKit
+  fresh independent specification review before mandatory separate tasks, then planner's
+  parent review before one combined approval. No SpecKit
   or unnecessary spec/plan/research hierarchy is required.
 - **Standard:** through planner, genuine installed SpecKit stages, separate what/how/task
   reasoning, a distinct independent specification review and current-specification approval
   before planning, independent overall review and final approval. The later plan helper
   review/fix pass is not that specification review and does not trigger it again.
-- **Both:** planner delegates each source/specification, applicable Standard plan and separate
+- **Both:** specification review primarily checks fidelity to the original request and actual
+  owner answers; unresolved material intent gaps block downstream work. Reviewers neither edit
+  nor approve; parents evaluate findings and source producers make substantive corrections.
+  No additional TinySpec approval or automatic rereview loop is added.
+  Planner delegates each source/specification, applicable Standard plan and separate
   task artifact to its own fresh bounded-context producer. Corrections use suitable originating
   producer context or a fresh bounded correction delegate; planner never authors/repairs artifacts
   or falls back inline. Missing usable authorized delegation stops. Planner still owns dialogue,

@@ -809,7 +809,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "explicit owner deferral", "default deferral", "discovery:"),
             ("planner", "constraints **verbatim**", "constraints summarized", "handoff:"),
             ("planner", "Create separate tasks", "Use source checklist", "tiny-flow:"),
-            ("planner", "No independent planning", "Mandatory independent planning", "tiny-flow:"),
+            ("planner", "No additional independent task-planning reviewer", "Mandatory independent planning", "tiny-flow:"),
             ("planner", "template-only", "generic", "standard-preflight:"),
             ("planner", "verify repaired output", "assume valid output", "standard-preflight:"),
             ("planner", "Durably record that approval before `plan_create`", "approval later", "spec-review:"),
@@ -1032,7 +1032,7 @@ class InstructionTests(unittest.TestCase):
             ("missing approval", planner.replace("Durably record that approval before `plan_create`", "REMOVED", 1)),
         ]
         for label, first, second in (
-            ("correction before owner answer", "For each unresolved material finding", "Send actual answers"),
+            ("correction before owner answer", "For each unresolved material decision", "Send actual answers"),
             ("approval before incorporation", "The producer updates", "Durably record that approval"),
         ):
             # Swap complete carrier paragraphs rather than inventing an unrelated trace.
@@ -2320,7 +2320,7 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
             self.assertIn("[the canonical review prompt](references/spec-review.md)", skill)
             prompt = installed / "references/spec-review.md"
             self.assertTrue(prompt.is_file())
-            self.assertIn("# Standard specification skeptical review", prompt.read_text())
+            self.assertIn("# Independent specification review — user-intent fidelity", prompt.read_text())
 
     def test_installer_symlink_discovers_canonical_file_from_unrelated_home(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -2365,10 +2365,10 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
     def assert_spec_review_prompt(self, text):
         for clause in (
             "Product intent and relevant behavioral completeness are review\nperspectives, not a checklist.",
-            "**zero findings**", "return all material unresolved decisions, ranked by importance",
+            "**zero findings**", "return all material findings, ranked by importance",
             "no numerical discovery cap", "Group findings into meaningful areas",
             "exclude duplicates and trivia", "coordinator controls presentation size, not reviewer discovery",
-            "concrete scenario", "reasonable divergent assumptions or\nbehaviors", "their consequences", "specific question, preferably with meaningful\nalternatives", "already answered\nby supplied context, implementation questions, and generic questions.",
+            "concrete scenario", "reasonable divergent\nassumptions or behaviors", "their consequences", "specific question, preferably with\nmeaningful alternatives", "already answered\nby supplied context, implementation questions, and generic questions.",
             "definition of done is clear and aligned with user intent",
             "what must be observably true for the user to consider the outcome complete?",
             "Do not require a new heading or duplicate criteria.",
@@ -2385,7 +2385,7 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
         prompt = (ROOT / "skills/planner/references/spec-review.md").read_text()
         self.assert_spec_review_prompt(prompt)
         for removed in (
-            "**zero findings**", "return all material unresolved decisions,", "no numerical discovery cap",
+            "**zero findings**", "return all material findings,", "no numerical discovery cap",
             "Group findings into meaningful", "exclude duplicates and trivia",
             "already answered", "independent from",
             "no writes, implementation changes,", "operational boundary, not a security sandbox",
@@ -2424,6 +2424,81 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
             unavailable["assignments"]["standard-review"] = {"model": "", "effort": "medium"}
             target.write_text(json.dumps(unavailable))
             self.assert_problem("standard-spec-review", skill, "needs nonempty model and effort")
+
+
+class IntentSpecificationReviewTests(unittest.TestCase):
+    """Carrier/order and mutation evidence for both paths, not live model obedience."""
+
+    def test_both_paths_require_shared_intent_review_before_downstream_work(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        planner = texts["planner"]
+        tiny = checker.section(planner, "### TinySpec path")
+        standard = checker.section(planner, "### Standard path")
+        self.assertEqual(tiny.count("**Specification review"), 1)
+        self.assertEqual(standard.count("**`spec_review`"), 1)
+        for old, new, diagnostic in (
+            (tiny, tiny[:tiny.index("2. **Specification review")] + tiny[tiny.index("3. **Tasks"):], "tiny-spec-review:"),
+            (tiny, tiny.replace("2. **Specification review", "2. **Tasks bypass review", 1), "tiny-review-order:"),
+            (tiny, tiny.replace("tinyspec-spec-review", "standard-spec-review", 1), "tiny-spec-review:"),
+            (standard, standard.replace("shared specification-review contract above", "unrelated review", 1), "spec-review:"),
+        ):
+            with self.subTest(diagnostic=diagnostic):
+                changed = dict(texts)
+                # A retained summary must not satisfy a deleted operational carrier.
+                changed["planner"] = planner.replace(old, new, 1) + "\nSummary: " + old
+                self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
+
+    def test_intent_inputs_dispositions_and_prompt_requirements_cannot_be_dropped(self):
+        texts = checker.load_texts()
+        for key, clauses, diagnostic in (
+            ("planner", (
+                "original\nuser request, actual owner clarifications/decisions",
+                "Do not supply producer rationale, conclusions, or full unrelated transcripts",
+                "saved exact binding is permitted and callable",
+                "Parent evaluates", "Material decisions go to the owner",
+                "Parent inspects producer corrections",
+                "Neither path may progress beyond specification review\nwith unresolved material intent gaps",
+                "No automatic rereview loop",
+            ), "intent-review:"),
+            ("spec_review_prompt", (
+                "relevant user-intent evidence", "affected specification section",
+                "concrete consequence", "correction or\nowner question",
+                "actual problem, intended beneficiary, desired behavior, boundaries, explicit\nexclusions, and observable completion",
+                "omitted requirements, distorted meaning", "invented scope, unnecessary restrictions",
+                "technical solutions that fail to deliver", "explicit user requirements",
+                "necessary derived choices", "revisitable assumptions", "**zero findings**",
+                "Exclude producer conclusions", "not approval",
+            ), "intent-review-prompt:"),
+        ):
+            for clause in clauses:
+                with self.subTest(key=key, clause=clause):
+                    self.assertIn(clause, texts[key])
+                    changed = dict(texts)
+                    changed[key] = texts[key].replace(clause, "REMOVED", 1)
+                    self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
+
+    def test_tinyspec_review_resolves_owner_shared_binding_and_missing_operation_stops(self):
+        assignments = load("intent_assignments", "../skills/planner/scripts/model_assignments.py")
+        actual = json.loads((ROOT / "skills/planner/references/model-assignments.json").read_text())
+        self.assertEqual(actual["operations"]["tinyspec-spec-review"], {"assignment": "standard-review"})
+        self.assertEqual(assignments.resolve("tinyspec-spec-review")["requested"],
+                         assignments.resolve("standard-spec-review")["requested"])
+        with tempfile.TemporaryDirectory() as directory:
+            skill = Path(directory) / "planner"
+            (skill / "references").mkdir(parents=True)
+            (skill / "SKILL.md").write_text("fixture")
+            path = skill / "references/model-assignments.json"
+            actual["assignments"]["standard-review"] = {"model": "example/owner-edit", "effort": "high"}
+            path.write_text(json.dumps(actual))
+            self.assertEqual(assignments.resolve("tinyspec-spec-review", planner_skill=skill)["requested"],
+                             {"model": "example/owner-edit", "effort": "high"})
+            del actual["operations"]["tinyspec-spec-review"]
+            path.write_text(json.dumps(actual))
+            with self.assertRaises(assignments.AssignmentError) as error:
+                assignments.resolve("tinyspec-spec-review", planner_skill=skill)
+            self.assertIn("tinyspec-spec-review", str(error.exception))
+            self.assertIn("no assignment", str(error.exception))
 
 
 class OwnerAssignmentPlannerTests(unittest.TestCase):

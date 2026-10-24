@@ -42,7 +42,7 @@ Avoid vague adjectives, hidden defaults, speculative implementation detail, and 
 - Ask a human when alternatives materially change product scope, architecture, privacy, permissions, irreversible behavior, cost, or a settled requirement.
 - Present concrete options, relevant tradeoffs, and a recommendation; record the decision and rationale in the applicable artifact.
 - Do not choose speculatively to keep the workflow moving.
-- In planner-managed Standard, planning must not begin until the distinct independent specification review has completed, the producer has incorporated any answered material findings, and the current specification has explicit human approval. The reviewer has no edit authority. TinySpec resolves material choices but does not add a separate pre-task source approval.
+- In planner-managed Standard, planning must not begin until the distinct independent specification review has completed, the producer has incorporated any answered material findings, and the current specification has explicit human approval. The reviewer has no edit authority. TinySpec also requires fresh independent read-only specification review primarily for fidelity to the original user request and actual owner answers before task generation, with necessary source-producer corrections and parent inspection. Neither path proceeds with unresolved material intent gaps. TinySpec does not add a separate pre-task source approval or automatic rereview loop.
 
 ### Planning, Tasks, and Analysis
 

@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PATHS = {
     "parsimony": "skills/planner/references/parsimony.md",
     "planner": "skills/planner/SKILL.md",
+    "spec_review_prompt": "skills/planner/references/spec-review.md",
     "tiny": "skills/tiny-spec/SKILL.md",
     "brainstorm": "skills/planning-brainstorming/SKILL.md",
     "approval": "skills/planner/references/approval-and-recovery.md",
@@ -146,7 +147,7 @@ MANAGED_ENTRY_CARRIERS = (
 
 MECHANICAL_CARRIERS = (
     ("planner", "## Selected production and stage handoffs"),
-    ("planner", "item:3. **Review"),
+    ("planner", "item:4. **Review"),
     ("planner", "stage:overall_review"),
     ("helper", "## Planner Standard adapter contract"),
 )
@@ -316,7 +317,7 @@ def check_contracts(texts):
             "UNVERIFIED", "explicit owner deferral", "Do not invent a beneficiary",
             "separately scheduled mechanical work", "missing required memory stops".capitalize(),
             "missing-install report", "question: UNAVAILABLE", "inspect failures before",
-            "Standard-only SpecKit/reviewer/constitution checks happen after Standard")
+            "Standard-only SpecKit/constitution checks happen after Standard")
     require("handoff", p, "constraints **verbatim**", "prior-stage handoff", "Resume originating",
             "Re-present unanswered questions", "selected depth", "current content/revision evidence",
             "Explicit approved implementation scope", "executable runner alone")
@@ -324,10 +325,45 @@ def check_contracts(texts):
     require("tiny-flow", tiny, "**Source creation — saved assignment", "**Tasks — saved assignment",
             "**Review — planner-owned parent binding",
             "invoke `tiny-spec`", "invoke `task-generation` direct adapter",
-            "Create separate tasks", "No independent planning", "**Combined approval:**",
+            "Create separate tasks", "No additional independent task-planning reviewer", "**Combined approval:**",
             "BEFORE `ask_user`", "Denial returns to review", "No SpecKit prerequisite",
             "standalone\n   TinySpec approval", "Record\n   fixes",
             "brief bullet-list executive summary", "immediately proceed to handoff")
+    shared = section(p, "### Shared specification-review contract")
+    require("intent-review", shared,
+            "Both paths require one fresh independent read-only specification review",
+            "fidelity to user intent", "[the canonical review prompt](references/spec-review.md)",
+            "original\nuser request, actual owner clarifications/decisions",
+            "exact current specification path/content identity with readable content",
+            "Do not supply producer rationale, conclusions, or full unrelated transcripts",
+            "saved exact binding is permitted and callable", "async: true",
+            "compare source content before\nand after review", "neither\nedits nor approves",
+            "Parent evaluates", "source producer under its saved producing assignment",
+            "Material decisions go to the owner", "Parent inspects producer corrections",
+            "Neither path may progress beyond specification review\nwith unresolved material intent gaps",
+            "cannot release reliance", "not a new tracker", "No automatic rereview loop",
+            "additional approval gate")
+    tiny_review = re.search(r"\*\*Specification review .*?(?=\n\d+\. \*\*Tasks)", tiny, re.S)
+    require("tiny-spec-review", tiny_review.group() if tiny_review else "",
+            "independent saved reviewer assignment", "tinyspec-spec-review",
+            "shared specification-review contract", "fresh reviewer independent",
+            "necessary producer corrections before task generation", "same saved assignment",
+            "Explicit zero findings", "not a separate TinySpec approval",
+            "Unresolved material intent gaps stop task generation")
+    tiny_order = [tiny.find(marker) for marker in (
+        "**Source creation", "**Specification review", "**Tasks", "**Review", "**Combined approval")]
+    if -1 in tiny_order or tiny_order != sorted(tiny_order):
+        errors.append("tiny-review-order: source → spec review → tasks → parent review → approval required")
+    prompt = texts["spec_review_prompt"]
+    require("intent-review-prompt", prompt,
+            "TinySpec\nor Standard", "primary focus is fidelity",
+            "relevant user-intent evidence", "affected specification section", "concrete consequence",
+            "correction or\nowner question", "actual problem, intended beneficiary, desired behavior, boundaries, explicit\nexclusions, and observable completion",
+            "omitted requirements, distorted meaning", "invented scope, unnecessary restrictions",
+            "technical solutions that fail to deliver", "explicit user requirements",
+            "necessary derived choices", "revisitable assumptions", "**zero findings**",
+            "no numerical discovery cap", "original user request and actual owner clarifications/decisions",
+            "Exclude producer conclusions", "not approval", "no writes, implementation changes")
     std = section(p, "### Standard path")
     positions = [std.find(f"**`{s}`") for s in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review")]
     if -1 in positions or positions != sorted(positions):
@@ -346,7 +382,8 @@ def check_contracts(texts):
             "source-producer and `ask_user` capabilities", "Package/profile names alone are insufficient",
             "stops only this review", "do not substitute, route to another reviewer, or fall back",
             "Dispatch exactly that saved binding unchanged", "async: true",
-            "bind its report to the runtime invocation", "exact\n   current specification path/content identity",
+            "bind its report to the runtime invocation", "shared specification-review contract above",
+            "original user\n   request, actual owner clarifications/decisions", "exact\n   current specification path/content identity",
             "Do not\n   include producer rationale, transcript, or unrelated history",
             "no writes, implementation, external action, or delegation", "before and after review",
             "reviewer and\n   parent never substantively repair", "one concrete `ask_user` question at\n   a time",
@@ -800,8 +837,8 @@ BOUNDARY_CARRIERS = (
 # Actual producer/consumer inputs, not incidental summary keywords.
 DELEGATION_CARRIERS = (
     ("delegate-source", "planner", "item:1. **Source creation", ("delegate `tiny-spec`", "separate fresh", "bounded-context source producer", "unauthorized source", "delegation stops", "no parent creation/substantive correction or inline/local fallback")),
-    ("delegate-tiny-tasks", "planner", "item:2. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/substantive correction or inline/local fallback")),
-    ("delegate-tiny-correction", "planner", "item:3. **Review", ("Delegate uncertain or substantive source/task corrections", "originating context or a fresh bounded correction delegate", "no parent substantive", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
+    ("delegate-tiny-tasks", "planner", "item:3. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/substantive correction or inline/local fallback")),
+    ("delegate-tiny-correction", "planner", "item:4. **Review", ("Delegate uncertain or substantive source/task corrections", "originating context or a fresh bounded correction delegate", "no parent substantive", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
     ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "unauthorized specification delegation stops", "no parent creation/substantive correction or inline/local", "mechanical gaps are resolved by the delegate")),
     ("delegate-spec-review", "planner", "stage:spec_review", ("independent saved reviewer assignment", "standard-spec-review", "Dispatch exactly that saved binding unchanged", "async: true", "fresh independent reviewer", "no writes, implementation, external action, or delegation", "reviewer and\n   parent never substantively repair", "originating `standard-spec-create` producer", "same producing assignment", "no inferred default")),
     ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "unauthorized plan delegation stops", "no parent production/substantive repair", "inline/local fallback", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
@@ -819,7 +856,7 @@ AUTHORITY_CARRIERS = (
     ("quality-tiny-producer", "tiny", "## Compact source contract", ("Read and apply the [SDD quality guidance]", "for specification creation only, including TinySpec", "missing guidance stops", "Retain complete relevant behavior, approach, constraints", "observable acceptance in this source", "gaps return through existing gates", "governing instructions/contracts, memory and permission/safety", "separate tasks remain mandatory")),
     ("truth-plan", "planner", "stage:plan_create", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "governing instructions/contracts, memory and permission/safety")),
     ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
-    ("truth-tiny-task-stage", "planner", "item:2. **Tasks", ("TinySpec is requirements truth", "no SDD forwarding/rereading", "direct requirements input", "Governing instructions/contracts, memory and permission/safety")),
+    ("truth-tiny-task-stage", "planner", "item:3. **Tasks", ("TinySpec is requirements truth", "no SDD forwarding/rereading", "direct requirements input", "Governing instructions/contracts, memory and permission/safety")),
     ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Specification is requirements truth", "approved plan is derived sequencing", "No SDD forwarding/rereading as direct requirements input", "contracts, memory and permission/safety still apply")),
     ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "No SDD forwarding/rereading as direct requirements input", "Trace source", "criteria into task checks", "Governing instructions/contracts, memory and permission/safety", "create-only")),
     ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "No SDD forwarding/rereading as direct requirements", "input", "Trace source criteria into task checks", "Governing instructions/contracts, memory", "permission/safety still apply")),

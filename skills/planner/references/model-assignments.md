@@ -9,9 +9,9 @@ Each operation resolves either a saved `assignment` or explicit
 the owner-launched session; it never supplies a planning default. Saved assignment records
 are shared by reference, so editing one changes every linked operation. The listed operations
 cover planner-parent, both brainstorming calls, TinySpec source/tasks, Standard spec/tasks,
-the direct and helper plan pass, fresh overall review/rereview, and the skeptical
-Standard specification review. `standard-spec-review` references the existing
-`standard-review` assignment; it does not duplicate or hardcode a portable model binding.
+the direct and helper plan pass, fresh overall review/rereview, and both independent
+specification reviews. `tinyspec-spec-review` and `standard-spec-review` reference the existing
+`standard-review` assignment; neither duplicates or hardcodes a portable model binding.
 
 A correction calls `resolve_correction` with its producing operation and therefore keeps that
 producer's assignment. There is no repair profile. If a retained producer context conflicts

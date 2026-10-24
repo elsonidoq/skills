@@ -63,6 +63,24 @@ python3 skills/task-generation/scripts/check-task-order.py scripts/fixtures/plan
 git diff --check
 ```
 
+## User-intent specification review — both paths
+
+Current contracts require TinySpec source → fresh independent read-only specification review
+→ necessary source-producer corrections → tasks → parent review → existing combined approval.
+Standard keeps its existing `spec_review`, now using the same fidelity-focused prompt, before
+its existing specification approval and planning. Neither path releases downstream work with
+unresolved material intent gaps. No new approval, tracker or automatic rereview loop is added.
+The owner selected `tinyspec-spec-review` → shared `standard-review`; future saved edits apply
+to both specification-review operations.
+
+`IntentSpecificationReviewTests` in `scripts/test-planner-workflow.py` checks actual path
+carriers/order, shared prompt integration, input/evidence/finding/correction boundaries, and
+saved-binding resolution/missing-operation failure. Negative mutations remove TinySpec's stage
+while retaining summary text, bypass ordering, misroute its binding, detach Standard from the
+shared review contract, or drop intent requirements. Existing Standard trace and prompt tests
+remain in place. These are offline instruction/fixture checks, not evidence of live reviewer
+fidelity or runtime model compliance. Historical sections below retain their original scope.
+
 ## T001 skeptical specification review contract
 
 Scoped offline result: `python3 scripts/test-planner-workflow.py OwnerAssignmentConfigTests -v`

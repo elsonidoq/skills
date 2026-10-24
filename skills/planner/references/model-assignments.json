@@ -30,6 +30,9 @@
     "tinyspec-source": {
       "assignment": "source-and-tasks"
     },
+    "tinyspec-spec-review": {
+      "assignment": "standard-review"
+    },
     "tinyspec-tasks": {
       "assignment": "source-and-tasks"
     },
