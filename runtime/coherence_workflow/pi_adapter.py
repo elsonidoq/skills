@@ -19,8 +19,17 @@ def host_path():
     return source if source.exists() else Path(sys.prefix) / 'share/coherence-workflow/pi-host/host.mjs'
 
 
-def parent_question(question, *, ready=False):
-    """Use the existing parent socket for readiness or an owner question."""
+def parent_question(question, *, ready=False, owner_only=False, decision_context=None):
+    """Use the existing parent socket for readiness, routine, or owner-only questions."""
+    if ready and (owner_only or decision_context is not None):
+        raise Blocked('parent bridge readiness cannot carry an owner decision')
+    if owner_only:
+        required = ('rejecting_execution', 'review_base', 'review_head', 'scope', 'effect')
+        if not isinstance(decision_context, dict) or any(
+                not isinstance(decision_context.get(key), str) or not decision_context[key] for key in required):
+            raise Blocked('owner-only question needs rejecting execution, reviewed range, scope, and one-pair effect')
+    elif decision_context is not None:
+        raise Blocked('routine parent question cannot carry owner-only decision context')
     endpoint = os.environ.get('COHERENCE_PARENT_BRIDGE_SOCKET')
     token = os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN')
     session = os.environ.get('COHERENCE_PARENT_BRIDGE_SESSION')
@@ -31,8 +40,11 @@ def parent_question(question, *, ready=False):
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
             client.connect(endpoint)
-            client.sendall((canonical({'type': 'ready' if ready else 'question', 'request_id': request_id, 'run_id': run,
-                                      'session_id': session, 'token': token, 'question': question}) + '\n').encode())
+            request = {'type': 'ready' if ready else 'question', 'request_id': request_id, 'run_id': run,
+                       'session_id': session, 'token': token, 'question': question}
+            if owner_only:
+                request.update({'owner_only': True, 'decision_context': decision_context})
+            client.sendall((canonical(request) + '\n').encode())
             stream = client.makefile('r', encoding='utf-8')
             try:
                 line = stream.readline()
@@ -56,6 +68,8 @@ def parent_question(question, *, ready=False):
         return
     if not isinstance(response.get('answer'), str):
         raise Blocked('parent owner bridge returned an invalid answer')
+    if owner_only and not response['answer'].strip():
+        raise Blocked('parent owner bridge returned an empty owner answer; ask the owner again or stop')
     return response['answer']
 
 

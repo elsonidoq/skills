@@ -258,6 +258,40 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
         self.assertEqual(received[0]['run_id'], 'run')
         self.assertNotIn('PRIVATE-SENTINEL', str(received[0] | {'question': '<redacted>'}))
 
+    def test_owner_only_question_carries_context_and_rejects_empty_answer(self):
+        endpoint = str(self.root/'owner-only.sock')
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+            server.bind(endpoint)
+            server.listen(1)
+            received = []
+            def serve():
+                client, _ = server.accept()
+                with client:
+                    request = json.loads(client.makefile('r', encoding='utf-8').readline())
+                    received.append(request)
+                    client.sendall((json.dumps({'request_id': request['request_id'], 'answer': '  '}) + '\n').encode())
+            thread = threading.Thread(target=serve)
+            thread.start()
+            values = {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint, 'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
+                      'COHERENCE_PARENT_BRIDGE_SESSION': 'session', 'COHERENCE_PARENT_BRIDGE_RUN': 'run'}
+            context = {'rejecting_execution': 'review-2', 'review_base': 'base', 'review_head': 'head',
+                       'scope': 'original task scope', 'effect': 'one repair/review pair; no repeat'}
+            with patch.dict(os.environ, values, clear=False), \
+                 self.assertRaisesRegex(Blocked, 'empty owner answer'):
+                parent_question('Authorize one pair?', owner_only=True, decision_context=context)
+            thread.join()
+        self.assertEqual(received[0]['owner_only'], True)
+        self.assertEqual(received[0]['decision_context'], context)
+
+    def test_owner_only_question_requires_complete_context(self):
+        with self.assertRaisesRegex(Blocked, 'owner-only question needs'):
+            parent_question('Authorize?', owner_only=True, decision_context={'scope': 'only'})
+
+    def test_interactive_terminal_answer_is_direct_owner_input(self):
+        with patch('sys.stdin.isatty', return_value=True), patch('builtins.input', return_value='yes') as prompt:
+            self.assertEqual(terminal_question('Authorize one pair?'), 'yes')
+        prompt.assert_called_once_with('Authorize one pair?\n> ')
+
     def test_parent_readiness_requires_positive_correlated_response(self):
         for ready, correlate in [(True, True), (False, True), (True, False)]:
             with self.subTest(ready=ready, correlate=correlate):

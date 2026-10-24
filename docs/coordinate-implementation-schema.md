@@ -191,8 +191,8 @@ cancellation, EOF or disposal closes the target without retargeting. Without thi
 the original uncorrelated callback/reply vocabulary remains the only transport vocabulary;
 `sessionObservations` alone does not select steering. When explicitly launched by the project parent-session bridge, the adapter uses one private
 Unix-socket request/reply connection with a token, parent session, run and request identity; EOF,
-unavailable endpoints and uncorrelated replies stop with the actual bridge error. The bridge keeps
-its pending request only in memory and never stores question or answer text in monitoring SQLite.
+unavailable endpoints and uncorrelated replies stop with the actual bridge error. An owner-only continuation request additionally carries a marker and decision context (rejecting execution, original reviewed base/head, original scope, and exactly one repair/fresh-review pair with no repeat grant). The bridge keeps that marker through its in-memory pending/reply correlation, requires registered `ask_user`, rejects the routine reply route, and accepts only a nonempty answer relayed through its dedicated owner-reply route. This does not attest human identity or persist a transcript: the bridge keeps
+its pending request only in memory and never stores question or answer text in monitoring SQLite or public projections. Missing owner capability, cancellation, empty answer, or invalid correlation stops actionably; routine technical questions retain their ordinary coordinator route.
 Invalid framing/types are communication errors, not permanent launch poison. No record size
 cap, pressure protocol, watchdog, telemetry prerequisite or closed host manifest.
 SDK tools handle normal read/edit/write/search/command errors and output continuation.

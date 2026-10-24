@@ -12,7 +12,7 @@ const repository = fileURLToPath(new URL('../../', import.meta.url));
 const bridgeModule = pathToFileURL(path.join(repository, '.pi/extensions/coordinate-implementation-bridge.js')).href;
 
 // Exercise Pi's normal project discovery, not a direct import of the factory.
-test('Pi discovers the project bridge and registers both tools without explicit paths', async () => {
+test('Pi discovers the project bridge and registers its tools without explicit paths', async () => {
   const {DefaultResourceLoader, SettingsManager} = await import('../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js');
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-discovery-'));
   try {
@@ -31,6 +31,7 @@ test('Pi discovers the project bridge and registers both tools without explicit 
       extension.tools.has('coordinate_implementation_start'));
     assert.ok(bridge, 'normal project discovery must register the bridge start tool');
     assert.ok(bridge.tools.has('coordinate_implementation_reply'));
+    assert.ok(bridge.tools.has('coordinate_implementation_owner_reply'));
     assert.ok(bridge.tools.has('coordinate_implementation_steer'));
   } finally {
     await fs.rm(root, {recursive: true, force: true});
@@ -162,7 +163,8 @@ async function fixture({hold = false, paidScope = false, paidApis = []} = {}) {
   const node = path.join(root, 'offline-node');
   const marker = path.join(root, 'host-started');
   await fs.writeFile(tasks, JSON.stringify({...(paidScope ? {paid_scope: {approved: true, agent_providers: ['fixture'], apis: ['fixture test API']}} : {}), paid_apis: paidApis, tasks: [{id: 'question', description: 'Ask then continue'}]}));
-  await fs.writeFile(executor, JSON.stringify({provider: 'fixture', model: 'offline', effort: 'medium'}));
+  await fs.writeFile(executor, JSON.stringify({provider: 'fixture', model: 'offline', effort: 'medium',
+    reviewer: {provider: 'fixture', model: 'offline', effort: 'medium'}}));
   await fs.writeFile(host, hold ? `import os, pathlib, sys, time
 json = __import__('json')
 request=json.loads(input())

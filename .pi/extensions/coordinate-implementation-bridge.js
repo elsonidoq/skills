@@ -19,6 +19,12 @@ const replyParameters = {
     request_id: {type: 'string'}, run: {type: 'string'}, answer: {type: 'string'},
   }, required: ['request_id', 'run', 'answer'],
 };
+const ownerReplyParameters = {
+  type: 'object', additionalProperties: false,
+  properties: {
+    request_id: {type: 'string'}, run: {type: 'string'}, answer: {type: 'string'},
+  }, required: ['request_id', 'run', 'answer'],
+};
 const steerParameters = {
   type: 'object', additionalProperties: false,
   properties: {
@@ -110,10 +116,17 @@ export default function coordinateImplementationBridge(pi) {
         {triggerTurn: false});
       return;
     }
+    const ownerOnly = request?.owner_only === true;
+    const context = request?.decision_context;
+    const validOwnerContext = context && typeof context === 'object' && !Array.isArray(context) &&
+      ['rejecting_execution', 'review_base', 'review_head', 'scope', 'effect'].every(key =>
+        typeof context[key] === 'string' && context[key]);
     if (!request || !['ready', 'question'].includes(request.type) || request.token !== bridge.token ||
         request.session_id !== bridge.session || request.run_id !== bridge.run ||
         typeof request.request_id !== 'string' || !request.request_id ||
-        (request.type === 'question' && typeof request.question !== 'string')) {
+        (request.type === 'question' && typeof request.question !== 'string') ||
+        (request.type === 'ready' && (ownerOnly || context !== undefined)) ||
+        (request.type === 'question' && ((ownerOnly && !validOwnerContext) || (!ownerOnly && context !== undefined)))) {
       send(socket, {request_id: request?.request_id, error: 'bridge request does not target this parent session and run'});
       return;
     }
@@ -129,11 +142,18 @@ export default function coordinateImplementationBridge(pi) {
       send(socket, {request_id: request.request_id, error: 'parent owner bridge already has a pending question'});
       return;
     }
-    bridge.pending = {request_id: request.request_id, socket};
+    if (ownerOnly && !pi.getActiveTools().includes('ask_user')) {
+      send(socket, {request_id: request.request_id, error: 'registered ask_user capability unavailable; open a session with ask_user and ask the owner'});
+      return;
+    }
+    bridge.pending = {request_id: request.request_id, socket, ownerOnly};
+    const ownerInstruction = ownerOnly
+      ? `This is an owner-only continuation decision, not routine coordinator triage. Call registered ask_user with this decision context and relay only the actual owner answer using coordinate_implementation_owner_reply with request_id ${request.request_id} and run ${bridge.run}. Do not self-consent or use coordinate_implementation_reply.\n\nDecision context: rejecting execution ${context.rejecting_execution}; reviewed range ${context.review_base} → ${context.review_head}; original scope ${context.scope}; effect ${context.effect}.`
+      : `Triage this as coordinator: investigate and reply for routine authorized technical matters. Ask the owner and reply with their actual answer only for material product, scope, or permission decisions. Then call coordinate_implementation_reply with request_id ${request.request_id} and run ${bridge.run}.`;
     pi.sendMessage({
       customType: 'coordinate_implementation_question', display: true,
-      content: `Coordinate implementation needs a response before continuing: ${request.question}\n\nTriage this as coordinator: investigate and reply for routine authorized technical matters. Ask the owner and reply with their actual answer only for material product, scope, or permission decisions. Then call coordinate_implementation_reply with request_id ${request.request_id} and run ${bridge.run}.`,
-      details: {request_id: request.request_id, run: bridge.run},
+      content: `Coordinate implementation needs a response before continuing: ${request.question}\n\n${ownerInstruction}`,
+      details: {request_id: request.request_id, run: bridge.run, ...(ownerOnly ? {owner_only: true, decision_context: context} : {})},
     }, {triggerTurn: true, deliverAs: 'followUp'});
   };
 
@@ -259,17 +279,35 @@ export default function coordinateImplementationBridge(pi) {
 
   pi.registerTool({
     name: 'coordinate_implementation_reply', label: 'Reply to coordinate implementation',
-    description: 'Return the coordinator response for a routine authorized technical matter, or the actual owner answer for a material decision, to the exact pending coordinate-implementation question.',
+    description: 'Return the coordinator response for an exact pending routine authorized technical question.',
     parameters: replyParameters, executionMode: 'sequential',
     async execute(_id, params, _signal, _update, ctx) {
       if (!active || ctx.sessionManager.getSessionId() !== active.session || params.run !== active.run ||
           !active.pending || params.request_id !== active.pending.request_id) {
         throw new Error('no matching pending coordinate-implementation question');
       }
+      if (active.pending.ownerOnly) throw new Error('owner-only decision requires registered ask_user and coordinate_implementation_owner_reply');
       const pending = active.pending;
       active.pending = undefined;
       send(pending.socket, {request_id: params.request_id, answer: params.answer});
-      return textResult('Returned the response to the waiting worker.', {request_id: params.request_id, run: params.run});
+      return textResult('Returned the routine response to the waiting worker.', {request_id: params.request_id, run: params.run});
+    },
+  });
+
+  pi.registerTool({
+    name: 'coordinate_implementation_owner_reply', label: 'Return actual owner decision',
+    description: 'Relay only the actual answer returned by registered ask_user for an exact pending owner-only continuation decision.',
+    parameters: ownerReplyParameters, executionMode: 'sequential',
+    async execute(_id, params, _signal, _update, ctx) {
+      if (!active || ctx.sessionManager.getSessionId() !== active.session || params.run !== active.run ||
+          !active.pending || params.request_id !== active.pending.request_id || !active.pending.ownerOnly) {
+        throw new Error('no matching pending owner-only coordinate-implementation decision');
+      }
+      if (!params.answer.trim()) throw new Error('owner-only decision needs a nonempty actual owner answer');
+      const pending = active.pending;
+      active.pending = undefined;
+      send(pending.socket, {request_id: params.request_id, answer: params.answer});
+      return textResult('Relayed the actual owner answer to the waiting worker.', {request_id: params.request_id, run: params.run});
     },
   });
 
