@@ -1,5 +1,23 @@
 # Planner Regression Guide
 
+## Independent Spec Review — current owner disposition (2026-10-23)
+
+The owner explicitly removed the planned live A–D evaluation from this delivery's
+scope and will validate through normal skill use and iteration. Earlier NOT RUN
+reports and final-review findings below remain historical evidence, not a current
+live-validation blocker or a claim that behavioral evaluation passed. The scoped
+correction and supersession are recorded in
+[independent Spec Review task approval](independent-spec-review-tasks.md#approval-record).
+
+The parent directly repaired the task-generation preservation test's stale stage
+selector: select `overall_review` by its stable heading rather than stage number.
+Both existing authorization-neutrality assertions remain unchanged. This avoids
+repeating the regression when an earlier stage is inserted; it changes no workflow
+behavior. Correction verification: `python3 skills/task-generation/scripts/test_contract.py`
+PASS (12 tests); `python3 scripts/check-planner-workflow.py` PASS;
+`python3 scripts/test-planner-workflow.py` PASS (167 tests); `git diff --check` PASS.
+No live evaluation, delegation or additional review loop was performed.
+
 ## What the checks prove
 
 `bash scripts/check-skills-lint.sh` runs frontmatter lint, operational instruction

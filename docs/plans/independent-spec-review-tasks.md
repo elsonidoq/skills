@@ -10,6 +10,17 @@ owns the exact work instructions, owned paths and task-local REQUIRED checks.
 
 ### Approval record
 
+**Current owner scope correction (2026-10-23):** After implementation review, the
+owner instructed the parent to repair the stale stage-selector test directly, without
+delegation, and explicitly excluded the planned live A–D behavioral evaluation from
+this delivery: “I will use the skill to build something and iterate if something does
+not work. This is not in the scope.” This supersedes the live-evaluation prerequisites
+in the original source/tasks below and executable JSON; those historical instructions
+are not current delivery blockers. Live evaluation remains NOT RUN, not passed.
+Existing functional behavior, static regression checks and real user decision gates
+when using the skill remain required. No additional implementation run is authorized
+or needed for that excluded evaluation.
+
 Owner selected TinySpec through `ask_user` and authorized task preparation. On
 2026-10-23, after the parent presented the source/scope, each ordered T001–T003 outcome,
 exclusions, review results and limitations, the owner answered **“Approve planning-only
