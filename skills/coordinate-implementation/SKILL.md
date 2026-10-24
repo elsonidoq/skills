@@ -34,8 +34,18 @@ consumes only approved constraints and gotchas.
 ## Prepare Approved Execution
 
 Read actual `scripts/coordinate-implementation --help` and the [operating guide](../../docs/coordinate-implementation.md).
-Supply project, task file and executor JSON containing the owner-selected executor/effort
-(provider, model, effort), without silent substitutions. There is no owner catalog or binding
+Resolve the executor once with
+`python3 scripts/resolve-workflow-executor.py --project PROJECT_ROOT` from the suite checkout
+([resolver](../../scripts/resolve-workflow-executor.py)), or reuse the exact absolute path already
+resolved in the approved handoff. Add `--executor PATH` only for an explicit override; relative
+overrides are project-root-relative. Otherwise only `PROJECT_ROOT/.pi/workflow-executor.json`
+is selected. Pass the exact absolute stdout path as `--executor CONFIG` to the CLI or as `executor`
+to the parent start tool and unchanged to downstream work. Keep downstream configuration reads
+and validation; do not repeat discovery. Explicit resume retains its recorded executor input.
+Never search neighboring repositories, home directories, other worktrees or historical task files,
+fall back after a failed override, create/copy configuration, authenticate providers or invoke a
+model merely to resolve it. Supply project, task file and executor JSON containing the
+owner-selected executor/effort (provider, model, effort), without silent substitutions. There is no owner catalog or binding
 assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical
 fixes, isolated tests/servers, necessary local/in-project dependency setup, and current-task artifact
 lifecycle need no owner question; this authority does not prove checks passed. No global install, auth

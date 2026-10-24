@@ -74,6 +74,16 @@ as unavailable.
 
 ## Executor guidance
 
+Use the exact absolute executor path already resolved by the coordinator/planner; do not search
+again. On standalone entry without a resolved path, run
+`python3 scripts/resolve-workflow-executor.py --project PROJECT_ROOT` from the suite checkout
+([resolver](../../scripts/resolve-workflow-executor.py)); add `--executor PATH` only for an explicit
+override. Relative overrides are project-root-relative; otherwise only
+`PROJECT_ROOT/.pi/workflow-executor.json` is selected. Pass the resulting absolute path unchanged
+in downstream briefs/handoffs. Never search neighboring repositories, home directories, other
+worktrees or historical tasks, fall back after a failed override, create/copy configuration,
+authenticate providers, invoke models to resolve configuration or invent model/effort selections.
+
 Before either adapter decomposes work, the producer itself must read the current project's selected
 executor JSON at the exact path supplied in its brief. Use that JSON's valid worker model and effort
 for bounded implementation guidance; do not use a planner/parent/producer profile, remembered
