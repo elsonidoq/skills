@@ -14,7 +14,7 @@ from coherence_workflow.metric_artifacts import create_artifact
 from coherence_workflow.store import Authority, git
 from coherence_workflow.processes import process_identity
 from workflow_monitor.app import create_app
-from workflow_monitor.reader import Reader
+from workflow_monitor.projects import Projects
 import uvicorn
 
 
@@ -41,7 +41,8 @@ def metric_record(run, invocation, mode, actual, *, partial=False):
 
 
 with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as temporary:
-    project = Path(temporary)
+    project = Path(temporary) / 'projects' / 'fixture'
+    project.mkdir(parents=True)
     git(project, 'init', '-q')
     git(project, 'config', 'user.name', 'Offline fixture')
     git(project, 'config', 'user.email', 'fixture@example.invalid')
@@ -208,4 +209,4 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     with artifact.path.open('a') as output:
                         output.write('{invalid metric record}\n')
             owner.store.db.execute('UPDATE execution_runs SET state=? WHERE run_id=?', ('failed' if run in ('stopping', 'before-agent') else 'completed', run))
-    uvicorn.run(create_app(Reader(project), ROOT / 'workflow_monitor/web/dist', 4174), host='127.0.0.1', port=4174, access_log=False, log_level='critical')
+    uvicorn.run(create_app(Projects(project.parent), ROOT / 'workflow_monitor/web/dist', 4174), host='127.0.0.1', port=4174, access_log=False, log_level='critical')

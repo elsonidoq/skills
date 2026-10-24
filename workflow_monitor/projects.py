@@ -15,6 +15,7 @@ import subprocess
 from typing import Iterable
 
 from .reader import Reader, ReaderError
+from .recordings import PRESERVED_DIRECTORY, RecordingError
 
 _GIT_ENV = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR",
             "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES")
@@ -97,6 +98,11 @@ class Projects:
             self._projects = self._discover()
         return self._projects
 
+    def refresh(self) -> tuple[Project, ...]:
+        """Re-read the inventory on an explicit page reload, without writing storage."""
+        self._projects = self._discover()
+        return self._projects
+
     def resolve_project(self, project_ref: str) -> Project | None:
         return next((project for project in self.inventory() if project.ref == project_ref), None)
 
@@ -151,14 +157,32 @@ class Projects:
         projects: list[Project] = []
         for common, members in groups.items():
             recordings: list[Recording] = []
+            main_worktree: Path | None = None
             for worktree, (_, admin, _) in sorted(members.items(), key=lambda item: str(item[0])):
                 label = "main" if admin == common else "linked"
+                if label == "main":
+                    main_worktree = worktree
                 try:
                     reader: Reader | None = Reader(worktree)
                     state = "available" if reader.database.exists() else "no_store"
                 except (OSError, ReaderError):
                     reader, state = None, "unavailable"
                 recordings.append(Recording(_opaque("recording", admin), label, state, reader, worktree))
+            # Complete captures are separate recordings.  Binding validates their fixed
+            # layout; incomplete or unsafe entries remain unavailable rather than hiding
+            # the healthy live recordings.
+            if main_worktree is not None:
+                preserved_root = main_worktree / ".coherence" / PRESERVED_DIRECTORY
+                try:
+                    entries = list(preserved_root.iterdir())
+                except OSError:
+                    entries = []
+                for entry in sorted(entries, key=lambda item: item.name):
+                    try:
+                        reader = Reader.preserved(main_worktree, entry.name)
+                    except (OSError, ReaderError, RecordingError):
+                        continue
+                    recordings.append(Recording(_opaque("recording", entry), "preserved", "available", reader, main_worktree))
             # Git common-directory identity, not branch/cwd/directory spelling, is the group.
             projects.append(Project(_opaque("project", common), "main", tuple(recordings), common))
         return tuple(sorted(projects, key=lambda project: project.ref))

@@ -27,8 +27,10 @@ class ChainMappingTests(ProjectTest):
         task = {"id": "dummy", "description": "synthetic only", "owned_paths": ["owned.txt"]}
         if checks:
             task["checks"] = [["/bin/sh", "-c", 'test "$(cat owned.txt)" = fixed']]
+        answers = iter(("yes", "no") if run_id == "final" else ("yes",))
         with Authority(self.project) as owner:
-            engine = Engine(owner, run_id, admit({"tasks": [task]}), EXECUTOR, adapter=adapter, paid_scope=SCOPE)
+            engine = Engine(owner, run_id, admit({"tasks": [task]}), EXECUTOR, adapter=adapter,
+                            question=lambda *_args, **_kwargs: next(answers, "no"), paid_scope=SCOPE)
             if raises:
                 with self.assertRaisesRegex(Blocked, raises):
                     engine.invoke()
@@ -234,7 +236,7 @@ class ChainMappingTests(ProjectTest):
             def prompt(self, prompt, **kwargs):
                 if kwargs.get("read_only"):
                     Repaired.reviews += 1
-                    return ('{"approved":false,"findings":["owned.txt:1 - safe defect", "PRIVATE-SENTINEL"]}'
+                    return ('{"approved":false,"findings":["owned.txt:1 - safe defect"],"suggestions":["PRIVATE-SENTINEL"]}'
                             if Repaired.reviews == 1 else '{"approved":true,"findings":[]}')
                 if "Actionable findings:" in prompt:
                     kwargs["claim"]("owned.txt"); project.joinpath("owned.txt").write_text("broken\n")
@@ -265,7 +267,7 @@ class ChainMappingTests(ProjectTest):
 
         self._run("approved", Approval)
         self._run("repaired", Repaired, checks=True)
-        self._run("final", FinalRejection, raises="final")
+        self._run("final", FinalRejection, raises="owner did not authorize")
         self._run("fixer-failure", FixerFailure, raises="fixer failure")
 
         dto = minimize(normalize(Reader(self.project).open_snapshot()))
@@ -284,8 +286,9 @@ class ChainMappingTests(ProjectTest):
         self.assertTrue(dto["chain_acceptance"][by_run["repaired"]]["terminal_execution_ref"])
         self.assertEqual([item["role"] for item in dto["chain"] if item["run_ref"] == by_run["approved"]], ["reviewer"])
         self.assertEqual([(item["role"], item["outcome"]) for item in dto["chain"] if item["run_ref"] == by_run["final"]],
-                         [("reviewer", "rejected"), ("reviewer", "rejected")])
-        self.assertEqual([(item["fixing_round"], item["outcome"]) for item in dto["fixing_rounds"] if item["run_ref"] == by_run["final"]], [(1, "approved")])
+                         [("reviewer", "rejected"), ("reviewer", "rejected"), ("reviewer", "rejected")])
+        self.assertEqual([(item["fixing_round"], item["outcome"]) for item in dto["fixing_rounds"] if item["run_ref"] == by_run["final"]],
+                         [(1, "approved"), (2, "approved")])
         self.assertEqual([(item["role"], item["outcome"]) for item in dto["chain"] if item["run_ref"] == by_run["fixer-failure"]],
                          [("reviewer", "rejected")])
         self.assertEqual([(item["fixing_round"], item["outcome"]) for item in dto["fixing_rounds"] if item["run_ref"] == by_run["fixer-failure"]], [(1, "failed")])

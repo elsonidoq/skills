@@ -1,8 +1,10 @@
 """Actual Git/SQLite fixtures for read-only multi-worktree discovery."""
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -13,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "runtime"))
 
 from coherence_workflow.store import Authority, git
+from workflow_monitor.app import create_app
 from workflow_monitor.projects import Projects
 from workflow_monitor.reader import Reader
 
@@ -119,6 +122,38 @@ class ProjectTests(unittest.TestCase):
         replacement.write_bytes(database.read_bytes())
         os.replace(replacement, database)
         self.assertEqual(alpha.reader.open_snapshot("first")["state"], "unavailable")
+
+    def test_project_http_qualifies_collisions_and_keeps_preserved_source_after_removal(self):
+        from starlette.testclient import TestClient
+        self._record(self.alpha, "same")
+        self._record(self.external, "same")
+        capture = self.alpha / ".coherence/preserved-recordings/capture-1"
+        (capture / "metrics").mkdir(parents=True)
+        shutil.copyfile(self.external / ".coherence/workflow/workflow.sqlite", capture / "monitor.sqlite")
+        (capture / "recording.json").write_text(json.dumps({"version": 1, "state": "complete", "recording_id": "capture-1", "origin_id": "origin-1"}))
+        assets = self.base / "assets"; assets.mkdir(); (assets / "index.html").write_text("safe")
+        projects = Projects(self.root)
+        client = TestClient(create_app(projects, assets, 8765), base_url="http://127.0.0.1:8765")
+        headers = {"sec-fetch-site": "same-origin", "x-workflow-monitor": "1"}
+        listed = client.get("/api/monitor/v1/projects", headers=headers)
+        self.assertEqual(listed.status_code, 200)
+        alpha = next(item for item in listed.json()["projects"] if len(item["recordings"]) == 4)
+        runs = client.get(f"/api/monitor/v1/projects/{alpha['ref']}/runs", headers=headers)
+        self.assertEqual(runs.status_code, 200)
+        values = runs.json()["runs"]
+        self.assertEqual(len({item["ref"] for item in values}), len(values))
+        self.assertEqual(len({item["display_id"] for item in values}), len(values))
+        recording = next(item for item in alpha["recordings"] if item["label"] == "preserved")
+        preserved = next(item for item in values if item["display_id"] == recording["ref"].split("_", 1)[1][:12] + "-same")
+        snapshot = client.get(f"/api/monitor/v1/projects/{alpha['ref']}/runs/{preserved['ref']}/snapshot", headers=headers)
+        self.assertEqual(snapshot.status_code, 200)
+        self.assertIn(preserved["display_id"], {item["display_id"] for item in snapshot.json()["runs"]})
+        git(self.alpha, "worktree", "remove", "--force", str(self.external))
+        refreshed = Projects(self.root)
+        client = TestClient(create_app(refreshed, assets, 8765), base_url="http://127.0.0.1:8765")
+        alpha = next(item for item in client.get("/api/monitor/v1/projects", headers=headers).json()["projects"] if item["ref"] == alpha["ref"])
+        self.assertIn("preserved", {item["label"] for item in alpha["recordings"]})
+        self.assertEqual(client.get(f"/api/monitor/v1/projects/{alpha['ref']}/runs/{preserved['ref']}/snapshot", headers=headers).status_code, 200)
 
     def test_empty_and_invalid_roots_are_honest(self):
         empty = self.base / "empty"

@@ -599,4 +599,144 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
     return app
 
 
+# The single-recording application above remains the presentation implementation.  The
+# project dispatcher below gives each project its own composed reader and consequently
+# its own fallback/freshness state; a failed recording can never reuse another
+# recording's last-safe snapshot.
+from .projects import Projects, Project, Recording
+
+
+class _ProjectReader:
+    def __init__(self, project: Project):
+        self.project = project
+        self._last_safe: dict[str, dict[str, Any]] = {}
+
+    def open_snapshot(self) -> dict[str, Any]:
+        combined: dict[str, Any] = {"runs": [], "observations": [], "review_details": [],
+                                    "metrics": {}, "metric_artifacts": {}, "activities": [],
+                                    "review_acceptance": {}, "chain": [], "fixing_rounds": [],
+                                    "chain_acceptance": {}}
+        snapshots: list[tuple[Recording, dict[str, Any]]] = []
+        for recording in self.project.recordings:
+            if recording.reader is None:
+                continue
+            try:
+                raw = recording.reader.open_snapshot()
+            except Exception:
+                raw = {"state": "unavailable"}
+            if raw.get("state") != "ok":
+                raw = self._last_safe.get(recording.ref, raw)
+            else:
+                self._last_safe[recording.ref] = copy.deepcopy(raw)
+            if raw.get("state") == "ok":
+                snapshots.append((recording, raw))
+        # Keep a unique live display ID where possible.  Preserved recordings are
+        # always explicitly qualified with their stable opaque capture hash.
+        counts: dict[str, int] = {}
+        for _, raw in snapshots:
+            for row in raw.get("runs", []):
+                if isinstance(row, dict) and isinstance(row.get("run_id"), str):
+                    counts[row["run_id"]] = counts.get(row["run_id"], 0) + 1
+        for recording, raw in snapshots:
+            value = copy.deepcopy(raw)
+            qualifier = recording.ref.partition("_")[2][:12]
+            names = {row["run_id"]: (f"{qualifier}-{row['run_id']}" if recording.label == "preserved" or counts[row["run_id"]] > 1 else row["run_id"])
+                     for row in value.get("runs", []) if isinstance(row, dict) and isinstance(row.get("run_id"), str)}
+            def rewrite(item: Any) -> Any:
+                if isinstance(item, str):
+                    return names.get(item, item)
+                if isinstance(item, list):
+                    return [rewrite(child) for child in item]
+                if isinstance(item, dict):
+                    return {names.get(key, key) if isinstance(key, str) else key: rewrite(child)
+                            for key, child in item.items()}
+                return item
+            value = rewrite(value)
+            for key, item in value.items():
+                if key == "state":
+                    continue
+                if isinstance(item, list):
+                    combined.setdefault(key, []).extend(item)
+                elif isinstance(item, dict):
+                    combined.setdefault(key, {}).update(item)
+        return {"state": "ok", **combined} if snapshots else {"state": "unavailable"}
+
+
+def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette:
+    if type(port) is not int or not 1 <= port <= 65535:
+        raise ValueError("port must be a valid TCP port")
+    expected_host = f"127.0.0.1:{port}"
+    readers: dict[str, Starlette] = {}
+
+    def secure(response: Response) -> Response:
+        response.headers.update({"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
+                                 "Referrer-Policy": "no-referrer", "X-Frame-Options": "DENY",
+                                 "Content-Security-Policy": _CSP})
+        return response
+
+    def project_list() -> list[dict[str, Any]]:
+        return [{"ref": project.ref, "label": project.label,
+                 "recordings": [{"ref": item.ref, "label": item.label, "state": item.state}
+                                for item in project.recordings]}
+                for project in projects.inventory()]
+
+    async def listed(request: Request) -> Response:
+        return JSONResponse({"monitor_version": 1, "projects": project_list()})
+
+    async def proxy(request: Request) -> Response:
+        project = projects.resolve_project(request.path_params["project_ref"])
+        if project is None:
+            return _error("not_found", 404)
+        inner = readers.get(project.ref)
+        if inner is None:
+            inner = _create_single_app(_ProjectReader(project), assets, port)
+            readers[project.ref] = inner
+        rest = request.path_params.get("rest", "")
+        prefix = "/api/monitor/v1/projects/" + project.ref
+        path = "/api/monitor/v1" + ("/" + rest if rest else "/runs") if request.url.path.startswith(prefix) else "/" + rest
+        scope = dict(request.scope)
+        scope["path"] = path
+        scope["raw_path"] = path.encode("utf-8")
+        messages: list[dict[str, Any]] = []
+        async def receive() -> dict[str, Any]:
+            return {"type": "http.request", "body": b"", "more_body": False}
+        async def send(message: dict[str, Any]) -> None:
+            messages.append(message)
+        await inner(scope, receive, send)
+        start = next(item for item in messages if item["type"] == "http.response.start")
+        body = b"".join(item.get("body", b"") for item in messages if item["type"] == "http.response.body")
+        headers = {key.decode("latin-1"): value.decode("latin-1") for key, value in start["headers"]}
+        return Response(body, status_code=start["status"], headers=headers, media_type=None)
+
+    async def protected(request: Request, call_next):
+        host = request.headers.get("host")
+        if host != expected_host or request.method not in {"GET", "HEAD"}:
+            return secure(_error("bad_request", 400))
+        if request.url.path.startswith("/api/"):
+            origin = request.headers.get("origin")
+            if origin is not None and origin != f"http://{expected_host}":
+                return secure(_error("bad_request", 400))
+            if request.headers.get("sec-fetch-site") != "same-origin" or request.headers.get("x-workflow-monitor") != "1":
+                return secure(_error("bad_request", 400))
+        try:
+            return secure(await call_next(request))
+        except Exception:
+            return secure(_error("internal", 500, retryable=True))
+
+    app = Starlette(routes=[
+        Route("/api/monitor/v1/projects", listed, methods=["GET"]),
+        Route("/api/monitor/v1/projects/{project_ref}/{rest:path}", proxy, methods=["GET"]),
+        Route("/projects/{project_ref}/{rest:path}", proxy, methods=["GET", "HEAD"]),
+    ])
+    app.add_middleware(BaseHTTPMiddleware, dispatch=protected)
+    return app
+
+
+_create_single_app = create_app
+
+def create_app(reader: SnapshotReader | Projects, assets: str | Path, port: int) -> Starlette:
+    """Create either the legacy single reader view or project-scoped monitor routes."""
+    return _project_app(reader, assets, port) if isinstance(reader, Projects) else _create_single_app(reader, assets, port)
+
+
 __all__ = ["create_app"]

@@ -132,14 +132,21 @@ asset-building overrides. Stopping it is the rollback: it closes observation onl
 Git, authoritative SQLite rows, and any writer untouched. It serves only the fixed startup asset inventory (not
 sourcemaps, symlinks, directories, or arbitrary files). Rebuilding the active asset directory replaces hashed JS/CSS filenames but does not refresh that startup inventory: the HTML can load while its assets return JSON 404 responses and browser MIME errors. Finish the build before starting/restarting the monitor, or serve a separate copy of the built assets for a stable preview while another process rebuilds. Restart only the monitor, not the workflow worker or Pi session.
 
-It exposes closed GET routes. A direct run shell uses `/runs/id-<percent-encoded actual run ID>`: the server validates one raw encoded component before routing can decode a slash, then serves only the fixed startup `index.html`. Unknown IDs are resolved by the client against its inventory; malformed IDs, extra path segments, APIs, and assets receive closed errors rather than an HTML fallback.
+It exposes closed GET routes. Project and recording-qualified opaque references are the
+only browser/API selectors; browser values never become paths. A direct run shell uses
+`/projects/{project_ref}/runs/id-<percent-encoded qualified run ID>` and validates the
+raw encoded component before serving only the fixed startup `index.html`. Unknown IDs,
+malformed IDs, extra segments, APIs, and assets receive closed errors rather than an HTML
+fallback. Responses expose no absolute path, Git-admin identity, private recording
+payload, or raw exception.
 
-- `/runs/id-<percent-encoded actual run ID>`
-- `/api/monitor/v1/runs`
-- `/api/monitor/v1/runs/{run_ref}/snapshot`
-- `/api/monitor/v1/runs/{run_ref}/history`
-- `/api/monitor/v1/runs/{run_ref}/records/{record_ref}?snapshot=`
-- `/api/monitor/v1/runs/{run_ref}/followups?snapshot=&cursor=&limit=`
+- `/api/monitor/v1/projects`
+- `/api/monitor/v1/projects/{project_ref}/runs`
+- `/api/monitor/v1/projects/{project_ref}/runs/{run_ref}/snapshot`
+- `/api/monitor/v1/projects/{project_ref}/runs/{run_ref}/history`
+- `/api/monitor/v1/projects/{project_ref}/runs/{run_ref}/records/{record_ref}?snapshot=`
+- `/api/monitor/v1/projects/{project_ref}/runs/{run_ref}/followups?snapshot=&cursor=&limit=`
+- `/projects/{project_ref}/runs/id-<percent-encoded qualified run ID>`
 
 Snapshots return an opaque `snapshot_ref` and `next_cursor`. History and record lookup require that snapshot reference; stale references return closed `409` responses, and invalid cursors or other-run record references are rejected. Followups are only explicitly declared local correction references. A reference resolves only when it names a recorded reviewer occurrence; dangling, conflicting, and cyclic declarations remain unresolved. Current acceptance requires an approving findings-free review recorded from the original base through the current linked head. A correction-only range is labelled honestly, and the original rejected run remains failed history.
 
