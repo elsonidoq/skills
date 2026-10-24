@@ -175,7 +175,17 @@ liveness as unknown rather than liveness of main.  Missing, partial, malformed, 
 unsupported evidence remains qualified by the existing read/normalization behavior.
 Copied artifact commitment references remain historical facts, not commits on main.
 Readers create, migrate, repair, or import nothing; publication/capture is a later
-explicit operation and must not write main's native live database.
+explicit operation and must not write main's native live database. The prepared
+`workflow-monitor-preserve --source-worktree PATH` command uses that capture context to
+create a command-owned private directory, verifies unchanged source before publication,
+reserves a no-overwrite target, moves prepared bytes beneath that invisible pending target,
+and writes closed complete metadata as the final publication boundary, then reopens it through
+`Reader.preserved` and returns only after the context's final source check. Exact
+content repeats reopen/verify the existing complete recording. A different later source for
+the same opaque origin is retained beside the prior recording and reported as a mismatch,
+not synchronized, replaced, or versioned. Pending/private directories are never listed;
+interrupted, unsafe, or readback-failed operation leaves bytes and source for inspection and
+never claims deletion safe.
 
 ## Historical records
 

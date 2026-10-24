@@ -210,3 +210,29 @@ overwrites a prior capture, modifies native source/main data, or provides a CLI.
 The reader opens short SQLite `mode=ro` snapshots for exactly one canonical Git
 worktree and does not import or invoke the workflow writer. It never copies a database,
 checkpoints WAL, signals a process, repairs recording gaps, or falls back to legacy history.
+
+## Preserve a stopped linked worktree
+
+With the source writer stopped, invoke the separately prepared command from any directory:
+
+```sh
+workflow-monitor-preserve --source-worktree /canonical/stopped-linked-worktree
+```
+
+The command verifies the registered distinct main, holds the source writer lock through
+capture, pre-publication drift verification, preserved-Reader readback, and its final
+context-exit drift check. It privately prepares only the monitor subset and exact metric
+bytes, then publishes one complete recording below main's
+`.coherence/preserved-recordings/`; pending preparation is never visible to a Reader.
+Success reports preserved internal workflow identities, Reader metric qualifications, and
+verified readback only after the final source check succeeds.
+
+An exact unchanged repeat reopens and verifies the existing complete recording rather than
+copying it again. A changed source with the same stopped-worktree origin is a mismatch:
+the command retains both the prior capture and source and says to resolve that difference;
+it never performs incremental sync or versioning. Publication never overwrites a target.
+Interruption, unsafe storage, uncertain completion, source drift, or failed readback returns
+an operation-specific correction and leaves newly prepared/published bytes for inspection.
+It never deletes/prunes the source, resumes a workflow, modifies either live database,
+Git index, or existing history, and copied historical commitment/liveness facts are not new
+main commits or live-run evidence.
