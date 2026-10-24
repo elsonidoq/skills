@@ -48,10 +48,12 @@ not unrelated implementation.
 | Owner chooses depth | Preparation authorization only; persist then immediately start selected source production |
 | TinySpec ready | Generate separate tasks; no intermediate approval gate |
 | TinySpec/tasks reviewed | Bullet brief then combined source/task/scope approval; immediately start coordinator unless explicitly planning-only |
-| Standard spec ready | Bullet brief then specification approval; immediately start planning |
+| Standard spec ready | Complete required ordinary clarification and parent inspection, then run distinct `spec_review`; do not approve or plan yet |
+| Standard spec review returns zero | Skip question interaction; bullet brief then existing specification approval; immediately start planning |
+| Standard spec review has findings | Ask one material question at a time; originating producer incorporates answered decisions and parent inspects before the existing specification approval |
 | Standard plan/tasks reviewed | Bullet brief then overall approval; immediately start coordinator unless explicitly planning-only |
 | Denied, cancelled, timed out or ambiguous answer | No downstream production requiring that approval or implementation; preserve pending correction |
-| Request/source/decision changes | Recheck scope, traceability and affected downstream artifacts/review; material scope changes need owner decision |
+| Request/source/decision changes | Recheck scope, traceability and affected downstream artifacts/review; material scope changes need owner decision. Source/spec/context drift invalidates only its affected review, correction, approval and downstream work, then resumes at the earliest affected boundary. |
 | Approved specification content changes | Renew specification approval before proceeding beyond the affected Standard stage |
 | Plan/tasks change after final approval | Re-review affected evidence and renew final approval |
 | Any renewal | Present a new bullet-list executive brief before `ask_user`; old brief does not cover changed content; after approval immediately resume the affected stage |
@@ -64,7 +66,11 @@ execution do not by themselves change the approved task contracts; changed scope
 acceptance, dependencies or instructions do. Do not waive drift merely by calling it
 cosmetic: verify the authorized content remains equivalent and record that comparison.
 
-Unanswered questions retain their originating context, alternatives and owner rationale.
+Unanswered `spec_review` questions retain their originating source/spec/context, alternatives,
+scenario, consequences and owner rationale. Ask one at a time and remove later queued questions
+that an earlier answer resolves. A cancelled or unanswered material answer stops only affected
+planning; no recommendation, automatic deferral, clarification-taxonomy rerun, default, or
+rereview releases it. Zero findings go directly to the existing specification approval gate.
 Delegate uncertain or substantive artifact corrections to that originating producer context
 when supported and suitable; otherwise use a fresh bounded correction delegate.
 No parent artifact authoring or substantive task-level or upstream repair, including legacy recovery.

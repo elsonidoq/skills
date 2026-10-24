@@ -1,0 +1,104 @@
+{
+  "context": {
+    "source": "docs/plans/independent-spec-review-tinyspec.md",
+    "shared_brief": "Requirements truth is the TinySpec at cb892bb9add2b02a46e788e8cc13c5d54164139f, especially Stage behavior and Observable acceptance A–E. Read it fully; no downstream SDD forwarding/rereading as requirements. Read docs/plans/independent-spec-review-tasks.md Shared implementation context and carry applicable accepted ADR outcomes/source links and each task-local REQUIRED item into worker/reviewer briefs. Selected runtime executor path remains .pi/workflow-executor.json; settings are runtime configuration, not planning assignment or task eligibility metadata. Preserve earlier task changes on shared files; explicit dependencies serialize shared ownership.",
+    "verification": "REQUIRED items below are actual runnable checks with their observable pass conditions. Manual/live acceptance named in outcomes is also required: command success cannot substitute for it. Use existing checker/stage parser, traces, mutation fixtures, assignment resolver and isolated installer link tests, not a new harness, framework, persistent review-artifact subsystem or orchestration. Update docs/plans/planner-regression.md within each delivered concern with actual results and limits, not historical proof claims. Static tests establish carrier sensitivity, never behavioral obedience. Missing capability/permission is NOT RUN/UNAVAILABLE and blocks the affected acceptance claim. Failed/inconclusive cases retain evidence, block reliance, and return correction/affected review/renewal through existing gates; inspect failed invocation before targeted retry, never blind expensive retries. Reuse unchanged applicable evidence; refresh only invalidated observations. Keep verification/docs and routine teardown with their outcome.",
+    "permissions": "ADR-0003 (docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md): executable descriptions/check permissions remain authorization-neutral; current scoped launch authority comes from the existing runner, temporary phase status belongs in approval records. ADR-0004 (docs/decisions/ADR-0004-shared-routine-worker-permissions.md): scoped fixes and small isolated fixtures/tests/local databases need no repeated approval; keep execution bounded against machine-resource exhaustion and unrelated data/services, protect credentials, and retain global-install, deployment/push and separately chargeable/external-action boundaries. Ordinary model tokens do not require an extra financial gate. Real owner product answers/specification approvals still use existing ask_user gates; no answering or approving on the owner's behalf. memory/MEMORY.md Parent-turn notifications: no per-task/stage acknowledgment machinery or routine parent wakeups; only actual questions or terminal completion require a parent turn.",
+    "exclusions": "No new skill/role/hook/framework/database/scoring, generic clarification engine, default review loops, extra approval, assignment rebinding, runtime/resolver/helper/installer changes, global adoption migration, memory/STATE writes, historical approval rewrite or standalone SpecKit guarantee. Proposed change owners are the source's exact list; contradictory evidence or material scope change returns through existing gates rather than silently widening paths. Preserve TinySpec, required ordinary clarification, later independent overall_review, current-content specification/final approvals, producer correction ownership and earliest-invalid recovery. Changed global activation in Paseo uses a fresh-session handoff verifying checkout/revision/current approval/loaded capabilities, never /reload or automatic restart. Do not mutate installation symlinks."
+  },
+  "tasks": [
+    {
+      "id": "T001",
+      "outcome": "Deliver one canonical skeptical reviewer prompt and the saved standard-spec-review operation contract, independently testable before stage integration. Add skills/planner/references/spec-review.md with the source prompt core: product intent and relevant behavioral completeness are perspectives, not a checklist; exclude context-answered/implementation/generic questions; return explicit zero or at most five highest-impact unresolved decisions ranked by importance, each with concrete scenario, reasonable divergent assumptions/behavior, consequences and specific question/preferably meaningful alternatives. Require findings only, no writes/implementation/external actions/further delegation. Define bounded fresh-context inputs (request, exact current spec path/content identity, relevant context/constraints/accepted decisions/memory, no producer rationale/transcript/unrelated history), read-only profile plus instruction boundary, and runtime-bound report output; bash makes this no security sandbox. Add only operation standard-spec-review referencing existing standard-review in model-assignments.json; preserve assignment values and existing operations. Document it in model-assignments.md and test actual generic resolver lookup, fixture owner edits, absent/malformed/unavailable exact binding handling without silent fallback or resolver change. Keep stage/correction/approval integration out of this task. REQUIRED manual E/T001: review the prompt against the source core, distinguish read-only instruction from sandbox, confirm no duplicated maintained prompt or hardcoded portable model binding, and inspect exact config diff for no rebinding. Record scoped offline results/limits in planner-regression.md. A–C behavior is not accepted from this task's static checks; T002 consumes this contract for actual runs.",
+      "depends": [],
+      "owned_paths": [
+        "skills/planner/references/spec-review.md",
+        "skills/planner/references/model-assignments.json",
+        "skills/planner/references/model-assignments.md",
+        "scripts/test-planner-workflow.py",
+        "docs/plans/planner-regression.md"
+      ],
+      "required": [
+        {
+          "id": "E/T001-prompt-routing",
+          "check": ["python3", "scripts/test-planner-workflow.py", "OwnerAssignmentConfigTests", "-v"],
+          "pass": "Extend the existing class with focused prompt-contract and actual resolver tests: new operation resolves the unchanged standard-review assignment, isolated saved edits propagate, invalid/missing exact binding has affected-operation/problem/corrective-action diagnostics and no substitute. Prompt mutations removing zero/max-five, context selectivity, independence or no-write rules fail. Existing config/discovery/correction behavior passes; no stage integration prerequisite is assumed.",
+          "evidence": "Actual focused output and reviewed prompt/config diff; resolver fixtures are not live model availability or obedience proof."
+        },
+        {
+          "id": "E/T001-diff",
+          "check": ["git", "diff", "--check"],
+          "pass": "Task-owned diff is clean; assignment values, generic resolver and runtime executor are unchanged.",
+          "evidence": "Diff check and exact owned-path review."
+        }
+      ]
+    },
+    {
+      "id": "T002",
+      "outcome": "Integrate the canonical prompt as a distinct Standard spec_review stage, including parent dialogue, producer correction, existing approval and recovery. Consume T001; spec_create ends after specification plus requested/detected required ordinary clarification and parent inspection. Fresh independent read-only spec_review then resolves standard-spec-review and dispatches exact saved provider/id:effort unchanged using installed interface, explicit fresh context, async true and runtime-bound output. Reverify actual permitted reviewer tools/profile, exact assignment availability and source-producer/ask_user capabilities; package/profile names alone are insufficient. Missing/unsupported/unavailable binding stops only affected operation with actionable owner correction, no substitution. Parent asks one concrete question at a time using ask_user, preserves scenario/consequences/alternatives and drops queued questions made unnecessary by earlier answers. Existing originating producer correction (suitable resume or fresh bounded correction with same producing assignment) applies answers to relevant requirements/scenarios/acceptance and Clarifications/session Q: … → A: …, removes contradictions, validates/checkpoints; parent inspects returned changes, neither parent nor reviewer substantively repairs spec. No automatic taxonomy rerun on answered questions. Zero goes directly to the existing current-spec approval brief/gate; unanswered/cancelled material decisions stop affected planning without inferred defaults. Honor owner stop/deferral through existing gates with unresolved impact explicit; no automatic deferral releases a material dependency. Only after that ordinary approval release unchanged plan_create, tasks_create, independent overall_review and final approval. No extra review approval, automatic rereview/default loop, routine acknowledgment or retrospective review of valid historical approvals. Update transition/recovery carriers: pending questions retain origin/alternatives/rationale; source/spec/context drift invalidates only affected review/work/approval and resumes earliest affected boundary. Keep approved-spec changes/renewal and existing legacy/TinySpec behavior. REQUIRED E/T002: extend actual operational-stage/order, trace/inventory and meaningful mutation checks, relocating old spec_create approval assertions to the new actual carrier rather than preserving bypass text. Deleting/folding/reordering the stage with summaries intact, approval/plan bypass, nonfresh or writable reviewer, wrong routing/fallback, parent/reviewer repair, duplicate clarification and automatic loops must fail. Keep ADR-0003 neutral tasks/approval-only phase status and ADR-0004 bounded routine isolated-check permissions observable through local checks/briefs.\n\nREQUIRED A–D/T002 actual acceptance at this first usable core boundary, not static-only completion: use the installed actual reviewer/ask_user/source-producer interfaces with bounded isolated authored A/B/C cases and actual owner answers/approval. Use disposable isolated fixture workspaces for source/spec changes, not feature specs or unowned retained repository files; ordinary fixture writes do not expand retained owned paths. A telemetry-dashboard spec lists signals but omits human purpose: reviewer asks what the user must understand/accomplish rather than more metrics; actual answer changes pertinent user outcomes/scenarios/acceptance through producer. B batch per-item-failure omission: ask meaningful abort/continue-partially/retry alternatives with observable consequences, not prescribed mechanism. C sufficiently specified case returns explicit zero; context-answered gaps are excluded; every output is zero or at most five unresolved impact-ranked concrete scenario/assumption/consequence/questions without quota/generic questionnaire/gratuitous security or telemetry demands. D observe actual fresh reviewer input exact source/spec/context with no producer rationale/transcript; before/after content comparison proves reviewer did not mutate spec; parent asks one at a time, actual answer reaches original-assignment producer correction, producer updates pertinent spec and Q&A, parent inspects, existing current-spec approval precedes plan. Observe zero skipping question-only interaction and cancellation of a material answer preventing affected plan release. Exercise real dialogue/approval gates, not fabricated answers or simulated approval. Keep actual session/input identity/spec comparisons and order evidence in normal outputs; summarize results/limits in planner-regression.md, no new evidence subsystem. Static checks cannot claim A–D. If needed capabilities/permission are absent mark affected scenarios NOT RUN/UNAVAILABLE and do not claim this outcome's behavioral acceptance. Correct failures through existing review/renewal; no blind retry. When practical evaluator may add blinded historical input only after verifying a genuine pre-correction gap/source pair; expected gaps remain evaluator-private, never reviewer input. Candidate history alone is NOT VERIFIED: otherwise use authored cases and state historical evidence NOT VERIFIED. No prototype or generic evaluation harness. Complete routine isolation teardown within this task.",
+      "depends": ["T001"],
+      "owned_paths": [
+        "skills/planner/SKILL.md",
+        "skills/planner/references/approval-and-recovery.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "docs/plans/planner-regression.md"
+      ],
+      "required": [
+        {
+          "id": "E/T002-operational-carriers",
+          "check": ["python3", "scripts/check-planner-workflow.py"],
+          "pass": "Actual Standard carrier order is specify/required clarification → distinct spec_review → answer incorporation → existing spec approval → plan → tasks → independent overall review/final approval. Approval assertions move to the actual new carrier; no summary-only substitute or bypass. Canonical prompt/routing references resolve. Recovery, TinySpec, neutral tasks and routine isolated verification/external-data-resource boundaries remain intact.",
+          "evidence": "Checker output and manual source-to-carrier diff inspection; existing focused rules extended, not a second framework."
+        },
+        {
+          "id": "E/T002-traces-mutations",
+          "check": ["python3", "scripts/test-planner-workflow.py"],
+          "pass": "Extend existing stage parser/inventory, trace and negative mutation fixtures for the outcome's stage deletion/fold/order, approval, fresh/read-only/routing/correction/selectivity/recovery cases; every meaningful changed-carrier mutation fails for the intended diagnostic. Existing TinySpec, late overall review, both approvals, saved operations, isolated tests and packaging behavior passes. Synthetic traces are labeled static evidence, separate from REQUIRED A–D actual observations.",
+          "evidence": "Actual suite output with named new/mutated cases; planner-regression.md records behavioral results honestly, including unavailable/not-run cases."
+        },
+        {
+          "id": "E/T002-diff",
+          "check": ["git", "diff", "--check"],
+          "pass": "Task-owned diff is clean; earlier prompt/mapping and unrelated work preserved, no runtime/helper/resolver/install or historical approval changes.",
+          "evidence": "Diff check and owned-path review; actual A–D acceptance remains required within outcome, not inferred from command exit status."
+        }
+      ]
+    },
+    {
+      "id": "T003",
+      "outcome": "Close managed SpecKit entry shortcuts and document/verify the composed delivered workflow without wrapping standalone vendor flows. Consume T001/T002. Make only narrow compatibility edits to speckit.specify frontmatter direct-plan suggestion and Outline 6/8/completion, speckit.clarify integration/return guidance, and speckit.plan Setup/Load context: under planner, return after specify/required clarification for distinct spec_review, producer answer incorporation and existing current-spec approval before planning. Clarify write conventions do not grant reviewer edit authority; retain vendor taxonomy/hooks and tracked local customization. Raw standalone SpecKit remains available but explicitly outside planner's independently reviewed Standard guarantee; route users seeking that guarantee through planner, do not invent a new standalone slash command or silent wrapper. Update README setup/workflow and only necessary active SDD lifecycle/discovery documentation, not downstream SDD requirements instructions. Keep helper's later review/fix from being represented as this stage or triggering automatic repeated review; no helper production edit. REQUIRED E/T003 composed acceptance: extend existing checker/tests to inspect actual managed-entry carriers for direct-plan bypass and actual canonical prompt link packaging via existing whole-skill isolated installer/link fixture without touching real installation. Verify all source E preservation together, including existing TinySpec and late independent overall_review, both approvals/current-content renewal, earliest-invalid recovery, neutral tasks and shared bounded routine-test permissions; no new startup linter checks or per-stage acknowledgment. Reuse T002 actual A–D evidence only where prompt/profile/revision/context observations remain applicable; if changed entry behavior invalidates release-order evidence, rerun only that bounded actual boundary with real owner answers/approval and exact capabilities. Never accept A–D from static tests or mark missing live evidence passed. Record actual commands, composed/manual results and historical NOT VERIFIED/live limits in planner-regression.md; this is lockstep concern documentation, not a report-only deliverable. REQUIRED manual E/T003: compare changed docs against implemented carriers, confirm no standalone guarantee, global binding hardcode or altered installer/runtime; inspect linked canonical prompt from an isolated installed skill. Prepare future Paseo fresh-session activation handoff (checkout/revision/current approval/loaded capabilities), never /reload, install mutation or automatic restart.",
+      "depends": ["T002"],
+      "owned_paths": [
+        ".pi/prompts/speckit.specify.md",
+        ".pi/prompts/speckit.clarify.md",
+        ".pi/prompts/speckit.plan.md",
+        "README.md",
+        "docs/best_practices_spec_driven_development.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "docs/plans/planner-regression.md"
+      ],
+      "required": [
+        {
+          "id": "E/T003-managed-entry",
+          "check": ["python3", "scripts/check-planner-workflow.py"],
+          "pass": "Managed specify/clarify return and plan prerequisite honor distinct review plus existing approval, while standalone boundary is explicit. Active lifecycle and canonical prompt discovery agree with delivered behavior; old direct-plan suggestions cannot bypass managed gates. Vendor taxonomy/hooks/local customizations, TinySpec, later overall review and both approvals preserved.",
+          "evidence": "Checker output, narrow prompt/docs diff and manual actual-carrier comparison."
+        },
+        {
+          "id": "E/T003-composed-packaging",
+          "check": ["python3", "scripts/test-planner-workflow.py"],
+          "pass": "Existing focused carrier/mutation/trace/link/install fixtures cover entry bypass, lost return/approval restriction and missing/broken canonical prompt in isolated whole-skill installation. Stage deletion remains rejected with summaries intact; full relevant preservation passes without installer/resolver/runtime change or new harness. No static green substitutes for pending actual A–D acceptance.",
+          "evidence": "Suite results, meaningful mutation failures, isolated packaged-link readback and T002 evidence applicability/limits review."
+        },
+        {
+          "id": "E/T003-diff",
+          "check": ["git", "diff", "--check"],
+          "pass": "Clean focused diff confined to owned paths; shared files retain T001/T002 behavior and real installation remains untouched.",
+          "evidence": "Diff and source A–E coverage review; final handoff states actual live/static status and fresh-session activation requirements."
+        }
+      ]
+    }
+  ]
+}

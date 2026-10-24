@@ -21,6 +21,10 @@ PATHS = {
     "requirements": "REQUIREMENTS.md",
     "risk": "skills/planner/references/early-risk-reduction.md",
     "research": "skills/planner/references/dependency-research.md",
+    "specify": ".pi/prompts/speckit.specify.md",
+    "clarify": ".pi/prompts/speckit.clarify.md",
+    "plan_prompt": ".pi/prompts/speckit.plan.md",
+    "readme": "README.md",
 }
 
 
@@ -89,6 +93,9 @@ def stage(text, name):
 
 def operational_carrier(text, selector):
     """Bound an actual operational stage/adapter; summary wording cannot satisfy it."""
+    if selector == "frontmatter":
+        match = re.match(r"\A---\n.*?\n---", text, re.S)
+        return match.group(0) if match else ""
     if selector.startswith("stage:"):
         return stage(section(text, "### Standard path"), selector[6:])
     if selector.startswith("item:"):
@@ -103,6 +110,40 @@ def operational_carrier(text, selector):
     return section(text, selector)
 
 # Focused workflow-ownership boundaries; these are textual checks, not semantic oracles.
+MANAGED_ENTRY_CARRIERS = (
+    ("managed-specify-handoff", "specify", "frontmatter", (
+        "agent: planner", "Continue managed Standard workflow",
+        "independent spec review and current-spec approval before planning",
+    )),
+    ("managed-specify-outline", "specify", "## Outline", (
+        "Return: SUCCESS to `planner`", "distinct independent `spec_review`",
+        "current-specification approval before `plan_create`",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-specify-completion", "specify", "## Completion Report", (
+        "return control for the distinct `spec_review`", "Raw standalone SpecKit",
+    )),
+    ("managed-clarify-outline", "clarify", "## Outline", (
+        "Under `planner`, return after required clarification", "distinct independent `spec_review`",
+        "never grants the read-only reviewer edit authority",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-clarify-completion", "clarify", "## Completion Report", (
+        "return control for distinct review and current-specification approval",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-plan-setup", "plan_prompt", "## Outline", (
+        "Under `planner`, do not run setup or create planning artifacts", "distinct independent `spec_review`",
+        "current-specification approval is recorded", "Return the unmet boundary to planner",
+        "outside planner's independently reviewed Standard guarantee",
+    )),
+    ("managed-plan-context", "plan_prompt", "## Outline", (
+        "load the current approved FEATURE_SPEC only after that boundary",
+        "reviewer is read-only and does not edit it",
+    )),
+)
+
+
 MECHANICAL_CARRIERS = (
     ("planner", "## Selected production and stage handoffs"),
     ("planner", "item:3. **Review"),
@@ -152,6 +193,20 @@ def check_contracts(texts):
         for phrase in phrases:
             if phrase.lower() in text.lower():
                 errors.append(f"{label}: contradictory {phrase!r}")
+
+    for label, key, selector, clauses in MANAGED_ENTRY_CARRIERS:
+        require(label, operational_carrier(texts[key], selector), *clauses)
+    reject("managed-specify-handoff", operational_carrier(texts["specify"], "frontmatter"),
+           "agent: speckit.plan")
+    require("managed-readme", texts["readme"],
+            "Use `planner` for the managed Standard guarantee", "independent specification review",
+            "current-specification approval before planning", "Raw standalone SpecKit commands remain",
+            "outside that planner guarantee", "does not add a\nwrapper command or change their installer/runtime",
+            "later plan helper\n  review/fix pass is not that specification review and does not trigger it again")
+    require("managed-sdd-lifecycle", section(texts["guidance"], "## SDD Role and Lifecycle"),
+            "Review specification", "distinct independent `spec_review`", "reviewer reports findings only",
+            "originating producer incorporates actual owner answers", "outside this independently reviewed Standard guarantee",
+            "rather than a wrapper or new slash command", "reviewer reports findings only and has no edit authority")
 
     require("parsimony-policy", texts.get("parsimony", ""),
             "smallest working solution", "legitimate behavior prevented",
@@ -274,7 +329,7 @@ def check_contracts(texts):
             "standalone\n   TinySpec approval", "Record\n   fixes",
             "brief bullet-list executive summary", "immediately proceed to handoff")
     std = section(p, "### Standard path")
-    positions = [std.find(f"**`{s}`") for s in ("spec_create", "plan_create", "tasks_create", "overall_review")]
+    positions = [std.find(f"**`{s}`") for s in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review")]
     if -1 in positions or positions != sorted(positions):
         errors.append("standard-order: missing/reordered operational stages")
     require("standard-preflight", std, "constitution", "template-only", "owner-derived",
@@ -282,8 +337,34 @@ def check_contracts(texts):
             "never install, simulate slash commands", "Required absent\ncapability stops")
     spec = stage(std, "spec_create")
     require("spec", spec, "— saved assignment",  "Clarify only when requested or required",
-            "BEFORE\n   `ask_user`", "specification approval before `plan_create`",
-            "bullet-list executive brief", "immediately continue to `plan_create`")
+            "ordinary clarification and parent inspection", "do not approve or plan here")
+    spec_review = stage(std, "spec_review")
+    require("spec-review", spec_review,
+            "independent saved reviewer assignment", "standard-spec-review",
+            "exact saved provider/model:effort", "actually permitted and callable",
+            "installed async delegation interface", "fresh context", "read-only tool/profile",
+            "source-producer and `ask_user` capabilities", "Package/profile names alone are insufficient",
+            "stops only this review", "do not substitute, route to another reviewer, or fall back",
+            "Dispatch exactly that saved binding unchanged", "async: true",
+            "bind its report to the runtime invocation", "exact\n   current specification path/content identity",
+            "Do not\n   include producer rationale, transcript, or unrelated history",
+            "no writes, implementation, external action, or delegation", "before and after review",
+            "reviewer and\n   parent never substantively repair", "one concrete `ask_user` question at\n   a time",
+            "scenario, alternatives, and consequences", "discard queued", "unanswered or cancelled material",
+            "no discovery cap", "reports the total findings and meaningful areas",
+            "five most\n   important findings initially", "show all findings or a grouped\n   overview",
+            "Retain the complete returned findings", "not a new\n   persistent tracker",
+            "Five is a presentation batch, not a discovery or resolution limit",
+            "surface the next\n   highest-impact remaining findings", "do not stop merely because five were answered",
+            "every remaining material decision must be answered or explicitly\n   deferred by the owner",
+            "consequences and permitted planning bounds recorded",
+            "no inferred default", "originating `standard-spec-create` producer", "same producing assignment",
+            "requirements/scenarios/acceptance", "Q: … → A: …", "removes contradictions, validates and checkpoints",
+            "Do not rerun ordinary clarification taxonomy", "automatically rereview", "unresolved impact",
+            "never release a material dependency automatically", "explicit zero findings", "skip question interaction",
+            "existing current-specification executive brief and `ask_user`\n   approval gate",
+            "Durably record that approval before `plan_create`", "immediately continue to `plan_create`",
+            "without a second continuation or review approval")
     plan = stage(std, "plan_create")
     require("plan", plan, "— saved assignment",  "same-session pass", "review/fix the specification",
             "create one plan", "review/fix the produced plan", "entire pass",
@@ -337,6 +418,14 @@ def check_contracts(texts):
             "No universal\ntotal-bullet cap", "Every actual ordered plan stage separately",
             "Every actual task ID separately", "name the next", "immediately continue to the next authorized phase",
             "same session unless the owner explicitly requested planning-only")
+    require("spec-review-recovery", a,
+            "Standard spec ready", "distinct `spec_review`", "do not approve or plan yet",
+            "Standard spec review returns zero", "Skip question interaction", "existing specification approval",
+            "Standard spec review has findings", "Ask one material question at a time",
+            "originating producer incorporates answered decisions", "Source/spec/context drift invalidates only",
+            "earliest affected boundary", "originating source/spec/context, alternatives",
+            "scenario, consequences and owner rationale", "no recommendation, automatic deferral",
+            "clarification-taxonomy rerun, default, or\nrereview releases it")
     require("legacy", a, "inside tasks", "approved spec awaiting plan", "earliest affected Standard",
             "Other documented producer", "Ambiguous/conflicting origin", "retired skills",
             "Missing runtime capabilities")
@@ -714,6 +803,7 @@ DELEGATION_CARRIERS = (
     ("delegate-tiny-tasks", "planner", "item:2. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/substantive correction or inline/local fallback")),
     ("delegate-tiny-correction", "planner", "item:3. **Review", ("Delegate uncertain or substantive source/task corrections", "originating context or a fresh bounded correction delegate", "no parent substantive", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
     ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "unauthorized specification delegation stops", "no parent creation/substantive correction or inline/local", "mechanical gaps are resolved by the delegate")),
+    ("delegate-spec-review", "planner", "stage:spec_review", ("independent saved reviewer assignment", "standard-spec-review", "Dispatch exactly that saved binding unchanged", "async: true", "fresh independent reviewer", "no writes, implementation, external action, or delegation", "reviewer and\n   parent never substantively repair", "originating `standard-spec-create` producer", "same producing assignment", "no inferred default")),
     ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "unauthorized plan delegation stops", "no parent production/substantive repair", "inline/local fallback", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
     ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "unauthorized task", "delegation stops", "no parent task creation/substantive correction or inline/local fallback")),
     ("delegate-overall-correction", "planner", "stage:overall_review", ("Delegate uncertain or substantive task-level and", "originating producer", "fresh bounded correction delegate", "independent reviewer", "does not become the producer", "No parent substantive artifact edits", "unauthorized", "correction delegation stops", "no inline/local fallback")),

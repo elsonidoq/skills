@@ -70,9 +70,14 @@ No arbitrary target refresh or rollout is implied by installing this repository.
 
 This repository tracks its project-local SpecKit 1.0.12 setup: `.specify/` contains shared
 scripts, templates, integration metadata and the [project constitution](.specify/memory/constitution.md);
-`.pi/prompts/` exposes the project SpecKit commands in pi. Machine-local feature pointers,
-extension overrides and `.pi/subagents/` runtime state remain ignored. Other projects
-still need their own SpecKit installation for Standard; TinySpec does not require it.
+`.pi/prompts/` exposes the project SpecKit commands in pi. Use `planner` for the managed
+Standard guarantee: after specify and any required clarification it runs the distinct
+independent specification review, returns material answers to the producer, and records
+current-specification approval before planning. Raw standalone SpecKit commands remain
+available as vendor flows, but are outside that planner guarantee; this does not add a
+wrapper command or change their installer/runtime. Machine-local feature pointers, extension
+overrides and `.pi/subagents/` runtime state remain ignored. Other projects still need their
+own SpecKit installation for Standard; TinySpec does not require it.
 
 When SpecKit metadata is absent (not malformed/conflicting), inspect supported installed-CLI
 choices and version read-only, propose from current runtime/repository evidence and obtain
@@ -96,15 +101,17 @@ paths and stops for your explicit choice; the recommendation does not choose for
 ```text
                          ┌→ TinySpec → Tasks → Review → Combined approval ───┐
 Request → Planner → Choose│                                                   ├→ coordinate-implementation
-                         └→ SpecKit Specify → Spec approval → Plan → Tasks ──┤
-                                                 → Analyze → Final approval ─┘
+                         └→ SpecKit Specify → Spec review → Spec approval → Plan → Tasks ──┤
+                                                               → Analyze → Final approval ─┘
 ```
 
 - **TinySpec:** compact context, scope, decisions, approach, acceptance and validation;
   mandatory separate tasks. Planner reviews both before one combined approval. No SpecKit
   or unnecessary spec/plan/research hierarchy is required.
-- **Standard:** genuine installed SpecKit stages, separate what/how/task reasoning,
-  specification approval before planning, independent overall review and final approval.
+- **Standard:** through planner, genuine installed SpecKit stages, separate what/how/task
+  reasoning, a distinct independent specification review and current-specification approval
+  before planning, independent overall review and final approval. The later plan helper
+  review/fix pass is not that specification review and does not trigger it again.
 - **Both:** planner delegates each source/specification, applicable Standard plan and separate
   task artifact to its own fresh bounded-context producer. Corrections use suitable originating
   producer context or a fresh bounded correction delegate; planner never authors/repairs artifacts

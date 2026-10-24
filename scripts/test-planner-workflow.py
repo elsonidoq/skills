@@ -760,6 +760,29 @@ class InstructionTests(unittest.TestCase):
     def test_candidate_contract(self):
         self.assertEqual(checker.check_contracts(self.texts), [])
 
+    def test_managed_entry_carriers_reject_shortcuts_and_summary_substitutes(self):
+        """E/T003 static entry sensitivity, not live A–D behavioral acceptance."""
+        for label, key, selector, clauses in checker.MANAGED_ENTRY_CARRIERS:
+            body = checker.operational_carrier(self.texts[key], selector)
+            self.assertTrue(body, label)
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    changed = dict(self.texts)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    replacement = re.sub(pattern, "REMOVED", body, count=1)
+                    changed[key] = changed[key].replace(body, replacement, 1)
+                    # The original text outside the actual frontmatter/Outline carrier is inert.
+                    changed[key] += "\n## Summary only\n" + body
+                    self.assertTrue(any(error.startswith(label + ":")
+                                        for error in checker.check_contracts(changed)))
+
+        changed = dict(self.texts)
+        frontmatter = checker.operational_carrier(changed["specify"], "frontmatter")
+        changed["specify"] = changed["specify"].replace("agent: planner", "agent: speckit.plan", 1)
+        changed["specify"] += "\n## Summary only\n" + frontmatter
+        self.assertTrue(any(error.startswith("managed-specify-handoff:")
+                            for error in checker.check_contracts(changed)))
+
     def test_route_sections_do_not_overlap(self):
         tiny = checker.section(self.texts["planner"], "### TinySpec path")
         standard = checker.section(self.texts["planner"], "### Standard path")
@@ -789,7 +812,7 @@ class InstructionTests(unittest.TestCase):
             ("planner", "No independent planning", "Mandatory independent planning", "tiny-flow:"),
             ("planner", "template-only", "generic", "standard-preflight:"),
             ("planner", "verify repaired output", "assume valid output", "standard-preflight:"),
-            ("planner", "specification approval before `plan_create`", "approval later", "spec:"),
+            ("planner", "Durably record that approval before `plan_create`", "approval later", "spec-review:"),
             ("planner", "Only when no adapter is invoked", "After the adapter returns", "plan:"),
             ("planner", "do not create the plan again", "create the plan again", "plan:"),
             ("planner", "renewed specification approval", "existing specification approval", "plan:"),
@@ -798,7 +821,7 @@ class InstructionTests(unittest.TestCase):
             ("approval", "before calling `ask_user`", "after calling `ask_user`", "approval:"),
             ("approval", "Every actual task ID separately", "unstructured paragraphs", "approval:"),
             ("planner", "brief bullet-list executive summary", "summary in tool context", "tiny-flow:"),
-            ("planner", "immediately continue to `plan_create`", "wait for another prompt", "spec:"),
+            ("planner", "immediately continue to `plan_create`", "wait for another prompt", "spec-review:"),
             ("planner", "immediately proceed to handoff", "report readiness and stop", "tiny-flow:"),
             ("planner", "Do not end the turn merely to report approval", "End the turn after approval", "continuation:"),
             ("planner", "automatically invoke `coordinate-implementation`", "wait for a separate execution request", "final-continuation:"),
@@ -877,7 +900,7 @@ class InstructionTests(unittest.TestCase):
         self.assertIn("Do not end the turn merely to report approval", self.texts["planner"])
         self.assertIn("automatically invoke `coordinate-implementation`", self.texts["planner"])
         self.assertIn("explicitly requested planning-only", self.texts["planner"])
-        self.assertIn("immediately continue to `plan_create`", checker.stage(self.texts["planner"], "spec_create"))
+        self.assertIn("immediately continue to `plan_create`", " ".join(checker.stage(self.texts["planner"], "spec_review").split()))
         self.assertIn("immediately proceed to handoff", checker.section(self.texts["planner"], "### TinySpec path"))
 
     def test_shared_invocation_cannot_be_satisfied_by_prerequisite_mentions(self):
@@ -896,16 +919,153 @@ class InstructionTests(unittest.TestCase):
                 self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
 
     def test_whole_stage_deletion_and_swap(self):
-        for name in ("spec_create", "plan_create", "tasks_create", "overall_review"):
+        for name in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review"):
             body = checker.stage(self.texts["planner"], name)
             changed = dict(self.texts)
             changed["planner"] = changed["planner"].replace(body, f"**`{name}`**\n", 1)
             self.assertTrue(checker.check_contracts(changed), name)
-        spec = checker.stage(self.texts["planner"], "spec_create")
+        review = checker.stage(self.texts["planner"], "spec_review")
         plan = checker.stage(self.texts["planner"], "plan_create")
         changed = dict(self.texts)
-        changed["planner"] = changed["planner"].replace(spec, "TEMP_STAGE", 1).replace(plan, spec, 1).replace("TEMP_STAGE", plan, 1)
+        changed["planner"] = changed["planner"].replace(review, "TEMP_STAGE", 1).replace(plan, review, 1).replace("TEMP_STAGE", plan, 1)
         self.assertTrue(any(e.startswith("standard-order:") for e in checker.check_contracts(changed)))
+
+    def test_standard_spec_review_carrier_mutations_are_not_summary_satisfied(self):
+        """Static E/T002 carrier sensitivity; it is not A–D behavioral evidence."""
+        review = checker.stage(self.texts["planner"], "spec_review")
+        self.assertTrue(review)
+        mutations = (
+            ("stage deletion", "", "spec-review:"),
+            ("discovery cap restored", review.replace("no discovery cap", "at most five findings", 1), "spec-review:"),
+            ("hidden remainder", review.replace("reports the total findings and meaningful areas", "reports only five findings", 1), "spec-review:"),
+            ("missing all/grouped views", review.replace("show all findings or a grouped\n   overview", "show only the initial batch", 1), "spec-review:"),
+            ("findings discarded", review.replace("Retain the complete returned findings", "Retain only five findings", 1), "spec-review:"),
+            ("stops after five", review.replace("do not stop merely because five were answered", "stop after five answers", 1), "spec-review:"),
+            ("remaining decisions bypassed", review.replace("every remaining material decision must be answered or explicitly\n   deferred by the owner", "ignore remaining material decisions", 1), "spec-review:"),
+            ("writable reviewer", review.replace("read-only tool/profile", "writable tool/profile", 1), "spec-review:"),
+            ("wrong routing", review.replace("standard-spec-review", "standard-overall-review", 1), "spec-review:"),
+            ("parent repair", review.replace("parent never substantively repair", "parent may substantively repair", 1), "spec-review:"),
+            ("automatic rereview", review.replace("automatically rereview", "rerun a review every correction", 1), "spec-review:"),
+            ("approval bypass", review.replace("Durably record that approval before `plan_create`", "plan without approval", 1), "spec-review:"),
+        )
+        for name, replacement, diagnostic in mutations:
+            with self.subTest(mutation=name):
+                changed = dict(self.texts)
+                changed["planner"] = changed["planner"].replace(review, replacement, 1)
+                # An inert summary cannot satisfy an operational-stage carrier.
+                changed["planner"] += "\n## Summary\n" + review
+                self.assertTrue(any(error.startswith(diagnostic) or error.startswith("standard-order:")
+                                    for error in checker.check_contracts(changed)))
+
+        plan = checker.stage(self.texts["planner"], "plan_create")
+        changed = dict(self.texts)
+        changed["planner"] = changed["planner"].replace(review, "TEMP", 1).replace(plan, review, 1).replace("TEMP", plan, 1)
+        self.assertTrue(any(error.startswith("standard-order:") for error in checker.check_contracts(changed)))
+
+        for clause in ("Source/spec/context drift invalidates only", "Ask one material question at a time",
+                       "clarification-taxonomy rerun, default, or\nrereview releases it"):
+            with self.subTest(recovery_clause=clause):
+                changed = dict(self.texts)
+                changed["approval"] = changed["approval"].replace(clause, "REMOVED", 1)
+                self.assertTrue(any(error.startswith("spec-review-recovery:")
+                                    for error in checker.check_contracts(changed)))
+
+    def assert_standard_spec_review_carrier_trace(self, planner):
+        """Extract instruction order, not a model execution or semantic obedience trace."""
+        standard = checker.section(planner, "### Standard path")
+        inventory = re.findall(r"(?m)^\d+\. \*\*`([^`]+)`", standard)
+        expected_stages = ["spec_create", "spec_review", "plan_create", "tasks_create", "overall_review"]
+        self.assertEqual(inventory, expected_stages, "Standard operational stage inventory")
+        # Locate actual action clauses inside each operational carrier. Summaries outside
+        # Standard and references to a later stage cannot supply a missing action.
+        actions = {
+            "spec_create": (
+                ("ordinary_clarification", "after that ordinary clarification"),
+                ("parent_inspection", "parent inspection of the exact current specification"),
+            ),
+            "spec_review": (
+                ("review_dispatch", "Dispatch exactly that saved binding unchanged"),
+                ("owner_question", "parent asks one concrete `ask_user` question at a time"),
+                ("producer_correction", "Send actual answers to the originating `standard-spec-create` producer"),
+                ("answer_incorporation", "The producer updates relevant requirements/scenarios/acceptance"),
+                ("correction_inspection", "parent inspects the returned change"),
+                ("zero_skip", "With explicit zero findings, skip question interaction"),
+                ("spec_approval", "present the existing current-specification executive brief and `ask_user` approval gate"),
+                ("record_spec_approval", "Durably record that approval before `plan_create`"),
+            ),
+            "plan_create": (("plan_producer", "Delegate a separate fresh bounded-context plan producer"),),
+            "tasks_create": (("task_producer", "delegate a separate fresh bounded-context task producer"),),
+            "overall_review": (
+                ("overall_inspection", "inspect source → spec → plan → tasks traceability"),
+                ("final_approval", "obtain current overall approval"),
+            ),
+        }
+        observed = []
+        for name in inventory:
+            body = " ".join(checker.stage(standard, name).split())
+            positions = []
+            for event, clause in actions[name]:
+                self.assertEqual(body.count(clause), 1, f"{name}: missing/duplicate {event}")
+                positions.append((body.index(clause), event))
+            actual = [event for _, event in sorted(positions)]
+            self.assertEqual(actual, [event for event, _ in actions[name]], f"{name}: action order")
+            observed.extend([name, *actual])
+        return observed
+
+    def test_standard_spec_review_static_trace_inventory_is_explicitly_nonbehavioral(self):
+        observed = self.assert_standard_spec_review_carrier_trace(self.texts["planner"])
+        print("T002 carrier-derived static trace (zero_skip is an alternative branch, not a live event): "
+              + " → ".join(observed)
+              + "; not live reviewer, ask_user, producer, or approval evidence")
+
+    def test_standard_spec_review_carrier_trace_rejects_changed_actions_and_order(self):
+        planner = self.texts["planner"]
+        review = checker.stage(planner, "spec_review")
+        summary = "\n## Summary only\n" + review
+        mutations = [
+            ("deleted stage", planner.replace(review, "", 1)),
+            ("folded stage", planner.replace(
+                "2. **`spec_review` — independent saved reviewer assignment:** resolve\n", "", 1)),
+            ("missing question", planner.replace("parent asks one concrete `ask_user` question at\n   a time", "REMOVED", 1)),
+            ("missing correction inspection", planner.replace("parent\n   inspects the returned change", "REMOVED", 1)),
+            ("missing zero skip", planner.replace("With explicit zero findings, skip question interaction", "REMOVED", 1)),
+            ("missing approval", planner.replace("Durably record that approval before `plan_create`", "REMOVED", 1)),
+        ]
+        for label, first, second in (
+            ("correction before owner answer", "For each unresolved material finding", "Send actual answers"),
+            ("approval before incorporation", "The producer updates", "Durably record that approval"),
+        ):
+            # Swap complete carrier paragraphs rather than inventing an unrelated trace.
+            paragraphs = review.split("\n\n")
+            left = next(i for i, paragraph in enumerate(paragraphs) if first in paragraph)
+            right = next(i for i, paragraph in enumerate(paragraphs) if second in paragraph)
+            if left == right:
+                # The owner-question and correction clauses share a paragraph.
+                body = paragraphs[left]
+                boundary = body.index(second)
+                paragraphs[left] = body[boundary:] + "\n" + body[:boundary]
+            else:
+                paragraphs[left], paragraphs[right] = paragraphs[right], paragraphs[left]
+            mutations.append((label, planner.replace(review, "\n\n".join(paragraphs), 1)))
+        plan = checker.stage(planner, "plan_create")
+        mutations.append(("plan before review", planner.replace(review, "TEMP_STAGE", 1)
+                          .replace(plan, review, 1).replace("TEMP_STAGE", plan, 1)))
+        diagnostics = {
+            "deleted stage": "Standard operational stage inventory",
+            "folded stage": "Standard operational stage inventory",
+            "missing question": "spec_review: missing/duplicate owner_question",
+            "missing correction inspection": "spec_review: missing/duplicate correction_inspection",
+            "missing zero skip": "spec_review: missing/duplicate zero_skip",
+            "missing approval": "spec_review: missing/duplicate record_spec_approval",
+            "correction before owner answer": "spec_review: action order",
+            "approval before incorporation": "spec_review: action order",
+            "plan before review": "Standard operational stage inventory",
+        }
+        for label, changed in mutations:
+            with self.subTest(mutation=label):
+                self.assertNotEqual(changed, planner, "Mutation must change the actual carrier")
+                with self.assertRaisesRegex(AssertionError, re.escape(diagnostics[label])):
+                    self.assert_standard_spec_review_carrier_trace(changed + summary)
 
     def test_contradictions(self):
         policies = ("Automatically choose TinySpec", "Automatically choose Standard",
@@ -2144,6 +2304,24 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
                              self.assignments.resolve(operations[0], planner_skill=skill)["requested"])
             self.assertNotIn("repair", edited)
 
+    def test_installed_whole_skill_keeps_canonical_review_prompt_link(self):
+        """E/T003 isolated packaging readback; no real installation is touched."""
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory) / "home"
+            destinations = home / "skills"
+            guidance = Path(directory) / "guide.md"
+            guidance.write_text("fixture guidance")
+            with contextlib.redirect_stdout(io.StringIO()):
+                links.install(ROOT / "skills", guidance, destinations, home / "docs",
+                              home / "backups", home / "settings.json")
+            installed = destinations / "planner"
+            self.assertTrue(installed.is_symlink())
+            skill = (installed / "SKILL.md").read_text()
+            self.assertIn("[the canonical review prompt](references/spec-review.md)", skill)
+            prompt = installed / "references/spec-review.md"
+            self.assertTrue(prompt.is_file())
+            self.assertIn("# Standard specification skeptical review", prompt.read_text())
+
     def test_installer_symlink_discovers_canonical_file_from_unrelated_home(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory) / "home"
@@ -2183,6 +2361,69 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
             del absent["assignments"][missing_name]
             target.write_text(json.dumps(absent))
             self.assert_problem(saved_operation, skill, "is absent")
+
+    def assert_spec_review_prompt(self, text):
+        for clause in (
+            "Product intent and relevant behavioral completeness are review\nperspectives, not a checklist.",
+            "**zero findings**", "return all material unresolved decisions, ranked by importance",
+            "no numerical discovery cap", "Group findings into meaningful areas",
+            "exclude duplicates and trivia", "coordinator controls presentation size, not reviewer discovery",
+            "concrete scenario", "reasonable divergent assumptions or\nbehaviors", "their consequences", "specific question, preferably with meaningful\nalternatives", "already answered\nby supplied context, implementation questions, and generic questions.",
+            "definition of done is clear and aligned with user intent",
+            "what must be observably true for the user to consider the outcome complete?",
+            "Do not require a new heading or duplicate criteria.",
+            "Relevant failure or partial-success outcomes",
+            "do not invent thresholds, requirements or an additional approval gate.",
+            "Include definition-of-done gaps in the same ranked findings, not an extra questionnaire.",
+            "existing criteria already establish observable completion aligned with user intent",
+            "exact current specification path and content identity", "relevant context, constraints, accepted decisions, and memory", "Do not provide producer rationale, a producer transcript, or unrelated history.",
+            "independent from the specification producer.", "no writes, implementation changes,\nexternal actions, or further delegation.", "operational boundary, not a security sandbox", "including `bash`,\ncan still act outside it.", "Bind the report output to the runtime invocation",
+        ):
+            self.assertIn(" ".join(clause.split()), " ".join(text.split()))
+
+    def test_skeptical_spec_review_prompt_contract_and_mutations(self):
+        prompt = (ROOT / "skills/planner/references/spec-review.md").read_text()
+        self.assert_spec_review_prompt(prompt)
+        for removed in (
+            "**zero findings**", "return all material unresolved decisions,", "no numerical discovery cap",
+            "Group findings into meaningful", "exclude duplicates and trivia",
+            "already answered", "independent from",
+            "no writes, implementation changes,", "operational boundary, not a security sandbox",
+            "definition of done is clear and aligned with user intent",
+            "Include definition-of-done gaps in the same ranked findings, not an extra questionnaire.",
+            "Do not require a new heading or duplicate criteria.",
+        ):
+            with self.subTest(removed=removed):
+                self.assertIn(removed, prompt)
+                with self.assertRaises(AssertionError):
+                    self.assert_spec_review_prompt(prompt.replace(removed, "REMOVED", 1))
+
+    def test_standard_spec_review_resolves_shared_binding_and_rejects_bad_exact_binding(self):
+        actual = json.loads(self.canonical.read_text())
+        self.assertEqual(actual["operations"]["standard-spec-review"],
+                         {"assignment": "standard-review"})
+        resolved = self.assignments.resolve("standard-spec-review")
+        overall = self.assignments.resolve("standard-overall-review")
+        self.assertEqual(resolved["source"], "standard-review")
+        self.assertEqual(resolved["requested"], overall["requested"])
+        with tempfile.TemporaryDirectory() as directory:
+            skill, target = self.fixture_skill(directory)
+            edited = json.loads(target.read_text())
+            edited["assignments"]["standard-review"] = {
+                "model": "example/owner-edited", "effort": "high"}
+            target.write_text(json.dumps(edited))
+            self.assertEqual(self.assignments.resolve("standard-spec-review", planner_skill=skill)["requested"],
+                             {"model": "example/owner-edited", "effort": "high"})
+            missing = json.loads(target.read_text())
+            del missing["operations"]["standard-spec-review"]
+            target.write_text(json.dumps(missing))
+            self.assert_problem("standard-spec-review", skill, "no assignment")
+            target.write_text("{")
+            self.assert_problem("standard-spec-review", skill, "malformed")
+            unavailable = json.loads(self.canonical.read_text())
+            unavailable["assignments"]["standard-review"] = {"model": "", "effort": "medium"}
+            target.write_text(json.dumps(unavailable))
+            self.assert_problem("standard-spec-review", skill, "needs nonempty model and effort")
 
 
 class OwnerAssignmentPlannerTests(unittest.TestCase):

@@ -1,5 +1,41 @@
 # Planner Regression Guide
 
+## Independent Spec Review — current owner disposition (2026-10-23)
+
+The owner explicitly removed the planned live A–D evaluation from this delivery's
+scope and will validate through normal skill use and iteration. Earlier NOT RUN
+reports and final-review findings below remain historical evidence, not a current
+live-validation blocker or a claim that behavioral evaluation passed. The scoped
+correction and supersession are recorded in
+[independent Spec Review task approval](independent-spec-review-tasks.md#approval-record).
+
+The parent directly repaired the task-generation preservation test's stale stage
+selector: select `overall_review` by its stable heading rather than stage number.
+Both existing authorization-neutrality assertions remain unchanged. This avoids
+repeating the regression when an earlier stage is inserted; it changes no workflow
+behavior. Correction verification: `python3 skills/task-generation/scripts/test_contract.py`
+PASS (12 tests); `python3 scripts/check-planner-workflow.py` PASS;
+`python3 scripts/test-planner-workflow.py` PASS (167 tests); `git diff --check` PASS.
+No live evaluation, delegation or additional review loop was performed.
+
+## Complete findings, progressive presentation
+
+Spec Review returns all material unresolved decisions, ranked by impact and grouped
+into meaningful areas when useful; zero remains valid. Definition-of-done gaps share
+that report. There is no reviewer discovery quota. The coordinator reports the total
+and areas, surfaces five initially, and offers all findings or a grouped overview.
+Questions remain one at a time; earlier answers can eliminate later questions. The
+coordinator retains the full report in existing context and presents further batches
+until material decisions are resolved or explicitly owner-deferred with consequences
+and permitted planning bounds. No extra approval, tracker or automatic rereview is added.
+
+Existing prompt-contract assertions and negative mutations cover uncapped/selective
+review, total/area disclosure, all/grouped views, retained remainder, continuation past
+five answers and the remaining-decision planning gate. These are static checks, not
+live-model evidence; owner-directed ordinary use/iteration remains the evaluation path.
+Historical source/task descriptions of a five-finding cap are superseded by this
+owner-requested behavior, not rewritten as current requirements.
+
 ## What the checks prove
 
 `bash scripts/check-skills-lint.sh` runs frontmatter lint, operational instruction
@@ -27,10 +63,147 @@ python3 skills/task-generation/scripts/check-task-order.py scripts/fixtures/plan
 git diff --check
 ```
 
+## T001 skeptical specification review contract
+
+Scoped offline result: `python3 scripts/test-planner-workflow.py OwnerAssignmentConfigTests -v`
+passed 6 tests, including prompt-rule mutations and the actual generic resolver lookup for
+`standard-spec-review`; `git diff --check` passed. Fixture owner edits propagate through the
+existing `standard-review` assignment. Missing operation, malformed JSON, and an unavailable
+(empty) exact binding report the affected operation and corrective action without a fallback.
+
+Manual E/T001 review: the one maintained prompt contains the source core, treats read-only as
+an instruction rather than a `bash` security sandbox, and forbids writes, implementation,
+external actions, and delegation. The exact config diff adds only the operation reference; it
+neither changes an assignment value nor hardcodes a portable model binding.
+
+Limits: these are offline contract/resolver checks and manual source/config inspection only.
+They do not prove model obedience, live binding availability, sandboxing, or the later
+stage/correction/approval behavior consumed by T002.
+
+## T002 Standard `spec_review` integration
+
+`python3 scripts/check-planner-workflow.py` and
+`python3 scripts/test-planner-workflow.py` exercise the actual maintained Standard-stage
+carrier and existing checker/test suite. The stage inventory is now
+`spec_create → ordinary clarification/parent inspection → spec_review → answer
+incorporation → existing specification approval → plan_create → tasks_create →
+independent overall_review/final approval`. Focused mutations reject deletion or folding
+of the operational `spec_review` carrier even with a summary retained, reordering,
+approval bypass, writable/nonfresh review wording, wrong saved operation/fallback,
+parent repair, automatic rereview, and lost producer-correction/recovery rules. The
+static trace is explicitly labelled carrier/order evidence only. TinySpec, the later
+independent review, both Standard approvals, authorization-neutral tasks, and the
+ordinary isolated-check boundaries remain covered by the existing suite.
+
+**A–D behavioral acceptance: NOT RUN / UNAVAILABLE; outcome not behaviorally accepted.**
+The earlier explanation conflated authorized worker/reviewer model calls with separately
+paid application/test APIs. Selected model calls are authorized by the implementation
+launch; lack of additional paid-API approval is not a blocker for those model calls.
+During the fixing round, `pi --version` returned 0.87.1, installed package metadata showed
+`pi-subagents` 0.73.1 and `pi-ask-user` 0.15.1, and
+`pi --offline --list-models gpt-6.1-sol` listed the exact saved
+`openai-codex/gpt-6.1-sol` binding. This is installation/catalogue evidence only, not a
+successful model invocation or callable async/read-only profile. The fixing harness's
+registered tool surface exposes neither `subagents_enable`/`subagent` nor `ask_user`;
+`ask_owner` is available for material scope questions but is not substituted for the
+required installed dialogue interface. No actual reviewer/source-producer invocation,
+owner acceptance dialogue/cancellation, or approval-before-plan observation was made.
+No fabricated answer, simulated approval, alternative binding, or model call was used.
+A fresh capable session must verify the actual interfaces and tool profile, capture
+source/spec/context input identity and before/after spec comparison, run authored A/B/C
+cases (telemetry purpose, batch failure alternatives, explicit zero/context-answered
+selectivity), and observe D's one-at-a-time dialogue, original-assignment producer Q&A
+correction, approval-before-plan, zero skip, and material cancellation stop. Preserve
+existing authority; do not add a paid-API gate for authorized model tokens. The candidate
+historical pre-correction gap/source pair remains **NOT VERIFIED**; no historical
+evaluator input was used.
+
 Fixture tasks demonstrate shared syntax only: they lack real source/review/authorization
 and must not be executed. Existing dependency-parser tests cover IDs, gaps, duplicates,
 self/forward/missing prerequisites and story continuity. Manual/semantic review still checks
 implicit producers, acceptance meaning, saved-assignment propagation, exclusions and documentation truth.
+
+## T003 managed SpecKit entry composition
+
+Actual local commands: `PYTHONDONTWRITEBYTECODE=1 python3
+scripts/check-planner-workflow.py` passed (static instructions only),
+`PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py` passed 166 offline
+tests, and `git diff --check` passed. The checker now reads the actual Specify frontmatter
+and Outline/completion, Clarify Outline/completion, and Plan Outline carriers. Focused
+mutations reject a restored direct-plan handoff, a missing return/review/approval prerequisite,
+lost reviewer read-only boundary, and summary-only replacement. It also retains the existing
+planner carrier checks for TinySpec, late independent `overall_review`, both Standard approvals
+and current-content renewal/earliest-invalid recovery, neutral tasks, and shared bounded
+routine-test permissions. These are static composition guards, not an added startup linter or
+per-stage acknowledgement. The broader `PYTHONDONTWRITEBYTECODE=1 bash
+scripts/check-skills-lint.sh` was also run but is **not green**. The
+`initialize-coherence/scripts/test_contract.py` failure expects the absent tracked
+`docs/open_issues.md` historical link target and was reported as inherited. In contrast,
+`task-generation/scripts/test_contract.py` expects `overall_review` to be stage 4: T002's
+insertion of `spec_review` renumbered it to stage 5 and caused this regression. That
+failure is not inherited. The fixing round reproduced its `IndexError` at line 156;
+composed preservation remains incomplete until the affected test is repaired.
+
+The suite's existing whole-skill isolated installer fixture installed `skills/` into a temporary
+home only, read the installed `planner/SKILL.md`, resolved its canonical
+`references/spec-review.md` link, and read the canonical review prompt. No real installation,
+resolver, runtime, global binding, or installer mutation occurred. Manual comparison of the
+changed prompt/docs carriers with `planner` and approval/recovery confirmed planner-only
+independent review → producer incorporation → current-spec approval → plan ordering; raw
+standalone SpecKit is explicitly outside that guarantee. The later helper review/fix pass is
+not represented as `spec_review` and does not cause automatic repeated review. The narrow diff
+contains no model/provider hardcode and no installer/runtime edit.
+
+**A–D behavioral acceptance remains NOT RUN / UNAVAILABLE.** T002's missing live evidence
+also leaves composed T003 acceptance incomplete. Selected worker/reviewer model usage is
+already authorized; the fixing round's missing loaded delegation/dialogue tools, not a
+paid application/test API gate, are the current limitation. Static tests and isolated
+packaging are not live evidence and do not mark A–D passed. There is no earlier actual
+release-order observation to reuse. Complete the required bounded acceptance with real
+owner answers/approval and exact verified capabilities in a capable session; do not
+fabricate or substitute it.
+
+For Paseo activation after this prompt/skill change, prepare a fresh-session handoff naming
+the checkout, revision, current approval and loaded capabilities. The fresh agent verifies
+those facts before launching approved workflow. Do not use `/reload`, mutate installation, or
+automatically restart this session.
+
+## Assigned fixing round
+
+Baseline: `73a9b1fd92ab0487b62d3cfe4471f39150bfafc8`. The retained repair replaces the
+self-comparing hardcoded trace with a trace extracted from the actual Standard stage
+inventory and action-clause positions within those carriers. Negative mutations delete or
+fold the stage, remove question/correction inspection/zero-skip/approval actions, move
+correction ahead of the owner question, move approval ahead of incorporation, and move
+planning ahead of review. Appending the original review as an inert summary cannot make
+these mutations pass. This is instruction-order evidence only; the zero branch is an
+alternative, not an assertion that a live zero case asked questions.
+
+Commands actually run in the fixing round:
+
+- `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py InstructionTests.test_standard_spec_review_static_trace_inventory_is_explicitly_nonbehavioral InstructionTests.test_standard_spec_review_carrier_trace_rejects_changed_actions_and_order -v`: 2 passed, including the carrier-derived trace and negative mutations.
+- `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py OwnerAssignmentConfigTests -v`: 7 passed, including actual resolver fixtures and isolated installed canonical-prompt link readback.
+- `PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py`: PASS, static instructions only.
+- `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py`: 167 offline tests passed.
+- `PYTHONDONTWRITEBYTECODE=1 python3 skills/task-generation/scripts/test_contract.py -v`: 12 ran, 11 passed and authorization-neutral final review errored at the stale numbered lookup. Its focused invocation reproduced the same error.
+- `git diff --check`: passed after the test repair; rechecked after report correction.
+
+The owner explicitly approved through the scope-question interface the additional path
+`skills/task-generation/scripts/test_contract.py`, solely to repair the stale Standard
+`overall_review` selector while preserving all neutrality assertions. The attempted narrow
+edit was rejected by the edit tool with `path outside optional owned_paths`; no bytes in
+that file changed and no alternate write mechanism was used to bypass enforcement.
+The runner must reconcile its enforced owned-path set with that exact owner approval
+before applying/checkpointing the repair and include the path/approval in the fresh
+review scope. The proposed correction selects the named numbered `overall_review`
+carrier up to the next stage/section instead of hardcoding stage 4; TinySpec and all
+neutrality assertions remain unchanged. This is a remaining blocking regression, not a
+waived check. No scope revision waives A–D acceptance either.
+
+Only `scripts/test-planner-workflow.py` and this report were retained as fixing edits.
+No staging, commit, resolver/runtime/helper/installer edit, real installation mutation,
+external paid application/test API, reload or restart was performed. Preserve the
+pre-existing untracked `.coherence/metrics/` file. Runner owns the focused repair checkpoint.
 
 Instruction mutations delete gates/constraints, change classes, remove renewals, permit
 adapter double creation, remove stage bodies, swap stages and insert contradictory policies.
