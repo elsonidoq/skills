@@ -1,4 +1,16 @@
-# Outcome
+# Current owner continuation direction
+
+After this handoff was prepared, the owner clarified: “I don't want to test the new
+interface” and “I just want to finish the implementation, and use it in the next thing
+I need to implement.” This authorizes finishing the existing R001 correction in the
+current session with its automated checks and independent full-range review; no manual
+or live interface test is requested. It supersedes only the fresh-session-before-correction
+boundary below, not scope, checks, review, historical preservation or actual-owner consent.
+The current loaded bridge lacks the added owner-only reply tool: if that capability is
+actually needed for an additional pair, stop that continuation rather than downgrade consent.
+Updated bridge activation can occur naturally in the next fresh session; no reload/restart.
+
+# Original handoff outcome
 
 In a **fresh Paseo session**, execute the owner-authorized narrow suggestion-keyword-filter
 correction as a **new run**, then obtain fresh independent read-only acceptance of the **whole
