@@ -143,8 +143,9 @@ small offline fixtures, not live-provider regression or proof of model/human obe
    is not usable evidence for this new launch. Verify Pi 0.87.x and applicable pinned capabilities
    as instructed by AGENTS; package/config selection alone does not prove availability. Missing
    required tools stop the affected launch for a fresh-session/capability correction, not a probe
-   call, install or owner-consent bypass. Delegation: UNAVAILABLE in this preparation; none launched
-   or required. Use this fresh local session and the existing runner, not a substitute delegate.
+   call, install or owner-consent bypass. Preparation used an available retained planning delegate;
+   this does not establish fresh-session delegation availability. Continue in the fresh local
+   session through the existing runner, not a substitute implementation delegate.
 3. Read `.pi/workflow-executor.json`, retain exact binding, inspect full-range base ancestry, and
    run ordinary intake:
 
