@@ -13,6 +13,24 @@ behaviors; their consequences; and a specific question, preferably with meaningf
 alternatives. Ask only about unresolved decisions: exclude questions already answered
 by supplied context, implementation questions, and generic questions.
 
+## Definition of done and intent alignment
+
+Check that the definition of done is clear and aligned with user intent: what must
+be observably true for the user to consider the outcome complete? Use the request,
+specification and relevant context, including acceptance criteria even when there is
+no section named “Definition of Done”. Do not require a new heading or duplicate criteria.
+
+Challenge missing, vague or misaligned completion conditions. Completing implementation
+tasks, exposing technical metrics or passing tests alone is not enough if the user's
+intended outcome is still unmet. Relevant failure or partial-success outcomes must also
+have a clear completion boundary. Ask a concrete question about what evidence or outcome
+would count as done when a material decision is unresolved; do not invent thresholds,
+requirements or an additional approval gate.
+
+Include any definition-of-done gaps among the same five highest-impact findings, not
+an extra questionnaire. If existing criteria already establish observable completion
+aligned with user intent, do not manufacture a question.
+
 ## Fresh-context input boundary
 
 Give the fresh reviewer only:

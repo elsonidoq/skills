@@ -2360,6 +2360,13 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
         for clause in (
             "Product intent and relevant behavioral completeness are review\nperspectives, not a checklist.",
             "**zero findings**", "no more than **five** highest-impact unresolved\ndecisions, ranked by importance.", "concrete scenario", "reasonable divergent assumptions or\nbehaviors", "their consequences", "specific question, preferably with meaningful\nalternatives", "already answered\nby supplied context, implementation questions, and generic questions.",
+            "definition of done is clear and aligned with user intent",
+            "what must be observably true for the user to consider the outcome complete?",
+            "Do not require a new heading or duplicate criteria.",
+            "Relevant failure or partial-success outcomes",
+            "do not invent thresholds, requirements or an additional approval gate.",
+            "same five highest-impact findings, not an extra questionnaire",
+            "existing criteria already establish observable completion aligned with user intent",
             "exact current specification path and content identity", "relevant context, constraints, accepted decisions, and memory", "Do not provide producer rationale, a producer transcript, or unrelated history.",
             "independent from the specification producer.", "no writes, implementation changes,\nexternal actions, or further delegation.", "operational boundary, not a security sandbox", "including `bash`,\ncan still act outside it.", "Bind the report output to the runtime invocation",
         ):
@@ -2371,6 +2378,9 @@ class OwnerAssignmentConfigTests(unittest.TestCase):
         for removed in (
             "**zero findings**", "no more than **five**", "already answered", "independent from",
             "no writes, implementation changes,", "operational boundary, not a security sandbox",
+            "definition of done is clear and aligned with user intent",
+            "same five highest-impact findings, not\nan extra questionnaire",
+            "Do not require a new heading or duplicate criteria.",
         ):
             with self.subTest(removed=removed):
                 self.assertIn(removed, prompt)

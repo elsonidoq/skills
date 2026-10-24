@@ -441,7 +441,10 @@ valid settled principles. Verify the saved exact stage binding and independent r
    to the runtime invocation. Give the fresh independent reviewer only the request, exact
    current specification path/content identity, relevant context/constraints/accepted
    decisions/memory, and [the canonical review prompt](references/spec-review.md). Do not
-   include producer rationale, transcript, or unrelated history. Require findings only;
+   include producer rationale, transcript, or unrelated history. Review definition of
+   done for observable completion aligned with user intent, using existing acceptance
+   criteria rather than requiring a new heading; material gaps share the five-finding
+   limit and existing question/correction flow. Require findings only;
    no writes, implementation, external action, or delegation. Parent compares the exact
    specification before and after review and inspects the returned report; reviewer and
    parent never substantively repair the specification.
@@ -452,7 +455,8 @@ valid settled principles. Verify the saved exact stage binding and independent r
    answer stops affected planning with no inferred default. Send actual answers to the
    originating `standard-spec-create` producer: resume a suitable context or dispatch a
    fresh bounded correction with that same producing assignment. The producer updates
-   relevant requirements/scenarios/acceptance and existing Clarifications/session
+   relevant requirements/scenarios/acceptance, including definition-of-done completion
+   conditions affected by the answers, and existing Clarifications/session
    `Q: … → A: …` convention, removes contradictions, validates and checkpoints; parent
    inspects the returned change. Do not rerun ordinary clarification taxonomy for answered
    questions or automatically rereview. Explicit owner stops/deferrals use existing gates
