@@ -550,6 +550,12 @@ class Engine:
                 if not set(checkpoint['paths']) <= set(returned['paths']):
                     raise Blocked('repair checkpoint paths do not match returned ownership; inspect retained effects')
                 if head == checkpoint['parent']:
+                    # Ownership will restore every returned path, including paths that
+                    # were unchanged and therefore absent from the checkpoint selection.
+                    effects = check_events[-1][1]
+                    if (effects.get('head') != head or
+                            self._repair_blobs(project, returned['paths']) != effects.get('blobs')):
+                        raise Blocked('repair checkpoint source bytes drifted; preserve them and inspect ownership before continuation')
                     if self._repair_blobs(project, checkpoint['paths']) != checkpoint.get('blobs'):
                         raise Blocked('repair checkpoint source bytes drifted; preserve them and inspect ownership before continuation')
                     return recovered

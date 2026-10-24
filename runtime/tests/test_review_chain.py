@@ -669,7 +669,8 @@ class ReviewBoundaryRegressionTests(ProjectTest):
         class ProcessDeath(BaseException): pass
         boundaries = ('authorized', 'reserved', 'dispatched', 'invocation_started', 'returned',
                       'check_started', 'checks_passed', 'commit', 'checkpoint_passed', 'fixer_complete', 'reviewer_reserved',
-                      'review_complete', 'missing_facts', 'source_drift', 'commit_drift')
+                      'review_complete', 'missing_facts', 'source_drift', 'commit_drift',
+                      'checkpoint_started', 'checkpoint_unselected_drift', 'checkpoint_unselected_delete')
         for boundary in boundaries:
             with self.subTest(boundary=boundary):
                 # Use a separate disposable repo per scenario, including unrelated index bytes.
@@ -678,7 +679,10 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                 self.addCleanup(case.doCleanups)
                 project, base = case.project, case.base
                 calls, questions, crashed = [], [], [False]
-                contract = admit([{'id': 'original', 'description': 'fixture', 'owned_paths': ['owned.txt'],
+                checkpoint_start = boundary in ('checkpoint_started', 'checkpoint_unselected_drift',
+                                                'checkpoint_unselected_delete')
+                contract = admit([{'id': 'original', 'description': 'fixture',
+                                   'owned_paths': ['owned.txt', 'STATE.md'],
                                    'checks': [['/bin/sh', '-c', 'test -s owned.txt']]}])
                 class Adapter:
                     reviews = 0
@@ -695,6 +699,10 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                             calls.append(('fix', Adapter.fixes, prompt))
                             kwargs['claim']('owned.txt')
                             project.joinpath('owned.txt').write_text('repair-' + str(Adapter.fixes) + '\n')
+                            if checkpoint_start and Adapter.fixes == 2:
+                                # Selected for repair, but unchanged at checkpoint intent.
+                                kwargs['claim']('STATE.md')
+                                project.joinpath('STATE.md').write_text('custom\n')
                         else:
                             calls.append(('worker', 0, prompt))
                             kwargs['claim']('owned.txt')
@@ -728,8 +736,10 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                         result = original_history(run, task, kind, state, details)
                         names = {('fixer_invocation', 'started'): 'invocation_started',
                                  ('fixer_invocation', 'returned'): 'returned', ('fixer_checks', 'passed'): 'checks_passed',
-                                 ('fixer_checks', 'started'): 'check_started', ('fixer_checkpoint', 'passed'): 'checkpoint_passed'}
-                        selected = ('returned' if boundary in ('missing_facts', 'source_drift') else boundary)
+                                 ('fixer_checks', 'started'): 'check_started', ('fixer_checkpoint', 'passed'): 'checkpoint_passed',
+                                 ('fixer_checkpoint', 'started'): 'checkpoint_started'}
+                        selected = ('checkpoint_started' if checkpoint_start else
+                                    'returned' if boundary in ('missing_facts', 'source_drift') else boundary)
                         if not crashed[0] and extra and names.get((kind, state)) == selected:
                             die()
                         return result
@@ -773,16 +783,32 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                     before = git(project, 'rev-parse', 'HEAD').decode().strip()
                     initial_checkpoints = store.completed_checkpoints('recovery')
                     initial_grants = [row['details'] for row in store.db.execute("SELECT details FROM execution_history WHERE kind='review_pair_grant'")]
+                    if checkpoint_start:
+                        intent = json.loads(store.db.execute(
+                            "SELECT details FROM execution_history WHERE kind='fixer_checkpoint' AND state='started' ORDER BY seq DESC LIMIT 1"
+                        ).fetchone()['details'])
+                        returned = json.loads(store.db.execute(
+                            "SELECT details FROM execution_history WHERE kind='fixer_invocation' AND state='returned' ORDER BY seq DESC LIMIT 1"
+                        ).fetchone()['details'])
+                        self.assertEqual(intent['paths'], ['owned.txt'])
+                        self.assertEqual(returned['paths'], ['STATE.md', 'owned.txt'])
                 if boundary == 'source_drift':
                     project.joinpath('owned.txt').write_text('unrelated later bytes\n')
+                if boundary == 'checkpoint_unselected_drift':
+                    project.joinpath('STATE.md').write_text('unrelated later bytes\n')
+                if boundary == 'checkpoint_unselected_delete':
+                    project.joinpath('STATE.md').unlink()
                 if boundary == 'commit_drift':
                     git(project, 'commit', '--allow-empty', '--only', '-m', 'incoming unrelated commit')
                 with Authority(project) as owner:
                     engine = Engine(owner, 'recovery', contract, EXECUTOR, adapter=Adapter, question=question, resume=True)
                     blocked = {'invocation_started': 'uncertain or failed', 'check_started': 'check completion is uncertain',
                                'missing_facts': 'missing owned-path', 'source_drift': 'source bytes drifted',
-                               'commit_drift': 'commit effects are missing or uncertain'}
+                               'commit_drift': 'commit effects are missing or uncertain',
+                               'checkpoint_unselected_drift': 'source bytes drifted',
+                               'checkpoint_unselected_delete': 'source bytes drifted'}
                     if boundary in blocked:
+                        before_resume_head = git(project, 'rev-parse', 'HEAD').decode().strip()
                         before_calls = len(calls)
                         with self.assertRaisesRegex(Blocked, blocked[boundary]):
                             engine.invoke()
@@ -790,8 +816,13 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                         self.assertEqual(Adapter.fixes, 1 if boundary == 'invocation_started' else 2)
                         if boundary == 'invocation_started':
                             self.assertEqual(status(project, 'recovery')['review_authorization']['next_stage'], 'blocked')
+                        self.assertEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), before_resume_head)
                         if boundary == 'source_drift':
                             self.assertEqual(project.joinpath('owned.txt').read_text(), 'unrelated later bytes\n')
+                        if boundary == 'checkpoint_unselected_drift':
+                            self.assertEqual(project.joinpath('STATE.md').read_text(), 'unrelated later bytes\n')
+                        if boundary == 'checkpoint_unselected_delete':
+                            self.assertFalse(project.joinpath('STATE.md').exists())
                     else:
                         result = engine.invoke()
                         self.assertEqual(result['status'], 'complete')
