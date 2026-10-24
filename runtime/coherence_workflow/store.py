@@ -1,6 +1,7 @@
 """Worktree writer lock, ordinary progress, and read-only historical access."""
 from contextlib import contextmanager
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -174,6 +175,8 @@ class Store:
         CREATE TABLE IF NOT EXISTS execution_review_inputs(
             run_id TEXT NOT NULL, execution_id TEXT NOT NULL, input_checkpoints TEXT NOT NULL,
             PRIMARY KEY(run_id, execution_id));
+        CREATE TABLE IF NOT EXISTS execution_review_suggestions(
+            attempt_seq INTEGER PRIMARY KEY, suggestions TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS execution_usage_memberships(
             run_id TEXT NOT NULL, task_id TEXT NOT NULL, dispatched_at REAL NOT NULL,
             PRIMARY KEY(run_id, task_id));
@@ -294,6 +297,207 @@ class Store:
             return None
         return {key: json.loads(row[key]) if key != 'review_base' else row[key]
                 for key in ('contract', 'executor', 'authority', 'review_base')}
+
+    def review_policy(self, run):
+        """Read retained policy; absent policy is deliberately historical behavior."""
+        saved = self.input(run)
+        if not saved:
+            raise Blocked('review policy needs retained run input')
+        policy = saved['authority'].get('review_policy') if isinstance(saved['authority'], dict) else None
+        if policy is None:
+            return 'historical-two-review-one-fixer'
+        if policy != 'owner-pair-v1':
+            raise Blocked('unsupported retained review policy ' + repr(policy) + '; inspect or use a compatible continuation')
+        return policy
+
+    def _actionable_rejection(self, run, execution_id, review_base, review_head):
+        row = self.db.execute('SELECT role,review_base,review_head FROM execution_review_executions WHERE run_id=? AND execution_id=?',
+                              (run, execution_id)).fetchone()
+        if row is None or row['role'] != 'reviewer' or row['review_base'] != review_base or row['review_head'] != review_head:
+            raise Blocked('pair authorization rejection/range does not match retained review execution')
+        attempt = self.db.execute('SELECT state,uncertainty,findings FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq DESC LIMIT 1',
+                                  (run, execution_id)).fetchone()
+        if attempt is None or attempt['state'] != 'rejected' or attempt['uncertainty']:
+            raise Blocked('pair authorization needs a settled actionable rejection')
+        try:
+            findings = json.loads(attempt['findings'])
+        except (TypeError, ValueError):
+            findings = None
+        if not isinstance(findings, list) or not findings:
+            raise Blocked('pair authorization rejection has no actionable findings')
+
+    def review_scope(self, run):
+        saved = self.input(run)
+        return hashlib.sha256(canonical(saved['contract'].get('tasks', [])).encode()).hexdigest()
+
+    def _pair_rejection(self, run, execution_id, review_base, review_head, original_scope):
+        self._actionable_rejection(run, execution_id, review_base, review_head)
+        chain = self.review_chain(run, private=True)
+        rejection = next(item for item in chain['executions'] if item['execution_id'] == execution_id)
+        if rejection['review_ordinal'] < 2 or original_scope != self.review_scope(run):
+            raise Blocked('pair grant needs a later rejection and the retained original scope; inspect original inputs')
+        if chain['uncertain']:
+            raise Blocked('pair grant cannot continue an uncertain stage; inspect invocation history')
+        return rejection, chain
+
+    @staticmethod
+    def _pair_identity(value, name):
+        if not isinstance(value, str) or not value:
+            raise Blocked('pair authorization needs a concrete ' + name)
+        return value
+
+    def authorize_owner_pair(self, run, grant_id, *, rejecting_execution_id, review_base, review_head,
+                             original_scope, fixer_execution_id, reviewer_execution_id):
+        """Durably retain one affirmative owner pair, without a transcript or dispatch."""
+        if self.review_policy(run) != 'owner-pair-v1':
+            raise Blocked('retained review policy does not permit an additional owner pair')
+        values = {name: self._pair_identity(value, name.replace('_', ' ')) for name, value in {
+            'grant_id': grant_id, 'rejecting_execution_id': rejecting_execution_id, 'review_base': review_base,
+            'review_head': review_head, 'original_scope': original_scope, 'fixer_execution_id': fixer_execution_id,
+            'reviewer_execution_id': reviewer_execution_id}.items()}
+        if values['fixer_execution_id'] == values['reviewer_execution_id']:
+            raise Blocked('pair authorization needs distinct fixer and fresh reviewer identities')
+        rejection, chain = self._pair_rejection(run, values['rejecting_execution_id'], values['review_base'],
+                                               values['review_head'], values['original_scope'])
+        if chain['executions'][-1]['execution_id'] != rejection['execution_id']:
+            raise Blocked('pair authorization must follow the latest settled rejection; inspect retained chain')
+        if any(item['execution_id'] in (fixer_execution_id, reviewer_execution_id) for item in chain['executions']):
+            raise Blocked('pair identities already belong to an execution; select fresh assigned identities')
+        facts = {'grant_id': values['grant_id'], 'decision': 'affirmative_actual_owner',
+                 'rejecting_execution_id': values['rejecting_execution_id'], 'review_base': values['review_base'],
+                 'review_head': values['review_head'], 'original_scope': values['original_scope'],
+                 'fixer_execution_id': values['fixer_execution_id'], 'reviewer_execution_id': values['reviewer_execution_id']}
+        encoded = canonical(facts)
+        def write():
+            with self.transaction() as db:
+                duplicate = db.execute("SELECT 1 FROM execution_history WHERE run_id=? AND kind='review_pair_grant' AND details=?",
+                                       (run, encoded)).fetchone()
+                if duplicate:
+                    return
+                for row in db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='review_pair_grant'", (run,)):
+                    try:
+                        prior = json.loads(row['details'])
+                    except (TypeError, ValueError):
+                        continue
+                    if (prior.get('grant_id') == values['grant_id'] or
+                            prior.get('rejecting_execution_id') == values['rejecting_execution_id']):
+                        raise Blocked('pair grant/rejection is already authorized; reuse its exact retained pair')
+                self._history_insert(db, run, None, 'review_pair_grant', 'authorized', encoded, time.time())
+        def completed():
+            return bool(self.db.execute("SELECT 1 FROM execution_history WHERE run_id=? AND kind='review_pair_grant' AND state='authorized' AND details=?",
+                                        (run, encoded)).fetchone())
+        self._required_write('owner pair authorization', write, completed)
+        return facts
+
+    def reserve_owner_pair_fixer(self, run, grant_id, *, rejecting_execution_id, review_base, review_head, original_scope):
+        """Atomically consume one grant for its exact fixer before any provider call."""
+        if self.review_policy(run) != 'owner-pair-v1':
+            raise Blocked('retained review policy does not permit an additional owner pair')
+        self._pair_identity(grant_id, 'grant identity')
+        rejection, chain = self._pair_rejection(run, rejecting_execution_id, review_base, review_head, original_scope)
+        rows = self.db.execute("SELECT details,state FROM execution_history WHERE run_id=? AND kind IN ('review_pair_grant','review_pair_reservation') ORDER BY seq", (run,)).fetchall()
+        grant = reservation = None
+        for row in rows:
+            try: facts = json.loads(row['details'])
+            except (TypeError, ValueError): continue
+            if facts.get('grant_id') == grant_id:
+                if row['state'] == 'authorized': grant = facts
+                elif row['state'] == 'fixer_reserved': reservation = facts
+        expected = {'rejecting_execution_id': rejecting_execution_id, 'review_base': review_base,
+                    'review_head': review_head, 'original_scope': original_scope}
+        if grant is None or any(grant.get(key) != value for key, value in expected.items()):
+            raise Blocked('pair grant does not match rejection, range, or original scope')
+        last = chain['executions'][-1]
+        if last['execution_id'] != rejection['execution_id']:
+            if (last['execution_id'] != grant['fixer_execution_id'] or last['state'] != 'dispatched'):
+                raise Blocked('pair fixer reservation cannot replace a started, failed, or completed stage; inspect retained invocation')
+        if reservation is not None:
+            if reservation.get('fixer_execution_id') != grant['fixer_execution_id']:
+                raise Blocked('pair grant was consumed by a different fixer')
+            return reservation
+        facts = {**expected, 'grant_id': grant_id, 'fixer_execution_id': grant['fixer_execution_id'],
+                 'reviewer_execution_id': grant['reviewer_execution_id']}
+        encoded = canonical(facts)
+        def write():
+            with self.transaction() as db:
+                existing = None
+                for row in db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='review_pair_reservation'", (run,)):
+                    try:
+                        prior = json.loads(row['details'])
+                    except (TypeError, ValueError):
+                        continue
+                    if prior.get('grant_id') == grant_id:
+                        existing = row
+                        break
+                if existing:
+                    if existing['details'] != encoded:
+                        raise Blocked('pair grant was already consumed; inspect its retained reservation')
+                    return
+                self._history_insert(db, run, None, 'review_pair_reservation', 'fixer_reserved', encoded, time.time())
+        def completed():
+            return bool(self.db.execute("SELECT 1 FROM execution_history WHERE run_id=? AND kind='review_pair_reservation' AND state='fixer_reserved' AND details=?",
+                                        (run, encoded)).fetchone())
+        self._required_write('owner pair fixer reservation', write, completed)
+        return facts
+
+    def reserve_owner_pair_reviewer(self, run, grant_id, *, fixer_execution_id):
+        """Reserve the grant's sole fresh reviewer only after its exact fixer succeeded."""
+        if self.review_policy(run) != 'owner-pair-v1':
+            raise Blocked('retained review policy does not permit an additional owner pair')
+        reservation = None
+        for row in self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='review_pair_reservation' AND state='fixer_reserved' ORDER BY seq", (run,)):
+            try:
+                facts = json.loads(row['details'])
+            except (TypeError, ValueError):
+                continue
+            if facts.get('grant_id') == grant_id:
+                reservation = facts
+        if reservation is None:
+            raise Blocked('pair reviewer needs a retained fixer reservation')
+        if reservation['fixer_execution_id'] != fixer_execution_id:
+            raise Blocked('pair reviewer must follow the grant-assigned successful fixer')
+        fixer = self.db.execute('SELECT state,uncertainty FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq DESC LIMIT 1',
+                                (run, fixer_execution_id)).fetchone()
+        if fixer is None or fixer['state'] != 'approved' or fixer['uncertainty']:
+            raise Blocked('pair reviewer needs the grant-assigned successful fixer')
+        chain = self.review_chain(run, private=True)
+        if chain['uncertain'] or chain['executions'][-1]['execution_id'] != fixer_execution_id:
+            raise Blocked('pair reviewer must immediately follow its successful fixer; inspect retained chain')
+        facts = {**reservation, 'reviewer_execution_id': reservation['reviewer_execution_id']}
+        encoded = canonical(facts)
+        def write():
+            with self.transaction() as db:
+                existing = None
+                for row in db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='review_pair_reservation' AND state='reviewer_reserved'", (run,)):
+                    try:
+                        prior = json.loads(row['details'])
+                    except (TypeError, ValueError):
+                        continue
+                    if prior.get('grant_id') == grant_id:
+                        existing = row
+                        break
+                if existing:
+                    if existing['details'] != encoded: raise Blocked('pair reviewer reservation conflicts with retained grant')
+                    return
+                self._history_insert(db, run, None, 'review_pair_reservation', 'reviewer_reserved', encoded, time.time())
+        self._required_write('owner pair reviewer reservation', write, lambda: bool(self.db.execute(
+            "SELECT 1 FROM execution_history WHERE run_id=? AND kind='review_pair_reservation' AND state='reviewer_reserved' AND details=?", (run, encoded)).fetchone()))
+        return facts
+
+    def owner_pair_for_rejection(self, run, *, rejecting_execution_id, review_base, review_head, original_scope):
+        """Return the one retained grant/reservation matching this exact rejection."""
+        matched = None
+        for row in self.db.execute("SELECT kind,state,details FROM execution_history WHERE run_id=? AND kind IN ('review_pair_grant','review_pair_reservation') ORDER BY seq", (run,)):
+            try:
+                facts = json.loads(row['details'])
+            except (TypeError, ValueError):
+                continue
+            if all(facts.get(key) == value for key, value in {
+                'rejecting_execution_id': rejecting_execution_id, 'review_base': review_base,
+                'review_head': review_head, 'original_scope': original_scope}.items()):
+                matched = {**facts, 'state': row['state'], 'kind': row['kind']}
+        return matched
+
     def resume(self, run):
         """Reopen one actually failed/interrupted run from its retained input/history."""
         from .processes import inspect_recorded_writers
@@ -306,6 +510,9 @@ class Store:
         saved = self.input(run)
         if not saved or not isinstance(saved.get('contract'), dict) or not isinstance(saved['contract'].get('tasks'), list):
             raise Blocked('resume cannot continue: original contract/history is missing')
+        # A resume is a continuation boundary: never silently reinterpret an unknown
+        # retained policy, while absent policy deliberately preserves historical behavior.
+        self.review_policy(run)
         details = canonical({'previous_state': row['state'], 'previous_error': row['error']})
         def write():
             with self.transaction() as db:
@@ -397,17 +604,45 @@ class Store:
                                               not isinstance(input_checkpoints, list) or
                                               not all(_review_input(item) for item in input_checkpoints)):
             raise Blocked('only the first reviewer may retain explicit selected input checkpoints')
-        if review_ordinal not in (1, 2) or fixing_round not in (0, 1):
-            raise Blocked('review chain exceeds two reviews or one fixing round')
+        if not isinstance(review_ordinal, int) or review_ordinal < 1 or not isinstance(fixing_round, int) or fixing_round < 0:
+            raise Blocked('review execution needs positive ordinal/round values')
         if role == 'reviewer' and fixing_round != review_ordinal - 1:
             raise Blocked('review ordinal and fixing round are inconsistent')
-        if role == 'fixer' and fixing_round != 1:
-            raise Blocked('fixer must consume the one fixing round')
+        if role == 'fixer' and (fixing_round < 1 or fixing_round > review_ordinal):
+            raise Blocked('fixer needs a positive assigned fixing round')
         prior = self.review_chain(run, private=True)
         if prior['uncertain']:
             raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
-        if sum(item['role'] == 'reviewer' for item in prior['executions']) >= 2 or (role == 'fixer' and any(item['role'] == 'fixer' for item in prior['executions'])):
-            raise Blocked('review chain limit already consumed; do not dispatch another review/fixing round')
+        if self.review_policy(run) == 'historical-two-review-one-fixer':
+            if sum(item['role'] == 'reviewer' for item in prior['executions']) >= 2 or (role == 'fixer' and any(item['role'] == 'fixer' for item in prior['executions'])):
+                raise Blocked('review chain limit already consumed; do not dispatch another review/fixing round')
+        else:
+            last = prior['executions'][-1] if prior['executions'] else None
+            if last is None:
+                if (role, review_ordinal, fixing_round, trigger_execution_id, predecessor_execution_id) != ('reviewer', 1, 0, None, None):
+                    raise Blocked('review chain must start with fresh Review 1; correct the assigned stage')
+            else:
+                expected_role, expected_state = ('fixer', 'rejected') if last['role'] == 'reviewer' else ('reviewer', 'approved')
+                expected_ordinal = last['review_ordinal'] + (role == 'reviewer')
+                expected_round = last['fixing_round'] + (role == 'fixer')
+                if (role != expected_role or last['state'] != expected_state or
+                        review_ordinal != expected_ordinal or fixing_round != expected_round or
+                        trigger_execution_id != last['execution_id'] or predecessor_execution_id != last['execution_id'] or
+                        review_base != last['references'].get('base') or review_head != last['references'].get('head')):
+                    raise Blocked('review dispatch has unsupported causal order/range; inspect the last settled stage')
+                if role == 'fixer' and not (last.get('findings') and last['findings'][-1]):
+                    raise Blocked('fixer dispatch needs an actionable settled rejection; inspect review findings')
+                if fixing_round > 1:
+                    rejection_id = last['execution_id'] if role == 'fixer' else last['trigger_execution_id']
+                    rejection = next((item for item in prior['executions'] if item['execution_id'] == rejection_id), None)
+                    grant = self.owner_pair_for_rejection(run, rejecting_execution_id=rejection_id,
+                        review_base=review_base, review_head=rejection['references'].get('head') if rejection else None,
+                        original_scope=self.review_scope(run))
+                    reserved = 'fixer_reserved' if role == 'fixer' else 'reviewer_reserved'
+                    if (grant is None or grant['state'] != reserved or
+                            grant[role + '_execution_id'] != execution_id or
+                            (role == 'reviewer' and grant['fixer_execution_id'] != last['execution_id'])):
+                        raise Blocked('review dispatch needs its exact retained owner grant/reservation; authorize and reserve the assigned pair')
         references = canonical({'base': review_base, 'head': review_head})
         saved_inputs = canonical(input_checkpoints) if input_checkpoints is not None else None
         def write():
@@ -429,30 +664,45 @@ class Store:
             return dispatched and row is not None and row['input_checkpoints'] == saved_inputs
         self._required_write('review dispatch history', write, completed)
 
-    def review_outcome(self, run, execution_id, state, *, findings=None, uncertainty=False, references=None):
+    def review_outcome(self, run, execution_id, state, *, findings=None, suggestions=None, uncertainty=False, references=None):
         if state not in ('approved', 'rejected', 'failed', 'interrupted'):
             raise Blocked('invalid review execution outcome')
         if not isinstance(findings, list) or any(not isinstance(item, str) for item in findings):
             raise Blocked('review findings must be a list of strings')
+        if suggestions is None:
+            suggestions = []
+        if not isinstance(suggestions, list) or any(not isinstance(item, str) for item in suggestions):
+            raise Blocked('review suggestions must be a list of strings')
         refs = canonical(references or {})
-        saved_findings = canonical(findings)
+        saved_findings, saved_suggestions = canonical(findings), canonical(suggestions)
         def write():
             with self.transaction() as db:
                 if not db.execute('SELECT 1 FROM execution_review_executions WHERE run_id=? AND execution_id=?',
                                   (run, execution_id)).fetchone():
                     raise Blocked('review outcome has no recorded dispatch')
-                db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
-                           (run, execution_id, state, int(uncertainty), saved_findings, refs, time.time()))
+                attempt = db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
+                                     (run, execution_id, state, int(uncertainty), saved_findings, refs, time.time()))
+                db.execute('INSERT INTO execution_review_suggestions(attempt_seq,suggestions) VALUES(?,?)',
+                           (attempt.lastrowid, saved_suggestions))
         def completed():
-            return bool(self.db.execute('SELECT 1 FROM execution_review_attempts WHERE run_id=? AND execution_id=? AND state=? AND uncertainty=? AND findings=? AND reference_json=?',
-                                        (run, execution_id, state, int(uncertainty), saved_findings, refs)).fetchone())
+            row = self.db.execute('SELECT seq FROM execution_review_attempts WHERE run_id=? AND execution_id=? AND state=? AND uncertainty=? AND findings=? AND reference_json=? ORDER BY seq DESC LIMIT 1',
+                                  (run, execution_id, state, int(uncertainty), saved_findings, refs)).fetchone()
+            return row is not None and bool(self.db.execute(
+                'SELECT 1 FROM execution_review_suggestions WHERE attempt_seq=? AND suggestions=?',
+                (row['seq'], saved_suggestions)).fetchone())
         self._required_write('review outcome history', write, completed)
 
     def review_chain(self, run, *, private=False):
         executions = []
+        suggestions_table = bool(self.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_review_suggestions'").fetchone())
         for row in self.db.execute('SELECT * FROM execution_review_executions WHERE run_id=? ORDER BY dispatched_at,execution_id', (run,)):
-            attempts = [dict(item) for item in self.db.execute('SELECT state,uncertainty,findings,reference_json FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (run, row['execution_id']))]
-            latest = attempts[-1] if attempts else {'state': 'unknown', 'uncertainty': 1, 'findings': None, 'reference_json': '{}'}
+            attempts = [dict(item) for item in self.db.execute('SELECT seq,state,uncertainty,findings,reference_json FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (run, row['execution_id']))]
+            for attempt in attempts:
+                suggestion = (self.db.execute('SELECT suggestions FROM execution_review_suggestions WHERE attempt_seq=?',
+                                              (attempt['seq'],)).fetchone() if suggestions_table else None)
+                attempt['suggestions'] = suggestion['suggestions'] if suggestion is not None else '[]'
+            latest = attempts[-1] if attempts else {'state': 'unknown', 'uncertainty': 1, 'findings': None, 'suggestions': '[]', 'reference_json': '{}'}
             item = {'execution_id': row['execution_id'], 'role': row['role'], 'review_ordinal': row['review_ordinal'],
                     'fixing_round': row['fixing_round'], 'trigger_execution_id': row['trigger_execution_id'],
                     'predecessor_execution_id': row['predecessor_execution_id'], 'state': latest['state'],
@@ -464,10 +714,12 @@ class Store:
                 item['input_checkpoints'] = json.loads(inputs['input_checkpoints'])
             if private:
                 item['findings'] = [json.loads(attempt['findings']) for attempt in attempts if attempt['findings'] is not None]
+                item['suggestions'] = [json.loads(attempt['suggestions']) for attempt in attempts]
             else:
                 item['references'].pop('saved_session', None)
-                # Parsed actionable findings are safe owner output; raw reviewer JSON stays private.
+                # Parsed findings/suggestions are safe owner output; raw reviewer JSON stays private.
                 item['findings'] = json.loads(latest['findings']) if latest['findings'] is not None else []
+                item['suggestions'] = json.loads(latest['suggestions'])
             executions.append(item)
         return {'executions': executions, 'review_count': sum(item['role'] == 'reviewer' for item in executions),
                 'fixing_round_count': sum(item['role'] == 'fixer' for item in executions),

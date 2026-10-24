@@ -114,11 +114,7 @@ Planning/standalone/bootstrap writers retain their existing checkpoint duties.
 
 ## Review and Acceptance
 
-After task checkpoints, use one fresh independent reviewer context with only read/search tools,
-not the worker's conversation. Its review scope carries applicable accepted outcomes, explicit mechanism
-constraints and source links, and compares the actual change (including simplification or deletion)
-with them. Review the actual full committed range and relevant files with continuation; no
-provenance/evidence hash or SQL disposition is required. A findings-free approval completes immediately. A well-formed actionable first rejection continues the same reviewer session with explicitly enabled scoped writer tools: the reviewer first plans corrections, then implements fixes within original scope using the configured reviewer model. The runner runs applicable checks and creates the focused checkpoint, then obtains one fresh read-only Review 2 over the original base→actual head. The existing `fixer` history role records this correction stage, not a separate task-worker-model agent. Before repair, a process restart reopens the private saved reviewer identity; historical outcomes without that identity use a fresh reviewer-model repair session without claiming warm context. Formatting/tool issues use safe same-invocation correction or deterministic normalization of the actual result only; they never invent a verdict or launch a fixer. Malformed, interrupted, uncertain, nonactionable, fixer/checkpoint-unrecoverable, or Review 2 rejection stops honestly with retained work and actual findings/references. Across resume, retain at most two actual reviews and one fixing round; do not relabel findings as resolved, substitute the repair author for the fresh final reviewer, claim unperformed checks, or start another repair loop.
+After task checkpoints, use a fresh independent read/search-only reviewer context. A findings-free approval completes immediately. New runs retain `owner-pair-v1` before dependent work: the first actionable rejection gets the existing scoped repair/checkpoint and a fresh original-base→actual-head rereview. Every later actionable rejection asks the actual owner; only a durable affirmative grant reserves exactly one assigned fixer and its following fresh reviewer. Another rejection asks again. Denied, empty, unavailable, malformed, nonactionable, uncertain, failed, or target-drifted stages stop with retained work and never gain a replacement pair. The existing `fixer` history role records a configured-reviewer-model correction, not a task-worker agent; repair preserves original scope and never independently accepts delivery. Historical runs without policy retain the old two-review/one-fixer limit. Resume selects the last eligible persisted stage, reuses a completed exact verdict/head without another call, and never replays uncertain invocations or commits. Additional-round recovery may dispatch a provably not-started reserved fixer once or continue a returned repair's local checks/checkpoint without another fixer call. Retain matching checkpoint SHA/parent/content facts; missing or uncertain effects stop for inspection. Dispatch validates the exact causal grant/reservation, not a numeric round allowance. Findings keep compatible `path:line - defect` strings with impact/basis in ordinary prose; no literal basis suffix is required.
 
 ## Runner-configured worker role
 
@@ -133,4 +129,6 @@ review read-only in a fresh context.
 
 Operative runtime instructions supersede older graph/custody/evidence eligibility mandates.
 Historical plans/specs/approvals remain historical, not a launch checklist. Keep global assets
-portable and consent boundaries intact. After adopting changed global skills/prompts, run `/reload` in pi.
+portable and consent boundaries intact. In Paseo, changed global skills/prompts require a fresh-session
+handoff verifying checkout, revision, current approval and loaded capabilities; never ask the owner to
+run `/reload` or automatically reload/restart. Elsewhere follow the host's normal activation guidance.

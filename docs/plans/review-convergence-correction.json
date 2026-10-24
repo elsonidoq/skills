@@ -1,0 +1,36 @@
+{
+  "review_base": "453235d80da1a7f9a6a694f7108f8dc121184b60",
+  "context": {
+    "source": "docs/plans/review-convergence-tinyspec.md",
+    "original_tasks": "docs/plans/review-convergence-tasks.json",
+    "handoff": "docs/plans/review-convergence-handoff.md",
+    "lineage": "Scoped A3 correction following failed run review-convergence-20261024, successful repair checkpoint f29f6729d01e265578d5ee5026ab059baa72f28d and fresh second review rejection 9901ff6d4b5e4c2fb7c17417b02687a5. Preserve that historical original/no-policy run unchanged. Use a NEW correction run with unchanged .pi/workflow-executor.json. Top-level review_base deliberately retains the full original implementation range, not correction-only acceptance."
+  },
+  "tasks": [
+    {
+      "id": "R001",
+      "outcome": "Remove keyword-based suggestion classification from Engine._review_value, without replacing it with another semantic classifier. Read docs/plans/review-convergence-handoff.md and original TinySpec Approach 1/A3 plus original task constraints; the correction is within those requirements, not a policy redesign. The confirmed positive verdict with empty findings and suggestion 'Consider adding regression coverage for invalid credentials' currently raises _ReviewFormat solely for the word credentials. Leave blocker/nonblocker classification to the reviewer's findings/suggestions split: well-formed positive verdicts with no findings may contain optional advice mentioning crash, hang, credential, target risk or false unavailable and must remain nonblocking. Preserve structural malformed-result/type/nonempty-string/location checks, deterministic actual-output normalization, contradictory positive-plus-findings rejection, negative-without-actionable-findings stop and interrupted/uncertain handling. Do not relabel actual defects or weaken independent review/prompts. Update the focused test currently treating a credential-risk suggestion as malformed; add positive parser and actual engine/status fixtures with the formerly filtered words, showing completion, separately retained suggestions and no fixer. Assert true actionable findings (including actual crash/hang/credential/target/data-safety defects) remain blocking even with a positive flag; malformed structures still stop honestly without approval/fixer. Keep ordinary tests with this outcome; no prototype, new taxonomy, recovery/lifecycle redesign or broad refactor. Owned mutation is only engine.py and test_review_chain.py: operative docs already describe nonblocking suggestions and need no change. Preserve all other original A1-A8 acceptance, hooks/signing, owned-path limits, unrelated bytes and prior lineage. Runner executes checks and a focused verified checkpoint; worker does not stage/commit. ADR-0003 (docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md): current scoped launch authority reaches initial/corrective briefs, not changed acceptance, unrelated work or automatic failed-call retries. ADR-0004 (docs/decisions/ADR-0004-shared-routine-worker-permissions.md): shared scoped fixes and small bounded isolated tests/databases need no repeated permission; preserve exclusions for installs/global activation, credentials, deploy/push, unrelated deletion and paid application/test APIs. memory/MEMORY.md: routine status/steering does not wake parent, questions and terminal success/error may. Do not resume/upgrade/rewrite the failed historical run, mutate old Cerca applications/histories, install, reload/restart, change executor, call live providers solely for regression or write issue/memory/ADR ledgers. The independent reviewer must read original source/tasks and assess the whole original base 453235d80da1a7f9a6a694f7108f8dc121184b60 through actual correction head against A1-A8, not just R001 or last-finding compliance; fresh read/search-only Sol6.1/medium acceptance remains separate from fixer/checkpoint/metrics outcomes. A new correction run uses normal retained new-policy lifecycle; any later owner-only pair requires actual registered ask_user and durable single-pair consent, never routine coordinator self-consent or an assumed repeat grant.",
+      "depends": [],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/tests/test_review_chain.py"
+      ],
+      "required": [
+        {
+          "id": "A3-R001-focused",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests runtime/.venv/bin/python -B -m unittest test_review_chain test_cli test_worker_authority -v",
+          "pass": "Actual parser/engine/status fixtures accept positive empty-findings optional suggestions containing formerly filtered risk words, complete with separately projected suggestions and no fixer; credential-risk text alone is not a structural-malformed case. Real findings remain blocking despite positive flag; negative-empty and malformed types/strings/location/result handling still stop without fabricated approval or fixer. Shared current-authority/routine-permission/exclusion prompts remain intact. Reuse original still-applicable REQUIRED results only after inspecting actual retained check facts and revision applicability; this changed-seam check must run after correction. No broad suite default or provider regression.",
+          "evidence": "Named focused test output, suggestions/status/call-count assertions, preserved blocker/malformed negative cases and exact owned diff; fixture evidence is not model obedience or live-human proof.",
+          "permissions": "Small isolated local Git/SQLite/offline adapter fixtures with existing approved local dependency links; no install, paid app API or live provider call for regression. Missing dependency or failed check is a reported blocker, never a pass."
+        },
+        {
+          "id": "A3-A8-R001-diff",
+          "check": ["git", "diff", "--check"],
+          "pass": "No keyword filter or replacement semantic classifier remains; structural checks, blocker rejection and independent full-range review are preserved. Actual diff contains only the two owned files, with focused tests rather than unrelated cleanup; original contracts/config/history and approved dependency symlinks are untouched. Runner honors actual checks/hooks/signing and checkpoints explicit owned paths without adopting unrelated work.",
+          "evidence": "Manual _review_value/fixture diff inspection, diff-check output and actual checkpoint SHA/parent/owned paths; subsequent acceptance records exact original-base-to-correction-head range, not metrics SHA.",
+          "permissions": "Owned local edits and read-only comparison only; material scope conflict or unrelated concrete defect returns to owner instead of expanding correction."
+        }
+      ]
+    }
+  ]
+}

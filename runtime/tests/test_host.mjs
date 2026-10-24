@@ -349,7 +349,7 @@ async function mutationFixture(run) {
     const claims = [];
     const tools = limits => mutationTools(project, async request => {
       claims.push(request.path);
-      const output = execFileSync(path.join(repository, '.pi/workflow-validation/venv/bin/python'),
+      const output = execFileSync(process.env.COHERENCE_PYTHON || path.join(repository, 'runtime/.venv/bin/python'),
         ['-B', '-c', `import json,sys
 from coherence_workflow.git_effects import FocusedGit
 from coherence_workflow.store import Blocked
