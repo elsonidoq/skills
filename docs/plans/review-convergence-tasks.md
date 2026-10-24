@@ -73,19 +73,23 @@ source-producer profile is not the implementation binding.
     A5 transaction/reopen/idempotent required-write facts; A6 historical/no-policy preservation
     and unknown-policy stop; A8 safe status/history and storage docs. Explicit fixture policy
     exercises primitives; production new-start selection waits for the composed lifecycle.
-- [ ] T004 Deliver a recoverable scoped repair stage with related-failure reasoning.
+- [ ] T004 Parameterize the existing repair stage and add scoped related-failure reasoning.
   - **Depends**: T003
-  - REQUIRED: A4 actual initial/corrective brief delivery, reviewer model/context/writer
-    transition, adjacent correction and outside-authority stop; A5 repair/check/checkpoint/
-    outcome gaps with actual Git reconciliation and no replay/recommit; A8 paths, unrelated
-    bytes, checks/hooks/signing/lineage and stage documentation. Legacy first repair stays usable.
+  - REQUIRED: A4 initial/corrective briefs examine directly related adverse paths and integrated
+    original acceptance within scope; preserve reviewer-model continuation, current checks,
+    checkpoints and failure handling. A5 tests specifically exercise additional authorized
+    rounds, including repair/check/checkpoint/outcome gaps with actual Git reconciliation and
+    no replay/recommit; A8 paths, unrelated bytes, hooks/signing/lineage and affected stage docs.
+    Reuse current recovery mechanisms; no comprehensive repair of existing interruption gaps.
+    Legacy first repair stays usable.
 - [ ] T005 Deliver the usable owner-controlled lifecycle and composed acceptance.
   - **Depends**: T004
   - REQUIRED: **A1–A8 together at this first usable boundary**, including multiple later
     rejections/yes grants and no-answer stops, fresh original-range rereviews, actual bridge
     decision→durable grant→dispatch order, policy compatibility and every specified reopen gap.
     Integrate verified predecessors into last-eligible-stage selection and safe finalization;
-    retain optional-observation gaps and synchronize skill/operating/schema owners.
+    retain optional-observation gaps and synchronize skill/operating/schema owners. Reuse
+    recovery mechanisms here too; do not move a general recovery overhaul from T004 into T005.
 
 This serial order protects shared files and releases only verified checkpoint interfaces.
 Verdict interpretation, owner transport, durable authorization and recoverable repair are
@@ -93,7 +97,13 @@ independently testable seams; the lifecycle selector consumes all four. T005 is 
 transition outcome, not a milestone carrying unfinished transport/storage/fixer concerns.
 Tests and relevant docs stay with each outcome; no prototype, test-only, phase or report task.
 Permanent production-helper/lifecycle proofs address the known authorization/durability risk
-before reliance, rather than an unnecessary disposable experiment.
+before reliance, rather than an unnecessary disposable experiment. Source A5 retains every
+named recovery scenario and its safety/pass criteria; scenario coverage is not a blanket
+recovery rebuild. Modify recovery only where a concrete gap would cause duplicate calls,
+duplicate commits or unsafe continuation in the new lifecycle. Report broader pre-existing
+defects separately unless genuinely blocking this change; failed/unrun A5 proofs still block
+affected acceptance. T004 reuses existing store/Git helpers read-only, with owned changes
+limited to engine wiring, focused fixtures and affected docs.
 
 ## Verification feasibility and limits
 
@@ -133,9 +143,10 @@ base→final repaired head; planning-only source/task diff is not implementation
 - Fresh independent Sol 6.1/medium read-only specification review returned **ZERO findings** for
   the source identity above (`/tmp/coherence-convergence-spec-review.md`, session-local report).
   This is specification fidelity, not implementation acceptance.
-- Parent task inspection/review and **combined current-content source/task/scope approval are
-  pending**. Implementation, dependency installation/global activation and live workflow proof
-  are not authorized by this production operation.
+- The combined approval question was **cancelled**, not approved. The owner authorized this
+  bounded T004 task-artifact narrowing only. Updated tasks remain **pending parent review and
+  renewed combined current-content source/task/scope approval**. Implementation, dependency
+  preparation/installation/global activation and live workflow proof are not authorized.
 - Future combined approval slot: record actual owner answer, exact current source/Markdown/JSON
   identities, reviewed task scope, genuine permission/capability limits and launch authority
   here through the existing parent approval route. No producer approval or invented receipt.
