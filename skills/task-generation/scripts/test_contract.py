@@ -124,6 +124,16 @@ class ComposedAcceptanceTests(unittest.TestCase):
 
 
 class TaskGenerationContractTests(unittest.TestCase):
+    def test_required_command_handoff_uses_executable_fields_without_universal_checks(self):
+        handoff = TEXT.split('## Structured executable handoff', 1)[1].split('## Review and handoff', 1)[0]
+        self.assertIn('not only in description prose', handoff)
+        self.assertIn('Tasks without configured commands remain valid', handoff)
+        self.assertIn('`checks`, `check`, or `required[].check`', handoff)
+        examples = [json.loads(block) for block in re.findall(r'```json\n(.*?)\n```', handoff, re.S)]
+        task = next(value for value in examples if isinstance(value, dict) and value.get('id') == 'verify-title')
+        self.assertEqual(task['checks'], [['npm', 'test', '--', 'title.test.ts']])
+        review = TEXT.split('## Review and handoff', 1)[1]
+        self.assertIn('specified required commands reach the executable fields above rather than prose alone', review)
 
     def test_guidance_changes_dependency_check_and_brief_in_both_adapters(self):
         preflight = TEXT.split("## Preconditions and adapters", 1)[1].split("## Task contract", 1)[0]

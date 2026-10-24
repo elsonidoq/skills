@@ -228,6 +228,23 @@ class Engine:
         return worker.prompt(prompt, **kwargs)
 
     @staticmethod
+    def _task_value(text):
+        """Task acceptance is explicit, separate from successful SDK transport."""
+        try:
+            normalized = text.strip()
+            if normalized.startswith('```') and normalized.endswith('```'):
+                normalized = normalized.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+            value = json.loads(normalized)
+        except (AttributeError, IndexError, ValueError):
+            raise Blocked('task result needs JSON status (completed/blocked/failed) and summary; '
+                          'return an explicit outcome before completion') from None
+        if (not isinstance(value, dict) or value.get('status') not in ('completed', 'blocked', 'failed')
+                or not isinstance(value.get('summary'), str) or not value['summary'].strip()):
+            raise Blocked('task result needs status completed/blocked/failed and a nonempty summary; '
+                          'return an explicit outcome before completion')
+        return value
+
+    @staticmethod
     def _headroom(observation):
         if not isinstance(observation, dict):
             return None
@@ -890,7 +907,13 @@ class Engine:
                             continuation = {'state': row['state'], **json.loads(row['details'])}
                             if row['state'] == 'started':
                                 raise Blocked('unfinished worker invocation has no terminal outcome; inspect its saved call before continuation')
-                            if row['state'] == 'failed':
+                            needs_correction = row['state'] == 'failed'
+                            if 'task_result' in continuation:
+                                try:
+                                    needs_correction = needs_correction or self._task_value(continuation['task_result'])['status'] != 'completed'
+                                except Blocked:
+                                    needs_correction = True
+                            if needs_correction:
                                 if not continuation.get('saved_session'):
                                     raise Blocked('terminal worker failure has no saved session; inspect the failed invocation/cause before any relaunch: '
                                                   + str(continuation.get('invocation_id', 'unknown')))
@@ -944,7 +967,13 @@ class Engine:
 
                     def invoke_worker(prompt, **kwargs):
                         nonlocal continuation
-                        prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + prompt
+                        prompt = (_IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + prompt +
+                                  '\nReturn only JSON: {"status":"completed|blocked|failed","summary":"outcome and checks"}. '
+                                  'Use completed when your work and non-command acceptance are satisfied, ready for runner verification; '
+                                  'use blocked for unmet prerequisites, required acceptance you cannot satisfy or a needed decision, '
+                                  'failed for unsuccessful work. A normal tool/session return is not task completion. '
+                                  'Corrected routine tool errors do not prevent completed. The runner executes configured required '
+                                  'commands before checkpointing; their pending runner execution alone is not a blocker.')
                         if continuation is not None:
                             prompt = ('Continue only the unfinished same-task work. Inspect the prior invocation/cause below; '
                                       'do not replay completed effects. Apply only the justified targeted correction; '
@@ -992,7 +1021,8 @@ class Engine:
                                                 expected_session_id=expected_session_id)
                             raise
                         store.history(self.run, task['id'], 'worker_invocation', 'returned',
-                                      {**facts, 'saved_session': getattr(worker, 'saved_session', None)})
+                                      {**facts, 'saved_session': getattr(worker, 'saved_session', None),
+                                       'task_result': result})
                         recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)
                         self._append_metric(worker, invocation_id=invocation_id, task_id=task['id'],
                                             role=(role if role == 'fixing_worker' else 'corrective_worker' if predecessor else 'worker'), outcome='settled',
@@ -1000,7 +1030,12 @@ class Engine:
                                             expected_session_id=expected_session_id)
                         invocation_chain[:] = chain
                         last_invocation[0] = invocation_id
-                        return result
+                        outcome = self._task_value(result)
+                        if outcome['status'] != 'completed':
+                            terminal_stop[0] = invocation_id
+                            raise Blocked('task ' + task['id'] + ' ' + outcome['status'] + ': ' + outcome['summary'] +
+                                          '; partial work retained; resolve the unmet task before continuing')
+                        return outcome['summary']
                     claimed_paths = set()
                     def claim(name):
                         if name not in claimed_paths:

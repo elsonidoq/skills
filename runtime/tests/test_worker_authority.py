@@ -36,7 +36,7 @@ class WorkerAuthorityTests(ProjectTest):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"findings":[]}'
                 prompts.append(prompt)
-                return 'Verified no-change offline fixture'
+                return '{"status":"completed","summary":"Verified no-change offline fixture"}'
 
         with Authority(self.project) as owner:
             result = Engine(owner, 'authority', contract, EXECUTOR, adapter=Offline).invoke()
@@ -47,7 +47,7 @@ class WorkerAuthorityTests(ProjectTest):
             self.assert_authority(prompt)
             self.assert_test_permission(prompt)
             self.assertIn(historical, prompt)
-        self.assertEqual(result['sha'], self.base)  # No empty commits or completion redesign.
+        self.assertEqual(result['sha'], self.base)  # Successful no-change work needs no empty commit.
 
     def test_same_task_correction_keeps_current_authority_and_isolated_database_permission(self):
         project, prompts = self.project, []
@@ -61,7 +61,7 @@ class WorkerAuthorityTests(ProjectTest):
                 if len(prompts) > 1:
                     kwargs['claim']('owned.txt')
                     (project/'owned.txt').write_text('ready\n')
-                return 'Offline scoped correction'
+                return '{"status":"completed","summary":"Offline scoped correction"}'
 
         # A tiny in-memory database exercises the ordinary required-check path.
         check = ['python3', '-B', '-c',

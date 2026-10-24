@@ -231,6 +231,19 @@ no work and reserve/launch nothing. No required order, context group, source has
 approvals, execution intent, envelopes, gates, oracle mappings or model assessments.
 Do not regenerate old tasks solely to remove metadata: useful optional context remains valid.
 
+Put required machine-executable project commands in `checks`, `check`, or `required[].check`,
+not only in description prose. Both adapters use these existing fields; the runner executes them
+and requires passing exits before checkpoint/completion. For example:
+
+```json
+{"id":"verify-title","description":"Verify the corrected title","checks":[["npm","test","--","title.test.ts"]]}
+```
+
+Choose actual commands available in the target project, not example commands or check IDs.
+Keep semantic acceptance in the description and genuine owner decisions in optional `gates`;
+required acceptance that cannot be executed must still be reported unmet by the worker until
+satisfied. Tasks without configured commands remain valid; do not invent checks to fill fields.
+
 Optional `owned_paths` restricts file mutation when provided. Without it, the runner claims
 only clean, unchanged paths immediately before actual tool edits; it does not adopt dirty
 files or stage arbitrary post-run changes. Useful existing `required` check mappings are
@@ -249,6 +262,8 @@ actual independently consequential resource or outcome.
 
 At final planning review, check that executable tasks are authorization-neutral and temporary
 approval status is confined to the approval record; retain real action-specific permission gates.
+Check that specified required commands reach the executable fields above rather than prose alone;
+this is handoff review, not another startup gate or a requirement for every task to have commands.
 
 Review selection/omission, real-runtime evidence, applicable dependencies, proof lifetime,
 production acceptance, disproof/renewal and feasibility through both adapters/direct entry.

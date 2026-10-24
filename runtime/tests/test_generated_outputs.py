@@ -38,7 +38,7 @@ class GeneratedActionScopeTests(ProjectTest):
                 (project/'ignored.tmp').write_text('ignored\n')
                 command('end', 'synthetic-build')
                 calls.append('continued')
-                return 'synthetic build complete'
+                return '{"status":"completed","summary":"synthetic build complete"}'
 
         task = {'id': 'build', 'description': 'Synthetic build', 'owned_paths': ['owned.txt'],
                 'generated_outputs': ['web/dist/'],

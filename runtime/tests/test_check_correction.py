@@ -28,13 +28,13 @@ class RequiredCheckCorrectionTests(ProjectTest):
                 if len(prompts) == 1:
                     claim('owned.txt')
                     (project/'owned.txt').write_text('missing setup\n')
-                    return 'initial task work'
+                    return '{"status":"completed","summary":"initial task work"}'
                 self_case.assertIn('Actual failed attempt:', prompt)
                 self_case.assertIn('missing isolated dependency', prompt)
                 self_case.assertIn('"exit_code":1', prompt)
                 claim('setup.txt')
                 (project/'setup.txt').write_text('ready\n')
-                return 'scoped correction'
+                return '{"status":"completed","summary":"scoped correction"}'
 
         self_case = self
         command = [
@@ -80,7 +80,7 @@ class RequiredCheckCorrectionTests(ProjectTest):
                 if self.calls == 1:
                     claim('owned.txt')
                     (project/'owned.txt').write_text('partial\n')
-                    return 'initial'
+                    return '{"status":"completed","summary":"initial"}'
                 raise RuntimeError('safe correction unavailable')
         with Authority(project) as owner:
             with self.assertRaisesRegex(RuntimeError, 'safe correction unavailable'):

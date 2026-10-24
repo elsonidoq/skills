@@ -29,7 +29,7 @@ class OwnerAssignmentExecutionRoleTests(ProjectTest):
             def prompt(self, _prompt, **kwargs):
                 calls.append((self.profile, kwargs.get('read_only', False)))
                 if not kwargs.get('read_only'):
-                    return 'offline worker'
+                    return '{"status":"completed","summary":"offline worker"}'
                 return ('{"approved":false,"findings":["fixture finding"]}'
                         if len([call for call in calls if call[1]]) == 1 else '{"approved":true,"findings":[]}')
 
@@ -76,7 +76,7 @@ class SequentialExecutionTests(ProjectTest):
                     case.assertEqual(git(project, 'show', 'HEAD:owned.txt'), b'producer\n')
                     claim('new.txt')
                     (project/'new.txt').write_text('consumer\n')
-                return 'offline operation fixture'
+                return '{"status":"completed","summary":"offline operation fixture"}'
         result = self.execute([
             {'id': 'consumer', 'description': 'Consume', 'depends': ['producer'],
              'checks': [['python3', '-B', '-c', "assert open('new.txt').read() == 'consumer\\n'"],
@@ -120,7 +120,7 @@ class SequentialExecutionTests(ProjectTest):
                 calls.append(prompt)
                 kwargs['claim']('owned.txt')
                 (project/'owned.txt').write_text('partial\n')
-                return 'worker claims done but actual command fails'
+                return '{"status":"completed","summary":"worker claims done but actual command fails"}'
         with self.assertRaisesRegex(Blocked, 'check failed'):
             self.execute([{'id': 'fix', 'description': 'Fix', 'checks': [['python3', '-B', '-c', 'raise SystemExit(7)']]}], OfflineFailure)
         self.assertEqual(len(calls), 2)
@@ -139,7 +139,7 @@ class SequentialExecutionTests(ProjectTest):
                     return '{"approved":false,"findings":["owned.txt:1 - defect"]}'
                 claim('owned.txt')
                 (project/'owned.txt').write_text('changed\n')
-                return 'changed'
+                return '{"status":"completed","summary":"changed"}'
         with self.assertRaisesRegex(Blocked, 'owned.txt:1 - defect'):
             self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineReview)
         self.assertNotEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
@@ -174,7 +174,7 @@ class SequentialExecutionTests(ProjectTest):
                 if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
                 for state in ('requested', 'returned', 'sent'):
                     self.observe_question(state)
-                return 'offline question adapter'
+                return '{"status":"completed","summary":"offline question adapter"}'
         self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineQuestions)
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
@@ -232,7 +232,7 @@ else:
                 if kwargs.get('read_only'):
                     prompts.append(prompt)
                     return '{"approved":true,"findings":[]}'
-                return 'offline worker'
+                return '{"status":"completed","summary":"offline worker"}'
         contract = admit({'review_base': self.base, 'tasks': [{'id': 'fix', 'description': 'Fix'}]})
         with Authority(project) as owner:
             Engine(owner, 'range', contract, EXECUTOR, adapter=Offline).invoke()
@@ -255,7 +255,7 @@ else:
                 if '"id":"fix"' in prompt:
                     kwargs['claim']('fix.txt')
                     (project/'fix.txt').write_text('corrected\\n')
-                return 'offline worker'
+                return '{"status":"completed","summary":"offline worker"}'
         original = admit({'tasks': [{'id': 'original', 'description': 'Original'}]})
         with Authority(project) as owner:
             with self.assertRaisesRegex(Blocked, 'original defect'):
@@ -281,7 +281,7 @@ else:
             def __init__(self, *a, **k): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'): raise Blocked('transport failed')
-                return 'worker'
+                return '{"status":"completed","summary":"worker"}'
         contract = admit({'review_base': self.base, 'tasks': [{'id': 'fix', 'description': 'Fix'}]})
         with Authority(project) as owner:
             with self.assertRaisesRegex(Blocked, 'transport failed'):
@@ -300,7 +300,7 @@ else:
                 if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('done\n')
-                return 'offline worker'
+                return '{"status":"completed","summary":"offline worker"}'
         task = admit([{'id': 'fix', 'description': 'Fix', 'checks': [['python3', '-B', '-c', "assert open('owned.txt').read() == 'done\\n'"]]}])
         # Initial registration failure leaves no fabricated eligible monitor run.
         with Authority(project) as owner, patch.object(owner.store, 'register_monitor_run', side_effect=RuntimeError('setup unavailable')):
@@ -338,7 +338,7 @@ else:
             def __init__(self, *a, **k): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'): return '{"approved":false,"findings":["original review failure"]}'
-                return 'worker'
+                return '{"status":"completed","summary":"worker"}'
         for run, task, adapter, reason in (
             ('append-worker', admit([{'id': 'worker', 'description': 'Worker'}]), WorkerFailure, 'original worker failure'),
             ('append-check', admit([{'id': 'check', 'description': 'Check', 'checks': ['exit 23']}]), ReviewFailure, 'exit 23'),
@@ -352,7 +352,7 @@ else:
                 if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
                 kwargs['claim']('git-failure.txt')
                 project.joinpath('git-failure.txt').write_text('partial\n')
-                return 'worker'
+                return '{"status":"completed","summary":"worker"}'
         hook = project/'.git/hooks/pre-commit'
         hook.write_text('#!/bin/sh\nexit 9\n')
         hook.chmod(0o755)

@@ -216,6 +216,15 @@ the SDK's effective model-specific reserve, context occupancy/window and compact
 facts; unavailable observations select fresh. Each check's combined stdout/stderr and actual
 exit/interruption outcome is retained before the next command, including earlier passes in failed lists.
 
+Task-worker final text carries JSON `{status: "completed"|"blocked"|"failed", summary: string}`
+(a nonempty summary; a JSON fence is accepted). `worker_invocation` retains this private text as
+`task_result` with transport state `returned`, independently of task acceptance. The engine
+allows only `completed` to proceed to checks/checkpoint and subsequent dispatch. Unsuccessful
+or malformed results retain partial bytes and ordinary task/run `failed` state; no new database
+status or historical relabeling is introduced. Resume requires inspected targeted correction for
+unsuccessful returned outcomes just as for failed invocations. Older history without this field
+remains historical; no acceptance is inferred from prose keywords.
+
 `pi_adapter.py` and `pi-host/host.mjs` exchange newline-delimited JSON for a prompt, local
 edit/write path checks, current owner questions, optional event observations and final text/error.
 A caller that explicitly supplies an initial worker/fixer `steering` target (`run_id`,
