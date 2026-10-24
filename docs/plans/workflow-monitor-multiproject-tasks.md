@@ -10,12 +10,26 @@ Source SHA256: `02ef30d6e4c291b7d732c22cd86ed7c9a2c8b55beedca0592928ed45648f57c4
 [Executable JSON](workflow-monitor-multiproject-tasks.json) replaces the stale native-DB
 merge decomposition. These seven IDs describe this revision, not historical assignments.
 
-**Approval record:** preparation only; parent source inspection and fresh independent
-source-intent review reported zero findings. Independent task review subsequently reported
-**ONE P1**: split consistent/private source capture from publication/repeat/readback plus CLI.
-This bounded correction addresses that decomposition only; parent inspection/disposition and
-combined current-content owner planning approval remain pending. It does not claim a new
-zero-findings verdict, implementation approval or application check execution.
+**Approval record:** owner selected **“Approve planning handoff”** through `ask_user`
+after the parent presented the three goals, all seven task outcomes, exclusions, review
+results and planning-only boundary. This approves planner/TinySpec source and tasks as a
+planning handoff only, not implementation or actual preservation/removal. Reviewed content
+at `c54602b9efa5b3f0b88f5bf1ddb6f0860a50d075`:
+
+- Source SHA256: `02ef30d6e4c291b7d732c22cd86ed7c9a2c8b55beedca0592928ed45648f57c4`.
+- Task Markdown before this approval-record update SHA256:
+  `6cd2998420ad2be3e4597382423b3810390b1b9119330007116592aef912bcdf`.
+- Executable JSON SHA256:
+  `c8d93c7e9b8ef5a9d306d2d69dbc78ff3cc55b376c0e607843f96c759658791f`.
+
+Fresh independent source-intent review reported zero findings. Independent task review
+reported **ONE P1**: separate consistent/private capture from publication/repeat/readback
+plus CLI. The producer corrected that boundary at the reviewed revision; parent inspected
+the actual diff and disposed the finding as addressed. No new zero-findings task-review
+verdict is claimed. JSON/Markdown dependency validation passed; application checks remain
+NOT RUN. This update changes approval/status text only, not source or task contracts.
+The source's stale-task statement records its earlier production stage; this record owns
+current task approval. Later implementation needs explicit current launch authority.
 
 Producer reread [the actual executor](../../.pi/workflow-executor.json) before this correction:
 `openai-codex/gpt-5.6-terra` / medium workers, fresh
@@ -289,7 +303,8 @@ at the first usable browser boundary. Tests, docs and routine teardown stay with
 The task producer validates JSON/Markdown task parsing/dependencies, human–machine outcome/
 owned-path/check equivalence, source digest, G1–G3 coverage, local links and focused diff.
 These are planning checks only. Actual application tests/build/browser/setup/preservation/
-removal are NOT RUN by task preparation. Parent inspection/disposition of the one-P1
-correction and combined owner planning approval come next; no automatic rereview loop or
-implementation launch is implied. JSON `required` mappings provide compact pass/evidence/
-permission summaries; task-local outcomes independently carry executable context.
+removal are NOT RUN by task preparation. Parent inspection/disposition and combined owner
+planning approval are complete as recorded above. Implementation remains separately
+authorized; no automatic rereview loop or implementation launch is implied. JSON `required`
+mappings provide compact pass/evidence/permission summaries; task-local outcomes independently
+carry executable context.
