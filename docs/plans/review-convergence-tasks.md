@@ -143,10 +143,22 @@ base→final repaired head; planning-only source/task diff is not implementation
 - Fresh independent Sol 6.1/medium read-only specification review returned **ZERO findings** for
   the source identity above (`/tmp/coherence-convergence-spec-review.md`, session-local report).
   This is specification fidelity, not implementation acceptance.
-- The combined approval question was **cancelled**, not approved. The owner authorized this
-  bounded T004 task-artifact narrowing only. Updated tasks remain **pending parent review and
-  renewed combined current-content source/task/scope approval**. Implementation, dependency
-  preparation/installation/global activation and live workflow proof are not authorized.
-- Future combined approval slot: record actual owner answer, exact current source/Markdown/JSON
-  identities, reviewed task scope, genuine permission/capability limits and launch authority
-  here through the existing parent approval route. No producer approval or invented receipt.
+- The earlier combined approval question was cancelled. After the bounded T004 narrowing,
+  parent review inspected checkpoint `3db2e4a793cccc69bcec3d672cfbdb325730f1a8` and confirmed
+  preserved A1–A8 acceptance, narrowed ownership and no recovery-overhaul transfer into T005.
+- The owner then answered **“Approve and implement”** through `ask_user`, approving all five
+  tasks and unchanged source at that checkpoint: source SHA256
+  `a4b05453e3a3e1a106fdba01bb4c83374fd5886f28987785e62a8becb5e67b14`,
+  executable JSON SHA256 `c6ab0aa46bb9289f6411bb958fa1f21328f98ad439b7b19019cd1a52b8dbc05e`,
+  and human task presentation SHA256
+  `edd476b9325bc765c3c9583bebcfe29735a7adc51d41fdf39764bcba1e223fa9`
+  (before this approval-record-only update).
+- Approval authorizes bounded local links to reuse existing SDK/pinned Python dependencies,
+  sequential implementation through `.pi/workflow-executor.json`, required offline checks and
+  fresh independent full-range final review. It does not authorize installation, global
+  activation, application mutation, historical workflow restart or live-provider regression.
+  Changed bridge/skill activation requires the existing fresh Paseo-session handoff.
+- Validation: independent source review ZERO findings; parent task review, both task-order
+  adapters, CLI intake and changed-content/diff inspection passed. Existing baseline 24 Python
+  tests and one offline bridge-triage test passed; SDK checks await the approved local dependency
+  reuse and must pass before affected acceptance. This approval is not implementation evidence.
