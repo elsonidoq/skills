@@ -166,6 +166,15 @@ class ProjectTests(unittest.TestCase):
                                 if recording.reader is not None and recording.reader.recording_identity == (recording_id, "origin-1"))
                 initial = current()
                 self.assertEqual(initial.state, "available")
+                # Prime the actual project HTTP aggregation before removing required
+                # preserved evidence, so it must retain last-safe rows and report the
+                # recording-local failure rather than quietly emptying this source.
+                client, headers = self._runs_client(projects)
+                route = self._runs_route(projects)
+                baseline = client.get(route, headers=headers).json()
+                preserved_refs = {run["ref"] for run in baseline["runs"]
+                                  if run["ref"].startswith(initial.ref + ".")}
+                self.assertTrue(preserved_refs)
                 target = directory / component
                 target.chmod(0o666)
                 before = self._bytes()
@@ -178,6 +187,9 @@ class ProjectTests(unittest.TestCase):
                 # Missing complete evidence must not be advertised as an empty source.
                 held = target.with_suffix(".held")
                 target.rename(held)
+                missing = client.get(route, headers=headers).json()
+                self.assertTrue(preserved_refs <= {run["ref"] for run in missing["runs"]})
+                self.assertIn(initial.ref, {item["ref"] for item in missing["unavailable_recordings"]})
                 self.assertEqual(current().state, "unavailable")
                 held.rename(target)
                 self.assertEqual(current().state, "available")
@@ -468,6 +480,15 @@ class ProjectTests(unittest.TestCase):
         recovered = client.get(route, headers=headers).json()
         self.assertEqual(recovered["runs"], first["runs"])
         self.assertEqual(recovered["unavailable_recordings"], [])
+        # A previously pinned database vanishing is unavailable, not a new empty
+        # source; its last-safe rows remain alongside the healthy recording.
+        held = database.with_suffix(".held")
+        database.rename(held)
+        missing = client.get(route, headers=headers).json()
+        self.assertEqual({run["ref"] for run in missing["runs"]}, {run["ref"] for run in first["runs"]})
+        self.assertEqual([item["ref"] for item in missing["unavailable_recordings"]], [cached["ref"].split(".")[0]])
+        held.rename(database)
+        self.assertEqual(client.get(route, headers=headers).json()["unavailable_recordings"], [])
         # A permanent replacement remains unavailable, with last-safe rows retained.
         replacement = database.with_suffix(".replacement")
         replacement.write_bytes(database.read_bytes())

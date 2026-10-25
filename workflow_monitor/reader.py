@@ -264,7 +264,11 @@ class Reader:
             self._database_identity = self._check_binding()
         except ReaderError as exc:
             code = str(exc)
-            return {"state": "no_store" if code == "no_store" else "unavailable", "code": code}
+            # Only a Reader that has never bound storage may describe its missing
+            # database as an empty live source.  A pinned store disappearing is an
+            # unavailable recording, not permission to erase its last-safe view.
+            empty = code == "no_store" and self._database_identity is None and self._preserved is None
+            return {"state": "no_store" if empty else "unavailable", "code": code}
 
         connection: sqlite3.Connection | None = None
         try:

@@ -179,6 +179,15 @@ class ReaderTests(unittest.TestCase):
         finally:
             connection.close()
 
+    def test_pinned_store_disappearance_is_unavailable_not_empty(self):
+        self._record()
+        reader = Reader(self.project)
+        self.assertEqual(reader.open_snapshot()["state"], "ok")
+        (self.project / ".coherence/workflow/workflow.sqlite").unlink()
+        missing = reader.open_snapshot()
+        self.assertEqual(missing["state"], "unavailable")
+        self.assertEqual(missing["code"], "no_store")
+
     def test_review_attempt_history_is_retained_in_order(self):
         self._record()
         with Authority(self.project) as writer:
