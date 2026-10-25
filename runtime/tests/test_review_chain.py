@@ -230,7 +230,7 @@ class ChainHistoryTests(ProjectTest):
                     return '{"approved":false,"findings":["owned.txt:1 - actionable defect [basis: correctness]"]}'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('changed\n')
-                return '{"status":"completed","summary":"PRIVATE-WORKER-ANSWER"}'
+                return 'PRIVATE-WORKER-ANSWER'
 
         contract = admit({'tasks': [{'id': 'original', 'description': 'PRIVATE-TASK-TEXT'}]})
         with Authority(project) as owner:
@@ -259,7 +259,7 @@ class BoundedChainTests(ProjectTest):
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 calls.append(kwargs.get('read_only', False))
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else '{"status":"completed","summary":"synthetic worker"}'
+                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'synthetic worker'
         with Authority(self.project) as owner:
             result = Engine(owner, 'approved', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
                             EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
@@ -276,7 +276,7 @@ class BoundedChainTests(ProjectTest):
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 calls.append(kwargs.get('read_only', False))
-                return json.dumps({'approved': True, 'findings': [], 'suggestions': suggestions}) if kwargs.get('read_only') else '{"status":"completed","summary":"worker answer"}'
+                return json.dumps({'approved': True, 'findings': [], 'suggestions': suggestions}) if kwargs.get('read_only') else 'worker answer'
         contract = admit({'tasks': [{'id': 'private', 'description': 'PRIVATE task text'}]})
         with Authority(self.project) as owner:
             result = Engine(owner, 'suggestions-only', contract, EXECUTOR, adapter=Adapter).invoke()
@@ -308,7 +308,7 @@ class BoundedChainTests(ProjectTest):
                     def __init__(self, *_args, **_kwargs): pass
                     def prompt(self, _prompt, **kwargs):
                         calls.append(kwargs.get('read_only', False))
-                        return verdict if kwargs.get('read_only') else '{"status":"completed","summary":"worker answer"}'
+                        return verdict if kwargs.get('read_only') else 'worker answer'
                 with Authority(self.project) as owner:
                     with self.assertRaisesRegex(Blocked, 'owner authorization unavailable|actionable rejection'):
                         Engine(owner, name, admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
@@ -334,7 +334,7 @@ class BoundedChainTests(ProjectTest):
                     def __init__(self, *_args, **_kwargs): pass
                     def prompt(self, _prompt, **kwargs):
                         calls.append(kwargs.get('read_only', False))
-                        return verdict if kwargs.get('read_only') else '{"status":"completed","summary":"worker answer"}'
+                        return verdict if kwargs.get('read_only') else 'worker answer'
                 with Authority(self.project) as owner:
                     with self.assertRaisesRegex(Blocked, 'reviewer result|review blocker'):
                         Engine(owner, 'malformed-' + str(ordinal), admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
@@ -352,7 +352,7 @@ class BoundedChainTests(ProjectTest):
                 calls.append(kwargs.get('read_only', False))
                 if kwargs.get('read_only'):
                     raise KeyboardInterrupt
-                return '{"status":"completed","summary":"worker answer"}'
+                return 'worker answer'
         with Authority(self.project) as owner:
             with self.assertRaises(KeyboardInterrupt):
                 Engine(owner, 'interrupted-review', admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
@@ -385,7 +385,7 @@ class BoundedChainTests(ProjectTest):
                 else:
                     kwargs['claim']('owned.txt')
                     project.joinpath('owned.txt').write_text('fixed\n')
-                return '{"status":"completed","summary":"synthetic worker"}'
+                return 'synthetic worker'
         contract = admit({'tasks': [{'id': 'dummy', 'description': 'synthetic', 'owned_paths': ['owned.txt'],
                                      'checks': [['/bin/sh', '-c', 'test "$(cat owned.txt)" = fixed']]}]})
         with Authority(project) as owner:
@@ -468,7 +468,7 @@ class BoundedChainTests(ProjectTest):
                 else:
                     kwargs['claim']('owned.txt')
                     project.joinpath('owned.txt').write_text('initial\n')
-                return '{"status":"completed","summary":"fixture"}'
+                return 'fixture'
         contract = admit([{'id': 'task', 'description': 'fixture', 'owned_paths': ['owned.txt'],
                            'checks': [['/bin/sh', '-c', '! grep -q broken owned.txt']]}])
         with Authority(project) as owner:
@@ -495,7 +495,7 @@ class BoundedChainTests(ProjectTest):
                     Adapter.reviews += 1
                     return ('{"approved":false,"findings":["owned.txt:1 - first [basis: correctness]"]}' if Adapter.reviews == 1
                             else '{"approved":false,"findings":["owned.txt:2 - final [basis: correctness]"]}')
-                return '{"status":"completed","summary":"synthetic worker"}'
+                return 'synthetic worker'
         with Authority(self.project) as owner:
             with self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
                 Engine(owner, 'final-rejection', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
@@ -514,7 +514,7 @@ class BoundedChainTests(ProjectTest):
                     return '{"approved":false,"findings":["owned.txt:1 - defect [basis: correctness]"]}'
                 if 'Actionable findings:' in _prompt:
                     raise Blocked('synthetic fixer failure')
-                return '{"status":"completed","summary":"synthetic worker"}'
+                return 'synthetic worker'
         with Authority(self.project) as owner:
             with self.assertRaisesRegex(Blocked, 'synthetic fixer failure'):
                 Engine(owner, 'fixer-failure', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
@@ -547,7 +547,7 @@ class BoundedChainTests(ProjectTest):
                         return '{"approved":false,"findings":["owned.txt:1 - defect [basis: correctness]"]}'
                     return '{"approved":true,"findings":[]}'
                 calls.append(('fix-or-worker', id(self)))
-                return '{"status":"completed","summary":"fixture"}'
+                return 'fixture'
         def owner_question(question, **kwargs):
             decisions.append((question, kwargs))
             return 'yes'
@@ -640,7 +640,7 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                     calls.append(kwargs.get('read_only', False))
                     if kwargs.get('read_only'):
                         return '{"approved":false,"findings":["owned.txt:1 - requests crash on missing record"]}'
-                    return '{"status":"completed","summary":"fixture"}'
+                    return 'fixture'
             def question(text, **kwargs):
                 questions.append(kwargs)
                 if mode == 'internal-error':
@@ -707,7 +707,7 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                             calls.append(('worker', 0, prompt))
                             kwargs['claim']('owned.txt')
                             project.joinpath('owned.txt').write_text('initial\n')
-                        return '{"status":"completed","summary":"PRIVATE repair answer"}'
+                        return 'PRIVATE repair answer'
                 def question(text, **kwargs):
                     questions.append(kwargs)
                     return 'yes'
@@ -855,7 +855,7 @@ class FixExecutionTests(ProjectTest):
                     project.joinpath('owned.txt').write_text('broken\n')
                 else:
                     project.joinpath('owned.txt').write_text('fixed\n')
-                return '{"status":"completed","summary":"fixed"}'
+                return 'fixed'
 
         contract = {'tasks': [{
             'id': 'original', 'description': 'synthetic original work', 'owned_paths': ['owned.txt'],

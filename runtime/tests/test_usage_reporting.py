@@ -42,11 +42,11 @@ class UsageReportingTests(ProjectTest):
                 if 'REQUIRED check' in prompt:
                     project.joinpath('ready').write_text('ready\n')
                     self.last_interval = interval('worker-session', 3, .03)
-                    return '{"status":"completed","summary":"corrected"}'
+                    return 'corrected'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('done\n')
                 self.last_interval = interval('worker-session', 5, .05)
-                return '{"status":"completed","summary":"synthetic worker PRIVATE-ANSWER"}'
+                return 'synthetic worker PRIVATE-ANSWER'
 
         contract = admit({'tasks': [{'id': 'usage', 'description': 'PRIVATE TASK TEXT',
                                      'owned_paths': ['owned.txt'],
@@ -76,7 +76,7 @@ class UsageReportingTests(ProjectTest):
         class Adapter:
             def __init__(self, *_args, **_kwargs): self.last_interval = interval('worker', 1, .01)
             def prompt(self, _prompt, **kwargs):
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else '{"status":"completed","summary":"done"}'
+                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
         with Authority(project) as owner:
             with patch('coherence_workflow.engine.create_artifact', side_effect=OSError('optional gap')):
                 result = Engine(owner, 'gap', admit([{'id': 'task', 'description': 'synthetic'}]),

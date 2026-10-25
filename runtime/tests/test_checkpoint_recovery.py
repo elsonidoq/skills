@@ -29,7 +29,7 @@ class CheckpointRecoveryTests(ProjectTest):
                 prompts.append(prompt)
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('bad\n' if len(prompts) == 1 else 'good\n')
-                return '{"status":"completed","summary":"corrected"}'
+                return 'corrected'
 
         task = {'id': 'hook', 'description': 'Synthetic hook correction', 'owned_paths': ['owned.txt'],
                 'checks': [["python3", "-B", "-c", "from pathlib import Path; assert Path('owned.txt').exists()"]]}
@@ -58,7 +58,7 @@ class CheckpointRecoveryTests(ProjectTest):
                     return '{"approved":true,"findings":[]}'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('committed\n')
-                return '{"status":"completed","summary":"work"}'
+                return 'work'
 
         original = FocusedGit.checkpoint
         def reported_failure(focused):

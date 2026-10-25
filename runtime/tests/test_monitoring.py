@@ -95,7 +95,7 @@ class MonitoringStorageTests(ProjectTest):
                 if read_only:
                     return '{"approved":true,"findings":[]}'
                 self.calls += 1
-                return '{"status":"completed","summary":"returned"}'
+                return 'returned'
 
         tasks = [
             {'id': 'left', 'description': 'left'},
@@ -145,7 +145,7 @@ class MonitoringStorageTests(ProjectTest):
                 if len(calls) == 1:
                     claim('effect.txt')
                     (project / 'effect.txt').write_text('complete\n')
-                    return '{"status":"completed","summary":"completed effect once"}'
+                    return 'completed effect once'
                 raise KeyboardInterrupt
 
         with Authority(project) as owner:
@@ -163,7 +163,7 @@ class MonitoringStorageTests(ProjectTest):
                     calls.append('resumed-correction')
                     claim('ready.txt')
                     (project / 'ready.txt').write_text('ready\n')
-                    return '{"status":"completed","summary":"continued without replaying completed effect"}'
+                    return 'continued without replaying completed effect'
 
             self_case = self
             result = Engine(owner, 'resume-lineage', admit([task]), EXECUTOR,

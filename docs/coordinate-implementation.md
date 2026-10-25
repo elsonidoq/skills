@@ -95,17 +95,6 @@ Optional `checks` accepts shell command strings, argv lists or objects with `com
 A singular `check` or `required[].check` uses the same command format. Old registered catalogue
 IDs are no longer executable: supply the actual project command when requesting that check.
 Commands run normally with no workflow deadline or output cap. A nonzero required command is retained with its exact command, exit and output as a failed attempt, then returned to the same-task worker for a reasoned safe scoped source/setup correction. The runner reruns the affected required command and only checkpoints after real passes; an unavailable safe correction or material decision reports its actual blocker. This is neither a skipped check nor cross-task reuse/post-review fixing, and it never spins an unchanged failed command. No universal test collection count, byte pin or evidence applicability receipt.
-Task workers (including same-task check/checkpoint corrections) return JSON
-`{"status":"completed|blocked|failed","summary":"outcome and checks"}` with one status value.
-Only `completed` proceeds to runner checks and a focused checkpoint. `blocked`, `failed`, or
-malformed outcomes stop advancement before checkpoint, dependents, final review or repair;
-partial work stays in place. Legitimate completed no-change tasks need no empty commit or
-configured command. This is an explicit outcome, not keyword scanning or proof of semantic
-acceptance: agents still judge non-executable requirements. A delivered owner answer/steering
-message is not cancellation; the worker must return its actual outcome. Resume treats an
-unsuccessful returned task like a failed invocation: inspect its saved session and supply a
-diagnosed targeted correction through the existing continuation path, never an unchanged retry.
-
 Optional `gates` contains question strings or objects with `question`/`description`; current owner
 approval is needed before that task's worker starts. Other optional context is passed to the worker.
 

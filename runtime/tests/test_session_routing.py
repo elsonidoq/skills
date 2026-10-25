@@ -32,7 +32,7 @@ class SessionRoutingTests(ProjectTest):
                     project.joinpath('ready').write_text('ready\n')
                     self.saved_session = saved_session or {'id': 'persisted-worker', 'file': '/private/worker.jsonl'}
                     self.last_observation = {'after': {'headroom': HEADROOM}}
-                    return '{"status":"completed","summary":"corrected required check"}'
+                    return 'corrected required check'
                 workers.append((self, saved_session, reuse_key, prompt))
                 if '"id":"first"' in prompt:
                     claim('first.txt')
@@ -43,7 +43,7 @@ class SessionRoutingTests(ProjectTest):
                     project.joinpath('second.txt').write_text('second\n')
                 self.saved_session = saved_session or {'id': 'persisted-worker', 'file': '/private/worker.jsonl'}
                 self.last_observation = {'after': {'headroom': HEADROOM}}
-                return '{"status":"completed","summary":"synthetic worker"}'
+                return 'synthetic worker'
 
             def assertEqual(self, left, right):
                 if left != right:
@@ -89,7 +89,7 @@ class SessionRoutingTests(ProjectTest):
                 claim('one.txt' if '"id":"one"' in prompt else 'two.txt')
                 self.saved_session = {'id': 'persisted-worker', 'file': '/private/worker.jsonl'}
                 self.last_observation = {'after': {'headroom': HEADROOM}}
-                return '{"status":"completed","summary":"synthetic worker"}'
+                return 'synthetic worker'
 
         tasks = admit([
             {'id': 'one', 'description': 'One', 'context_group': 'same'},

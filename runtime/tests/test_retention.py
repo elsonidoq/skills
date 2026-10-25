@@ -34,7 +34,7 @@ class RunInputHistoryTests(ProjectTest):
                     project.joinpath('owned.txt').write_text('owned\n')
                 if 'Actual failed attempt:' in prompt:
                     project.joinpath('ready').write_text('ready\n')
-                return '{"status":"completed","summary":"PRIVATE worker answer"}'
+                return 'PRIVATE worker answer'
 
         with Authority(project) as owner:
             Engine(owner, 'retained', contract, EXECUTOR, adapter=CorrectingWorker,
@@ -88,7 +88,7 @@ class RequiredStorageRecoveryTests(ProjectTest):
                     effects.append('worker')
                     kwargs['claim']('owned.txt')
                     project.joinpath('owned.txt').write_text('changed\n')
-                return '{"status":"completed","summary":"done"}'
+                return 'done'
 
         project = self.project
         with Authority(project) as owner:
@@ -117,7 +117,7 @@ class RequiredStorageRecoveryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 prompts.append(prompt)
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else '{"status":"completed","summary":"done"}'
+                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
 
         with Authority(self.project) as owner:
             with patch.object(owner.store, '_history_insert', side_effect=sqlite3.OperationalError('storage unavailable')):

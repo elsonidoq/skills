@@ -35,7 +35,7 @@ class SameRunResumeTests(ProjectTest):
                 Adapter.workers += 1
                 kwargs['claim']('tiny.txt')
                 (project/'tiny.txt').write_text('done')
-                return '{"status":"completed","summary":"done"}'
+                return 'done'
         with Authority(project) as owner:
             original_task = owner.store.task
             def interrupted(*args, **kwargs):
@@ -76,7 +76,7 @@ class SameRunResumeTests(ProjectTest):
                     case.assertTrue(kwargs['review_repair'])
                     case.assertEqual(self.profile, EXECUTOR['reviewer'])
                     self.saved_session = {**saved, 'compatibility': {'readOnly': False}}
-                return '{"status":"completed","summary":"fixture"}'
+                return 'fixture'
         contract = admit([{'id': 'task', 'description': 'fixture'}])
         with Authority(self.project) as owner:
             with patch.object(Engine, 'run_fix', side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
@@ -139,7 +139,7 @@ class SameRunResumeTests(ProjectTest):
                     raise KeyboardInterrupt
                 kwargs['claim']('one.txt')
                 project.joinpath('one.txt').write_text('one\n')
-                return '{"status":"completed","summary":"first"}'
+                return 'first'
 
         with Authority(project) as owner:
             with self.assertRaises(KeyboardInterrupt):
@@ -160,7 +160,7 @@ class SameRunResumeTests(ProjectTest):
                 resumed_calls.append('worker')
                 kwargs['claim']('two.txt')
                 project.joinpath('two.txt').write_text('two\n')
-                return '{"status":"completed","summary":"second"}'
+                return 'second'
 
         output = io.StringIO()
         with patch.dict(os.environ, _DETACHED_BRIDGE), patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
@@ -238,7 +238,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
                     self_test.assertIn('terminal unknown transport cause', prompt)
                     self_test.assertIn('diagnosed fixture disconnected pipe; repaired fixture transport', prompt)
                     self_test.assertEqual(kwargs['saved_session'], identity)
-                    return '{"status":"completed","summary":"continued targeted work"}'
+                    return 'continued targeted work'
             self_test = self
             with self.assertRaisesRegex(Blocked, 'remains unknown'):
                 Engine(owner, 'terminal', contract, EXECUTOR, adapter=Continued, resume=True,
@@ -279,13 +279,13 @@ class UnfinishedTaskResumeTests(ProjectTest):
                 if 'first synthetic task' in prompt:
                     kwargs['claim']('one.txt')
                     project.joinpath('one.txt').write_text('complete\n')
-                    return '{"status":"completed","summary":"first complete"}'
+                    return 'first complete'
                 kwargs['claim']('two.txt')
                 project.joinpath('two.txt').write_text('partial\n')
                 (project/'web/dist').mkdir(parents=True)
                 kwargs['claim']('web/dist/known.js')
                 project.joinpath('web/dist/known.js').write_text('generated\n')
-                return '{"status":"completed","summary":"partial work"}'
+                return 'partial work'
 
         with Authority(project) as owner:
             with self.assertRaises(KeyboardInterrupt):
@@ -309,12 +309,12 @@ class UnfinishedTaskResumeTests(ProjectTest):
                     return '{"approved":true,"findings":[]}'
                 if 'Actual failed attempt:' in prompt and not prompt.startswith('Continue only'):
                     project.joinpath('ready').write_text('ready\n')
-                    return '{"status":"completed","summary":"corrected setup"}'
+                    return 'corrected setup'
                 assert 'cleanup' in kwargs
                 kwargs['claim']('two.txt')
                 project.joinpath('two.txt').write_text('continued\n')
                 kwargs['cleanup']('web/dist/known.js')
-                return '{"status":"completed","summary":"continued partial task"}'
+                return 'continued partial task'
 
         output = io.StringIO()
         with patch.dict(os.environ, _DETACHED_BRIDGE), patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
@@ -391,7 +391,7 @@ class CancelledPartialResumeTests(ProjectTest):
                     kwargs['claim']('work.txt')
                     project.joinpath('work.txt').write_text('continued\n')
                     kwargs['cleanup']('web/dist/known.js')
-                    return '{"status":"completed","summary":"continued after owned cancellation"}'
+                    return 'continued after owned cancellation'
 
             result = Engine(owner, 'cancelled-partial', saved['contract'], saved['executor'], adapter=Continued,
                             paid_scope=saved['authority']['paid_scope'], resume=True).invoke()
