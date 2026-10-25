@@ -15,6 +15,7 @@ import uvicorn
 
 from workflow_monitor.app import create_app
 from workflow_monitor.mapping import normalize
+from workflow_monitor.projects import Projects
 from workflow_monitor.public import minimize
 from workflow_monitor.tests.test_mapping import snapshot
 
@@ -240,6 +241,73 @@ class HttpTests(unittest.TestCase):
         for path in ("/secret.map", "/raw-ref.txt", "/outside", "/../etc/passwd", "/api/monitor/v1/runs/run_raw/snapshot"):
             response = self.client.get(path, headers=self.api_headers)
             self.assertEqual(response.status_code, 404 if path.startswith("/api/") else 404)
+            self.assert_safe(response)
+
+    def project_client(self):
+        root = Path(self.tmp.name) / "projects"
+        root.mkdir()
+        return TestClient(create_app(Projects(root), Path(self.tmp.name) / "assets", 8765),
+                          base_url="http://127.0.0.1:8765")
+
+    def test_project_dispatcher_serves_root_and_fixed_build_assets(self):
+        assets = Path(self.tmp.name) / "assets"
+        built = assets / "assets"
+        built.mkdir()
+        (assets / "index.html").write_text('<script type="module" src="/assets/app-123.js"></script>')
+        (built / "app-123.js").write_text("console.log('built')")
+        (built / "app-123.css").write_text("main { color: black; }")
+        client = self.project_client()
+        for path, expected, media_type in (
+            ("/", (assets / "index.html").read_text(), "text/html"),
+            ("/assets/app-123.js", "console.log('built')", "javascript"),
+            ("/assets/app-123.css", "main { color: black; }", "text/css"),
+        ):
+            with self.subTest(path=path):
+                response = client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.text, expected)
+                self.assertIn(media_type, response.headers["content-type"])
+                self.assert_safe(response)
+                self.assertEqual(response.headers["x-content-type-options"], "nosniff")
+                self.assertEqual(response.headers["referrer-policy"], "no-referrer")
+                self.assertEqual(response.headers["x-frame-options"], "DENY")
+                head = client.head(path)
+                self.assertEqual(head.status_code, 200)
+                self.assertEqual(head.content, b"")
+        (built / "later.js").write_text("not inventoried")
+        for path in ("/assets/later.js", "/missing.js", "/unknown", "/secret.map", "/raw-ref.txt",
+                     "/outside", "/%2e%2e/etc/passwd",
+                     "/runs/id-plain", "/projects/unknown/runs/id-plain", "/api/monitor/v1/unknown"):
+            with self.subTest(path=path):
+                response = client.get(path, headers=self.api_headers)
+                self.assertEqual(response.status_code, 404)
+                self.assert_safe(response)
+        self.assertEqual(client.get("/api/monitor/v1/projects", headers=self.api_headers).json()["projects"], [])
+
+    def test_project_dispatcher_keeps_asset_and_api_security_boundaries(self):
+        assets = Path(self.tmp.name) / "assets"
+        nested = assets / "nested"
+        nested.mkdir()
+        (nested / "safe.js").write_text("safe")
+        client = self.project_client()
+        for path in ("/", "/app.js", "/api/monitor/v1/projects"):
+            response = client.get(path, headers={"host": "localhost:8765", **self.api_headers})
+            self.assertEqual(response.status_code, 400)
+            self.assert_safe(response)
+            self.assertEqual(client.post(path).status_code, 400)
+        for headers in ({}, {**self.api_headers, "origin": "http://evil.invalid"},
+                        {**self.api_headers, "sec-fetch-site": "cross-site"}):
+            response = client.get("/api/monitor/v1/projects", headers=headers)
+            self.assertEqual(response.status_code, 400)
+            self.assert_safe(response)
+        (assets / "app.js").unlink()
+        (assets / "app.js").symlink_to(assets / "secret.map")
+        (nested / "safe.js").unlink()
+        nested.rmdir()
+        nested.symlink_to(assets)
+        for path in ("/app.js", "/nested/safe.js"):
+            response = client.get(path)
+            self.assertEqual(response.status_code, 404)
             self.assert_safe(response)
 
     def test_actual_server_error_is_closed_and_safe(self):

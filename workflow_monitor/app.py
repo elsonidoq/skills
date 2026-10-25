@@ -130,6 +130,17 @@ def _read_asset(root_fd: int, parts: tuple[str, ...]) -> bytes:
         os.close(directory_fd)
 
 
+def _asset_response(assets_fd: int, fixed_assets: dict[str, tuple[str, ...]], path: str) -> Response:
+    asset = fixed_assets.get(path)
+    if asset is None:
+        return _error("not_found", 404)
+    try:
+        content = _read_asset(assets_fd, asset)
+    except OSError:
+        return _error("not_found", 404)
+    return Response(content, media_type=mimetypes.guess_type(path)[0] or "application/octet-stream")
+
+
 def _token(run_ref: str, records: list[dict[str, Any]], unknown: list[dict[str, Any]]) -> str:
     retained = records + unknown
     watermark = max((item.get("source_seq", -1) for item in retained if type(item.get("source_seq")) is int), default=-1)
@@ -546,14 +557,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         return JSONResponse(item) if item else _error("not_found", 404)
 
     def asset_response(path: str) -> Response:
-        asset = fixed_assets.get(path)
-        if asset is None:
-            return _error("not_found", 404)
-        try:
-            content = _read_asset(assets_fd, asset)
-        except OSError:
-            return _error("not_found", 404)
-        return Response(content, media_type=mimetypes.guess_type(path)[0] or "application/octet-stream")
+        return _asset_response(assets_fd, fixed_assets, path)
 
     async def run_shell(request: Request) -> Response:
         raw_path = request.scope.get("raw_path")
@@ -665,8 +669,13 @@ class _ProjectReader:
 def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette:
     if type(port) is not int or not 1 <= port <= 65535:
         raise ValueError("port must be a valid TCP port")
+    assets_fd, fixed_assets = _assets(assets)
     expected_host = f"127.0.0.1:{port}"
     readers: dict[str, Starlette] = {}
+
+    async def static(request: Request) -> Response:
+        name = request.path_params.get("path", "")
+        return _asset_response(assets_fd, fixed_assets, "/index.html" if name == "" else "/" + name)
 
     def secure(response: Response) -> Response:
         response.headers.update({"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
@@ -727,6 +736,7 @@ def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette
         Route("/api/monitor/v1/projects", listed, methods=["GET"]),
         Route("/api/monitor/v1/projects/{project_ref}/{rest:path}", proxy, methods=["GET"]),
         Route("/projects/{project_ref}/{rest:path}", proxy, methods=["GET", "HEAD"]),
+        Route("/{path:path}", static, methods=["GET", "HEAD"]),
     ])
     app.add_middleware(BaseHTTPMiddleware, dispatch=protected)
     return app
