@@ -69,9 +69,11 @@ _DECISION_CONSTRAINTS = (
 _IMPLEMENTATION_AUTHORITY = (
     'Current execution authority: this owner-authorized workflow launch approves implementation '
     'of the assigned task within its stated scope. Historical planning-only or awaiting-implementation-approval '
-    'wording in source/task artifacts is superseded for that scope, not a current prohibition. '
-    'Preserve task requirements, acceptance criteria, explicit manual gates and all safety/permission '
-    'boundaries; ask the owner if a material authority conflict remains.\n'
+    'wording in source/task artifacts is superseded for that scope, not a current prohibition. A later scoped '
+    'owner approval also supersedes an earlier conflicting restriction for the action it approves; an agent-chosen '
+    'finite fixture, setup, rerun, or lifecycle parameter is not an owner-approval gate. Preserve actual owner-imposed '
+    'constraints, task requirements, acceptance criteria, explicit manual gates and all safety/permission boundaries; '
+    'ask the owner if a material authority conflict remains.\n'
 )
 
 # Shared worker permission defaults. Edit here, not in individual task/correction prompts.
@@ -80,6 +82,7 @@ _ROUTINE_AUTHORITY = (
     'local/in-project dependency setup; and generate, rebuild, or selectively clean up current-task artifacts without '
     'an owner question. Small isolated tests and local test databases are allowed for any task; keep test data and '
     'execution bounded so they do not risk exhausting the machine\'s resources or affecting unrelated data/services. '
+    'Choose and adjust ordinary finite execution parameters within that scope without turning them into owner-renewal gates. '
     'Do not ask merely because files changed. This authority is not proof that checks succeeded. '
     'A separately supplied paid scope applies only as supplied and is never inferred from credentials or task text. '
     'Ask only for product decisions, substantial planned-complexity increases, separately scoped paid usage, or actions '
@@ -656,7 +659,7 @@ class Engine:
             text = reviewer.prompt('Independently review the actual committed range below against the requested tasks. '
                 'You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, '
                 'so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. '
-                + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
+                + _DECISION_CONSTRAINTS + _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + self.paid_authority()
                 + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. '
                 'Return only JSON: {"approved":true,"findings":[],"suggestions":[]} (suggestions may be omitted) or '
                 '{"approved":false,"findings":["path:line - concrete defect, impact and accepted basis in ordinary prose"]}. '

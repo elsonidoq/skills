@@ -434,7 +434,9 @@ or additional approval gate; actual invalidating drift follows existing recovery
    Apply the dependency evidence/permission review above before combined approval.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable task instructions.
-   Review risk selection/omission, actual evidence and gates, necessary producer/consumer
+   Reconcile later scoped owner approval with earlier conflicting restrictions into one current
+   worker scope; do not promote agent-selected execution parameters or optional hardening into
+   owner gates. Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries.
    Source carries needs; separate tasks carry only independently necessary work units.
 5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
@@ -571,7 +573,9 @@ valid settled principles. Verify the saved exact stage binding and independent r
    in direct Standard and managed/helper plans.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable task instructions.
-   Apply the dependency evidence/permission review above, including the direct Standard
+   Reconcile later scoped owner approval with earlier conflicting restrictions into one current
+   worker scope; do not promote agent-selected execution parameters or optional hardening into
+   owner gates. Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
    Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
    to proven-equivalent mechanical repairs. Delegate uncertain or substantive task-level and
