@@ -35,7 +35,7 @@ class LineageTests(unittest.TestCase):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get("read_only"):
-                    return '{"approved":true,"findings":[]}' if approved else '{"approved":false,"findings":["fixture defect"]}'
+                    return '{"approved":true,"findings":[]}' if approved else '{"approved":false,"findings":["tracked@1:1 - fixture defect impacts workflow lineage"]}'
                 kwargs["claim"](run_id + ".txt")
                 (project / (run_id + ".txt")).write_text("changed\n")
                 return "offline adapter"
@@ -43,7 +43,7 @@ class LineageTests(unittest.TestCase):
             return Engine(owner, run_id, contract, EXECUTOR, adapter=OfflineAdapter).invoke()
 
     def test_real_rejected_and_full_range_rereview_flow_through_reader_mapper_and_http(self):
-        with self.assertRaisesRegex(Blocked, "fixture defect"):
+        with self.assertRaisesRegex(Blocked, "owner authorization unavailable"):
             self._run("original", {"tasks": [{"id": "original", "description": "Original"}]}, False)
         with sqlite3.connect(self.project / ".coherence/workflow/workflow.sqlite") as db:
             review_id = db.execute("SELECT occurrence_id FROM execution_observations WHERE run_id='original' AND phase='review' AND kind='failed'").fetchone()[0]
@@ -73,7 +73,7 @@ class LineageTests(unittest.TestCase):
 
     def test_reviewer_only_or_no_check_corrections_cannot_accept_a_repair_chain(self):
         def rejected(name):
-            with self.assertRaisesRegex(Blocked, "fixture defect"):
+            with self.assertRaisesRegex(Blocked, "owner authorization unavailable"):
                 self._run(name, {"tasks": [{"id": name, "description": "Original"}]}, False)
             with sqlite3.connect(self.project / ".coherence/workflow/workflow.sqlite") as db:
                 occurrence, facts = db.execute("SELECT occurrence_id, facts FROM execution_observations WHERE run_id=? AND phase='review' AND kind='failed'", (name,)).fetchone()
