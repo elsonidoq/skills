@@ -116,12 +116,38 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(alpha.state, "no_store")
         self.assertEqual(alpha.reader.open_snapshot()["state"], "no_store")
         self._record(self.alpha, "first")
+        refreshed = next(recording for project in projects.refresh() for recording in project.recordings
+                         if recording.worktree == self.alpha)
+        self.assertIs(refreshed.reader, alpha.reader)
+        self.assertEqual(refreshed.state, "available")
         self.assertEqual(alpha.reader.open_snapshot("first")["state"], "ok")
         database = self.alpha / ".coherence/workflow/workflow.sqlite"
         replacement = database.with_suffix(".replacement")
         replacement.write_bytes(database.read_bytes())
         os.replace(replacement, database)
         self.assertEqual(alpha.reader.open_snapshot("first")["state"], "unavailable")
+        rejected = next(recording for project in projects.refresh() for recording in project.recordings
+                        if recording.worktree == self.alpha)
+        self.assertIs(rejected.reader, alpha.reader)
+        self.assertEqual(rejected.state, "unavailable")
+
+    def test_refresh_retries_an_initially_unsafe_binding_after_permission_repair(self):
+        self._record(self.alpha, "first")
+        database = self.alpha / ".coherence/workflow/workflow.sqlite"
+        database.chmod(0o666)
+        projects = Projects(self.root)
+        initial = next(recording for project in projects.inventory() for recording in project.recordings
+                       if recording.worktree == self.alpha)
+        self.assertEqual(initial.state, "unavailable")
+        self.assertIsNone(initial.reader)
+        database.chmod(0o600)
+        before = self._bytes()
+        repaired = next(recording for project in projects.refresh() for recording in project.recordings
+                        if recording.worktree == self.alpha)
+        self.assertEqual(repaired.state, "available")
+        self.assertIsNotNone(repaired.reader)
+        self.assertEqual(repaired.reader.open_snapshot("first")["state"], "ok")
+        self.assertEqual(before, self._bytes())
 
     def test_project_http_qualifies_collisions_and_keeps_preserved_source_after_removal(self):
         from starlette.testclient import TestClient

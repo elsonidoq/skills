@@ -124,6 +124,37 @@ class Projects:
                 return next((recording for recording in project.recordings if recording.label == "main"), None)
         return None
 
+    @staticmethod
+    def _live_state(reader: Reader) -> str:
+        """Check a retained binding without opening a database snapshot.
+
+        This deliberately asks Reader only to revalidate its fixed filesystem/Git
+        binding.  It keeps inventory discovery read-only while making an explicit
+        refresh report an absent, repaired, or unsafe store honestly.
+        """
+        try:
+            reader._database_identity = reader._check_binding()
+        except ReaderError as exc:
+            return "no_store" if str(exc) == "no_store" else "unavailable"
+        return "available"
+
+    def _live_recording(self, reference: str, label: str, worktree: Path) -> Recording:
+        """Retain established Readers but retry bindings that never established."""
+        prior = self._bindings.get(reference)
+        if prior is not None and prior.reader is not None:
+            state = self._live_state(prior.reader)
+            if prior.state == state and prior.label == label and prior.worktree == worktree:
+                return prior
+            recording = Recording(reference, label, state, prior.reader, worktree)
+        else:
+            try:
+                reader = Reader(worktree)
+                recording = Recording(reference, label, self._live_state(reader), reader, worktree)
+            except (OSError, ReaderError):
+                recording = Recording(reference, label, "unavailable", None, worktree)
+        self._bindings[reference] = recording
+        return recording
+
     def _discover(self) -> tuple[Project, ...]:
         groups: dict[Path, dict[Path, tuple[Path, Path, Path]]] = {}
         try:
@@ -164,16 +195,7 @@ class Projects:
                 if label == "main":
                     main_worktree = worktree
                 reference = _opaque("recording", admin)
-                recording = self._bindings.get(reference)
-                if recording is None:
-                    try:
-                        reader: Reader | None = Reader(worktree)
-                        state = "available" if reader.database.exists() else "no_store"
-                    except (OSError, ReaderError):
-                        reader, state = None, "unavailable"
-                    recording = Recording(reference, label, state, reader, worktree)
-                    self._bindings[reference] = recording
-                recordings.append(recording)
+                recordings.append(self._live_recording(reference, label, worktree))
             # Complete captures are separate recordings.  Binding validates their fixed
             # layout; incomplete or unsafe entries remain unavailable rather than hiding
             # the healthy live recordings.
