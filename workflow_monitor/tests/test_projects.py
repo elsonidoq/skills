@@ -341,6 +341,95 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(response.json()["runs"], [])
         self.assertEqual(response.json()["unavailable_recordings"], [])
 
+    def test_project_runs_existing_empty_store_is_empty_not_unavailable(self):
+        with Authority(self.alpha):
+            pass
+        projects = Projects(self.root)
+        client, headers = self._runs_client(projects)
+        route = self._runs_route(projects)
+        before = self._bytes()
+        response = client.get(route, headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["runs"], [])
+        self.assertEqual(response.json()["unavailable_recordings"], [])
+        self.assertEqual(before, self._bytes())
+
+    def test_project_runs_no_store_discovery_does_not_suppress_later_unsafe_store(self):
+        projects = Projects(self.root)
+        client, headers = self._runs_client(projects)
+        route = self._runs_route(projects)  # retain no-store discovery throughout
+        self.assertEqual(client.get(route, headers=headers).json()["unavailable_recordings"], [])
+        self._record(self.alpha, "later")
+        database = self.alpha / ".coherence/workflow/workflow.sqlite"
+        database.chmod(0o666)
+        before = self._bytes()
+        failed = client.get(route, headers=headers).json()
+        self.assertEqual(failed["runs"], [])
+        self.assertEqual([item["label"] for item in failed["unavailable_recordings"]], ["main"])
+        self.assertNotIn(str(self.alpha), json.dumps(failed))
+        self.assertEqual(before, self._bytes())
+        database.chmod(0o600)
+        recovered = client.get(route, headers=headers).json()
+        self.assertEqual(len(recovered["runs"]), 1)
+        self.assertTrue(recovered["runs"][0]["display_id"].endswith("-later"))
+        self.assertEqual(recovered["unavailable_recordings"], [])
+
+    def test_project_runs_no_store_discovery_does_not_suppress_later_incompatible_store(self):
+        projects = Projects(self.root)
+        client, headers = self._runs_client(projects)
+        route = self._runs_route(projects)
+        database = self.alpha / ".coherence/workflow/workflow.sqlite"
+        with Authority(self.alpha):
+            pass
+        with sqlite3.connect(database) as connection:
+            connection.execute("ALTER TABLE execution_monitor_runs RENAME TO fixture_monitor_runs")
+        before = self._bytes()
+        failed = client.get(route, headers=headers).json()
+        self.assertEqual(failed["runs"], [])
+        self.assertEqual([item["label"] for item in failed["unavailable_recordings"]], ["main"])
+        self.assertEqual(before, self._bytes())
+        # Repair only this fixture in place; the retained Reader stays inode-pinned.
+        with sqlite3.connect(database) as connection:
+            connection.execute("ALTER TABLE fixture_monitor_runs RENAME TO execution_monitor_runs")
+        empty = client.get(route, headers=headers).json()
+        self.assertEqual(empty["runs"], [])
+        self.assertEqual(empty["unavailable_recordings"], [])
+        self._record(self.alpha, "later")
+        recovered = client.get(route, headers=headers).json()
+        self.assertEqual(len(recovered["runs"]), 1)
+        self.assertEqual(recovered["unavailable_recordings"], [])
+
+    def test_project_runs_reports_stale_fallback_and_recovers_without_losing_healthy_rows(self):
+        self._record(self.alpha, "cached")
+        self._record(self.external, "healthy")
+        projects = Projects(self.root)
+        client, headers = self._runs_client(projects)
+        route = self._runs_route(projects)
+        first = client.get(route, headers=headers).json()
+        self.assertEqual(len(first["runs"]), 2)
+        self.assertEqual(first["unavailable_recordings"], [])
+        cached = next(run for run in first["runs"] if run["display_id"].endswith("-cached"))
+        database = self.alpha / ".coherence/workflow/workflow.sqlite"
+        database.chmod(0o666)
+        before = self._bytes()
+        failed = client.get(route, headers=headers).json()
+        self.assertEqual({run["ref"] for run in failed["runs"]}, {run["ref"] for run in first["runs"]})
+        self.assertEqual([item["ref"] for item in failed["unavailable_recordings"]], [cached["ref"].split(".")[0]])
+        self.assertEqual(next(run for run in failed["runs"] if run["ref"] == cached["ref"])["runner_state"],
+                         {"state": "unknown", "reason": "read_unavailable"})
+        self.assertEqual(before, self._bytes())
+        database.chmod(0o600)
+        recovered = client.get(route, headers=headers).json()
+        self.assertEqual(recovered["runs"], first["runs"])
+        self.assertEqual(recovered["unavailable_recordings"], [])
+        # A permanent replacement remains unavailable, with last-safe rows retained.
+        replacement = database.with_suffix(".replacement")
+        replacement.write_bytes(database.read_bytes())
+        os.replace(replacement, database)
+        rejected = client.get(route, headers=headers).json()
+        self.assertEqual(len(rejected["runs"]), 2)
+        self.assertEqual(rejected["unavailable_recordings"], failed["unavailable_recordings"])
+
     def test_project_runs_recovers_after_recording_failure(self):
         self._record(self.alpha, "recovered")
         projects = Projects(self.root)

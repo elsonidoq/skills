@@ -445,10 +445,15 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int, *, recordi
                                 "read_state": read_state, "warnings": warnings}
         return value
 
-    def snapshot() -> tuple[dict[str, Any] | None, JSONResponse | None]:
+    def snapshot(*, inventory: bool = False) -> tuple[dict[str, Any] | None, JSONResponse | None]:
         nonlocal last_safe, last_success_at
         try:
             raw = reader.open_snapshot()
+            # Empty is a current read result, not a cached discovery qualification.
+            # Addressed snapshot routes keep their existing unavailable behavior.
+            if inventory and raw.get("state") in {"no_store", "no_monitored_runs"}:
+                last_success_at = time.time()
+                return observed({"runs": []}, read_state="current"), None
             graph = normalize(raw)
             result = minimize(graph)
             if result.get("state") != "ok":
@@ -485,10 +490,11 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int, *, recordi
         return _page(data, reference, -1, _DEFAULT_PAGE_SIZE), None
 
     async def runs(request: Request) -> Response:
-        data, error = snapshot()
+        data, error = snapshot(inventory=recording is not None)
         if error:
             return error
-        return JSONResponse({"monitor_version": 1, "runs": data["runs"], "next_cursor": None})
+        return JSONResponse({"monitor_version": 1, "runs": data["runs"], "next_cursor": None,
+                             "observation": data["observation"]})
 
     async def run_snapshot(request: Request) -> Response:
         data, error = snapshot()
@@ -720,11 +726,13 @@ def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette
             for recording in project.recordings:
                 response = await dispatch(request, recording, "/api/monitor/v1/runs")
                 if response.status_code == 200:
-                    runs.extend(json.loads(response.body)["runs"])
-                elif recording.state != "no_store":
-                    # Keep healthy recordings visible, but do not mistake a closed
-                    # recording-local failure for an empty project inventory.
-                    unavailable_recordings.append({"ref": recording.ref, "label": recording.label})
+                    data = json.loads(response.body)
+                    runs.extend(data["runs"])
+                    if data["observation"]["read_state"] == "current":
+                        continue
+                # Keep healthy/last-safe rows, but surface current failures even when
+                # discovery predates the store or an inner app has a stale fallback.
+                unavailable_recordings.append({"ref": recording.ref, "label": recording.label})
             return JSONResponse({"monitor_version": 1, "runs": runs, "next_cursor": None,
                                  "unavailable_recordings": unavailable_recordings})
         parts = rest.split("/")
