@@ -241,6 +241,7 @@ function App() {
     <aside aria-label="Recorded runs">
     <h1>Workflow monitor</h1>
     <p className="status" role="status">{message}</p>
+    {unavailableRecordings.length > 0 && <p aria-label="Recording availability" role="alert">Recorded monitor data is unavailable for {unavailableRecordings.map(recording => recording.label).join(', ')}. Listed runs may include last-safe data.</p>}
     <h2>Projects</h2>
     <div className="project-list">{projects.map(project => <button key={project.ref} className={project.ref === selectedProject ? 'selected' : ''} onClick={() => { if (project.ref === selectedProject) return; window.history.pushState(null, '', `/projects/${encodeURIComponent(project.ref)}/runs`); window.location.reload() }}>{project.label} · {project.recordings.map(recording => recording.label).join(', ') || 'no recordings'}</button>)}</div>
     <h2>Runs</h2>

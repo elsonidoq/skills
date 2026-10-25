@@ -150,6 +150,52 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(repaired.reader.open_snapshot("first")["state"], "ok")
         self.assertEqual(before, self._bytes())
 
+    def test_refresh_revalidates_preserved_bindings_without_adopting_replacement(self):
+        self._record(self.external, "kept")
+        for component in ("monitor.sqlite", "recording.json"):
+            with self.subTest(component=component):
+                recording_id = "capture-" + component.replace(".", "-")
+                directory = self.alpha / ".coherence/preserved-recordings" / recording_id
+                (directory / "metrics").mkdir(parents=True)
+                shutil.copyfile(self.external / ".coherence/workflow/workflow.sqlite", directory / "monitor.sqlite")
+                (directory / "recording.json").write_text(json.dumps({
+                    "version": 1, "state": "complete", "recording_id": recording_id, "origin_id": "origin-1"}))
+                projects = Projects(self.root)
+                def current():
+                    return next(recording for project in projects.refresh() for recording in project.recordings
+                                if recording.reader is not None and recording.reader.recording_identity == (recording_id, "origin-1"))
+                initial = current()
+                self.assertEqual(initial.state, "available")
+                target = directory / component
+                target.chmod(0o666)
+                before = self._bytes()
+                unsafe = current()
+                self.assertEqual(unsafe.state, "unavailable")
+                self.assertIs(unsafe.reader, initial.reader)
+                self.assertEqual(before, self._bytes())
+                target.chmod(0o600)
+                self.assertEqual(current().state, "available")
+                # Missing complete evidence must not be advertised as an empty source.
+                held = target.with_suffix(".held")
+                target.rename(held)
+                self.assertEqual(current().state, "unavailable")
+                held.rename(target)
+                self.assertEqual(current().state, "available")
+                replacement = target.with_suffix(".replacement")
+                replacement.write_bytes(target.read_bytes())
+                os.replace(replacement, target)
+                client, headers = self._runs_client(projects)
+                before = self._bytes()
+                rejected = current()
+                self.assertEqual(rejected.state, "unavailable")
+                self.assertEqual(rejected.ref, initial.ref)
+                self.assertIs(rejected.reader, initial.reader)
+                self.assertEqual(rejected.reader.open_snapshot()["state"], "unavailable")
+                listed = client.get("/api/monitor/v1/projects", headers=headers).json()["projects"]
+                self.assertEqual(next(recording["state"] for project in listed for recording in project["recordings"]
+                                      if recording["ref"] == initial.ref), "unavailable")
+                self.assertEqual(before, self._bytes())
+
     def test_project_http_qualifies_collisions_and_keeps_preserved_source_after_removal(self):
         from starlette.testclient import TestClient
         self._record(self.alpha, "same")

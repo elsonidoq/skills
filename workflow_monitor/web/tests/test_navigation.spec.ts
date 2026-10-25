@@ -49,6 +49,35 @@ test('distinguishes an unavailable recording inventory from an empty one', async
   await expect(page.getByRole('status')).toHaveText('No recorded runs are available.')
 })
 
+for (const source of ['linked', 'main'] as const) {
+  test(`keeps ${source === 'linked' ? 'mixed-source' : 'cached-row'} availability failures visible beside a selected run and clears them on recovery`, async ({ page }) => {
+    await page.clock.install()
+    let unavailable = true
+    await page.route(`**/api/monitor/v1/projects/${projectRef}/runs`, async route => {
+      const response = await route.fetch({ headers: { ...route.request().headers(), 'sec-fetch-site': 'same-origin' } })
+      const data = await response.json()
+      expect(response.status()).toBe(200)
+      expect(Array.isArray(data.runs)).toBe(true)
+      await route.fulfill({ json: { ...data, unavailable_recordings: unavailable
+        ? [{ ref: source === 'main' ? `recording_${mainQualifier}` : 'recording_failed_linked', label: source }] : [] } })
+    })
+    await page.goto(runPage('success'))
+    await expect(page.getByRole('status')).toHaveText('Updated from the recorded snapshot.')
+    const warning = page.getByRole('alert', { name: 'Recording availability' })
+    await expect(warning).toContainText(`unavailable for ${source}`)
+    await expect(warning).toContainText('last-safe data')
+    await expect(page.locator('.react-flow__node').first()).toBeVisible()
+    // Snapshot success and subsequent same-run polling cannot erase source failures.
+    await page.clock.fastForward(60_001)
+    await expect(warning).toBeVisible()
+    unavailable = false
+    await page.clock.fastForward(60_001)
+    await expect(warning).toHaveCount(0)
+    await expect(page).toHaveURL(runPage('success'))
+    await expect(page.locator('.react-flow__node').first()).toBeVisible()
+  })
+}
+
 test('uses actual production routes for display-ID direct opens, history, sorting, and local filtering', async ({ page }) => {
   await page.goto('/')
   await expect(page).toHaveURL(runPage('...'))

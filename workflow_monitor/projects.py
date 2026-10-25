@@ -136,6 +136,8 @@ class Projects:
             reader._database_identity = reader._check_binding()
         except ReaderError as exc:
             return "no_store" if str(exc) == "no_store" else "unavailable"
+        except OSError:
+            return "unavailable"
         return "available"
 
     def _live_recording(self, reference: str, label: str, worktree: Path) -> Recording:
@@ -215,6 +217,14 @@ class Projects:
                             continue
                         recording = Recording(reference, "preserved", "available", reader, main_worktree)
                         self._bindings[reference] = recording
+                    else:
+                        state = self._live_state(recording.reader)
+                        # A published recording losing required files is unavailable,
+                        # not an empty live source awaiting its first store.
+                        state = "unavailable" if state == "no_store" else state
+                        if state != recording.state:
+                            recording = Recording(reference, "preserved", state, recording.reader, main_worktree)
+                            self._bindings[reference] = recording
                     recordings.append(recording)
             # Git common-directory identity, not branch/cwd/directory spelling, is the group.
             label = main_worktree.name if main_worktree is not None else next(iter(members)).name
