@@ -204,13 +204,10 @@ do not impose generic acceptance boilerplate or manual gates on ordinary coding.
 
 Write executable tasks as authorization-neutral work instructions. Keep temporary phase status
 such as "planning only" or "implementation awaiting approval" in the approval record, not task
-descriptions or check permissions. Preserve genuine owner-imposed action-specific permission
-boundaries and manual gates. Do not turn agent-selected finite fixture, setup, rerun, or lifecycle
-parameters—or optional hardening—into owner requirements or renewal gates. A later scoped owner
-approval supersedes an earlier conflicting restriction for the action it approves; retain an actual
-owner-imposed restriction unless that approval changes it. Routine verification may use small
-isolated tests and local test databases without an extra owner question; keep data and execution
-bounded to avoid exhausting machine resources or affecting unrelated data/services.
+descriptions or check permissions. Preserve genuine action-specific permission boundaries and
+manual gates. Routine verification may use small isolated tests and local test databases without
+an extra owner question; keep data and execution bounded to avoid exhausting machine resources
+or affecting unrelated data/services.
 
 ## Structured executable handoff (both adapters)
 
@@ -251,9 +248,7 @@ keep routine teardown inside its task. A separate cleanup task needs an
 actual independently consequential resource or outcome.
 
 At final planning review, check that executable tasks are authorization-neutral and temporary
-approval status is confined to the approval record. Reconcile later scoped owner approval with
-earlier conflicting restrictions into one current worker scope; retain real owner-imposed
-action-specific permission gates.
+approval status is confined to the approval record; retain real action-specific permission gates.
 
 Review selection/omission, real-runtime evidence, applicable dependencies, proof lifetime,
 production acceptance, disproof/renewal and feasibility through both adapters/direct entry.

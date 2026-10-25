@@ -138,12 +138,9 @@ expensive worker, inspect its recorded cause and invocation; never blindly retry
 Each task runs in a fresh coding conversation. Ordinary scoped technical fixes, isolated tests/servers,
 necessary local/in-project dependency setup, and current-task artifact lifecycle need no owner question.
 Small isolated tests and local test databases are allowed for any task, using bounded data/execution
-that do not risk exhausting the machine or affecting unrelated data/services. An agent-chosen finite
-fixture, setup, rerun, or lifecycle parameter is not an owner-renewal gate. A later scoped owner
-approval supersedes an earlier conflicting restriction for the action it approves, while actual
-owner-imposed limits remain unless changed. Shared defaults live in `_ROUTINE_AUTHORITY` in [the
-runner](../runtime/coherence_workflow/engine.py), included in initial and corrective task prompts;
-edit that block rather than individual tasks. See [ADR-0004](decisions/ADR-0004-shared-routine-worker-permissions.md).
+that do not risk exhausting the machine or affecting unrelated data/services. Shared defaults live in
+`_ROUTINE_AUTHORITY` in [the runner](../runtime/coherence_workflow/engine.py), included in initial and
+corrective task prompts; edit that block rather than individual tasks. See [ADR-0004](decisions/ADR-0004-shared-routine-worker-permissions.md).
 This authority is not proof that checks passed. Product decisions, substantial complexity increases,
 separately scoped paid usage, and actions outside authority still ask. No global install, credential change,
 deployment, push, or unrelated-work deletion is implied. It runs requested project checks and yields a real
