@@ -64,7 +64,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                 CorrectionAdapter.calls += 1
                 kwargs['claim']('correction.txt')
                 (project/'correction.txt').write_text('broken' if CorrectionAdapter.calls == 1 else 'fixed')
-                return 'offline correction'
+                return '{"status":"completed","summary":"offline correction"}'
         Engine(owner, 'engine-correction', admit({'monitor': {'correction_of': {'run_id': 'original', 'review_execution_id': 'review-id'}},
             'tasks': [{'id': 'fix', 'description': 'Correct original result', 'owned_paths': ['correction.txt'],
                        'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),

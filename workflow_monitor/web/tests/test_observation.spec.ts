@@ -14,7 +14,8 @@ function view() {
 test.beforeAll(async () => {
   server = createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1:4174')
-    if (url.pathname === '/api/monitor/v1/runs') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ runs: [run] })); return }
+    if (url.pathname === '/api/monitor/v1/projects') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ projects: [{ ref: 'project', label: 'Fixture', recordings: [] }] })); return }
+    if (url.pathname.endsWith('/runs')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ runs: [run] })); return }
     if (url.pathname.endsWith('/snapshot')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify(view())); return }
     try { const file = url.pathname === '/' ? 'index.html' : url.pathname.slice(1); response.setHeader('content-type', { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }[extname(file)] ?? 'application/octet-stream'); response.end(await readFile(join('dist', file))) } catch { response.statusCode = 404; response.end() }
   })

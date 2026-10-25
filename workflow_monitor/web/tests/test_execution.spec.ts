@@ -5,12 +5,15 @@ import { graphFor, type GraphSnapshot } from '../src/graph'
 
 let fixture: ChildProcess
 let fixtureOutput = ''
+let projectRef = ''
+const api = (suffix = '') => `http://127.0.0.1:4174/api/monitor/v1/projects/${encodeURIComponent(projectRef)}/runs${suffix}`
+const runPage = (id: string) => `/projects/${encodeURIComponent(projectRef)}/runs/id-${encodeURIComponent(id)}`
 
 async function ready() {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      const response = await fetch('http://127.0.0.1:4174/api/monitor/v1/runs', { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
-      if (response.ok) return
+      const response = await fetch('http://127.0.0.1:4174/api/monitor/v1/projects', { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
+      if (response.ok) { projectRef = (await response.json()).projects[0]?.ref ?? ''; if (projectRef && (await fetch(api(), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })).ok) return }
     } catch { /* fixture is still starting */ }
     await new Promise(resolve => setTimeout(resolve, 100))
   }
@@ -18,7 +21,7 @@ async function ready() {
 }
 
 test.beforeAll(async () => {
-  const web = process.cwd()
+  const web = resolve(import.meta.dirname, '..')
   fixture = spawn(resolve(web, '../.venv/bin/python'), ['-B', 'tests/execution_fixture.py'], {
     cwd: web,
     env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1', PYTHONPATH: `${resolve(web, '../..')}/runtime:${resolve(web, '../..')}/runtime/tests` },
@@ -36,7 +39,7 @@ test.afterAll(async () => {
 
 test('inspects every merged input and correction fact with readable action endpoints', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto('/runs/id-merged-edge')
+  await page.goto(runPage('merged-edge'))
   await expect(page.locator('.react-flow__node')).toHaveCount(3)
   await expect(page.locator('.react-flow__node').last()).toBeInViewport()
   const edge = page.locator('.react-flow__edge-interaction')
@@ -61,10 +64,10 @@ test('inspects every merged input and correction fact with readable action endpo
 
 test('producer readback reconciles ordinal-two dispatch and qualifies observed lifecycle', async ({ page }) => {
   for (const [stage, expected] of [['dispatched', 'unknown'], ['started', 'running'], ['waiting', 'waiting'], ['returned', 'returned — changes requested'], ['conflict', 'unknown']] as const) {
-    const response = await fetch(`http://127.0.0.1:4174/api/monitor/v1/runs`, { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
+    const response = await fetch(api(), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
     const { runs } = await response.json()
     const run = runs.find((item: { display_id: string }) => item.display_id === `review-${stage}`)
-    const snapshotResponse = await fetch(`http://127.0.0.1:4174/api/monitor/v1/runs/${run.ref}/snapshot`, { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
+    const snapshotResponse = await fetch(api(`/${run.ref}/snapshot`), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
     const input: GraphSnapshot = await snapshotResponse.json()
     const execution = input.chain!.find(item => item.review_ordinal === 2)!
     const activity = input.activities!.find(item => item.invocation_id === execution.execution_id)!
@@ -73,7 +76,7 @@ test('producer readback reconciles ordinal-two dispatch and qualifies observed l
     expect(graph.nodes.filter(node => node.id === execution.ref)).toHaveLength(1)
     expect(graph.nodes.some(node => node.id === activity.ref)).toBe(false)
     expect(graph.nodes.find(node => node.id === execution.ref)?.data.status).toContain(expected)
-    await page.goto(`/runs/id-review-${stage}`)
+    await page.goto(runPage(`review-${stage}`))
     const node = page.locator('.react-flow__node').filter({ hasText: 'Review 2' })
     await expect(node).toHaveCount(1)
     await node.click()
@@ -81,21 +84,21 @@ test('producer readback reconciles ordinal-two dispatch and qualifies observed l
     await page.getByText('Loaded history', { exact: true }).click()
     for (const raw of ['recorded_running', 'outstanding_input', 'incomplete_history', 'conflicting_terminal_evidence']) await expect(page.locator('main')).not.toContainText(raw)
   }
-  await page.goto('/runs/id-before-agent')
+  await page.goto(runPage('before-agent'))
   await expect(page.locator('.react-flow__node').filter({ hasText: 'Final review' })).toContainText('Not started; run stopped')
 })
 
 test('unobserved ordinal-two reviewer retains exact call metrics in Details', async ({ page }, testInfo) => {
   const headers = { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' }
-  const { runs } = await (await fetch('http://127.0.0.1:4174/api/monitor/v1/runs', { headers })).json()
+  const { runs } = await (await fetch(api(), { headers })).json()
   const run = runs.find((item: { display_id: string }) => item.display_id === 'review-dispatched')
-  const input = await (await fetch(`http://127.0.0.1:4174/api/monitor/v1/runs/${run.ref}/snapshot`, { headers })).json()
+  const input = await (await fetch(api(`/${run.ref}/snapshot`), { headers })).json()
   const execution = input.chain.find((item: { review_ordinal: number }) => item.review_ordinal === 2)
   const activity = input.activities.find((item: { invocation_id: string }) => item.invocation_id === execution.execution_id)
   expect(activity.occurrence_ref).toBeNull()
   expect(activity.metrics.total_tokens.value).toBe(12)
   expect(activity.ref).not.toBe(activity.invocation_id)
-  await page.goto('/runs/id-review-dispatched')
+  await page.goto(runPage('review-dispatched'))
   const reviewer = page.locator('.react-flow__node').filter({ hasText: 'Review 2' })
   await expect(reviewer).toHaveCount(1)
   await expect(page.locator('.react-flow__node')).toHaveCount(5)
@@ -111,7 +114,7 @@ test('unobserved ordinal-two reviewer retains exact call metrics in Details', as
 })
 
 test('ordinary task correction reports its recorded metric role', async ({ page }, testInfo) => {
-  await page.goto('/runs/id-metrics-composed')
+  await page.goto(runPage('metrics-composed'))
   await page.locator('.react-flow__node').filter({ hasText: 'Worker — Correction 1' }).first().click()
   const details = page.getByLabel('Selected execution details')
   await expect(details).toContainText('Role: Corrective worker; outcome: Recorded.')
@@ -125,12 +128,12 @@ test('ordinary task correction reports its recorded metric role', async ({ page 
 test('production computed lifecycle colors and declared recorded mixed connectors', async ({ page }, testInfo) => {
   const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 240, 194)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(238, 242, 246)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'Task 1', 'rgb(255, 240, 194)']] as const
   for (const [run, title, color] of colors) {
-    await page.goto(`/runs/id-${run}`)
+    await page.goto(runPage(run))
     const node = page.locator('.react-flow__node').filter({ hasText: title })
     await expect(node).toHaveCSS('background-color', color)
     expect((await node.getAttribute('class'))?.split(' ').filter(value => ['pending', 'running', 'success', 'failed', 'waiting', 'neutral'].includes(value))).toHaveLength(1)
   }
-  await page.goto('/runs/id-relation-styles')
+  await page.goto(runPage('relation-styles'))
   for (const [kind, stroke, dash] of [['declared', 'rgb(95, 75, 182)', '6px, 4px'], ['recorded', 'rgb(23, 105, 170)', 'none'], ['mixed', 'rgb(40, 117, 107)', '8px, 3px, 2px, 3px']] as const) {
     const path = page.locator(`.${kind}-edge .react-flow__edge-path`).first()
     await expect(path).toHaveCSS('stroke', stroke)
@@ -156,7 +159,7 @@ test('compaction inclusion uncertainty is honest and never changes totals', asyn
       for (const activity of body.activities ?? []) if (activity.metrics?.summary_overhead) activity.metrics.summary_overhead.included_in_sdk_deltas = null
       await route.fulfill({ json: body })
     })
-    await page.goto(`/runs/id-${run === 'metrics-unverified' ? 'success' : run}`)
+    await page.goto(runPage(run === 'metrics-unverified' ? 'success' : run))
     await page.locator('.react-flow__node').first().click()
     const details = page.getByLabel('Selected execution details')
     await expect(details).toContainText(text)
@@ -168,7 +171,7 @@ test('compaction inclusion uncertainty is honest and never changes totals', asyn
 })
 
 test('renders scoped ordinary metrics from fixture JSONL through production HTTP', async ({ page }, testInfo) => {
-  await page.goto('/runs/id-success')
+  await page.goto(runPage('success'))
   const worker = page.locator('.react-flow__node').first()
   await expect(worker).toBeVisible()
   await worker.click()
@@ -188,11 +191,11 @@ test('renders scoped ordinary metrics from fixture JSONL through production HTTP
   await page.screenshot({ path: testInfo.outputPath('production-metrics-details-expanded.png'), fullPage: true })
 
   for (const [run, opening] of [['metrics-reused', 'Session reused from an earlier task'], ['metrics-continued', 'Session continued for this task'], ['metrics-unknown', 'Opening not recorded']] as const) {
-    await page.goto(`/runs/id-${run}`)
+    await page.goto(runPage(run))
     await page.locator('.react-flow__node').first().click()
     await expect(page.getByLabel('Selected execution details')).toContainText(`Selected opening: ${opening}. Confirmed opening: ${opening}.`)
   }
-  await page.goto('/runs/id-metrics-composed')
+  await page.goto(runPage('metrics-composed'))
   await page.locator('.react-flow__node.actual-call').first().click()
   await expect(details).toContainText('Task total')
   await expect(details).toContainText('Total tokens: known subtotal 24; complete total Unavailable')
@@ -204,13 +207,13 @@ test('renders scoped ordinary metrics from fixture JSONL through production HTTP
   await page.locator('.react-flow__node').filter({ hasText: 'Final review' }).click()
   await expect(details).toContainText('Role: Reviewer; outcome: Recorded.')
   await expect(details).toContainText('Total tokens: 12')
-  await page.goto('/runs/id-engine-correction')
+  await page.goto(runPage('engine-correction'))
   await page.locator('.react-flow__node').filter({ hasText: 'Fix 1' }).click()
   await expect(details).toContainText('Role: Corrective worker; outcome: Recorded.')
   await expect(details).toContainText('Total tokens: 12')
   await expect(details).toContainText('Total tokens: known subtotal 24; complete total 24')
   await expect(details).toContainText('2 recorded calls; 2 dispatched calls; 1 task membership.')
-  await page.goto('/runs/id-metrics-partial')
+  await page.goto(runPage('metrics-partial'))
   await page.locator('.react-flow__node').first().click()
   await expect(page.getByLabel('Selected execution details')).toContainText('Partial recorded coverage. Some recorded intervals or dispatches are incomplete.')
   await expect(page.getByLabel('Selected execution details')).toContainText('Output tokens: Unavailable from the recorded evidence')

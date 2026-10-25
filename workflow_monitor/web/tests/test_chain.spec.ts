@@ -20,8 +20,9 @@ test.beforeAll(async () => {
   vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' })
   server = createServer((request, response) => {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1:4174')
-    if (url.pathname === '/api/monitor/v1/runs') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ runs: [run] })); return }
-    if (url.pathname === '/api/monitor/v1/runs/run/snapshot') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify(snapshot())); return }
+    if (url.pathname === '/api/monitor/v1/projects') { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ projects: [{ ref: 'project', label: 'Fixture', recordings: [] }] })); return }
+    if (url.pathname.endsWith('/runs')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ runs: [run] })); return }
+    if (url.pathname.endsWith('/runs/run/snapshot')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify(snapshot())); return }
     if (url.pathname.endsWith('/followups')) { response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ followups: [] })); return }
     vite.middlewares(request, response, () => { response.statusCode = 404; response.end() })
   })
