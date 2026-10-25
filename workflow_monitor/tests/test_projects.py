@@ -1,6 +1,7 @@
 """Actual Git/SQLite fixtures for read-only multi-worktree discovery."""
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 import os
 from pathlib import Path
@@ -283,6 +284,82 @@ class ProjectTests(unittest.TestCase):
         response = client.get(base + "/history", params={"snapshot": b["snapshot_ref"], "cursor": b["next_cursor"]}, headers=headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["inventory"]["loaded_count"], 2)
+
+    def _with_readers(self, projects, readers):
+        """Replace only fixture-local bindings to exercise project HTTP aggregation."""
+        projects._projects = tuple(replace(project, recordings=tuple(
+            replace(recording, reader=readers.get(recording.worktree, recording.reader))
+            for recording in project.recordings)) for project in projects.inventory())
+
+    def _runs_client(self, projects):
+        from starlette.testclient import TestClient
+        assets = self.base / "aggregation-assets"
+        assets.mkdir(exist_ok=True)
+        (assets / "index.html").write_text("safe")
+        return TestClient(create_app(projects, assets, 8765), base_url="http://127.0.0.1:8765"), {
+            "sec-fetch-site": "same-origin", "x-workflow-monitor": "1"}
+
+    def _runs_route(self, projects):
+        project = next(project for project in projects.inventory()
+                       if any(recording.worktree == self.alpha for recording in project.recordings))
+        return "/api/monitor/v1/projects/" + project.ref + "/runs"
+
+    def test_project_runs_all_failed_are_unavailable_not_empty(self):
+        self._record(self.alpha, "alpha")
+        self._record(self.external, "external")
+        projects = Projects(self.root)
+        class Failed:
+            def open_snapshot(self):
+                raise RuntimeError("private fixture failure")
+        self._with_readers(projects, {self.alpha: Failed(), self.external: Failed()})
+        client, headers = self._runs_client(projects)
+        response = client.get(self._runs_route(projects), headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["runs"], [])
+        self.assertEqual({item["label"] for item in response.json()["unavailable_recordings"]}, {"main", "linked"})
+        self.assertNotIn("private fixture failure", response.text)
+
+    def test_project_runs_keeps_healthy_recordings_when_one_fails(self):
+        self._record(self.alpha, "healthy")
+        self._record(self.external, "failed")
+        projects = Projects(self.root)
+        class Failed:
+            def open_snapshot(self):
+                raise RuntimeError("private fixture failure")
+        self._with_readers(projects, {self.external: Failed()})
+        client, headers = self._runs_client(projects)
+        response = client.get(self._runs_route(projects), headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["display_id"].endswith("-healthy") for item in response.json()["runs"]], [True])
+        self.assertEqual([item["label"] for item in response.json()["unavailable_recordings"]], ["linked"])
+
+    def test_project_runs_no_store_is_an_honest_empty_inventory(self):
+        projects = Projects(self.root)
+        client, headers = self._runs_client(projects)
+        response = client.get(self._runs_route(projects), headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["runs"], [])
+        self.assertEqual(response.json()["unavailable_recordings"], [])
+
+    def test_project_runs_recovers_after_recording_failure(self):
+        self._record(self.alpha, "recovered")
+        projects = Projects(self.root)
+        original = next(recording.reader for project in projects.inventory() for recording in project.recordings
+                        if recording.worktree == self.alpha)
+        class Flaky:
+            failed = True
+            def open_snapshot(self):
+                if self.failed:
+                    self.failed = False
+                    raise RuntimeError("private fixture failure")
+                return original.open_snapshot()
+        self._with_readers(projects, {self.alpha: Flaky()})
+        client, headers = self._runs_client(projects)
+        route = self._runs_route(projects)
+        self.assertEqual(client.get(route, headers=headers).json()["runs"], [])
+        recovered = client.get(route, headers=headers).json()
+        self.assertTrue(any(item["display_id"].endswith("-recovered") for item in recovered["runs"]))
+        self.assertEqual(recovered["unavailable_recordings"], [])
 
     def test_empty_and_invalid_roots_are_honest(self):
         empty = self.base / "empty"

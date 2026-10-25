@@ -36,6 +36,19 @@ test.afterAll(async () => {
   await exited
 })
 
+test('distinguishes an unavailable recording inventory from an empty one', async ({ page }) => {
+  let unavailable = true
+  await page.route(`**/api/monitor/v1/projects/${projectRef}/runs`, route => route.fulfill({ json: {
+    monitor_version: 1, runs: [], next_cursor: null,
+    unavailable_recordings: unavailable ? [{ ref: 'recording_fixture', label: 'main' }] : []
+  } }))
+  await page.goto('/')
+  await expect(page.getByRole('status')).toHaveText('Recorded monitor data is unavailable.')
+  unavailable = false
+  await page.reload()
+  await expect(page.getByRole('status')).toHaveText('No recorded runs are available.')
+})
+
 test('uses actual production routes for display-ID direct opens, history, sorting, and local filtering', async ({ page }) => {
   await page.goto('/')
   await expect(page).toHaveURL(runPage('...'))

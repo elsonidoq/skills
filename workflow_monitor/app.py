@@ -716,11 +716,17 @@ def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette
             return _asset_response(assets_fd, fixed_assets, "/index.html")
         if rest == "runs":
             runs = []
+            unavailable_recordings = []
             for recording in project.recordings:
                 response = await dispatch(request, recording, "/api/monitor/v1/runs")
                 if response.status_code == 200:
                     runs.extend(json.loads(response.body)["runs"])
-            return JSONResponse({"monitor_version": 1, "runs": runs, "next_cursor": None})
+                elif recording.state != "no_store":
+                    # Keep healthy recordings visible, but do not mistake a closed
+                    # recording-local failure for an empty project inventory.
+                    unavailable_recordings.append({"ref": recording.ref, "label": recording.label})
+            return JSONResponse({"monitor_version": 1, "runs": runs, "next_cursor": None,
+                                 "unavailable_recordings": unavailable_recordings})
         parts = rest.split("/")
         if len(parts) < 3 or parts[0] != "runs":
             return _error("not_found", 404)
