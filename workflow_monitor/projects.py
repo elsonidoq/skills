@@ -92,6 +92,7 @@ class Projects:
         except OSError as exc:
             raise ValueError("projects root must be a readable, non-symlink directory") from exc
         self._projects: tuple[Project, ...] | None = None
+        self._bindings: dict[str, Recording] = {}
 
     def inventory(self) -> tuple[Project, ...]:
         if self._projects is None:
@@ -162,12 +163,17 @@ class Projects:
                 label = "main" if admin == common else "linked"
                 if label == "main":
                     main_worktree = worktree
-                try:
-                    reader: Reader | None = Reader(worktree)
-                    state = "available" if reader.database.exists() else "no_store"
-                except (OSError, ReaderError):
-                    reader, state = None, "unavailable"
-                recordings.append(Recording(_opaque("recording", admin), label, state, reader, worktree))
+                reference = _opaque("recording", admin)
+                recording = self._bindings.get(reference)
+                if recording is None:
+                    try:
+                        reader: Reader | None = Reader(worktree)
+                        state = "available" if reader.database.exists() else "no_store"
+                    except (OSError, ReaderError):
+                        reader, state = None, "unavailable"
+                    recording = Recording(reference, label, state, reader, worktree)
+                    self._bindings[reference] = recording
+                recordings.append(recording)
             # Complete captures are separate recordings.  Binding validates their fixed
             # layout; incomplete or unsafe entries remain unavailable rather than hiding
             # the healthy live recordings.
@@ -178,13 +184,19 @@ class Projects:
                 except OSError:
                     entries = []
                 for entry in sorted(entries, key=lambda item: item.name):
-                    try:
-                        reader = Reader.preserved(main_worktree, entry.name)
-                    except (OSError, ReaderError, RecordingError):
-                        continue
-                    recordings.append(Recording(_opaque("recording", entry), "preserved", "available", reader, main_worktree))
+                    reference = _opaque("recording", entry)
+                    recording = self._bindings.get(reference)
+                    if recording is None:
+                        try:
+                            reader = Reader.preserved(main_worktree, entry.name)
+                        except (OSError, ReaderError, RecordingError):
+                            continue
+                        recording = Recording(reference, "preserved", "available", reader, main_worktree)
+                        self._bindings[reference] = recording
+                    recordings.append(recording)
             # Git common-directory identity, not branch/cwd/directory spelling, is the group.
-            projects.append(Project(_opaque("project", common), "main", tuple(recordings), common))
+            label = main_worktree.name if main_worktree is not None else next(iter(members)).name
+            projects.append(Project(_opaque("project", common), label, tuple(recordings), common))
         return tuple(sorted(projects, key=lambda project: project.ref))
 
 

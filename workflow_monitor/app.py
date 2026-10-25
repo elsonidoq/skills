@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import mimetypes
 import os
 from pathlib import Path
@@ -155,7 +156,7 @@ def _cursor(value: str | None) -> int | str | None:
         return -1
     if value.startswith("cursor_") and value[7:].isdigit():
         return int(value[7:])
-    if value.startswith("cursor_unknown_") and value[15:]:
+    if value.startswith("cursor_") and (value[7:].startswith("unknown_") or ".unknown_" in value[7:]):
         return value[7:]
     return None
 
@@ -416,7 +417,7 @@ def _execution_details(graph: dict[str, Any], public: dict[str, Any]) -> None:
                                      "full_range": run["review_acceptance"]}
 
 
-def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlette:
+def create_app(reader: SnapshotReader, assets: str | Path, port: int, *, recording=None) -> Starlette:
     """Create an application bound to one reader, fixed asset inventory, and port."""
     if type(port) is not int or not 1 <= port <= 65535:
         raise ValueError("port must be a valid TCP port")
@@ -436,6 +437,9 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
             warnings.append(warning)
         if any(item.get("completeness") == "incomplete" for item in value.get("occurrences", [])):
             warnings.append("incomplete_history")
+        if read_state == "unavailable":
+            for run in value.get("runs", []):
+                run["runner_state"] = {"state": "unknown", "reason": "read_unavailable"}
         value["observation"] = {"read_at": time.time(), "last_success_at": last_success_at,
                                 "last_recorded_at": max(recorded) if recorded else None,
                                 "read_state": read_state, "warnings": warnings}
@@ -461,6 +465,8 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
                 item["runner_state"] = qualify(identities.get(raw_id))
             _execution_details(graph, result)
             _task_progress(graph, result)
+            if recording is not None:
+                result = _qualify_public(result, recording)
             last_success_at = time.time()
             last_safe = observed(result, read_state="current")
             return last_safe, None
@@ -492,7 +498,18 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
             result, error = selected(data, request)
         except ValueError:
             return _error("bad_request", 400)
+        if result is not None and recording is not None:
+            result["next_cursor"] = _scoped_cursor(result["next_cursor"], request.path_params["run_ref"])
         return error or JSONResponse(result)
+
+    def request_cursor(request):
+        value = request.query_params.get("cursor")
+        if recording is not None and value is not None:
+            prefix = request.path_params["run_ref"] + ":"
+            if not value.startswith(prefix):
+                return None
+            value = value[len(prefix):]
+        return _cursor(value)
 
     async def history(request: Request) -> Response:
         data, error = snapshot()
@@ -501,7 +518,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         reference = request.path_params["run_ref"]
         if run(data, reference) is None:
             return _error("not_found", 404)
-        cursor, size = _cursor(request.query_params.get("cursor")), _page_size(request.query_params.get("limit"))
+        cursor, size = request_cursor(request), _page_size(request.query_params.get("limit"))
         if cursor is None or size is None or request.query_params.get("snapshot") is None:
             return _error("bad_request", 400)
         records = [item for item in data["records"] if item["run_ref"] == reference]
@@ -509,7 +526,10 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         if request.query_params["snapshot"] != _token(reference, records, unknown):
             return _error("snapshot_conflict", 409, retryable=True)
         try:
-            return JSONResponse(_page(data, reference, cursor, size))
+            page = _page(data, reference, cursor, size)
+            if recording is not None:
+                page["next_cursor"] = _scoped_cursor(page["next_cursor"], reference)
+            return JSONResponse(page)
         except ValueError:
             return _error("bad_request", 400)
 
@@ -520,7 +540,7 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         reference = request.path_params["run_ref"]
         if run(data, reference) is None:
             return _error("not_found", 404)
-        cursor, size = _cursor(request.query_params.get("cursor")), _page_size(request.query_params.get("limit"))
+        cursor, size = request_cursor(request), _page_size(request.query_params.get("limit"))
         records = [item for item in data["records"] if item["run_ref"] == reference]
         unknown = [item for item in data["unknown_records"] if item["run_ref"] == reference]
         if not isinstance(cursor, int) or size is None or request.query_params.get("snapshot") != _token(reference, records, unknown):
@@ -540,7 +560,9 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
         start = cursor + 1
         visible = relations[start:start + size]
         return JSONResponse({"monitor_version": 1, "run_ref": reference, "followups": visible,
-                             "next_cursor": "cursor_" + str(start + len(visible) - 1) if start + len(visible) < len(relations) else None})
+                             "next_cursor": (_scoped_cursor("cursor_" + str(start + len(visible) - 1), reference)
+                                             if recording is not None else "cursor_" + str(start + len(visible) - 1))
+                                            if start + len(visible) < len(relations) else None})
 
     async def record(request: Request) -> Response:
         data, error = snapshot()
@@ -603,67 +625,36 @@ def create_app(reader: SnapshotReader, assets: str | Path, port: int) -> Starlet
     return app
 
 
-# The single-recording application above remains the presentation implementation.  The
-# project dispatcher below gives each project its own composed reader and consequently
-# its own fallback/freshness state; a failed recording can never reuse another
-# recording's last-safe snapshot.
-from .projects import Projects, Project, Recording
+# Each recording retains the existing normalization, paging and freshness closure.
+# Only closed public references are qualified, after all local relations are resolved.
+from .projects import Projects, Recording
 
 
-class _ProjectReader:
-    def __init__(self, project: Project):
-        self.project = project
-        self._last_safe: dict[str, dict[str, Any]] = {}
+def _scoped_cursor(cursor: str | None, reference: str) -> str | None:
+    return reference + ":" + cursor if cursor is not None else None
 
-    def open_snapshot(self) -> dict[str, Any]:
-        combined: dict[str, Any] = {"runs": [], "observations": [], "review_details": [],
-                                    "metrics": {}, "metric_artifacts": {}, "activities": [],
-                                    "review_acceptance": {}, "chain": [], "fixing_rounds": [],
-                                    "chain_acceptance": {}}
-        snapshots: list[tuple[Recording, dict[str, Any]]] = []
-        for recording in self.project.recordings:
-            if recording.reader is None:
-                continue
-            try:
-                raw = recording.reader.open_snapshot()
-            except Exception:
-                raw = {"state": "unavailable"}
-            if raw.get("state") != "ok":
-                raw = self._last_safe.get(recording.ref, raw)
-            else:
-                self._last_safe[recording.ref] = copy.deepcopy(raw)
-            if raw.get("state") == "ok":
-                snapshots.append((recording, raw))
-        # Keep a unique live display ID where possible.  Preserved recordings are
-        # always explicitly qualified with their stable opaque capture hash.
-        counts: dict[str, int] = {}
-        for _, raw in snapshots:
-            for row in raw.get("runs", []):
-                if isinstance(row, dict) and isinstance(row.get("run_id"), str):
-                    counts[row["run_id"]] = counts.get(row["run_id"], 0) + 1
-        for recording, raw in snapshots:
-            value = copy.deepcopy(raw)
-            qualifier = recording.ref.partition("_")[2][:12]
-            names = {row["run_id"]: (f"{qualifier}-{row['run_id']}" if recording.label == "preserved" or counts[row["run_id"]] > 1 else row["run_id"])
-                     for row in value.get("runs", []) if isinstance(row, dict) and isinstance(row.get("run_id"), str)}
-            def rewrite(item: Any) -> Any:
-                if isinstance(item, str):
-                    return names.get(item, item)
-                if isinstance(item, list):
-                    return [rewrite(child) for child in item]
-                if isinstance(item, dict):
-                    return {names.get(key, key) if isinstance(key, str) else key: rewrite(child)
-                            for key, child in item.items()}
-                return item
-            value = rewrite(value)
-            for key, item in value.items():
-                if key == "state":
-                    continue
-                if isinstance(item, list):
-                    combined.setdefault(key, []).extend(item)
-                elif isinstance(item, dict):
-                    combined.setdefault(key, {}).update(item)
-        return {"state": "ok", **combined} if snapshots else {"state": "unavailable"}
+
+def _qualify_public(data: dict[str, Any], recording: Recording) -> dict[str, Any]:
+    prefix = recording.ref + "."
+    keyed = {"chain_acceptance", "metric_coverage", "metric_aggregates", "metric_artifacts"}
+
+    def qualify(value: Any, field: str = "") -> Any:
+        if isinstance(value, dict):
+            return {(prefix + key if field in keyed else key): qualify(child, key)
+                    for key, child in value.items()}
+        if isinstance(value, list):
+            return [qualify(child, field) for child in value]
+        if isinstance(value, str) and (field in {"ref", "correction_chain"} or field.endswith("_ref") or field.endswith("_refs")):
+            return prefix + value
+        return value
+
+    result = qualify(data)
+    for run in result.get("runs", []):
+        # Fixed-width full recording hash makes qualification stable and unambiguous,
+        # regardless of the appearance/disappearance of another live recording.
+        run["display_id"] = recording.ref.split("_", 1)[1] + "-" + run["display_id"]
+        run["source"] = recording.label
+    return result
 
 
 def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette:
@@ -683,29 +674,23 @@ def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette
                                  "Content-Security-Policy": _CSP})
         return response
 
-    def project_list() -> list[dict[str, Any]]:
-        return [{"ref": project.ref, "label": project.label,
-                 "recordings": [{"ref": item.ref, "label": item.label, "state": item.state}
-                                for item in project.recordings]}
-                for project in projects.inventory()]
-
     async def listed(request: Request) -> Response:
-        return JSONResponse({"monitor_version": 1, "projects": project_list()})
+        # A page load explicitly refreshes discovery, retaining all existing Reader
+        # bindings and their identity/fallback state. Polling runs does not rediscover.
+        inventory = projects.refresh()
+        return JSONResponse({"monitor_version": 1, "projects": [
+            {"ref": project.ref, "label": project.label,
+             "recordings": [{"ref": item.ref, "label": item.label, "state": item.state}
+                            for item in project.recordings]} for project in inventory]})
 
-    async def proxy(request: Request) -> Response:
-        project = projects.resolve_project(request.path_params["project_ref"])
-        if project is None:
-            return _error("not_found", 404)
-        inner = readers.get(project.ref)
+    async def dispatch(request: Request, recording: Recording, path: str) -> Response:
+        if recording.reader is None:
+            return _error("unavailable", 503, retryable=True)
+        inner = readers.get(recording.ref)
         if inner is None:
-            inner = _create_single_app(_ProjectReader(project), assets, port)
-            readers[project.ref] = inner
-        rest = request.path_params.get("rest", "")
-        prefix = "/api/monitor/v1/projects/" + project.ref
-        path = "/api/monitor/v1" + ("/" + rest if rest else "/runs") if request.url.path.startswith(prefix) else "/" + rest
-        scope = dict(request.scope)
-        scope["path"] = path
-        scope["raw_path"] = path.encode("utf-8")
+            inner = _create_single_app(recording.reader, assets, port, recording=recording)
+            readers[recording.ref] = inner
+        scope = dict(request.scope, path=path, raw_path=path.encode("utf-8"))
         messages: list[dict[str, Any]] = []
         async def receive() -> dict[str, Any]:
             return {"type": "http.request", "body": b"", "more_body": False}
@@ -716,6 +701,34 @@ def _project_app(projects: Projects, assets: str | Path, port: int) -> Starlette
         body = b"".join(item.get("body", b"") for item in messages if item["type"] == "http.response.body")
         headers = {key.decode("latin-1"): value.decode("latin-1") for key, value in start["headers"]}
         return Response(body, status_code=start["status"], headers=headers, media_type=None)
+
+    async def proxy(request: Request) -> Response:
+        project = projects.resolve_project(request.path_params["project_ref"])
+        if project is None:
+            return _error("not_found", 404)
+        rest = request.path_params.get("rest", "")
+        if not request.url.path.startswith("/api/"):
+            raw = request.scope.get("raw_path", b"")
+            prefix = ("/projects/" + project.ref).encode("ascii")
+            shell = raw[len(prefix):] if raw.startswith(prefix) else b""
+            if shell != b"/runs" and not _encoded_run_id(shell):
+                return _error("not_found", 404)
+            return _asset_response(assets_fd, fixed_assets, "/index.html")
+        if rest == "runs":
+            runs = []
+            for recording in project.recordings:
+                response = await dispatch(request, recording, "/api/monitor/v1/runs")
+                if response.status_code == 200:
+                    runs.extend(json.loads(response.body)["runs"])
+            return JSONResponse({"monitor_version": 1, "runs": runs, "next_cursor": None})
+        parts = rest.split("/")
+        if len(parts) < 3 or parts[0] != "runs":
+            return _error("not_found", 404)
+        recording_ref, separator, local_ref = parts[1].partition(".")
+        recording = projects.resolve_recording(project.ref, recording_ref) if separator and local_ref else None
+        if recording is None:
+            return _error("not_found", 404)
+        return await dispatch(request, recording, "/api/monitor/v1/" + rest)
 
     async def protected(request: Request, call_next):
         host = request.headers.get("host")

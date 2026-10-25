@@ -153,8 +153,13 @@ acquires the stopped source's ordinary `coherence-workflow.lock` without constru
 migrating `Authority`, and keeps it through consumer readback and the successful context-exit
 source-drift check. Its new private directory is below `main/.coherence`, is not discoverable,
 and contains only monitor descriptors, ordered observations, review execution/attempt/input facts,
-Reader-consumed typed dispatch/metric-artifact history, and byte-identical associated metrics.
-It excludes run inputs, runnable progress, unrelated history/tables and SDK/private prompt data.
+Reader-consumed typed started-dispatch/metric-artifact fields, and byte-identical associated metrics.
+Returned repair blobs, run inputs, runnable progress, unrelated history/tables and SDK/private
+prompt data are excluded, including from failed preparation. The source is read directly with
+SQLite `mode=ro`, `query_only` and a transaction when a WAL exists; no full runtime DB/WAL copy
+is made. The owner-approved exception permits only ordinary source `-shm` coordination
+creation/modification. With no WAL, an immutable read avoids creating a `-wal`; source identity
+and database/WAL/metric byte checks remain required, and no other mutation is authorized.
 Absent metrics remain absent; existing unreadable/unsafe metrics or source identity/content drift
 fail actionably while retaining source and prior history. The helper neither publishes nor deletes.
 
@@ -181,7 +186,10 @@ create a command-owned private directory, verifies unchanged source before publi
 reserves a no-overwrite target, moves prepared bytes beneath that invisible pending target,
 and writes closed complete metadata as the final publication boundary, then reopens it through
 `Reader.preserved` and returns only after the context's final source check. Exact
-content repeats reopen/verify the existing complete recording. A different later source for
+content repeats reopen/verify the existing complete recording. Readback compares every retained
+SQLite fact (including unsupported observations and review inputs) plus exact metric hashes,
+not just row counts/file presence. Repeat IDs depend on retained content rather than source
+inode/timestamps or unrelated private tables. A different later source for
 the same opaque origin is retained beside the prior recording and reported as a mismatch,
 not synchronized, replaced, or versioned. Pending/private directories are never listed;
 interrupted, unsafe, or readback-failed operation leaves bytes and source for inspection and

@@ -6,14 +6,15 @@ import { graphFor, type GraphSnapshot } from '../src/graph'
 let fixture: ChildProcess
 let fixtureOutput = ''
 let projectRef = ''
+let mainQualifier = ''
 const api = (suffix = '') => `http://127.0.0.1:4174/api/monitor/v1/projects/${encodeURIComponent(projectRef)}/runs${suffix}`
-const runPage = (id: string) => `/projects/${encodeURIComponent(projectRef)}/runs/id-${encodeURIComponent(id)}`
+const runPage = (id: string) => `/projects/${encodeURIComponent(projectRef)}/runs/id-${encodeURIComponent(`${mainQualifier}-${id}`)}`
 
 async function ready() {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
       const response = await fetch('http://127.0.0.1:4174/api/monitor/v1/projects', { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
-      if (response.ok) { projectRef = (await response.json()).projects[0]?.ref ?? ''; if (projectRef && (await fetch(api(), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })).ok) return }
+      if (response.ok) { const project = (await response.json()).projects[0]; projectRef = project?.ref ?? ''; mainQualifier = project?.recordings.find((item: { label: string }) => item.label === 'main')?.ref.split('_')[1] ?? ''; if (projectRef && (await fetch(api(), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })).ok) return }
     } catch { /* fixture is still starting */ }
     await new Promise(resolve => setTimeout(resolve, 100))
   }
@@ -66,7 +67,7 @@ test('producer readback reconciles ordinal-two dispatch and qualifies observed l
   for (const [stage, expected] of [['dispatched', 'unknown'], ['started', 'running'], ['waiting', 'waiting'], ['returned', 'returned — changes requested'], ['conflict', 'unknown']] as const) {
     const response = await fetch(api(), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
     const { runs } = await response.json()
-    const run = runs.find((item: { display_id: string }) => item.display_id === `review-${stage}`)
+    const run = runs.find((item: { display_id: string }) => item.display_id === `${mainQualifier}-review-${stage}`)
     const snapshotResponse = await fetch(api(`/${run.ref}/snapshot`), { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
     const input: GraphSnapshot = await snapshotResponse.json()
     const execution = input.chain!.find(item => item.review_ordinal === 2)!
@@ -91,7 +92,7 @@ test('producer readback reconciles ordinal-two dispatch and qualifies observed l
 test('unobserved ordinal-two reviewer retains exact call metrics in Details', async ({ page }, testInfo) => {
   const headers = { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' }
   const { runs } = await (await fetch(api(), { headers })).json()
-  const run = runs.find((item: { display_id: string }) => item.display_id === 'review-dispatched')
+  const run = runs.find((item: { display_id: string }) => item.display_id === `${mainQualifier}-review-dispatched`)
   const input = await (await fetch(api(`/${run.ref}/snapshot`), { headers })).json()
   const execution = input.chain.find((item: { review_ordinal: number }) => item.review_ordinal === 2)
   const activity = input.activities.find((item: { invocation_id: string }) => item.invocation_id === execution.execution_id)

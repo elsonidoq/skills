@@ -5,13 +5,14 @@ import { resolve } from 'node:path'
 let fixture: ChildProcess
 let fixtureOutput = ''
 let projectRef = ''
-const runPage = (id: string) => `/projects/${encodeURIComponent(projectRef)}/runs/id-${encodeURIComponent(id)}`
+let mainQualifier = ''
+const runPage = (id: string) => `/projects/${encodeURIComponent(projectRef)}/runs/id-${encodeURIComponent(`${mainQualifier}-${id}`)}`
 
 async function ready() {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
       const response = await fetch('http://127.0.0.1:4174/api/monitor/v1/projects', { headers: { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' } })
-      if (response.ok) { projectRef = (await response.json()).projects[0]?.ref ?? ''; if (projectRef) return }
+      if (response.ok) { const project = (await response.json()).projects[0]; projectRef = project?.ref ?? ''; mainQualifier = project?.recordings.find((item: { label: string }) => item.label === 'main')?.ref.split('_')[1] ?? ''; if (projectRef) return }
     } catch { /* fixture is still starting */ }
     await new Promise(resolve => setTimeout(resolve, 100))
   }
@@ -28,10 +29,15 @@ test.beforeAll(async () => {
   fixture.stderr?.on('data', chunk => { fixtureOutput += chunk })
   await ready()
 })
-test.afterAll(() => { fixture.kill('SIGTERM') })
+test.afterAll(async () => {
+  if (fixture.exitCode !== null) return
+  const exited = new Promise<void>(resolve => fixture.once('exit', () => resolve()))
+  fixture.kill('SIGTERM')
+  await exited
+})
 
 test('uses actual production routes for display-ID direct opens, history, sorting, and local filtering', async ({ page }) => {
-  await page.goto(runPage('...'))
+  await page.goto('/')
   await expect(page).toHaveURL(runPage('...'))
   await expect(page.getByLabel('Selected run')).toContainText('Run 1 — Recorded run')
 
@@ -61,5 +67,5 @@ test('uses actual production routes for display-ID direct opens, history, sortin
   await expect(page.getByLabel('Selected run')).toContainText('Recorded run')
   await page.goto(runPage('missing'))
   await expect(page).toHaveURL(runPage('missing'))
-  await expect(page.getByRole('status')).toContainText('Run missing is unavailable.')
+  await expect(page.getByRole('status')).toContainText(`Run ${mainQualifier}-missing is unavailable.`)
 })

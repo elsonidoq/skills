@@ -15,8 +15,10 @@ scans projects or Paseo directories and never follows an arbitrary root-child sy
 Registered worktrees are grouped by canonical Git common-directory identity. The registered
 main is identified by its admin directory, not by a branch, current directory, or directory
 name; canonical aliases are listed once. Each live worktree has one retained Reader and an
-opaque project/recording reference. Labels are only `main` or `linked`; browser-facing code
-must use references, never paths. Listing does not open every database snapshot or create a
+opaque project/recording reference. Project labels use the registered main's directory name;
+source labels are `main`, `linked`, or `preserved`. Browser-facing code must use references,
+never paths. An explicit project-list request (including page reload) refreshes discovery while
+retaining existing Reader bindings; run polling does not rediscover projects/worktrees. Listing does not open every database snapshot or create a
 store. An empty valid root is usable, while an invalid root is an actionable error. A missing
 store is reported honestly and the same Reader can observe its first legitimate later store;
 a Reader that has observed a replaced store reports it unavailable rather than adopting it.
@@ -57,7 +59,7 @@ local `dist/` directory and retry.
 
 Then open `http://127.0.0.1:8765/` in a local browser. One launcher uses this one loopback port for every project discovered under the selected root; it can be started from any working directory after the package and assets are prepared. The left selector and selected-run banner use readable numbered run labels; opaque references remain internal for API requests and URL routing. The graph retains one stable planned worker slot for every known task and a separately planned final independent review, then reconciles each slot only with its unique exact recorded initial call. Later plans remain visible while earlier calls run. Corrective prompts and later reviews appear only when exact recorded evidence exists; fixing rounds are not fabricated as calls. Declared prerequisites (including planned review completion) are distinct from recorded causal/input relations. Missing, ambiguous, or cyclic relations remain qualified rather than guessed. Details lead with the recorded action, outcome, blocker and findings. Missing, malformed, partial or unsupported records remain unavailable or qualified rather than repaired into a completed graph.
 
-The browser URL identifies a run by its actual displayed ID as `/runs/id-<percent-encoded ID>`; the client decodes that component once, looks it up exactly in the inventory, and only then uses the opaque API reference. A successful nonempty root inventory replaces `/` with its newest finite-epoch run (descending, deterministic ID ties; unknown times last). Different selections push history, repeated selections do not, and Back/Forward clears obsolete graph/Details work before loading the addressed run. Unknown, removed, or unavailable IDs remain in the address bar with an honest unavailable state rather than selecting a substitute. The run-ID filter is a case-insensitive local substring filter: it neither changes the selected URL/history nor sends a server search, and it explicitly reports selected-outside-filter and no-match states. Polling remains at 60 seconds and never steals the current selection for a newer row.
+The browser URL identifies a run as `/projects/{project_ref}/runs/id-<percent-encoded qualified ID>`; the client decodes that component once, looks it up exactly in the selected project's inventory, and only then uses the opaque API reference. Every displayed live/preserved ID uses a fixed recording hash plus the unchanged old run ID, so collisions appearing or disappearing cannot change an existing URL. Public references, pages and freshness are recording-local; normalization resolves relations before qualifying public refs, never by rewriting internal IDs or JSON. A successful nonempty root inventory selects a project and replaces `/` with that project's newest finite-epoch run (descending, deterministic ID ties; unknown times last). Different selections push history, repeated selections do not, and Back/Forward clears obsolete graph/Details work before loading the addressed run. Unknown, removed, or unavailable IDs remain in the address bar with an honest unavailable state rather than selecting a substitute. The run-ID filter is a case-insensitive local substring filter: it neither changes the selected URL/history nor sends a server search, and it explicitly reports selected-outside-filter and no-match states. Polling remains at 60 seconds and never steals the current selection for a newer row.
 
 A confirmed internal step that stops a recorded failed run appears as a red node with its explicit recorded support relation. A failure before any agent starts remains visible without an invented agent. Recovered checks remain in Details/history, not extra graph nodes. Edges come only from explicit recorded input, correction, review/fix and stop facts; missing, ambiguous or cyclic relations remain qualified in Details and are not rendered.
 
@@ -209,6 +211,9 @@ the consumer has read the prepared files and the context exits. `private_dir` is
 command-owned directory below `main/.coherence`, so it is not discoverable as completed history.
 The returned capture exposes the verified main/origin identity, private `monitor.sqlite` and
 `metrics/` paths, a content fingerprint/retained-facts summary, and `verify_unchanged()`.
+Readback compares all retained SQLite facts (including unsupported observations/review inputs)
+and exact metric hashes, not counts or presence alone. Exact-repeat identity depends on retained
+content, not inode/timestamps or unrelated native tables.
 
 The private SQLite retains monitor descriptors, ordered observations, review executions/attempts/
 input checkpoints, and only Reader-consumed worker/fixer dispatch and metric-artifact history.
@@ -216,8 +221,13 @@ It retains original internal IDs/order and copies associated JSONL metric bytes 
 partial or malformed tails; absent artifacts stay absent. It excludes runtime progress, run inputs,
 other history/tables, SDK sessions and prompts. An unreadable existing metric, source replacement,
 or drift fails with a retain-source correction rather than claiming deletion is safe. A successful
-context exit performs a final source check before unlocking. This helper never publishes,
-overwrites a prior capture, modifies native source/main data, or provides a CLI.
+context exit performs a final source check before unlocking. This helper never publishes, overwrites a prior capture, or provides a CLI. Owner-approved
+SQLite exception: it opens the stopped source with `mode=ro`, `query_only` and a read transaction
+when WAL exists, allowing only ordinary source `-shm` coordination creation/modification.
+When WAL is absent it uses an immutable read to avoid creating `-wal`; before/after identity
+and byte checks reject drift. Database/WAL/metric bytes stay unchanged. No full runtime DB
+or WAL is copied into preparation, including on failed projection. Mixed history retains only
+Reader-consumed started-dispatch fields and metric-artifact fields, never returned repair blobs.
 
 The reader opens short SQLite `mode=ro` snapshots for exactly one canonical Git
 worktree and does not import or invoke the workflow writer. It never copies a database,
@@ -245,6 +255,6 @@ the command retains both the prior capture and source and says to resolve that d
 it never performs incremental sync or versioning. Publication never overwrites a target.
 Interruption, unsafe storage, uncertain completion, source drift, or failed readback returns
 an operation-specific correction and leaves newly prepared/published bytes for inspection.
-It never deletes/prunes the source, resumes a workflow, modifies either live database,
-Git index, or existing history, and copied historical commitment/liveness facts are not new
+It never deletes/prunes the source, resumes a workflow, modifies either live database/WAL,
+metrics, Git index, or existing history (only the explicit `-shm` coordination exception above), and copied historical commitment/liveness facts are not new
 main commits or live-run evidence.

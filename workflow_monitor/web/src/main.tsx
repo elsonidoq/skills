@@ -10,7 +10,7 @@ type Acceptance = { state: string; base: string | null; head: string | null }
 type AcceptanceItem = { occurrence_ref: string; state: string; ordinal?: number | null; exit_code?: number | null; baseline?: string | null; head?: string | null; no_change?: boolean | null; approved?: boolean | null; finding_count?: number | null; base?: string | null }
 type AcceptanceSummary = { checks: AcceptanceItem[]; checkpoints: AcceptanceItem[]; reviews: AcceptanceItem[]; full_range: Acceptance }
 type RunnerState = { state: 'live' | 'stopped' | 'unknown'; reason: string | null }
-type Run = { ref: string; display_id: string; label: string; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance; acceptance_summary?: AcceptanceSummary }
+type Run = { ref: string; display_id: string; source?: 'main' | 'linked' | 'preserved'; label: string; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance; acceptance_summary?: AcceptanceSummary }
 type Recording = { ref: string; label: 'main' | 'linked' | 'preserved'; state: string }
 type Project = { ref: string; label: string; recordings: Recording[] }
 type Unknown = { ref: string; run_ref: string; source_seq: number | null; code: string }
@@ -244,7 +244,7 @@ function App() {
     <div className="project-list">{projects.map(project => <button key={project.ref} className={project.ref === selectedProject ? 'selected' : ''} onClick={() => { if (project.ref === selectedProject) return; window.history.pushState(null, '', `/projects/${encodeURIComponent(project.ref)}/runs`); window.location.reload() }}>{project.label} · {project.recordings.map(recording => recording.label).join(', ') || 'no recordings'}</button>)}</div>
     <h2>Runs</h2>
     <label className="run-filter">Filter runs <input value={filter} onChange={event => setFilter(event.target.value)} placeholder="Filter runs" /></label>
-    <div className="run-list">{runs.filter(run => run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())).map((run, index) => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun || !selectedProject) return; window.history.pushState(null, '', routeFor(selectedProject, run.display_id)); applyLocation(runsRef.current) }}>Run {index + 1} · {run.label} · {run.completeness}</button>)}</div>
+    <div className="run-list">{runs.filter(run => run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())).map((run, index) => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun || !selectedProject) return; window.history.pushState(null, '', routeFor(selectedProject, run.display_id)); applyLocation(runsRef.current) }}>Run {index + 1} · {run.label} · {run.source ?? 'unknown source'} · {run.completeness}</button>)}</div>
     {filter && !runs.some(run => run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p>No runs match this filter.</p>}
     {filter && selectedRun && !runs.some(run => run.ref === selectedRun && run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p>The selected run is outside this filter.</p>}
     </aside>
@@ -252,7 +252,7 @@ function App() {
     <header>
     <h2>Selected run graph</h2>
     <p aria-label="Selected project">Selected project: {projects.find(project => project.ref === selectedProject)?.label ?? 'unknown'}</p>
-    <p aria-label="Selected source">Source: {selectedRunInfo?.display_id.includes('-') ? 'recording-qualified' : 'recording-local'}</p>
+    <p aria-label="Selected source">Source: {selectedRunInfo?.source ?? 'unknown'}</p>
     <p aria-label="Selected run">Selected run: {selectedRunInfo ? `Run ${runs.findIndex(run => run.ref === selectedRunInfo.ref) + 1} — ${selectedRunInfo.label}` : 'unknown'}</p>
     <p>Pan and zoom the graph. Select a node or edge for its brief details.</p>
     </header>

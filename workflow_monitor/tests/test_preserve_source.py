@@ -8,6 +8,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "runtime"))
@@ -107,6 +108,82 @@ class PreserveSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(CaptureError, "source changed"):
             capture.verify_unchanged()
         capture.__exit__(RuntimeError, RuntimeError("consumer failed"), None)
+
+    def test_no_raw_private_database_is_copied_and_history_is_typed(self):
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("INSERT INTO execution_history(run_id,task_id,kind,state,details,recorded_at) VALUES(?,?,?,?,?,?)", ("kept", None, "fixer_invocation", "returned", json.dumps({"invocation_id": "call", "blobs": {"PRIVATE-SENTINEL": "runnable"}}), 3.0))
+            connection.execute("INSERT INTO execution_history(run_id,task_id,kind,state,details,recorded_at) VALUES(?,?,?,?,?,?)", ("kept", None, "worker_invocation", "started", json.dumps({"invocation_id": "typed", "execution_id": "exec", "role": "worker", "private_prompt": "PRIVATE-SENTINEL"}), 4.0))
+            connection.execute("CREATE TABLE private_payload(secret TEXT)")
+            connection.execute("INSERT INTO private_payload VALUES('PRIVATE-SENTINEL')")
+        with capture_stopped(self.source, self._private("typed")) as capture:
+            with sqlite3.connect(capture.database) as connection:
+                rows = connection.execute("SELECT state,details FROM execution_history ORDER BY seq").fetchall()
+                self.assertFalse(any(state == "returned" for state, _ in rows))
+                self.assertEqual(json.loads(rows[-1][1]), {"invocation_id": "typed", "execution_id": "exec", "role": "worker"})
+            self.assertNotIn(b"PRIVATE-SENTINEL", capture.database.read_bytes())
+            self.assertEqual({path.name for path in capture.private_dir.iterdir()}, {"monitor.sqlite", "metrics"})
+        # Failure during projection must not leave a raw runtime DB either.
+        with patch("workflow_monitor.preserve_source._copy_monitor", side_effect=RuntimeError("fixture interruption")):
+            with self.assertRaisesRegex(RuntimeError, "fixture interruption"):
+                capture_stopped(self.source, self._private("interrupted"))
+        for path in self._private("interrupted").rglob("*"):
+            if path.is_file():
+                self.assertNotIn(b"PRIVATE-SENTINEL", path.read_bytes())
+
+    def test_absent_wal_is_not_created_and_existing_wal_bytes_are_unchanged(self):
+        wal = self.db.with_name(self.db.name + "-wal")
+        shm = self.db.with_name(self.db.name + "-shm")
+        self.assertFalse(wal.exists())
+        self.assertFalse(shm.exists())
+        before = self.db.read_bytes(), self.metric.read_bytes()
+        with capture_stopped(self.source, self._private("no-wal")):
+            pass
+        self.assertFalse(wal.exists())
+        self.assertFalse(shm.exists())
+        self.assertEqual(before, (self.db.read_bytes(), self.metric.read_bytes()))
+        writer = sqlite3.connect(self.db)
+        writer.execute("PRAGMA journal_mode=WAL")
+        writer.execute("UPDATE execution_monitor_runs SET started_at=started_at+1")
+        writer.commit()
+        stopped_database, stopped_wal = self.db.read_bytes(), wal.read_bytes()
+        writer.close()
+        # Reconstruct only this created fixture's stopped WAL state without -shm.
+        self.db.write_bytes(stopped_database)
+        wal.write_bytes(stopped_wal)
+        self.assertFalse(shm.exists())
+        with capture_stopped(self.source, self._private("wal-without-shm")) as capture:
+            with sqlite3.connect(capture.database) as copied:
+                self.assertEqual(copied.execute("SELECT started_at FROM execution_monitor_runs WHERE run_id='kept'").fetchone()[0], 2.0)
+            self.assertEqual((self.db.read_bytes(), wal.read_bytes()), (stopped_database, stopped_wal))
+        self.assertEqual((self.db.read_bytes(), wal.read_bytes()), (stopped_database, stopped_wal))
+        self.assertEqual(self.metric.read_bytes(), before[1])
+
+    def test_metric_drift_between_copy_and_fingerprint_is_rejected(self):
+        from workflow_monitor import preserve_source
+        original = preserve_source._source_fingerprint
+        def drift(source, run_ids=None):
+            if run_ids:
+                self.metric.write_bytes(self.metric.read_bytes() + b"changed")
+            return original(source, run_ids)
+        with patch.object(preserve_source, "_source_fingerprint", drift):
+            with self.assertRaisesRegex(CaptureError, "metric changed during capture"):
+                capture_stopped(self.source, self._private("metric-race"))
+
+    def test_absent_partial_and_unsafe_metrics_remain_honest(self):
+        self.metric.write_bytes(self.metric.read_bytes() + b'{invalid json}\npartial')
+        expected = self.metric.read_bytes()
+        with capture_stopped(self.source, self._private("partial")) as capture:
+            self.assertEqual((capture.metrics / self.metric.name).read_bytes(), expected)
+        self.metric.unlink()  # only this test-created artifact
+        with capture_stopped(self.source, self._private("absent")) as capture:
+            self.assertEqual(capture.summary["metrics"][self.metric.name]["availability"], "absent")
+            self.assertFalse((capture.metrics / self.metric.name).exists())
+        target = self.metric.with_suffix(".fixture")
+        target.write_bytes(expected)
+        self.metric.symlink_to(target)
+        with self.assertRaisesRegex(CaptureError, "unsafe or unreadable"):
+            capture_stopped(self.source, self._private("unsafe"))
+        self.assertEqual(target.read_bytes(), expected)
 
     def test_rejects_main_and_existing_preparation(self):
         with self.assertRaisesRegex(CaptureError, "linked worktree"):

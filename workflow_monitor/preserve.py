@@ -7,11 +7,12 @@ import json
 import os
 from pathlib import Path
 import stat
+import sqlite3
 import sys
 import uuid
 from typing import Any
 
-from .preserve_source import Capture, CaptureError, capture_stopped
+from .preserve_source import Capture, CaptureError, capture_stopped, registered_main, retained_digest, _read_bytes
 from .reader import Reader, ReaderError
 from .recordings import (DATABASE_NAME, METADATA_NAME, PRESERVED_DIRECTORY,
                          RECORDING_VERSION, RecordingError, bind)
@@ -33,8 +34,8 @@ def _owned_directory(path: Path, operation: str) -> None:
 def _recording_id(capture: Capture) -> str:
     # The content identity makes an exact stopped-source repeat address the same target
     # without retaining a source path in public metadata.
-    value = json.dumps({"origin": capture.origin_id, "database": capture.fingerprint["database"],
-                        "metrics": capture.fingerprint["metrics"]}, sort_keys=True, separators=(",", ":"), default=list)
+    value = json.dumps({"origin": capture.origin_id, "facts": capture.summary["facts_sha256"],
+                        "metrics": capture.summary["metrics"]}, sort_keys=True, separators=(",", ":"))
     return "capture-" + hashlib.sha256(value.encode("utf-8")).hexdigest()[:32]
 
 
@@ -68,14 +69,26 @@ def _write_metadata(directory: Path, origin_id: str, recording_id: str) -> None:
 def _readback(capture: Capture, recording_id: str) -> dict[str, Any]:
     try:
         reader = Reader.preserved(capture.main, recording_id)
+        if reader.recording_identity != (recording_id, capture.origin_id):
+            raise PreserveError("preservation readback: recording origin differs from capture; retain the source and inspect the capture")
         snapshot = reader.open_snapshot()
     except (OSError, ReaderError) as exc:
         raise PreserveError("preservation readback: cannot reopen the complete recording; retain the source and inspect the capture") from exc
     if snapshot.get("state") not in {"ok", "unsupported", "no_monitored_runs"}:
         raise PreserveError("preservation readback: completed recording is unavailable; retain the source and inspect the capture")
-    if (len(snapshot.get("runs", [])) + len(snapshot.get("unsupported_run_ids", [])) != capture.summary["runs"] or
-            len(snapshot.get("observations", [])) != capture.summary["observations"]):
-        raise PreserveError("preservation readback: retained monitor facts differ from capture; retain the source and inspect the capture")
+    directory = capture.main / ".coherence" / PRESERVED_DIRECTORY / recording_id
+    try:
+        if retained_digest(directory / DATABASE_NAME) != capture.summary["facts_sha256"]:
+            raise PreserveError("preservation readback: retained monitor facts differ from capture; retain the source and inspect the capture")
+        for name, expected_metric in capture.summary["metrics"].items():
+            metric_path = directory / "metrics" / name
+            if expected_metric["availability"] == "absent":
+                if metric_path.exists() or metric_path.is_symlink():
+                    raise PreserveError("preservation readback: absent metric was replaced; retain the source and inspect the capture")
+            elif hashlib.sha256(_read_bytes(metric_path, "preservation metric readback")).hexdigest() != expected_metric["sha256"]:
+                raise PreserveError("preservation readback: metric bytes differ from capture; retain the source and inspect the capture")
+    except (OSError, sqlite3.Error, CaptureError) as exc:
+        raise PreserveError("preservation readback: cannot verify retained facts/metric bytes; retain the source and inspect the capture") from exc
     qualifications: dict[str, str] = {}
     metrics = snapshot.get("metrics", {})
     for run_id in capture.fingerprint["run_ids"]:
@@ -120,22 +133,12 @@ def preserve(source_worktree: str | os.PathLike[str]) -> dict[str, Any]:
     returns success only after the source lock has been released without drift.
     """
     source = Path(source_worktree)
-    # This directory is command-owned and remains private/unlisted if any later safety
-    # check fails.  It is intentionally not automatically deleted for inspection.
-    private_hint = source.parent / ".invalid"  # replaced after verified main is known
-    # capture_stopped requires a path below main; discover main only through its own
-    # verification, using a harmless first private path inferred from Git's worktree list
-    # is not safe.  Its API supplies main after entering, so use a temporary path based on
-    # the source's registered common main discovered by the capture helper's accepted root.
-    # A minimal Git query here is avoided; choose the conventional main sibling only after
-    # capture API verification is impossible.  ``capture_stopped`` accepts any path and
-    # validates it, so obtain main from its Git worktree list with its own public contract.
-    from .preserve_source import _git  # command uses the same verified Git boundary
+    # Reuse capture's registered-main boundary; Git's admin directory need not be
+    # main/.git (for example --separate-git-dir). No guessed destination is written.
     try:
-        common = _git(source.resolve(strict=True), "--git-common-dir")
+        main = registered_main(source)
     except (OSError, CaptureError) as exc:
         raise PreserveError(str(exc)) from exc
-    main = common.parent
     private_hint = main / ".coherence" / ("preserve-" + uuid.uuid4().hex)
     try:
         with capture_stopped(source, private_hint) as capture:

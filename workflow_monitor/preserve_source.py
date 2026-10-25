@@ -8,6 +8,7 @@ from __future__ import annotations
 from contextlib import AbstractContextManager
 import fcntl
 import hashlib
+import json
 import os
 from pathlib import Path
 import sqlite3
@@ -155,8 +156,21 @@ def _copy_monitor(source: sqlite3.Connection, target: sqlite3.Connection) -> lis
         if table in tables:
             target.executemany(insert, source.execute(selects[table] + " FROM " + table + " WHERE run_id IN (" + marks + ") ORDER BY " + ("seq" if table == "execution_review_attempts" else "rowid"), run_ids))
     if "execution_history" in tables:
-        target.executemany("INSERT INTO execution_history(seq,run_id,task_id,kind,state,details,recorded_at) VALUES(?,?,?,?,?,?,?)",
-                           source.execute("SELECT seq,run_id,task_id,kind,state,details,recorded_at FROM execution_history WHERE run_id IN (" + marks + ") AND kind IN ('worker_invocation','fixer_invocation','metric_artifact') ORDER BY seq", run_ids))
+        for row in source.execute("SELECT seq,run_id,task_id,kind,state,details,recorded_at FROM execution_history WHERE run_id IN (" + marks + ") AND kind IN ('worker_invocation','fixer_invocation','metric_artifact') ORDER BY seq", run_ids):
+            # Mixed-purpose history can contain repair blobs/session/private fields.
+            # Reader consumes only started dispatch identities and artifact status.
+            if row[3] != "metric_artifact" and row[4] != "started":
+                continue
+            try:
+                detail = json.loads(row[5])
+            except (ValueError, TypeError):
+                detail = None
+            keys = {"status", "path", "paths", "sha"} if row[3] == "metric_artifact" else {"invocation_id", "execution_id", "role"}
+            safe = {key: value for key, value in detail.items() if key in keys and
+                    (isinstance(value, str) or (key == "paths" and isinstance(value, list) and
+                                               all(isinstance(path, str) for path in value)))} if isinstance(detail, dict) else None
+            target.execute("INSERT INTO execution_history(seq,run_id,task_id,kind,state,details,recorded_at) VALUES(?,?,?,?,?,?,?)",
+                           (*row[:5], json.dumps(safe, sort_keys=True, separators=(",", ":")), row[6]))
     return run_ids
 
 
@@ -186,6 +200,12 @@ class Capture(AbstractContextManager["Capture"]):
 
 
 def _source_fingerprint(source: Path, run_ids: list[str] | None = None) -> dict[str, Any]:
+    for directory in (source / ".coherence", source / ".coherence" / "workflow", source / ".coherence" / "metrics"):
+        if not _present(directory) and directory.name == "metrics":
+            continue
+        info = directory.lstat()
+        if directory.is_symlink() or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or info.st_mode & 0o022:
+            raise CaptureError("capture source storage is unsafe; retain the source and restore owned non-symlink directories")
     database = source.joinpath(*_DATABASE_PARTS)
     values: dict[str, dict[str, Any] | None] = {}
     # ``-shm`` is SQLite reader coordination, not committed source content; opening a
@@ -212,13 +232,8 @@ def _source_fingerprint(source: Path, run_ids: list[str] | None = None) -> dict[
             "database": values, "metrics": metric_values, "run_ids": list(run_ids or [])}
 
 
-def capture_stopped(source_worktree: str | os.PathLike[str], private_dir: str | os.PathLike[str]) -> Capture:
-    """Prepare monitor facts below verified main while holding the source writer lock.
-
-    ``private_dir`` must not exist and must be beneath ``main/.coherence``.  Consumers
-    must use this as a context manager and call :meth:`Capture.verify_unchanged` before
-    any completion/publication boundary.
-    """
+def registered_main(source_worktree: str | os.PathLike[str]) -> Path:
+    """Resolve the distinct main by registered Git admin identity, not directory shape."""
     try:
         source = Path(source_worktree).resolve(strict=True)
     except OSError as exc:
@@ -229,23 +244,41 @@ def capture_stopped(source_worktree: str | os.PathLike[str], private_dir: str | 
     # Git's common dir is the admin directory of exactly one registered main worktree.
     result = subprocess.run(["git", "--no-optional-locks", "-C", str(source), "worktree", "list", "--porcelain", "-z"], capture_output=True, check=False)
     main: Path | None = None
+    source_registered = False
     if result.returncode == 0:
         for field in result.stdout.decode("utf-8", "strict").split("\0"):
             if field.startswith("worktree "):
                 candidate = Path(field[9:])
                 try:
                     candidate = candidate.resolve(strict=True)
-                    if _git(candidate, "--git-common-dir") == common and _git(candidate, "--absolute-git-dir") == common:
+                    if _git(candidate, "--git-common-dir") != common:
+                        continue
+                    candidate_admin = _git(candidate, "--absolute-git-dir")
+                    if candidate_admin == common:
                         main = candidate
-                        break
+                    if candidate == source and candidate_admin == admin:
+                        source_registered = True
                 except (OSError, CaptureError):
                     continue
-    if main is None or main == source or admin == common:
+    if not source_registered or main is None or main == source or admin == common:
         raise CaptureError("capture source must be a registered linked worktree distinct from its main; choose the stopped linked worktree")
+    return main
+
+
+def capture_stopped(source_worktree: str | os.PathLike[str], private_dir: str | os.PathLike[str]) -> Capture:
+    """Prepare monitor facts below main; consumers retain this context through readback."""
+    main = registered_main(source_worktree)
+    source = Path(source_worktree).resolve(strict=True)
+    common, admin = _git(source, "--git-common-dir"), _git(source, "--absolute-git-dir")
+    _regular(admin / "HEAD", "capture Git registration")
     try:
         fd = os.open(admin / "coherence-workflow.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        lock = os.fdopen(fd, "r+")
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            lock = os.fdopen(fd, "r+")
+        except BaseException:
+            os.close(fd)
+            raise
     except BlockingIOError as exc:
         raise CaptureError("source writer lock is busy; stop the writer and retry without signalling it") from exc
     except OSError as exc:
@@ -255,15 +288,13 @@ def capture_stopped(source_worktree: str | os.PathLike[str], private_dir: str | 
         _regular(database, "capture database")
         before_database = _source_fingerprint(source)["database"]
         staged = _safe_private_directory(main, Path(private_dir))
-        # Opening a WAL database in read-only mode creates source-side -shm/-wal files.
-        # Copy its locked raw snapshot only into this private preparation area, then
-        # project monitor tables from that temporary SQLite snapshot and remove it.
-        snapshot = staged / ".source-snapshot.sqlite"
-        snapshot.write_bytes(_read_bytes(database, "capture database"))
-        source_wal = database.with_name(database.name + "-wal")
-        if _present(source_wal):
-            snapshot.with_name(snapshot.name + "-wal").write_bytes(_read_bytes(source_wal, "capture database sidecar"))
-        connection = sqlite3.connect(snapshot.as_uri() + "?mode=ro", uri=True, isolation_level=None)
+        # Owner-approved exception: ordinary -shm coordination only. With a WAL
+        # present, mode=ro reads its committed frames consistently. Without one,
+        # immutable prevents SQLite from creating an empty -wal/-shm pair; the
+        # before/after source checks reject a WAL appearing during that read.
+        wal_present = before_database["database-wal"] is not None
+        options = "?mode=ro" if wal_present else "?mode=ro&immutable=1"
+        connection = sqlite3.connect(database.as_uri() + options, uri=True, isolation_level=None)
         try:
             connection.execute("PRAGMA query_only=ON")
             connection.execute("BEGIN")
@@ -275,30 +306,47 @@ def capture_stopped(source_worktree: str | os.PathLike[str], private_dir: str | 
             finally:
                 target.close()
             metrics = staged / METRICS_DIRECTORY
+            before_metrics = _source_fingerprint(source, run_ids)["metrics"]
             for run_id in run_ids:
                 name = "run-" + hashlib.sha256(run_id.encode("utf-8")).hexdigest() + ".jsonl"
                 source_metric = source / ".coherence" / "metrics" / name
                 if _present(source_metric):
                     (metrics / name).write_bytes(_read_bytes(source_metric, "capture metric artifact"))
             fingerprint = _source_fingerprint(source, run_ids)
+            if fingerprint["metrics"] != before_metrics:
+                raise CaptureError("metric changed during capture; retain the source, stop its writer and retry")
+            for name, value in fingerprint["metrics"].items():
+                copied = metrics / name
+                if (value is None and copied.exists()) or (value is not None and
+                        (not copied.exists() or _digest(_read_bytes(copied, "verify copied metric")) != value["digest"])):
+                    raise CaptureError("metric changed during capture; retain the source, stop its writer and retry")
             if {key: fingerprint["database"][key] for key in ("database", "database-wal")} != before_database:
                 raise CaptureError("source database changed during capture; stop its writer and retry before publication")
         finally:
             connection.close()
-            for suffix in ("", "-wal", "-shm", "-journal"):
-                try:
-                    snapshot.with_name(snapshot.name + suffix).unlink()
-                except FileNotFoundError:
-                    pass
         origin_id = hashlib.sha256((str(common) + "\0" + str(admin)).encode()).hexdigest()[:32]
         summary = {"runs": len(run_ids), "observations": _count(staged / DATABASE_NAME, "execution_observations"),
+                   "facts_sha256": retained_digest(staged / DATABASE_NAME),
                    "metrics": {name: ({"availability": "copied_unqualified", "sha256": value["digest"]} if value is not None else {"availability": "absent", "sha256": None}) for name, value in fingerprint["metrics"].items()},
                    "retained": ("monitor descriptors", "ordered observations", "review executions/attempts/input checkpoints", "typed dispatch and metric-artifact history"),
                    "excluded": ("execution_run_inputs", "runnable progress", "unrelated tables", "SDK sessions/private prompts")}
         return Capture(source, main, origin_id, staged, lock, fingerprint, summary)
+    except (OSError, sqlite3.Error) as exc:
+        lock.close()
+        raise CaptureError("capture monitor projection failed; retain the source, restore readable compatible storage and retry") from exc
     except BaseException:
         lock.close()
         raise
+
+
+def retained_digest(database: Path) -> str:
+    """Compare all retained facts, including unsupported rows, without source paths."""
+    tables = ("execution_monitor_runs", "execution_observations", "execution_review_executions",
+              "execution_review_attempts", "execution_review_inputs", "execution_history")
+    with sqlite3.connect(database.as_uri() + "?mode=ro&immutable=1", uri=True) as connection:
+        facts = {table: connection.execute("SELECT * FROM " + table + " ORDER BY rowid").fetchall()
+                 for table in tables}
+    return _digest(json.dumps(facts, sort_keys=True, separators=(",", ":")).encode("utf-8"))
 
 
 def _count(database: Path, table: str) -> int:

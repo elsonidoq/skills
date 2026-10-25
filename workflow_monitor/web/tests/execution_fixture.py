@@ -3,6 +3,10 @@ from pathlib import Path
 import sys
 import tempfile
 import os
+import json
+import shutil
+import sqlite3
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT), str(ROOT / 'runtime')]
@@ -209,4 +213,66 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                     with artifact.path.open('a') as output:
                         output.write('{invalid metric record}\n')
             owner.store.db.execute('UPDATE execution_runs SET state=? WHERE run_id=?', ('failed' if run in ('stopping', 'before-agent') else 'completed', run))
-    uvicorn.run(create_app(Projects(project.parent), ROOT / 'workflow_monitor/web/dist', 4174), host='127.0.0.1', port=4174, access_log=False, log_level='critical')
+    projects = Projects(project.parent)
+    if os.environ.get('MONITOR_MULTIPROJECT') == '1':
+        # Extend this existing real-storage harness, not a mock HTTP archive reader.
+        with Authority(project) as owner:
+            owner.store.start('original', base)
+            recorder = Recorder(owner.store, 'original')
+            recorder.register(presentation)
+            owner.store.review_dispatch('original', 'review-id', review_base=base, review_head=base)
+            owner.store.review_outcome('original', 'review-id', 'rejected', findings=['tracked:1 - retained original rejection'])
+            emit(recorder, 'review-id', 'review', 'started', task=None, role='reviewer', execution_id='review-id', review_ordinal=1, review_base=base, review_head=base)
+            emit(recorder, 'review-id', 'review', 'failed', task=None, role='reviewer', execution_id='review-id', review_ordinal=1, approved=False, finding_count=1, review_base=base, review_head=base)
+        beta = project.parent / 'second-project'
+        beta.mkdir()
+        git(beta, 'init', '-q')
+        git(beta, 'config', 'user.name', 'Offline fixture')
+        git(beta, 'config', 'user.email', 'fixture@example.invalid')
+        (beta / 'tracked').write_text('second project')
+        git(beta, 'add', 'tracked'); git(beta, 'commit', '-qm', 'fixture')
+        with Authority(beta) as owner:
+            recorder = Recorder(owner.store, 'success')
+            recorder.register(presentation)
+            emit(recorder, 'beta-worker', 'worker', 'returned', role='worker')
+        linked = Path(temporary) / 'external linked worktree'
+        git(project, 'worktree', 'add', '-qb', 'external', str(linked))
+        with Authority(linked) as owner:
+            with sqlite3.connect(project / '.coherence/workflow/workflow.sqlite') as original:
+                for table in ('execution_monitor_runs', 'execution_observations', 'execution_review_executions', 'execution_review_attempts', 'execution_review_inputs', 'execution_history'):
+                    rows = original.execute('SELECT * FROM ' + table).fetchall()
+                    if rows:
+                        owner.store.db.executemany('INSERT INTO ' + table + ' VALUES(' + ','.join('?' for _ in rows[0]) + ')', rows)
+            owner.store.start('private-input', base, contract={'secret': 'PRIVATE-RUNNABLE-SENTINEL'})
+        shutil.copytree(project / '.coherence/metrics', linked / '.coherence/metrics', dirs_exist_ok=True)
+        live_linked = Path(temporary) / 'still registered linked worktree'
+        git(project, 'worktree', 'add', '-qb', 'live-linked', str(live_linked))
+        with Authority(live_linked) as owner:
+            owner.store.start('success', base)
+            recorder = Recorder(owner.store, 'success')
+            recorder.register(presentation, runner_identity=process_identity(os.getpid(), 'offline-fixture'))
+            facts = {'role': 'worker', 'invocation_id': 'success-worker', 'invocation_kind': 'task_worker', 'selected_input_checkpoints': [], 'correction_chain': ['success-worker']}
+            emit(recorder, 'worker', 'worker', 'started', **facts)
+            emit(recorder, 'worker', 'worker', 'returned', **facts)
+            artifact = create_artifact(live_linked, 'success', authority=owner)
+            artifact.append(metric_record('success', 'success-worker', 'fresh', 'fresh'))
+        projects.inventory()  # startup cache predates completion/source removal
+        def existing_bytes(worktree):
+            return {path.relative_to(worktree): path.read_bytes() for path in worktree.rglob('*')
+                    if path.is_file() and '.git' not in path.relative_to(worktree).parts}
+        main_before, source_before = existing_bytes(project), existing_bytes(linked)
+        index_before = (project / '.git/index').read_bytes()
+        result = subprocess.run([sys.executable, '-B', '-m', 'workflow_monitor.preserve', '--source-worktree', str(linked)], cwd=ROOT, capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr
+        published = json.loads(result.stdout.removeprefix('preserved '))
+        assert published['readback'] == 'verified'
+        assert all((project / path).read_bytes() == value for path, value in main_before.items())
+        assert all((linked / path).read_bytes() == value for path, value in source_before.items())
+        assert (project / '.git/index').read_bytes() == index_before
+        capture = project / '.coherence/preserved-recordings' / published['recording_id']
+        assert b'PRIVATE-RUNNABLE-SENTINEL' not in (capture / 'monitor.sqlite').read_bytes()
+        # Only this explicitly created fixture worktree/registration is removed.
+        git(project, 'worktree', 'remove', '--force', str(linked))
+        assert not linked.exists()
+        print('COMPOSED: CLI/readback/private-exclusion/main-source-index-bytes/source-removal verified', flush=True)
+    uvicorn.run(create_app(projects, ROOT / 'workflow_monitor/web/dist', 4174), host='127.0.0.1', port=4174, access_log=False, log_level='critical')
