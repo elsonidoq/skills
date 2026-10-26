@@ -628,8 +628,15 @@ class Engine:
                 raise Blocked('retained repair paths exceed original scope; inspect ownership before continuation')
         recovered = {'returned': True, 'baseline': returned['baseline'], 'invocations': list(calls),
                      'facts': {'paths': returned['paths'], 'artifacts': returned['artifacts']}}
-        checkpoints = [(state, facts) for kind, state, facts in events if kind == 'fixer_checkpoint']
-        check_events = [(state, facts) for kind, state, facts in events if kind == 'fixer_checks']
+        # Earlier local failures remain history, not stages of this returned
+        # correction. Only reconcile checks/checkpoints begun after its return;
+        # every call above still participates in the uncertain-call guard.
+        returned_index = max(index for index, (kind, state, facts) in enumerate(events)
+                             if kind == 'fixer_invocation' and state == 'returned'
+                             and facts['invocation_id'] == returned['invocation_id'])
+        local_events = events[returned_index + 1:]
+        checkpoints = [(state, facts) for kind, state, facts in local_events if kind == 'fixer_checkpoint']
+        check_events = [(state, facts) for kind, state, facts in local_events if kind == 'fixer_checks']
         checks = [state for state, _ in check_events]
         if checkpoints:
             state, checkpoint = checkpoints[-1]

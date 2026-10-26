@@ -105,6 +105,12 @@ class SameRunResumeTests(ProjectTest):
     def test_settled_fixer_checkpoint_resumes_without_provider_or_commit_replay(self):
         self._settled_fixer_restart(interrupt='fixer_checkpoint')
 
+    def test_settled_fixer_check_failure_then_returned_correction_ignores_old_stage(self):
+        self._settled_fixer_restart(interrupt='fixer_invocation', prior_stage='check')
+
+    def test_settled_fixer_checkpoint_failure_then_returned_correction_ignores_old_stage(self):
+        self._settled_fixer_restart(interrupt='fixer_invocation', prior_stage='checkpoint')
+
     def test_settled_fixer_source_drift_preserves_unknown_bytes_without_dispatch(self):
         self._settled_fixer_restart(drift='bytes')
 
@@ -117,10 +123,15 @@ class SameRunResumeTests(ProjectTest):
     def test_settled_fixer_head_drift_stops_before_dispatch(self):
         self._settled_fixer_restart(drift='head')
 
-    def _settled_fixer_restart(self, *, interrupt=None, drift=None):
+    def _settled_fixer_restart(self, *, interrupt=None, drift=None, prior_stage=None):
         """Actual adapter restart seam; scripted output proves mechanics, not judgment."""
         host, state = self.root / 'repair_resume_host.py', self.root / 'repair_resume_state.json'
         state.write_text('{}')
+        failed_phase = 2 if prior_stage else 1
+        if prior_stage == 'checkpoint':
+            hook = self.project / '.git/hooks/pre-commit'
+            hook.write_text('#!/bin/sh\ntest "$(git show :owned.txt)" != broken\n')
+            hook.chmod(0o755)
         if drift == 'crlf':
             git(self.project, 'config', 'core.autocrlf', 'true')
         host.write_text("""import json
@@ -143,10 +154,10 @@ if 'Independently review' in prompt:
         result('{"approved":false,"findings":["owned.txt:1 - fixture defect [basis: correctness]"]}', session=saved)
     else:
         result('{"approved":true,"findings":[]}', session=saved)
-elif 'Actionable findings:' in prompt:
+elif any(marker in prompt for marker in ('Actionable findings:', 'Actual failed attempt:', 'Actual checkpoint error:')):
     phase = count('fix')
     assert request.get('savedSession', {}).get('id') == 'warm-review'
-    if phase == 2:
+    if phase == FAILED_PHASE + 1:
         assert 'BENIGN-FIXER-REASON: inspect then repair' in prompt
         assert 'retained head and selected source/artifact bytes still match Git' in prompt
         assert 'never repeat the previous attempt unchanged' in prompt
@@ -156,17 +167,21 @@ elif 'Actionable findings:' in prompt:
         assert 'Required/manual acceptance is not waived' in prompt
     print(json.dumps({'type': 'claim', 'path': 'owned.txt'}), flush=True)
     assert json.loads(input()) == {'ok': True}
-    Path(request['project'], 'owned.txt').write_text('partial\\n' if phase == 1 else 'repaired\\n')
-    result('BENIGN-FIXER-REASON: inspect then repair' if phase == 1 else 'repair complete',
-           'failed' if phase == 1 else 'completed', saved)
+    Path(request['project'], 'owned.txt').write_text(
+        'partial\\n' if phase == FAILED_PHASE else ('broken\\n' if phase < FAILED_PHASE else 'repaired\\n'))
+    result('BENIGN-FIXER-REASON: inspect then repair' if phase == FAILED_PHASE else 'repair complete',
+           'failed' if phase == FAILED_PHASE else 'completed', saved)
 else:
     print(json.dumps({'type': 'claim', 'path': 'owned.txt'}), flush=True)
     assert json.loads(input()) == {'ok': True}
     Path(request['project'], 'owned.txt').write_text('initial\\n')
     result('task complete')
-""".replace("STATE", repr(str(state))))
+""".replace("STATE", repr(str(state))).replace('FAILED_PHASE', str(failed_phase)))
+        check_source = "from pathlib import Path; assert Path('owned.txt').exists()"
+        if prior_stage == 'check':
+            check_source += "; assert Path('owned.txt').read_text() != 'broken\\n'"
         contract = admit([{'id': 'task', 'description': 'fixture', 'owned_paths': ['owned.txt'],
-                          'check': [sys.executable, '-B', '-c', "from pathlib import Path; assert Path('owned.txt').exists()"]}])
+                          'check': [sys.executable, '-B', '-c', check_source]}])
         environment = {'COHERENCE_NODE': sys.executable, **_DETACHED_BRIDGE}
         with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, environment):
             with Authority(self.project) as owner:
@@ -205,13 +220,13 @@ else:
                 original_history = owner.store.history
                 def interrupted_history(run, task, kind, status, details):
                     original_history(run, task, kind, status, details)
-                    if kind == interrupt and status == 'passed':
+                    if kind == interrupt and status == ('returned' if interrupt == 'fixer_invocation' else 'passed'):
                         raise KeyboardInterrupt
                 if interrupt:
                     with patch.object(owner.store, 'history', side_effect=interrupted_history), self.assertRaises(KeyboardInterrupt):
                         Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
                     settled_head = git(self.project, 'rev-parse', 'HEAD')
-                    self.assertEqual(json.loads(state.read_text()), {'review': 1, 'fix': 2})
+                    self.assertEqual(json.loads(state.read_text()), {'review': 1, 'fix': failed_phase + 1})
                 else:
                     result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
             if interrupt:
@@ -226,16 +241,30 @@ else:
                 history = [dict(row) for row in owner.store.db.execute(
                     "SELECT kind,state,details FROM execution_history WHERE run_id='review-restart' ORDER BY seq")]
         self.assertEqual(result['status'], 'complete')
-        self.assertEqual(json.loads(state.read_text()), {'review': 2, 'fix': 2})
+        self.assertEqual(json.loads(state.read_text()), {'review': 2, 'fix': failed_phase + 1})
         failure = next(json.loads(row['details']) for row in history
                        if row['kind'] == 'fixer_invocation' and row['state'] == 'failed')
         self.assertEqual(failure['paths'], ['owned.txt'])
         self.assertIn('owned.txt', failure['source_state'])
         self.assertEqual(set(failure['source_state']['owned.txt']), {'sha256', 'mode'})
         self.assertTrue(failure['head'])
-        self.assertTrue(any(row['kind'] == 'fixer_checks' and row['state'] == 'passed' for row in history))
-        self.assertTrue(any(row['kind'] == 'fixer_checkpoint' and row['state'] == 'passed' for row in history))
-        self.assertEqual([row['state'] for row in history if row['kind'] == 'fixer_invocation' and row['state'] != 'started'], ['failed', 'returned'])
+        latest_return = max(index for index, row in enumerate(history)
+                            if row['kind'] == 'fixer_invocation' and row['state'] == 'returned')
+        local_history = history[latest_return + 1:]
+        check_pass = next(index for index, row in enumerate(local_history)
+                          if row['kind'] == 'fixer_checks' and row['state'] == 'passed')
+        checkpoint_pass = next(index for index, row in enumerate(local_history)
+                               if row['kind'] == 'fixer_checkpoint' and row['state'] == 'passed')
+        self.assertLess(check_pass, checkpoint_pass)
+        self.assertEqual([row['state'] for row in history if row['kind'] == 'fixer_invocation' and row['state'] != 'started'],
+                         (['returned'] if prior_stage else []) + ['failed', 'returned'])
+        if prior_stage == 'check':
+            failed_check = next(json.loads(row['details']) for row in history
+                                if row['kind'] == 'fixer_check' and row['state'] == 'failed')
+            self.assertNotEqual(failed_check['exit_code'], 0)
+        elif prior_stage == 'checkpoint':
+            self.assertTrue(any(row['kind'] == 'fixer_checkpoint' and row['state'] == 'failed' for row in history))
+        self.assertEqual(git(self.project, 'rev-list', '--count', self.base + '..HEAD'), b'2\n')
 
     def test_persisted_approval_never_accepts_incoming_commits(self):
         for ordinal in (1, 2):
