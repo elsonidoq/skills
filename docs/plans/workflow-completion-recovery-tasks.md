@@ -25,11 +25,9 @@ via `ask_user`, then explicitly authorized bounded corrections to confusion/over
 and focused planning checkpoints. Saved `tinyspec-tasks` producer assignment remains
 `openai-codex/gpt-6.1-sol`, medium, separate from runtime bindings.
 
-Combined approval was **CANCELLED / not granted**. Affected task review/parent inspection
-and renewed combined owner approval remain pending; implementation is **not approved**.
-A planning checkpoint supplies none of those approvals. Final combined approval starts
-coordinator preflight by default; no launch occurs here. No implementation proof, live
-workflow/provider call or Cerca continuation ran during this task correction.
+The initial combined approval was cancelled. After source correction, independent affected-source review and parent inspection of the aligned five tasks, the owner answered **“Approve and implement”** through `ask_user` on 2026-10-26. This approves T001, T002, T003, T004 and T006 and immediately authorizes coordinator preflight/implementation, actual REQUIRED checks, focused checkpoints and fresh independent final review. No Cerca continuation or unrelated repair is authorized.
+
+Approved content at `bd5f0606075ea440451b937b32aed2a0edde3ebb`: source SHA256 `aa89afc2f99755a0895368ff420a77dd1c0caed26895ca93099d6d3f7c6a7314`; executable JSON SHA256 `c1113a771c0f77ae9ab3f1a03d8234c58bf78aed036959824235dd2f765915f7`; human tasks before this approval-only update SHA256 `10fe9f507f3059f6b80aac2cd761ee8c3db3ebe051b989f93e87dc20c4f528b4`. Task instructions and shared execution context are unchanged by this approval record. Parent review confirmed A1–A5 coverage, bounded outcomes, T002 → T004 dependency, owned supporting paths and actual command fields. Dependency/artifact checks passed; required implementation proofs remain NOT RUN. The disclosed existing full-planner instruction-text assertion failure and prior full-fixture timeout are not silently waived or added to implementation scope.
 
 Revision disposition: A1 now distinguishes runner check execution/checkpoint/review dispatch
 from worker semantic/manual evidence and independent judgment. Old T004/T005 are one bounded
