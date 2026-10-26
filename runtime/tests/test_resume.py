@@ -53,6 +53,48 @@ class SameRunResumeTests(ProjectTest):
             self.assertEqual(owner.store.db.execute("SELECT state,result FROM execution_tasks WHERE run_id='lost-completion'").fetchone()[:], ('complete', checkpoint))
 
 
+    def test_resume_checkpoints_already_edited_established_handoff_without_second_edit(self):
+        project = self.project
+        project.joinpath('recovery.txt').write_bytes(b'preserved recovery bytes\n')
+        contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [{
+            'id': 'handoff', 'description': 'resume an exact recovery handoff',
+            'owned_paths': ['recovery.txt'], 'handoff_paths': ['recovery.txt'],
+        }]})
+
+        class Interrupted:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"findings":[]}'
+                kwargs['claim']('recovery.txt')
+                project.joinpath('recovery.txt').write_bytes(b'preserved recovery bytes\nintended correction\n')
+                raise KeyboardInterrupt
+
+        with Authority(project) as owner:
+            with self.assertRaises(KeyboardInterrupt):
+                Engine(owner, 'handoff-resume', contract, EXECUTOR, adapter=Interrupted,
+                       paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
+            owner.store.resume('handoff-resume')
+
+            class Continued:
+                calls = 0
+                def __init__(self, *_args, **_kwargs): pass
+                def prompt(self, _prompt, **kwargs):
+                    if kwargs.get('read_only'):
+                        return '{"approved":true,"findings":[]}'
+                    Continued.calls += 1
+                    kwargs['claim']('recovery.txt')
+                    return 'checkpoint the already intended handoff edit'
+
+            result = Engine(owner, 'handoff-resume', contract, EXECUTOR, adapter=Continued,
+                            paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True).invoke()
+        self.assertEqual(Continued.calls, 1)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['checkpoints'][0]['paths'], ['recovery.txt'])
+        self.assertEqual(git(project, 'show', 'HEAD:recovery.txt'),
+                         b'preserved recovery bytes\nintended correction\n')
+
+
     def test_review_repair_reopens_persisted_reviewer_after_process_restart(self):
         calls = []
         saved = {'id': 'warm-review', 'file': '/private/review.jsonl',

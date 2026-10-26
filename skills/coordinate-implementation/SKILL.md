@@ -125,7 +125,8 @@ no universal collection-count/receipt format. A nonzero required command retains
 cleanup, preserve pre-existing/unknown bytes; never adopt them. Optional `owned_paths` limits source edits;
 explicit task edit selections determine checkpoint paths. An optional task `handoff_paths` list transfers only
 explicitly authorized exact pre-existing dirty regular files: the runner preserves and rechecks their starting
-bytes at claim before the intended edit and focused checkpoint. It is not an `owned_paths` extension—directory,
+bytes at claim before the intended edit and focused checkpoint. A resumed task keeps an already claimed
+exact transfer rather than resnapshotting its intended edit or demanding a second edit. It is not an `owned_paths` extension—directory,
 glob, or broad path coverage never authorizes adoption. A missing, changed, symlinked, or unapproved target
 stops that claim with its filename, operation, and corrective action. Optional `generated_outputs` guides selective
 known-artifact regeneration/cleanup only: it is not an allowlist, registration, permission prerequisite or

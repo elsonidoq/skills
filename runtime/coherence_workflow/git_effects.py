@@ -91,8 +91,12 @@ class FocusedGit:
         if not isinstance(handoff, list) or any(not isinstance(name, str) or not name for name in handoff):
             raise Blocked('handoff_paths must be a list of exact nonempty file paths; correct the task input')
         self.handoff = {}
+        # A persisted claim is an established exact transfer.  On continuation its
+        # bytes may already contain the intended edit, so taking a fresh snapshot
+        # would incorrectly require a second edit before checkpointing.
+        self.resumed_handoffs = self.resumed_paths & set(handoff)
         for name in handoff:
-            if name in self.handoff:
+            if name in self.handoff or name in self.resumed_handoffs:
                 continue
             try:
                 path = editable_path(self.project, name)
@@ -155,10 +159,10 @@ class FocusedGit:
         path.unlink()
 
     def facts(self):
-        # Report the current task's explicit transfer input, but never turn it into
-        # resumed-path history; only paths/artifacts are reusable resume facts.
+        # Report the current task's explicit transfer input.  A persisted claimed
+        # path, not this report, establishes a handoff during continuation.
         return {'paths': sorted(self.task_edited), 'artifacts': sorted(self.known_artifacts),
-                'handoff_paths': sorted(self.handoff)}
+                'handoff_paths': sorted(set(self.handoff) | self.resumed_handoffs)}
 
     def _checkpoint_result(self, sha, parent, owned):
         if git(self.project, 'rev-list', '--parents', '-n', '1', sha).decode().split() != [sha, parent]:

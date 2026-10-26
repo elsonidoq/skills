@@ -15,7 +15,8 @@ optionally carry `handoff_paths`: exact explicitly authorized pre-existing dirty
 one task's focused Git transfer. The runner snapshots each named path at preparation and rechecks it
 at claim, so only its preserved starting bytes plus the intended correction may be checkpointed.
 `handoff_paths` is distinct from `owned_paths`; broad directory or glob scope is never transfer authority.
-Malformed or ineligible handoff input stops only that task's transfer with the filename/operation and a
+A retained resumed claim remains that established exact transfer and does not resnapshot its already intended
+edit. Malformed or ineligible handoff input stops only that task's transfer with the filename/operation and a
 supported correction, without scanning or adopting other dirty paths.
 
 A task-contract object may also contain dedicated paid-use fields outside individual task text:

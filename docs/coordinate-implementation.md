@@ -109,7 +109,8 @@ Optional `owned_paths` limits source file/directory scope. Explicit SDK edit/wri
 source checkpoint paths; the runner never derives ownership by scanning a clean baseline. A task may
 optionally provide `handoff_paths`, a list of exact explicitly authorized pre-existing dirty regular files.
 At task preparation the runner records each named file's bytes; at the actual claim it requires those
-same bytes, then permits the intended edit and focused checkpoint. This is a narrow transfer, not an
+same bytes, then permits the intended edit and focused checkpoint. A resumed task retains an already
+claimed exact transfer, so it checkpoints that intended edit without resnapshotting it or requiring a second edit. This is a narrow transfer, not an
 `owned_paths` extension: directory/glob/broad coverage never adopts dirty content. A changed, missing,
 symlinked, or unapproved target is refused with its filename, operation, and the corrective action
 (restoring its authorized bytes or supplying a current exact handoff entry). Optional `generated_outputs`
