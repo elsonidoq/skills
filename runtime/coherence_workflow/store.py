@@ -389,6 +389,40 @@ class Store:
         self._required_write('owner pair authorization', write, completed)
         return facts
 
+    def authorize_routine_review_continuation(self, run, original_scope):
+        """Record current owner authority for routine later review repairs in one exact run scope."""
+        if self.review_policy(run) != 'owner-pair-v1':
+            raise Blocked('retained review policy does not permit routine review continuation authority')
+        if not isinstance(original_scope, str) or not original_scope:
+            raise Blocked('routine review continuation authority needs the retained original scope')
+        if original_scope != self.review_scope(run):
+            raise Blocked('routine review continuation authority scope does not match retained original scope')
+        facts = {'decision': 'affirmative_actual_owner', 'original_scope': original_scope}
+        encoded = canonical(facts)
+        def write():
+            with self.transaction() as db:
+                rows = db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='routine_review_authority'", (run,)).fetchall()
+                for row in rows:
+                    try:
+                        prior = json.loads(row['details'])
+                    except (TypeError, ValueError):
+                        continue
+                    if prior != facts:
+                        raise Blocked('routine review continuation authority is already bound to another scope')
+                if not any(row['details'] == encoded for row in rows):
+                    self._history_insert(db, run, None, 'routine_review_authority', 'authorized', encoded, time.time())
+        self._required_write('routine review continuation authority', write, lambda: bool(self.db.execute(
+            "SELECT 1 FROM execution_history WHERE run_id=? AND kind='routine_review_authority' AND state='authorized' AND details=?", (run, encoded)).fetchone()))
+        return facts
+
+    def routine_review_authority(self, run, original_scope):
+        """Return only current authority explicitly bound to this retained run scope."""
+        if self.review_policy(run) != 'owner-pair-v1' or original_scope != self.review_scope(run):
+            return None
+        expected = canonical({'decision': 'affirmative_actual_owner', 'original_scope': original_scope})
+        row = self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='routine_review_authority' AND state='authorized' AND details=? ORDER BY seq DESC LIMIT 1", (run, expected)).fetchone()
+        return json.loads(row['details']) if row else None
+
     def reserve_owner_pair_fixer(self, run, grant_id, *, rejecting_execution_id, review_base, review_head, original_scope):
         """Atomically consume one grant for its exact fixer before any provider call."""
         if self.review_policy(run) != 'owner-pair-v1':

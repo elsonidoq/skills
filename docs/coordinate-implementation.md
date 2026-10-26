@@ -48,6 +48,13 @@ scripts/coordinate-implementation resume --project /absolute/project --run FAILE
 # status/history include monitoring recording version, stable occurrence IDs, and safe review ranges when available
 ```
 
+After an actual current owner grants routine repair/review continuation for one retained run, record that new bounded authority before resuming (the scope is the run's retained original task-scope hash):
+
+```sh
+scripts/coordinate-implementation authorize-routine-repairs --project /absolute/project \
+  --run FAILED_OR_INTERRUPTED_RUN --scope RETAINED_ORIGINAL_SCOPE
+```
+
 The resolver requires only Python's standard library, prints only the absolute selected path on
 success, and sends actionable failures to stderr with a nonzero exit. It reads existing JSON and
 checks nonempty provider/model/effort strings, including an optional reviewer profile; it never
@@ -166,7 +173,7 @@ adverse paths, and the integrated result against original acceptance without spe
 a fixer never independently accepts delivery. Its checks and focused checkpoint retain a distinct execution
 identity and explicit predecessor. Correctable
 check/checkpoint errors stay inside that assigned round and rerun affected checks before its
-checkpoint. The existing `fixer` history role identifies this repair stage, not a separate executor-model agent. A process restart before repair reopens the privately retained reviewer session; historical outcomes without a saved session can only use a fresh reviewer-model repair session, without claiming warm-context reuse. Final chain control selects the last eligible persisted stage. New runs retain `owner-pair-v1`: the first repair is automatic, while each later actionable rejection needs an actual-owner durable one-pair grant before its assigned fixer and fresh read-only original-range rereview. A further rejection asks again; historical no-policy runs retain the old two-review/one-fixer limit. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
+checkpoint. The existing `fixer` history role identifies this repair stage, not a separate executor-model agent. A process restart before repair reopens the privately retained reviewer session; historical outcomes without a saved session can only use a fresh reviewer-model repair session, without claiming warm-context reuse. Final chain control selects the last eligible persisted stage. New runs retain `owner-pair-v1`: the first repair is automatic, while each later actionable rejection needs an actual-owner durable one-pair grant before its assigned fixer and fresh read-only original-range rereview. A further rejection asks again unless the current owner has explicitly recorded `authorize-routine-repairs` for that same retained run and unchanged original task scope; it then creates a new exact causal grant/reservation for each routine corrective pair without changing historical questions, rejections, or grants. This narrow authority never covers material scope, paid, security, data, external actions, uncertain stages, or target drift. Historical no-policy runs retain the old two-review/one-fixer limit. SDK compaction/retries follow SDK behavior; compaction/optional telemetry never creates a
 workflow fatal condition. SDK tools truncate long output with their normal continuation
 instructions; the transport has no size cap. A runner may reuse only a returned private saved session identity from the same run after a
 successful idle settlement and preceding verified checkpoint. Reuse also requires an explicit

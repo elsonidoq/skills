@@ -914,6 +914,10 @@ class Engine:
                     head = last['references'].get('head')
                     grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=last['execution_id'],
                                                            review_base=review_base, review_head=head, original_scope=scope)
+                    if grant is None and store.routine_review_authority(self.run, scope):
+                        grant = store.authorize_owner_pair(self.run, uuid.uuid4().hex,
+                            rejecting_execution_id=last['execution_id'], review_base=review_base, review_head=head,
+                            original_scope=scope, fixer_execution_id=fixer_id, reviewer_execution_id=uuid.uuid4().hex)
                     if grant is None:
                         context = {'rejecting_execution': last['execution_id'], 'review_base': review_base,
                                    'review_head': head, 'scope': scope,

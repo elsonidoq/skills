@@ -653,6 +653,40 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(grants[0]['rejecting_execution_id'], chain['executions'][2]['execution_id'])
         self.assertTrue(all(item['references']['base'] == self.base for item in chain['executions'] if item['role'] == 'reviewer'))
 
+    def test_current_scoped_routine_authority_skips_later_pair_questions_but_keeps_each_pair_causal(self):
+        decisions, granted = [], [False]
+        class Adapter:
+            reviews = 0
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    Adapter.reviews += 1
+                    return ('{"approved":false,"findings":["owned.txt:1 - correctness defect"]}'
+                            if Adapter.reviews < 4 else '{"approved":true,"findings":[]}')
+                if not granted[0]:
+                    granted[0] = True
+                    owner.store.authorize_routine_review_continuation('routine-authority', owner.store.review_scope('routine-authority'))
+                return 'fixture'
+        def question(*args, **kwargs):
+            decisions.append((args, kwargs))
+            return 'yes'
+        contract = admit({'tasks': [{'id': 'task', 'description': 'fixture'}]})
+        with Authority(self.project) as owner:
+            result = Engine(owner, 'routine-authority', contract, EXECUTOR, adapter=Adapter, question=question).invoke()
+            chain = owner.store.review_chain('routine-authority', private=True)
+            grants = [json.loads(row['details']) for row in owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='routine-authority' AND kind='review_pair_grant' ORDER BY seq")]
+            scope = owner.store.review_scope('routine-authority')
+            self.assertTrue(owner.store.routine_review_authority('routine-authority', scope))
+            self.assertIsNone(owner.store.routine_review_authority('routine-authority', 'wrong-scope'))
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(decisions, [])
+        self.assertEqual([(item['role'], item['state']) for item in chain['executions']], [
+            ('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'rejected'),
+            ('fixer', 'approved'), ('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
+        self.assertEqual(len(grants), 2)
+        self.assertTrue(all(grant['original_scope'] == scope for grant in grants))
+
 
 class ReviewBoundaryRegressionTests(ProjectTest):
     """Exercise the actual store/engine boundary with disposable Git and reopen."""

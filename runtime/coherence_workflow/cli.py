@@ -186,7 +186,7 @@ def cancel(signum, frame):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
-    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon'):
+    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs'):
         sub = subs.add_parser(command)
         if command != 'intake':
             sub.add_argument('--project', required=True)
@@ -195,8 +195,10 @@ def main(argv=None):
         if command == 'start':
             sub.add_argument('--executor', help='JSON file with provider, model and effort; no manifest or binding proof')
             sub.add_argument('--run', default=None)
-        if command in ('resume', 'status', 'history', 'abandon'):
+        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs'):
             sub.add_argument('--run', required=True)
+        if command == 'authorize-routine-repairs':
+            sub.add_argument('--scope', required=True, help='exact retained original task scope from the authorized handoff')
     args = parser.parse_args(argv)
     run_id = None
     writer_entered = False
@@ -208,6 +210,10 @@ def main(argv=None):
         if args.command == 'abandon':
             with Authority(args.project, wait=True) as authority:
                 print(canonical(authority.store.abandon(args.run)))
+            return 0
+        if args.command == 'authorize-routine-repairs':
+            with Authority(args.project, wait=True) as authority:
+                print(canonical(authority.store.authorize_routine_review_continuation(args.run, args.scope)))
             return 0
         contract = load_contract(args.tasks) if args.command in ('start', 'intake') else None
         if args.command == 'intake':

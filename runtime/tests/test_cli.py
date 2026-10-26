@@ -120,6 +120,26 @@ class CliTests(ProjectTest):
                 self.assertIn(error, json.loads(result.stdout)['reason'])
                 self.assertFalse((self.project/'.coherence').exists())
 
+    def test_authorize_routine_repairs_records_only_current_matching_scope(self):
+        with Authority(self.project) as owner:
+            owner.store.start('retained', self.base, contract={'tasks': []},
+                              executor={'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
+                                        'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}},
+                              authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []},
+                                         'review_policy': 'owner-pair-v1'}, review_base=self.base)
+            owner.store.finish('retained', 'failed', self.base, 'stopped fixture')
+            original = owner.store.input('retained')
+            scope = owner.store.review_scope('retained')
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(main(['authorize-routine-repairs', '--project', str(self.project), '--run', 'retained', '--scope', scope]), 0)
+        self.assertEqual(json.loads(out.getvalue())['original_scope'], scope)
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.input('retained'), original)
+            self.assertTrue(owner.store.routine_review_authority('retained', scope))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(main(['authorize-routine-repairs', '--project', str(self.project), '--run', 'retained', '--scope', 'wrong']), 2)
+        self.assertIn('does not match', json.loads(out.getvalue())['reason'])
+
     def test_attached_resume_uses_ready_parent_bridge_for_recovery_questions(self):
         paid_scope = {'agent_providers': ['fixture'], 'apis': []}
         with Authority(self.project) as owner:
