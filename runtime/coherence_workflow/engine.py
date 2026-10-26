@@ -236,7 +236,16 @@ class Engine:
         if not accepts_keywords:
             names = {parameter.name for parameter in parameters}
             kwargs = {key: value for key, value in kwargs.items() if key in names}
-        return worker.prompt(prompt, **kwargs)
+        result = worker.prompt(prompt, **kwargs)
+        # Task and repair consumers share this boundary: transport resolution is
+        # not acceptance. Ordinary text remains the compatible completion path.
+        if isinstance(result, TaskOutcome):
+            raise Blocked('worker explicitly ' + result.status + '; partial work retained')
+        if isinstance(result, BaseException):
+            raise result
+        if result is None:
+            raise Blocked('worker returned without completing the task; partial work retained')
+        return result
 
     @staticmethod
     def _headroom(observation):
@@ -361,7 +370,7 @@ class Engine:
                 + _DECISION_CONSTRAINTS + self.paid_authority() + '\nOriginal task contracts: '
                 + canonical(original_tasks) + '\n')
             def prompt_fix(prompt, **kwargs):
-                prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + repair_context + prompt
+                prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + repair_context + prompt
                 invocation_id = uuid.uuid4().hex
                 predecessor = last_fixer_invocation[0]
                 chain = [*fixer_chain, invocation_id]
@@ -988,15 +997,6 @@ class Engine:
                         worker.opened_session = None
                         try:
                             result = self._prompt_worker(worker, prompt, **kwargs)
-                            # Transport resolution is not task acceptance. The actual SDK host
-                            # carries only an explicit worker-reported unsuccessful outcome here;
-                            # ordinary text remains the compatible completion path.
-                            if isinstance(result, TaskOutcome):
-                                raise Blocked('worker explicitly ' + result.status + '; partial work retained')
-                            if isinstance(result, BaseException):
-                                raise result
-                            if result is None:
-                                raise Blocked('worker returned without completing the task; partial work retained')
                         except BaseException as exc:
                             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                             store.history(self.run, task['id'], 'worker_invocation', state,

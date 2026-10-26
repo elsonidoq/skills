@@ -249,6 +249,58 @@ print(json.dumps({'type': 'result', 'text': 'delivered answer', 'outcome': 'bloc
         self.assertIn(('worker_invocation', 'failed'), history)
         self.assertNotIn(('checkpoint', 'passed'), history)
 
+    def test_actual_adapter_unsuccessful_fixer_stops_before_checkpoint_and_rereview(self):
+        """Synthetic host responses traverse the real adapter and repair consumer."""
+        host, dispatches = self.root / 'repair_host.py', self.root / 'dispatches.jsonl'
+        for outcome in ('blocked', 'failed', 'incomplete'):
+            for partial in (False, True):
+                with self.subTest(outcome=outcome, partial=partial):
+                    name = 'repair-' + outcome + '-' + str(partial) + '.txt'
+                    host.write_text("""import json
+from pathlib import Path
+request = json.loads(input())
+with Path(DISPATCHES).open('a') as log:
+    log.write(json.dumps({'read_only': request['readOnly'], 'prompt': request['prompt']}) + '\\n')
+if request['readOnly']:
+    text, outcome = '{"approved":false,"findings":["owned.txt:1 - fixture defect"]}', 'completed'
+elif 'Actionable findings:' in request['prompt']:
+    if PARTIAL:
+        print(json.dumps({'type': 'claim', 'path': NAME}), flush=True)
+        assert json.loads(input()) == {'ok': True}
+        Path(request['project'], NAME).write_text('partial repair\\n')
+    text, outcome = 'Required semantic acceptance remains unmet', OUTCOME
+else:
+    text, outcome = 'Completed no-change task', 'completed'
+print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=True)
+""".replace('DISPATCHES', repr(str(dispatches))).replace('PARTIAL', repr(partial))
+                        .replace('NAME', repr(name)).replace('OUTCOME', repr(outcome)))
+                    dispatches.write_text('')
+                    run = 'repair-outcome-' + outcome + '-' + str(partial)
+                    with patch('coherence_workflow.pi_adapter.host_path', return_value=host), \
+                         patch.dict(os.environ, {'COHERENCE_NODE': sys.executable,
+                                                'COHERENCE_PARENT_BRIDGE_SOCKET': '', 'COHERENCE_PARENT_BRIDGE_TOKEN': '',
+                                                'COHERENCE_PARENT_BRIDGE_SESSION': '', 'COHERENCE_PARENT_BRIDGE_RUN': ''}):
+                        with Authority(self.project) as owner:
+                            with self.assertRaisesRegex(Blocked, 'worker explicitly ' + outcome):
+                                Engine(owner, run, admit([{
+                                    'id': 'A', 'description': 'Completed no-change fixture', 'owned_paths': [name],
+                                    'check': [sys.executable, '-B', '-c', "print('baseline green')"],
+                                }]), EXECUTOR).invoke()
+                            chain = owner.store.review_chain(run)
+                            self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
+                                             [('reviewer', 'rejected'), ('fixer', 'failed')])
+                            history = list(owner.store.db.execute(
+                                'SELECT kind,state FROM execution_history WHERE run_id=?', (run,)))
+                            self.assertIn(('fixer_invocation', 'failed'), [tuple(row) for row in history])
+                            self.assertFalse(any(row['kind'] in ('fixer_checks', 'fixer_checkpoint') for row in history))
+                    calls = [json.loads(line) for line in dispatches.read_text().splitlines()]
+                    self.assertEqual([call['read_only'] for call in calls], [False, True, False])
+                    self.assertIn('call report_task_outcome', calls[-1]['prompt'])
+                    self.assertEqual((self.project / name).exists(), partial)
+                    if partial:
+                        self.assertEqual((self.project / name).read_text(), 'partial repair\n')
+                    self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+
     def test_findings_honestly_reported_commits_retained_no_disposition_database(self):
         project = self.project
         class OfflineReview:
