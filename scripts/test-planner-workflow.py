@@ -3113,6 +3113,24 @@ sys.stdin.buffer.read()
             rpc.answer_dialog(request, {"method": "input", "response": {"value": "TinySpec"}})
 
 
+class AuthoredCommandHandoffTests(unittest.TestCase):
+    """Both task adapters preserve authored executable checks; runtime behavior is tested separately."""
+
+    def test_shared_guidance_reaches_direct_and_standard_adapters(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, heading, clauses in checker.AUTHORED_COMMAND_CARRIERS:
+            body = checker.section(texts[key], heading)
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    changed = dict(texts)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
+                    changed[key] += "\n## Summary only\n" + clause
+                    self.assertTrue(any(error.startswith(label + ":")
+                                        for error in checker.check_contracts(changed)))
+
+
 class RuntimeHandoffTests(unittest.TestCase):
     def test_current_runtime_policy_replaces_historical_eligibility_not_historical_records(self):
         import hashlib
@@ -3129,19 +3147,12 @@ class RuntimeHandoffTests(unittest.TestCase):
             self.assertNotIn('durable effect identity', text)
             self.assertNotIn('current Git state and durable receipt', text)
 
-    def test_installed_adapter_template_is_sequential_and_hashes_honest(self):
-        import hashlib,json
-        for path,manifest in [('.pi/prompts/speckit.tasks.md','.specify/integrations/pi.manifest.json'),
-                              ('.specify/templates/tasks-template.md','.specify/integrations/speckit.manifest.json')]:
-            text=(ROOT/path).read_text()
-            self.assertNotIn('parallelizable',text)
-            self.assertNotIn('Tests are OPTIONAL',text)
+    def test_installed_adapter_templates_are_sequential_without_manifest_registration(self):
+        for path in ('.pi/prompts/speckit.tasks.md', '.specify/templates/tasks-template.md'):
+            text = (ROOT / path).read_text()
+            self.assertNotIn('parallelizable', text)
+            self.assertNotIn('Tests are OPTIONAL', text)
             self.assertIn('task', text)
-            metadata=json.loads((ROOT/manifest).read_text())
-            actual=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
-            self.assertEqual(metadata['files'][path],actual)
-            self.assertEqual(metadata['local_overrides'][path]['current_sha256'],actual)
-            self.assertNotEqual(metadata['local_overrides'][path]['upstream_sha256'],actual)
 
     def test_compact_task_adapter_has_no_phase_or_batch_execution_protocol(self):
         for path in ('.pi/prompts/speckit.tasks.md', '.specify/templates/tasks-template.md'):

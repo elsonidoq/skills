@@ -163,7 +163,9 @@ existing task IDs without cycles. IDs need not be numbered or contiguous, and fi
 is not execution order. Acceptance, paths, story labels and check commands are useful
 context, not universal startup fields. Specified checks remain required after the work.
 Optional `checks` accepts shell strings, argv lists or objects containing `command`/`argv`;
-`check` and `required[].check` use the same command format.
+`check` and `required[].check` use the same command format. Put each authored deterministic
+required command in one of those existing executable fields once; semantic criteria stay prose,
+and optional absent checks stay absent.
 
 ### Task Organization
 

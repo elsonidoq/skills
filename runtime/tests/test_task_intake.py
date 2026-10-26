@@ -15,6 +15,7 @@ import yaml
 from coherence_workflow.cli import ROOT, main
 from coherence_workflow.intake import admit, load_contract
 from coherence_workflow.store import Authority, Blocked, git
+from coherence_workflow.verification import commands
 
 
 class TaskLinterTests(unittest.TestCase):
@@ -73,6 +74,14 @@ class TaskLinterTests(unittest.TestCase):
                        {'id': 'b', 'outcome': 'B', 'depends': ['a']}]):
             with self.assertRaisesRegex(Blocked, 'dependency cycle'):
                 admit(tasks)
+
+    def test_authored_required_command_is_preserved_for_the_existing_consumer(self):
+        command = ['python3', '-B', '-c', "print('authored command')"]
+        contract = {'tasks': [{'id': 'author', 'outcome': 'Preserve command', 'required': [
+            {'id': 'required-command', 'description': 'Semantic criterion', 'check': command}]}]}
+        admitted = admit(contract)
+        self.assertEqual(admitted['tasks'][0]['required'][0]['check'], command)
+        self.assertEqual(commands(admitted['tasks'][0]), [command])
 
     def test_out_of_order_and_optional_fields_preserved(self):
         value = {'origin': 'anything', 'sources': [], 'tasks': [

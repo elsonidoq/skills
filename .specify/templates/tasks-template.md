@@ -41,8 +41,10 @@ protections, and actual manual/permission gates. Additional hardening is optiona
 nonblocking. Include justified interface checks within the delivery task; separate a
 test/proof task only for an independently necessary prerequisite.
 Optional `checks` accepts shell strings, argv lists or objects with `command`/`argv`;
-`check` and `required[].check` use the same format. Run specified checks after the work
-and report their actual outcomes; missing or failed checks are not passes.
+`check` and `required[].check` use the same format. Put each authored deterministic required
+command in one existing executable field once; semantic criteria remain prose and optional absent
+checks remain absent. Run specified checks after the work and report their actual outcomes;
+missing or failed checks are not passes.
 
 Check readability, parsing into a list, ID/work description, uniqueness, dependency
 references and cycles with the shared task linter. Relevant specified project commands

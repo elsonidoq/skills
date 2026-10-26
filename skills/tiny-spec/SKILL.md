@@ -70,8 +70,9 @@ for the focused owner correction described there.
 
 The executable task handoff follows [task-generation](../task-generation/SKILL.md): IDs, work
 descriptions and optional dependencies, not mandatory execution-intent, compatibility-assessment
-or provenance metadata. Executor settings belong to the selected runtime configuration. Existing
-optional context may remain.
+or provenance metadata. For a deterministic required command, use its existing executable check
+field once; retain semantic criteria as prose and leave optional absent checks absent. Executor
+settings belong to the selected runtime configuration. Existing optional context may remain.
 
 ## Compact source contract
 

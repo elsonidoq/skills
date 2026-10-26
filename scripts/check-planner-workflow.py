@@ -25,6 +25,8 @@ PATHS = {
     "specify": ".pi/prompts/speckit.specify.md",
     "clarify": ".pi/prompts/speckit.clarify.md",
     "plan_prompt": ".pi/prompts/speckit.plan.md",
+    "tasks_prompt": ".pi/prompts/speckit.tasks.md",
+    "tasks_template": ".specify/templates/tasks-template.md",
     "readme": "README.md",
 }
 
@@ -676,7 +678,7 @@ def check_contracts(texts):
     reject("stage-dispatch", dispatch, "Default to a single-child workflow wrapper",
            "Prewire source→tasks without parent inspection", "Sequential convenience justifies workflows")
     # Bounded checks of changed instruction carriers, not a production audit/router.
-    for label, key, heading, clauses in VERIFICATION_CARRIERS:
+    for label, key, heading, clauses in AUTHORED_COMMAND_CARRIERS + VERIFICATION_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, heading, clauses in COMPOSED_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
@@ -862,6 +864,23 @@ AUTHORITY_CARRIERS = (
     ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "No SDD forwarding/rereading as direct requirements input", "Trace source", "criteria into task checks", "Governing instructions/contracts, memory and permission/safety", "create-only")),
     ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "No SDD forwarding/rereading as direct requirements", "input", "Trace source criteria into task checks", "Governing instructions/contracts, memory", "permission/safety still apply")),
     ("brief-coverage", "approval", "## Executive brief before approval", ("concrete included scope", "Every actual ordered plan stage separately", "meaningful outcome", "Every actual task ID separately", "execution order", "Never truncate beyond six, merge IDs/stages", "catch-alls or empty headings", "TinySpec has no plan; specification-only approval", "This adds no plan approval gate", "Renewals regenerate the complete brief from current artifacts", "before calling `ask_user`")),
+)
+
+
+AUTHORED_COMMAND_CARRIERS = (
+    ("authored-command-shared", "tasks", "## Structured executable handoff (both adapters)", (
+        "When authoring a deterministic required command", "existing `checks`, `check`, or `required[].check` field",
+        "keep semantic criteria as prose", "never compile prose into shell", "leave absent optional checks absent",
+    )),
+    ("authored-command-tiny", "tiny", "## Intended executor before decomposition", (
+        "deterministic required command", "existing executable check\nfield once", "semantic criteria as prose", "optional absent checks absent",
+    )),
+    ("authored-command-standard", "tasks_prompt", "## Task Generation Rules", (
+        "authored deterministic", "existing executable fields once", "semantic criteria stay prose", "optional absent checks stay absent",
+    )),
+    ("authored-command-template", "tasks_template", "## Verification and review", (
+        "authored deterministic required", "existing executable field once", "semantic criteria remain prose", "optional absent\nchecks remain absent",
+    )),
 )
 
 

@@ -234,8 +234,11 @@ Do not regenerate old tasks solely to remove metadata: useful optional context r
 Optional `owned_paths` restricts file mutation when provided. Without it, the runner claims
 only clean, unchanged paths immediately before actual tool edits; it does not adopt dirty
 files or stage arbitrary post-run changes. Useful existing `required` check mappings are
-still consumed if supplied; they are not universally required. Sources may be context, not
-content-pinned execution authority. Keep actual external action permission at that action.
+still consumed if supplied; they are not universally required. When authoring a deterministic
+required command, place it once in an existing `checks`, `check`, or `required[].check` field;
+keep semantic criteria as prose, never compile prose into shell, and leave absent optional checks
+absent. Sources may be context, not content-pinned execution authority. Keep actual external
+action permission at that action.
 
 Markdown may remain a human presentation. `check-task-order.py` also checks its IDs,
 descriptions and dependency graph; no contiguous numbering or story-group constraints.

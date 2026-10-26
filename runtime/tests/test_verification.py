@@ -1,5 +1,6 @@
 """Actual project command behavior, not universal evidence formatting."""
-from coherence_workflow.verification import run_checks
+from coherence_workflow.intake import admit
+from coherence_workflow.verification import CheckFailure, commands, run_checks
 from coherence_workflow.store import Blocked
 from fixtures.support import ProjectTest
 
@@ -19,6 +20,33 @@ class ProjectCheckTests(ProjectTest):
         with self.assertRaisesRegex(Blocked, 'exit 19'):
             run_checks(self.project, {'id': 'fix', 'checks': ['exit 19']}, observe=lambda *event: events.append(event))
         self.assertEqual(events, [('started', 1, None), ('failed', 1, 19)])
+
+    def test_authored_required_command_survives_intake_and_records_real_results(self):
+        failing = ['python3', '-B', '-c', "import sys; print('authored failure'); sys.exit(23)"]
+        successful = ['python3', '-B', '-c', "print('authored success')"]
+
+        def admitted_required(command=None):
+            required = {'id': 'authored-command', 'description': 'Run the authored command'}
+            if command is not None:
+                required['check'] = command
+            return admit({'tasks': [{'id': 'authored', 'outcome': 'Handoff command',
+                                     'required': [required]}]})['tasks'][0]
+
+        # A description is semantic context, not an executable command carrier.
+        with self.assertRaises(AssertionError):
+            self.assertEqual(commands(admitted_required()), [failing])
+
+        failed = admitted_required(failing)
+        completed = []
+        with self.assertRaises(CheckFailure) as raised:
+            run_checks(self.project, failed, completed=lambda state, attempt: completed.append((state, attempt)))
+        self.assertEqual(raised.exception.attempt['exit_code'], 23)
+        self.assertEqual(raised.exception.attempt['output'], 'authored failure\n')
+        self.assertEqual(completed, [('failed', raised.exception.attempt)])
+
+        passed = admitted_required(successful)
+        self.assertEqual(run_checks(self.project, passed), [
+            {'command': successful, 'exit_code': 0, 'output': 'authored success\n'}])
 
     def test_signalled_command_preserves_actual_exit_status(self):
         import sys
