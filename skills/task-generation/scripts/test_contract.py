@@ -151,7 +151,7 @@ class TaskGenerationContractTests(unittest.TestCase):
         review = ' '.join(TEXT.split('## Review and handoff', 1)[1].split())
         self.assertIn('At final planning review, check that executable tasks are authorization-neutral', review)
         planner = (Path(__file__).parents[2] / 'planner' / 'SKILL.md').read_text()
-        for start, end in (('3. **Review — planner-owned parent binding', '4. **Combined approval'),
+        for start, end in (('**Review — planner-owned parent binding', '**Combined approval'),
                            ('**`overall_review`', '\n## ')):
             stage = planner.split(start, 1)[1].split(end, 1)[0]
             self.assertIn('../task-generation/SKILL.md#authorization-neutral-tasks', stage)
@@ -227,6 +227,29 @@ class TaskGenerationContractTests(unittest.TestCase):
         self.assertIn("../task-generation/SKILL.md#executor-sized-outcomes", review)
         self.assertIn("milestones disguised as tasks", review)
         self.assertIn("configured executor/effort", review)
+
+    def test_ui_control_supporting_ownership_example(self):
+        """A narrow authoring contrast, not runtime closure validation."""
+        recipe = TEXT.split("### Executor-sized outcomes", 1)[1].split(
+            "State shared constraints once", 1)[0]
+        omitted = "Add the export control in `ui/export_controls.py`; own only\nthat file"
+        corrected = ("owning the control, selector and harness support in\nthe same bounded UI outcome"
+                     " when they need changes, or by naming the real existing producer")
+        for clause in (
+            "acceptance selectors, coupled fixtures and admitting\n   harness alongside the product interface",
+            omitted,
+            "`tests/test_export_controls.py::test_capture_export_button`",
+            "`scripts/run-ui-captures.py`",
+            corrected,
+            "not a\ngeneric path/dependency-closure validator or a new task field",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, recipe)
+        handoff = TEXT.split("## Structured executable handoff", 1)[1].split(
+            "## Review and handoff", 1)[0]
+        self.assertIn("existing `checks`, `check`, or `required[].check` field", handoff)
+        self.assertIn("six startup linter checks", handoff)
+        self.assertIn("authorization-neutral", TEXT)
 
     def assert_prototype_adapter_fixture(self, source):
         tasks = re.findall(r"(?m)^- \[ \] (T\d+) (.+)$", source)

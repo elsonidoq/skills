@@ -133,9 +133,12 @@ not automatically an executor-sized assignment, even when an advanced model coul
 During authoring and review:
 
 1. Name the outcome, owned change paths, scope/exclusions, consumed interfaces and earlier
-   producer dependencies. Give a concrete observable and the smallest sufficient verification;
-   keep its ordinary tests, relevant docs and routine teardown with the outcome. Express these
-   in the work description or existing fields, not new mandatory metadata.
+   producer dependencies. Inspect the acceptance selectors, coupled fixtures and admitting
+   harness alongside the product interface; keep necessary in-scope support with the bounded
+   outcome, or name a genuinely necessary existing producer dependency. Give a concrete
+   observable and the smallest sufficient verification; keep its ordinary tests, relevant docs
+   and routine teardown with the outcome. Express these in the work description or existing
+   fields, not new mandatory metadata.
 2. If the assignment bundles independently testable interfaces or behaviors and requires the
    configured executor to carry multiple unfinished concerns, split at those real seams.
    Consider context loss, compaction and drift across implementation, debugging and verification,
@@ -159,6 +162,14 @@ against that reader, HTTP against the public mapped contract, and browser agains
 each with its local tests/docs and concrete checks. Reader acceptance does not wait for the
 browser. Keep a simple reader fix and its regression test together; do not force this example's
 number of tasks onto other work.
+
+**Supporting ownership example:** “Add the export control in `ui/export_controls.py`; own only
+that file” obviously omits the coupled capture selector
+`tests/test_export_controls.py::test_capture_export_button` and its admitting harness
+`scripts/run-ui-captures.py`. Correct it by owning the control, selector and harness support in
+the same bounded UI outcome when they need changes, or by naming the real existing producer
+that supplies unchanged harness support as a dependency. This is authoring guidance, not a
+generic path/dependency-closure validator or a new task field.
 
 State shared constraints once in their authoritative context. Task entries contain
 outcome-specific scope, interfaces, acceptance and verification, not repeated specification
