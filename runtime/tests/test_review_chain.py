@@ -709,6 +709,7 @@ class BoundedChainTests(ProjectTest):
             store.start('refresh', self.base, contract=contract, executor=EXECUTOR,
                         authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []}, 'review_policy': 'owner-pair-v1'},
                         review_base=self.base)
+            self.assertTrue(Recorder(store, 'refresh').register(descriptor(contract, EXECUTOR, self.base)))
             OwnerPairPrimitiveTests._rejection(self, store, 'refresh')
             scope = store.review_scope('refresh')
             store.authorize_owner_pair('refresh', 'stale', rejecting_execution_id='review-2', review_base=self.base,
@@ -730,6 +731,10 @@ class BoundedChainTests(ProjectTest):
             self.assertEqual(chain['executions'][-1]['references']['head'], current)
             self.assertEqual(chain['executions'][-1]['references']['base'], self.base)
             self.assertEqual(store.db.execute("SELECT count(*) FROM execution_tasks WHERE run_id='refresh'").fetchone()[0], 0)
+            refresh_terminal = [(row['kind'], json.loads(row['facts'])) for row in store.monitor('refresh')['observations']
+                                if row['phase'] == 'terminal']
+            self.assertIn(('started', {'baseline': self.base}), refresh_terminal)
+            self.assertIn(('failed', {'head': current}), refresh_terminal)
             store.resume('refresh')
             result = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=question,
                             paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True).invoke()

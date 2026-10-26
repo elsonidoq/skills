@@ -984,15 +984,15 @@ class Engine:
         recorder = Recorder(store, self.run)
         recorder.resume()
         terminal = recorder.occurrence()
-        recorder.emit(terminal, 'terminal', 'started', facts={'baseline': review_base, 'target_refresh': True})
+        recorder.emit(terminal, 'terminal', 'started', facts={'baseline': review_base})
         execution_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head,
                                                     ordinal=0, refresh_target=True)
         if state == 'approved':
             store.finish(self.run, 'complete', head)
-            recorder.emit(terminal, 'terminal', 'passed', facts={'head': head, 'target_refresh': True})
+            recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
             return {'status': 'complete', 'run_id': self.run, 'baseline': review_base, 'sha': head, 'review': review}
         store.finish(self.run, 'failed', head, 'fresh current-target review rejected; retained routine authority may govern a new exact pair')
-        recorder.emit(terminal, 'terminal', 'failed', facts={'head': head, 'target_refresh': True})
+        recorder.emit(terminal, 'terminal', 'failed', facts={'head': head})
         return {'status': 'rejected', 'run_id': self.run, 'baseline': review_base, 'sha': head, 'review': review}
 
     def invoke(self):
