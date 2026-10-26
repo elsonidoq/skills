@@ -139,9 +139,11 @@ Each task runs in a fresh coding conversation. Ordinary scoped technical fixes, 
 necessary local/in-project dependency setup, and current-task artifact lifecycle need no owner question.
 Small isolated tests and local test databases are allowed for any task, using bounded data/execution
 that do not risk exhausting the machine or affecting unrelated data/services. Shared defaults live in
-`_ROUTINE_AUTHORITY` in [the runner](../runtime/coherence_workflow/engine.py), included in initial and
-corrective task prompts; edit that block rather than individual tasks. See [ADR-0004](decisions/ADR-0004-shared-routine-worker-permissions.md).
-This authority is not proof that checks passed. Product decisions, substantial complexity increases,
+`_ROUTINE_AUTHORITY` in [the runner](../runtime/coherence_workflow/engine.py), included in initial,
+corrective, and resumed task prompts; edit that block rather than individual tasks. See [ADR-0004](decisions/ADR-0004-shared-routine-worker-permissions.md).
+Prompt delivery is text-contract evidence, not evidence of model obedience or a passed check. An earlier agent-authored task, recovery, or handoff demand for
+renewed exact-resource/setup/rerun consent does not override this current scoped authority; actual owner limits and
+manual, paid, security, data, and external-operation gates still apply. Product decisions, substantial complexity increases,
 separately scoped paid usage, and actions outside authority still ask. No global install, credential change,
 deployment, push, or unrelated-work deletion is implied. It runs requested project checks and yields a real
 focused commit before dependents. Normal Git configuration, hooks and signing are honored. A correctable whitespace, source, hook, or Git checkpoint failure returns to the same task worker with its actual error; affected required checks rerun before the normal checkpoint retry. A reported-failed/interrupted commit is reconciled from that operation's selected paths, attempted parent, and actual result before any retry, retaining a matching SHA without recommit. Failures retain

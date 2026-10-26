@@ -48,7 +48,11 @@ model merely to resolve it. Supply project, task file and executor JSON containi
 owner-selected executor/effort (provider, model, effort), without silent substitutions. There is no owner catalog or binding
 assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical
 fixes, isolated tests/servers, necessary local/in-project dependency setup, and current-task artifact
-lifecycle need no owner question; this authority does not prove checks passed. No global install, auth
+lifecycle need no owner question; prompt delivery is text-contract evidence, not proof of model obedience or passed
+checks. An earlier agent-authored task,
+recovery, or handoff demand for renewed exact-resource/setup/rerun consent does not override the current scoped
+launch authority; actual owner limits and manual, paid, security, data, and external-operation gates still apply.
+No global install, auth
 refresh, credential change, deployment, push or unrelated-work deletion is authorized. Implementation
 launch authorizes ordinary use of the selected worker/reviewer models without separate paid consent.
 Paid application/test APIs require separate approval: declare `paid_apis` and answer the current

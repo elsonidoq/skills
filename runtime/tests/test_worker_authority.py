@@ -1,7 +1,7 @@
 """Offline prompt wiring checks; not proof that a provider follows instructions."""
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
-from coherence_workflow.store import Authority
+from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
 
 
@@ -22,12 +22,26 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIn("do not risk exhausting the machine's resources", prompt)
         self.assertIn('or affecting unrelated data/services', prompt)
 
+    def assert_precedence_authority(self, prompt):
+        self.assertIn('this current scoped authority takes precedence', prompt)
+        self.assertIn('actual owner-imposed limit', prompt)
+        self.assertIn('manual gate, paid application/test API boundary', prompt)
+        self.assertIn('security/data restriction, or external-operation restriction', prompt)
+        self.assertIn('This authority is not proof that checks succeeded.', prompt)
+
+    def assert_precedence_scenario(self, prompt, scenario):
+        self.assertIn(scenario, prompt)
+        self.assert_precedence_authority(prompt)
+        self.assertLess(prompt.index('this current scoped authority takes precedence'), prompt.index(scenario))
+
     def test_every_task_gets_authority_without_rewriting_historical_task_text(self):
         prompts = []
         historical = 'Planning draft only: implementation requires separate approval.'
+        scenario = ('LABELLED SCENARIO ONLY: an earlier agent-authored recovery instruction requires renewed consent '
+                    'for an exact 1 GiB fixture and rerunning its check.')
         contract = admit({'tasks': [
-            {'id': 'one', 'description': 'First task. ' + historical},
-            {'id': 'two', 'description': 'Second task. ' + historical, 'depends': ['one']},
+            {'id': 'one', 'description': 'First task. ' + historical + ' ' + scenario},
+            {'id': 'two', 'description': 'Second task. ' + historical + ' ' + scenario, 'depends': ['one']},
         ]})
 
         class Offline:
@@ -47,10 +61,13 @@ class WorkerAuthorityTests(ProjectTest):
             self.assert_authority(prompt)
             self.assert_test_permission(prompt)
             self.assertIn(historical, prompt)
+            self.assert_precedence_scenario(prompt, scenario)
         self.assertEqual(result['sha'], self.base)  # No empty commits or completion redesign.
 
     def test_same_task_correction_keeps_current_authority_and_isolated_database_permission(self):
         project, prompts = self.project, []
+        scenario = ('LABELLED SCENARIO ONLY: an earlier agent-authored task instruction requires renewed consent '
+                    'for exact SQLite fixture setup and rerunning its check.')
 
         class Offline:
             def __init__(self, *args, **kwargs): pass
@@ -70,12 +87,54 @@ class WorkerAuthorityTests(ProjectTest):
                  "assert open('owned.txt').read() == 'ready\\n'"]
         with Authority(project) as owner:
             result = Engine(owner, 'correction', admit([{
-                'id': 'fix', 'description': 'Scoped fixture', 'checks': [check],
+                'id': 'fix', 'description': 'Scoped fixture. ' + scenario, 'checks': [check],
             }]), EXECUTOR, adapter=Offline).invoke()
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(len(prompts), 2)
         self.assertIn('Actual failed attempt:', prompts[1])
-        for prompt in prompts:
+        for ordinal, prompt in enumerate(prompts):
             self.assert_authority(prompt)
             self.assert_test_permission(prompt)
+            if ordinal == 0:
+                self.assert_precedence_scenario(prompt, scenario)
+            else:
+                self.assert_precedence_authority(prompt)
             self.assertTrue(prompt.startswith('Current execution authority:'))
+
+    def test_resumed_handoff_keeps_scoped_authority_over_labelled_agent_restriction(self):
+        scenario = ('LABELLED SCENARIO ONLY: an earlier agent-authored recovery instruction requires renewed consent '
+                    'for an exact local fixture and rerunning its check.')
+        identity, prompts = {'id': 'authority-fixture-session', 'file': '/private/fixture.jsonl'}, []
+
+        class Interrupted:
+            def __init__(self, *args, **kwargs): self.saved_session = identity
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"findings":[]}'
+                raise Blocked('labelled authority fixture interruption')
+
+        with Authority(self.project) as owner:
+            with self.assertRaisesRegex(Blocked, 'labelled authority fixture interruption'):
+                Engine(owner, 'authority-resume', admit([{
+                    'id': 'resume', 'description': 'Scoped fixture. ' + scenario,
+                }]), EXECUTOR, adapter=Interrupted).invoke()
+            owner.store.resume('authority-resume')
+
+            class Continued:
+                def __init__(self, *args, **kwargs): pass
+                def prompt(self, prompt, **kwargs):
+                    if kwargs.get('read_only'):
+                        return '{"approved":true,"findings":[]}'
+                    prompts.append(prompt)
+                    self_test.assertEqual(kwargs['saved_session'], identity)
+                    return 'Resumed scoped fixture'
+
+            self_test = self
+            result = Engine(owner, 'authority-resume', admit([{
+                'id': 'resume', 'description': 'Scoped fixture. ' + scenario,
+            }]), EXECUTOR, adapter=Continued, resume=True,
+                            question=lambda _question: 'diagnosed fixture interruption').invoke()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(len(prompts), 1)
+        self.assertIn('Continue only the unfinished same-task work.', prompts[0])
+        self.assert_precedence_scenario(prompts[0], scenario)
