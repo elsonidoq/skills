@@ -475,6 +475,9 @@ else:
             Engine(owner, 'fixing', fixing, EXECUTOR, adapter=OfflineReviewCycle).invoke()
         self.assertIn('Range: ' + self.base + '..', prompts[1])
         self.assertIn('fix.txt', prompts[1])
+        self.assertTrue(all('Review the complete original range and diff on every review and rereview.' in prompt and
+                            'Attributable task/repair checkpoints (verified against Git):' in prompt
+                            for prompt in prompts))
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
         terminal = [row[0] for row in db.execute("SELECT kind FROM execution_observations WHERE run_id='original' AND phase='terminal'")]

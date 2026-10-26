@@ -402,6 +402,11 @@ class BoundedChainTests(ProjectTest):
 
     def test_actionable_rejection_repairs_once_then_fresh_rereview(self):
         project, calls = self.project, []
+        project.joinpath('unrelated.txt').write_text('intervening\n')
+        from coherence_workflow.store import git
+        git(project, 'add', '--', 'unrelated.txt')
+        git(project, 'commit', '-qm', 'unrelated integration context')
+        unrelated = git(project, 'rev-parse', 'HEAD').decode().strip()
         class Adapter:
             reviews = 0
             fixer_prompts = 0
@@ -411,21 +416,21 @@ class BoundedChainTests(ProjectTest):
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
-                    calls.append(('review', id(self), kwargs))
+                    calls.append(('review', id(self), kwargs, _prompt))
                     return '```json\n{"approved":false,"findings":["owned.txt:1 - synthetic defect [basis: correctness]"]}\n```' if Adapter.reviews == 1 else '{"approved":true,"findings":[]}'
                 if 'Actionable findings:' in _prompt:
                     Adapter.fixer_prompts += 1
                     kwargs['claim']('owned.txt')
                     project.joinpath('owned.txt').write_text('broken\n')
-                elif 'Actual failed attempt:' in _prompt:
-                    Adapter.fixer_prompts += 1
-                    project.joinpath('owned.txt').write_text('fixed\n')
-                else:
+                elif '"id":"task"' in _prompt:
                     kwargs['claim']('owned.txt')
-                    project.joinpath('owned.txt').write_text('fixed\n')
+                    project.joinpath('owned.txt').write_text('initial\n')
                 return 'synthetic worker'
-        contract = admit({'tasks': [{'id': 'dummy', 'description': 'synthetic', 'owned_paths': ['owned.txt'],
-                                     'checks': [['/bin/sh', '-c', 'test "$(cat owned.txt)" = fixed']]}]})
+        contract = admit({'review_base': self.base, 'tasks': [
+            {'id': 'no-change', 'description': 'synthetic no-change'},
+            {'id': 'task', 'description': 'synthetic', 'depends': ['no-change'], 'owned_paths': ['owned.txt'],
+             'checks': [['/bin/sh', '-c', 'test -f owned.txt']]}
+        ]})
         with Authority(project) as owner:
             result = Engine(owner, 'repaired', contract, EXECUTOR, adapter=Adapter,
                             paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
@@ -434,35 +439,51 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(result['status'], 'complete')
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
                          [('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
-        self.assertEqual(Adapter.fixer_prompts, 2)
+        self.assertEqual(Adapter.fixer_prompts, 1)
         self.assertEqual(len(calls), 2)
         self.assertNotEqual(calls[0][1], calls[1][1])
         self.assertTrue(all(call[2]['read_only'] for call in calls))
+        review_prompts = [call[3] for call in calls]
+        self.assertTrue(all('Range: ' + self.base + '..' in prompt and 'Diff:' in prompt for prompt in review_prompts))
+        self.assertTrue(all('do not reject unrelated context solely for task-path scope' in prompt and
+                            'causal integration defects affecting the requested result remain blockers' in prompt.lower() and
+                            'independently unrelated defects with their ownership/repair limit' in prompt
+                            for prompt in review_prompts))
+        self.assertIn('Intervening unrelated or unattributed integration context:', review_prompts[0])
+        self.assertIn('commit ' + unrelated, review_prompts[0])
+        self.assertIn('no retained task/repair attribution: ownership unknown', review_prompts[0])
+        self.assertIn('no-change: no commit changes (recorded checkpoint ' + unrelated + ')', review_prompts[0])
+        task_checkpoint = next(item for item in result['checkpoints'] if item['task_id'] == 'task')
+        repair = next(item for item in chain['executions'] if item['role'] == 'fixer')
+        repair_sha = repair['references']['commit']
+        repair_parent = git(project, 'rev-parse', repair_sha + '^').decode().strip()
+        self.assertIn('task task: commit ' + task_checkpoint['sha'] + ', parent ' + task_checkpoint['parent'] +
+                      ', changed paths ["owned.txt"]', review_prompts[0])
+        self.assertIn('repair ' + repair['execution_id'] + ': commit ' + repair_sha + ', parent ' + repair_parent +
+                      ', changed paths ["owned.txt"]', review_prompts[1])
 
         if any(row['phase'] == 'review' and row['kind'] == 'started' and
                'selected_input_checkpoints' in json.loads(row['facts']) for row in observations):
             # Optional recording loss cannot alter the required chain.
-            checkpoint = next(row for row in observations
-                              if row['phase'] == 'checkpoint' and row['kind'] == 'passed' and row['task_id'] == 'dummy')
+            checkpoints = [row for row in observations if row['phase'] == 'checkpoint' and row['kind'] == 'passed'
+                           and row['task_id'] in ('no-change', 'task')]
             first_review = next(row for row in observations
                                 if row['phase'] == 'review' and row['kind'] == 'started'
                                 and json.loads(row['facts'])['review_ordinal'] == 1)
             first_facts = json.loads(first_review['facts'])
             self.assertEqual(first_facts['selected_input_checkpoints'], [{
-                'checkpoint_occurrence_id': checkpoint['occurrence_id'], 'task_id': 'dummy',
+                'checkpoint_occurrence_id': checkpoint['occurrence_id'], 'task_id': checkpoint['task_id'],
                 'producer_invocation_id': json.loads(checkpoint['facts'])['producer_invocation_id'],
                 'correction_chain': json.loads(checkpoint['facts'])['correction_chain'],
-            }])
+            } for checkpoint in checkpoints])
             self.assertEqual(chain['executions'][0]['input_checkpoints'], first_facts['selected_input_checkpoints'])
             fixer_calls = [json.loads(row['facts']) for row in observations
                            if row['phase'] == 'worker' and row['kind'] == 'started'
                            and json.loads(row['facts']).get('role') == 'fixing_worker']
-            self.assertEqual(len(fixer_calls), 2)
-            self.assertNotEqual(fixer_calls[0]['invocation_id'], fixer_calls[1]['invocation_id'])
+            self.assertEqual(len(fixer_calls), 1)
             self.assertEqual(fixer_calls[0]['trigger_execution_id'], chain['executions'][0]['execution_id'])
-            self.assertEqual(fixer_calls[1]['predecessor_invocation_id'], fixer_calls[0]['invocation_id'])
-            self.assertEqual(fixer_calls[1]['correction_chain'], [call['invocation_id'] for call in fixer_calls])
-            self.assertTrue(all(call['fixing_round'] == 1 for call in fixer_calls))
+            self.assertEqual(fixer_calls[0]['correction_chain'], [fixer_calls[0]['invocation_id']])
+            self.assertEqual(fixer_calls[0]['fixing_round'], 1)
 
     def test_reviewer_context_and_model_survive_repair_and_check_correction(self):
         project, calls, instances = self.project, [], []

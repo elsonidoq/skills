@@ -54,7 +54,7 @@ The project database remains `.coherence/workflow/workflow.sqlite`. New executio
 - `execution_tasks(run_id, task_id, state, baseline, result, details)`;
 - private `execution_run_inputs(run_id, contract, executor, authority, review_base)` captured before task mutation; and
 - append-only private `execution_history(run_id, task_id, kind, state, details, recorded_at)`; and
-- required chain rows: `execution_review_executions` (actual reviewer/fixer ID, ordinal/round, explicit trigger/predecessor and range), append-only `execution_review_attempts` (dispatch/outcome/uncertainty, private parsed findings and references), and `execution_review_suggestions` keyed to the attempt (optional parsed nonblocking suggestions).
+- required chain rows: `execution_review_executions` (actual reviewer/fixer ID, ordinal/round, explicit trigger/predecessor and range), append-only `execution_review_attempts` (dispatch/outcome/uncertainty, private parsed findings and references), and `execution_review_suggestions` keyed to the attempt (optional parsed nonblocking suggestions). Review briefs derive task/repair attribution from retained checkpoint facts and actual Git commits/parents/paths; no-change records no commit changes, while intervening or missing attribution remains explicitly unrelated/unattributed context rather than ownership inference or a new registry.
 
 Legacy `execution_usage_memberships` and `execution_usage_intervals` remain untouched when present; new runs do not write or read them.
 

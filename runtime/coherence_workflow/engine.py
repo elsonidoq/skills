@@ -670,6 +670,52 @@ class Engine:
             selected.append(value)
         return selected
 
+    def _review_attribution(self, review_base, head):
+        """Describe verified run checkpoints without assigning intervening commits to a task."""
+        project = self.authority.project
+        retained = []
+        for row in self.authority.store.db.execute(
+                "SELECT task_id,kind,details FROM execution_history WHERE run_id=? "
+                "AND kind IN ('checkpoint','fixer_checkpoint') AND state='passed' ORDER BY seq", (self.run,)):
+            try:
+                details = json.loads(row['details'])
+            except (TypeError, ValueError):
+                continue
+            role = ('task ' + row['task_id']) if row['kind'] == 'checkpoint' else ('repair ' + str(details.get('execution_id', 'unknown')))
+            retained.append((role, details))
+        attributed, lines, gaps = set(), [], []
+        for role, item in retained:
+            sha, parent, paths, no_change = item.get('sha'), item.get('parent'), item.get('paths'), item.get('no_change')
+            if no_change is True:
+                lines.append('- ' + role + ': no commit changes (recorded checkpoint ' + str(sha) + '); this does not attribute HEAD or another commit.')
+                continue
+            if not (isinstance(sha, str) and isinstance(parent, str) and isinstance(paths, list) and
+                    all(isinstance(path, str) for path in paths)):
+                gaps.append('- ' + role + ': retained attribution is missing or ambiguous; ownership is unknown.')
+                continue
+            try:
+                actual_parent = git(project, 'rev-parse', sha + '^').decode().strip()
+                actual_paths = sorted(filter(None, git(project, 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', sha).decode().split('\0')))
+            except Blocked:
+                gaps.append('- ' + role + ': retained commit cannot be verified; ownership is unknown.')
+                continue
+            if actual_parent != parent or actual_paths != sorted(paths):
+                gaps.append('- ' + role + ': retained parent/paths do not match Git; ownership is unknown.')
+                continue
+            attributed.add(sha)
+            lines.append('- ' + role + ': commit ' + sha + ', parent ' + parent + ', changed paths ' + canonical(actual_paths) + '.')
+        commits = git(project, 'rev-list', '--reverse', review_base + '..' + head).decode().split()
+        context = []
+        for sha in commits:
+            if sha in attributed:
+                continue
+            parent = git(project, 'rev-parse', sha + '^').decode().strip()
+            paths = sorted(filter(None, git(project, 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', sha).decode().split('\0')))
+            context.append('- commit ' + sha + ', parent ' + parent + ', changed paths ' + canonical(paths) + '; no retained task/repair attribution: ownership unknown.')
+        return ('Attributable task/repair checkpoints (verified against Git):\n' + ('\n'.join(lines) or '- none retained.') +
+                '\nIntervening unrelated or unattributed integration context:\n' + ('\n'.join(context) or '- none.') +
+                '\nMissing or ambiguous attribution:\n' + ('\n'.join(gaps) if gaps else '- none beyond the explicitly unknown intervening context above.'))
+
     def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
                 trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
                 execution_id=None):
@@ -704,7 +750,8 @@ class Engine:
                 '{"approved":false,"findings":["path:line[-end_line] - concrete defect, impact and accepted basis in ordinary prose"]}. '
                 'Use findings only for blockers: each needs a location, concrete impact, and basis of requirement, correctness, security, or data-safety. '
                 'Put only nonblocking advice in suggestions; crashes, hangs, target/credential risks, and false-unavailable observations are blockers. Never approve when blockers exist.\n'
-                'Tasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff,
+                'Review the complete original range and diff on every review and rereview. Attribution below is context, not a narrowed scope: do not reject unrelated context solely for task-path scope, and do not certify it as task delivery. Causal integration defects affecting the requested result remain blockers and must cite the interaction/accepted basis. Report independently unrelated defects with their ownership/repair limit; do not expand fixer authority.\n'
+                'Tasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head),
                 read_only=True)
             value = self._review_value(text)
         except BaseException as exc:
