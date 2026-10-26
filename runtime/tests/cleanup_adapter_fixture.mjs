@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import readline from 'node:readline';
 import {mock} from 'node:test';
-import {AgentSession} from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
+import {piSdk} from '../pi-host/host.mjs';
+const {AgentSession} = piSdk;
 
 // When loaded with NODE_OPTIONS this patches only the local SDK provider seam;
 // the child still executes the production host stdin dispatcher.

@@ -7,8 +7,8 @@ import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mock, test } from 'node:test';
 import readline from 'node:readline';
-import { AgentSession, createReadTool, createEditTool, createWriteTool, createBashTool } from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
-import { createWorkflowSession, mutationTools, promptSession, steeringController } from '../pi-host/host.mjs';
+import { piSdk, createWorkflowSession, mutationTools, promptSession, steeringController } from '../pi-host/host.mjs';
+const { AgentSession, createReadTool, createEditTool, createWriteTool, createBashTool } = piSdk;
 import {installSteeringProvider} from './fixtures/steering_adapter_fixture.mjs';
 
 test('actual SDK worker exposes ask_owner while independent reviewer remains read-only', async () => {

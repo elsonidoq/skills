@@ -158,7 +158,9 @@ Approved current content/revisions and implementation scope: [evidence]
 ```
 
 Coordinate Implementation executes requested tasks sequentially using the existing CLI and
-installed Pi SDK. Ordinary direct owner-authorized coding needs no new planning artifacts.
+installed Pi SDK. Source worktrees reuse that Pi SDK rather than requiring copied runtime
+`node_modules`; explicit isolated workflow setup retains its lockfile-resolved SDK. Ordinary direct
+owner-authorized coding needs no new planning artifacts.
 Task intake checks only readable file, parsed list, ID/work, unique IDs, existing dependencies
 and no cycles; empty work launches nothing. Dependency order need not match file order.
 

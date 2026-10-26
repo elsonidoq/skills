@@ -1,8 +1,12 @@
 // Local provider responses only. SDK prompt, tools, steer queue and events stay real.
 import assert from 'node:assert/strict';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {mock} from 'node:test';
-import {ModelRuntime} from '../../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
-import {createAssistantMessageEventStream, getCurrentTools} from '../../pi-host/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist/index.js';
+import {piSdk, piSdkPackageDir} from '../../pi-host/host.mjs';
+const {ModelRuntime} = piSdk;
+const {createAssistantMessageEventStream, getCurrentTools} = await import(pathToFileURL(path.join(
+  piSdkPackageDir, 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'index.js')).href);
 
 export function installSteeringProvider(callback = 'question', directory = process.env.PI_CODING_AGENT_DIR) {
   const create = ModelRuntime.create.bind(ModelRuntime);

@@ -258,7 +258,11 @@ external operations or a possibly completed Git commit. Start a fresh run ID, no
 
 Python >=3.10 with PyYAML, local Git/SQLite, and a usable Node/Pi SDK installation are actual
 runtime dependencies. SDK 0.87.1 is tested; the dependency lock is install metadata, not exact
-SDK/Node equality admission. No LangGraph, cgroup delegation, custom SDK tools or host manifests.
+SDK/Node equality admission. For source checkout execution, `runtime/pi-host/host.mjs` resolves the
+SDK from Pi's `PI_PACKAGE_DIR`, or the installed release named by
+`PI_CODING_AGENT_DIR/install/current-version` when present, otherwise the default `~/.pi/agent`, so a new Git/Paseo worktree
+does not need copied `node_modules`. An explicit isolated workflow installation instead uses its
+lockfile-resolved colocated SDK. No LangGraph, cgroup delegation, custom SDK tools or host manifests.
 Explicit optional setup remains `scripts/install-workflow.sh --prefix NEW_DIRECTORY --allow-network`
 only with separate install/network authority. Ordinary entry never calls it.
 
