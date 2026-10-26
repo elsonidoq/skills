@@ -33,6 +33,13 @@ class SimulatedGh:
         self.calls.append(("GET", f"repos/{TARGET}/issues/{number}"))
         return {"number": number, "html_url": f"https://{TARGET}/issues/{number}", "body": self.body}
 
+    def update_body(self, number, expected_body, replacement_body):
+        self.calls.append(("PATCH", f"repos/{TARGET}/issues/{number}", "body-only"))
+        if self.body != expected_body:
+            return False
+        self.body = replacement_body
+        return True
+
 
 def investigated_body(observations, cause, hypotheses, uncertainty, next_step):
     cause_text = cause if cause else "No verified cause established."
@@ -63,6 +70,43 @@ def reconcile_unknown_mutation(gh, number):
     return "deferred", None
 
 
+class SimulatedReviewer:
+    """A controlled stand-in; its finding is not independent reviewer judgment."""
+
+    configuration = {"provider": "configured-provider", "model": "configured-reviewer"}
+
+    def __init__(self, finding=None):
+        self.finding = finding
+        self.contexts = []
+
+    def review(self, context):
+        self.contexts.append(context)
+        return self.finding
+
+
+def review_then_correct(gh, reviewer, original_intent, evidence, uncertainty, readback):
+    """Mechanical ordering oracle for configured read-only review and one guarded correction."""
+    if reviewer is None:
+        return "incomplete", None, readback
+    context = {
+        "original_intent": original_intent,
+        "primary_evidence": evidence,
+        "uncertainty": uncertainty,
+        "actual_body": readback["body"],
+        "reviewer_configuration": reviewer.configuration,
+    }
+    finding = reviewer.review(context)
+    if finding is None:
+        return "complete", "clean", readback
+    latest = gh.readback(readback["number"])
+    if latest["body"] != readback["body"]:
+        return "incomplete", "deferred-concurrent-body", latest
+    corrected = latest["body"].replace(finding["before"], finding["after"])
+    if not gh.update_body(readback["number"], latest["body"], corrected):
+        return "incomplete", "deferred-concurrent-body", gh.readback(readback["number"])
+    return "complete", finding, gh.readback(readback["number"])
+
+
 class TrackOpenIssueContractTests(unittest.TestCase):
     def setUp(self):
         self.text = SKILL.read_text()
@@ -77,6 +121,14 @@ class TrackOpenIssueContractTests(unittest.TestCase):
             "An uncertain RCA does not block tracking\nindefinitely",
             "Preserve the intended body and the independently read-back body",
             "creation/readback is not that review",
+            "## Separate read-only quality review and one correction",
+            "selected reviewer configuration; do not hardcode a provider or model",
+            "original user intent, primary evidence, uncertainty/next investigation, and",
+            "the actual read-back body",
+            "downstream ambiguity or conflicts, omissions,",
+            "promoted assumptions, scope creep, and over-prescribed mechanisms or checks",
+            "immediately GET the exact issue",
+            "automatic\nmulti-round review loop",
             "After every create, update, close, or reopen, independently GET the exact issue",
             "do not blindly retry a possibly successful mutation",
         )
@@ -105,6 +157,51 @@ class TrackOpenIssueContractTests(unittest.TestCase):
         self.assertIn("## Original intent", readback["body"])
         self.assertIn("## Verified cause", readback["body"])
         self.assertIn("## Hypotheses", readback["body"])
+
+    def test_simulated_read_only_review_gets_actual_body_and_one_narrow_correction(self):
+        body = investigated_body("Observed failure.", None, "No alternative.", "Trace absent.", "collect trace")
+        gh = SimulatedGh(body)
+        _, readback = create_then_readback(gh, body)
+        reviewer = SimulatedReviewer({"before": "No alternative.", "after": "One unverified alternative exists."})
+        result, finding, final = review_then_correct(
+            gh, reviewer, "Track the failure without repairing the application.", "Observed failure.",
+            "Trace absent.", readback,
+        )
+        self.assertEqual(result, "complete")
+        self.assertEqual(final["body"], body.replace(finding["before"], finding["after"]))
+        self.assertEqual(reviewer.contexts, [{
+            "original_intent": "Track the failure without repairing the application.",
+            "primary_evidence": "Observed failure.",
+            "uncertainty": "Trace absent.",
+            "actual_body": body,
+            "reviewer_configuration": reviewer.configuration,
+        }])
+        self.assertEqual(gh.calls[-3:], [
+            ("GET", f"repos/{TARGET}/issues/27"),
+            ("PATCH", f"repos/{TARGET}/issues/27", "body-only"),
+            ("GET", f"repos/{TARGET}/issues/27"),
+        ])
+
+    def test_unavailable_or_concurrent_review_is_incomplete_without_overwrite(self):
+        body = investigated_body("Observed failure.", None, "No alternative.", "Trace absent.", "collect trace")
+        gh = SimulatedGh(body)
+        _, readback = create_then_readback(gh, body)
+        self.assertEqual(review_then_correct(gh, None, "intent", "evidence", "uncertainty", readback)[0], "incomplete")
+
+        reviewer = SimulatedReviewer({"before": "No alternative.", "after": "corrected"})
+        original_readback = gh.readback
+        calls = 0
+        def concurrent_readback(number):
+            nonlocal calls
+            calls += 1
+            result = original_readback(number)
+            if calls == 1:
+                result = dict(result, body="concurrent content")
+            return result
+        gh.readback = concurrent_readback
+        result, finding, final = review_then_correct(gh, reviewer, "intent", "evidence", "uncertainty", readback)
+        self.assertEqual((result, finding, final["body"]), ("incomplete", "deferred-concurrent-body", "concurrent content"))
+        self.assertEqual(gh.body, body)
 
     def test_unknown_mutation_response_reconciles_without_blind_repeat(self):
         gh = SimulatedGh("read-back body")

@@ -116,13 +116,39 @@ Instead return the qualified candidate and reconciliation action (GET/list compl
 results, then inspect the exact issue). Separate remote operation confirmation from proof that
 the underlying problem is resolved.
 
+## Separate read-only quality review and one correction
+
+After successful issue-body readback, use a separate read-only reviewer context. Read the
+project's selected reviewer configuration; do not hardcode a provider or model. Give that
+reviewer only the original user intent, primary evidence, uncertainty/next investigation, and
+the actual read-back body. Ask it to identify downstream ambiguity or conflicts, omissions,
+promoted assumptions, scope creep, and over-prescribed mechanisms or checks. It must not author
+new product requirements or mutate the issue.
+
+Evaluate each finding against the original intent and evidence. A clean review is a distinct
+result, not a substitute for evaluating an actionable finding. For an ordinary in-scope wording
+correction, retain the existing scoped mutation authority: immediately GET the exact issue,
+compare the body used for review, preserve unknown content and change only the narrow affected
+field. If the body changed, preservation is uncertain, or the proposed correction would
+materially change the outcome, do not overwrite it; report `deferred` and either reinspection or
+owner action as appropriate. After an authorized correction, independently GET the exact issue
+again and report the before/after narrow content and final observed body. Do not run an automatic
+multi-round review loop or add planning/approval ceremony for an ordinary correction.
+
+If the reviewer is unavailable or fails, preserve the create/readback outcome and report the
+review as incomplete with the capability/failure and resumption action. Do not fabricate an
+assessment or blindly retry an expensive reviewer invocation; inspect a failed invocation before
+any targeted retry. Actual reviewer judgment requires usable selected reviewer/delegation
+capability, just as actual issue mutation requires exact target and operation authority.
+
 ## Report and checkpoint boundary
 
-Report exactly one outcome: `created`, `updated`, `deduplicated`, `deferred`, or `not recorded`.
+Report exactly one creation outcome: `created`, `updated`, `deduplicated`, `deferred`, or `not recorded`.
 Include the qualified target/URL when known, original intent, verified observations/cause,
 hypotheses, uncertainty/next investigation, intended and observed state, and required owner
-action. State that any later independent quality review remains incomplete unless it was actually
-performed in a separate read-only context against the read-back body.
+action. Separately report mutation/readback outcome and review result (`complete`, `incomplete`,
+or `not run`), including any finding evaluation, correction/readback, and whether GitHub and
+reviewer actors were actual or simulated.
 
 External-only issue work creates no empty Git commit. If this skill produces an authorized
 retained repository deliverable, follow the focused task checkpoint contract at

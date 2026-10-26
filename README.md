@@ -235,7 +235,7 @@ After changing global assets in Paseo, prepare a fresh-session handoff instead o
   decisions; project routing selects the actual owner and store, if any.
 - `requesting-code-review` / `receiving-code-review`: independent assessment and disposition.
 - `memory-handling`, `finish-session`: durable guidance and closeout.
-- `track-open-issue`: project-discovered GitHub unresolved-issue lifecycle, scoped writes and independent readback.
+- `track-open-issue`: project-discovered GitHub unresolved-issue lifecycle, scoped writes, independent readback and configured read-only body review.
 - `import-open-issues`: default offline historical Markdown preview, conflict-aware reconciliation and separately authorized import; never an automatic migration.
 
 ## Validation and Documentation
