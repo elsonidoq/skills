@@ -21,4 +21,10 @@ substitute or store secrets, completed-work inventories or fabricated knowledge.
 - **Action:** Handle routine technical decisions autonomously; ask the owner only for product decisions or material scope creep. Preserve mandatory explicit permission gates rather than treating this preference as consent. When the owner requests correction-only review, assess the correction and affected behavior instead of re-reviewing areas already confirmed correct.
 - **Provenance:** Explicit owner direction in the workflow-monitor implementation conversation: “Do not ask me again about these decisions,” clarified as “Only product or scope creepy”; later, “yes, but do not re-review what it has already reviewed and confirmed it's correctness.”
 
+### Routine repair authorization
+
+- **Trigger:** Continuing routine repair/review rounds after the owner has explicitly authorized them within a bounded implementation scope.
+- **Action:** Do not repeatedly ask for the same routine authorization. Use the supported run-and-scope-bound authority mechanism; preserve actual material scope, manual, paid, security, data and external-action gates. A conflicting runtime consent rule needs a scoped correction, not fabricated owner replies or silent bypass.
+- **Provenance:** Explicit owner feedback during #30 implementation: “Why do you keep asking for these authorizations? Yes I authorize them all” and “Stop asking me for authorization for routine things like that.” The owner then approved the proposed scoped policy correction and retained continuation with “Go ahead.” This records the conversational preference, not blanket permission for unrelated runs or actions.
+
 No technical project gotchas recorded yet.
