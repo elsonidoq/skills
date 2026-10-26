@@ -324,6 +324,18 @@ class Engine:
                             'mode': stat.S_IMODE(info.st_mode)}
         return result
 
+    @staticmethod
+    def _repair_index_state(project, paths):
+        """Capture Git's staged entries for already-selected repair paths only."""
+        result = {}
+        for name in paths:
+            entries = []
+            for entry in git(project, 'ls-files', '--stage', '-z', '--', name).split(b'\0'):
+                if entry:
+                    entries.append(entry.split(b'\t', 1)[0].decode('ascii'))
+            result[name] = entries
+        return result
+
     def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id,
                 review_ordinal=1, fixing_round=1, predecessor_execution_id=None, terminal_stop=None,
                 recovered=None):
@@ -449,7 +461,8 @@ class Engine:
                         details.update({'diagnostic': exc.diagnostic, 'baseline': focused.base,
                                         'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                                         **focused.facts(),
-                                        'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts)})
+                                        'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
+                                        'index_state': self._repair_index_state(project, focused.task_edited | focused.known_artifacts)})
                     store.history(self.run, fix_task['id'], 'fixer_invocation', outcome, details)
                     recorder.emit(occurrence, 'worker', outcome, task_id=fix_task['id'], facts={
                         **public, 'stopped_by_invocation_id': invocation_id, 'error_category': _failure(exc)})
@@ -459,7 +472,8 @@ class Engine:
                                   {'invocation_id': invocation_id, 'execution_id': execution_id,
                                    'baseline': focused.base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                                    **focused.facts(), 'blobs': self._repair_blobs(project, focused.task_edited),
-                                   'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts)})
+                                   'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
+                                   'index_state': self._repair_index_state(project, focused.task_edited | focused.known_artifacts)})
                     recorder.emit(occurrence, 'worker', 'returned', task_id=fix_task['id'], facts=public)
                     fixer_chain[:] = chain
                     last_fixer_invocation[0] = invocation_id
@@ -495,7 +509,8 @@ class Engine:
                         store.history(self.run, None, 'fixer_checks', 'passed', {
                             'execution_id': execution_id, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                             'blobs': self._repair_blobs(project, focused.task_edited),
-                            'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts)})
+                            'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
+                            'index_state': self._repair_index_state(project, focused.task_edited | focused.known_artifacts)})
                         return results
                     except CheckFailure as failure:
                         if failure.attempt == previous:
@@ -589,8 +604,8 @@ class Engine:
                 raise Blocked('assigned repair failure has no settled unsuccessful diagnosis; inspect its recorded call before continuation')
         if calls and list(calls.values())[-1][0] == 'failed':
             failure = list(calls.values())[-1][1]
-            if not all(key in failure for key in ('paths', 'artifacts', 'baseline', 'head', 'source_state')):
-                raise Blocked('settled repair failure lacks owned-path/effect facts; inspect its retained effects without replaying the fixer')
+            if not all(key in failure for key in ('paths', 'artifacts', 'baseline', 'head', 'source_state', 'index_state')):
+                raise Blocked('settled repair failure lacks owned-path/index effect facts; inspect its retained effects without replaying the fixer')
             limits = [path for task in self.contract['tasks'] for path in task.get('owned_paths', [])]
             if any('owned_paths' in task for task in self.contract['tasks']) and any(
                     not any(name == path.rstrip('/') or name.startswith(path.rstrip('/') + '/') for path in limits)
@@ -600,6 +615,8 @@ class Engine:
             selected = sorted(set(failure['paths']) | set(failure['artifacts']))
             if head != failure['head'] or self._repair_source_state(project, selected) != failure['source_state']:
                 raise Blocked('settled repair failure target/source bytes drifted; preserve them and inspect ownership before continuation')
+            if self._repair_index_state(project, selected) != failure['index_state']:
+                raise Blocked('settled repair failure index entries drifted; preserve staged and working bytes and inspect ownership before continuation')
             # Explicit resume selects this same settled assignment, not an automatic
             # retry. Feed the actual cause and reconciled effects to its corrective
             # context; routine diagnosis never requires human terminal input.
@@ -641,11 +658,13 @@ class Engine:
         check_events = [(state, facts) for kind, state, facts in local_events if kind == 'fixer_checks']
         checks = [state for state, _ in check_events]
         def verify_working_state(effects):
-            if 'source_state' not in effects:
-                raise Blocked('returned repair lacks exact working-byte/mode facts; inspect its owned effects before restoring ownership without replaying the fixer')
+            if 'source_state' not in effects or 'index_state' not in effects:
+                raise Blocked('returned repair lacks exact working-byte/mode or index facts; inspect its owned effects before restoring ownership without replaying the fixer')
             selected = set(returned['paths']) | set(returned['artifacts'])
             if self._repair_source_state(project, selected) != effects['source_state']:
                 raise Blocked('returned repair source bytes drifted or file modes changed; preserve them and inspect ownership before continuation')
+            if self._repair_index_state(project, selected) != effects['index_state']:
+                raise Blocked('returned repair index entries drifted; preserve staged and working bytes and inspect ownership before continuation')
         if checkpoints:
             state, checkpoint = checkpoints[-1]
             if state not in ('passed', 'started') or not checks or checks[-1] != 'passed':

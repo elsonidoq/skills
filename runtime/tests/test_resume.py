@@ -114,6 +114,9 @@ class SameRunResumeTests(ProjectTest):
     def test_settled_fixer_source_drift_preserves_unknown_bytes_without_dispatch(self):
         self._settled_fixer_restart(drift='bytes')
 
+    def test_settled_fixer_index_drift_preserves_staged_and_working_bytes_without_dispatch(self):
+        self._settled_fixer_restart(index_drift=True)
+
     def test_settled_fixer_filter_equivalent_bytes_stop_before_dispatch(self):
         self._settled_fixer_restart(drift='crlf')
 
@@ -135,7 +138,7 @@ class SameRunResumeTests(ProjectTest):
     def test_settled_fixer_checked_filter_equivalent_drift_stops_before_ownership_restore(self):
         self._settled_fixer_restart(interrupt='fixer_checks', returned_drift='crlf')
 
-    def _settled_fixer_restart(self, *, interrupt=None, drift=None, prior_stage=None, returned_drift=None):
+    def _settled_fixer_restart(self, *, interrupt=None, drift=None, prior_stage=None, returned_drift=None, index_drift=False):
         """Actual adapter restart seam; scripted output proves mechanics, not judgment."""
         host, state = self.root / 'repair_resume_host.py', self.root / 'repair_resume_state.json'
         state.write_text('{}')
@@ -215,19 +218,27 @@ else:
                 self.project.joinpath('other.txt').write_text('incoming commit\n')
                 git(self.project, 'add', '--', 'other.txt')
                 git(self.project, 'commit', '-qm', 'incoming unrelated work')
+            if index_drift:
+                owned.write_text('UNRELATED-STAGED-CONTENT\n')
+                git(self.project, 'add', '--', 'owned.txt')
+                staged_before = git(self.project, 'ls-files', '--stage', '--', 'owned.txt')
+                owned.write_text('partial\n')
             before_resume = git(self.project, 'rev-parse', 'HEAD')
             before_bytes, before_mode = owned.read_bytes(), owned.stat().st_mode
             with Authority(self.project) as owner:
                 owner.store.resume('review-restart')
                 # No bridge or injected diagnosis: standalone/noninteractive resume must
                 # not route routine diagnosis to terminal owner input.
-                if drift:
-                    with self.assertRaisesRegex(Blocked, 'target/source bytes drifted'):
+                if drift or index_drift:
+                    with self.assertRaisesRegex(Blocked, 'target/source bytes drifted' if drift else 'index entries drifted'):
                         Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
                     self.assertEqual(json.loads(state.read_text()), {'review': 1, 'fix': 1})
                     self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), before_resume)
                     self.assertEqual(owned.read_bytes(), before_bytes)
                     self.assertEqual(owned.stat().st_mode, before_mode)
+                    if index_drift:
+                        self.assertEqual(git(self.project, 'ls-files', '--stage', '--', 'owned.txt'), staged_before)
+                        self.assertEqual(git(self.project, 'show', ':owned.txt'), b'UNRELATED-STAGED-CONTENT\n')
                     return
                 original_history = owner.store.history
                 def interrupted_history(run, task, kind, status, details):
@@ -280,6 +291,7 @@ else:
         self.assertEqual(failure['paths'], ['owned.txt'])
         self.assertIn('owned.txt', failure['source_state'])
         self.assertEqual(set(failure['source_state']['owned.txt']), {'sha256', 'mode'})
+        self.assertEqual(len(failure['index_state']['owned.txt']), 1)
         self.assertTrue(failure['head'])
         latest_return = max(index for index, row in enumerate(history)
                             if row['kind'] == 'fixer_invocation' and row['state'] == 'returned')
