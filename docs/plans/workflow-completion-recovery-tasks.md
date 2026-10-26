@@ -2,42 +2,55 @@
 
 ## Source and executable handoff
 
-Requirements truth: [TinySpec](workflow-completion-recovery-tinyspec.md), A1–A5,
-read entirely through the task-generation direct adapter. [Executable JSON](workflow-completion-recovery-tasks.json)
-owns complete work instructions, explicit paths and task-local REQUIRED checks; this is its concise presentation.
-No Standard plan or SDD input is introduced.
+Requirements truth: [TinySpec](workflow-completion-recovery-tinyspec.md), A1–A5, read
+entirely through the task-generation direct adapter. [Executable JSON](workflow-completion-recovery-tasks.json)
+owns complete work instructions, explicit paths and task-local REQUIRED checks; this is
+its concise presentation. No Standard plan or SDD requirements input is introduced.
 
 ### Preparation, review and approval record
 
-Preparation baseline: branch `planner-github-com-elsonidoq-skills-30`, clean HEAD
-`9561175a2cee861fe5216951086c55846bd30087`. Source SHA256:
-`71e20f2bf47d9860d5de38408248c5ccc16fdfed6e700bcd6cce6bd4e84daab9`.
-Owner selected TinySpec via `ask_user` and authorized bounded planning preparation and
-focused checkpoint after the clean approved fast-forward bringing completed #23–#28 safeguards.
-Parent inspected the source/scope. Fresh independent read-only source-review invocation
-`89c7c394-951b-410e-a36b-a6c68b899336` returned explicit **zero findings**; parent confirmed
-source unchanged before/after. This is upstream source-review evidence, not task review or implementation acceptance.
-Saved task-producer assignment: `openai-codex/gpt-6.1-sol`, medium (`tinyspec-tasks`),
-not the implementation binding.
+Correction baseline: clean branch `planner-github-com-elsonidoq-skills-30`, HEAD
+`f25fcc847bec1a332e4909464097b82e06c382c1`. Current source SHA256:
+`aa89afc2f99755a0895368ff420a77dd1c0caed26895ca93099d6d3f7c6a7314`.
+Parent inspected the actual upstream source/index correction and preservation boundaries.
+Fresh independent affected-source review `c47d0154-bb4d-4e21-a481-d3164b6f62b0`
+returned explicit **zero findings**; parent verified the source digest unchanged afterward.
+That review covers the current source, not these task revisions or implementation acceptance.
 
-Current combined source/task review and owner approval are **pending**; implementation
-is **not approved**. Task-list checkpoint is preparation, not that approval. Final combined
-approval starts coordinator preflight by default; it has not been requested here. Temporary
-phase status stays in this record, not executable instructions. No implementation proofs,
-provider calls, live workflow or Cerca continuation ran during task preparation.
+Historical initial task checkpoint `b25969be7e29426f68e0b912ad5ff0e9fc7fe072`
+used source digest `71e20f2bf47d9860d5de38408248c5ccc16fdfed6e700bcd6cce6bd4e84daab9`
+and zero-finding source review `89c7c394-951b-410e-a36b-a6c68b899336`; those apply only
+to that old identity. Git retains the original task/source history. Owner selected TinySpec
+via `ask_user`, then explicitly authorized bounded corrections to confusion/overcomplication
+and focused planning checkpoints. Saved `tinyspec-tasks` producer assignment remains
+`openai-codex/gpt-6.1-sol`, medium, separate from runtime bindings.
+
+Combined approval was **CANCELLED / not granted**. Affected task review/parent inspection
+and renewed combined owner approval remain pending; implementation is **not approved**.
+A planning checkpoint supplies none of those approvals. Final combined approval starts
+coordinator preflight by default; no launch occurs here. No implementation proof, live
+workflow/provider call or Cerca continuation ran during this task correction.
+
+Revision disposition: A1 now distinguishes runner check execution/checkpoint/review dispatch
+from worker semantic/manual evidence and independent judgment. Old T004/T005 are one bounded
+A4 handling outcome, T004; no speculative facts producer or persistence inventory remains.
+The supporting-guidance ID T006 is retained to avoid relabeling its history; T005 is removed
+from this revised unlaunched list, not a runtime task mutation. A4 tests target the demonstrated
+sequence and one uncertain-call control; unchanged grant/ownership safeguards reuse applicable
+evidence. T006 is only a small example/text-contract fixture, not a generic validator.
 
 ## Shared worker and reviewer context
 
-Producer itself read the exact selected executor JSON before decomposition:
+Producer itself re-read the exact selected executor JSON before decomposition:
 `/home/dev/.paseo/worktrees/0zfm1a0e/unlucky-flamingo/.pi/workflow-executor.json`.
 Pass that absolute path unchanged: worker `openai-codex/gpt-5.6-terra`, medium;
 fresh reviewer `openai-codex/gpt-6.1-sol`, medium. Do not substitute producer settings
-or historical executor files. These runtime settings are not task eligibility metadata.
+or historical executor files. These settings are not task eligibility metadata.
 
-The following binding source constraints are carried **verbatim** from its governing section
-(relative links retain the same directory base). Each task's REQUIRED mappings apply them
-at its changed seam; worker/reviewer briefs include those mappings, exact owned paths,
-consumed predecessor contracts and exclusions, not links alone:
+Binding source constraints below are carried **verbatim** from its governing section
+(relative links share the same directory base). Apply each task's local REQUIRED mapping
+at its changed seam; briefs include those observables, paths, dependencies and material
+permission boundaries, not links alone:
 
 - [ADR-0003](../decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md): current owner-authorized launch governs assigned implementation over historical planning-only labels, including corrections/resumes; tasks stay authorization-neutral and temporary phase status stays in approval records. Preserve acceptance/manual/safety gates and escalate material authority conflicts. Returned execution is not acceptance. Validate unchanged authority delivery alongside the changed completion prompts; do not add a routine approval question or rewrite historical artifacts.
 - [ADR-0004](../decisions/ADR-0004-shared-routine-worker-permissions.md): reuse shared `_ROUTINE_AUTHORITY` for ordinary scoped fixes, small isolated tests/databases/local servers, necessary local/in-project setup and task-artifact lifecycle without repeated approval. Preserve actual owner-imposed limits/manual gates, paid application/test API scope, credential/security/data/external boundaries, global-install exclusion, and prohibitions on deployment/push/unrelated deletion. Unknown bytes are not adopted or deleted. Authority is not proof; check results remain actual results. Validate these limits in affected initial/corrective/resumed prompts, not a new permission layer.
@@ -48,75 +61,76 @@ consumed predecessor contracts and exclusions, not links alone:
 Shared exclusions: no Cerca execution/recovery/application fixes, reopening completed #23–#27,
 redoing #26, #5 unchanged-check loops or duplicating delivered #28. No framework/state machine,
 outcome schema, migration/history rewrite, retry/permission service, runtime task/path mutation,
-automatic ownership adoption, extra startup rules, quotas/limits, blanket concurrency ban,
-automatic install/auth/reload, push/deploy or mandatory paid/live proof. Current operating/schema
-docs change in lockstep with behavior; historical source/tasks/rows and memory/STATE remain intact.
+automatic ownership adoption, extra startup rules, quotas/invented limits, blanket concurrency
+ban, automatic install/auth/reload, push/deploy or mandatory paid/live proof. Preserve current
+requirements and actual safeguards; historical records and memory/STATE remain intact.
 
-Read baseline production owners and actual-helper fixtures named by each task; reuse
-`runtime/tests/fixtures/support.py` disposable Git, actual adapter subprocess fixtures in
-`test_engine.py`, and recovery/grant fixtures in `test_resume.py`/`test_review_chain.py`.
-Ordinary tests/docs/teardown stay with outcomes. Workers do not stage/commit; runner runs
-configured actual commands, inspects owned diffs and checkpoints, then fresh independent
-full-range review. Explicit manual/external/paid/security/data gates remain at the real action;
-local isolated fixture work has no new permission ceremony. Routine technical decisions
-are autonomous. Overlapping shared-file edits require scheduling/coordination, not invented dependencies.
+Use existing `runtime/tests/fixtures/support.py` disposable Git projects, actual adapter
+subprocess fixtures in `test_engine.py`, and existing resume/review/grant fixtures. Ordinary
+tests, relevant current operating/schema docs and routine teardown stay with the outcome.
+Workers never stage/commit. Runner executes/reruns configured commands, inspects owned diffs,
+checkpoints and dispatches fresh independent review; this does not transfer all semantic/manual
+acceptance or verdict judgment to the runner. Worker-owned failed/unrun requirements remain
+blockers. Routine technical correction and small isolated fixture work require no new consent;
+real manual/external/paid/security/data gates remain at their actual actions. Coordinate
+shared-file overlaps and respect actual live-writer locks, without invented dependencies.
 
 ## Bounded outcomes
 
-- [ ] T001 Separate worker-owned completion from runner-owned acceptance stages (A1).
+- [ ] T001 Clarify worker completion versus runner check execution, checkpoint and review dispatch (A1).
   - **Depends**: none
-  - Shared completion/task/fixer prompts and registered host description, captured authority,
-    real Engine stage order/positive controls and preserved unsuccessful stops; current docs.
-- [ ] T002 Retain unsuccessful task/fixer status and actionable returned explanation (A2).
+  - Shared prompts/tool description, captured existing authority, actual stage order and
+    completed/no-change/correction controls; explicit unsuccessful truth stays intact.
+- [ ] T002 Preserve actionable unsuccessful task/fixer explanations (A2).
   - **Depends**: none
-  - Actual host → adapter → Engine terminal/history diagnostics, fallback/invalid controls,
-    safe existing projections; no new reporting schema or success inference.
-- [ ] T003 Attribute task/repair checkpoints within full integration review (A3).
+  - Actual host → adapter → terminal/history, fallback/success/invalid controls and safe
+    projection; no new reason schema, acceptance inference or retry permission.
+- [ ] T003 Attribute checkpoints within full original integration review (A3).
   - **Depends**: none
-  - Actual Git parents/paths and retained checkpoints distinguish unrelated/unknown context;
-    composed initial/repair rereview keeps full original diff and cross-commit defects visible.
-- [ ] T004 Retain restart-usable settled-unsuccessful-fixer facts (A4 producer).
+  - Actual checkpoint/Git parent/path attribution separates unrelated/unknown context;
+    composed task/repair rereview keeps full original diff and causal interactions visible.
+- [ ] T004 Deliver inspected actionable handling of the demonstrated settled unsuccessful fixer (A4).
   - **Depends**: T002
-  - Persist actual failure identity/cause/session/claims/effects; reopening can inspect facts
-    while the existing unsuccessful stop remains. Acceptance needs no unfinished consumer.
-- [ ] T005 Continue inspected settled-unsuccessful fixer in its exact assignment (A4 consumer).
-  - **Depends**: T004
-  - Consume restart facts and diagnosis before same-assignment continuation; compose real
-    checks/checkpoint/fresh review for first repair and exact consumed additional pair;
-    preserve uncertain no-replay, negative controls, existing reconciliation and real owner grants.
-- [ ] T006 Prepare coupled supporting-test/harness ownership within bounded outcomes (A5).
+  - Consume the returned explanation, inspect cause/call/effects and correct the technical
+    gap through the smallest supported path. An alternative authority limitation must cite
+    an actual binding rule and supported next action, not a missing branch or routine handoff.
+    Preserve failed truth, grants/ownership, uncertain no-replay and independent acceptance.
+- [ ] T006 Add a small supporting-test/harness ownership reminder and example (A5).
   - **Depends**: none
-  - Canonical authoring reminder/example and focused fixture; unchanged real ownership,
-    command-field, neutral wording and exact-file handoff/resume controls.
+  - Canonical recipe plus existing text-contract fixture; preserve executable command/neutral
+    wording and unchanged claim/handoff controls, without generalized closure validation.
 
-Only causal graph: `T002 → T004 → T005`; other outcomes need no new producer.
-T004 produces failure facts independently inspectable after restart; T005 consumes those
-facts before reliance. T003's new attribution brief is independently useful and not required
-to enable the already-existing original-range recovery contract. Shared `engine.py`, docs
-and test files require coordinated nonoverlapping writes; runner sequencing already provides
-that scheduling. Each outcome includes its own tests/current docs and excludes other seams.
+Only causal edge: `T002 → T004`, supplying the unsuccessful explanation consumed during
+diagnosis. A4's diagnosis, any missing fact actually consumed and its supported handling are
+one checkpointable outcome for the selected worker, not a persistence subsystem plus consumer.
+No independent facts deliverable is evidenced. T003 attribution and T006 authoring remain
+independently useful and unnecessary as recovery prerequisites. Shared engine/docs/test paths
+need coordinated scheduling; the sequential runner provides it without extra graph edges.
 
-## Proof and handoff limits
+## Verification and handoff limits
 
-No disposable prototype is warranted: bounded existing helpers and permanent regression
-fixtures observe these seams. T001 composes completion→real check→checkpoint→review;
-T002 composes actual framed transport→terminal/history; T003 composes actual Git attribution
-through repair rereview; T004 verifies retained facts before T005 composes restart/grant recovery.
-T006's example tests preparation quality, not live planner behavior. Scripted host/model and
-reviewer answers are labelled: they prove mechanics/instruction delivery, not live autonomous
-judgment, consent or obedience. No new test platform or mandatory provider proof.
+No prototype is warranted: existing production-helper seams support permanent focused tests.
+T001 observes worker return → real check → checkpoint → fresh review; T002 observes framed
+transport → terminal/history; T003 observes actual Git attribution across repair rereview;
+T004 observes settled failure → diagnosis → supported handling and one uncertain no-replay
+control, including retained-resume/restart where relevant. T006 observes small-example guidance
+delivery only. Scripted host/model/reviewer responses prove mechanics and instruction delivery,
+not autonomous judgment, owner consent or live obedience. No paid/provider proof is required.
 
-Executable REQUIRED argv commands occur once per task in existing `required[].check` fields;
-semantic pass criteria remain prose. Selected pre-existing classes/modules were inspected,
-not guessed. Run commands after relevant implementation and report actual outcomes; failed,
-unrun or unavailable proof cannot release affected acceptance. Reuse still-applicable evidence
-once; rerun when code/environment/scope changes invalidate it. Missing historical attribution
-or safe recovery facts stays an actionable limit, not guessed ownership/migration. Disproof
-blocks affected reliance and returns through existing correction/review; scope/acceptance or
-authority changes renew affected approval. Keep disposable proof until consumers/production
-validation complete; routine teardown remains inside the task.
+REQUIRED argv commands occur only in existing `required[].check` fields. Named selectors
+already exist; extend those focused seams rather than invent infrastructure. Semantic criteria
+remain prose. After work, run specified commands and report actual results; missing/failed/unrun
+proof is not a pass. Reuse unchanged applicable evidence, not an assumed result; rerun only
+invalidated/changed-seam checks or necessary exposed safety coverage. No new first/additional-pair
+matrix or repeated proof of unaffected safeguards. Source constraints and actual exposed
+security/durability/grant protections remain binding. Report unrelated baseline failures separately;
+do not weaken assertions or fix unrelated code. In particular the reported unchanged full-planner
+text assertion failure is not this delivery's target or a reason for full-suite retry loops.
 
-Final review checks A1–A5, actual required results, scoped paths, unchanged completed
-safeguards and applicable ADR/memory mappings, not green syntax alone. Changed global
-contracts/tools require a fresh Paseo session handoff after delivery, with checkout/revision,
-current approval and loaded capabilities verified; no automatic restart or `/reload` instruction.
+Changed scope/acceptance/authority returns through existing review/approval boundaries; disproof
+blocks affected reliance, not unrelated outcomes. Historical missing facts stay specific gaps,
+not migration or guessed ownership. Retain disposable evidence through its consumers/validation;
+teardown belongs inside the outcome. Final review checks A1–A5 and actual results, precise task
+ownership, neutral instructions, applicable ADR/memory constraints and retained #23–#28 safeguards.
+Changed global contracts/tools in Paseo need a fresh-session handoff verifying checkout/revision,
+current approval and loaded capabilities, not `/reload` or automatic restart.

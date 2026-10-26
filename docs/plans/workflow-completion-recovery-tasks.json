@@ -2,15 +2,16 @@
   "tasks": [
     {
       "id": "T001",
-      "outcome": "Separate worker-owned completion from runner-owned acceptance stages (A1).",
-      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the referenced TinySpec acceptance below in full; carry its binding constraints and this task's REQUIRED observables into worker/reviewer briefs. Source A1 and governing ADR-0003/0004 bullets. Clarify _COMPLETION_REPORTING and only causal task/fixer prompt text in engine.py plus report_task_outcome tool description in host.mjs. Worker finishes assigned implementation and worker-owned checks/evidence, reports real blockers and returns; runner owns configured checks/reruns, focused commit and fresh independent review. Pending runner stages alone do not require unsuccessful status. A reasoned correction awaiting a promised runner rerun is supported, never a waived rerun. Keep the common explicit unsuccessful boundary unchanged: no prose inference, coercion to success, extra judge call or worker Git commit. Extend existing Engine, authority, check-correction and host fixtures; update current operating/schema descriptions with the ownership distinction. Exclude diagnostics transport, review attribution and recovery selection.",
+      "outcome": "Clarify worker completion versus runner check execution, checkpoint and review dispatch (A1).",
+      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the linked TinySpec acceptance for this outcome. Carry those binding constraints and this task's REQUIRED observables, paths and dependencies into worker/reviewer briefs. Source A1. Update _COMPLETION_REPORTING and only causal task/fixer prompt text in engine.py plus the report_task_outcome tool description in host.mjs. Worker finishes assigned implementation and worker-owned semantic/manual evidence, reports actual blockers and returns. Runner executes/reruns configured checks, creates the focused checkpoint and dispatches fresh independent review; it does not own all semantic/manual judgment or the reviewer verdict. Pending runner stages alone do not require unsuccessful status. A reasoned correction awaiting a promised runner rerun does not waive that rerun. Keep explicit unsuccessful handling unchanged: no prose inference, forced success, extra judge/model call or worker commit. Extend the existing stage/authority/repair fixtures named below with captured ownership instructions and positive/unsuccessful controls; update current operating/schema wording. Exclude diagnostics transport, attribution and new settled-fixer handling.",
       "depends": [],
       "owned_paths": [
         "runtime/coherence_workflow/engine.py",
         "runtime/pi-host/host.mjs",
         "runtime/tests/test_engine.py",
         "runtime/tests/test_worker_authority.py",
-        "runtime/tests/test_check_correction.py",
+        "runtime/tests/test_review_chain.py",
+        "runtime/tests/test_resume.py",
         "runtime/tests/test_host.mjs",
         "docs/coordinate-implementation.md",
         "docs/coordinate-implementation-schema.md"
@@ -18,15 +19,15 @@
       "required": [
         {
           "id": "A1-flow",
-          "description": "REQUIRED: In actual Engine/disposable Git fixtures, normal completed worker return reaches real configured command \u2192 focused checkpoint \u2192 fresh read-only verdict in that order. Include genuinely complete no-command/no-change (no empty commit), corrected ordinary error, and reasoned same-assignment correction with actual successful runner rerun. Known failed/unrun worker-owned semantic acceptance remains unsuccessful even when baseline commands are green. Capture initial/corrective and already-supported resumed task AND fixer prompts (settled-unsuccessful-fixer resume is T005, not this task) and registered tool description: stage ownership is consistent; worker never stages/commits."
+          "description": "REQUIRED: Actual Engine/disposable Git: completed worker return reaches real configured command, focused checkpoint and fresh read-only review in order. Keep genuinely completed no-command/no-change (no empty commit), corrected ordinary-error and successful runner-rerun controls. Failed or genuinely unrun worker-owned semantic/manual acceptance remains unsuccessful even with green baseline commands. Explicit incomplete saying only runner review remains still stops; blocked/failed/incomplete with no edits or partial edits do not release dependent B, success checkpoint, session settlement or success-path review/fixer. Extend existing fixtures rather than add a new platform."
         },
         {
-          "id": "A1-preservation",
-          "description": "REQUIRED: Preserve blocked/failed/incomplete no-edit and partial-edit stops before dependent B, success checkpoint, session settlement, review or fixer; explicit incomplete saying only review remains still stops. Compare unchanged current-launch authority and shared _ROUTINE_AUTHORITY/exclusions in affected initial/corrective/resumed prompts (ADR-0003/0004); historical phase text triggers no routine reapproval, permission is not acceptance, owner/manual/paid/security/data/external gates and unknown-byte protection survive. Keep exact-file handoff, actual nonzero commands and required executable fields. Evidence: captured instructions, dispatch order, actual exits, Git/history and preserved bytes, not live model-obedience claims."
+          "id": "A1-brief",
+          "description": "REQUIRED: Inspect registered tool description and captured initial/corrective/already-supported resumed task and fixer prompts: precise ownership, unchanged ADR-0003 current-launch authority and shared ADR-0004 _ROUTINE_AUTHORITY/exclusions. New settled-fixer handling is T004, not a prerequisite here. Preserve worker semantic/manual evidence, actual owner/manual/paid/security/data/external gates and unknown-byte protection; no historical rewrite, routine consent or acknowledgment wake. Evidence is prompt/tool capture plus actual exits, Git/history and dispatch order, not live obedience."
         },
         {
-          "id": "engine-command",
-          "description": "REQUIRED: Extend existing SequentialExecutionTests for stage ownership and controls.",
+          "id": "completion-command",
+          "description": "REQUIRED: Extend these existing actual stage and unsuccessful controls; positive no-change/corrected-error assertions belong with them.",
           "check": [
             "env",
             "PYTHONDONTWRITEBYTECODE=1",
@@ -36,12 +37,13 @@
             "-m",
             "unittest",
             "-v",
-            "test_engine.SequentialExecutionTests"
+            "test_engine.SequentialExecutionTests.test_dependencies_real_checks_focused_commits_and_independent_read_only_review",
+            "test_engine.SequentialExecutionTests.test_explicit_unaccepted_worker_return_preserves_partial_work_without_success_dispatch"
           ]
         },
         {
-          "id": "authority-correction-command",
-          "description": "REQUIRED: Preserve affected shared-authority and real correction/rerun contracts.",
+          "id": "prompt-command",
+          "description": "REQUIRED: Extend focused existing authority/correction/resume captures and fixer correction context for the changed shared prompt.",
           "check": [
             "env",
             "PYTHONDONTWRITEBYTECODE=1",
@@ -51,14 +53,14 @@
             "-m",
             "unittest",
             "-v",
-            "test_worker_authority",
-            "test_check_correction",
+            "test_worker_authority.WorkerAuthorityTests",
+            "test_review_chain.BoundedChainTests.test_reviewer_context_and_model_survive_repair_and_check_correction",
             "test_resume.SameRunResumeTests.test_review_repair_reopens_persisted_reviewer_after_process_restart"
           ]
         },
         {
           "id": "host-command",
-          "description": "REQUIRED: Extend the existing actual-SDK tool-registration fixture to inspect completion description without provider calls. Missing SDK is unavailable, not permission to install or a passing result.",
+          "description": "REQUIRED: Inspect completion description in the existing SDK registration fixture without provider calls. Missing SDK is unavailable, not permission to install or a passing result.",
           "check": [
             "node",
             "--test",
@@ -70,14 +72,12 @@
     },
     {
       "id": "T002",
-      "outcome": "Retain unsuccessful task/fixer status and actionable returned explanation (A2).",
-      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the referenced TinySpec acceptance below in full; carry its binding constraints and this task's REQUIRED observables into worker/reviewer briefs. Source A2. Carry already-returned host text alongside status through existing TaskOutcome/PiAdapter conversion, Engine._prompt_worker and ordinary task/fixer failure history/terminal diagnostics. Keep TaskOutcome(status) offline compatibility and useful generic empty-text fallback. Do not add a required reason tool field, result protocol, parser, taxonomy, extra model call or automatic retry. Keep successful returned text and status-only reporting tool compatible. Explanations diagnose, never override unsuccessful acceptance. Extend actual adapter subprocess fixtures in test_engine.py, not a new platform; change existing store/CLI projection only if the changed failure path demonstrably needs it, without exposing raw sessions or new public diagnostic fields. Update operative guide/schema to distinguish private failure evidence from safe status projection. Exclude resumed-fixer fact collection/dispatch and review attribution.",
+      "outcome": "Preserve actionable unsuccessful task/fixer explanations through existing transport and failure history (A2).",
+      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the linked TinySpec acceptance for this outcome. Carry those binding constraints and this task's REQUIRED observables, paths and dependencies into worker/reviewer briefs. Source A2. Carry already-returned host text alongside status through TaskOutcome/PiAdapter conversion, Engine._prompt_worker and existing failure recording. Keep TaskOutcome(status) offline compatibility, useful empty-explanation fallback, status-only reporting tool and ordinary successful text. No new required reason field/schema, prose parser/taxonomy, model call or automatic retry. Explanations diagnose, never decide acceptance or grant authority. Extend the existing actual-adapter subprocess tests below for task and fixer; update current guide/schema. Preserve private saved-session redaction and existing safe status/history projection. Exclude recovery mechanism selection and attribution.",
       "depends": [],
       "owned_paths": [
         "runtime/coherence_workflow/pi_adapter.py",
         "runtime/coherence_workflow/engine.py",
-        "runtime/coherence_workflow/store.py",
-        "runtime/coherence_workflow/cli.py",
         "runtime/tests/test_engine.py",
         "docs/coordinate-implementation.md",
         "docs/coordinate-implementation-schema.md"
@@ -85,15 +85,15 @@
       "required": [
         {
           "id": "A2-transport",
-          "description": "REQUIRED: Tiny subprocess host \u2192 actual PiAdapter \u2192 Engine returns blocked/failed/incomplete plus distinctive benign reason and next correction for both task and fixer; terminal exception and existing failure history retain status/reason. Partial owned bytes remain; no success checkpoint, dependent/review/fixer dispatch after that unsuccessful boundary. Existing safe status/history behavior remains compatible without publishing saved identities, raw session dumps, credentials or private application artifacts. Include empty-text fallback, TaskOutcome(status), ordinary completed text, invalid result type/outcome refusal, and actual nonzero required-command protection. A green baseline command never overrides semantic failure. Evidence: real framed transport, raised diagnostic, stored history and Git/dispatch assertions; scripted model output is labelled."
+          "description": "REQUIRED: Tiny host subprocess through actual PiAdapter/Engine returns unsuccessful status with distinctive benign reason/next correction; raised diagnostic and ordinary failure history retain both for task and fixer. Owned partial bytes remain, no success-path stages run after unsuccessful return. Cover empty fallback/status-only offline compatibility, ordinary completed text and invalid outcome/type refusal within those existing fixtures. Green baseline checks never override unsuccessful semantic acceptance; preserve real nonzero command protection and authored executable fields using applicable existing evidence, rerunning only affected checks."
         },
         {
-          "id": "A2-authority",
-          "description": "REQUIRED: ADR-0003 current launch and ADR-0004 routine authority remain delivered unchanged; explanation never grants scope, acceptance or retry. Preserve original permissions/manual gates, unknown-byte/handoff protection and no routine consent/acknowledgment wake. Compare affected prompt/projection diffs against shared context."
+          "id": "A2-boundary",
+          "description": "REQUIRED: Compare changed error/history handling with existing safe projection: no saved identities, raw session dumps, credentials or private application artifacts newly published through status/monitor. Preserve ADR-0003 scoped authority versus acceptance and ADR-0004 routine permissions/exclusions; a reason is neither retry consent nor permission/path expansion. Keep no routine acknowledgment/consent wake. Use actual terminal/history/bytes/dispatch assertions, not a model-compliance claim."
         },
         {
           "id": "transport-command",
-          "description": "REQUIRED: Extend actual adapter task/fixer transport and history controls in existing class.",
+          "description": "REQUIRED: Extend these real framed-transport task/fixer fixtures with explanation, fallback/success and invalid-result controls.",
           "check": [
             "env",
             "PYTHONDONTWRITEBYTECODE=1",
@@ -103,15 +103,16 @@
             "-m",
             "unittest",
             "-v",
-            "test_engine.SequentialExecutionTests"
+            "test_engine.SequentialExecutionTests.test_actual_adapter_transport_outcome_blocks_before_checkpoint_or_dispatch",
+            "test_engine.SequentialExecutionTests.test_actual_adapter_unsuccessful_fixer_stops_before_checkpoint_and_rereview"
           ]
         }
       ]
     },
     {
       "id": "T003",
-      "outcome": "Attribute actual task/repair checkpoints within the full integration review range (A3).",
-      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the referenced TinySpec acceptance below in full; carry its binding constraints and this task's REQUIRED observables into worker/reviewer briefs. Source A3. Extend Engine._review brief construction using actual retained task and fixer checkpoints, verified Git commit/parent/changed-path facts; inspect existing store.completed_checkpoints/history and run_fix checkpoint shapes. State role/task or repair association, separate intervening unrelated or unattributed context, and mark missing/ambiguous older attribution explicitly unknown. No-change claims no commit changes, especially not an unrelated current HEAD. Preserve original review_base..actual_head and full diff at initial and every fresh rereview; do not narrow to last commit, hide context, invent a registry/backfill, or add broad Git admission. Reviewer cannot reject unrelated context solely for exceeding task paths or silently certify it as task delivery; concrete causal integration defects remain blockers. Independently unrelated defects report ownership/repair limit; appearing in the range is not edit authority. Include operating/schema and coordinator contract wording only at this changed review boundary, and existing parser/chain regressions. Exclude recovery dispatch and unsuccessful transport.",
+      "outcome": "Attribute actual task/repair checkpoints within the full original integration review (A3).",
+      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the linked TinySpec acceptance for this outcome. Carry those binding constraints and this task's REQUIRED observables, paths and dependencies into worker/reviewer briefs. Source A3. Extend Engine._review brief construction from actual retained task/repair checkpoints and their Git commits, parents and changed paths. Separate intervening unrelated/unattributed context and explicit missing/ambiguous attribution; no-change claims no commit changes, not an unrelated HEAD. Preserve original review_base..actual_head and full diff for first review and every rereview. Do not narrow/hide the range, infer ownership from order, introduce a registry/backfill or broad admission check. Reviewer must neither reject unrelated context solely for task-path scope nor certify it as task delivery; causal integration defects remain blockers. Independently unrelated defects report ownership/repair limits, not expanded fixer authority. Extend existing range/repair fixtures and update current operating/schema/coordinator review wording. Exclude recovery dispatch and transport.",
       "depends": [],
       "owned_paths": [
         "runtime/coherence_workflow/engine.py",
@@ -124,15 +125,15 @@
       "required": [
         {
           "id": "A3-composed",
-          "description": "REQUIRED: Actual Engine/Git sequence includes unrelated commit after original baseline and before focused task checkpoint, first rejection and repair checkpoint, then fresh reviewer. Capture both reviewer prompts: original full range/diff, task/repair SHAs with verified parents/paths, separately identified unrelated commit, cross-commit interaction still visible. Include no-change at unrelated HEAD and missing older attribution; neither claims ownership from order/labels. Assert anti-false-scope and anti-silent-approval instructions plus concrete integration-defect/repair-scope distinction. Scripted verdicts prove construction and flow, not actual reviewer judgment. Keep single-line/range findings exact and malformed-review rejection."
+          "description": "REQUIRED: Actual Engine/Git sequence puts unrelated commit after original baseline before focused task checkpoint, followed by rejection/repair checkpoint and fresh reviewer. Capture both prompts: original full range/diff, attributable task/repair SHAs with actual parents/paths, separate intervening context and visible cross-commit interaction. Include no-change at unrelated HEAD and missing older attribution without guessed ownership. Assert anti-false-scope/anti-silent-approval instructions and causal integration-defect versus independent unrelated-defect repair limit. Reuse unchanged line-range/malformed-result protections, rerunning affected ones if changed; scripted verdicts prove brief construction/flow only."
         },
         {
-          "id": "A3-governance",
-          "description": "REQUIRED: Carry memory correction-only affected-behavior guidance without removing mandatory fresh full-original-range review. ADR-0003 launch is not acceptance; ADR-0004 authority cannot adopt unrelated bytes or widen fixer paths. Compare actual delivered review/fixer instructions and retained history; no routine acknowledgments, historical edits or inferred ownership."
+          "id": "A3-brief",
+          "description": "REQUIRED: Memory correction-only guidance concerns correction/affected behavior, not removal of mandatory fresh full-original-range review. ADR-0003 launch is not acceptance; ADR-0004 does not authorize unrelated edits or byte adoption. Compare delivered review/fixer instructions and retained history; no new routine approval/acknowledgment or historical relabeling."
         },
         {
-          "id": "range-command",
-          "description": "REQUIRED: Extend existing original-range/repair flow and no-change controls.",
+          "id": "attribution-command",
+          "description": "REQUIRED: Extend existing actual repair cycle with attribution/no-change/unknown observations and retain the original-range control.",
           "check": [
             "env",
             "PYTHONDONTWRITEBYTECODE=1",
@@ -142,101 +143,44 @@
             "-m",
             "unittest",
             "-v",
-            "test_engine.SequentialExecutionTests"
-          ]
-        },
-        {
-          "id": "chain-command",
-          "description": "REQUIRED: Preserve actual parser, exact findings and scoped reviewer-model repair context.",
-          "check": [
-            "env",
-            "PYTHONDONTWRITEBYTECODE=1",
-            "PYTHONPATH=runtime:runtime/tests",
-            "python3",
-            "-B",
-            "-m",
-            "unittest",
-            "-v",
-            "test_review_chain.BoundedChainTests"
+            "test_review_chain.BoundedChainTests.test_actionable_rejection_repairs_once_then_fresh_rereview",
+            "test_engine.SequentialExecutionTests.test_rejected_original_and_declared_fix_use_full_original_review_range"
           ]
         }
       ]
     },
     {
       "id": "T004",
-      "outcome": "Retain restart-usable facts for a settled unsuccessful fixer without permitting replay (A4 producer).",
-      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the referenced TinySpec acceptance below in full; carry its binding constraints and this task's REQUIRED observables into worker/reviewer briefs. Source A4 failure-fact prerequisite; consume T002 status/explanation path. Extend run_fix failure recording in existing private operation history to distinguish actual terminal unsuccessful return from uncertain transport/interruption/started-only call. Retain the failed invocation/cause, compatible actual saved session/settings, exact existing repair/rejection/round identity, explicit claimed paths/artifacts, baseline/head and relevant source/check/Git effects sufficient for restart inspection; use FocusedGit facts/_repair_blobs and current history, never discover ownership by scanning dirt. Keep dispatch and failed attempts append-only; expose no new public saved-session payloads. Deliver facts and actionable missing-fact diagnostics only, not the continuation selector. Existing unsuccessful stop remains until T005; this task is accepted by failure/readback assertions alone, not downstream resume. Update current schema/operating description of retained facts and limits, preserving old rows without migration. No new table/schema/permission layer, automatic retries or failed-to-success rewrite.",
+      "outcome": "Deliver inspected actionable handling of the demonstrated settled unsuccessful fixer (A4).",
+      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the linked TinySpec acceptance for this outcome. Carry those binding constraints and this task's REQUIRED observables, paths and dependencies into worker/reviewer briefs. Source A4. Consume T002 status/explanation as diagnostic input. At the failed-fixer boundary inspect actual cause/call and source/check/Git effects; choose the smallest supported targeted correction using existing resume, coordinator diagnosis, session/scoped-repair and history interfaces. A missing runtime branch is a technical gap to correct autonomously, not an authority limitation or reason to hand routine debugging to the owner. Continue where supported; only an evidenced actual binding authority limit may instead yield a precise supported next action. Do not preselect same-assignment mechanics or require saved-session reopening universally. Reuse existing records/session/effect facts; add only a missing fact actually consumed by the selected path, with diagnosis and consumer in this outcome. No inventory/ledger/schema, speculative capture or separate persistence task. Keep failed/rejection truth, partial work and exact grants/assigned identities/scope/range/settings/historical policy. No new round or replacement pair disguised as continuation, uncertain replay, completed-task replay, path adoption, hook/signing bypass or automatic retry service. Preserve worker semantic/manual acceptance and actual configured check execution, owned-effect reconciliation/checkpoint and fresh independent full-original-range verdict before completion. Extend the existing adapter/resume/chain seam and current coordinator/operating/schema contracts only as needed by this supported path. Exclude attribution redesign and generalized recovery.",
       "depends": [
         "T002"
       ],
       "owned_paths": [
         "runtime/coherence_workflow/engine.py",
         "runtime/coherence_workflow/store.py",
-        "runtime/tests/test_engine.py",
-        "runtime/tests/test_review_chain.py",
-        "docs/coordinate-implementation.md",
-        "docs/coordinate-implementation-schema.md"
-      ],
-      "required": [
-        {
-          "id": "A4-retained-facts",
-          "description": "REQUIRED: Using actual Engine/adapter and disposable Git/SQLite, rejecting review \u2192 terminal unsuccessful fixer with partial owned edit retains status/reason from T002 plus exact invocation/session, repair/rejection/round, claim/effect facts. Close/reopen authority/store to inspect retained facts independently of live Python objects. Initial failure still yields no repair checks/checkpoint, fresh review or completion. Compare dispatch/attempt rows before and after; rejection and failure remain immutable history. Include terminal no-change and absent session/effect facts as explicit actionable gaps, and started-only/transport-uncertain call that cannot be classified as safe settled return. No private identities/raw text newly appear in public status/monitor."
-        },
-        {
-          "id": "A4-fact-authority",
-          "description": "REQUIRED: ADR-0003/0004 remain scoped authority, not facts or acceptance. Recorded claims must preserve exact-file handed-off bytes, owned-path boundaries and unrelated staged/unstaged/untracked content; broad paths cannot adopt unknown bytes. Preserve actual owner grant/assigned pair identities without replacement reservation, no policy upgrade or automatic continuation. Evidence: persisted private facts versus safe projection and unchanged stop controls."
-        },
-        {
-          "id": "fact-command",
-          "description": "REQUIRED: Extend existing fixer execution fixture with failure/reopen fact observations.",
-          "check": [
-            "env",
-            "PYTHONDONTWRITEBYTECODE=1",
-            "PYTHONPATH=runtime:runtime/tests",
-            "python3",
-            "-B",
-            "-m",
-            "unittest",
-            "-v",
-            "test_review_chain.FixExecutionTests",
-            "test_engine.SequentialExecutionTests.test_actual_adapter_unsuccessful_fixer_stops_before_checkpoint_and_rereview"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "T005",
-      "outcome": "Continue only an inspected settled unsuccessful fixer in its exact existing assignment (A4 consumer).",
-      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the referenced TinySpec acceptance below in full; carry its binding constraints and this task's REQUIRED observables into worker/reviewer briefs. Source A4; consume T004 restart-usable terminal/claim/effect facts and T002 diagnostics. Extend _finish_reviews/_recover_assigned_fix/run_fix narrowly for explicit supported resume, covering first repair and consumed additional pair without new dispatch identity. Reuse existing coordinator diagnosis/question pattern and compatible retained fixer session with configured reviewer executor, original findings, owned paths and unchanged acceptance. Require inspected cause plus targeted correction, not acknowledgment/unchanged retry. Missing compatible session/ownership/cause/effect facts produces an invocation-specific actionable blocker. Continue same assigned fixer, append actual continuation attempts, retain original dispatch/rejection/failure and exact owner grant/reviewer reservation; do not call replacement reservation to bypass failed-stage guard, consume another round, or reset historical policy. After success run actual checks/manual gates, reconcile/checkpoint scoped effects and dispatch already-assigned fresh independent original-range reviewer; no-change misattributed finding fabricates neither commit nor erased rejection and still requires checks/fresh verdict. Later rejection uses existing owner-pair policy. Unknown/live/incomplete call, uncertain external/Git/check effects, assignment/grant-invalidating drift or out-of-path work blocks affected continuation before unsafe dispatch. Reuse existing check/commit reconciliation, not a new matrix, general target-drift gate, retry service or schema. Update coordinator and operating/schema contracts to distinguish prohibited replacement pair from inspected same-assignment correction.",
-      "depends": [
-        "T004"
-      ],
-      "owned_paths": [
-        "runtime/coherence_workflow/engine.py",
-        "runtime/coherence_workflow/store.py",
         "runtime/tests/test_resume.py",
         "runtime/tests/test_review_chain.py",
-        "runtime/tests/test_worker_authority.py",
         "skills/coordinate-implementation/SKILL.md",
         "docs/coordinate-implementation.md",
         "docs/coordinate-implementation-schema.md"
       ],
       "required": [
         {
-          "id": "A4-composed",
-          "description": "REQUIRED: Permanent actual Engine/adapter/Git/SQLite tests: rejection \u2192 settled unsuccessful fixer \u2192 process restart \u2192 explicit resume \u2192 coordinator inspected targeted correction \u2192 continued compatible saved session \u2192 actual checks \u2192 focused owned checkpoint (or genuine no-change) \u2192 fresh original-range read-only verdict. Exercise first repair AND an already-authorized additional pair through actual grant/reservation consumers, not mocked grant compliance. Assert same execution/rejection/grant/scope/base/round/assigned following reviewer, predecessor invocation chain and configured reviewer model/settings; no completed task replay, no new pair/grant/round. Only fresh verdict accepts; rejection/failed invocation/check attempts and old rows stay. Check no-change misattribution, not-started reserved repair and returned/local-effect recovery remain usable. Reuse existing reconciliation evidence unless changed code invalidates it."
+          "id": "A4-handling",
+          "description": "REQUIRED: Small actual Engine/adapter/Git fixture reproduces rejection → settled unsuccessful fixer → inspected diagnosis/targeted correction → supported handling. Extend the existing adapter/resume fixture seam below; exercise process restart for the retained-resume case where the chosen path depends on it, without turning persisted session inventories into acceptance. Where continuation is supported, observe real checks, focused owned checkpoint (or genuine no-change), fresh original-range review, retained rejection/failed-call history and no completed-task replay; fresh verdict alone accepts delivery. If a real authority limit prevents continuation, demonstrate its binding rule, affected operation and actionable supported next step, not a generic dead end. Missing branch, ordinary technical error or agent uncertainty is not such a rule; no unchanged retry or routine owner-debugging handoff."
         },
         {
-          "id": "A4-negative",
-          "description": "REQUIRED: Before unsafe continuation/review, reject missing/unknown/generic diagnosis, missing compatible saved/effect facts, unapproved/out-of-path edits, uncertain started call, grant-target-invalidating drift, failed/unrun worker-owned acceptance and uncertain local/external effects. Actual check failure cannot checkpoint until an authorized correction and real rerun passes. Preserve failed-stage replacement reservation refusal and historical two-review/one-fixer policy; same-assignment continuation does not upgrade it. Report exact invocation and corrective inspection, never blindly retry or manufacture consent."
+          "id": "A4-safety",
+          "description": "REQUIRED: Include one uncertain-call no-replay control at the changed continuation boundary. Reuse applicable existing grant/ownership/effect-reconciliation evidence; rerun or extend only checks invalidated by the selected correction or required for an exposed safety boundary. Preserve actual grants/assigned identities and failed-stage replacement guards, scope/range/settings and historical policy; no new mandatory first/additional-pair variants or exhaustive recovery matrix. Required/manual acceptance failures cannot be waived, unknown bytes cannot be adopted, and unsuccessful work cannot checkpoint/review as accepted."
         },
         {
-          "id": "A4-authority-brief",
-          "description": "REQUIRED: Capture resumed fixer and coordinator/reviewer prompts: ADR-0003 current authority unchanged; ADR-0004 _ROUTINE_AUTHORITY with all original manual/paid/security/data/external/unknown-byte limits; diagnosis is autonomous routine coordinator work, not owner debugging/reapproval. Additional-pair consent remains actual owner-only. Memory correction-only scope coexists with mandatory full-original-range independent review and no routine acknowledgment wakes. Preserve exact-file handed-off bytes, task ownership, hooks/signing and unrelated work; compare current docs with implemented same-assignment behavior. Static prompts/stub answers prove mechanical flow only, no live autonomy claim."
+          "id": "A4-brief",
+          "description": "REQUIRED: Capture affected diagnosis/continuation instructions: ADR-0003 current authority remains scoped and is not acceptance; ADR-0004 routine isolated checks/corrections need no renewed consent, while actual owner/manual/paid/security/data/external gates remain. Additional-pair consent stays owner-only. Apply memory routine technical autonomy/no acknowledgment wakes and correction-only affected behavior without removing full-original-range independent review. Compare current docs with actual supported handling; report any specific missing consumed fact with operation/corrective action, not a general new admission rule. Stubs prove mechanical flow, not autonomous judgment."
         },
         {
-          "id": "resume-command",
-          "description": "REQUIRED: Extend existing restart/resume fixtures; retain actual existing handoff and unfinished-task controls.",
+          "id": "handling-command",
+          "description": "REQUIRED: Extend this existing restart/repair fixture with the demonstrated settled-failure handling, using the actual adapter subprocess seam from T002 rather than a new harness; keep its existing supported recovery control.",
           "check": [
             "env",
             "PYTHONDONTWRITEBYTECODE=1",
@@ -246,12 +190,12 @@
             "-m",
             "unittest",
             "-v",
-            "test_resume"
+            "test_resume.SameRunResumeTests.test_review_repair_reopens_persisted_reviewer_after_process_restart"
           ]
         },
         {
-          "id": "review-recovery-command",
-          "description": "REQUIRED: Extend actual grant/first-pair/recovery consumers and preserve failed-stage guards and check/commit reconciliation.",
+          "id": "uncertain-command",
+          "description": "REQUIRED: Extend/reuse this existing uncertain-dispatch control to observe no replay at the changed fixer-handling boundary; one focused control suffices.",
           "check": [
             "env",
             "PYTHONDONTWRITEBYTECODE=1",
@@ -261,79 +205,47 @@
             "-m",
             "unittest",
             "-v",
-            "test_review_chain"
-          ]
-        },
-        {
-          "id": "resume-authority-command",
-          "description": "REQUIRED: Preserve authority delivery at the changed resumed seam.",
-          "check": [
-            "env",
-            "PYTHONDONTWRITEBYTECODE=1",
-            "PYTHONPATH=runtime:runtime/tests",
-            "python3",
-            "-B",
-            "-m",
-            "unittest",
-            "-v",
-            "test_worker_authority"
+            "test_review_chain.ChainHistoryTests.test_uncertain_dispatch_blocks_replay_and_optional_monitor_gap_is_not_authority"
           ]
         }
       ]
     },
     {
       "id": "T006",
-      "outcome": "Prepare coupled supporting-test/harness ownership inside each bounded outcome (A5).",
-      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the referenced TinySpec acceptance below in full; carry its binding constraints and this task's REQUIRED observables into worker/reviewer briefs. Source A5. Add only a focused reminder/example to skills/task-generation/SKILL.md executor-sized recipe: inspect acceptance selectors, coupled fixtures and admitting harness along with product interface before selecting explicit owned paths; include necessary in-scope support in the same task, or a genuinely necessary scoped producer/dependency. Extend existing task-generation contract fixture with UI/control + coupled capture selector + admitting harness, demonstrating acceptance closes within paths/dependency; omission must fail fixture rather than invent a runtime micro-repair. Keep independent outcomes granular, no broad milestone/path expansion, new mandatory fields, adapter duplication or runtime task mutation. Use existing test_contract.py and AuthoredCommandHandoffTests for shared route compatibility; preserve executable check fields and neutral task wording. Ownership tests consume unchanged FocusedGit/Engine and exact handoff fixtures, not a new platform or production ownership change. Exclude runtime repair/adoption implementation and historical task rewrites.",
+      "outcome": "Add a small supporting-test/harness ownership reminder and authoring example (A5).",
+      "description": "Read docs/plans/workflow-completion-recovery-tasks.md#shared-worker-and-reviewer-context and the linked TinySpec acceptance for this outcome. Carry those binding constraints and this task's REQUIRED observables, paths and dependencies into worker/reviewer briefs. Source A5. Add a focused reminder/example to the existing executor-sized recipe in skills/task-generation/SKILL.md: inspect acceptance selectors, coupled fixtures and admitting harness alongside product interface, then include necessary in-scope support in the same bounded outcome or a genuinely necessary existing dependency. Extend the existing text-contract fixture in TaskGenerationContractTests with one UI/control change, coupled capture selector and admitting harness example. Show obvious omitted support versus corrected task wording; do not implement a generic owned-path/dependency-closure validator, admission gate, new task fields or runtime input mutation. Keep this outcome to guidance delivery and a small example, not live planner proof or runtime ownership changes. Preserve neutral executable wording and existing required-command fields. Reuse unchanged actual claim/handoff/resume protections; no historical task rewrites or duplicated adapter recipe.",
       "depends": [],
       "owned_paths": [
         "skills/task-generation/SKILL.md",
-        "skills/task-generation/scripts/test_contract.py",
-        "scripts/test-planner-workflow.py"
+        "skills/task-generation/scripts/test_contract.py"
       ],
       "required": [
         {
-          "id": "A5-authoring",
-          "description": "REQUIRED: Focused authoring example/fixture has UI/control outcome, coupled capture selector and admitting harness with actual bounded path/dependency closure; omitted support cannot finish acceptance and is detected. No deferred unfinished acceptance, newly improvised micro-repair or blanket allowlist. Preserve ID/description/dependency six-rule contract, optional metadata, existing checks/check/required[].check command placement, both direct and Standard shared guidance, and authorization-neutral descriptions (ADR-0003). Compare guidance against fixture, not a claim of live planner compliance."
+          "id": "A5-example",
+          "description": "REQUIRED: Small example/text-contract fixture shows the UI/control outcome includes its coupled capture selector/harness in scoped ownership or names a real existing producer dependency, avoiding an obvious omitted-file micro-repair. Contrast the omission with corrected wording; do not build generalized closure validation. Preserve executable checks/check/required[].check fields, six-rule optional-metadata intake and neutral descriptions (ADR-0003). Existing both-adapter command-handoff fixture checks that shared guidance still reaches both routes; this is instruction delivery, not live planner compliance."
         },
         {
           "id": "A5-ownership",
-          "description": "REQUIRED: Actual unchanged ownership consumers refuse out-of-original-path claim and broad allowlist adoption of unapproved dirty file; exact-file handoff and already-claimed-resume bytes still checkpoint correctly. ADR-0004 routine isolated tests need no renewed approval but cannot adopt/delete unknown content or waive acceptance, owner/manual/paid/security/data/external limits. Keep scoped support paths, real dependencies and no routine acknowledgment instructions in briefs. If a real missing scoped support path is discovered, coordinate it before launch; no runtime input amendment."
+          "description": "REQUIRED: Reuse applicable existing FocusedCheckpointTests claim/handoff and SameRunResumeTests established-handoff evidence: out-of-path claims/unapproved dirty-file adoption stay refused; exact handed-off starting bytes and already-claimed-resume behavior stay intact. No runtime ownership code changes are part of this outcome. If guidance/test changes invalidate relevant evidence, rerun the affected existing checks, not a new matrix. ADR-0004 routine isolated fixtures are allowed without renewed approval but do not waive manual/paid/security/data/external limits or unknown-byte protection. Keep actual support paths and permission boundaries in briefs; no routine acknowledgment or automatic path adoption."
         },
         {
-          "id": "authoring-command",
-          "description": "REQUIRED: Extend existing shared task-generation contract fixtures.",
+          "id": "example-command",
+          "description": "REQUIRED: Extend only the existing authoring text-contract class with the small example.",
           "check": [
             "python3",
             "-B",
-            "skills/task-generation/scripts/test_contract.py"
+            "skills/task-generation/scripts/test_contract.py",
+            "TaskGenerationContractTests"
           ]
         },
         {
           "id": "adapter-command",
-          "description": "REQUIRED: Preserve actual existing both-adapter executable command guidance.",
+          "description": "REQUIRED: Preserve the existing shared-route executable-command text contract, not the unrelated full planner suite.",
           "check": [
             "python3",
             "-B",
             "scripts/test-planner-workflow.py",
             "AuthoredCommandHandoffTests"
-          ]
-        },
-        {
-          "id": "ownership-command",
-          "description": "REQUIRED: Reuse actual Git ownership/handoff controls, including already-claimed exact resume.",
-          "check": [
-            "env",
-            "PYTHONDONTWRITEBYTECODE=1",
-            "PYTHONPATH=runtime:runtime/tests",
-            "python3",
-            "-B",
-            "-m",
-            "unittest",
-            "-v",
-            "test_git_effects",
-            "test_resume.SameRunResumeTests.test_resume_checkpoints_already_edited_established_handoff_without_second_edit",
-            "test_engine.SequentialExecutionTests.test_exact_handoff_input_claims_preserved_recovery_bytes_and_checkpoints_only_owned_results"
           ]
         }
       ]
