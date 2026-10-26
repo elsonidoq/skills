@@ -123,7 +123,19 @@ class SameRunResumeTests(ProjectTest):
     def test_settled_fixer_head_drift_stops_before_dispatch(self):
         self._settled_fixer_restart(drift='head')
 
-    def _settled_fixer_restart(self, *, interrupt=None, drift=None, prior_stage=None):
+    def test_settled_fixer_returned_mode_drift_stops_before_ownership_restore(self):
+        self._settled_fixer_restart(interrupt='fixer_invocation', returned_drift='mode')
+
+    def test_settled_fixer_returned_filter_equivalent_drift_stops_before_ownership_restore(self):
+        self._settled_fixer_restart(interrupt='fixer_invocation', returned_drift='crlf')
+
+    def test_settled_fixer_checked_mode_drift_stops_before_ownership_restore(self):
+        self._settled_fixer_restart(interrupt='fixer_checks', returned_drift='mode')
+
+    def test_settled_fixer_checked_filter_equivalent_drift_stops_before_ownership_restore(self):
+        self._settled_fixer_restart(interrupt='fixer_checks', returned_drift='crlf')
+
+    def _settled_fixer_restart(self, *, interrupt=None, drift=None, prior_stage=None, returned_drift=None):
         """Actual adapter restart seam; scripted output proves mechanics, not judgment."""
         host, state = self.root / 'repair_resume_host.py', self.root / 'repair_resume_state.json'
         state.write_text('{}')
@@ -132,7 +144,7 @@ class SameRunResumeTests(ProjectTest):
             hook = self.project / '.git/hooks/pre-commit'
             hook.write_text('#!/bin/sh\ntest "$(git show :owned.txt)" != broken\n')
             hook.chmod(0o755)
-        if drift == 'crlf':
+        if drift == 'crlf' or returned_drift == 'crlf':
             git(self.project, 'config', 'core.autocrlf', 'true')
         host.write_text("""import json
 from pathlib import Path
@@ -232,8 +244,29 @@ else:
             if interrupt:
                 # Reopen after the successful corrective provider return. Retained old
                 # failure history must not win stage selection over that return.
+                if returned_drift:
+                    normalized = git(self.project, 'hash-object', '--path=owned.txt', '--', 'owned.txt')
+                    if returned_drift == 'mode':
+                        owned.chmod(owned.stat().st_mode ^ 0o100)
+                    else:
+                        owned.write_bytes(b'repaired\r\n')
+                    self.assertEqual(git(self.project, 'hash-object', '--path=owned.txt', '--', 'owned.txt'), normalized)
+                    incoming_bytes, incoming_mode = owned.read_bytes(), owned.stat().st_mode
                 with Authority(self.project) as owner:
                     owner.store.resume('review-restart')
+                    if returned_drift:
+                        before_history = owner.store.db.execute('SELECT COUNT(*) FROM execution_history').fetchone()[0]
+                        with self.assertRaisesRegex(Blocked, 'source bytes drifted or file modes changed'):
+                            Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
+                        self.assertEqual(json.loads(state.read_text()), {'review': 1, 'fix': failed_phase + 1})
+                        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), settled_head)
+                        self.assertEqual(owned.read_bytes(), incoming_bytes)
+                        self.assertEqual(owned.stat().st_mode, incoming_mode)
+                        new_stages = owner.store.db.execute(
+                            "SELECT kind FROM execution_history ORDER BY seq LIMIT -1 OFFSET ?", (before_history,)).fetchall()
+                        self.assertFalse(any(row['kind'] in ('fixer_checks', 'fixer_checkpoint', 'fixer_invocation')
+                                             for row in new_stages))
+                        return
                     result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
                     if interrupt == 'fixer_checkpoint':
                         self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), settled_head)

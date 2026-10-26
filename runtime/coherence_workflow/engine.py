@@ -458,7 +458,8 @@ class Engine:
                     store.history(self.run, fix_task['id'], 'fixer_invocation', 'returned',
                                   {'invocation_id': invocation_id, 'execution_id': execution_id,
                                    'baseline': focused.base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
-                                   **focused.facts(), 'blobs': self._repair_blobs(project, focused.task_edited)})
+                                   **focused.facts(), 'blobs': self._repair_blobs(project, focused.task_edited),
+                                   'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts)})
                     recorder.emit(occurrence, 'worker', 'returned', task_id=fix_task['id'], facts=public)
                     fixer_chain[:] = chain
                     last_fixer_invocation[0] = invocation_id
@@ -493,7 +494,8 @@ class Engine:
                                 {'execution_id': execution_id, **attempt}))
                         store.history(self.run, None, 'fixer_checks', 'passed', {
                             'execution_id': execution_id, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
-                            'blobs': self._repair_blobs(project, focused.task_edited)})
+                            'blobs': self._repair_blobs(project, focused.task_edited),
+                            'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts)})
                         return results
                     except CheckFailure as failure:
                         if failure.attempt == previous:
@@ -638,6 +640,12 @@ class Engine:
         checkpoints = [(state, facts) for kind, state, facts in local_events if kind == 'fixer_checkpoint']
         check_events = [(state, facts) for kind, state, facts in local_events if kind == 'fixer_checks']
         checks = [state for state, _ in check_events]
+        def verify_working_state(effects):
+            if 'source_state' not in effects:
+                raise Blocked('returned repair lacks exact working-byte/mode facts; inspect its owned effects before restoring ownership without replaying the fixer')
+            selected = set(returned['paths']) | set(returned['artifacts'])
+            if self._repair_source_state(project, selected) != effects['source_state']:
+                raise Blocked('returned repair source bytes drifted or file modes changed; preserve them and inspect ownership before continuation')
         if checkpoints:
             state, checkpoint = checkpoints[-1]
             if state not in ('passed', 'started') or not checks or checks[-1] != 'passed':
@@ -659,6 +667,7 @@ class Engine:
                     # Ownership will restore every returned path, including paths that
                     # were unchanged and therefore absent from the checkpoint selection.
                     effects = check_events[-1][1]
+                    verify_working_state(effects)
                     if (effects.get('head') != head or
                             self._repair_blobs(project, returned['paths']) != effects.get('blobs')):
                         raise Blocked('repair checkpoint source bytes drifted; preserve them and inspect ownership before continuation')
@@ -688,6 +697,7 @@ class Engine:
         if checks and checks[-1] != 'passed':
             raise Blocked('repair check completion is uncertain; inspect actual check effects before targeted continuation')
         effects = check_events[-1][1] if check_events else returned
+        verify_working_state(effects)
         if (effects.get('head') != head or self._repair_blobs(project, returned['paths']) != effects.get('blobs')):
             raise Blocked('returned repair source bytes drifted; preserve them and inspect ownership before continuation')
         return recovered
