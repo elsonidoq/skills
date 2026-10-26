@@ -30,7 +30,7 @@ class OwnerAssignmentExecutionRoleTests(ProjectTest):
                 calls.append((self.profile, kwargs.get('read_only', False)))
                 if not kwargs.get('read_only'):
                     return 'offline worker'
-                return ('{"approved":false,"findings":["fixture finding"]}'
+                return ('{"approved":false,"findings":["fixture.txt:1 - fixture finding"]}'
                         if len([call for call in calls if call[1]]) == 1 else '{"approved":true,"findings":[]}')
 
         executor = {**worker, 'reviewer': reviewer}
@@ -130,6 +130,55 @@ class SequentialExecutionTests(ProjectTest):
         self.assertEqual(status(project, 'fixture')['run']['state'], 'failed')
         self.assertEqual(status(project, 'fixture')['tasks'][0]['state'], 'failed')
 
+    def test_explicit_unaccepted_worker_return_preserves_partial_work_without_success_dispatch(self):
+        """Composed V1: transport return cannot release an explicitly failed task."""
+        project = self.project
+        for label, returned, partial in (
+            ('blocked', Blocked('worker explicitly blocked'), False),
+            ('failed', Blocked('worker explicitly failed'), True),
+            ('incomplete', None, True),
+            ('required-unrun', Blocked('worker reported required acceptance unrun'), True),
+        ):
+            with self.subTest(label=label):
+                calls, answers = [], []
+                class ExplicitReturn:
+                    def __init__(self, *args, **kwargs): self.question = kwargs.get('question')
+                    def prompt(self, prompt, **kwargs):
+                        calls.append((prompt, kwargs.get('read_only', False)))
+                        if kwargs.get('read_only'):
+                            self_case.fail('success-path review must not dispatch')
+                        if '"id":"B"' in prompt:
+                            self_case.fail('dependent B must not dispatch')
+                        # A delivered answer is not controller cancellation; the worker can
+                        # still explicitly return its blocker after receiving it.
+                        if label == 'blocked':
+                            answers.append(self.question('fixture question'))
+                        if partial:
+                            kwargs['claim']('partial-' + label + '.txt')
+                            (project / ('partial-' + label + '.txt')).write_text(label + '\n')
+                        return returned
+                self_case = self
+                with Authority(project) as owner:
+                    with self.assertRaises(Blocked):
+                        Engine(owner, 'unaccepted-' + label, admit([
+                            {'id': 'A', 'description': 'A', 'owned_paths': ['partial-' + label + '.txt']},
+                            {'id': 'B', 'description': 'B', 'depends': ['A']}]), EXECUTOR,
+                            adapter=ExplicitReturn, question=lambda prompt: answers.append(prompt) or 'answered').invoke()
+                self.assertEqual(len([entry for entry in calls if not entry[1]]), 1)
+                if label == 'blocked':
+                    self.assertEqual(len(answers), 2)
+                if partial:
+                    self.assertEqual((project / ('partial-' + label + '.txt')).read_text(), label + '\n')
+                import sqlite3
+                db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
+                tasks = dict(db.execute("SELECT task_id,state FROM execution_tasks WHERE run_id=?", ('unaccepted-' + label,)))
+                history = list(db.execute("SELECT kind,state FROM execution_history WHERE run_id=?", ('unaccepted-' + label,)))
+                db.close()
+                self.assertEqual(tasks, {'A': 'failed'})
+                self.assertIn(('worker_invocation', 'failed'), history)
+                self.assertNotIn(('checkpoint', 'passed'), history)
+                self.assertEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+
     def test_findings_honestly_reported_commits_retained_no_disposition_database(self):
         project = self.project
         class OfflineReview:
@@ -140,7 +189,7 @@ class SequentialExecutionTests(ProjectTest):
                 claim('owned.txt')
                 (project/'owned.txt').write_text('changed\n')
                 return 'changed'
-        with self.assertRaisesRegex(Blocked, 'owned.txt:1 - defect'):
+        with self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
             self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineReview)
         self.assertNotEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
@@ -250,7 +299,7 @@ else:
                 if kwargs.get('read_only'):
                     prompts.append(prompt)
                     return '{"approved":false,"findings":["fix.txt:1 - original defect"]}' if len(prompts) == 1 else '{"approved":true,"findings":[]}'
-                if 'Continue your code review:' in prompt:
+                if 'Continue the rejecting review' in prompt:
                     raise Blocked('original defect')
                 if '"id":"fix"' in prompt:
                     kwargs['claim']('fix.txt')
@@ -337,12 +386,12 @@ else:
         class ReviewFailure:
             def __init__(self, *a, **k): pass
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":false,"findings":["original review failure"]}'
+                if kwargs.get('read_only'): return '{"approved":false,"findings":["review.txt:1 - original review failure"]}'
                 return 'worker'
         for run, task, adapter, reason in (
             ('append-worker', admit([{'id': 'worker', 'description': 'Worker'}]), WorkerFailure, 'original worker failure'),
             ('append-check', admit([{'id': 'check', 'description': 'Check', 'checks': ['exit 23']}]), ReviewFailure, 'exit 23'),
-            ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'original review failure')):
+            ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'owner authorization unavailable')):
             with self.subTest(run=run), Authority(project) as owner, patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('append unavailable')):
                 with self.assertRaisesRegex(Blocked, reason):
                     Engine(owner, run, task, EXECUTOR, adapter=adapter).invoke()

@@ -977,6 +977,15 @@ class Engine:
                         worker.opened_session = None
                         try:
                             result = self._prompt_worker(worker, prompt, **kwargs)
+                            # A normal transport return is not itself task acceptance. Adapters
+                            # may return an explicit failure object after delivering a question
+                            # answer; preserve that reported blocker instead of checkpointing it.
+                            # This deliberately does not interpret summary prose or require a
+                            # result format: ordinary text remains the existing completion path.
+                            if isinstance(result, BaseException):
+                                raise result
+                            if result is None:
+                                raise Blocked('worker returned without completing the task; partial work retained')
                         except BaseException as exc:
                             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                             store.history(self.run, task['id'], 'worker_invocation', state,
