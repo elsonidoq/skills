@@ -353,8 +353,6 @@ class Engine:
         def claim(name):
             if name not in claimed_paths:
                 focused.claim(name)
-                store.history(self.run, fix_task['id'], 'fixer_mutation', 'claimed',
-                              {'execution_id': execution_id, **focused.facts()})
                 claimed_paths.add(name)
         def gate_question(text):
             return self.question(text)
@@ -430,7 +428,10 @@ class Engine:
                     details = {'invocation_id': invocation_id, 'execution_id': execution_id,
                                'error': _safe_error(exc) or type(exc).__name__}
                     if isinstance(exc, _UnsuccessfulOutcome):
-                        details['diagnostic'] = exc.diagnostic
+                        details.update({'diagnostic': exc.diagnostic, 'baseline': focused.base,
+                                        'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
+                                        **focused.facts(),
+                                        'blobs': self._repair_blobs(project, focused.task_edited | focused.known_artifacts)})
                     store.history(self.run, fix_task['id'], 'fixer_invocation', outcome, details)
                     recorder.emit(occurrence, 'worker', outcome, task_id=fix_task['id'], facts={
                         **public, 'stopped_by_invocation_id': invocation_id, 'error_category': _failure(exc)})
@@ -559,39 +560,41 @@ class Engine:
         for kind, state, facts in events:
             if kind == 'fixer_invocation':
                 calls[facts['invocation_id']] = (state, facts)
-        failed = [facts for state, facts in calls.values() if state == 'failed']
-        if failed:
-            # T002's explicit unsuccessful outcome is settled diagnostic evidence. Other
-            # failed/started calls remain uncertain and cannot be replayed here.
-            if len(failed) != 1 or any(state not in ('returned', 'failed') for state, _ in calls.values()):
-                raise Blocked('assigned repair invocation is uncertain or failed; inspect its recorded cause before targeted continuation')
-            failure = failed[0]
-            diagnostic = failure.get('diagnostic')
-            if not isinstance(diagnostic, str) or not diagnostic:
+        # Inspect every call for uncertainty, but select only the latest unresolved
+        # stage. An earlier explicit failure must not replay a later returned call.
+        if any(state not in ('returned', 'failed') for state, _ in calls.values()):
+            raise Blocked('assigned repair invocation is uncertain or failed; inspect its recorded cause before targeted continuation')
+        for state, facts in calls.values():
+            if state == 'failed' and not (isinstance(facts.get('diagnostic'), str) and facts['diagnostic']):
                 raise Blocked('assigned repair failure has no settled unsuccessful diagnosis; inspect its recorded call before continuation')
-            claims = []
-            for kind, state, facts in events:
-                if kind == 'fixer_mutation' and state == 'claimed':
-                    claims = facts
-            if not claims or not isinstance(claims.get('paths'), list):
-                raise Blocked('settled repair failure lacks claimed source paths; inspect its retained effects before continuation')
+        if calls and list(calls.values())[-1][0] == 'failed':
+            failure = list(calls.values())[-1][1]
+            if not all(key in failure for key in ('paths', 'artifacts', 'baseline', 'head', 'blobs')):
+                raise Blocked('settled repair failure lacks owned-path/effect facts; inspect its retained effects without replaying the fixer')
             limits = [path for task in self.contract['tasks'] for path in task.get('owned_paths', [])]
             if any('owned_paths' in task for task in self.contract['tasks']) and any(
                     not any(name == path.rstrip('/') or name.startswith(path.rstrip('/') + '/') for path in limits)
-                    for name in claims['paths']):
+                    for name in failure['paths']):
                 raise Blocked('settled repair failure claimed paths outside original scope; inspect ownership before continuation')
-            correction = self.question(
-                'As coordinating agent, inspect this settled unsuccessful fixer call and its claimed source effects. '
-                'Provide the diagnosis and targeted correction for the same assigned repair; do not blindly retry or ask '
-                'the owner to debug routine technical failures. Leave empty if no safe correction is supported. '
-                'Actual failed fixer: ' + canonical(failure))
-            if not isinstance(correction, str) or not correction.strip() or correction.strip().lower() in ('unknown', 'retry', 'yes'):
-                raise Blocked('settled repair diagnosis/targeted correction remains unknown; no fixer relaunched')
-            return {'failed': True, 'baseline': item['references'].get('head'),
-                    'facts': {'paths': claims['paths'], 'artifacts': claims.get('artifacts', [])},
+            head = git(project, 'rev-parse', 'HEAD').decode().strip()
+            selected = sorted(set(failure['paths']) | set(failure['artifacts']))
+            if head != failure['head'] or self._repair_blobs(project, selected) != failure['blobs']:
+                raise Blocked('settled repair failure target/source bytes drifted; preserve them and inspect ownership before continuation')
+            # Explicit resume selects this same settled assignment, not an automatic
+            # retry. Feed the actual cause and reconciled effects to its corrective
+            # context; routine diagnosis never requires human terminal input.
+            correction = (
+                'The prior call explicitly returned unsuccessful, not an uncertain transport failure. '
+                'Its retained head and selected source/artifact bytes still match Git. '
+                'Inspect the actual failed call below and the retained partial diff before editing. '
+                'Diagnose the reported unmet acceptance, make a concise targeted correction plan, and correct only '
+                'that cause in this same assignment; never repeat the previous attempt unchanged. '
+                'If no safe correction exists, report the actual blocker; do not ask the owner to debug routine errors. '
+                'Required/manual acceptance is not waived. Actual failed fixer: ' + canonical(failure) +
+                '\nRetained partial diff:\n' + (git(project, 'diff', 'HEAD', '--', *selected).decode() if selected else ''))
+            return {'failed': True, 'baseline': failure['baseline'], 'invocations': list(calls),
+                    'facts': {'paths': failure['paths'], 'artifacts': failure['artifacts']},
                     'diagnosis': correction}
-        if any(state != 'returned' for state, _ in calls.values()):
-            raise Blocked('assigned repair invocation is uncertain or failed; inspect its recorded cause before targeted continuation')
         head = git(project, 'rev-parse', 'HEAD').decode().strip()
         if not calls:
             if head != item['references'].get('head'):
@@ -850,7 +853,7 @@ class Engine:
                              input_checkpoints=self._review_inputs(checkpoints))
                 continue
             last = executions[-1]
-            if (last['role'] == 'fixer' and last['state'] in ('dispatched', 'failed') and
+            if (last['role'] == 'fixer' and last['state'] in ('dispatched', 'failed', 'interrupted') and
                     (last['fixing_round'] == 1 or policy == 'owner-pair-v1')):
                 recovered = self._recover_assigned_fix(last, review_base)
                 if recovered is not None:

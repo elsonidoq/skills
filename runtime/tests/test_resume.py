@@ -97,7 +97,22 @@ class SameRunResumeTests(ProjectTest):
 
 
     def test_review_repair_reopens_persisted_reviewer_after_process_restart(self):
-        """A settled adapter fixer failure is diagnosed and continued once in its retained assignment."""
+        self._settled_fixer_restart()
+
+    def test_settled_fixer_returned_correction_resumes_checks_without_provider_replay(self):
+        self._settled_fixer_restart(interrupt='fixer_checks')
+
+    def test_settled_fixer_checkpoint_resumes_without_provider_or_commit_replay(self):
+        self._settled_fixer_restart(interrupt='fixer_checkpoint')
+
+    def test_settled_fixer_source_drift_preserves_unknown_bytes_without_dispatch(self):
+        self._settled_fixer_restart(drift='bytes')
+
+    def test_settled_fixer_head_drift_stops_before_dispatch(self):
+        self._settled_fixer_restart(drift='head')
+
+    def _settled_fixer_restart(self, *, interrupt=None, drift=None):
+        """Actual adapter restart seam; scripted output proves mechanics, not judgment."""
         host, state = self.root / 'repair_resume_host.py', self.root / 'repair_resume_state.json'
         state.write_text('{}')
         host.write_text("""import json
@@ -123,6 +138,14 @@ if 'Independently review' in prompt:
 elif 'Actionable findings:' in prompt:
     phase = count('fix')
     assert request.get('savedSession', {}).get('id') == 'warm-review'
+    if phase == 2:
+        assert 'BENIGN-FIXER-REASON: inspect then repair' in prompt
+        assert 'retained head and selected source/artifact bytes still match Git' in prompt
+        assert 'never repeat the previous attempt unchanged' in prompt
+        assert 'partial' in prompt
+        assert 'Current execution authority:' in prompt
+        assert 'Routine authority:' in prompt
+        assert 'Required/manual acceptance is not waived' in prompt
     print(json.dumps({'type': 'claim', 'path': 'owned.txt'}), flush=True)
     assert json.loads(input()) == {'ok': True}
     Path(request['project'], 'owned.txt').write_text('partial\\n' if phase == 1 else 'repaired\\n')
@@ -143,18 +166,55 @@ else:
                     Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter).invoke()
             # A new Authority and Engine have no in-memory adapter; the persisted reviewer
             # session, failed-call diagnosis, and claimed path are the consumed resume facts.
-            diagnoses = []
+            if drift == 'bytes':
+                self.project.joinpath('owned.txt').write_text('unknown incoming bytes\n')
+            elif drift == 'head':
+                self.project.joinpath('other.txt').write_text('incoming commit\n')
+                git(self.project, 'add', '--', 'other.txt')
+                git(self.project, 'commit', '-qm', 'incoming unrelated work')
+            before_resume = git(self.project, 'rev-parse', 'HEAD')
             with Authority(self.project) as owner:
                 owner.store.resume('review-restart')
-                result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True,
-                                question=lambda prompt: (diagnoses.append(prompt) or 'inspect failed semantic check; repair owned.txt')).invoke()
+                # No bridge or injected diagnosis: standalone/noninteractive resume must
+                # not route routine diagnosis to terminal owner input.
+                if drift:
+                    with self.assertRaisesRegex(Blocked, 'target/source bytes drifted'):
+                        Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
+                    self.assertEqual(json.loads(state.read_text()), {'review': 1, 'fix': 1})
+                    self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), before_resume)
+                    self.assertEqual(self.project.joinpath('owned.txt').read_text(),
+                                     'unknown incoming bytes\n' if drift == 'bytes' else 'partial\n')
+                    return
+                original_history = owner.store.history
+                def interrupted_history(run, task, kind, status, details):
+                    original_history(run, task, kind, status, details)
+                    if kind == interrupt and status == 'passed':
+                        raise KeyboardInterrupt
+                if interrupt:
+                    with patch.object(owner.store, 'history', side_effect=interrupted_history), self.assertRaises(KeyboardInterrupt):
+                        Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
+                    settled_head = git(self.project, 'rev-parse', 'HEAD')
+                    self.assertEqual(json.loads(state.read_text()), {'review': 1, 'fix': 2})
+                else:
+                    result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
+            if interrupt:
+                # Reopen after the successful corrective provider return. Retained old
+                # failure history must not win stage selection over that return.
+                with Authority(self.project) as owner:
+                    owner.store.resume('review-restart')
+                    result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
+                    if interrupt == 'fixer_checkpoint':
+                        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), settled_head)
+            with Authority(self.project) as owner:
                 history = [dict(row) for row in owner.store.db.execute(
                     "SELECT kind,state,details FROM execution_history WHERE run_id='review-restart' ORDER BY seq")]
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(json.loads(state.read_text()), {'review': 2, 'fix': 2})
-        self.assertEqual(len(diagnoses), 1)
-        self.assertIn('BENIGN-FIXER-REASON', diagnoses[0])
-        self.assertTrue(any(row['kind'] == 'fixer_mutation' and row['state'] == 'claimed' for row in history))
+        failure = next(json.loads(row['details']) for row in history
+                       if row['kind'] == 'fixer_invocation' and row['state'] == 'failed')
+        self.assertEqual(failure['paths'], ['owned.txt'])
+        self.assertIn('owned.txt', failure['blobs'])
+        self.assertTrue(failure['head'])
         self.assertTrue(any(row['kind'] == 'fixer_checks' and row['state'] == 'passed' for row in history))
         self.assertTrue(any(row['kind'] == 'fixer_checkpoint' and row['state'] == 'passed' for row in history))
         self.assertEqual([row['state'] for row in history if row['kind'] == 'fixer_invocation' and row['state'] != 'started'], ['failed', 'returned'])
