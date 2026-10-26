@@ -322,7 +322,8 @@ class BoundedChainTests(ProjectTest):
                     self.assertEqual(chain['fixing_round_count'], 0)
 
     def test_malformed_review_types_stop_without_fixer(self):
-        malformed = ('{"approved":"yes","findings":[]}',
+        malformed = ('not-json',
+                     '{"approved":"yes","findings":[]}',
                      '{"approved":true,"findings":"not a list"}',
                      '{"approved":true,"findings":[],"suggestions":"not a list"}',
                      '{"approved":false,"findings":["no location or concrete impact"]}',
@@ -336,7 +337,7 @@ class BoundedChainTests(ProjectTest):
                         calls.append(kwargs.get('read_only', False))
                         return verdict if kwargs.get('read_only') else 'worker answer'
                 with Authority(self.project) as owner:
-                    with self.assertRaisesRegex(Blocked, 'reviewer result|review blocker'):
+                    with self.assertRaisesRegex(Blocked, 'reviewer returned invalid JSON|reviewer result|review blocker'):
                         Engine(owner, 'malformed-' + str(ordinal), admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
                                EXECUTOR, adapter=Adapter).invoke()
                     chain = owner.store.review_chain('malformed-' + str(ordinal))
@@ -361,6 +362,43 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(calls, [False, True])
         self.assertTrue(chain['uncertain'])
         self.assertEqual(chain['fixing_round_count'], 0)
+
+    def test_single_line_and_range_citations_reach_repair_unchanged(self):
+        for location in ('717', '717-723'):
+            with self.subTest(location=location):
+                project, repair_inputs = self.project, []
+                finding = f'owned.txt:{location} - synthetic defect [basis: correctness]'
+
+                class Adapter:
+                    reviews = 0
+                    def __init__(self, *_args, **_kwargs): pass
+                    def prompt(self, prompt, **kwargs):
+                        if kwargs.get('read_only'):
+                            Adapter.reviews += 1
+                            return (json.dumps({'approved': False, 'findings': [finding]})
+                                    if Adapter.reviews == 1 else '{"approved":true,"findings":[]}')
+                        if 'Actionable findings:' in prompt:
+                            repair_inputs.append(prompt)
+                            kwargs['claim']('owned.txt')
+                            project.joinpath('owned.txt').write_text('repaired\n')
+                        else:
+                            kwargs['claim']('owned.txt')
+                            project.joinpath('owned.txt').write_text('initial\n')
+                        return 'synthetic worker'
+
+                contract = admit({'tasks': [{'id': 'dummy', 'description': 'synthetic',
+                                             'owned_paths': ['owned.txt'],
+                                             'checks': [['/bin/sh', '-c', 'test -f owned.txt']]}]})
+                with Authority(project) as owner:
+                    result = Engine(owner, 'citation-' + location, contract, EXECUTOR, adapter=Adapter,
+                                    paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
+                    chain = owner.store.review_chain('citation-' + location)
+                self.assertEqual(result['status'], 'complete')
+                self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
+                                 [('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
+                self.assertEqual(chain['executions'][0]['findings'], [finding])
+                self.assertEqual(len(repair_inputs), 1)
+                self.assertIn(finding, repair_inputs[0])
 
     def test_actionable_rejection_repairs_once_then_fresh_rereview(self):
         project, calls = self.project, []

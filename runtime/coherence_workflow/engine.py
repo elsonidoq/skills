@@ -610,9 +610,9 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
         # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
         # where the defect is, its concrete impact, and why it violates accepted work.
-        pattern = re.compile(r'^\S+:\d+\s+-\s+\S')
+        pattern = re.compile(r'^\S+:\d+(?:-\d+)?\s+-\s+\S')
         if any(not pattern.match(item.strip()) for item in findings):
-            raise _ReviewFormat('review blocker needs a path:line location and concrete defect/impact')
+            raise _ReviewFormat('review blocker needs a path:line or path:start-end location and concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
         return {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
 
@@ -663,7 +663,7 @@ class Engine:
                 + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
                 + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. '
                 'Return only JSON: {"approved":true,"findings":[],"suggestions":[]} (suggestions may be omitted) or '
-                '{"approved":false,"findings":["path:line - concrete defect, impact and accepted basis in ordinary prose"]}. '
+                '{"approved":false,"findings":["path:line[-end_line] - concrete defect, impact and accepted basis in ordinary prose"]}. '
                 'Use findings only for blockers: each needs a location, concrete impact, and basis of requirement, correctness, security, or data-safety. '
                 'Put only nonblocking advice in suggestions; crashes, hangs, target/credential risks, and false-unavailable observations are blockers. Never approve when blockers exist.\n'
                 'Tasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff,
