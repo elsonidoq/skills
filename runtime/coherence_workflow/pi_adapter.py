@@ -15,9 +15,10 @@ from .store import Blocked, canonical
 
 
 class TaskOutcome:
-    """An explicit unsuccessful outcome reported by the SDK-hosted worker."""
-    def __init__(self, status):
+    """An explicit unsuccessful outcome and its host-returned explanation."""
+    def __init__(self, status, explanation=None):
         self.status = status
+        self.explanation = explanation
 
 
 def host_path():
@@ -393,7 +394,7 @@ class PiAdapter:
                             self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
                             self.last_interval = (interval_record(**observations)
                                                   if self.last_observation is not None else None)
-                            result.append(TaskOutcome(outcome) if outcome in ('blocked', 'failed', 'incomplete') else value['text'])
+                            result.append(TaskOutcome(outcome, value['text']) if outcome in ('blocked', 'failed', 'incomplete') else value['text'])
                             # Multiplexed host input intentionally remains open
                             # for controls; the result is its terminal boundary.
                             close_input()

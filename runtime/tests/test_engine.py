@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
-from coherence_workflow.pi_adapter import TaskOutcome
-from coherence_workflow.store import Authority, Blocked, git
+from coherence_workflow.pi_adapter import PiAdapter, TaskOutcome
+from coherence_workflow.store import Authority, Blocked, canonical, git
 from fixtures.support import ProjectTest
 
 EXECUTOR = {'provider': 'fixture', 'model': 'offline-not-provider-success', 'effort': 'medium',
@@ -237,14 +237,14 @@ request = json.loads(input())
 print(json.dumps({'type': 'claim', 'path': 'partial.txt'}), flush=True)
 assert json.loads(input()) == {'ok': True}
 Path(request['project'], 'partial.txt').write_text('partial\\n')
-print(json.dumps({'type': 'result', 'text': 'delivered answer', 'outcome': 'blocked'}), flush=True)
+print(json.dumps({'type': 'result', 'text': 'BENIGN-TASK-REASON: correct fixture input', 'outcome': 'blocked'}), flush=True)
 """)
         with patch('coherence_workflow.pi_adapter.host_path', return_value=host), \
              patch.dict(os.environ, {'COHERENCE_NODE': sys.executable,
                                     'COHERENCE_PARENT_BRIDGE_SOCKET': '', 'COHERENCE_PARENT_BRIDGE_TOKEN': '',
                                     'COHERENCE_PARENT_BRIDGE_SESSION': '', 'COHERENCE_PARENT_BRIDGE_RUN': ''}):
             with Authority(self.project) as owner:
-                with self.assertRaisesRegex(Blocked, 'worker explicitly blocked'):
+                with self.assertRaisesRegex(Blocked, 'worker explicitly blocked; BENIGN-TASK-REASON: correct fixture input'):
                     Engine(owner, 'host-outcome', admit([
                         {'id': 'A', 'description': 'A', 'owned_paths': ['partial.txt']},
                         {'id': 'B', 'description': 'B', 'depends': ['A']}]), EXECUTOR).invoke()
@@ -253,11 +253,37 @@ print(json.dumps({'type': 'result', 'text': 'delivered answer', 'outcome': 'bloc
         import sqlite3
         db = sqlite3.connect(self.project / '.coherence/workflow/workflow.sqlite')
         tasks = dict(db.execute("SELECT task_id,state FROM execution_tasks WHERE run_id='host-outcome'"))
-        history = list(db.execute("SELECT kind,state FROM execution_history WHERE run_id='host-outcome'"))
+        history = list(db.execute("SELECT kind,state,details FROM execution_history WHERE run_id='host-outcome'"))
         db.close()
         self.assertEqual(tasks, {'A': 'failed'})
-        self.assertIn(('worker_invocation', 'failed'), history)
+        failed = next(row for row in history if row[0:2] == ('worker_invocation', 'failed'))
+        self.assertIn('BENIGN-TASK-REASON: correct fixture input', json.loads(failed[2])['diagnostic'])
+        from coherence_workflow.cli import status
+        self.assertNotIn('BENIGN-TASK-REASON: correct fixture input', canonical(status(self.project, 'host-outcome')))
         self.assertNotIn(('checkpoint', 'passed'), history)
+
+    def test_actual_adapter_outcome_text_fallback_success_and_invalid_controls(self):
+        """Actual adapter keeps status-only callers, successful text, and transport refusal compatible."""
+        host = self.root / 'outcome_controls_host.py'
+        def prompt(record):
+            host.write_text("""import json
+json.loads(input())
+print(json.dumps(RECORD), flush=True)
+""".replace('RECORD', repr(record)))
+            return PiAdapter(self.project, EXECUTOR).prompt('fixture')
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), \
+             patch.dict(os.environ, {'COHERENCE_NODE': sys.executable,
+                                    'COHERENCE_PARENT_BRIDGE_SOCKET': '', 'COHERENCE_PARENT_BRIDGE_TOKEN': '',
+                                    'COHERENCE_PARENT_BRIDGE_SESSION': '', 'COHERENCE_PARENT_BRIDGE_RUN': ''}):
+            empty = prompt({'type': 'result', 'text': '', 'outcome': 'failed'})
+            with self.assertRaisesRegex(Blocked, 'worker explicitly failed; no explanation returned'):
+                Engine._prompt_worker(type('Offline', (), {'prompt': lambda _self, _prompt: empty})(), 'fixture')
+            self.assertEqual(prompt({'type': 'result', 'text': 'ordinary completed text', 'outcome': 'completed'}),
+                             'ordinary completed text')
+            with self.assertRaisesRegex(Blocked, 'SDK result outcome must be completed'):
+                prompt({'type': 'result', 'text': 'ignored', 'outcome': 'invalid'})
+            with self.assertRaisesRegex(Blocked, 'SDK result text must be a string'):
+                prompt({'type': 'result', 'text': None, 'outcome': 'failed'})
 
     def test_actual_adapter_unsuccessful_fixer_stops_before_checkpoint_and_rereview(self):
         """Synthetic host responses traverse the real adapter and repair consumer."""
@@ -278,7 +304,7 @@ elif 'Actionable findings:' in request['prompt']:
         print(json.dumps({'type': 'claim', 'path': NAME}), flush=True)
         assert json.loads(input()) == {'ok': True}
         Path(request['project'], NAME).write_text('partial repair\\n')
-    text, outcome = 'Required semantic acceptance remains unmet', OUTCOME
+    text, outcome = 'BENIGN-FIXER-REASON: correct fixture acceptance', OUTCOME
 else:
     text, outcome = 'Completed no-change task', 'completed'
 print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=True)
@@ -291,7 +317,7 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
                                                 'COHERENCE_PARENT_BRIDGE_SOCKET': '', 'COHERENCE_PARENT_BRIDGE_TOKEN': '',
                                                 'COHERENCE_PARENT_BRIDGE_SESSION': '', 'COHERENCE_PARENT_BRIDGE_RUN': ''}):
                         with Authority(self.project) as owner:
-                            with self.assertRaisesRegex(Blocked, 'worker explicitly ' + outcome):
+                            with self.assertRaisesRegex(Blocked, 'worker explicitly ' + outcome + '; BENIGN-FIXER-REASON: correct fixture acceptance'):
                                 Engine(owner, run, admit([{
                                     'id': 'A', 'description': 'Completed no-change fixture', 'owned_paths': [name],
                                     'check': [sys.executable, '-B', '-c', "print('baseline green')"],
@@ -300,8 +326,11 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
                             self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
                                              [('reviewer', 'rejected'), ('fixer', 'failed')])
                             history = list(owner.store.db.execute(
-                                'SELECT kind,state FROM execution_history WHERE run_id=?', (run,)))
-                            self.assertIn(('fixer_invocation', 'failed'), [tuple(row) for row in history])
+                                'SELECT kind,state,details FROM execution_history WHERE run_id=?', (run,)))
+                            failed = next(row for row in history if row['kind'] == 'fixer_invocation' and row['state'] == 'failed')
+                            self.assertIn('BENIGN-FIXER-REASON: correct fixture acceptance', json.loads(failed['details'])['diagnostic'])
+                            from coherence_workflow.cli import status
+                            self.assertNotIn('BENIGN-FIXER-REASON: correct fixture acceptance', canonical(status(self.project, run)))
                             self.assertFalse(any(row['kind'] in ('fixer_checks', 'fixer_checkpoint') for row in history))
                     calls = [json.loads(line) for line in dispatches.read_text().splitlines()]
                     self.assertEqual([call['read_only'] for call in calls], [False, True, False])

@@ -28,6 +28,19 @@ def _failure(exc):
     return 'transport' if isinstance(exc, Blocked) else 'unknown'
 
 
+def _safe_error(exc):
+    """Use the existing public error carrier without projecting host-returned text."""
+    return getattr(exc, 'safe_error', str(exc))
+
+
+class _UnsuccessfulOutcome(Blocked):
+    """Private host diagnostic paired with a safe existing error summary."""
+    def __init__(self, status, explanation):
+        self.safe_error = 'worker explicitly ' + status + '; partial work retained'
+        self.diagnostic = 'worker explicitly ' + status + '; ' + explanation + '; partial work retained'
+        super().__init__(self.diagnostic)
+
+
 def usage_summary(project, run, expected_invocation_ids=()):
     """Project JSONL-only totals; unknown fields never become zero."""
     summary = summarize_artifact(project, run, expected_invocation_ids=expected_invocation_ids)
@@ -244,7 +257,8 @@ class Engine:
         # Task and repair consumers share this boundary: transport resolution is
         # not acceptance. Ordinary text remains the compatible completion path.
         if isinstance(result, TaskOutcome):
-            raise Blocked('worker explicitly ' + result.status + '; partial work retained')
+            explanation = result.explanation if isinstance(result.explanation, str) and result.explanation.strip() else 'no explanation returned'
+            raise _UnsuccessfulOutcome(result.status, explanation)
         if isinstance(result, BaseException):
             raise result
         if result is None:
@@ -411,8 +425,11 @@ class Engine:
                     outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     if terminal_stop is not None:
                         terminal_stop[0] = invocation_id
-                    store.history(self.run, fix_task['id'], 'fixer_invocation', outcome,
-                                  {'invocation_id': invocation_id, 'execution_id': execution_id})
+                    details = {'invocation_id': invocation_id, 'execution_id': execution_id,
+                               'error': _safe_error(exc) or type(exc).__name__}
+                    if isinstance(exc, _UnsuccessfulOutcome):
+                        details['diagnostic'] = exc.diagnostic
+                    store.history(self.run, fix_task['id'], 'fixer_invocation', outcome, details)
                     recorder.emit(occurrence, 'worker', outcome, task_id=fix_task['id'], facts={
                         **public, 'stopped_by_invocation_id': invocation_id, 'error_category': _failure(exc)})
                     raise
@@ -1004,9 +1021,11 @@ class Engine:
                             result = self._prompt_worker(worker, prompt, **kwargs)
                         except BaseException as exc:
                             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                            store.history(self.run, task['id'], 'worker_invocation', state,
-                                {**facts, 'error': str(exc) or type(exc).__name__,
-                                 'saved_session': getattr(worker, 'saved_session', None)})
+                            details = {**facts, 'error': _safe_error(exc) or type(exc).__name__,
+                                       'saved_session': getattr(worker, 'saved_session', None)}
+                            if isinstance(exc, _UnsuccessfulOutcome):
+                                details['diagnostic'] = exc.diagnostic
+                            store.history(self.run, task['id'], 'worker_invocation', state, details)
                             terminal_stop[0] = invocation_id
                             recorder.emit(occurrence, 'worker', state, task_id=task['id'],
                                           facts={**public, 'stopped_by_invocation_id': invocation_id,
@@ -1055,7 +1074,7 @@ class Engine:
                                 selected['saved_session'] if selected else None), reuse_key=reuse_key)
                     except BaseException as exc:
                         state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                        store.history(self.run, task['id'], 'worker', state, {'role': role, 'error': str(exc)})
+                        store.history(self.run, task['id'], 'worker', state, {'role': role, 'error': _safe_error(exc)})
                         raise
                     store.history(self.run, task['id'], 'worker', 'returned', {'role': role})
                     check_occurrences = {}
@@ -1089,7 +1108,7 @@ class Engine:
                                         claim=claim, command=command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
                                 except BaseException as exc:
                                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                                    store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': str(exc)})
+                                    store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': _safe_error(exc)})
                                     raise
                                 store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
 
@@ -1146,14 +1165,14 @@ class Engine:
                 except BaseException as exc:
                     recorder.emit(preparation, 'prepare', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'error_category': _failure(exc)})
                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                    store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': str(exc)})
+                    store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': _safe_error(exc)})
                     raise
             result = self._finish_reviews(recorder=recorder, terminal=terminal, checkpoints=checkpoints,
                                           base=base, review_base=review_base, terminal_stop=terminal_stop)
             return self._finalize_metric_artifact(result)
         except BaseException as exc:
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
-            store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, str(exc))
+            store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, _safe_error(exc))
             terminal_facts = {'head': head, 'error_category': _failure(exc)}
             if terminal_stop[0] is not None:
                 terminal_facts['stopped_by_invocation_id'] = terminal_stop[0]
