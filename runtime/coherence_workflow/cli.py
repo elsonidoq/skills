@@ -186,7 +186,7 @@ def cancel(signum, frame):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
-    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs'):
+    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target'):
         sub = subs.add_parser(command)
         if command != 'intake':
             sub.add_argument('--project', required=True)
@@ -195,7 +195,7 @@ def main(argv=None):
         if command == 'start':
             sub.add_argument('--executor', help='JSON file with provider, model and effort; no manifest or binding proof')
             sub.add_argument('--run', default=None)
-        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs'):
+        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target'):
             sub.add_argument('--run', required=True)
         if command == 'authorize-routine-repairs':
             sub.add_argument('--scope', required=True, help='exact retained original task scope from the authorized handoff')
@@ -214,6 +214,15 @@ def main(argv=None):
         if args.command == 'authorize-routine-repairs':
             with Authority(args.project, wait=True) as authority:
                 print(canonical(authority.store.authorize_routine_review_continuation(args.run, args.scope)))
+            return 0
+        if args.command == 'refresh-review-target':
+            with Authority(args.project, wait=True) as authority:
+                saved = authority.store.input(args.run)
+                if not saved or not isinstance(saved.get('authority'), dict) or not isinstance(saved['authority'].get('paid_scope'), dict):
+                    raise Blocked('review target refresh needs retained run input and paid scope')
+                engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
+                                paid_scope=saved['authority']['paid_scope'], resume=True)
+                print(canonical(engine.refresh_review_target()))
             return 0
         contract = load_contract(args.tasks) if args.command in ('start', 'intake') else None
         if args.command == 'intake':

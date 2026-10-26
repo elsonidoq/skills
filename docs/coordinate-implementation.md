@@ -55,6 +55,13 @@ scripts/coordinate-implementation authorize-routine-repairs --project /absolute/
   --run FAILED_OR_INTERRUPTED_RUN --scope RETAINED_ORIGINAL_SCOPE
 ```
 
+If an unreserved pair grant was stopped by target drift, do not rebind it. Refresh the independent review of the current committed target over the retained original range first; a rejected refresh leaves the run stopped for normal explicit resume and a new exact pair, while an approval completes it:
+
+```sh
+scripts/coordinate-implementation refresh-review-target --project /absolute/project \
+  --run FAILED_OR_INTERRUPTED_RUN
+```
+
 The resolver requires only Python's standard library, prints only the absolute selected path on
 success, and sends actionable failures to stderr with a nonzero exit. It reads existing JSON and
 checks nonempty provider/model/effort strings, including an optional reviewer profile; it never

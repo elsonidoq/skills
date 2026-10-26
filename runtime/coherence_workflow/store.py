@@ -624,6 +624,37 @@ class Store:
             return row is not None and tuple(row) == (state, baseline, result, saved_details)
         self._required_write('task progress for ' + task, write, completed)
 
+    def refresh_review_target_dispatch(self, run, execution_id, *, review_base, review_head):
+        """Append one fresh read-only review after an unconsumed stale pair grant drifted."""
+        if self.review_policy(run) != 'owner-pair-v1':
+            raise Blocked('review target refresh needs retained owner-pair-v1 policy')
+        chain = self.review_chain(run, private=True)
+        last = chain['executions'][-1] if chain['executions'] else None
+        if (chain['uncertain'] or last is None or last['role'] != 'reviewer' or last['state'] != 'rejected' or
+                not last.get('findings') or not last['findings'][-1] or review_base != last['references'].get('base')):
+            raise Blocked('review target refresh needs the latest settled actionable rejection')
+        stale = self.owner_pair_for_rejection(run, rejecting_execution_id=last['execution_id'], review_base=review_base,
+                                              review_head=last['references'].get('head'), original_scope=self.review_scope(run))
+        if stale is None or stale['kind'] != 'review_pair_grant' or stale['state'] != 'authorized':
+            raise Blocked('review target refresh needs an unreserved stale owner pair grant')
+        if review_head == stale['review_head']:
+            raise Blocked('review target refresh needs a changed current target')
+        row = self.db.execute('SELECT state FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+        if row is None or row['state'] != 'failed':
+            raise Blocked('review target refresh only continues a stopped failed run')
+        references = canonical({'base': review_base, 'head': review_head})
+        def write():
+            with self.transaction() as db:
+                db.execute('INSERT INTO execution_review_executions VALUES(?,?,?,?,?,?,?,?,?,?)',
+                           (run, execution_id, 'reviewer', last['review_ordinal'], last['fixing_round'],
+                            last['execution_id'], last['execution_id'], review_base, review_head, time.time()))
+                db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
+                           (run, execution_id, 'dispatched', 0, None, references, time.time()))
+        self._required_write('refreshed review dispatch', write, lambda: bool(self.db.execute(
+            'SELECT 1 FROM execution_review_executions WHERE run_id=? AND execution_id=?', (run, execution_id)).fetchone()))
+        return {'review_ordinal': last['review_ordinal'], 'fixing_round': last['fixing_round'],
+                'trigger_execution_id': last['execution_id']}
+
     def review_dispatch(self, run, execution_id, *, role='reviewer', review_ordinal=1,
                         fixing_round=0, trigger_execution_id=None, predecessor_execution_id=None,
                         input_checkpoints=None, review_base, review_head):

@@ -71,6 +71,7 @@ additional paid APIs, including those discovered during execution, require appro
   its recorded cause and operation history; retain original input/scope/baseline and never replay completed checkpoints.
 - `abandon --project ROOT --run ID`: explicitly label abandoned work, never completed effects.
 - `authorize-routine-repairs --project ROOT --run ID --scope SCOPE`: after an actual current owner affirmative, append scope-bound authority for routine later repair/review pairs in that retained `owner-pair-v1` run. It preserves original inputs, historical questions/grants/rejections, and all per-rejection causal reservations; it does not authorize material scope, paid, security, data, or external actions.
+- `refresh-review-target --project ROOT --run ID`: after a stopped run's exact unreserved pair grant has drifted, dispatch exactly one fresh read-only review of current HEAD over the retained original range before any new repair pair. It does not rebind or consume the stale grant, edit files, replay tasks, or accept a rejected target.
   The writer lock and current recorded child/controller identities protect against overlap;
   historical process scopes are inspected, never provisioned or signalled.
 

@@ -8,7 +8,7 @@ from coherence_workflow.cli import status
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
 from coherence_workflow.monitoring import Recorder, descriptor
-from coherence_workflow.store import Authority, Blocked
+from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
 
@@ -686,6 +686,56 @@ class BoundedChainTests(ProjectTest):
             ('fixer', 'approved'), ('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
         self.assertEqual(len(grants), 2)
         self.assertTrue(all(grant['original_scope'] == scope for grant in grants))
+
+    def test_refreshes_stale_unreserved_pair_with_current_full_range_before_routine_resume(self):
+        contract = {'tasks': []}
+        calls, questions = [], []
+        class Adapter:
+            reviews = 0
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    Adapter.reviews += 1
+                    calls.append(('review', Adapter.reviews))
+                    return ('{"approved":false,"findings":["owned.txt:1 - current target defect"]}'
+                            if Adapter.reviews == 1 else '{"approved":true,"findings":[]}')
+                calls.append(('fixer', None))
+                return 'routine scoped repair'
+        def question(*args, **kwargs):
+            questions.append((args, kwargs))
+            return 'yes'
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('refresh', self.base, contract=contract, executor=EXECUTOR,
+                        authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []}, 'review_policy': 'owner-pair-v1'},
+                        review_base=self.base)
+            OwnerPairPrimitiveTests._rejection(self, store, 'refresh')
+            scope = store.review_scope('refresh')
+            store.authorize_owner_pair('refresh', 'stale', rejecting_execution_id='review-2', review_base=self.base,
+                                       review_head=self.base, original_scope=scope,
+                                       fixer_execution_id='stale-fix', reviewer_execution_id='stale-review')
+            store.authorize_routine_review_continuation('refresh', scope)
+            self.project.joinpath('owned.txt').write_text('known intervening correction\n')
+            git(self.project, 'add', '--', 'owned.txt')
+            git(self.project, 'commit', '-m', 'known intervening correction')
+            current = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+            store.finish('refresh', 'failed', self.base, 'review target drifted after owner authorization')
+            refreshed = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter,
+                               paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True).refresh_review_target()
+            stale = store.owner_pair_for_rejection('refresh', rejecting_execution_id='review-2', review_base=self.base,
+                                                    review_head=self.base, original_scope=scope)
+            chain = store.review_chain('refresh', private=True)
+            self.assertEqual((refreshed['status'], refreshed['sha']), ('rejected', current))
+            self.assertEqual((stale['grant_id'], stale['state']), ('stale', 'authorized'))
+            self.assertEqual(chain['executions'][-1]['references']['head'], current)
+            self.assertEqual(chain['executions'][-1]['references']['base'], self.base)
+            self.assertEqual(store.db.execute("SELECT count(*) FROM execution_tasks WHERE run_id='refresh'").fetchone()[0], 0)
+            store.resume('refresh')
+            result = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=question,
+                            paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True).invoke()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(calls, [('review', 1), ('fixer', None), ('review', 2)])
+        self.assertEqual(questions, [])
 
 
 class ReviewBoundaryRegressionTests(ProjectTest):

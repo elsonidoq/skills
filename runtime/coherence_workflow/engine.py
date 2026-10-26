@@ -792,15 +792,21 @@ class Engine:
 
     def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
                 trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
-                execution_id=None):
+                execution_id=None, refresh_target=False):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
         execution_id = execution_id or uuid.uuid4().hex
-        store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
-                              fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
-                              predecessor_execution_id=predecessor_execution_id,
-                              input_checkpoints=input_checkpoints,
-                              review_base=review_base, review_head=head)
+        if refresh_target:
+            refreshed = store.refresh_review_target_dispatch(self.run, execution_id, review_base=review_base,
+                                                             review_head=head)
+            ordinal, fixing_round = refreshed['review_ordinal'], refreshed['fixing_round']
+            trigger_execution_id = predecessor_execution_id = refreshed['trigger_execution_id']
+        else:
+            store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
+                                  fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
+                                  predecessor_execution_id=predecessor_execution_id,
+                                  input_checkpoints=input_checkpoints,
+                                  review_base=review_base, review_head=head)
         review_facts = {
             'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
             'review_base': review_base, 'review_head': head,
@@ -968,6 +974,26 @@ class Engine:
                 raise Blocked('review target drifted after repair; inspect affected continuation before dispatch')
             self._review(recorder=recorder, review_base=review_base, head=head, ordinal=ordinal, fixing_round=round_,
                          trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'], execution_id=reviewer_id)
+
+    def refresh_review_target(self):
+        """Freshly review current HEAD after a stopped, unreserved stale pair grant drifted."""
+        store = self.authority.store
+        saved = store.input(self.run)
+        review_base = saved['review_base']
+        head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
+        recorder = Recorder(store, self.run)
+        recorder.resume()
+        terminal = recorder.occurrence()
+        recorder.emit(terminal, 'terminal', 'started', facts={'baseline': review_base, 'target_refresh': True})
+        execution_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head,
+                                                    ordinal=0, refresh_target=True)
+        if state == 'approved':
+            store.finish(self.run, 'complete', head)
+            recorder.emit(terminal, 'terminal', 'passed', facts={'head': head, 'target_refresh': True})
+            return {'status': 'complete', 'run_id': self.run, 'baseline': review_base, 'sha': head, 'review': review}
+        store.finish(self.run, 'failed', head, 'fresh current-target review rejected; retained routine authority may govern a new exact pair')
+        recorder.emit(terminal, 'terminal', 'failed', facts={'head': head, 'target_refresh': True})
+        return {'status': 'rejected', 'run_id': self.run, 'baseline': review_base, 'sha': head, 'review': review}
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store
