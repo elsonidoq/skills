@@ -108,6 +108,12 @@ class SameRunResumeTests(ProjectTest):
     def test_settled_fixer_source_drift_preserves_unknown_bytes_without_dispatch(self):
         self._settled_fixer_restart(drift='bytes')
 
+    def test_settled_fixer_filter_equivalent_bytes_stop_before_dispatch(self):
+        self._settled_fixer_restart(drift='crlf')
+
+    def test_settled_fixer_mode_drift_stops_before_dispatch(self):
+        self._settled_fixer_restart(drift='mode')
+
     def test_settled_fixer_head_drift_stops_before_dispatch(self):
         self._settled_fixer_restart(drift='head')
 
@@ -115,6 +121,8 @@ class SameRunResumeTests(ProjectTest):
         """Actual adapter restart seam; scripted output proves mechanics, not judgment."""
         host, state = self.root / 'repair_resume_host.py', self.root / 'repair_resume_state.json'
         state.write_text('{}')
+        if drift == 'crlf':
+            git(self.project, 'config', 'core.autocrlf', 'true')
         host.write_text("""import json
 from pathlib import Path
 request = json.loads(input())
@@ -166,13 +174,22 @@ else:
                     Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter).invoke()
             # A new Authority and Engine have no in-memory adapter; the persisted reviewer
             # session, failed-call diagnosis, and claimed path are the consumed resume facts.
-            if drift == 'bytes':
-                self.project.joinpath('owned.txt').write_text('unknown incoming bytes\n')
+            owned = self.project.joinpath('owned.txt')
+            normalized_before = git(self.project, 'hash-object', '--path=owned.txt', '--', 'owned.txt')
+            if drift == 'crlf':
+                owned.write_bytes(b'partial\r\n')
+                self.assertEqual(git(self.project, 'hash-object', '--path=owned.txt', '--', 'owned.txt'), normalized_before)
+            elif drift == 'mode':
+                owned.chmod(owned.stat().st_mode ^ 0o100)
+                self.assertEqual(git(self.project, 'hash-object', '--path=owned.txt', '--', 'owned.txt'), normalized_before)
+            elif drift == 'bytes':
+                owned.write_text('unknown incoming bytes\n')
             elif drift == 'head':
                 self.project.joinpath('other.txt').write_text('incoming commit\n')
                 git(self.project, 'add', '--', 'other.txt')
                 git(self.project, 'commit', '-qm', 'incoming unrelated work')
             before_resume = git(self.project, 'rev-parse', 'HEAD')
+            before_bytes, before_mode = owned.read_bytes(), owned.stat().st_mode
             with Authority(self.project) as owner:
                 owner.store.resume('review-restart')
                 # No bridge or injected diagnosis: standalone/noninteractive resume must
@@ -182,8 +199,8 @@ else:
                         Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True).invoke()
                     self.assertEqual(json.loads(state.read_text()), {'review': 1, 'fix': 1})
                     self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), before_resume)
-                    self.assertEqual(self.project.joinpath('owned.txt').read_text(),
-                                     'unknown incoming bytes\n' if drift == 'bytes' else 'partial\n')
+                    self.assertEqual(owned.read_bytes(), before_bytes)
+                    self.assertEqual(owned.stat().st_mode, before_mode)
                     return
                 original_history = owner.store.history
                 def interrupted_history(run, task, kind, status, details):
@@ -213,7 +230,8 @@ else:
         failure = next(json.loads(row['details']) for row in history
                        if row['kind'] == 'fixer_invocation' and row['state'] == 'failed')
         self.assertEqual(failure['paths'], ['owned.txt'])
-        self.assertIn('owned.txt', failure['blobs'])
+        self.assertIn('owned.txt', failure['source_state'])
+        self.assertEqual(set(failure['source_state']['owned.txt']), {'sha256', 'mode'})
         self.assertTrue(failure['head'])
         self.assertTrue(any(row['kind'] == 'fixer_checks' and row['state'] == 'passed' for row in history))
         self.assertTrue(any(row['kind'] == 'fixer_checkpoint' and row['state'] == 'passed' for row in history))

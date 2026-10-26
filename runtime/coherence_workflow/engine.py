@@ -5,6 +5,7 @@ import json
 import math
 import os
 import re
+import stat
 import uuid
 
 from .git_effects import FocusedGit, MetricArtifactFinalizer, path_has_preexisting_changes
@@ -306,6 +307,23 @@ class Engine:
         return {name: (git(project, 'hash-object', '--path=' + name, '--', name).decode().strip()
                        if safe_path(project, name).exists() else None) for name in paths}
 
+    @staticmethod
+    def _repair_source_state(project, paths):
+        """Compare exact working bytes/modes before restoring failed-repair ownership."""
+        result = {}
+        for name in paths:
+            path = safe_path(project, name)
+            try:
+                info = path.stat()
+            except FileNotFoundError:
+                result[name] = None
+                continue
+            if not stat.S_ISREG(info.st_mode):
+                raise Blocked('repair source is not a regular file: ' + name + '; preserve it and inspect ownership before continuation')
+            result[name] = {'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                            'mode': stat.S_IMODE(info.st_mode)}
+        return result
+
     def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id,
                 review_ordinal=1, fixing_round=1, predecessor_execution_id=None, terminal_stop=None,
                 recovered=None):
@@ -431,7 +449,7 @@ class Engine:
                         details.update({'diagnostic': exc.diagnostic, 'baseline': focused.base,
                                         'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                                         **focused.facts(),
-                                        'blobs': self._repair_blobs(project, focused.task_edited | focused.known_artifacts)})
+                                        'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts)})
                     store.history(self.run, fix_task['id'], 'fixer_invocation', outcome, details)
                     recorder.emit(occurrence, 'worker', outcome, task_id=fix_task['id'], facts={
                         **public, 'stopped_by_invocation_id': invocation_id, 'error_category': _failure(exc)})
@@ -569,7 +587,7 @@ class Engine:
                 raise Blocked('assigned repair failure has no settled unsuccessful diagnosis; inspect its recorded call before continuation')
         if calls and list(calls.values())[-1][0] == 'failed':
             failure = list(calls.values())[-1][1]
-            if not all(key in failure for key in ('paths', 'artifacts', 'baseline', 'head', 'blobs')):
+            if not all(key in failure for key in ('paths', 'artifacts', 'baseline', 'head', 'source_state')):
                 raise Blocked('settled repair failure lacks owned-path/effect facts; inspect its retained effects without replaying the fixer')
             limits = [path for task in self.contract['tasks'] for path in task.get('owned_paths', [])]
             if any('owned_paths' in task for task in self.contract['tasks']) and any(
@@ -578,7 +596,7 @@ class Engine:
                 raise Blocked('settled repair failure claimed paths outside original scope; inspect ownership before continuation')
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             selected = sorted(set(failure['paths']) | set(failure['artifacts']))
-            if head != failure['head'] or self._repair_blobs(project, selected) != failure['blobs']:
+            if head != failure['head'] or self._repair_source_state(project, selected) != failure['source_state']:
                 raise Blocked('settled repair failure target/source bytes drifted; preserve them and inspect ownership before continuation')
             # Explicit resume selects this same settled assignment, not an automatic
             # retry. Feed the actual cause and reconciled effects to its corrective
