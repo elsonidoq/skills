@@ -10,7 +10,13 @@ unchanged historical documents, not byte-equality or execution-eligibility manda
 `runtime/coherence_workflow/intake.py` owns the six task-linter checks. The packaged
 `schemas/task.schema.json` describes ID/work and optional dependencies/context; it is not a
 second launch validator. A bare task list or `tasks` object is accepted. No mandatory
-approvals, evidence, order, execution intent, check catalogue, path list or envelope.
+approvals, evidence, order, execution intent, check catalogue, path list or envelope. A task may
+optionally carry `handoff_paths`: exact explicitly authorized pre-existing dirty regular-file paths for
+one task's focused Git transfer. The runner snapshots each named path at preparation and rechecks it
+at claim, so only its preserved starting bytes plus the intended correction may be checkpointed.
+`handoff_paths` is distinct from `owned_paths`; broad directory or glob scope is never transfer authority.
+Malformed or ineligible handoff input stops only that task's transfer with the filename/operation and a
+supported correction, without scanning or adopting other dirty paths.
 
 A task-contract object may also contain dedicated paid-use fields outside individual task text:
 `paid_scope` is an explicit object with `approved: true`, exact `agent_providers` for the selected

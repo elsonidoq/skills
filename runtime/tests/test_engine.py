@@ -111,6 +111,42 @@ class SequentialExecutionTests(ProjectTest):
         self.assertIn('prepare', next(phase for phase in descriptor['phases'] if phase['id'] == 'checkpoint')['possible_branches'])
         self.assertIsNotNone(identity)
 
+    def test_exact_handoff_input_claims_preserved_recovery_bytes_and_checkpoints_only_owned_results(self):
+        project = self.project
+        (project/'tracked.txt').write_text('baseline\n')
+        git(project, 'add', '--', 'tracked.txt')
+        git(project, 'commit', '-qm', 'tracked baseline')
+        (project/'tracked.txt').write_bytes(b'tracked recovery\n')
+        (project/'untracked.txt').write_bytes(b'untracked recovery\n')
+        (project/'other.txt').write_bytes(b'unrelated staged\n')
+        git(project, 'add', '--', 'other.txt')
+        staged = git(project, 'show', ':other.txt')
+        seen = []
+        class HandoffOperations:
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"findings":[]}'
+                name = 'untracked.txt' if '"id":"handoff-untracked"' in prompt else 'tracked.txt'
+                before = (project/name).read_bytes()
+                seen.append((name, before))
+                kwargs['claim'](name)
+                (project/name).write_bytes(before + b'intended edit\n')
+                return 'corrected recovery file'
+        result = self.execute([
+            {'id': 'handoff-tracked', 'description': 'Correct tracked recovery', 'depends': ['handoff-untracked'],
+             'owned_paths': ['tracked.txt'], 'handoff_paths': ['tracked.txt']},
+            {'id': 'handoff-untracked', 'description': 'Correct untracked recovery',
+             'owned_paths': ['untracked.txt'], 'handoff_paths': ['untracked.txt']}], HandoffOperations)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(seen, [('untracked.txt', b'untracked recovery\n'), ('tracked.txt', b'tracked recovery\n')])
+        checkpoints = {item['task_id']: item for item in result['checkpoints']}
+        self.assertEqual(git(project, 'show', checkpoints['handoff-untracked']['sha'] + ':untracked.txt'),
+                         b'untracked recovery\nintended edit\n')
+        self.assertEqual(git(project, 'show', checkpoints['handoff-tracked']['sha'] + ':tracked.txt'),
+                         b'tracked recovery\nintended edit\n')
+        self.assertEqual(git(project, 'show', ':other.txt'), staged)
+
     def test_failed_check_not_passed_no_commit_or_automatic_retry(self):
         project = self.project
         calls = []

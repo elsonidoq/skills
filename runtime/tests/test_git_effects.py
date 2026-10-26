@@ -62,6 +62,40 @@ class FocusedCheckpointTests(ProjectTest):
         with self.assertRaisesRegex(Blocked, 'outside optional'):
             self.focused(owned_paths=['owned.txt']).claim('other.txt')
 
+    def test_exact_handoff_transfers_untracked_and_tracked_dirty_bytes_to_focused_checkpoints(self):
+        self.write('tracked.txt', 'base\n')
+        git(self.project, 'add', '--', 'tracked.txt')
+        git(self.project, 'commit', '-qm', 'tracked baseline')
+        self.write('tracked.txt', 'recovery tracked\n')
+        self.write('untracked.txt', 'recovery untracked\n')
+        self.write('other.txt', 'unrelated staged\n')
+        git(self.project, 'add', '--', 'other.txt')
+        staged = git(self.project, 'show', ':other.txt')
+        self.write('unrelated.txt', 'unrelated unstaged\n')
+        for name, before in (('tracked.txt', b'recovery tracked\n'), ('untracked.txt', b'recovery untracked\n')):
+            with self.subTest(name=name):
+                f = self.focused(owned_paths=['tracked.txt', 'untracked.txt'], handoff_paths=[name])
+                f.claim(name)
+                self.assertEqual(f.facts()['handoff_paths'], [name])
+                path = self.project / name
+                self.assertEqual(path.read_bytes(), before)
+                path.write_bytes(before + b'intended correction\n')
+                result = f.checkpoint()
+                self.assertEqual(result['paths'], [name])
+                self.assertEqual(git(self.project, 'show', 'HEAD:' + name), before + b'intended correction\n')
+                self.assertEqual(git(self.project, 'show', ':other.txt'), staged)
+                self.assertEqual((self.project/'unrelated.txt').read_bytes(), b'unrelated unstaged\n')
+
+    def test_handoff_refuses_broad_scope_and_pretransfer_drift(self):
+        (self.project/'recovery').mkdir()
+        self.write('recovery/dirty.txt', 'recovery bytes\n')
+        with self.assertRaisesRegex(Blocked, r'cannot claim pre-existing dirty path recovery/dirty.txt: operation claim requires an exact handoff_paths entry'):
+            self.focused(owned_paths=['recovery/']).claim('recovery/dirty.txt')
+        f = self.focused(handoff_paths=['recovery/dirty.txt'])
+        self.write('recovery/dirty.txt', 'unknown drift\n')
+        with self.assertRaisesRegex(Blocked, r'cannot claim handoff path recovery/dirty.txt: operation claim found changed pre-transfer bytes'):
+            f.claim('recovery/dirty.txt')
+
     def test_symlink_traversal_and_administrative_paths_refused(self):
         (self.project/'link').symlink_to(self.root, target_is_directory=True)
         for path in ('link/outside', '../outside', '/tmp/outside', '.git/config', '.coherence/state'):

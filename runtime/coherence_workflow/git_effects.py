@@ -87,6 +87,34 @@ class FocusedGit:
         self.resumed_paths = set(facts.get('paths', []))
         self.task_edited = set(self.resumed_paths)
         self.known_artifacts = set(facts.get('artifacts', []))
+        handoff = task.get('handoff_paths', [])
+        if not isinstance(handoff, list) or any(not isinstance(name, str) or not name for name in handoff):
+            raise Blocked('handoff_paths must be a list of exact nonempty file paths; correct the task input')
+        self.handoff = {}
+        for name in handoff:
+            if name in self.handoff:
+                continue
+            try:
+                path = editable_path(self.project, name)
+            except Blocked as exc:
+                raise Blocked('cannot transfer handoff path ' + name + ': operation transfer requires an exact safe regular file; correct handoff_paths') from exc
+            if not path.is_file() or not path_has_preexisting_changes(self.project, name):
+                raise Blocked('cannot transfer ' + name + ' for handoff: operation transfer requires an explicitly named pre-existing regular dirty file')
+            info = path.stat(follow_symlinks=False)
+            self.handoff[name] = {'identity': (info.st_dev, info.st_ino, info.st_ctime_ns), 'bytes': path.read_bytes()}
+
+    def _verify_handoff(self, name):
+        expected = self.handoff[name]
+        try:
+            path = editable_path(self.project, name)
+        except Blocked as exc:
+            raise Blocked('cannot claim handoff path ' + name + ': operation claim requires the authorized safe regular file; restore it and retry') from exc
+        if not path.is_file():
+            raise Blocked('cannot claim handoff path ' + name + ': operation claim requires the authorized regular file; restore it and retry')
+        info = path.stat(follow_symlinks=False)
+        if ((info.st_dev, info.st_ino, info.st_ctime_ns) != expected['identity'] or
+                path.read_bytes() != expected['bytes']):
+            raise Blocked('cannot claim handoff path ' + name + ': operation claim found changed pre-transfer bytes; restore the authorized bytes or supply a current exact handoff_paths entry')
 
     def command(self, phase, call):
         """Commands are never filesystem/Git admission points."""
@@ -95,14 +123,22 @@ class FocusedGit:
         return any(name == path.rstrip('/') or name.startswith(path.rstrip('/') + '/') for path in paths)
 
     def claim(self, name):
-        editable_path(self.project, name)
+        handoff = name in self.handoff
+        try:
+            editable_path(self.project, name)
+        except Blocked as exc:
+            if handoff:
+                raise Blocked('cannot claim handoff path ' + name + ': operation claim requires the authorized safe regular file; restore it and retry') from exc
+            raise
         # This is an actual write boundary, not a worktree snapshot: do not overwrite
         # bytes that were already modified when the task selected this path.
         limits = self.task.get('owned_paths')
         artifact = self._matches(name, self.task.get('generated_outputs', []))
         known = name in (self.known_artifacts if artifact else self.resumed_paths)
-        if path_has_preexisting_changes(self.project, name) and not known:
-            raise Blocked('pre-existing dirty path is not task-owned: ' + name)
+        if handoff:
+            self._verify_handoff(name)
+        if path_has_preexisting_changes(self.project, name) and not (known or handoff):
+            raise Blocked('cannot claim pre-existing dirty path ' + name + ': operation claim requires an exact handoff_paths entry; broad owned_paths coverage is not transfer authority')
         if limits is not None and not self._matches(name, limits) and not artifact:
             raise Blocked('path outside optional owned_paths: ' + name)
         if artifact:
@@ -119,7 +155,10 @@ class FocusedGit:
         path.unlink()
 
     def facts(self):
-        return {'paths': sorted(self.task_edited), 'artifacts': sorted(self.known_artifacts)}
+        # Report the current task's explicit transfer input, but never turn it into
+        # resumed-path history; only paths/artifacts are reusable resume facts.
+        return {'paths': sorted(self.task_edited), 'artifacts': sorted(self.known_artifacts),
+                'handoff_paths': sorted(self.handoff)}
 
     def _checkpoint_result(self, sha, parent, owned):
         if git(self.project, 'rev-list', '--parents', '-n', '1', sha).decode().split() != [sha, parent]:
@@ -135,6 +174,9 @@ class FocusedGit:
         # discover, adopt, or stage arbitrary command output.
         owned = sorted(name for name in self.task_edited
                        if path_has_preexisting_changes(self.project, name))
+        for name in set(owned) & set(self.handoff):
+            if editable_path(self.project, name).read_bytes() == self.handoff[name]['bytes']:
+                raise Blocked('cannot checkpoint handoff path ' + name + ': operation checkpoint found no intended edit; make the intended correction or do not claim the transfer')
         if not owned:
             return {'baseline': self.base, 'sha': self.base, 'paths': [],
                     'artifacts': sorted(self.known_artifacts), 'no_change': True}

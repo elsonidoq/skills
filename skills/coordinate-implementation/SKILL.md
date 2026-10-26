@@ -123,7 +123,11 @@ size caps, deadlines, lifetime quotas or repair budgets. Do not autonomously loo
 Project check commands are optional; run specified checks and report their actual outcomes with
 no universal collection-count/receipt format. A nonzero required command retains its exact command, exit and output as a failed attempt and returns it to the live or compatible same-task worker with its ordinary corrective tools. The worker makes a reasoned safe scoped source/setup correction or reports the actual blocker; the runner reruns affected required commands and never checkpoints before they pass. This is not cross-task reuse, a post-review round, a skip, or an unchanged-command spin. A saved worker may enter the private same-run reuse registry only after idle settlement, real required passes, and its focused checkpoint; corrective prompts remain in that same task context, and failed/unsettled sessions are never candidates for another task. A failed check is not passed. At an actual edit or destructive
 cleanup, preserve pre-existing/unknown bytes; never adopt them. Optional `owned_paths` limits source edits;
-explicit task edit selections determine checkpoint paths. Optional `generated_outputs` guides selective
+explicit task edit selections determine checkpoint paths. An optional task `handoff_paths` list transfers only
+explicitly authorized exact pre-existing dirty regular files: the runner preserves and rechecks their starting
+bytes at claim before the intended edit and focused checkpoint. It is not an `owned_paths` extension—directory,
+glob, or broad path coverage never authorizes adoption. A missing, changed, symlinked, or unapproved target
+stops that claim with its filename, operation, and corrective action. Optional `generated_outputs` guides selective
 known-artifact regeneration/cleanup only: it is not an allowlist, registration, permission prerequisite or
 commit target. New, ignored, Git-visible, deleted or undeclared output never blocks commands or checks.
 The SDK is an instruction-managed coding tool, not an adversarial filesystem/command sandbox.

@@ -106,9 +106,15 @@ SHA remains separate from the metric artifact SHA; no artifact means no empty co
 A collision, malformed tail, drift, hook/signing failure, or abrupt process death retains bytes and reports
 an artifact gap separately without changing the task/review result or automatically recovering/replaying it.
 Optional `owned_paths` limits source file/directory scope. Explicit SDK edit/write selections identify
-source checkpoint paths; the runner never derives ownership by scanning a clean baseline. Optional
-`generated_outputs` names expected task artifacts for selective regeneration/cleanup guidance, not a
-registration, allowlist, permission prerequisite, or automatic commit target.
+source checkpoint paths; the runner never derives ownership by scanning a clean baseline. A task may
+optionally provide `handoff_paths`, a list of exact explicitly authorized pre-existing dirty regular files.
+At task preparation the runner records each named file's bytes; at the actual claim it requires those
+same bytes, then permits the intended edit and focused checkpoint. This is a narrow transfer, not an
+`owned_paths` extension: directory/glob/broad coverage never adopts dirty content. A changed, missing,
+symlinked, or unapproved target is refused with its filename, operation, and the corrective action
+(restoring its authorized bytes or supplying a current exact handoff entry). Optional `generated_outputs`
+names expected task artifacts for selective regeneration/cleanup guidance, not a registration, allowlist,
+permission prerequisite, or automatic commit target.
 
 ## Real execution and safety
 

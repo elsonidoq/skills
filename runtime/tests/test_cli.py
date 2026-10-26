@@ -36,6 +36,32 @@ class CliTests(ProjectTest):
         self.assertEqual(observed['monitoring']['recording_version'], 1)
         self.assertTrue(any(row['phase'] == 'review' for row in observed['monitoring']['observations']))
 
+    def test_task_handoff_paths_reach_real_cli_execution_input(self):
+        tasks, executor = self.root/'tasks.json', self.root/'executor.json'
+        tasks.write_text(json.dumps({'tasks': [{'id': 'recover', 'description': 'Correct named recovery file',
+                                                  'owned_paths': ['recovery.txt'], 'handoff_paths': ['recovery.txt']}]}))
+        executor.write_text('{"provider":"fixture","model":"offline-worker","effort":"medium","reviewer":{"provider":"fixture","model":"offline-reviewer","effort":"medium"}}')
+        (self.project/'recovery.txt').write_bytes(b'preexisting recovery\n')
+        case = self
+        class Boundary:
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"findings":[]}'
+                case.assertIn('"handoff_paths":["recovery.txt"]', prompt)
+                kwargs['claim']('recovery.txt')
+                (case.project/'recovery.txt').write_bytes(b'preexisting recovery\nintended edit\n')
+                return 'corrected'
+        with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out, \
+             patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+                                                          'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}):
+            code = main(['start', '--project', str(self.project), '--tasks', str(tasks), '--executor', str(executor), '--run', 'handoff'])
+        self.assertEqual(code, 0, out.getvalue())
+        checkpoint = json.loads(out.getvalue())['checkpoints'][0]
+        self.assertEqual(checkpoint['paths'], ['recovery.txt'])
+        from coherence_workflow.store import git
+        self.assertEqual(git(self.project, 'show', checkpoint['sha'] + ':recovery.txt'), b'preexisting recovery\nintended edit\n')
+
     def test_selected_reviewer_profile_reaches_only_fresh_read_only_session(self):
         tasks, executor = self.root/'tasks.json', self.root/'executor.json'
         tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"dummy","description":"Synthetic no-change fixture"}]}')
