@@ -14,19 +14,30 @@ repository-qualified `HOST/OWNER/REPO#N` and URL.
 
 Read project instructions and routing before selecting a tracker. Preserve the existing declared local register until approved cutover. This is not a fallback for a GitHub capability failure and does not create a parallel tracker. Do not infer cutover from an installed skill, repository remote, or unfinished migration proof.
 
-If project routing still declares an existing local register, read it and inspect open and closed entries for the same problem/evidence before adding or narrowly updating a candidate. Retain the verified problem, primary evidence, resumption condition, uncertainty and established identifier/format; preserve unrelated entry bytes and history. Close or reopen only with recorded problem-specific evidence and authority. Re-read before editing, stop on concurrent changes, then read back the affected entry and use the focused task checkpoint below. A missing or conflicting declared owner is deferred with the candidate/evidence/resumption and a corrective ownership action, not permission to initialize another tracker. Return after this local operation; the remote instructions below apply only to a declared GitHub owner.
+If project routing still declares an existing local register, first perform the bounded investigation below, then read it and inspect open and closed entries for the same problem/evidence before adding or narrowly updating a candidate. Retain the verified observations/cause, hypotheses, primary evidence, resumption condition, uncertainty and established identifier/format; preserve unrelated entry bytes and history. Close or reopen only with recorded problem-specific evidence and authority. Re-read before editing, stop on concurrent changes, then read back the affected entry and use the focused task checkpoint below. A missing or conflicting declared owner is deferred with the candidate/evidence/resumption and a corrective ownership action, not permission to initialize another tracker. Return after this local operation; the remote instructions below apply only to a declared GitHub owner.
 
-## Candidate and target
+## Investigate candidate, then resolve target
 
-Read every named source artifact. Retain, or ask only for, the minimum candidate facts:
+Read every named source artifact before creating or changing an issue. Perform a bounded,
+evidence-based RCA and retain the original intent alongside four distinct kinds of information:
 
-- a concrete unresolved problem, classified as a bug, risk, shortcut, missing capability,
-  or investigation where that classification is verified or supported;
-- primary evidence for the problem (or for the uncertainty and needed evidence); and
-- a resumption condition: the next action, prerequisite, or observation.
+- **verified observations:** directly supported failure facts and primary evidence;
+- **verified cause:** only a causal conclusion supported by that evidence;
+- **hypotheses:** plausible but unverified explanations, clearly labelled as such; and
+- **uncertainty and next useful investigation:** what remains unknown and the next action,
+  prerequisite, or observation that could resolve it.
 
-Keep uncertainty explicit; do not promote an unverified claim to fact or include credentials,
-tokens, personal data, or sensitive payloads.
+Do not promote an unverified claim to a cause. An uncertain RCA does not block tracking
+indefinitely: create a focused investigation issue when the verified observations, uncertainty,
+and next useful investigation establish a concrete unresolved problem. Classify it as a bug,
+risk, shortcut, missing capability, or investigation only where that classification is verified
+or supported.
+
+Prepare the intended body from that investigation. It must retain the original intent, verified
+problem/evidence, any verified cause separately from hypotheses, uncertainty, and resumption
+condition. Keep credentials, tokens, personal data, and sensitive payloads out of both the
+investigation record and body. Preserve the intended body and the independently read-back body
+for the later separate read-only quality review; creation/readback is not that review.
 
 Resolve `HOST`, `OWNER`, and `REPO` from current project instructions/configuration, then
 confirm the same target from verified remote evidence. Do not infer a target from a bare
@@ -61,8 +72,9 @@ body/comments as needed; GitHub's default open-only listing and a result limit a
 discovery. Never deduplicate, merge, or reopen solely from a title or partial similarity.
 A closed overlap remains evidence for the report and is not automatically reopened.
 
-The intended body states the verified problem and category where supported, primary evidence,
-resumption condition, and uncertainty. Prepare Markdown in a local body file and pass it with
+The intended body states the original intent, verified problem and category where supported,
+primary evidence, verified cause only when established, clearly labelled hypotheses,
+uncertainty, and resumption condition. Prepare Markdown in a local body file and pass it with
 `--body-file`; do not interpolate Markdown into a shell command, use `eval`, upload
 attachments, or add labels, assignees, projects, parent/blocked-by relations, or unrelated
 fields. An authorized create is explicitly targeted, for example:
@@ -95,17 +107,22 @@ After every create, update, close, or reopen, independently GET the exact issue 
 gh api --method GET --hostname "$HOST" "repos/$OWNER/$REPO/issues/$number"
 ```
 
-Confirm the exact qualified URL/identity, intended problem/evidence/resumption content, and
-intended state. Readback failure or unknown mutation response leaves verification unknown:
-do not blindly retry a possibly successful mutation. Instead return the qualified candidate and
-reconciliation action (GET/list complete open+closed results, then inspect the exact issue).
-Separate remote operation confirmation from proof that the underlying problem is resolved.
+Confirm the exact qualified URL/identity, original intent, intended problem/evidence/cause-or-
+hypothesis/uncertainty/resumption content, and intended state. Keep the actual read-back body
+available with the original intent and investigation evidence for the separate read-only review;
+do not represent creation/readback as independent review. Readback failure or unknown mutation
+response leaves verification unknown: do not blindly retry a possibly successful mutation.
+Instead return the qualified candidate and reconciliation action (GET/list complete open+closed
+results, then inspect the exact issue). Separate remote operation confirmation from proof that
+the underlying problem is resolved.
 
 ## Report and checkpoint boundary
 
 Report exactly one outcome: `created`, `updated`, `deduplicated`, `deferred`, or `not recorded`.
-Include the qualified target/URL when known, candidate/evidence/resumption, intended and observed
-state, any uncertainty, and required owner action.
+Include the qualified target/URL when known, original intent, verified observations/cause,
+hypotheses, uncertainty/next investigation, intended and observed state, and required owner
+action. State that any later independent quality review remains incomplete unless it was actually
+performed in a separate read-only context against the read-back body.
 
 External-only issue work creates no empty Git commit. If this skill produces an authorized
 retained repository deliverable, follow the focused task checkpoint contract at
