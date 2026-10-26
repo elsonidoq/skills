@@ -220,6 +220,24 @@ class ChainHistoryTests(ProjectTest):
                 store.review_outcome('separate', 'review-1', 'approved', findings=[],
                                      references={'base': self.base, 'head': self.base})
             self.assertEqual(store.review_chain('separate')['executions'][0]['state'], 'approved')
+            # The A4 continuation branch must not reinterpret an uncertain fixer call as
+            # a settled failed call and relaunch it on resume.
+            store.start('uncertain-fixer', self.base, contract={'tasks': []}, executor=EXECUTOR,
+                        authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
+            store.review_dispatch('uncertain-fixer', 'review-1', review_base=self.base, review_head=self.base)
+            store.review_outcome('uncertain-fixer', 'review-1', 'rejected', findings=['owned.txt:1 - defect'],
+                                 references={'base': self.base, 'head': self.base})
+            store.review_dispatch('uncertain-fixer', 'fix-1', role='fixer', review_ordinal=1, fixing_round=1,
+                                  trigger_execution_id='review-1', predecessor_execution_id='review-1',
+                                  review_base=self.base, review_head=self.base)
+            store.review_outcome('uncertain-fixer', 'fix-1', 'failed', findings=[], uncertainty=True,
+                                 references={'base': self.base, 'head': self.base})
+            store.finish('uncertain-fixer', 'interrupted', self.base, 'fixture process loss')
+            store.resume('uncertain-fixer')
+            def forbidden(*_args, **_kwargs):
+                self.fail('uncertain fixer must not be replayed')
+            with self.assertRaisesRegex(Blocked, 'uncertain'):
+                Engine(owner, 'uncertain-fixer', {'tasks': []}, EXECUTOR, adapter=forbidden, resume=True).invoke()
 
     def test_engine_records_single_review_and_status_exposes_safe_findings_and_references(self):
         project = self.project

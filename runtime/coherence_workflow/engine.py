@@ -353,6 +353,8 @@ class Engine:
         def claim(name):
             if name not in claimed_paths:
                 focused.claim(name)
+                store.history(self.run, fix_task['id'], 'fixer_mutation', 'claimed',
+                              {'execution_id': execution_id, **focused.facts()})
                 claimed_paths.add(name)
         def gate_question(text):
             return self.question(text)
@@ -449,6 +451,8 @@ class Engine:
                                         fixing_round=fixing_round)
             prompt = ('Continue the rejecting review in this assigned repair round. Keep the configured reviewer '
                       'executor and its scoped writer transition.\nActionable findings: ' + canonical(findings))
+            if recovered and recovered.get('diagnosis'):
+                prompt += '\nInspected prior settled unsuccessful fixer diagnosis and targeted correction: ' + recovered['diagnosis']
             text = '' if recovered and recovered.get('returned') else prompt_fix(
                 prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
                 saved_session=saved, reuse_key=reuse_key)
@@ -535,16 +539,17 @@ class Engine:
             raise
 
     def _recover_assigned_fix(self, item, review_base):
-        """Reconcile only an additional reserved repair, never replay a paid call."""
+        """Reconcile one assigned repair; explicit failed returns need a diagnosis, never a blind replay."""
         project, store = self.authority.project, self.authority.store
         execution_id = item['execution_id']
         trigger = next((entry for entry in store.review_chain(self.run, private=True)['executions']
                         if entry['execution_id'] == item['trigger_execution_id']), None)
-        grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=item['trigger_execution_id'],
-            review_base=review_base, review_head=trigger['references'].get('head') if trigger else None,
-            original_scope=store.review_scope(self.run))
-        if grant is None or grant['fixer_execution_id'] != execution_id or grant['state'] != 'fixer_reserved':
-            raise Blocked('retained repair lacks its exact consumed owner grant; inspect authorization before continuation')
+        if item['fixing_round'] > 1:
+            grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=item['trigger_execution_id'],
+                review_base=review_base, review_head=trigger['references'].get('head') if trigger else None,
+                original_scope=store.review_scope(self.run))
+            if grant is None or grant['fixer_execution_id'] != execution_id or grant['state'] != 'fixer_reserved':
+                raise Blocked('retained repair lacks its exact consumed owner grant; inspect authorization before continuation')
         events = []
         for row in store.db.execute('SELECT kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (self.run,)):
             facts = json.loads(row['details'])
@@ -554,6 +559,37 @@ class Engine:
         for kind, state, facts in events:
             if kind == 'fixer_invocation':
                 calls[facts['invocation_id']] = (state, facts)
+        failed = [facts for state, facts in calls.values() if state == 'failed']
+        if failed:
+            # T002's explicit unsuccessful outcome is settled diagnostic evidence. Other
+            # failed/started calls remain uncertain and cannot be replayed here.
+            if len(failed) != 1 or any(state not in ('returned', 'failed') for state, _ in calls.values()):
+                raise Blocked('assigned repair invocation is uncertain or failed; inspect its recorded cause before targeted continuation')
+            failure = failed[0]
+            diagnostic = failure.get('diagnostic')
+            if not isinstance(diagnostic, str) or not diagnostic:
+                raise Blocked('assigned repair failure has no settled unsuccessful diagnosis; inspect its recorded call before continuation')
+            claims = []
+            for kind, state, facts in events:
+                if kind == 'fixer_mutation' and state == 'claimed':
+                    claims = facts
+            if not claims or not isinstance(claims.get('paths'), list):
+                raise Blocked('settled repair failure lacks claimed source paths; inspect its retained effects before continuation')
+            limits = [path for task in self.contract['tasks'] for path in task.get('owned_paths', [])]
+            if any('owned_paths' in task for task in self.contract['tasks']) and any(
+                    not any(name == path.rstrip('/') or name.startswith(path.rstrip('/') + '/') for path in limits)
+                    for name in claims['paths']):
+                raise Blocked('settled repair failure claimed paths outside original scope; inspect ownership before continuation')
+            correction = self.question(
+                'As coordinating agent, inspect this settled unsuccessful fixer call and its claimed source effects. '
+                'Provide the diagnosis and targeted correction for the same assigned repair; do not blindly retry or ask '
+                'the owner to debug routine technical failures. Leave empty if no safe correction is supported. '
+                'Actual failed fixer: ' + canonical(failure))
+            if not isinstance(correction, str) or not correction.strip() or correction.strip().lower() in ('unknown', 'retry', 'yes'):
+                raise Blocked('settled repair diagnosis/targeted correction remains unknown; no fixer relaunched')
+            return {'failed': True, 'baseline': item['references'].get('head'),
+                    'facts': {'paths': claims['paths'], 'artifacts': claims.get('artifacts', [])},
+                    'diagnosis': correction}
         if any(state != 'returned' for state, _ in calls.values()):
             raise Blocked('assigned repair invocation is uncertain or failed; inspect its recorded cause before targeted continuation')
         head = git(project, 'rev-parse', 'HEAD').decode().strip()
@@ -814,8 +850,8 @@ class Engine:
                              input_checkpoints=self._review_inputs(checkpoints))
                 continue
             last = executions[-1]
-            if (policy == 'owner-pair-v1' and last['role'] == 'fixer' and
-                    last['fixing_round'] > 1 and last['state'] == 'dispatched'):
+            if (last['role'] == 'fixer' and last['state'] in ('dispatched', 'failed') and
+                    (last['fixing_round'] == 1 or policy == 'owner-pair-v1')):
                 recovered = self._recover_assigned_fix(last, review_base)
                 if recovered is not None:
                     rejection = next(item for item in executions if item['execution_id'] == last['trigger_execution_id'])

@@ -10,7 +10,8 @@ from unittest.mock import patch
 from coherence_workflow import cli
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
-from coherence_workflow.store import Authority, git
+from coherence_workflow.pi_adapter import PiAdapter
+from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
 
@@ -96,43 +97,67 @@ class SameRunResumeTests(ProjectTest):
 
 
     def test_review_repair_reopens_persisted_reviewer_after_process_restart(self):
-        calls = []
-        saved = {'id': 'warm-review', 'file': '/private/review.jsonl',
-                 'compatibility': {'readOnly': True}}
-        case = self
-        class Adapter:
-            def __init__(self, _project, profile, **_kwargs):
-                self.profile = profile
-                self.saved_session = None
-            def prompt(self, prompt, **kwargs):
-                calls.append((self.profile, kwargs))
-                if kwargs.get('read_only'):
-                    if len(calls) == 2:
-                        self.saved_session = saved
-                        return '{"approved":false,"findings":["owned.txt:1 - fixture defect [basis: correctness]"]}'
-                    case.assertIsNone(self.saved_session)
-                    return '{"approved":true,"findings":[]}'
-                if 'Actionable findings:' in prompt:
-                    case.assertEqual(self.saved_session, saved)
-                    case.assertEqual(kwargs['saved_session'], saved)
-                    case.assertTrue(kwargs['review_repair'])
-                    case.assertEqual(self.profile, EXECUTOR['reviewer'])
-                    case.assertIn('Finish the assigned implementation and worker-owned semantic/manual acceptance', prompt)
-                    case.assertIn('The runner executes/reruns configured checks, creates the focused checkpoint', prompt)
-                    case.assertIn('it does not own all semantic/manual acceptance or the reviewer verdict', prompt)
-                    case.assertIn('Pending runner stages alone do not require an unsuccessful status', prompt)
-                    self.saved_session = {**saved, 'compatibility': {'readOnly': False}}
-                return 'fixture'
-        contract = admit([{'id': 'task', 'description': 'fixture'}])
-        with Authority(self.project) as owner:
-            with patch.object(Engine, 'run_fix', side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
-                Engine(owner, 'review-restart', contract, EXECUTOR, adapter=Adapter).invoke()
-        # A new authority and Engine have no in-memory reviewer adapter.
-        with Authority(self.project) as owner:
-            owner.store.resume('review-restart')
-            result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=Adapter, resume=True).invoke()
+        """A settled adapter fixer failure is diagnosed and continued once in its retained assignment."""
+        host, state = self.root / 'repair_resume_host.py', self.root / 'repair_resume_state.json'
+        state.write_text('{}')
+        host.write_text("""import json
+from pathlib import Path
+request = json.loads(input())
+state_path = Path(STATE)
+state = json.loads(state_path.read_text())
+prompt = request['prompt']
+def count(name):
+    state[name] = state.get(name, 0) + 1
+    state_path.write_text(json.dumps(state))
+    return state[name]
+def result(text, outcome='completed', session=None):
+    payload = {'type': 'result', 'text': text, 'outcome': outcome}
+    if session: payload['session'] = session
+    print(json.dumps(payload), flush=True)
+saved = {'id': 'warm-review', 'file': '/private/review.jsonl', 'compatibility': {'readOnly': True}}
+if 'Independently review' in prompt:
+    if count('review') == 1:
+        result('{"approved":false,"findings":["owned.txt:1 - fixture defect [basis: correctness]"]}', session=saved)
+    else:
+        result('{"approved":true,"findings":[]}', session=saved)
+elif 'Actionable findings:' in prompt:
+    phase = count('fix')
+    assert request.get('savedSession', {}).get('id') == 'warm-review'
+    print(json.dumps({'type': 'claim', 'path': 'owned.txt'}), flush=True)
+    assert json.loads(input()) == {'ok': True}
+    Path(request['project'], 'owned.txt').write_text('partial\\n' if phase == 1 else 'repaired\\n')
+    result('BENIGN-FIXER-REASON: inspect then repair' if phase == 1 else 'repair complete',
+           'failed' if phase == 1 else 'completed', saved)
+else:
+    print(json.dumps({'type': 'claim', 'path': 'owned.txt'}), flush=True)
+    assert json.loads(input()) == {'ok': True}
+    Path(request['project'], 'owned.txt').write_text('initial\\n')
+    result('task complete')
+""".replace("STATE", repr(str(state))))
+        contract = admit([{'id': 'task', 'description': 'fixture', 'owned_paths': ['owned.txt'],
+                          'check': [sys.executable, '-B', '-c', "from pathlib import Path; assert Path('owned.txt').exists()"]}])
+        environment = {'COHERENCE_NODE': sys.executable, **_DETACHED_BRIDGE}
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, environment):
+            with Authority(self.project) as owner:
+                with self.assertRaisesRegex(Blocked, 'BENIGN-FIXER-REASON'):
+                    Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter).invoke()
+            # A new Authority and Engine have no in-memory adapter; the persisted reviewer
+            # session, failed-call diagnosis, and claimed path are the consumed resume facts.
+            diagnoses = []
+            with Authority(self.project) as owner:
+                owner.store.resume('review-restart')
+                result = Engine(owner, 'review-restart', contract, EXECUTOR, adapter=PiAdapter, resume=True,
+                                question=lambda prompt: (diagnoses.append(prompt) or 'inspect failed semantic check; repair owned.txt')).invoke()
+                history = [dict(row) for row in owner.store.db.execute(
+                    "SELECT kind,state,details FROM execution_history WHERE run_id='review-restart' ORDER BY seq")]
         self.assertEqual(result['status'], 'complete')
-        self.assertEqual(len(calls), 4)
+        self.assertEqual(json.loads(state.read_text()), {'review': 2, 'fix': 2})
+        self.assertEqual(len(diagnoses), 1)
+        self.assertIn('BENIGN-FIXER-REASON', diagnoses[0])
+        self.assertTrue(any(row['kind'] == 'fixer_mutation' and row['state'] == 'claimed' for row in history))
+        self.assertTrue(any(row['kind'] == 'fixer_checks' and row['state'] == 'passed' for row in history))
+        self.assertTrue(any(row['kind'] == 'fixer_checkpoint' and row['state'] == 'passed' for row in history))
+        self.assertEqual([row['state'] for row in history if row['kind'] == 'fixer_invocation' and row['state'] != 'started'], ['failed', 'returned'])
 
     def test_persisted_approval_never_accepts_incoming_commits(self):
         for ordinal in (1, 2):
