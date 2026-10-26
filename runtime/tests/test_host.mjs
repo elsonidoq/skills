@@ -25,6 +25,8 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
           assert.ok(tools.includes('ask_owner'), 'registered ask_owner must also be active for workers');
           assert.ok(tools.includes('report_task_outcome'), 'workers need an explicit unsuccessful-outcome boundary');
           const outcomeTool = session.agent.state.tools.find(tool => tool.name === 'report_task_outcome');
+          assert.match(outcomeTool.description, /worker-owned required acceptance is known failed or unrun/);
+          assert.match(outcomeTool.description, /pending runner check, checkpoint, or review stages alone/);
           await outcomeTool.execute('fixture-outcome', {status: 'blocked'});
           assert.equal(session.coherenceTaskOutcome(), 'blocked', 'actual SDK tool result reaches the host completion boundary');
         }

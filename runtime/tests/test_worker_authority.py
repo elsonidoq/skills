@@ -22,6 +22,15 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIn("do not risk exhausting the machine's resources", prompt)
         self.assertIn('or affecting unrelated data/services', prompt)
 
+    def assert_completion_ownership(self, prompt):
+        self.assertIn('Finish the assigned implementation and worker-owned semantic/manual acceptance', prompt)
+        self.assertIn('The runner executes/reruns configured checks, creates the focused checkpoint', prompt)
+        self.assertIn('dispatches fresh independent review', prompt)
+        self.assertIn('it does not own all semantic/manual acceptance or the reviewer verdict', prompt)
+        self.assertIn('Pending runner stages alone do not require an unsuccessful status', prompt)
+        self.assertIn('required worker-owned acceptance remains failed or unrun', prompt)
+        self.assertIn('do not report corrected tool errors or a required check that will be rerun as unsuccessful', prompt)
+
     def assert_precedence_authority(self, prompt):
         self.assertIn('this current scoped authority takes precedence', prompt)
         self.assertIn('actual owner-imposed limit', prompt)
@@ -59,6 +68,7 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertEqual(len(prompts), 2)
         for prompt in prompts:
             self.assert_authority(prompt)
+            self.assert_completion_ownership(prompt)
             self.assert_test_permission(prompt)
             self.assertIn(historical, prompt)
             self.assert_precedence_scenario(prompt, scenario)
@@ -94,6 +104,7 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIn('Actual failed attempt:', prompts[1])
         for ordinal, prompt in enumerate(prompts):
             self.assert_authority(prompt)
+            self.assert_completion_ownership(prompt)
             self.assert_test_permission(prompt)
             if ordinal == 0:
                 self.assert_precedence_scenario(prompt, scenario)
@@ -137,4 +148,5 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(len(prompts), 1)
         self.assertIn('Continue only the unfinished same-task work.', prompts[0])
+        self.assert_completion_ownership(prompts[0])
         self.assert_precedence_scenario(prompts[0], scenario)

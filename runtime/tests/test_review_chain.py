@@ -493,6 +493,10 @@ class BoundedChainTests(ProjectTest):
                     case.assertIn('Original task contracts:', prompt)
                     case.assertIn('Paid application/test APIs approved for this unchanged run only', prompt)
                     case.assertIn('not independent acceptance', prompt)
+                    case.assertIn('Finish the assigned implementation and worker-owned semantic/manual acceptance', prompt)
+                    case.assertIn('The runner executes/reruns configured checks, creates the focused checkpoint', prompt)
+                    case.assertIn('it does not own all semantic/manual acceptance or the reviewer verdict', prompt)
+                    case.assertIn('Pending runner stages alone do not require an unsuccessful status', prompt)
                 if 'Actionable findings:' in prompt:
                     case.assertEqual(self.saved_session['id'], 'review-context')
                     case.assertTrue(kwargs['review_repair'])

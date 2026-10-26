@@ -117,6 +117,10 @@ class SameRunResumeTests(ProjectTest):
                     case.assertEqual(kwargs['saved_session'], saved)
                     case.assertTrue(kwargs['review_repair'])
                     case.assertEqual(self.profile, EXECUTOR['reviewer'])
+                    case.assertIn('Finish the assigned implementation and worker-owned semantic/manual acceptance', prompt)
+                    case.assertIn('The runner executes/reruns configured checks, creates the focused checkpoint', prompt)
+                    case.assertIn('it does not own all semantic/manual acceptance or the reviewer verdict', prompt)
+                    case.assertIn('Pending runner stages alone do not require an unsuccessful status', prompt)
                     self.saved_session = {**saved, 'compatibility': {'readOnly': False}}
                 return 'fixture'
         contract = admit([{'id': 'task', 'description': 'fixture'}])

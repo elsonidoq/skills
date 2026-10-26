@@ -104,7 +104,8 @@ class SequentialExecutionTests(ProjectTest):
         self.assertEqual(git(project, 'rev-list', '--count', self.base+'..HEAD'), b'2\n')
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        kinds = [row[0] for row in db.execute('SELECT kind FROM execution_observations ORDER BY seq')]
+        observations = list(db.execute('SELECT phase,task_id,kind FROM execution_observations ORDER BY seq'))
+        kinds = [row[2] for row in observations]
         descriptor = json.loads(db.execute("SELECT description FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0])
         identity = db.execute("SELECT runner_identity FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0]
         db.close()
@@ -112,6 +113,12 @@ class SequentialExecutionTests(ProjectTest):
         self.assertIn('returned', kinds)
         self.assertIn('passed', kinds)
         self.assertIn('prepare', next(phase for phase in descriptor['phases'] if phase['id'] == 'checkpoint')['possible_branches'])
+        self.assertLess(observations.index(('worker', 'consumer', 'returned')),
+                        observations.index(('check', 'consumer', 'passed')))
+        self.assertLess(observations.index(('check', 'consumer', 'passed')),
+                        observations.index(('checkpoint', 'consumer', 'passed')))
+        self.assertLess(observations.index(('checkpoint', 'consumer', 'passed')),
+                        observations.index(('review', None, 'started')))
         self.assertIsNotNone(identity)
 
     def test_exact_handoff_input_claims_preserved_recovery_bytes_and_checkpoints_only_owned_results(self):
@@ -200,10 +207,13 @@ class SequentialExecutionTests(ProjectTest):
                 with Authority(project) as owner:
                     with self.assertRaises(Blocked):
                         Engine(owner, 'unaccepted-' + label, admit([
-                            {'id': 'A', 'description': 'A', 'owned_paths': ['partial-' + label + '.txt']},
+                            {'id': 'A', 'description': 'A' + ('; only runner review remains' if label == 'incomplete' else ''),
+                             'owned_paths': ['partial-' + label + '.txt']},
                             {'id': 'B', 'description': 'B', 'depends': ['A']}]), EXECUTOR,
                             adapter=ExplicitReturn, question=lambda prompt: answers.append(prompt) or 'answered').invoke()
                 self.assertEqual(len([entry for entry in calls if not entry[1]]), 1)
+                if label == 'incomplete':
+                    self.assertIn('only runner review remains', calls[0][0])
                 if label == 'blocked':
                     self.assertEqual(len(answers), 2)
                 if partial:

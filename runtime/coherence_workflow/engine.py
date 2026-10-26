@@ -74,11 +74,15 @@ _IMPLEMENTATION_AUTHORITY = (
     'boundaries; ask the owner if a material authority conflict remains.\n'
 )
 
-# Shared worker completion reporting. Keep the transport boundary explicit without parsing summaries.
+# Shared worker completion reporting. Keep stage ownership explicit without parsing summaries.
 _COMPLETION_REPORTING = (
-    'If this task is explicitly blocked, failed, incomplete, or you know required acceptance remains failed or unrun, '
-    'call report_task_outcome with the matching status before returning. A normal returned answer remains compatible for '
-    'completed work; do not report corrected tool errors or a required check that will be rerun as unsuccessful.\n'
+    'Finish the assigned implementation and worker-owned semantic/manual acceptance, report actual outcomes and remaining '
+    'blockers, then return to the runner. The runner executes/reruns configured checks, creates the focused checkpoint, and '
+    'dispatches fresh independent review; it does not own all semantic/manual acceptance or the reviewer verdict. Pending '
+    'runner stages alone do not require an unsuccessful status. If this task is explicitly blocked, failed, incomplete, or you '
+    'know required worker-owned acceptance remains failed or unrun, call report_task_outcome with the matching status before '
+    'returning. A normal returned answer remains compatible for completed work; do not report corrected tool errors or a '
+    'required check that will be rerun as unsuccessful.\n'
 )
 
 # Shared worker permission defaults. Edit here, not in individual task/correction prompts.
@@ -365,8 +369,9 @@ class Engine:
                 'the original acceptance, then make only bounded fixes. This assigned repair is not independent '
                 'acceptance, a new task, routing operation, or permission expansion. Material scope, complexity, '
                 'verification, or permission expansion must stop for the owner; do not speculate or rewrite broadly. '
-                'The runner owns required/manual checks and the focused checkpoint: never stage or commit, bypass '
-                'checks/hooks/signing, or adopt unrelated/pre-existing bytes.\n'
+                'The runner executes/reruns configured required checks and creates the focused checkpoint; it does not own all '
+                'semantic/manual acceptance or the reviewer verdict. Finish worker-owned semantic/manual acceptance, never stage '
+                'or commit, bypass checks/hooks/signing, or adopt unrelated/pre-existing bytes.\n'
                 + _DECISION_CONSTRAINTS + self.paid_authority() + '\nOriginal task contracts: '
                 + canonical(original_tasks) + '\n')
             def prompt_fix(prompt, **kwargs):
