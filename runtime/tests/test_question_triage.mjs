@@ -23,7 +23,7 @@ test('parent triages a technical question and returns its own correlated diagnos
 import sys
 sys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})
 from coherence_workflow.pi_adapter import parent_question
-assert parent_question('Provide the inspected technical diagnosis') == 'Inspected broken fixture pipe; repair its transport'
+assert parent_question('After the inspected fixture repair/checkpoint, provide the later routine technical diagnosis') == 'Inspected broken fixture pipe; repair its transport'
 `, {mode: 0o700});
     bridge(pi);
     const ctx = {cwd: root, sessionManager: {getSessionId: () => 'triage-parent'}};
@@ -38,6 +38,7 @@ assert parent_question('Provide the inspected technical diagnosis') == 'Inspecte
     await call('coordinate_implementation_start', {run: 'triage-fixture', tasks: 'unused', executor: 'unused'});
     await until(() => messages.some(item => item.customType === 'coordinate_implementation_question'));
     const question = messages.find(item => item.customType === 'coordinate_implementation_question');
+    assert.match(question.content, /After the inspected fixture repair\/checkpoint/);
     assert.match(question.content, /Triage this as coordinator/);
     assert.match(question.content, /investigate and reply for routine authorized technical matters/);
     assert.match(question.content, /actual answer only for material product, scope, or permission decisions/);

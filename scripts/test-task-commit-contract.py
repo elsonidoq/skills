@@ -78,6 +78,22 @@ class StaticContractMutationTests(unittest.TestCase):
             errors = checker.check(coordinator_text=mutation)
             self.assertTrue(any(diagnostic in error for error in errors), errors)
 
+    def test_inspected_scoped_repair_contract_preserves_checkpoint_before_continuation(self):
+        coordinator = COORDINATOR.read_text()
+        normalized = " ".join(coordinator.split())
+        required = (
+            '“No automatic resume” forbids uninspected retry, replay and background',
+            'settle the failed invocation and writer lock first',
+            'separately assign only the necessary repair paths with the retained selected executor',
+            'Inspect the repair diff, relevant checks and its focused checkpoint before explicitly using',
+            'Workers never delegate or recursively launch the CLI',
+        )
+        for phrase in required:
+            self.assertIn(phrase, normalized)
+        weakened = normalized.replace('Inspect the repair diff, relevant checks and its focused checkpoint before explicitly using',
+                                      'Continue before inspecting repair effects')
+        self.assertNotIn('Inspect the repair diff, relevant checks and its focused checkpoint before explicitly using', weakened)
+
     def test_internal_batch_commits_do_not_require_routine_coordinator_approval(self):
         contract = " ".join(CONTRACT.read_text().split())
         coordinator = " ".join(COORDINATOR.read_text().split())

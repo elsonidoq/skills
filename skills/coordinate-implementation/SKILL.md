@@ -85,7 +85,18 @@ expensive worker, inspect its recorded cause and invocation; never blindly retry
 
 Questions use current terminal owner input when needed, without external receipt files or
 Paseo/session proofs. Noninteractive questions stop with the actual question and retain partial
-work; never invent an answer. No automatic resume, replay, control-mailbox or background daemon. If another cooperating implementation writer holds the existing worktree lock, CLI entry waits transparently and cancellation exits cleanly without fabricating a failed task/run or replacing that writer; platforms that cannot wait report concrete busy.
+work; never invent an answer. “No automatic resume” forbids uninspected retry, replay and background
+restart; it does not forbid an explicit, inspected continuation after an authorized coordinator-scoped
+repair. For that repair, settle the failed invocation and writer lock first; keep the original worker
+inside its paths and separately assign only the necessary repair paths with the retained selected
+executor. Inspect the repair diff, relevant checks and its focused checkpoint before explicitly using
+supported `resume` on the unfinished run. Reuse a suitable saved unfinished session, skip completed
+checkpoints, and triage later routine technical questions autonomously. Unknown failure cause, a live
+writer, failed/unsettled repair, or missing checkpoint facts stops that continuation rather than
+permitting a retry. Workers never delegate or recursively launch the CLI; this is coordinator work,
+not a new cancellation/recovery API or historical restart. If another cooperating implementation writer
+holds the existing worktree lock, CLI entry waits transparently and cancellation exits cleanly without
+fabricating a failed task/run or replacing that writer; platforms that cannot wait report concrete busy.
 
 ## Recover Context
 

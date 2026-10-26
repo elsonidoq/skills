@@ -260,6 +260,67 @@ class UnfinishedTaskResumeTests(ProjectTest):
             self.assertEqual(len(calls), 2)
 
 
+    def test_inspected_external_repair_checkpoint_precedes_retained_continuation_without_replay(self):
+        """Mechanical fixture only; coordinator/delegation autonomy remains a separate V3 exercise."""
+        from coherence_workflow.store import Blocked
+        project, calls = self.project, []
+        saved = {'id': 'blocked-worker', 'file': '/private/blocked.jsonl'}
+        contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [
+            {'id': 'predecessor', 'description': 'completed predecessor', 'owned_paths': ['predecessor.txt']},
+            {'id': 'unfinished', 'description': 'blocked unfinished worker', 'owned_paths': ['worker.txt'],
+             'checks': [[sys.executable, '-B', '-c', "from pathlib import Path; assert Path('repair.txt').read_text() == 'repaired\\n'"]]},
+        ]})
+
+        class BlockedWorker:
+            def __init__(self, *_args, **_kwargs): self.saved_session = saved
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                calls.append('predecessor' if 'completed predecessor' in prompt else 'unfinished')
+                if 'completed predecessor' in prompt:
+                    kwargs['claim']('predecessor.txt')
+                    project.joinpath('predecessor.txt').write_text('complete\n')
+                    return 'predecessor complete'
+                raise Blocked('diagnosed blocker requires coordinator repair.txt outside worker paths')
+
+        with Authority(project) as owner:
+            with self.assertRaisesRegex(Blocked, 'requires coordinator repair.txt'):
+                Engine(owner, 'scoped-repair', contract, EXECUTOR, adapter=BlockedWorker,
+                       paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
+            predecessor_sha = owner.store.db.execute(
+                "SELECT result FROM execution_tasks WHERE run_id='scoped-repair' AND task_id='predecessor'").fetchone()['result']
+
+        # This models the separately assigned coordinator repair: exact out-of-worker path,
+        # relevant check, and focused Git checkpoint before the unfinished run is continued.
+        project.joinpath('repair.txt').write_text('repaired\n')
+        subprocess.run(["git", "add", "--", "repair.txt"], cwd=project, check=True)
+        subprocess.run(["git", "commit", "-m", "fixture scoped repair", "--", "repair.txt"], cwd=project, check=True)
+        repair_sha = git(project, 'rev-parse', 'HEAD').decode().strip()
+        self.assertEqual(git(project, 'show', '--name-only', '--format=', repair_sha).decode().splitlines(), ['repair.txt'])
+        subprocess.run([sys.executable, '-B', '-c', "from pathlib import Path; assert Path('repair.txt').read_text() == 'repaired\\n'"], cwd=project, check=True)
+
+        class Continued:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                calls.append('continued')
+                self_test.assertIn('Continue only the unfinished same-task work.', prompt)
+                self_test.assertEqual(kwargs['saved_session'], saved)
+                kwargs['claim']('worker.txt')
+                project.joinpath('worker.txt').write_text('continued\n')
+                return 'continued after inspected repair'
+
+        self_test = self
+        with Authority(project) as owner:
+            owner.store.resume('scoped-repair')
+            result = Engine(owner, 'scoped-repair', contract, EXECUTOR, adapter=Continued, resume=True,
+                            paid_scope={'agent_providers': ['fixture'], 'apis': []},
+                            question=lambda prompt: (self.assertIn('Actual invocation:', prompt) or
+                                                     'repair.txt diff/check/checkpoint inspected')).invoke()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(calls, ['predecessor', 'unfinished', 'continued'])
+        self.assertEqual(predecessor_sha, result['checkpoints'][0]['sha'])
+        self.assertEqual(repair_sha, git(project, 'rev-parse', repair_sha).decode().strip())
+
     def test_resume_continues_saved_partial_task_without_adopting_unrelated_work(self):
         project = self.project
         contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [
