@@ -22,4 +22,4 @@ coherence_workflow = ["schemas/*.json"]
 coordinate-implementation = "coherence_workflow.cli:main"
 
 [tool.setuptools.data-files]
-"share/coherence-workflow/pi-host" = ["pi-host/host.mjs", "pi-host/package.json", "pi-host/package-lock.json"]
+"share/coherence-workflow/pi-host" = ["pi-host/host.mjs", "pi-host/sdk.mjs", "pi-host/package.json", "pi-host/package-lock.json"]

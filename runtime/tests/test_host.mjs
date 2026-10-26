@@ -228,7 +228,7 @@ test('steering uses the installed SDK queue and matching user event, not queue i
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 
-test('opted-in host dispatches a control while a correlated callback remains pending', async () => {
+test('preload installs SDK mocks before the host dispatcher handles its correlated callback', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-steering-host-'));
   const host = fileURLToPath(new URL('../pi-host/host.mjs', import.meta.url));
   const preload = fileURLToPath(new URL('cleanup_adapter_fixture.mjs', import.meta.url));
@@ -255,6 +255,7 @@ test('opted-in host dispatches a control while a correlated callback remains pen
       if (record.type === 'result') break;
     }
     assert.equal(records.at(-1).type, 'result');
+    assert.equal(records.at(-1).text, 'legacy complete', 'preload mock must handle the dispatcher request');
     assert.deepEqual(records.filter(record => record.type === 'steer').map(record => record.status).slice(0, 2), ['accepted', 'queued']);
     if (child.exitCode === null) await new Promise((resolve, reject) => child.once('exit', code =>
       code === 0 ? resolve() : reject(new Error(`host exit ${code}`))));

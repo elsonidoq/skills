@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {mock} from 'node:test';
-import {piSdk, piSdkPackageDir} from '../../pi-host/host.mjs';
+import {piSdk, piSdkPackageDir} from '../../pi-host/sdk.mjs';
 const {ModelRuntime} = piSdk;
 const {createAssistantMessageEventStream, getCurrentTools} = await import(pathToFileURL(path.join(
   piSdkPackageDir, 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'index.js')).href);

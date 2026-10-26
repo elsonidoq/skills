@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import readline from 'node:readline';
 import {mock} from 'node:test';
-import {piSdk} from '../pi-host/host.mjs';
+import {piSdk} from '../pi-host/sdk.mjs';
 const {AgentSession} = piSdk;
 
 // When loaded with NODE_OPTIONS this patches only the local SDK provider seam;
