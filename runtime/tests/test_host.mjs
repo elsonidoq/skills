@@ -21,7 +21,13 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
       try {
         const tools = session.getActiveToolNames();
         if (readOnly) assert.deepEqual([...tools].sort(), ['find', 'grep', 'ls', 'read']);
-        else assert.ok(tools.includes('ask_owner'), 'registered ask_owner must also be active for workers');
+        else {
+          assert.ok(tools.includes('ask_owner'), 'registered ask_owner must also be active for workers');
+          assert.ok(tools.includes('report_task_outcome'), 'workers need an explicit unsuccessful-outcome boundary');
+          const outcomeTool = session.agent.state.tools.find(tool => tool.name === 'report_task_outcome');
+          await outcomeTool.execute('fixture-outcome', {status: 'blocked'});
+          assert.equal(session.coherenceTaskOutcome(), 'blocked', 'actual SDK tool result reaches the host completion boundary');
+        }
       } finally { session.dispose(); }
     }
     const missingTool = mock.method(AgentSession.prototype, 'getActiveToolNames', () => []);
@@ -153,6 +159,18 @@ test('explicit review repair retains transcript and identity while enabling only
       assert.deepEqual([...final.getActiveToolNames()].sort(), ['find', 'grep', 'ls', 'read']);
     } finally { final.dispose(); }
   } finally { await fs.rm(project, {recursive: true, force: true}); }
+});
+
+test('host uses an explicit completed outcome when no unsuccessful outcome is reported', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-host-outcome-'));
+  const session = await createWorkflowSession({project,
+    executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'}}, async () => ({}));
+  try {
+    assert.equal(session.coherenceTaskOutcome() ?? 'completed', 'completed');
+  } finally {
+    session.dispose();
+    await fs.rm(project, {recursive: true, force: true});
+  }
 });
 
 test('provider-bound routine authority reaches the SDK prompt without sending a provider request', async () => {

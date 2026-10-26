@@ -12,7 +12,7 @@ from .metric_artifacts import (MetricArtifactError, artifact_relative, create_ar
                                read_artifact, summarize_artifact)
 from .metrics import interval_record
 from .monitoring import Recorder, descriptor
-from .pi_adapter import PiAdapter, terminal_question
+from .pi_adapter import PiAdapter, TaskOutcome, terminal_question
 from .processes import process_identity
 from .sessions import select_session
 from .store import Blocked, canonical, git, safe_path
@@ -72,6 +72,13 @@ _IMPLEMENTATION_AUTHORITY = (
     'wording in source/task artifacts is superseded for that scope, not a current prohibition. '
     'Preserve task requirements, acceptance criteria, explicit manual gates and all safety/permission '
     'boundaries; ask the owner if a material authority conflict remains.\n'
+)
+
+# Shared worker completion reporting. Keep the transport boundary explicit without parsing summaries.
+_COMPLETION_REPORTING = (
+    'If this task is explicitly blocked, failed, incomplete, or you know required acceptance remains failed or unrun, '
+    'call report_task_outcome with the matching status before returning. A normal returned answer remains compatible for '
+    'completed work; do not report corrected tool errors or a required check that will be rerun as unsuccessful.\n'
 )
 
 # Shared worker permission defaults. Edit here, not in individual task/correction prompts.
@@ -948,7 +955,7 @@ class Engine:
 
                     def invoke_worker(prompt, **kwargs):
                         nonlocal continuation
-                        prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + '\n' + prompt
+                        prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + prompt
                         if continuation is not None:
                             prompt = ('Continue only the unfinished same-task work. Inspect the prior invocation/cause below; '
                                       'do not replay completed effects. Apply only the justified targeted correction; '
@@ -981,11 +988,11 @@ class Engine:
                         worker.opened_session = None
                         try:
                             result = self._prompt_worker(worker, prompt, **kwargs)
-                            # A normal transport return is not itself task acceptance. Adapters
-                            # may return an explicit failure object after delivering a question
-                            # answer; preserve that reported blocker instead of checkpointing it.
-                            # This deliberately does not interpret summary prose or require a
-                            # result format: ordinary text remains the existing completion path.
+                            # Transport resolution is not task acceptance. The actual SDK host
+                            # carries only an explicit worker-reported unsuccessful outcome here;
+                            # ordinary text remains the compatible completion path.
+                            if isinstance(result, TaskOutcome):
+                                raise Blocked('worker explicitly ' + result.status + '; partial work retained')
                             if isinstance(result, BaseException):
                                 raise result
                             if result is None:

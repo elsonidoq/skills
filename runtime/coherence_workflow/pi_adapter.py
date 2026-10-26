@@ -14,6 +14,12 @@ from .metrics import interval_record
 from .store import Blocked, canonical
 
 
+class TaskOutcome:
+    """An explicit unsuccessful outcome reported by the SDK-hosted worker."""
+    def __init__(self, status):
+        self.status = status
+
+
 def host_path():
     source = Path(__file__).resolve().parents[1] / 'pi-host/host.mjs'
     return source if source.exists() else Path(sys.prefix) / 'share/coherence-workflow/pi-host/host.mjs'
@@ -374,6 +380,9 @@ class PiAdapter:
                         elif kind == 'result':
                             if not isinstance(value.get('text'), str):
                                 raise Blocked('SDK result text must be a string')
+                            outcome = value.get('outcome')
+                            if outcome is not None and outcome not in ('completed', 'blocked', 'failed', 'incomplete'):
+                                raise Blocked('SDK result outcome must be completed, blocked, failed, or incomplete')
                             session = value.get('session')
                             if session is not None:
                                 if not (isinstance(session, dict) and isinstance(session.get('id'), str)
@@ -384,7 +393,7 @@ class PiAdapter:
                             self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
                             self.last_interval = (interval_record(**observations)
                                                   if self.last_observation is not None else None)
-                            result.append(value['text'])
+                            result.append(TaskOutcome(outcome) if outcome in ('blocked', 'failed', 'incomplete') else value['text'])
                             # Multiplexed host input intentionally remains open
                             # for controls; the result is its terminal boundary.
                             close_input()

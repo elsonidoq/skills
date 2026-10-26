@@ -103,6 +103,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
   // Retain the reviewer's resource policy after writer tools are enabled, also
   // on subsequent corrective prompts. Old saved reviews gain this marker here.
   const reviewerContext = readOnly || reviewRepair || savedSession?.reviewerContext === true;
+  let reportedOutcome = null;
   let sessionManager;
   if (savedSession) {
     if (typeof savedSession !== 'object' || typeof savedSession.id !== 'string' ||
@@ -154,6 +155,15 @@ export async function createWorkflowSession({project, executor, readOnly = false
         },
       });
       if (!readOnly) pi.registerTool({
+        name: 'report_task_outcome', label: 'Report unsuccessful task outcome',
+        description: 'Report that this task is blocked, failed, or incomplete. Use this when required acceptance is known failed or unrun; do not use it for corrected errors.',
+        parameters: {type: 'object', properties: {status: {type: 'string', enum: ['blocked', 'failed', 'incomplete']}}, required: ['status']},
+        execute: async (_id, args) => {
+          reportedOutcome = args.status;
+          return {content: [{type: 'text', text: 'Reported task outcome: ' + args.status}], details: {}};
+        },
+      });
+      if (!readOnly) pi.registerTool({
         name: 'ask_owner', label: 'Ask owner',
         description: 'Ask a material scope or permission question; do not invent an answer.',
         parameters: {type: 'object', properties: {question: {type: 'string'}}, required: ['question']},
@@ -168,7 +178,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
   await resourceLoader.reload();
   const {session} = await createAgentSession({
     cwd: project, modelRuntime, model, thinkingLevel: executor.effort,
-    tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner', 'cleanup_artifact'],
+    tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner', 'cleanup_artifact', 'report_task_outcome'],
     sessionManager, resourceLoader,
   });
   try {
@@ -183,6 +193,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
     session.coherenceSavedSession = {id: sessionManager.getSessionId(), file: sessionManager.getSessionFile(), compatibility,
       ...(reviewerContext ? {reviewerContext: true} : {})};
     session._coherenceSessionManager = sessionManager;
+    session.coherenceTaskOutcome = () => reportedOutcome;
     return session;
   } catch (error) {
     session.dispose();
@@ -346,7 +357,8 @@ export async function execute(request, emit, ask, controls = null) {
     const text = await promptSession(session, request.prompt, emit);
     session.coherenceSavedSession = {...session.coherenceSavedSession,
       file: session._coherenceSessionManager.getSessionFile()};
-    return {text, session: session.coherenceSavedSession, before, after: observation(session)};
+    return {text, outcome: session.coherenceTaskOutcome?.() ?? 'completed',
+      session: session.coherenceSavedSession, before, after: observation(session)};
   } finally {
     process.off('SIGTERM', cancel);
     process.off('SIGINT', cancel);

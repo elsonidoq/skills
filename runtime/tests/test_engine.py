@@ -1,9 +1,12 @@
 """Offline operation fixtures exercise real task/check/Git ordering, not provider success."""
 import json
+import os
+import sys
 from unittest.mock import patch
 
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
+from coherence_workflow.pi_adapter import TaskOutcome
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
@@ -170,10 +173,10 @@ class SequentialExecutionTests(ProjectTest):
         """Composed V1: transport return cannot release an explicitly failed task."""
         project = self.project
         for label, returned, partial in (
-            ('blocked', Blocked('worker explicitly blocked'), False),
-            ('failed', Blocked('worker explicitly failed'), True),
-            ('incomplete', None, True),
-            ('required-unrun', Blocked('worker reported required acceptance unrun'), True),
+            ('blocked', TaskOutcome('blocked'), False),
+            ('failed', TaskOutcome('failed'), True),
+            ('incomplete', TaskOutcome('incomplete'), True),
+            ('required-unrun', TaskOutcome('failed'), True),
         ):
             with self.subTest(label=label):
                 calls, answers = [], []
@@ -214,6 +217,37 @@ class SequentialExecutionTests(ProjectTest):
                 self.assertIn(('worker_invocation', 'failed'), history)
                 self.assertNotIn(('checkpoint', 'passed'), history)
                 self.assertEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+
+    def test_actual_adapter_transport_outcome_blocks_before_checkpoint_or_dispatch(self):
+        """The host result, not a Python exception fixture, carries unsuccessful work."""
+        host = self.root / 'blocked_host.py'
+        host.write_text("""import json
+from pathlib import Path
+request = json.loads(input())
+print(json.dumps({'type': 'claim', 'path': 'partial.txt'}), flush=True)
+assert json.loads(input()) == {'ok': True}
+Path(request['project'], 'partial.txt').write_text('partial\\n')
+print(json.dumps({'type': 'result', 'text': 'delivered answer', 'outcome': 'blocked'}), flush=True)
+""")
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), \
+             patch.dict(os.environ, {'COHERENCE_NODE': sys.executable,
+                                    'COHERENCE_PARENT_BRIDGE_SOCKET': '', 'COHERENCE_PARENT_BRIDGE_TOKEN': '',
+                                    'COHERENCE_PARENT_BRIDGE_SESSION': '', 'COHERENCE_PARENT_BRIDGE_RUN': ''}):
+            with Authority(self.project) as owner:
+                with self.assertRaisesRegex(Blocked, 'worker explicitly blocked'):
+                    Engine(owner, 'host-outcome', admit([
+                        {'id': 'A', 'description': 'A', 'owned_paths': ['partial.txt']},
+                        {'id': 'B', 'description': 'B', 'depends': ['A']}]), EXECUTOR).invoke()
+        self.assertEqual((self.project / 'partial.txt').read_text(), 'partial\n')
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+        import sqlite3
+        db = sqlite3.connect(self.project / '.coherence/workflow/workflow.sqlite')
+        tasks = dict(db.execute("SELECT task_id,state FROM execution_tasks WHERE run_id='host-outcome'"))
+        history = list(db.execute("SELECT kind,state FROM execution_history WHERE run_id='host-outcome'"))
+        db.close()
+        self.assertEqual(tasks, {'A': 'failed'})
+        self.assertIn(('worker_invocation', 'failed'), history)
+        self.assertNotIn(('checkpoint', 'passed'), history)
 
     def test_findings_honestly_reported_commits_retained_no_disposition_database(self):
         project = self.project
