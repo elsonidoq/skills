@@ -96,6 +96,34 @@ not block unrelated legacy work.
   locations and formats. Do not assume a `docs/` layout or create owners before those
   choices.
 
+### Work-routing choice
+
+For new adoption and full refresh, inspect existing work-routing rules in project instructions,
+including local overrides outside managed bounds. For policy-only refresh, address routing only
+when requested; a parsimony-only refresh does not add a routing-policy decision.
+When routing is missing or conflicts with a blanket Coherence requirement, use `ask_user` to
+offer the template below, customization, or retention/reconciliation of an existing local policy.
+Explain the three routes before asking; never silently impose the template. An already-approved,
+clear local policy needs no repeated selection. Selection alone grants no writes: include the
+selected text, exact instructions owner/subsection and any conflicts in the existing Approval diff.
+
+Suggested project-instructions template (customize with the owner; no universal size thresholds):
+
+> **Work routing**
+> - **Direct work:** Handle small, bounded inspection, edits and focused checks in the current
+>   session without a workflow. File counts are examples, not eligibility rules.
+> - **Ordinary delegation:** Delegate bounded unplanned work to an agent or agents, including
+>   unexpected repairs found during coordinated implementation. Multiple consecutive delegations
+>   are allowed; do not manufacture a new Coherence workflow for ad hoc work.
+> - **Planned Coherence work:** Use the applicable planning and approval contracts to derive
+>   implementation tasks from specifications, then execute those approved tasks. Launching a
+>   workflow runner alone is not using Coherence; adoption is not a blanket workflow requirement.
+> - **Larger unexpected work:** Ask the owner whether to address it now through bounded delegation,
+>   plan it through Coherence, or file an issue with the declared tracker and continue the original
+>   work. Do not infer the answer from agent, file or action counts.
+> - Routing grants no new scope or external effects and waives no required acceptance, review,
+>   safety or permission gates. Keep ordinary scoped repair authority and existing local overrides.
+
 **SpecKit project-asset discovery (full initialization, read-only).**
 
 - After the dirty-first capability gate, check SpecKit project assets on every full initialization:
@@ -226,6 +254,11 @@ and `compact-memory` can cite it. Record:
   Verify each target before writing; missing installed contracts stop adoption/refresh.
   Refer to these owners rather than reproduce their workflow rules. Neither automatically
   creates an Epic. Package references do not supersede local product policy or authorize work.
+- Work routing: record the owner-selected policy from Discovery in the approved project
+  instructions owner (`AGENTS.md` or equivalent), not merely a link to the installer or a planning
+  artifact. Preserve approved custom wording and reconcile conflicting blanket workflow rules only
+  within the exact approved diff. Do not change this or any other project's policy as a side effect
+  of changing the installed skill.
 - Policy: Resolve the installed [Parsimony and Actionable Checks](../planner/references/parsimony.md)
   owner and include its marked project-copy fragment exactly once in the approved managed
   instructions. Verify it is readable before relying on it; no hard-coded installation path.
@@ -281,6 +314,12 @@ convert old artifacts or approvals, authorize substantive documentation through 
 or reset the memory store. Do not implicitly migrate/delete legacy custom stores. Preserve
 the existing memory store and index on refresh, never replace them with a skeleton or create
 a separate guidelines system.
+
+On refresh, retain the selected work-routing policy, including custom wording inside managed
+bounds; it is not a canonical fragment to replace when the suggested template changes. Missing
+routing proposes only an approved bounded insertion; ambiguous/conflicting policy requires the
+keep/customize/reconcile choice from Discovery. An unchanged repeat makes no routing write or
+duplicate block. Apply the existing Approval and Preflight protections to any routing patch.
 
 For association changes, Adoption writes are limited to approved instructions/memory; do not create
 documentation directories or planning artifacts in this stage.
@@ -391,6 +430,11 @@ including technical-gotcha or owner-guidance entries. Verify marked contract, as
 path, resolving index, no fabricated gotchas and no unrelated changes; it is one associated
 index and has no fabricated guidance. Validate only introduced documentation paths/headings/links/references,
 not a repository-wide audit.
+
+When routing is in scope, re-read the actual project instructions and verify the approved routing
+text is recorded once, existing customizations and surrounding bytes are preserved, and an
+unchanged repeat needs no write. Report retained versus added/reconciled policy; static text checks
+do not prove live agent routing judgment.
 
 Structural readiness requires approved instructions/memory association/index,
 documentation owners/indexes/routing and schema owner where required.

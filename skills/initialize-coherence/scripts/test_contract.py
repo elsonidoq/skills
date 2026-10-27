@@ -519,6 +519,57 @@ class PolicyRefreshTests(unittest.TestCase):
                 self.assertIn(clause, doc, path)
 
 
+class WorkRoutingTests(unittest.TestCase):
+    """Installer guidance checks, not an executed installer or live routing proof."""
+
+    def test_owner_choice_precedes_bounded_instructions_write(self):
+        discovery = stage(SKILL.read_text(), "Discovery")
+        choice = discovery.split("### Work-routing choice", 1)[1].split(
+            "**SpecKit project-asset discovery", 1)[0]
+        for clause in (
+            "inspect existing work-routing rules", "local overrides outside managed bounds",
+            "address routing only", "when requested", "use `ask_user`",
+            "customization", "retention/reconciliation", "never silently impose",
+            "needs no repeated selection", "Selection alone grants no writes",
+            "selected text, exact instructions owner/subsection and any conflicts",
+        ):
+            self.assertIn(clause, choice)
+        adoption = normalized(stage(SKILL.read_text(), "Adoption"))
+        for clause in ("record the owner-selected policy", "`agents.md` or equivalent",
+                       "not merely a link", "exact approved diff"):
+            self.assertIn(clause, adoption)
+
+    def test_template_distinguishes_routes_without_new_authority(self):
+        template = normalized(stage(SKILL.read_text(), "Discovery").split(
+            "> **Work routing**", 1)[1].split("**SpecKit project-asset discovery", 1)[0].replace("\n> ", " "))
+        for clause in (
+            "**direct work:**", "**ordinary delegation:**", "**planned coherence work:**",
+            "multiple consecutive delegations", "unexpected repairs",
+            "do not manufacture a new coherence workflow", "tasks from specifications",
+            "workflow runner alone is not using coherence", "not a blanket workflow requirement",
+            "**larger unexpected work:**", "bounded delegation", "plan it through coherence",
+            "file an issue with the declared tracker", "continue the original work",
+            "counts are examples, not eligibility rules", "grants no new scope or external effects",
+            "required acceptance, review", "safety or permission gates",
+        ):
+            self.assertIn(clause, template)
+
+    def test_refresh_preserves_choice_rather_than_syncing_template(self):
+        adoption = normalized(stage(SKILL.read_text(), "Adoption"))
+        for clause in (
+            "retain the selected work-routing policy", "custom wording inside managed bounds",
+            "not a canonical fragment to replace", "approved bounded insertion",
+            "keep/customize/reconcile choice", "no routing write or duplicate block",
+            "existing approval and preflight protections",
+        ):
+            self.assertIn(clause, adoption)
+        validation = normalized(stage(SKILL.read_text(), "Validation"))
+        for clause in ("when routing is in scope", "actual project instructions",
+                       "recorded once", "surrounding bytes are preserved",
+                       "unchanged repeat needs no write", "do not prove live agent routing judgment"):
+            self.assertIn(clause, validation)
+
+
 class DecisionConsultationTests(unittest.TestCase):
     """Authored managed-instruction diffs, not an adoption runner."""
 
