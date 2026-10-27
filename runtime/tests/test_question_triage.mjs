@@ -147,7 +147,7 @@ class Adapter:
     def prompt(self, prompt, **kwargs):
         if kwargs.get('read_only'):
             Adapter.reviews+=1
-            return json.dumps({'approved':Adapter.reviews==4, 'findings':[] if Adapter.reviews==4 else ['owned.txt:1 - missing input crashes requests']})
+            return json.dumps({'approved':Adapter.reviews==4, 'coverage':['fixture examined'], 'coverage_gaps':[], 'findings':[] if Adapter.reviews==4 else ['owned.txt:1 - missing input crashes requests']})
         if 'Actionable findings:' in prompt:
             Adapter.fixes+=1
         return 'offline fixture'

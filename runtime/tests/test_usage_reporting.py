@@ -38,7 +38,7 @@ class UsageReportingTests(ProjectTest):
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     self.last_interval = interval('review-session', 7, .07)
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'REQUIRED check' in prompt:
                     project.joinpath('ready').write_text('ready\n')
                     self.last_interval = interval('worker-session', 3, .03)
@@ -76,7 +76,7 @@ class UsageReportingTests(ProjectTest):
         class Adapter:
             def __init__(self, *_args, **_kwargs): self.last_interval = interval('worker', 1, .01)
             def prompt(self, _prompt, **kwargs):
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if kwargs.get('read_only') else 'done'
         with Authority(project) as owner:
             with patch('coherence_workflow.engine.create_artifact', side_effect=OSError('optional gap')):
                 result = Engine(owner, 'gap', admit([{'id': 'task', 'description': 'synthetic'}]),

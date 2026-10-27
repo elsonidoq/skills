@@ -8,6 +8,7 @@ Provide this contract to the available reviewer. Replace each bracketed field wi
 - **Requirements:** [acceptance criteria, issue, plan, or specification]
 - **Verification:** [checks run and results]
 - **Constraints:** [compatibility, migration, policy, or environment limits]
+- **For repair review:** [prior findings, examined/passing coverage, remaining gaps, prior reviewed head and actual repair changes]
 
 If an input is unavailable, identify the gap and limit the verdict accordingly. Review read-only unless explicitly authorized to make changes.
 
@@ -47,9 +48,15 @@ Read the changed code and enough surrounding context to substantiate each findin
 
 ## Executable review
 
-Review the actual full committed base/head range against the requested tasks and relevant
-project checks. Start final review in a fresh independent context; the same reviewer may
-recheck corrections. Remain read-only: report concrete findings, do not implement them or
+Initially review the actual full committed base/head range against the requested tasks and
+relevant project checks. Start final review in a fresh independent context. After repairs,
+independently review the repair changes and affected interactions, confirm addressed findings,
+and check for new defects. Carry forward previously examined, unaffected passing coverage
+instead of rereviewing the original range wholesale. If repairs invalidate an earlier
+conclusion, explain why and revisit that conclusion. Return updated cumulative passing
+coverage, removing invalidated conclusions until re-established. Retain unresolved findings
+and initial coverage gaps; fix-only review cannot certify unchecked original work. Missing
+historical coverage is a gap to examine, not implicit passing coverage. Remain read-only: report concrete findings, do not implement them or
 invent check results or owner answers. Include precise locations and failure scenarios.
 The runner consumes its ordinary approval/findings result; no packaged evidence schema,
 SQL receipt, original-session pin or graph-outcome protocol is required.
@@ -66,8 +73,9 @@ List findings first, ordered by severity. For each finding include:
 
 Then provide:
 
+- **Examined and passing:** concrete areas examined and found working, including still-valid prior coverage on repair reviews; no claims for unchecked areas
 - **Open questions:** ambiguities or inaccessible evidence that affect the verdict
 - **Verdict:** ready, ready with stated follow-up, or not ready
 - **Verification gaps:** checks still needed
 
-Do not add praise, style preferences, or hypothetical scope unrelated to the change. If there are no findings, say so explicitly and still state residual risks or verification gaps.
+Report passing coverage as factual review evidence, not praise. Do not add style preferences or hypothetical scope unrelated to the change. If there are no findings, say so explicitly and still state residual risks or verification gaps.

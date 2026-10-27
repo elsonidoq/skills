@@ -25,7 +25,7 @@ class CheckpointRecoveryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 prompts.append(prompt)
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('bad\n' if len(prompts) == 1 else 'good\n')
@@ -55,7 +55,7 @@ class CheckpointRecoveryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('committed\n')
                 return 'work'

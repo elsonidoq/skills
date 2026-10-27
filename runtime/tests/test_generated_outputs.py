@@ -26,7 +26,7 @@ class GeneratedActionScopeTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, claim=None, command=None, read_only=False):
                 if read_only:
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 claim('owned.txt')
                 (project/'owned.txt').write_text('source\n')
                 command('start', 'synthetic-build')

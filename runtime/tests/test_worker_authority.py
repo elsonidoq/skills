@@ -57,7 +57,7 @@ class WorkerAuthorityTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 prompts.append(prompt)
                 return 'Verified no-change offline fixture'
 
@@ -83,7 +83,7 @@ class WorkerAuthorityTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 prompts.append(prompt)
                 if len(prompts) > 1:
                     kwargs['claim']('owned.txt')
@@ -121,7 +121,7 @@ class WorkerAuthorityTests(ProjectTest):
             def __init__(self, *args, **kwargs): self.saved_session = identity
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 raise Blocked('labelled authority fixture interruption')
 
         with Authority(self.project) as owner:
@@ -135,7 +135,7 @@ class WorkerAuthorityTests(ProjectTest):
                 def __init__(self, *args, **kwargs): pass
                 def prompt(self, prompt, **kwargs):
                     if kwargs.get('read_only'):
-                        return '{"approved":true,"findings":[]}'
+                        return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                     prompts.append(prompt)
                     self_test.assertEqual(kwargs['saved_session'], identity)
                     return 'Resumed scoped fixture'

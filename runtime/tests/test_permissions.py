@@ -25,7 +25,7 @@ class RoutineDefaultsTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, read_only=False, **kwargs):
                 prompts.append((prompt, read_only))
-                return '{"approved":true,"findings":[]}' if read_only else 'offline worker'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if read_only else 'offline worker'
 
         def run(run_id, contract):
             with Authority(self.project) as authority:
@@ -125,7 +125,7 @@ class PaidScopeTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, read_only=False, **kwargs):
                 prompts.append((prompt, read_only))
-                return '{"approved":true,"findings":[]}' if read_only else 'offline worker'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if read_only else 'offline worker'
         with Authority(self.project) as authority:
             Engine(authority, 'granted', admit([{'id': 'dummy', 'description': 'Synthetic fixture'}]),
                    EXECUTOR, adapter=Capture, paid_scope=scope,

@@ -33,8 +33,8 @@ class OwnerAssignmentExecutionRoleTests(ProjectTest):
                 calls.append((self.profile, kwargs.get('read_only', False)))
                 if not kwargs.get('read_only'):
                     return 'offline worker'
-                return ('{"approved":false,"findings":["fixture.txt:1 - fixture finding"]}'
-                        if len([call for call in calls if call[1]]) == 1 else '{"approved":true,"findings":[]}')
+                return ('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["fixture.txt:1 - fixture finding"]}'
+                        if len([call for call in calls if call[1]]) == 1 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}')
 
         executor = {**worker, 'reviewer': reviewer}
         with Authority(self.project) as owner:
@@ -71,7 +71,7 @@ class SequentialExecutionTests(ProjectTest):
                 if read_only:
                     case.assertIn('Diff:', prompt)
                     case.assertIn('consumer', prompt)
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if len(sessions) == 1:
                     claim('owned.txt')
                     (project/'owned.txt').write_text('producer\n')
@@ -97,7 +97,7 @@ class SequentialExecutionTests(ProjectTest):
         self.assertTrue(all(instruction in prompt for prompt in worker_prompts + review_prompts))
         self.assertIn('Task: {"description":"Produce","id":"producer"}', worker_prompts[0])
         self.assertIn('Skills are disabled for this reviewer, so locate and read the canonical contract as a file with read/search tools;', review_prompts[0])
-        self.assertIn('Range: ' + self.base + '..', review_prompts[0])
+        self.assertIn('Original range: ' + self.base + '..', review_prompts[0])
         self.assertEqual(len(sessions), 3)
         self.assertEqual(len({id(s) for s in sessions}), 3)
         self.assertEqual(len(result['checkpoints']), 2)
@@ -136,7 +136,7 @@ class SequentialExecutionTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 name = 'untracked.txt' if '"id":"handoff-untracked"' in prompt else 'tracked.txt'
                 before = (project/name).read_bytes()
                 seen.append((name, before))
@@ -298,7 +298,7 @@ request = json.loads(input())
 with Path(DISPATCHES).open('a') as log:
     log.write(json.dumps({'read_only': request['readOnly'], 'prompt': request['prompt']}) + '\\n')
 if request['readOnly']:
-    text, outcome = '{"approved":false,"findings":["owned.txt:1 - fixture defect"]}', 'completed'
+    text, outcome = '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - fixture defect"]}', 'completed'
 elif 'Actionable findings:' in request['prompt']:
     if PARTIAL:
         print(json.dumps({'type': 'claim', 'path': NAME}), flush=True)
@@ -346,7 +346,7 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, read_only=False, claim=None, command=None):
                 if read_only:
-                    return '{"approved":false,"findings":["owned.txt:1 - defect"]}'
+                    return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - defect"]}'
                 claim('owned.txt')
                 (project/'owned.txt').write_text('changed\n')
                 return 'changed'
@@ -381,7 +381,7 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
         class OfflineQuestions:
             def __init__(self, project, executor, **kwargs): self.observe_question = kwargs.get('observe_question')
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 for state in ('requested', 'returned', 'sent'):
                     self.observe_question(state)
                 return 'offline question adapter'
@@ -441,12 +441,12 @@ else:
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     prompts.append(prompt)
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 return 'offline worker'
         contract = admit({'review_base': self.base, 'tasks': [{'id': 'fix', 'description': 'Fix'}]})
         with Authority(project) as owner:
             Engine(owner, 'range', contract, EXECUTOR, adapter=Offline).invoke()
-        self.assertIn('Range: ' + self.base + '..', prompts[0])
+        self.assertIn('Original range: ' + self.base + '..', prompts[0])
         bad = admit({'review_base': 'not-a-commit', 'tasks': [{'id': 'again', 'description': 'Again'}]})
         with Authority(project) as owner:
             with self.assertRaisesRegex(Blocked, 'ancestor'):
@@ -459,7 +459,7 @@ else:
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     prompts.append(prompt)
-                    return '{"approved":false,"findings":["fix.txt:1 - original defect"]}' if len(prompts) == 1 else '{"approved":true,"findings":[]}'
+                    return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["fix.txt:1 - original defect"]}' if len(prompts) == 1 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'Continue the rejecting review' in prompt:
                     raise Blocked('original defect')
                 if '"id":"fix"' in prompt:
@@ -473,9 +473,9 @@ else:
         fixing = admit({'monitor': {'correction_of': {'run_id': 'original', 'review_execution_id': 'review-id'}}, 'review_base': self.base, 'tasks': [{'id': 'fix', 'description': 'Fix'}]})
         with Authority(project) as owner:
             Engine(owner, 'fixing', fixing, EXECUTOR, adapter=OfflineReviewCycle).invoke()
-        self.assertIn('Range: ' + self.base + '..', prompts[1])
+        self.assertIn('Original range: ' + self.base + '..', prompts[1])
         self.assertIn('fix.txt', prompts[1])
-        self.assertTrue(all('Review the complete original range and diff on every review and rereview.' in prompt and
+        self.assertTrue(all('Initial review: examine the complete requested change' in prompt and
                             'Attributable task/repair checkpoints (verified against Git):' in prompt
                             for prompt in prompts))
         import sqlite3
@@ -510,7 +510,7 @@ else:
         class Successful:
             def __init__(self, *a, **k): pass
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('done\n')
                 return 'offline worker'
@@ -550,7 +550,7 @@ else:
         class ReviewFailure:
             def __init__(self, *a, **k): pass
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":false,"findings":["review.txt:1 - original review failure"]}'
+                if kwargs.get('read_only'): return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["review.txt:1 - original review failure"]}'
                 return 'worker'
         for run, task, adapter, reason in (
             ('append-worker', admit([{'id': 'worker', 'description': 'Worker'}]), WorkerFailure, 'original worker failure'),
@@ -562,7 +562,7 @@ else:
         class GitFailure:
             def __init__(self, *a, **k): pass
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 kwargs['claim']('git-failure.txt')
                 project.joinpath('git-failure.txt').write_text('partial\n')
                 return 'worker'

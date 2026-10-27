@@ -32,7 +32,7 @@ class SameRunResumeTests(ProjectTest):
             workers = 0
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 Adapter.workers += 1
                 kwargs['claim']('tiny.txt')
                 (project/'tiny.txt').write_text('done')
@@ -66,7 +66,7 @@ class SameRunResumeTests(ProjectTest):
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 kwargs['claim']('recovery.txt')
                 project.joinpath('recovery.txt').write_bytes(b'preserved recovery bytes\nintended correction\n')
                 raise KeyboardInterrupt
@@ -82,7 +82,7 @@ class SameRunResumeTests(ProjectTest):
                 def __init__(self, *_args, **_kwargs): pass
                 def prompt(self, _prompt, **kwargs):
                     if kwargs.get('read_only'):
-                        return '{"approved":true,"findings":[]}'
+                        return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                     Continued.calls += 1
                     kwargs['claim']('recovery.txt')
                     return 'checkpoint the already intended handoff edit'
@@ -166,9 +166,9 @@ def result(text, outcome='completed', session=None):
 saved = {'id': 'warm-review', 'file': '/private/review.jsonl', 'compatibility': {'readOnly': True}}
 if 'Independently review' in prompt:
     if count('review') == 1:
-        result('{"approved":false,"findings":["owned.txt:1 - fixture defect [basis: correctness]"]}', session=saved)
+        result('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - fixture defect [basis: correctness]"]}', session=saved)
     else:
-        result('{"approved":true,"findings":[]}', session=saved)
+        result('{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}', session=saved)
 elif any(marker in prompt for marker in ('Actionable findings:', 'Actual failed attempt:', 'Actual checkpoint error:')):
     phase = count('fix')
     assert request.get('savedSession', {}).get('id') == 'warm-review'
@@ -356,7 +356,7 @@ else:
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 initial_calls.append('worker')
                 if len(initial_calls) == 2:
                     raise KeyboardInterrupt
@@ -379,7 +379,7 @@ else:
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     resumed_calls.append('review')
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 resumed_calls.append('worker')
                 kwargs['claim']('two.txt')
                 project.joinpath('two.txt').write_text('two\n')
@@ -425,8 +425,10 @@ else:
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 assert kwargs['read_only']
+                assert 'Historical review has no explicit coverage' in _prompt
+                assert 'establish original coverage before approval' in _prompt
                 Reviewer.calls += 1
-                return '{"approved":true,"findings":[]}'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
 
         with Authority(self.project) as owner:
             saved = owner.store.resume('review-resume')['input']
@@ -457,7 +459,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
                 def __init__(self, *args, **kwargs): pass
                 def prompt(self, prompt, **kwargs):
                     calls.append(prompt)
-                    if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                    if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                     self_test.assertIn('terminal unknown transport cause', prompt)
                     self_test.assertIn('diagnosed fixture disconnected pipe; repaired fixture transport', prompt)
                     self_test.assertEqual(kwargs['saved_session'], identity)
@@ -497,7 +499,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
         class BlockedWorker:
             def __init__(self, *_args, **_kwargs): self.saved_session = saved
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 calls.append('predecessor' if 'completed predecessor' in prompt else 'unfinished')
                 if 'completed predecessor' in prompt:
                     kwargs['claim']('predecessor.txt')
@@ -524,7 +526,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
         class Continued:
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 calls.append('continued')
                 self_test.assertIn('Continue only the unfinished same-task work.', prompt)
                 self_test.assertEqual(kwargs['saved_session'], saved)
@@ -557,7 +559,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'Actual failed attempt:' in prompt and not prompt.startswith('Continue only'):
                     raise KeyboardInterrupt
                 if 'first synthetic task' in prompt:
@@ -590,7 +592,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'Actual failed attempt:' in prompt and not prompt.startswith('Continue only'):
                     project.joinpath('ready').write_text('ready\n')
                     return 'corrected setup'
@@ -671,7 +673,7 @@ class CancelledPartialResumeTests(ProjectTest):
                 def __init__(self, *_args, **_kwargs): pass
                 def prompt(self, _prompt, **kwargs):
                     if kwargs.get('read_only'):
-                        return '{"approved":true,"findings":[]}'
+                        return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                     kwargs['claim']('work.txt')
                     project.joinpath('work.txt').write_text('continued\n')
                     kwargs['cleanup']('web/dist/known.js')

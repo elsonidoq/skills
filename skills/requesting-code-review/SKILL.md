@@ -23,7 +23,7 @@ For direct review requests in fresh or resumed contexts, consult [save-adr](../s
 ## Choose A Review Path
 
 - If an independent reviewer capability is available, provide it the prepared context and the contract in [code-reviewer.md](code-reviewer.md).
-- For executable Coordinate Implementation, missing independent review leaves final acceptance incomplete; self-review cannot substitute. Review the actual full committed range in a fresh read-only context against the requested work and relevant project checks. No schema, provenance receipt or evidence template is required. For other workflows, label any explicitly permitted self-review as self-review, never independent review.
+- For executable Coordinate Implementation, missing independent review leaves final acceptance incomplete; self-review cannot substitute. Initially review the actual full committed range in a fresh read-only context against the requested work and relevant project checks. After repairs, provide the prior findings and passing coverage plus the actual repair delta; independently review fixes and affected interactions, carrying forward still-valid unaffected coverage rather than restarting the original review. Revisit invalidated conclusions with an explanation; never certify unchecked original work through a fix-only review. No schema, provenance receipt or evidence template is required. For other workflows, label any explicitly permitted self-review as self-review, never independent review.
 - If the change evidence cannot be accessed, request or produce an accessible patch or file set. Do not claim a review occurred without reading the changed code.
 
 The reviewer mechanism may be an agent, person, service, or local review tool. Do not assume a fixed agent name, model, Git host, branch, commit layout, or shell command.
@@ -33,11 +33,12 @@ The reviewer mechanism may be an agent, person, service, or local review tool. D
 - Address blocking correctness, security, data-loss, and requirement failures before proceeding.
 - Resolve other findings according to their demonstrated impact and project policy.
 - Verify technically questionable feedback against code, tests, and requirements; respond with evidence when declining it.
-- Re-run affected checks after fixes. Request another review when fixes materially change behavior or architecture.
+- Re-run affected checks after fixes. Independently review repairs and their affected interactions, confirming addressed findings and retaining unresolved findings or coverage gaps. Completion combines retained valid coverage with successful repair review; a repair alone is not acceptance.
 
 ## Completion Check
 
 - The reviewer read the actual change scope.
+- The outcome explicitly separates examined/passing areas from actionable defects; unchecked areas are not claimed as passing.
 - Findings cite concrete locations and impact.
 - The verdict states whether the change is ready and under what conditions.
 - Unresolved findings and verification gaps are visible to the next decision-maker.

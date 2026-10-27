@@ -27,7 +27,7 @@ class RunInputHistoryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 prompts.append(prompt)
                 if 'PRIVATE original task text' in prompt:
                     kwargs['claim']('owned.txt')
@@ -80,7 +80,7 @@ class RequiredStorageRecoveryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'Actual failed attempt:' in prompt:
                     effects.append('correction')
                     project.joinpath('ready').write_text('ready\n')
@@ -117,7 +117,7 @@ class RequiredStorageRecoveryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 prompts.append(prompt)
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if kwargs.get('read_only') else 'done'
 
         with Authority(self.project) as owner:
             with patch.object(owner.store, '_history_insert', side_effect=sqlite3.OperationalError('storage unavailable')):

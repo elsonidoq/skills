@@ -23,7 +23,7 @@ class RequiredCheckCorrectionTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, claim=None, command=None, read_only=False):
                 if read_only:
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 prompts.append(prompt)
                 if len(prompts) == 1:
                     claim('owned.txt')
@@ -75,7 +75,7 @@ class RequiredCheckCorrectionTests(ProjectTest):
             def __init__(self, *args, **kwargs): self.calls = 0
             def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
                 if read_only:
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 self.calls += 1
                 if self.calls == 1:
                     claim('owned.txt')

@@ -186,7 +186,9 @@ Workers use ordinary SDK tools and correct harmless read/argument errors in the 
 The runner inspects baseline/actual edits, preserves unrelated work, runs optional specified project
 commands, and creates one focused explicit-path commit per task with normal hooks/signing.
 No mandatory collected-count/evidence format or no-change empty commit. Fresh independent
-read-only full-range review remains required; concrete findings are honestly reported.
+read-only initial review covers the full range and reports passing coverage plus defects.
+Repair reviews check fixes and affected interactions, retaining valid prior coverage; unresolved
+findings or coverage gaps prevent acceptance.
 SDK compaction and long-output continuation remain normal behavior, not launch poison.
 
 `status`/`history` are passive readers. `abandon` explicitly labels an inspected old run abandoned,

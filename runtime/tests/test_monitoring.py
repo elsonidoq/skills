@@ -93,7 +93,7 @@ class MonitoringStorageTests(ProjectTest):
             def __init__(self, *args, **kwargs): self.calls = 0
             def prompt(self, prompt, *, read_only=False, **kwargs):
                 if read_only:
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 self.calls += 1
                 return 'returned'
 
@@ -140,7 +140,7 @@ class MonitoringStorageTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
                 if read_only:
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 calls.append('initial' if len(calls) == 0 else 'interrupted-correction')
                 if len(calls) == 1:
                     claim('effect.txt')
@@ -158,7 +158,7 @@ class MonitoringStorageTests(ProjectTest):
                 def __init__(self, *args, **kwargs): pass
                 def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
                     if read_only:
-                        return '{"approved":true,"findings":[]}'
+                        return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                     self_case.assertIn('Continue only the unfinished same-task work.', prompt)
                     calls.append('resumed-correction')
                     claim('ready.txt')
@@ -188,7 +188,7 @@ class MonitoringStorageTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, read_only=False, **kwargs):
                 if read_only:
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 raise RuntimeError('offline failure')
 
         with Authority(self.project) as owner:

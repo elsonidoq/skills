@@ -25,7 +25,7 @@ class SessionRoutingTests(ProjectTest):
             def prompt(self, prompt, *, claim=None, read_only=False, saved_session=None, reuse_key=None, **_kwargs):
                 if read_only:
                     reviews.append(self)
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'REQUIRED check' in prompt:
                     self.assert_same_worker = True
                     claim('ready')
@@ -84,7 +84,7 @@ class SessionRoutingTests(ProjectTest):
 
             def prompt(self, prompt, *, claim=None, read_only=False, saved_session=None, **_kwargs):
                 if read_only:
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 saved.append(saved_session)
                 claim('one.txt' if '"id":"one"' in prompt else 'two.txt')
                 self.saved_session = {'id': 'persisted-worker', 'file': '/private/worker.jsonl'}

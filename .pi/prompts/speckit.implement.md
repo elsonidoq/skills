@@ -70,7 +70,9 @@ Apply the shared [task-commit contract](../../skills/memory-handling/references/
 5. Read authoritative `status`/`pending`. Host exit does not imply background continuation.
    Report waiting/blocked/interrupted truthfully. Run applicable after-implementation hooks only
    after their original success/authority prerequisites; an unanswered gate is not completion.
-   Implementation complete is separate from current full-range independent review/acceptance.
+   Implementation complete is separate from independent review/acceptance: initial full-range review
+   records passing coverage and findings; repair reviews check fixes and affected interactions,
+   retaining valid coverage without certifying unchecked or invalidated conclusions.
 
 ## Mandatory Post-Execution Hooks
 

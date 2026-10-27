@@ -142,7 +142,7 @@ class MetricArtifactTests(ProjectTest):
         class Adapter:
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if kwargs.get('read_only') else 'done'
 
         with Authority(self.project) as authority:
             result = Engine(authority, 'terminal-calls', admit([{'id': 'metric', 'description': 'fixture'}]),
@@ -184,7 +184,7 @@ class MetricArtifactTests(ProjectTest):
                         def prompt(self, _prompt, **kwargs):
                             if failing:
                                 raise original_error
-                            return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'done'
+                            return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if kwargs.get('read_only') else 'done'
                     retained = {}
                     def finalize(engine, result=None):
                         path = engine.metric_artifact.path

@@ -81,8 +81,10 @@ actual project check execution and explicit-owned-path focused commits; workers 
 or commit. Checks and path limits are optional context, not universally required metadata.
 Actual check failures cannot be reported passed. Normal Git hooks/signing and unrelated
 staged/unstaged/untracked/STATE/custom work are preserved. No no-change empty commit. One
-fresh independent read-only full-range final review remains distinct from implementation.
-Findings are reported honestly, not accepted through a SQL disposition or evidence hash.
+fresh independent read-only initial full-range review remains distinct from implementation.
+Repair review checks the actual fixes and affected interactions, carrying forward valid passing
+coverage while revisiting invalidated conclusions. Findings and coverage gaps remain visible and
+prevent acceptance, not accepted through a SQL disposition or evidence hash.
 
 SQLite stores useful ordinary progress/history. Old tables/rows remain readable in place;
 new work never replays or settles old intent records. Optional history errors cannot veto coding.

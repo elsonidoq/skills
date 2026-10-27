@@ -245,7 +245,7 @@ class ChainHistoryTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":false,"findings":["owned.txt:1 - actionable defect [basis: correctness]"]}'
+                    return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - actionable defect [basis: correctness]"]}'
                 kwargs['claim']('owned.txt')
                 project.joinpath('owned.txt').write_text('changed\n')
                 return 'PRIVATE-WORKER-ANSWER'
@@ -277,7 +277,7 @@ class BoundedChainTests(ProjectTest):
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 calls.append(kwargs.get('read_only', False))
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'synthetic worker'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if kwargs.get('read_only') else 'synthetic worker'
         with Authority(self.project) as owner:
             result = Engine(owner, 'approved', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
                             EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
@@ -294,7 +294,7 @@ class BoundedChainTests(ProjectTest):
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
                 calls.append(kwargs.get('read_only', False))
-                return json.dumps({'approved': True, 'findings': [], 'suggestions': suggestions}) if kwargs.get('read_only') else 'worker answer'
+                return json.dumps({'approved': True, 'coverage': ['fixture examined'], 'coverage_gaps': [], 'findings': [], 'suggestions': suggestions}) if kwargs.get('read_only') else 'worker answer'
         contract = admit({'tasks': [{'id': 'private', 'description': 'PRIVATE task text'}]})
         with Authority(self.project) as owner:
             result = Engine(owner, 'suggestions-only', contract, EXECUTOR, adapter=Adapter).invoke()
@@ -313,12 +313,12 @@ class BoundedChainTests(ProjectTest):
 
     def test_positive_blockers_and_negative_empty_stop_without_a_fixer(self):
         for name, verdict in (
-            ('positive-crash', '{"approved":true,"findings":["owned.txt:1 - crashes on missing input"]}'),
-            ('positive-hang', '{"approved":true,"findings":["owned.txt:1 - hangs while waiting for input"]}'),
-            ('positive-credential', '{"approved":true,"findings":["owned.txt:1 - exposes credentials in output"]}'),
-            ('positive-target', '{"approved":true,"findings":["owned.txt:1 - applies changes to the wrong target"]}'),
-            ('positive-data-safety', '{"approved":true,"findings":["owned.txt:1 - corrupts saved state [basis: data-safety]"]}'),
-            ('negative-empty', '{"approved":false,"findings":[],"suggestions":["consider naming cleanup"]}'),
+            ('positive-crash', '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - crashes on missing input"]}'),
+            ('positive-hang', '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - hangs while waiting for input"]}'),
+            ('positive-credential', '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - exposes credentials in output"]}'),
+            ('positive-target', '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - applies changes to the wrong target"]}'),
+            ('positive-data-safety', '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - corrupts saved state [basis: data-safety]"]}'),
+            ('negative-empty', '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[],"suggestions":["consider naming cleanup"]}'),
         ):
             with self.subTest(name=name):
                 calls = []
@@ -393,8 +393,8 @@ class BoundedChainTests(ProjectTest):
                     def prompt(self, prompt, **kwargs):
                         if kwargs.get('read_only'):
                             Adapter.reviews += 1
-                            return (json.dumps({'approved': False, 'findings': [finding]})
-                                    if Adapter.reviews == 1 else '{"approved":true,"findings":[]}')
+                            return (json.dumps({'approved': False, 'coverage': ['fixture examined'], 'coverage_gaps': [], 'findings': [finding]})
+                                    if Adapter.reviews == 1 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}')
                         if 'Actionable findings:' in prompt:
                             repair_inputs.append(prompt)
                             kwargs['claim']('owned.txt')
@@ -435,7 +435,7 @@ class BoundedChainTests(ProjectTest):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
                     calls.append(('review', id(self), kwargs, _prompt))
-                    return '```json\n{"approved":false,"findings":["owned.txt:1 - synthetic defect [basis: correctness]"]}\n```' if Adapter.reviews == 1 else '{"approved":true,"findings":[]}'
+                    return '```json\n{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - synthetic defect [basis: correctness]"]}\n```' if Adapter.reviews == 1 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'Actionable findings:' in _prompt:
                     Adapter.fixer_prompts += 1
                     kwargs['claim']('owned.txt')
@@ -462,7 +462,7 @@ class BoundedChainTests(ProjectTest):
         self.assertNotEqual(calls[0][1], calls[1][1])
         self.assertTrue(all(call[2]['read_only'] for call in calls))
         review_prompts = [call[3] for call in calls]
-        self.assertTrue(all('Range: ' + self.base + '..' in prompt and 'Diff:' in prompt for prompt in review_prompts))
+        self.assertTrue(all('Original range: ' + self.base + '..' in prompt and 'Diff:' in prompt for prompt in review_prompts))
         self.assertTrue(all('do not reject unrelated context solely for task-path scope' in prompt and
                             'causal integration defects affecting the requested result remain blockers' in prompt.lower() and
                             'independently unrelated defects with their ownership/repair limit' in prompt
@@ -518,8 +518,8 @@ class BoundedChainTests(ProjectTest):
                     if 'owned.txt' not in project.joinpath('owned.txt').read_text():
                         self.saved_session = {'id': 'review-context', 'file': '/private/review.jsonl',
                                               'compatibility': {'readOnly': True}}
-                        return '{"approved":false,"findings":["owned.txt:1 - defect [basis: correctness]"]}'
-                    return '{"approved":true,"findings":[]}'
+                        return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - defect [basis: correctness]"]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'Actionable findings:' in prompt or 'Actual failed attempt:' in prompt:
                     case.assertIn('Current execution authority:', prompt)
                     case.assertIn('Historical planning-only', prompt)
@@ -574,8 +574,8 @@ class BoundedChainTests(ProjectTest):
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
-                    return ('{"approved":false,"findings":["owned.txt:1 - first [basis: correctness]"]}' if Adapter.reviews == 1
-                            else '{"approved":false,"findings":["owned.txt:2 - final [basis: correctness]"]}')
+                    return ('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - first [basis: correctness]"]}' if Adapter.reviews == 1
+                            else '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:2 - final [basis: correctness]"]}')
                 return 'synthetic worker'
         with Authority(self.project) as owner:
             with self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
@@ -592,7 +592,7 @@ class BoundedChainTests(ProjectTest):
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
-                    return '{"approved":false,"findings":["owned.txt:1 - defect [basis: correctness]"]}'
+                    return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - defect [basis: correctness]"]}'
                 if 'Actionable findings:' in _prompt:
                     raise Blocked('synthetic fixer failure')
                 return 'synthetic worker'
@@ -625,8 +625,8 @@ class BoundedChainTests(ProjectTest):
                     Adapter.reviews += 1
                     calls.append(('review', id(self)))
                     if Adapter.reviews < 3:
-                        return '{"approved":false,"findings":["owned.txt:1 - defect [basis: correctness]"]}'
-                    return '{"approved":true,"findings":[]}'
+                        return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - defect [basis: correctness]"]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 calls.append(('fix-or-worker', id(self)))
                 return 'fixture'
         def owner_question(question, **kwargs):
@@ -661,8 +661,8 @@ class BoundedChainTests(ProjectTest):
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
-                    return ('{"approved":false,"findings":["owned.txt:1 - correctness defect"]}'
-                            if Adapter.reviews < 4 else '{"approved":true,"findings":[]}')
+                    return ('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - correctness defect"]}'
+                            if Adapter.reviews < 4 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}')
                 if not granted[0]:
                     granted[0] = True
                     owner.store.authorize_routine_review_continuation('routine-authority', owner.store.review_scope('routine-authority'))
@@ -697,8 +697,8 @@ class BoundedChainTests(ProjectTest):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
                     calls.append(('review', Adapter.reviews))
-                    return ('{"approved":false,"findings":["owned.txt:1 - current target defect"]}'
-                            if Adapter.reviews == 1 else '{"approved":true,"findings":[]}')
+                    return ('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - current target defect"]}'
+                            if Adapter.reviews == 1 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}')
                 calls.append(('fixer', None))
                 return 'routine scoped repair'
         def question(*args, **kwargs):
@@ -809,7 +809,7 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                 def prompt(self, _prompt, **kwargs):
                     calls.append(kwargs.get('read_only', False))
                     if kwargs.get('read_only'):
-                        return '{"approved":false,"findings":["owned.txt:1 - requests crash on missing record"]}'
+                        return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - requests crash on missing record"]}'
                     return 'fixture'
             def question(text, **kwargs):
                 questions.append(kwargs)
@@ -862,8 +862,8 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                         if kwargs.get('read_only'):
                             Adapter.reviews += 1
                             calls.append(('review', Adapter.reviews, prompt))
-                            return ('{"approved":false,"findings":["owned.txt:1 - crashes on adjacent missing input"]}'
-                                    if Adapter.reviews < 3 else '{"approved":true,"findings":[],"suggestions":["optional cleanup"]}')
+                            return ('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - crashes on adjacent missing input"]}'
+                                    if Adapter.reviews < 3 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[],"suggestions":["optional cleanup"]}')
                         if 'Actionable findings:' in prompt:
                             Adapter.fixes += 1
                             calls.append(('fix', Adapter.fixes, prompt))
@@ -1001,9 +1001,11 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                             self.assertEqual(result['sha'], before)
                         chain = owner.store.review_chain('recovery')
                         self.assertEqual((chain['review_count'], chain['fixing_round_count']), (3, 2))
-                        self.assertEqual(chain['executions'][-1]['references'], {'base': base, 'head': result['sha']})
+                        self.assertEqual({key: chain['executions'][-1]['references'][key] for key in ('base', 'head')},
+                                         {'base': base, 'head': result['sha']})
+                        self.assertEqual(result['review']['coverage'], ['fixture examined'])
                         self.assertEqual(status(project, 'recovery')['review_authorization']['next_stage'], 'complete')
-                        self.assertIn('Range: ' + base + '..' + result['sha'], [entry[2] for entry in calls if entry[:2] == ('review', 3)][0])
+                        self.assertIn('Original range: ' + base + '..' + result['sha'], [entry[2] for entry in calls if entry[:2] == ('review', 3)][0])
                         self.assertEqual(git(project, 'rev-list', '--count', base + '..' + result['sha']).decode().strip(), '3')
                     self.assertEqual(owner.store.completed_checkpoints('recovery'), initial_checkpoints)
                     self.assertEqual([row['details'] for row in owner.store.db.execute("SELECT details FROM execution_history WHERE kind='review_pair_grant'")], initial_grants)

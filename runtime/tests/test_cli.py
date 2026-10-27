@@ -22,7 +22,7 @@ class CliTests(ProjectTest):
         class Boundary:
             def __init__(self, project, executor, **kwargs): seen.append(executor)
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"findings":[]}'
+                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 return 'read only offline fixture'
         with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out, \
              patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
@@ -47,7 +47,7 @@ class CliTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 case.assertIn('"handoff_paths":["recovery.txt"]', prompt)
                 kwargs['claim']('recovery.txt')
                 (case.project/'recovery.txt').write_bytes(b'preexisting recovery\nintended edit\n')
@@ -75,7 +75,7 @@ class CliTests(ProjectTest):
                 sessions.append(self)
             def prompt(self, prompt, **kwargs):
                 calls.append((self.profile, kwargs.get('read_only', False)))
-                return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'synthetic no-change fixture'
+                return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if kwargs.get('read_only') else 'synthetic no-change fixture'
         with patch('coherence_workflow.cli.PiAdapter', Boundary), contextlib.redirect_stdout(io.StringIO()) as out, \
              patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
                                                           'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}):

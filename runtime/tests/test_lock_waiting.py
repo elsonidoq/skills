@@ -18,7 +18,8 @@ class LockBusyTests(ProjectTest):
             'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []},
             'tasks': [{'id': 'synthetic', 'description': 'Synthetic disposable lock fixture'}],
         }))
-        self.executor.write_text(json.dumps({'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}))
+        self.executor.write_text(json.dumps({'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
+                                            'reviewer': {'provider': 'fixture', 'model': 'offline-review', 'effort': 'medium'}}))
 
     def hold_lock(self):
         code = """\
@@ -57,7 +58,7 @@ import coherence_workflow.cli as cli
 class Offline:
     def __init__(self, project, profile, **kwargs): pass
     def prompt(self, prompt, **kwargs):
-        return '{"approved":true,"findings":[]}' if kwargs.get('read_only') else 'synthetic no-change fixture'
+        return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}' if kwargs.get('read_only') else 'synthetic no-change fixture'
 cli.PiAdapter = Offline
 raise SystemExit(cli.main())
 """

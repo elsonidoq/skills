@@ -722,7 +722,7 @@ class Engine:
         return recovered
 
     @staticmethod
-    def _review_value(text):
+    def _review_value(text, *, require_coverage=False):
         """Parse an actual reviewer verdict; fenced JSON is safe normalization only."""
         if not isinstance(text, str):
             raise _ReviewFormat('reviewer result must be text')
@@ -745,7 +745,18 @@ class Engine:
         if any(not pattern.match(item.strip()) for item in findings):
             raise _ReviewFormat('review blocker needs a path:line or path:start-end location and concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
-        return {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
+        result = {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
+        if require_coverage or 'coverage' in value or 'coverage_gaps' in value:
+            for key in ('coverage', 'coverage_gaps'):
+                items = value.get(key)
+                if not isinstance(items, list) or any(not isinstance(item, str) or not item.strip() for item in items):
+                    raise _ReviewFormat('reviewer result needs coverage and coverage_gaps string lists; report examined/passing areas and unchecked or invalidated conclusions')
+                result[key] = items
+            if not result['coverage'] and not result['coverage_gaps']:
+                result['coverage_gaps'] = ['No examined/passing coverage recorded; establish requested-change coverage before approval.']
+            if result['coverage_gaps']:
+                result['approved'] = False
+        return result
 
     @staticmethod
     def _review_inputs(checkpoints):
@@ -838,21 +849,53 @@ class Engine:
         recorder.emit(execution_id, 'review', 'started', facts=review_facts)
         reviewer = self.adapter(self.authority.project, self.reviewer_executor, question=self.question)
         reviewer.lock_fd = self.authority.lock.fileno()
-        diff = git(self.authority.project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
+        # Retain the original base for authority/attribution, but review the repair
+        # delta against the latest settled reviewer, never a fixer's self-assessment.
+        previous = next((item for item in reversed(store.review_chain(self.run, private=True)['executions'])
+                         if item['execution_id'] != execution_id and item['role'] == 'reviewer'
+                         and item['state'] in ('approved', 'rejected') and not item['uncertain']), None)
+        diff_base = review_base
+        review_context = 'Initial review: examine the complete requested change and report actual passing coverage and all remaining coverage gaps.\n'
+        if previous is not None:
+            prior_head = previous['references'].get('head')
+            if not isinstance(prior_head, str) or not prior_head:
+                raise Blocked('prior review has no reviewed head; inspect retained review history before repair review')
+            try:
+                git(self.authority.project, 'merge-base', '--is-ancestor', prior_head, head)
+            except Blocked:
+                raise Blocked('prior reviewed head is not an ancestor of the current target; reconcile target drift before repair review') from None
+            diff_base = prior_head
+            prior_summary = previous['references'].get('review_summary')
+            review_context = (
+                'Repair review: independently examine the actual changes since the prior reviewed head and their affected interactions. '
+                'Confirm each addressed finding; retain unresolved findings. Carry forward previously examined, unaffected passing coverage, '
+                'rather than rereviewing the original change wholesale. Revisit any earlier conclusion invalidated by the repair, '
+                'explain why, and remove it from passing coverage until re-established. Inspect integration context as needed. '
+                'Return cumulative coverage and remaining coverage_gaps, not merely coverage of this delta. '
+                'A focused repair review must not certify unchecked original work: examine any outstanding gaps or leave them explicit and do not approve.\n'
+                'Prior review: ' + canonical({'execution_id': previous['execution_id'], 'head': prior_head,
+                    'findings': previous['findings'][-1] if previous['findings'] else [],
+                    'summary': prior_summary if prior_summary is not None else {
+                        'coverage': [], 'coverage_gaps': ['Historical review has no explicit coverage; establish original coverage before approval.']}}) + '\n')
+        diff = git(self.authority.project, 'diff', '--no-ext-diff', '--no-textconv', diff_base + '..' + head).decode(errors='replace')
         try:
             text = reviewer.prompt('Independently review the actual committed range below against the requested tasks. '
                 'You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, '
                 'so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. '
                 + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
                 + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. '
-                'Return only JSON: {"approved":true,"findings":[],"suggestions":[]} (suggestions may be omitted) or '
-                '{"approved":false,"findings":["path:line[-end_line] - concrete defect, impact and accepted basis in ordinary prose"]}. '
+                'Return only JSON with boolean approved, findings, coverage, coverage_gaps, and optional suggestions string lists. '
+                'Example: {"approved":true,"findings":[],"coverage":["area examined and why it works"],"coverage_gaps":[],"suggestions":[]}. '
+                'For rejection use findings like "path:line[-end_line] - concrete defect, impact and accepted basis in ordinary prose". '
+                'Always distinguish examined/passing areas from what must be fixed or remains unchecked. Never approve with coverage gaps. '
                 'Use findings only for blockers: each needs a location, concrete impact, and basis of requirement, correctness, security, or data-safety. '
                 'Put only nonblocking advice in suggestions; crashes, hangs, target/credential risks, and false-unavailable observations are blockers. Never approve when blockers exist.\n'
-                'Review the complete original range and diff on every review and rereview. Attribution below is context, not a narrowed scope: do not reject unrelated context solely for task-path scope, and do not certify it as task delivery. Causal integration defects affecting the requested result remain blockers and must cite the interaction/accepted basis. Report independently unrelated defects with their ownership/repair limit; do not expand fixer authority.\n'
-                'Tasks: ' + canonical(self.contract['tasks']) + '\nRange: ' + review_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head),
+                + review_context +
+                'Attribution below is integration context: do not reject unrelated context solely for task-path scope, and do not certify it as task delivery. Causal integration defects affecting the requested result remain blockers and must cite the interaction/accepted basis. Report independently unrelated defects with their ownership/repair limit; do not expand fixer authority.\n'
+                'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
+                '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head),
                 read_only=True)
-            value = self._review_value(text)
+            value = self._review_value(text, require_coverage=True)
         except BaseException as exc:
             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
             store.review_outcome(self.run, execution_id, state, findings=[], suggestions=[],
@@ -876,7 +919,10 @@ class Engine:
         self._review_workers[execution_id] = reviewer
         store.review_outcome(self.run, execution_id, state, findings=value['findings'], suggestions=value['suggestions'],
                              references={'base': review_base, 'head': head,
-                                         'saved_session': getattr(reviewer, 'saved_session', None)})
+                                         'saved_session': getattr(reviewer, 'saved_session', None),
+                                         'review_summary': {key: value[key] for key in ('coverage', 'coverage_gaps')},
+                                         'diff_base': diff_base,
+                                         'prior_review': previous['execution_id'] if previous else None})
         review_facts.update({'approved': value['approved'], 'outcome': state,
                              'finding_count': len(value['findings'])})
         recorder.emit(execution_id, 'review', 'passed' if state == 'approved' else 'failed', facts=review_facts)
@@ -891,7 +937,8 @@ class Engine:
         def value(item):
             return {'approved': item['state'] == 'approved',
                     'findings': item['findings'][-1] if item.get('findings') else [],
-                    'suggestions': item['suggestions'][-1] if item.get('suggestions') else []}
+                    'suggestions': item['suggestions'][-1] if item.get('suggestions') else [],
+                    **item['references'].get('review_summary', {})}
 
         def complete(item, review):
             head = item['references'].get('head')
@@ -929,7 +976,7 @@ class Engine:
                 if last['state'] == 'approved':
                     return complete(last, review)
                 if last['state'] != 'rejected' or review['approved'] or not review['findings']:
-                    raise Blocked('independent review was not an actionable rejection (commits retained): ' + canonical(review))
+                    raise Blocked('independent review was not an actionable rejection (commits retained); inspect findings and examine remaining coverage gaps before a new review: ' + canonical(review))
                 ordinal, round_ = last['review_ordinal'], last['fixing_round'] + 1
                 if policy == 'historical-two-review-one-fixer' and ordinal != 1:
                     raise Blocked('independent final review findings (commits retained): ' + canonical(review))
@@ -946,10 +993,10 @@ class Engine:
                     if grant is None:
                         context = {'rejecting_execution': last['execution_id'], 'review_base': review_base,
                                    'review_head': head, 'scope': scope,
-                                   'effect': 'Authorize exactly one scoped repair and one fresh full-range review; no repeat grant.'}
+                                   'effect': 'Authorize exactly one scoped repair and one fresh cumulative repair review; no repeat grant.'}
                         question = ('Independent review rejected execution ' + last['execution_id'] + ' for original range ' +
                                     review_base + '..' + head + ', original task scope ' + scope +
-                                    '. Authorize exactly one scoped repair plus fresh full-range review with the configured models, '
+                                    '. Authorize exactly one scoped repair plus fresh cumulative repair review with the configured models, '
                                     'not a repeat grant? [yes/no]')
                         try:
                             answer = self.question(question, owner_only=True, decision_context=context)
