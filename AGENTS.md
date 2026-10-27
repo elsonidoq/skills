@@ -92,7 +92,21 @@ rules above for reusable skills and commands.
   capabilities before applicable stages; report missing requirements rather than install.
   SpecKit is required only for a project's Standard planning stages, not TinySpec;
   Jev is optional for `finish-session-jev` with manual routing fallback.
-- Planning: request → `planner` understanding/brainstorming/scope → explicit owner
+- Work routing for this repository:
+  - **Direct work:** handle small, bounded inspection, edits and focused checks in the current
+    session without a workflow. File counts are examples, not eligibility rules.
+  - **Ordinary delegation:** delegate bounded unplanned work to an agent or agents, including
+    unexpected repairs during coordinated implementation. Multiple consecutive delegations are
+    allowed; do not manufacture a new Coherence workflow for ad hoc work.
+  - **Planned Coherence work:** derive implementation tasks from specifications under the
+    applicable planning and approval contracts, then execute those approved tasks. Launching a
+    workflow runner alone is not using Coherence; adoption is not a blanket workflow requirement.
+  - **Larger unexpected work:** ask the owner whether to address it now through bounded delegation,
+    plan it through Coherence, or file an issue with the declared tracker and continue the original
+    work. Do not infer the answer from agent, file or action counts.
+  - Routing grants no new scope or external effects and waives no required acceptance, review,
+    safety or permission gates. Preserve ordinary scoped repair authority and existing local overrides.
+- Planning (when routed to Coherence): request → `planner` understanding/brainstorming/scope → explicit owner
   TinySpec/Standard choice → reviewed tasks → approved handoff →
   `coordinate-implementation` → `finish-session`. TinySpec uses `tiny-spec`, separate
   tasks and combined approval; Standard uses installed SpecKit and specification/final
