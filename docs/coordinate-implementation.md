@@ -22,7 +22,7 @@ Executor JSON uses the actual owner selection, for example:
 An optional `reviewer` object selects the fresh read-only review executor separately:
 
 ```json
-{"provider":"openai-codex","model":"gpt-5.6-terra","effort":"medium","reviewer":{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium"}}
+{"provider":"openai-codex","model":"gpt-6.1-terra","effort":"medium","reviewer":{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium"}}
 ```
 
 Without `reviewer`, review retains the selected worker profile for compatibility.
