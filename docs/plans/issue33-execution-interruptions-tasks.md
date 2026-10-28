@@ -3,7 +3,7 @@
 Requirements: [TinySpec](issue33-execution-interruptions-tinyspec.md), AC1–AC5/Binding constraints.
 [Executable tasks](issue33-execution-interruptions-tasks.json) replace the five investigation tasks
 with three bounded corrections. Source SHA256 remains
-`0e8bc6494de5fd018797d8818c5d9b30248e06132aec04b59dee3c70e77fbe80`.
+`d74356af11ae1a96e2cf33a9d604b9049010dcb575ee9d77fc0286539cef0530`.
 Correction/diagnosis baseline: `d7aa64901abf8088ee3fa222dd431b77764ded0e`.
 
 ## Outcomes and completed/no-task mappings
@@ -12,7 +12,7 @@ Correction/diagnosis baseline: `d7aa64901abf8088ee3fa222dd431b77764ded0e`.
 | --- | --- |
 | AC1 | **T001:** operating-guide check-command/setup explanation only. Actual environment-boundary proof is completed below; inheritance is normal, not a runtime defect. |
 | AC2 | **No implementation task:** complete task/acceptance carriers and existing successful/unsuccessful dispatch support are intact. Local completion and eligible dependents remain possible with explicit live-only evidence unavailable; genuine failed/unrun required acceptance still blocks its actual claim/dependents. No live-readiness/deployment or model-judgment claim. |
-| AC3 | **T002:** one cohesive refinement of the existing supporting-ownership recipe: final configuration/override owners and producer's applicable admitting/type check. Small static contrasts/ordinary-success control, not a toy application or compiler. Fixture-location source alignment remains required below. |
+| AC3 | **T002:** one cohesive refinement of the existing supporting-ownership recipe: final configuration/override owners and producer's applicable admitting/type check. Small static contrasts/ordinary-success control, not a toy application or compiler. Source fixture location aligned at `12c7da5`. |
 | AC4 | **T003:** actionable terminal EOF/actual parent-channel-loss diagnostics with focused input/socket regressions. Supported living-parent wait/reply works on settled evidence; no bridge lifetime implementation. |
 | AC5 | Every task preserves authority, scoped repairs, real acceptance/manual gates, partial bytes/checkpoints, unaffected cumulative coverage and notification rules through the shared contract. Only affected verification reruns. |
 
@@ -118,14 +118,15 @@ openai-codex/gpt-6.1-sol`, medium. No search/substitution/configuration change.
 
 ## Approval and source alignment
 
-**Combined-approval readiness is blocked on ONE source alignment:** TinySpec AC3 explicitly places
-conditional representative examples in `scripts/test-planner-workflow.py` ("there"); T002 instead
-uses the existing, narrower `skills/task-generation/scripts/test_contract.py`. Parent confirmed it
-will route this exact fixture-location correction to the original source producer before combined
-approval. Do not reinterpret the source location as illustrative or silently waive it. Preserve the
-representative config/producer contrasts, ordinary-success control, pass conditions and sensitivity
-limits. No upstream source was edited here; these tasks are a prepared correction, not a ready or
-approved implementation handoff.
+The original source producer aligned AC3 at `12c7da5` with T002's existing shared fixture,
+`skills/task-generation/scripts/test_contract.py`. Parent inspected the actual diff: only AC3's
+verification cell changed; its observable criterion and all other source bytes remain unchanged.
+Representative config/producer contrasts, ordinary-success control, necessary paths/check or real
+dependency and final observable remain required, with static instruction-sensitivity limits.
+The source hash above now identifies those corrected bytes. No executable task instruction,
+scope, dependency, acceptance or permission changed in this mechanical reference update.
+The earlier independent intent review had zero findings; parent inspected this bounded source
+correction and the three-task mapping. Current combined owner approval is still required.
 
 AC1/AC2/AC4 accept reuse of completed actual-boundary diagnosis and supported unchanged mechanisms;
 source timing about checks not executed **during source preparation** is historical, not a new task.
