@@ -215,8 +215,13 @@ actually pass, and its focused checkpoint succeeds; same-task corrective prompts
 context, while failed or unsettled sessions never route another task.
 
 Material questions, including unapproved paid application/test APIs, use actual current terminal input.
-Without an interactive terminal the run stops with the question and does not fabricate an answer. A loaded project
-parent-session bridge may instead launch this same command with its private socket environment;
+Without an interactive terminal, or when terminal input reaches EOF, the run stops with a
+non-sensitive operation/channel diagnostic and interactive or explicit inspected-resume guidance;
+it does not fabricate an answer. Actual parent-channel connection loss or an empty reply likewise
+identifies the question/readiness operation and directs reconnection through the parent-session
+bridge followed by explicit inspected resume, never automatic retry. These errors preserve partial
+work and do not establish recovery success. A loaded project parent-session bridge may instead
+launch this same command with its private socket environment;
 it wakes that parent with the exact pending question (including the paid-scope decision when needed) and returns only its correlated reply to the
 waiting worker. A marked owner-only continuation decision instead carries the rejecting execution, original reviewed base/head, original scope, and one-repair/fresh-review/no-repeat effect. The bridge requires registered `ask_user`, tells the parent to call it, and accepts the actual nonempty owner answer only through `coordinate_implementation_owner_reply`; routine `coordinate_implementation_reply` cannot answer it. This is transport routing, not cryptographic proof of human identity, and neither question nor answer is retained in SQLite or public projections. Missing `ask_user`, cancellation, an empty answer, or an unavailable/uncorrelated reply stops with the concrete bridge diagnostic. A callback that cannot accept the owner-only marker/context also stops; it is never retried through routine triage. Routine technical questions remain coordinator-triaged and autonomous. Before attached execution, the runner checks the existing socket's authenticated
 readiness response and active parent reply tool; incomplete/mismatched configuration stops before
