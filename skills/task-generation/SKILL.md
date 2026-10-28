@@ -134,11 +134,14 @@ During authoring and review:
 
 1. Name the outcome, owned change paths, scope/exclusions, consumed interfaces and earlier
    producer dependencies. Inspect the acceptance selectors, coupled fixtures and admitting
-   harness alongside the product interface; keep necessary in-scope support with the bounded
-   outcome, or name a genuinely necessary existing producer dependency. Give a concrete
-   observable and the smallest sufficient verification; keep its ordinary tests, relevant docs
-   and routine teardown with the outcome. Express these in the work description or existing
-   fields, not new mandatory metadata.
+   harness alongside the product interface, and inspect the final configuration/override owners
+   that produce its final observable. Before a dependent relies on a producer fixture, inspect
+   that fixture's applicable admitting/type check. Keep necessary in-scope support, final
+   configuration/override ownership and applicable producer check with the bounded outcome, or
+   name a genuinely necessary existing producer dependency. Give a concrete observable and the
+   smallest sufficient verification; keep its ordinary tests, relevant docs and routine teardown
+   with the outcome. Express these in the work description or existing fields, not new mandatory
+   metadata.
 2. If the assignment bundles independently testable interfaces or behaviors and requires the
    configured executor to carry multiple unfinished concerns, split at those real seams.
    Consider context loss, compaction and drift across implementation, debugging and verification,
@@ -165,11 +168,16 @@ number of tasks onto other work.
 
 **Supporting ownership example:** “Add the export control in `ui/export_controls.py`; own only
 that file” obviously omits the coupled capture selector
-`tests/test_export_controls.py::test_capture_export_button` and its admitting harness
-`scripts/run-ui-captures.py`. Correct it by owning the control, selector and harness support in
-the same bounded UI outcome when they need changes, or by naming the real existing producer
-that supplies unchanged harness support as a dependency. This is authoring guidance, not a
-generic path/dependency-closure validator or a new task field.
+`tests/test_export_controls.py::test_capture_export_button`, its admitting harness
+`scripts/run-ui-captures.py`, and the final configuration/override owners that make the export
+control's final observable available. It also cannot rely on an export-state producer fixture
+without inspecting that fixture's applicable admitting/type check. Correct it by owning the
+control, selector, harness, necessary final configuration/override support and applicable
+producer check in the same bounded UI outcome when they need changes, or by naming the real
+existing producer that supplies unchanged support as a dependency. The final observable still
+needs its smallest sufficient check; an ordinary already-observed success control needs only its
+existing focused check. This is authoring guidance, not a generic path/dependency-closure
+validator or a new task field.
 
 State shared constraints once in their authoritative context. Task entries contain
 outcome-specific scope, interfaces, acceptance and verification, not repeated specification

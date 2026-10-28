@@ -229,22 +229,56 @@ class TaskGenerationContractTests(unittest.TestCase):
         self.assertIn("configured executor/effort", review)
 
     def test_ui_control_supporting_ownership_example(self):
-        """A narrow authoring contrast, not runtime closure validation."""
+        """Static authoring contrasts, not runtime closure or type-check validation."""
         recipe = TEXT.split("### Executor-sized outcomes", 1)[1].split(
             "State shared constraints once", 1)[0]
         omitted = "Add the export control in `ui/export_controls.py`; own only\nthat file"
-        corrected = ("owning the control, selector and harness support in\nthe same bounded UI outcome"
-                     " when they need changes, or by naming the real existing producer")
-        for clause in (
-            "acceptance selectors, coupled fixtures and admitting\n   harness alongside the product interface",
+        corrected = ("owning the\ncontrol, selector, harness, necessary final configuration/override support and applicable\nproducer check"
+                     " in the same bounded UI outcome")
+        clauses = (
+            "acceptance selectors, coupled fixtures and admitting\n   harness alongside the product interface, and inspect the final configuration/override owners\n   that produce its final observable",
+            "Before a dependent relies on a producer fixture, inspect\n   that fixture's applicable admitting/type check",
             omitted,
             "`tests/test_export_controls.py::test_capture_export_button`",
             "`scripts/run-ui-captures.py`",
+            "final configuration/override owners that make the export\ncontrol's final observable available",
+            "fixture's applicable admitting/type check",
             corrected,
-            "not a\ngeneric path/dependency-closure validator or a new task field",
-        ):
+            "ordinary already-observed success control needs only its\nexisting focused check",
+            "not a generic path/dependency-closure\nvalidator or a new task field",
+        )
+        for clause in clauses:
             with self.subTest(clause=clause):
                 self.assertIn(clause, recipe)
+                if recipe.count(clause) == 1:
+                    self.assertNotIn(clause, recipe.replace(clause, "REMOVED", 1))
+
+        # Contrast only the instruction's required task description; this is not a task validator.
+        def prepared(description):
+            return (description["final_observable"] and description["final_check"]
+                    and description["final_config_override_owner"]
+                    and description["producer_admitting_check"]
+                    and (description["owned_support_paths"]
+                         or description["producer_dependency"]))
+
+        ordinary_success = dict(final_observable=True, final_check="existing focused check",
+                                final_config_override_owner="ui/export_defaults.py",
+                                producer_admitting_check="fixture admission check",
+                                owned_support_paths=("ui/export_defaults.py",),
+                                producer_dependency=None)
+        self.assertTrue(prepared(ordinary_success))
+        self.assertTrue(prepared(dict(ordinary_success, owned_support_paths=(),
+                                      producer_dependency="T001 export-state producer")))
+        for omission in (
+            {"final_config_override_owner": None},
+            {"producer_admitting_check": None},
+            {"final_observable": False},
+            {"final_check": None},
+            {"owned_support_paths": (), "producer_dependency": None},
+        ):
+            with self.subTest(omission=omission):
+                self.assertFalse(prepared(dict(ordinary_success, **omission)))
+
         handoff = TEXT.split("## Structured executable handoff", 1)[1].split(
             "## Review and handoff", 1)[0]
         self.assertIn("existing `checks`, `check`, or `required[].check` field", handoff)
