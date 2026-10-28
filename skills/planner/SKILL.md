@@ -423,7 +423,14 @@ or additional approval gate; actual invalidating drift follows existing recovery
    consecutive without reordering dependencies or padding distant tasks.
 4. **Review — planner-owned parent binding:** review source-to-task traceability, in-scope coverage,
    exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
-   verification item completeness, explicit and implicit dependencies, and stage feasibility. Record
+   verification item completeness, explicit and implicit dependencies, and stage feasibility.
+   Explicitly check the TinySpec and tasks, within and across artifacts, for confusing, ambiguous
+   or contradictory instructions, scope creep, and unnecessary complexity/overengineering.
+   Report material defects with the affected passage, concrete impact and smallest sufficient
+   correction or simpler alternative; requirements coverage alone does not establish clarity
+   or proportionality. Challenge additions without a requirement, actual constraint or concrete
+   material risk as their basis; preserve necessary safety protections and required acceptance.
+   Do not manufacture findings or treat stylistic preferences as defects. Record
    fixes, validation results and current content evidence. Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
    to proven-equivalent mechanical repairs. Delegate uncertain or substantive source/task corrections
    to suitable originating context or a fresh bounded correction delegate; no parent substantive
@@ -566,6 +573,13 @@ valid settled principles. Verify the saved exact stage binding and independent r
    `standard-overall-review` (or `standard-overall-rereview` for a fresh rereview), then follow observed analysis
    capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
    coverage, dependencies, verification item completeness, documentation, integration and approvals.
+   Explicitly check source, specification, plan and tasks, within and across artifacts, for
+   confusing, ambiguous or contradictory instructions, scope creep, and unnecessary
+   complexity/overengineering. Report material defects with the affected passage, concrete impact
+   and smallest sufficient correction or simpler alternative; requirements coverage alone does
+   not establish clarity or proportionality. Challenge additions without a requirement, actual
+   constraint or concrete material risk as their basis; preserve necessary safety protections
+   and required acceptance. Do not manufacture findings or treat stylistic preferences as defects.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries
    in direct Standard and managed/helper plans.

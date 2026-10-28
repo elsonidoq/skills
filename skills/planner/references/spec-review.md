@@ -17,7 +17,15 @@ owner question. Do not turn an evident omission/distortion into an unnecessary o
 Check the actual problem, intended beneficiary, desired behavior, boundaries, explicit
 exclusions, and observable completion. Detect omitted requirements, distorted meaning,
 invented scope, unnecessary restrictions, and technical solutions that fail to deliver the
-requested experience. Distinguish explicit user requirements from necessary derived choices
+requested experience. Explicitly check for confusing, ambiguous or contradictory instructions,
+scope creep, and unnecessary complexity/overengineering in behavior, approach and acceptance.
+Challenge additions without a requirement, actual constraint or concrete material risk as their
+basis, including speculative abstractions, duplicate mechanisms and disproportionate checks.
+Report material defects in the same ranked findings with the affected passage, concrete impact
+and smallest sufficient correction or simpler alternative; do not silently overlook them because
+requirements are otherwise covered. Preserve necessary safety protections and required acceptance;
+do not manufacture findings or treat stylistic preferences as defects.
+Distinguish explicit user requirements from necessary derived choices
 (with their basis) and revisitable assumptions; do not promote assumptions to requirements.
 
 For a finding needing an owner decision, state a concrete scenario; reasonable divergent
