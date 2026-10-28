@@ -28,7 +28,13 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIn('dispatches fresh independent review', prompt)
         self.assertIn('it does not own all semantic/manual acceptance or the reviewer verdict', prompt)
         self.assertIn('Pending runner stages alone do not require an unsuccessful status', prompt)
-        self.assertIn('required worker-owned acceptance remains failed or unrun', prompt)
+        self.assertIn('Work autonomously until the assigned implementation and worker-owned acceptance are complete', prompt)
+        self.assertIn('Unfinished implementation, unrun checks, task complexity, and correctable or intermittent test failures', prompt)
+        self.assertIn('are reasons to continue working, not reasons to return incomplete', prompt)
+        self.assertIn('Do not assume an unprovided time limit', prompt)
+        self.assertIn('identify the concrete blocker, the actual failed operation and evidence', prompt)
+        self.assertIn('Never waive required checks, retry until green, conceal failures or claim unverified completion', prompt)
+        self.assertNotIn('or you know required worker-owned acceptance remains failed or unrun', prompt)
         self.assertIn('do not report corrected tool errors or a required check that will be rerun as unsuccessful', prompt)
 
     def assert_precedence_authority(self, prompt):

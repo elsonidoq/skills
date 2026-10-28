@@ -536,6 +536,9 @@ class BoundedChainTests(ProjectTest):
                     case.assertIn('The runner executes/reruns configured checks, creates the focused checkpoint', prompt)
                     case.assertIn('it does not own all semantic/manual acceptance or the reviewer verdict', prompt)
                     case.assertIn('Pending runner stages alone do not require an unsuccessful status', prompt)
+                    case.assertIn('Work autonomously until the assigned implementation and worker-owned acceptance are complete', prompt)
+                    case.assertIn('are reasons to continue working, not reasons to return incomplete', prompt)
+                    case.assertIn('identify the concrete blocker, the actual failed operation and evidence', prompt)
                 if 'Actionable findings:' in prompt:
                     case.assertEqual(self.saved_session['id'], 'review-context')
                     case.assertTrue(kwargs['review_repair'])
