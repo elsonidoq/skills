@@ -8,6 +8,10 @@
       "model": "openai-codex/gpt-6.1-sol",
       "effort": "medium"
     },
+    "tinyspec-tasks": {
+      "model": "openai-codex/gpt-6-astra",
+      "effort": "medium"
+    },
     "standard-plan": {
       "model": "openai-codex/gpt-6-astra",
       "effort": "medium"
@@ -34,7 +38,7 @@
       "assignment": "standard-review"
     },
     "tinyspec-tasks": {
-      "assignment": "source-and-tasks"
+      "assignment": "tinyspec-tasks"
     },
     "standard-spec-create": {
       "assignment": "source-and-tasks"
