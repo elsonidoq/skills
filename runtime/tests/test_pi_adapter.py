@@ -1,4 +1,6 @@
 """Transport framing, local edit errors, current questions, and owned cancellation."""
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -292,6 +294,15 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
             self.assertEqual(terminal_question('Authorize one pair?'), 'yes')
         prompt.assert_called_once_with('Authorize one pair?\n> ')
 
+    def test_actual_builtin_input_eof_reports_safe_actionable_terminal_loss(self):
+        # builtin input() reads this empty stream and raises EOFError; no exception is mocked.
+        with contextlib.redirect_stdout(io.StringIO()), patch('sys.stdin', io.StringIO()), \
+             patch('sys.stdin.isatty', return_value=True), \
+             self.assertRaisesRegex(Blocked, 'terminal-question operation blocked: terminal input channel was lost') as raised:
+            terminal_question('PRIVATE-SENTINEL')
+        self.assertIn('run interactively or explicitly inspect and resume', str(raised.exception))
+        self.assertNotIn('PRIVATE-SENTINEL', str(raised.exception))
+
     def test_parent_readiness_requires_positive_correlated_response(self):
         for ready, correlate in [(True, True), (False, True), (True, False)]:
             with self.subTest(ready=ready, correlate=correlate):
@@ -324,8 +335,37 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
                                      'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
                                      'COHERENCE_PARENT_BRIDGE_SESSION': 'session',
                                      'COHERENCE_PARENT_BRIDGE_RUN': 'run'}, clear=False):
-            with self.assertRaisesRegex(Blocked, 'parent owner bridge unavailable'):
+            with self.assertRaisesRegex(Blocked, 'parent question operation blocked: parent channel was lost'):
                 parent_question('Scope?')
+
+    def test_parent_socket_close_reports_safe_actionable_question_or_readiness_loss(self):
+        marker = self.root/'partial.txt'
+        marker.write_bytes(b'preserve-me\n')
+        for ready in (False, True):
+            with self.subTest(ready=ready):
+                endpoint = str(self.root/('closed-' + str(ready) + '.sock'))
+                server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                server.bind(endpoint)
+                server.listen(1)
+                def serve():
+                    client, _ = server.accept()
+                    with client:
+                        client.makefile('r', encoding='utf-8').readline()
+                    server.close()
+                thread = threading.Thread(target=serve)
+                thread.start()
+                values = {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint, 'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
+                          'COHERENCE_PARENT_BRIDGE_SESSION': 'session', 'COHERENCE_PARENT_BRIDGE_RUN': 'run'}
+                with patch.dict(os.environ, values, clear=False), \
+                     self.assertRaisesRegex(Blocked, 'parent ' + ('readiness' if ready else 'question')
+                                            + ' operation blocked: parent channel was lost') as raised:
+                    parent_question('PRIVATE-SENTINEL', ready=ready)
+                self.assertIn('reconnect through the parent-session bridge', str(raised.exception))
+                self.assertIn('explicitly inspect and resume', str(raised.exception))
+                self.assertNotIn('PRIVATE-SENTINEL', str(raised.exception))
+                thread.join()
+                self.assertFalse(thread.is_alive())
+                self.assertEqual(marker.read_bytes(), b'preserve-me\n')
 
     def test_question_recorder_failure_does_not_block_framed_answer_send(self):
         body = "print(json.dumps({'type':'question','question':'PRIVATE-SENTINEL'}),flush=True)\nassert json.loads(input()) == {'answer':'yes'}\nprint(json.dumps({'type':'result','text':'sent'}),flush=True)\n"
@@ -347,7 +387,7 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
 
     def test_noninteractive_question_stops_without_fabricating_answer(self):
         with patch('sys.stdin.isatty', return_value=False):
-            with self.assertRaisesRegex(Blocked, 'owner input needed'):
+            with self.assertRaisesRegex(Blocked, 'terminal-question operation blocked'):
                 terminal_question('Real scope decision?')
 
     def test_large_result_not_transport_cap(self):

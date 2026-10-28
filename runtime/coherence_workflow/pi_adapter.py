@@ -44,6 +44,9 @@ def parent_question(question, *, ready=False, owner_only=False, decision_context
     if not all((endpoint, token, session, run)):
         raise Blocked('parent owner bridge unavailable; launch through the parent-session bridge')
     request_id = uuid.uuid4().hex
+    operation = 'parent readiness' if ready else 'parent question'
+    lost_channel = (operation + ' operation blocked: parent channel was lost; reconnect through the '
+                    'parent-session bridge, then explicitly inspect and resume the pending operation')
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
             client.connect(endpoint)
@@ -57,10 +60,10 @@ def parent_question(question, *, ready=False, owner_only=False, decision_context
                 line = stream.readline()
             finally:
                 stream.close()
-    except OSError as exc:
-        raise Blocked('parent owner bridge unavailable: ' + str(exc)) from None
-    if not line:
-        raise Blocked('parent owner bridge unavailable: connection closed before an owner reply')
+    except OSError:
+        raise Blocked(lost_channel) from None
+    if not line or not line.endswith('\n'):
+        raise Blocked(lost_channel)
     try:
         response = json.loads(line)
     except ValueError as exc:
@@ -455,6 +458,10 @@ class PiAdapter:
 
 
 def terminal_question(question, *, owner_only=False, decision_context=None):
+    recovery = 'run interactively or explicitly inspect and resume the pending operation'
     if not sys.stdin.isatty():
-        raise Blocked('owner input needed: ' + question + '; run interactively to answer; partial work retained')
-    return input(question + '\n> ')
+        raise Blocked('terminal-question operation blocked: terminal input channel is unavailable; ' + recovery)
+    try:
+        return input(question + '\n> ')
+    except EOFError:
+        raise Blocked('terminal-question operation blocked: terminal input channel was lost; ' + recovery) from None
