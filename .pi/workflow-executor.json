@@ -1,6 +1,6 @@
 {
   "provider": "openai-codex",
-  "model": "gpt-5.6-terra",
+  "model": "gpt-6.1-terra",
   "effort": "medium",
   "reviewer": {
     "provider": "openai-codex",
