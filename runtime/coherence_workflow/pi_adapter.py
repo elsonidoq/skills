@@ -62,7 +62,7 @@ def parent_question(question, *, ready=False, owner_only=False, decision_context
                 stream.close()
     except OSError:
         raise Blocked(lost_channel) from None
-    if not line or not line.endswith('\n'):
+    if not line:
         raise Blocked(lost_channel)
     try:
         response = json.loads(line)

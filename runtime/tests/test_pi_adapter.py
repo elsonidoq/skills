@@ -294,7 +294,9 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
             self.assertEqual(terminal_question('Authorize one pair?'), 'yes')
         prompt.assert_called_once_with('Authorize one pair?\n> ')
 
-    def test_actual_builtin_input_eof_reports_safe_actionable_terminal_loss(self):
+        # Keep actual EOF coverage in the approved terminal-answer selector.
+        marker = self.root/'partial.txt'
+        marker.write_bytes(b'preserve-me\n')
         # builtin input() reads this empty stream and raises EOFError; no exception is mocked.
         with contextlib.redirect_stdout(io.StringIO()), patch('sys.stdin', io.StringIO()), \
              patch('sys.stdin.isatty', return_value=True), \
@@ -302,6 +304,7 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
             terminal_question('PRIVATE-SENTINEL')
         self.assertIn('run interactively or explicitly inspect and resume', str(raised.exception))
         self.assertNotIn('PRIVATE-SENTINEL', str(raised.exception))
+        self.assertEqual(marker.read_bytes(), b'preserve-me\n')
 
     def test_parent_readiness_requires_positive_correlated_response(self):
         for ready, correlate in [(True, True), (False, True), (True, False)]:
@@ -338,7 +341,7 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
             with self.assertRaisesRegex(Blocked, 'parent question operation blocked: parent channel was lost'):
                 parent_question('Scope?')
 
-    def test_parent_socket_close_reports_safe_actionable_question_or_readiness_loss(self):
+        # Exercise real peer closure as well as connect failure in this selected test.
         marker = self.root/'partial.txt'
         marker.write_bytes(b'preserve-me\n')
         for ready in (False, True):
