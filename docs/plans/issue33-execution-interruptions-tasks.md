@@ -130,8 +130,17 @@ correction and the three-task mapping. Current combined owner approval is still 
 
 AC1/AC2/AC4 accept reuse of completed actual-boundary diagnosis and supported unchanged mechanisms;
 source timing about checks not executed **during source preparation** is historical, not a new task.
-Both prior combined approvals were cancelled; parent inspection and renewed current-content approval
-remain required. No implementation authority is inferred from diagnosis or planning recovery.
+Both prior combined approval questions were cancelled. After parent inspection, the owner returned
+**“Approve and implement”** through registered `ask_user` for the three concrete corrections at
+`969a8730c4863b50cb1c9b3a0d9ec248759e5fcc`. This approves the source, human task document and
+executable tasks at that revision, including source SHA256
+`d74356af11ae1a96e2cf33a9d604b9049010dcb575ee9d77fc0286539cef0530` and executable-task SHA256
+`78fab3545ba3dfadc48f37dc55950a8d736b7cf695222a90ca323300e35f3715`.
+Approval authorizes T001–T003 implementation, focused checks/checkpoints and fresh independent review
+using `/home/dev/projects/skills/.pi/workflow-executor.json` (Terra/medium worker; Sol 6.1/medium
+reviewer); coordinator preflight starts next in this session. All exclusions and actual permission/manual
+gates remain. This approval-only record changes no reviewed task instruction or acceptance criterion;
+diagnosis or planning recovery alone supplied no implementation authority.
 
 This correction runs mechanical planning validation only. The parent-reported unchanged planner
 full-suite result **170/171**, with
