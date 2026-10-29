@@ -8,7 +8,7 @@ project adopts the suite through `initialize-coherence` before the workflow skil
 
 | Requirement | Pin | Verified how | Missing behavior |
 |---|---|---|---|
-| pi coding agent | 0.87.x (tested with 0.87.1) | `pi --version` | Install or update pi |
+| pi coding agent | Usable installation; no version pin | `pi --version` and applicable registered capabilities | Report the affected missing capability; no automatic install or update |
 | pi-subagents | npm:`pi-subagents@0.73.1` | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and `pi install npm:pi-subagents@0.73.1` |
 | pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Where a stage permits prose interaction, ask in prose and end the turn; do not proceed past the owner-answer gate or infer an answer. A manager's explicit mandatory preflight may stop earlier. |
 | SpecKit toolkit | installed in the **project** for planner's Standard path | detected integration/version inventory matches real readable, nonempty commands, templates and scripts, including permissions/references | Stop at the affected Standard stage with a capability report; TinySpec/direct tasking does not require it |
@@ -92,7 +92,12 @@ An ordinary exclusive worktree writer lock prevents cooperating overlap. Current
 writers cannot be replaced/killed; explicit historical abandon inspects identities/scopes,
 releases only the old reservation and preserves incomplete effects/partial work. No cgroup
 provisioning for normal tasks. SDK compaction and output continuation are normal behavior;
-no pressure fields, lifetime caps, watchdogs, repair budgets or arbitrary workflow deadlines.
+no pressure fields, generic lifetime caps, watchdogs, repair budgets or arbitrary workflow deadlines.
+The explicit exception is at most two resumes after the initial invocation of the same task-worker
+session, including required-check/checkpoint corrections. Durable dispatch history enforces this
+before provider dispatch across restarts; exhaustion preserves partial work and requires inspected
+recovery or separately authorized fresh context, never automatic relaunch. This is not an SDK retry,
+compaction, reviewer or fixer limit. See the [operating contract](docs/coordinate-implementation.md).
 The SDK's ordinary errors/cancellation remain real failures, not permanent launch poison.
 
 Questions use actual current terminal input, not Paseo versions, original-session proofs,
