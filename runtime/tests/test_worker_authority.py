@@ -23,12 +23,14 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIn('or affecting unrelated data/services', prompt)
 
     def assert_completion_ownership(self, prompt):
+        self.assertIn('Continue unfinished authorized implementation, unrun worker-owned semantic/manual acceptance, and correctable failures', prompt)
         self.assertIn('Finish the assigned implementation and worker-owned semantic/manual acceptance', prompt)
         self.assertIn('The runner executes/reruns configured checks, creates the focused checkpoint', prompt)
         self.assertIn('dispatches fresh independent review', prompt)
         self.assertIn('it does not own all semantic/manual acceptance or the reviewer verdict', prompt)
         self.assertIn('Pending runner stages alone do not require an unsuccessful status', prompt)
-        self.assertIn('required worker-owned acceptance remains failed or unrun', prompt)
+        self.assertIn('genuine inability to progress, cancellation, or execution failure prevents worker-owned acceptance', prompt)
+        self.assertIn('unmet acceptance never becomes success', prompt)
         self.assertIn('do not report corrected tool errors or a required check that will be rerun as unsuccessful', prompt)
 
     def assert_precedence_authority(self, prompt):

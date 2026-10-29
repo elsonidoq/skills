@@ -25,7 +25,9 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
           assert.ok(tools.includes('ask_owner'), 'registered ask_owner must also be active for workers');
           assert.ok(tools.includes('report_task_outcome'), 'workers need an explicit unsuccessful-outcome boundary');
           const outcomeTool = session.agent.state.tools.find(tool => tool.name === 'report_task_outcome');
-          assert.match(outcomeTool.description, /worker-owned required acceptance is known failed or unrun/);
+          assert.match(outcomeTool.description, /Continue unfinished authorized implementation, unrun worker-owned acceptance, and correctable failures/);
+          assert.match(outcomeTool.description, /genuine inability to progress, cancellation, or execution failure prevents worker-owned acceptance/);
+          assert.match(outcomeTool.description, /unmet acceptance never becomes success/);
           assert.match(outcomeTool.description, /pending runner check, checkpoint, or review stages alone/);
           await outcomeTool.execute('fixture-outcome', {status: 'blocked'});
           assert.equal(session.coherenceTaskOutcome(), 'blocked', 'actual SDK tool result reaches the host completion boundary');
@@ -370,7 +372,7 @@ async function mutationFixture(run) {
     const claims = [];
     const tools = limits => mutationTools(project, async request => {
       claims.push(request.path);
-      const output = execFileSync(process.env.COHERENCE_PYTHON || path.join(repository, 'runtime/.venv/bin/python'),
+      const output = execFileSync(process.env.COHERENCE_PYTHON || 'python3',
         ['-B', '-c', `import json,sys
 from coherence_workflow.git_effects import FocusedGit
 from coherence_workflow.store import Blocked

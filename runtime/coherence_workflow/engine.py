@@ -90,13 +90,14 @@ _IMPLEMENTATION_AUTHORITY = (
 
 # Shared worker completion reporting. Keep stage ownership explicit without parsing summaries.
 _COMPLETION_REPORTING = (
+    'Continue unfinished authorized implementation, unrun worker-owned semantic/manual acceptance, and correctable failures. '
     'Finish the assigned implementation and worker-owned semantic/manual acceptance, report actual outcomes and remaining '
     'blockers, then return to the runner. The runner executes/reruns configured checks, creates the focused checkpoint, and '
     'dispatches fresh independent review; it does not own all semantic/manual acceptance or the reviewer verdict. Pending '
-    'runner stages alone do not require an unsuccessful status. If this task is explicitly blocked, failed, incomplete, or you '
-    'know required worker-owned acceptance remains failed or unrun, call report_task_outcome with the matching status before '
-    'returning. A normal returned answer remains compatible for completed work; do not report corrected tool errors or a '
-    'required check that will be rerun as unsuccessful.\n'
+    'runner stages alone do not require an unsuccessful status. Call report_task_outcome with the matching status only when '
+    'genuine inability to progress, cancellation, or execution failure prevents worker-owned acceptance; unmet acceptance '
+    'never becomes success. A normal returned answer remains compatible only for completed work; do not report corrected tool '
+    'errors or a required check that will be rerun as unsuccessful.\n'
 )
 
 # Shared worker permission defaults. Edit here, not in individual task/correction prompts.

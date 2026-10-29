@@ -158,7 +158,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
       });
       if (!readOnly) pi.registerTool({
         name: 'report_task_outcome', label: 'Report unsuccessful task outcome',
-        description: 'Report that this task is blocked, failed, or incomplete when worker-owned required acceptance is known failed or unrun. Do not use it for corrected errors or pending runner check, checkpoint, or review stages alone.',
+        description: 'Continue unfinished authorized implementation, unrun worker-owned acceptance, and correctable failures. Report blocked, failed, or incomplete only when genuine inability to progress, cancellation, or execution failure prevents worker-owned acceptance; unmet acceptance never becomes success. Do not use it for corrected errors or pending runner check, checkpoint, or review stages alone.',
         parameters: {type: 'object', properties: {status: {type: 'string', enum: ['blocked', 'failed', 'incomplete']}}, required: ['status']},
         execute: async (_id, args) => {
           reportedOutcome = args.status;
