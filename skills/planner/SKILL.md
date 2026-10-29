@@ -5,655 +5,412 @@ description: Use when a structured requirement needs scope assessment, reviewed 
 
 # Planner
 
-Prepare work, never implement it. One entry point owns understanding, proportional
-brainstorming, scope assessment, the owner's TinySpec/Standard choice, review,
-approvals, and the handoff to `coordinate-implementation`. Depth is the owner's
-choice, not an admission threshold or a model-family choice.
+Prepare work, never implement it. Own understanding, scope assessment, the owner's
+TinySpec/Standard choice, review, approvals and the implementation handoff. Ordinary
+direct coding needs no new planning artifacts; no new Epic is required.
 
 ## Job first; no coordinator bookkeeping
 
-Resolve the request and advance toward an approved, executable handoff. Produce only
-substantive planning artifacts and required approval inputs; no coordinator bookkeeping.
-Do not maintain administrative ledgers, progress records, evidence manifests or repeated
-readiness reports. Runtime-owned operational state stays runtime-owned. This applies to
-TinySpec, Standard and recovery; it does not remove schema-required task fields.
-
+Produce substantive planning artifacts and approval inputs only; no coordinator bookkeeping.
+Do not maintain administrative ledgers, progress records, evidence manifests or STATE.
+Runtime-owned operational state stays runtime-owned. Carry this rule into every stage brief.
+State each required fact once in its authoritative artifact and reference it elsewhere.
+No repeated record polishing, duplicate evidence or unchanged rechecks.
+Reuse applicable settled evidence and decisions; reopen only affected work on concrete
+invalidating evidence: changed scope/content, stale approval, failed proof or capability/ownership drift.
 Once required prerequisites are satisfied, advance the next authorized stage.
-Reopen only affected work on concrete invalidating evidence such as changed scope/content,
-stale approval, failed proof or capability/ownership drift. Reuse applicable settled evidence
-and decisions; refresh only invalidated portions. State each required fact once in its
-authoritative artifact or existing approval/session return and reference it elsewhere.
-No repeated record polishing, duplicate evidence, unchanged rechecks or status-only writes.
-Carry this rule into every stage brief; do not add trackers or ceremonies to enforce it.
-
 Never waive required approvals, safety checks, permissions, reviews or commits.
-A genuine unmet gate stops only the affected stage: report the exact blocker and smallest
-required resolution, not an administrative cleanup programme.
+An unmet gate stops only the affected stage: report the exact blocker and smallest required resolution.
 
 ## Discovery and capability boundary
 
-Read repository instructions, the request or explicitly selected source/section,
-linked evidence, governing principles, existing planning artifacts, and workspace
-changes. Preserve unrelated work. Resolve ambiguous source selection through
-`ask_user`; never attach a likely source. Discover artifact conventions and ask for
-missing destinations only after depth selection. Do not assume paths or a state schema.
+Read the request/selected source, repository instructions/principles, relevant existing artifacts
+and affected code/tests/interfaces. Inspect workspace changes and preserve unrelated work.
+Resolve ambiguous source selection through `ask_user`; do not attach a likely source or assume
+artifact paths. Discover destinations after depth selection. Stop expanding discovery when
+scope is supported; state remaining uncertainty rather than false precision.
 
-In suite-adopting projects, verify discoverable `memory-handling` and read the whole
-project memory index, then trigger-matching entries. Missing required memory stops;
-do not substitute a global store. Read the distributed
-[SDD reference](../../docs/best_practices_spec_driven_development.md) for specification creation only, including TinySpec, and
-[approval/recovery contract](references/approval-and-recovery.md) and
-[dependency research contract](references/dependency-research.md). A missing required
-reference stops with a missing-install report. Verify discoverable
-`planning-brainstorming`, `tiny-spec`, `task-generation`, and `coordinate-implementation`
-before the stage that needs each; do not duplicate an unavailable skill.
-Use the SDD quality guidance to prepare source-producer briefs, not downstream requirements
-inputs. The source must retain complete relevant behavior, approach, constraints and observable
-acceptance; unresolved material gaps return through existing gates.
+Use [Memory Handling](../memory-handling/SKILL.md): read the whole verified unified index,
+then relevant entries. Missing optional storage or STATE is nonblocking. Missing required memory stops,
+without global-store substitution or initialization. Carry explicit owner guidance,
+alongside gotchas, through source observables → dependencies or gates → task-local REQUIRED checks
+→ worker/reviewer briefs. No default history intake, execution-time feedback routing, inferred
+lessons or routine memory writes; retain the owner's explicit-feedback and safe-write boundaries.
 
-Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
-including standalone/direct entry: retrieve relevant guidance from the verified unified index
-without auto-initialization; missing optional storage or STATE is nonblocking. Carry relevant
-explicit owner guidance, alongside gotchas, through source observables → dependencies or
-gates → task-local REQUIRED checks → worker/reviewer briefs; no default history intake,
-execution-time feedback routing, routine persistence, reflection, inferred lessons, or STATE
-maintenance. Preserve its explicit-feedback authority and path/symlink, sensitive-data, and
-dirty/concurrent safeguards. Apply [save-adr](../save-adr/SKILL.md)'s consult/propagate contract before affected planning; read the
-whole discovered decision index, then relevant accepted records in full and needed
-supersession links; fresh/resumed contexts re-establish applicability rather than claiming a
-prior read. Carry each applicable accepted outcome constraint and source link through source
-observables → dependencies/REQUIRED checks → brief; proposed/superseded records are not
-current policy, and contradictory accepted authority or uncertain applicability stops only the
-affected continuation for an owner decision. Verify its effect on a relevant decision, never
-override source/owner authority. No default history intake; explicit relevant retrieval is
-index-first where useful and retains uncertainty on no match. Required gotcha-memory gates
-remain separate.
+Before affected planning, apply [save-adr](../save-adr/SKILL.md): read the whole discovered decision
+index, relevant accepted records in full and needed supersession links; fresh/resumed contexts re-establish
+applicability rather than claiming a prior read; proposed/superseded records are not
+current policy; contradictory accepted authority or uncertain applicability stops only the
+affected continuation for an owner decision. Carry applicable accepted outcomes and source links
+into source acceptance, task checks and briefs; verify their effect, not merely their presence.
 
-Verify callable question capability before owner gates. Resolve planner-stage bindings from the
-[owner planning assignments](references/model-assignments.md); parent dialogue, inspection,
-TinySpec parent task review, and approvals retain the owner-launched parent model and effort.
-The suite runtime requirements are in the global configuration repository's `REQUIREMENTS.md`;
-configuration names alone are not availability evidence. `ask_user` unavailable or failing at a
-route or artifact-approval gate reports `question: UNAVAILABLE` and stops. No inferred answer
-or prose approval substitutes for those tool gates. Verify async delegation and its observed
-budgets before delegating, and inspect failures before retry/resume/relaunch. Never silently
-change a saved assignment or install missing capabilities.
-Standard-only SpecKit/constitution checks happen after Standard is selected,
-not as prerequisites for considering TinySpec.
+Apply the [dependency research contract](references/dependency-research.md): inspect repository
+guidance and dependency/version evidence first; reuse adequate guidance and refresh proportionally
+before consequential decisions. Verify permitted usable research tools only when needed.
 
-Treat source claims as claims. Verify load-bearing positive and negative claims at
-their source layer, especially “already satisfied” and “no task needed.” Cite symbols,
-paths/lines and relevant verbatim evidence; retain verified results, rather than
-rediscovering settled facts. Mark unchecked claims `UNVERIFIED`. Resolve those affecting
-scope, acceptance, dependencies, or decisions empirically when possible, otherwise
-obtain an explicit owner deferral before readiness. Do not invent a beneficiary.
-Record exclusions and separately scheduled mechanical work so tasks cannot duplicate it.
+Read the [SDD reference](../../docs/best_practices_spec_driven_development.md) for specification
+creation only, including TinySpec. Use the SDD quality guidance to prepare source-producer briefs,
+not downstream requirements inputs. Sources must retain complete relevant behavior, approach,
+constraints and observable acceptance; unresolved material gaps return through existing gates.
 
-Before declaring a technical blocker, identify the exact affected operation and verify its
-actual enforced limit at the consuming interface. Do not generalize a tool-operation limit
-into an artifact, project or workflow limit. For example, a worker's file-read bound does not
-establish the task-contract loader's bound; inspect that loader before blocking task intake.
-Keep owner-requested behavior, verified runtime restrictions and agent-selected design choices
-explicitly distinct in existing artifacts/briefs. An agent inference is not an owner requirement;
-interpret owner agreement within the explanation and scope actually presented, not as a
-broader policy. Correct a mistaken premise and its affected derived constraints before reliance.
+Verify required skills/references and usable capabilities at the stage that needs them, not as
+blanket startup ceremony. Missing packaging returns a missing-install report; do not duplicate,
+install or simulate unavailable capabilities. Verify callable `ask_user` before owner gates;
+if unavailable/failing, report `question: UNAVAILABLE` and stop that gate without inferred consent.
+Standard-only SpecKit/constitution checks happen after Standard is selected.
 
-Inspect affected implementations, tests, interfaces, data, integrations, and relevant
-history only as needed to assess load-bearing uncertainty. Stop expanding discovery
-when the scope signals are sufficiently supported; identify remaining uncertainty,
-not false precision. Material product, architecture, privacy, permissions, cost,
-irreversible, or settled-requirement changes are owner decisions. Resolve mechanical
-facts without unnecessary dialogue or speculative material defaults.
+Treat positive and negative claims as claims, especially “already satisfied” and “no task needed.”
+Verify load-bearing claims at their source layer with paths/symbols and relevant verbatim evidence;
+mark unchecked claims `UNVERIFIED`. Resolve material uncertainty empirically or obtain an explicit
+owner deferral. Do not invent a beneficiary. Record exclusions and separately scheduled mechanical
+work to prevent duplicate tasks. Resolve mechanical facts autonomously; material product,
+architecture, privacy, permissions, cost, irreversible or settled-requirement changes need the owner.
 
-Apply the shared dependency research contract during discovery: inspect repository
-guidance and dependency/version evidence first; detect consequential research needs,
-proportional reuse/skip and targeted refresh before design. Verify permitted usable
-research capabilities only when needed; configuration names are not usability proof.
+Before declaring a blocker, identify the exact affected operation and actual enforced limit at the
+consuming interface. Do not generalize a tool-operation limit into a project/artifact/workflow limit.
+Distinguish owner-requested behavior, verified runtime restrictions and agent-selected design choices.
+An agent inference is not an owner requirement; interpret owner agreement within the explanation
+and scope actually presented. Correct a mistaken premise and affected derived constraints before reliance.
 
 ## Saved planner assignments
 
-`references/model-assignments.json` is the owner-editable source for fresh planner work.
-Resolve its exact model and effort for brainstorming assessment/application, TinySpec source/tasks,
-Standard spec/tasks, both independent specification reviews, the whole direct/helper plan pass, and fresh overall review/rereview.
-Pass the resolved binding unchanged in the invocation and bounded brief; parent-only dialogue,
-inspection, TinySpec parent task review and approvals inherit the owner-launched parent binding in both
-dimensions. Verify the saved binding is permitted and callable for only the affected role at
-dispatch. A missing, malformed, unsupported, or unavailable exact assignment stops that role
-with the resolver's focused owner correction question: do not recommend, infer, substitute, or
-silently use a default.
-
-A correction retains its producing operation's saved assignment. Resume a suitable retained
-producer context when possible; otherwise launch a fresh correction with that same assignment.
-If the saved assignment changed and conflicts with retained producer context, ask the owner for
-a precise stage-specific resolution before correction. Inspect a failed expensive invocation and
-its call before any targeted retry or resume; never blind-retry or relaunch it.
+Use [model-assignments.json](references/model-assignments.json) via the
+[saved-assignment contract](references/model-assignments.md). It covers brainstorming, TinySpec
+source/tasks, Standard spec/tasks, both specification reviews, the direct/helper plan pass and overall
+review/rereview. Pass the resolved binding unchanged in the invocation and bounded brief.
+Parent dialogue, inspection, TinySpec task review and approvals retain the owner-launched parent binding.
+Verify the exact binding is permitted and callable at dispatch; configuration is not availability evidence.
+A missing, malformed, unsupported, or unavailable binding stops only that operation with the resolver's
+focused owner correction question: do not recommend, infer, substitute or silently default.
+A correction retains its producing operation's saved assignment. Resume suitable originating context;
+if its binding conflicts with a saved edit, ask for precise stage-specific resolution.
+Inspect a failed expensive invocation and its call before targeted retry/resume/relaunch; inspect
+failures before replacement and stop on unknown cause, never blind-retry.
 
 ## Proportionate validation
 
-Read and apply [early risk reduction](references/early-risk-reduction.md); verify it is
-readable or stop with a missing-install report. Select proof for a consequential unknown
-only when inexpensive, executable evidence can reduce costly reliance; known bounded behavior
-uses permanent actual-helper tests or a verified step inside its delivery task. Easy names/types
-use inspection, and non-isolatable risks use real-system validation with actual gates. Planning
-schedules proofs, not execution without separate authority; the shared risk owner defines proof
-applicability and lifetime.
+Apply [early risk reduction](references/early-risk-reduction.md); missing packaging stops with a
+missing-install report. Select executable proof only for consequential uncertainty with inexpensive
+leverage; known bounded behavior uses permanent actual-helper tests or an earlier verified step in
+its delivery task; non-isolatable risks use real-system validation. Planning schedules proof, not
+execution without separate authority; the shared risk owner defines proof applicability and lifetime.
 
-At both TinySpec and Standard reviews, challenge proposed task boundaries using the shared
-task-generation outcome rule and
-[executor-sized outcome recipe](../task-generation/SKILL.md#executor-sized-outcomes): reject
-milestones disguised as tasks and assess compaction/drift for the configured executor/effort,
-even when an advanced author could deliver the whole milestone.
-A workflow or phase noun is not a reason to split; keep tests, evidence, review preparation
-and routine teardown with the supported delivery unless a concrete independent outcome,
-prerequisite, gate, resource or context boundary warrants separation.
-Reject duplicate proof/report chains and disproportionate checks without weakening acceptance.
+At both TinySpec and Standard reviews, challenge proposed task boundaries using the task-generation
+outcome rule and [executor-sized outcome recipe](../task-generation/SKILL.md#executor-sized-outcomes).
+Assess compaction/drift for the configured executor/effort; reject milestones disguised as tasks.
+A workflow or phase noun is not a reason to split: keep tests, evidence, review preparation and routine
+teardown with the outcome unless an independent deliverable, prerequisite, gate, resource or context
+boundary warrants separation. Reject duplicate proof/report chains and disproportionate checks.
 
-During assessment and selected production/review, identify the actual changed seam
-and its concrete failure before choosing checks. Choose the lowest validation layer
-that can detect that failure; use the smallest sufficient check, not the broadest
-available suite. Carry this rationale into source/task acceptance and the handoff
-using existing artifact fields, not a new task schema. Prefer practical observables tied to the
-criterion over a generic green suite. Ordinary tasks need no invented manual ceremony; source-
-required representative samples retain STOP and explicit user approval before full/downstream work.
+Choose checks from the actual changed seam and concrete failure: use the lowest validation layer
+and smallest sufficient check, practical observables rather than a generic green suite. Carry the
+rationale in existing acceptance fields, not a new task schema. Ordinary tasks need no manual ceremony;
+source-required representative samples retain STOP and explicit user approval before downstream work.
+For selection/query/wiring, show the selected result or argument reaches the intended consumer.
+Do not automatically add exhaustive matrices, fault injection, new test infrastructure or broad suites.
+When mocks cannot detect the failure, use the necessary integration layer. Genuine schema, security
+or durability changes retain migration, authorization or persistence checks; small diffs alone never
+justify weakening safety evidence.
 
-For a small selection/query or wiring change, prefer a focused check showing the
-selected result or argument reaches the intended consumer. Do not automatically add
-exhaustive matrices, fault injection, new test infrastructure or broad suites.
-If mocks cannot detect the concrete failure (for example, real query semantics),
-use the necessary integration layer instead. Genuine schema, security or durability
-changes retain the checks needed to detect migration, authorization or persistence
-failures; small diffs alone never justify weakening safety evidence.
+When separate green components cannot establish a genuine risky boundary, use the smallest composed
+check that observes the final observable, order or custody. Reuse an existing focused check that already
+observes the boundary. Use a separate proof prerequisite only when the consequential unknown and costly
+downstream reliance justify it; otherwise verify before reliance within the delivery task; block reliance
+only on insufficient or invalidated evidence, not on unrelated seams.
 
-When separate green components cannot establish a genuine risky boundary, require the
-smallest composed check that observes the final observable, order or custody—not just
-helper outputs. Reuse an existing focused check that already observes the boundary;
-ordinary observed wiring needs no extra integration programme. Preserve necessary security
-and durability checks. Use a separate proof prerequisite only when the consequential unknown
-and costly downstream reliance justify it; otherwise put a verified step before reliance in
-the same coherent task. Preserve real dependency order and block reliance only on insufficient
-or invalidated evidence, not on unrelated seams.
-
-Separate REQUIRED acceptance checks (from source criteria, owner direction or
-repository policy) from optional hardening and broader regression. Identify separately
-gated live/provider/engine/browser checks and their permissions/capabilities; a gate
-is not a waiver when the check is REQUIRED. Optional checks are not acceptance blockers;
-new evidence of a concrete risk returns to the affected scope/approval gate rather
-than silently expanding acceptance. Never drop an owner-required check or approved
-safety criterion without explicit authority and renewed affected approval.
-
-Describe expected verification effort qualitatively: a focused existing check and
-bounded setup for a local seam, or justified additional setup/checks for affected
-contracts and risks. No universal deadlines. Compare this effort with the actual
-change before approval; remove unjustified expansion, not necessary criteria.
-Reuse valid unchanged evidence after checking its scope, revisions and environment
-still apply; refresh only invalidated evidence. Avoid repeated historical intake:
-carry settled evidence and decisions forward while preserving current approval checks.
-Separate unrelated recovery wiring or legacy compatibility repairs into small causal
-steps with their own outcomes/checks; include a prerequisite only with evidence that
-it actually blocks the selected change. Preserve dependency order and scope authority.
-
-Apply this boundary at both path reviews and in delegated briefs. It changes neither
-the owner's selected planning depth nor approval provenance, explicit permissions,
-mandated independent reviews or honest PASS/FAIL/NOT RUN reporting.
+Distinguish REQUIRED acceptance from optional hardening/regression. Optional checks are not acceptance
+blockers. Separately gated live/provider/browser checks retain permissions; a gate is not a waiver for
+REQUIRED checks. Never drop an owner-required check or approved safety criterion without explicit authority
+and renewed affected approval. New concrete risk returns to scope/approval, not silent acceptance expansion.
+Describe expected verification effort qualitatively; No universal deadlines. Remove unjustified setup,
+not necessary criteria. Reuse valid unchanged evidence when scope, revisions and environment still apply.
+Avoid repeated historical intake. Separate unrelated recovery/compatibility repairs into small causal
+steps; require a prerequisite only with evidence it actually blocks the selected change. These rules
+change neither the owner's selected planning depth nor mandated independent reviews or honest outcomes.
 
 ## Before selection: understand → brainstorm → assess → ask
 
-Apply [Parsimony and Actionable Checks](references/parsimony.md). Apply during understanding and scope assessment.
+Apply [Parsimony and Actionable Checks](references/parsimony.md). Fresh planning is read-only until
+the owner selects depth: no source edits, decisions, specs, plans or tasks. Session history carries
+request bounds, answers/rationale, evidence and deferrals; recover it or ask for missing answers.
+Research may inform assessment, but no dependency docs, source, plan or decisions may be persisted.
+Carry findings in session until selection.
 
-Fresh planning is read-only until the owner selects depth: no source edits, decision
-files, TinySpec, specification, plan, or tasks. Session history carries request bounds,
-evidence, answers/rationale, and deferrals. If interrupted, recover those records;
-if unavailable, ask for missing answers, never invent a durable preselection artifact.
-Dependency inspection/research may inform assessment read-only; no dependency docs,
-source, plan or decisions may be persisted. Carry findings in session until selection.
+Invoke `planning-brainstorming` in preselection mode with `brainstorm-assessment`, and
+`brainstorm-application` when applying recorded decisions, with each saved assignment unchanged.
+Supply inspected bounds and readiness target “informed scope assessment.” Preserve its gate result;
+conduct required owner dialogue yourself, one material item at a time. A settled request skips extended
+dialogue, not assessment. Generic brainstorming labels do not select depth or add an approval gate.
 
-Invoke `planning-brainstorming` in preselection mode with `brainstorm-assessment` for its
-assessment and `brainstorm-application` when applying recorded decisions; resolve and pass each
-saved assignment unchanged in the fresh call and brief, with the inspected request/bounds and
-readiness target “informed scope assessment.” Preserve its exact gate result;
-conduct required owner dialogue yourself, one material item at a time. A settled
-request skips extended dialogue, not assessment. Generic `brainstorming` design-depth
-labels do not select TinySpec/Standard or add an artifact approval before selection.
+Present approximate scope: affected subsystems, localized/cross-cutting effects, architecture/contracts/
+data, dependencies, migration, security/concurrency/deployment, verification, sequencing, uncertainty,
+reversibility, likely work units and value of separate planning. Use qualitative reasoning, not line/task quotas.
+Present BOTH options and recommend proportionately:
+- **TinySpec → Tasks → Implement:** compact what/how source and separate tasks.
+- **Standard: Specify → Plan → Tasks → Implement:** separate installed SpecKit stages.
 
-Present a concise approximate scope assessment: affected subsystems, localized versus
-cross-cutting impact, architecture/contracts/data changes, dependencies, migration
-and compatibility, security/concurrency/deployment concerns, tests, sequencing,
-uncertainty/reversibility, likely work units, and value of a separate planning stage.
-Use qualitative reasoning and coordination cost, not lines of code or a task quota.
-Present BOTH options, even against your recommendation:
-
-- **TinySpec → Tasks → Implement:** compact what/how source, separate compatible tasks.
-- **Standard: Specify → Plan → Tasks → Implement:** separate SpecKit reasoning stages.
-
-Explain why one appears proportionate, then call `ask_user` and STOP until the owner
-explicitly selects TinySpec or Standard. Either choice is valid regardless of scope
-recommendation. Denial/cancellation/ambiguous selection grants no production authority.
-Selection authorizes planning preparation only, never implementation. This includes
-writing and committing the selected path's bounded planning artifacts and required
-factual evidence under the shared task-commit contract. Do not ask for separate
-planning-commit authorization or defer these checkpoints until artifact approval.
-Artifact approvals govern content and downstream progression, not permission to
-commit already-authorized preparation. Pass this commit authority unchanged to
-planning delegates. Genuine Git, policy, verification or ownership conflicts stop
-with the exact blocker; they do not create a routine commit-permission gate.
-Preserve the selected depth on resume; resolved uncertainty alone does not reroute. Substantive
-scope change or explicit owner direction may reopen choice, with recorded rationale.
+Then call `ask_user` and STOP. Either choice is valid; denial/cancellation/ambiguity grants no authority.
+Selection authorizes preparation only: writing and committing the selected path's bounded planning artifacts
+and necessary factual evidence under the task-commit contract. Do not ask for separate planning-commit
+authorization or defer these checkpoints until artifact approval. Artifact approvals govern content and
+downstream progression. Pass this commit authority unchanged to planning delegates. Genuine Git, policy,
+verification or ownership conflicts stop. Preserve selected depth on resume; resolved uncertainty alone
+does not reroute. Material scope changes or explicit owner direction may reopen choice with rationale.
 
 ## Approval-driven continuation
 
-After `ask_user` returns an affirmative choice/approval, persist its scope and current
-content evidence, then immediately start the next authorized phase in the same session.
-Do not end the turn merely to report approval, promise the next phase, provide a prompt
-for the user to run, or ask “shall I continue?” For an asynchronous phase, dispatch it
-before returning control and continue at its completion notification; a routine async
-wait is not an owner approval gate.
+Read the [approval/recovery contract](references/approval-and-recovery.md) before the first approval;
+its executive-brief and current-content rules govern every approval/renewal. Present content-first
+bullets in conversation BEFORE `ask_user`, including every actual ordered plan stage and task ID/outcome
+when applicable, scope/exclusions, decisions, risks/gates, actual checks and exact content/next authority.
+No total-count cap, catch-alls or invented TinySpec plan. Renewals use current artifacts.
 
-Depth choice starts selected source production. Standard specification approval starts
-planning; approval renewal resumes the affected stage. TinySpec combined approval and
-Standard final approval start the coordinator's implementation preflight by default.
-If the owner explicitly requested planning-only or a separate-session handoff, honor
-that boundary and return the approved handoff instead. State the actual next phase and
-this boundary in the pre-approval bullet brief and question so approval never implies
-broader authority than presented. Never reinterpret an older preparation-only approval
-as execution permission. Denied/cancelled/ambiguous answers, missing capabilities,
-new material owner gates and explicit stop boundaries still prevent unsafe continuation.
+After an affirmative choice/approval, persist its scope/current-content evidence and immediately start
+the next authorized phase. Do not end the turn merely to report approval or ask “shall I continue?”
+For async work, dispatch it before returning control and continue at completion. State in the brief/question
+that final approval starts coordinator preflight unless explicitly requested planning-only or a separate-session
+handoff. An older preparation-only approval never implies execution authority. Denied/ambiguous answers,
+missing capabilities, new material gates and explicit stops still prevent continuation.
 
 ## Intended executor before decomposition
 
-Before task decomposition, resolve the current project's selected executor JSON path once with
+Before decomposition, resolve the current project's selected executor JSON path once with
 `python3 scripts/resolve-workflow-executor.py --project PROJECT_ROOT` from the suite checkout
-(the script is [here](../../scripts/resolve-workflow-executor.py)). Supply `--executor PATH` only
-for an explicit override; relative overrides are project-root-relative. Otherwise the resolver uses
-only `PROJECT_ROOT/.pi/workflow-executor.json`. Pass its exact absolute stdout path unchanged
-in both direct TinySpec and Standard task-producer briefs and the coordinator handoff. Never search
-neighboring repositories, home directories, other worktrees or historical task files; never fall
-back after an override fails. Resolution reads/validates existing configuration without creating
-or copying it, authenticating providers, invoking models or substituting selections. The producer itself
-must read the actual JSON before decomposing work; a planner/parent/producer profile, remembered
-default or brief assertion is not a substitute. A valid selected JSON supplies the worker model
-and effort for bounded implementation guidance, without a redundant executor-selection question.
+([resolver](../../scripts/resolve-workflow-executor.py)). Use `--executor PATH` only for an explicit
+override; relative overrides are project-root-relative. Otherwise use only
+`PROJECT_ROOT/.pi/workflow-executor.json`. Pass the exact absolute stdout path unchanged in both direct
+TinySpec and Standard task-producer briefs and the coordinator handoff. Never search neighboring repos,
+home, worktrees or historical tasks, fall back, create/copy configuration, authenticate or invoke a model
+to resolve it. The producer itself must read the actual JSON before decomposing work; a
+planner/parent/producer profile, remembered default or brief assertion is not a substitute.
+If missing, ambiguous or unreadable, or worker model/effort is absent or invalid, stop the affected producer
+and ask the owner to resolve that role, path and problem; never infer a replacement.
 
-If the selected path is missing, ambiguous or unreadable, or its worker model/effort is absent
-or invalid, stop only the affected producer and ask the owner to resolve that role, path and
-problem. Do not recommend or infer a replacement. Executor settings remain in actual runtime
-configuration: task handoffs follow the shared `task-generation` six-check contract, not
-mandatory execution-intent, compatibility-assessment or provenance metadata.
-
-Apply task-generation's executor-sized outcome recipe using the producer-read configuration and
-verified capability guidance, not a model-family hierarchy or a substitute model. Make
-interfaces and non-obvious decisions explicit where the executor needs them; configuration
-alone does not establish granularity. Record bounded scope, choices left open and uncertainty.
-REQUIRED acceptance, dependencies, safety and approval gates never shrink.
-
-Preserve the selected executor and effort without silent substitution. Revise guidance when
-a real change affects the work, but do not require model assessments, approval/source receipts
-or regeneration of historical tasks to execute ordinary requested coding.
+Apply the executor-sized outcome recipe using producer-read configuration and verified capability guidance,
+not model-family hierarchy. Make interfaces/non-obvious choices explicit, record bounded scope and remaining
+uncertainty; configuration alone does not establish granularity. Preserve REQUIRED acceptance and gates.
+Settings stay in runtime configuration: no execution-intent, compatibility-assessment or provenance metadata.
+Revise guidance only when actual changes affect it; do not regenerate historical tasks for ordinary coding.
 
 ## Selected production and stage handoffs
 
-Apply the shared early-risk and task-boundary contracts in stage briefs and source/task
-handoffs. Return the selection/omission rationale, executable criteria and applicability,
-only genuinely necessary producer/consumer dependencies, proof lifetime and disproof/NOT
-VERIFIED blockers with affected approval renewal. Keep ordinary acceptance, evidence and
-teardown inside coherent delivery; do not prescribe a prototype/consumer/cleanup task chain.
+The following shared rules apply to EVERY stage in both paths; stage entries below supply only differences.
+Persist selected source/provenance, evidence, decisions/deferrals and depth in existing project conventions.
+Apply recorded decisions through the shared mechanism inside selected bounds only. No redundant brief/Epic.
 
-After choice, persist the selected source/provenance, evidence, decisions/deferrals,
-and depth using established project conventions. Preserve the original request by
-reference when durable; capture necessary context when it exists only in the session.
-Apply recorded decisions through the shared mechanism inside selected bounds only.
-Do not create a redundant brief/Epic between request and selected planning source.
-
-Creation always uses a separate fresh bounded-context producer for each artifact. Loading
-a skill in the parent is not delegation. Planner owns dialogue, coordination, inspection,
-review and its own approval brief, never fresh artifact authoring or substantive repair. Direct mechanical repair is limited
-to the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections). Do not forward full
-transcripts or unrelated history. Missing, unusable or unauthorized delegation stops the
-affected production/correction stage with the exact gap; no inline/local fallback.
+Creation uses a separate fresh bounded-context producer for each artifact. Loading a skill in the parent
+is not delegation: planner owns dialogue, coordination, inspection/review and its approval brief, never
+fresh artifact authoring or substantive repair. Source/substantive correction stays with its producer;
+the independent reviewer never becomes the producer. Delegate uncertain or substantive artifact corrections,
+including task-level and upstream changes, to suitable originating context or a fresh bounded correction
+delegate; Resume originating correction context when suitable. Direct mechanical repairs alone follow the
+[bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections).
+Missing, unusable or unauthorized delegation stops the affected stage; no inline/local fallback.
+Do not forward full transcripts or unrelated history. Re-present unanswered questions before downstream work.
 
 Default to direct asynchronous single-stage dispatch with the resolved saved assignment unchanged.
-Inspect the returned artifact/checkpoint and resolve substantive blockers before the next
-authorized stage. Never prewire dependent source→tasks stages without parent inspection.
-A workflow needs concrete branching, parallel independent work or another earned orchestration
-need that direct delegation cannot adequately serve; a single child, convenience wrapper or
-stage sequence alone is insufficient. State a terse reason in the existing brief. Earned
-workflows preserve parent inspection, stage authority, approvals and reviewer independence;
-they do not authorize parallel implementation batches.
+Inspect the returned artifact/checkpoint before the next authorized stage. Never prewire dependent source→tasks.
+A workflow needs concrete branching, parallel independent work or another earned orchestration need that
+direct delegation cannot adequately serve; a single child, convenience wrapper or stage sequence alone is
+insufficient. State the reason in the brief; retain parent inspection, stage authority, approvals and reviewer
+independence. Earned workflows do not authorize parallel implementation batches.
 
-Before every direct or delegated TinySpec/Standard stage, resolve the stage's saved assignment
-and supply it unchanged in the bounded brief and call with the bounded source, settled and
-non-obvious constraints **verbatim**, each applicable accepted outcome constraint
-and source link, cited authorities, governing instructions/principles, applicable memory,
-prior-stage handoff, stage authorization, allowed writes, pending owner flags/answers/deferrals,
-and required evidence. Each stage reads the brief and returns an updated handoff carrying those
-applicable accepted constraints and links. Source references reduce artifact duplication; they
-do not replace necessary constraints in a fresh delegate's brief. Do not delegate owner dialogue.
-Resume originating correction context when supported and suitable; otherwise use a
-fresh bounded correction delegate with a durable correction handoff. Delegate uncertain or substantive artifact
-corrections, including task-level and upstream changes; never edit those in the parent.
-For proven-equivalent mechanical repairs use the bounded mechanical correction contract above. Inspect returned artifacts/checkpoints; ownership or verification conflicts stop.
-Re-present unanswered questions before downstream work.
+Before every direct or delegated TinySpec/Standard stage, provide one bounded brief containing:
+- Exact saved assignment, stage authorization, allowed writes and prohibited operations.
+- Bounded source, governing instructions/principles, settled/non-obvious constraints **verbatim**,
+  each applicable accepted outcome constraint and source link, applicable memory and prior-stage handoff.
+- Pending owner answers/flags/deferrals and required evidence. Require an updated handoff carrying those
+  applicable accepted constraints and links; references do not replace constraints in a fresh delegate's brief.
+- Canonical research links, local/version evidence, reuse/skip rationale, inspected supporting spans,
+  capability/permission gaps and bounded canonical-owner/discovery writes; persist reusable guidance during
+  authorized production before readiness. Supply the shared research contract before consequential source/plan
+  decisions; carry evidence-backed constraints/checks, not invented dependency rules.
+- Apply the shared early-risk and task-boundary contracts: selection/omission rationale, accessible proof/pass conditions,
+  only genuinely necessary producer/consumer dependencies, proof lifetime and disproof/NOT VERIFIED blockers.
+  Keep ordinary acceptance, evidence and teardown inside coherent delivery; do not prescribe a
+  prototype/consumer/cleanup task chain.
+- Carry stable task-local REQUIRED checks with pass criteria, evidence, original permission/manual gates and
+  earlier dependencies. Carry item mappings unchanged into the whole task contract before coding for both
+  adapters, including legacy producing review/renewal. Missing/weakened/unrun REQUIRED proof blocks reliance.
 
-Carry dependency research triggers, local/version findings, reuse/skip rationale,
-inspected supporting spans, capability evidence and gaps into selected production.
-Verify bounded canonical technical-owner and necessary discovery-link write scope;
-persist reusable guidance during authorized production before readiness, preserving
-unrelated content. No fixed project paths or arbitrary documentation permission.
-Before existing approvals/readiness, review actual shared-link resolution (including
-both direct/standalone consumers), canonical owner/discovery, version/provenance,
-proportional reuse/targeted refresh, supporting spans → constraints → observable checks,
-classified recommendations/derived decisions/assumptions, and capability/permission gaps.
-Required insufficient research returns the exact gap, affected decisions and needed
-evidence; stop affected design rather than default to model recollection or readiness.
-Obtain the owner's explicit bounded deferral through existing gates with impact, allowed bounds
-and outstanding validation; never automatically defer or fabricate evidence.
+For source/task authority in both paths: TinySpec/specification is requirements truth; approved plan is derived
+sequencing only. No SDD forwarding/rereading as direct requirements input downstream;
+governing instructions/contracts, memory and permission/safety still apply.
 
-Carry exact applicable coordination guideline constraints and evidence references into
-both TinySpec and Standard stage briefs: source observables/acceptance, producer/consumer
-boundaries, task dependencies, checkpoints, verification and coordinator handoff. Verify
-these constraints reach tasks through the shared adapter, not just a memory summary. Check that
-approved applicable guidance changes a relevant decision (or explain existing coverage), not merely a link.
-Memory cannot override source requirements or owner authority. Preselection stays read-only;
-no routine coordination persistence, default history intake or raw-outcome promotion.
-
-Pass source constraints, canonical research links, applicable guidelines and stable task-local REQUIRED
-verification needs through both adapters to task generation and coordinator. Each item retains
-its pass criterion, smallest sufficient check, expected evidence and manual/permission gates;
-include accessible proof/pass conditions, explicit earlier producer dependencies and original
-permission/manual gates in the inline REQUIRED brief for both adapters. Missing, weakened or
-unrun REQUIRED proof blocks downstream reliance. Optional checks stay distinct. Preserve item mappings unchanged into the whole task contract before
-coding, including both adapters and legacy producing review/renewal when contracts are inadequate.
-Saved planner assignments govern only planning-stage bindings; they are not implementation-task
-assignments and grant no implementation batching or runtime routing authority.
-Missing or ambiguous contracts, including old approved tasks, return to the producing review/approval
-gate for affected review and renewed approval, never fabricated historical requirements.
+In both TinySpec and Standard stage briefs, map guidance/accepted constraints through source
+observables/acceptance → task dependencies, checkpoints, verification and coordinator handoff. Memory cannot
+override source requirements or owner authority; confirm the mapping affects decisions, not just links.
+Before approval, inspect shared research-link resolution (both direct/standalone consumers), canonical owner/
+discovery, version/provenance, proportional reuse/targeted refresh, supporting spans → constraints → observable
+checks, classified recommendations/derived decisions/assumptions and capability/permission gaps.
+If required evidence is insufficient, stop affected design rather than default to model recollection. Obtain
+explicit bounded owner deferral with impact, allowed bounds and outstanding validation; never automatically
+defer or fabricate evidence. Research-driven content changes retain affected approval renewal.
+Saved planner assignments are not implementation-task assignments and authorize no batching/runtime routing.
 
 ### Shared specification-review contract
 
-Both paths require one fresh independent read-only specification review, primarily for
-fidelity to user intent, after source creation and before downstream production. Use
-[the canonical review prompt](references/spec-review.md). Give the reviewer the original
-user request, actual owner clarifications/decisions, relevant constraints/accepted decisions/
-memory, and the exact current specification path/content identity with readable content.
-Do not supply producer rationale, conclusions, or full unrelated transcripts. Verify the
-saved exact binding is permitted and callable with async delegation, fresh context and a
-read-only reviewer profile; missing capability or binding stops only this operation for
-owner correction, never substitution. Dispatch the resolved binding unchanged in brief and
-call with `async: true`, bind its report to the invocation, and compare source content before
-and after review. The reviewer returns ranked findings or explicit zero findings; it neither
-edits nor approves. Parent evaluates evidence and dispositions, not reviewer approval.
-
-Resolve straightforward fidelity defects without unnecessary owner questions; send substantive
-corrections to the source producer under its saved producing assignment, resuming suitable
-context or using a fresh bounded correction delegate. Material decisions go to the owner via
-one focused `ask_user` question at a time. Parent inspects producer corrections against the
-request, actual answers and findings. Neither path may progress beyond specification review
-with unresolved material intent gaps. An explicit bounded owner deferral can exclude affected
-work from progression but cannot release reliance on an unresolved gap. Keep findings and
-dispositions in existing session/report context, not a new tracker. No automatic rereview loop
-or additional approval gate; actual invalidating drift follows existing recovery rules.
+Both paths require one fresh independent read-only specification review for fidelity to user intent,
+after source creation and before downstream production. Use [the canonical review prompt](references/spec-review.md).
+Give the reviewer the original user request, actual owner clarifications/decisions, relevant constraints/
+accepted decisions/memory and exact current specification path/content identity with readable content.
+Do not supply producer rationale, conclusions, or full unrelated transcripts.
+Verify the saved exact binding is permitted and callable with async delegation, fresh context and read-only
+profile. Dispatch with `async: true`, bind the report to the invocation and compare source content before
+and after review. No writes, implementation, external action, or delegation. The reviewer returns ranked
+findings or explicit zero; it neither edits nor approves.
+Parent evaluates evidence/dispositions, resolves evident defects without unnecessary owner questions,
+and returns corrections to the source producer under its saved producing assignment. Material decisions
+go to the owner via one focused `ask_user` at a time. Parent inspects producer corrections against intent
+and findings. Neither path may progress beyond specification review with unresolved material intent gaps.
+A bounded owner deferral can exclude affected work but cannot release reliance on the gap. Keep findings
+in existing session/report context, not a new tracker. No automatic rereview loop or additional approval gate.
 
 ### TinySpec path
 
-1. **Source creation — saved assignment:** resolve `tinyspec-source` and delegate `tiny-spec` to a separate fresh
-   bounded-context source producer; invoke `tiny-spec` with verified request,
-   decisions, source bounds, observed destination, and preparation authorization.
-   Supply the shared research contract, findings/capability evidence and bounded
-   canonical-owner/discovery writes before consequential approach decisions; inspect
-   returned research traceability and persistence with the source.
-   Supply SDD quality guidance for specification creation only. Require complete relevant
-   behavior, approach, constraints and observable acceptance in the source; unresolved
-   material gaps return through existing gates. Missing, unusable or unauthorized source
-   delegation stops; no parent creation/substantive correction or inline/local fallback.
-   Inspect returned compact source and blockers. No SpecKit prerequisite or standalone
-   TinySpec approval is required before task production; independent specification review is.
-2. **Specification review — independent saved reviewer assignment:** resolve `tinyspec-spec-review`
-   and follow the shared specification-review contract above with the compact TinySpec as the
-   exact specification. Use a fresh reviewer independent of the `tinyspec-source` producer.
-   Evaluate all findings and inspect necessary producer corrections before task generation.
-   Return substantive corrections to `tinyspec-source` with its same saved assignment.
-   Explicit zero findings skips question interaction; resolved findings proceed directly to
-   tasks, not a separate TinySpec approval. Unresolved material intent gaps stop task generation.
-3. **Tasks — saved assignment:** resolve `tinyspec-tasks` and delegate a separate fresh bounded-context task
-   producer; invoke `task-generation` direct adapter with TinySpec and
-   applicable source links. TinySpec is requirements truth; no SDD forwarding/rereading as
-   direct requirements input. Governing instructions/contracts, memory and permission/safety
-   still apply. Missing, unusable or unauthorized task delegation stops; no parent task
-   creation/substantive correction or inline/local fallback. Create separate tasks using its full contract. Derive docs
-   from inspected effects/requirement, not an absent plan. Keep context-coherent work
-   consecutive without reordering dependencies or padding distant tasks.
-4. **Review — planner-owned parent binding:** review source-to-task traceability, in-scope coverage,
-   exclusions, constraints, decisions/deferrals, documentation, integration/acceptance,
-   verification item completeness, explicit and implicit dependencies, and stage feasibility.
-   Explicitly check the TinySpec and tasks, within and across artifacts, for confusing, ambiguous
-   or contradictory instructions, scope creep, and unnecessary complexity/overengineering.
-   Report material defects with the affected passage, concrete impact and smallest sufficient
-   correction or simpler alternative; requirements coverage alone does not establish clarity
-   or proportionality. Challenge additions without a requirement, actual constraint or concrete
-   material risk as their basis; preserve necessary safety protections and required acceptance.
-   Do not manufacture findings or treat stylistic preferences as defects. Record
-   fixes, validation results and current content evidence. Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
-   to proven-equivalent mechanical repairs. Delegate uncertain or substantive source/task corrections
-   to suitable originating context or a fresh bounded correction delegate; no parent substantive
-   task-level or upstream repair. Missing, unusable or unauthorized correction delegation stops; no
-   inline/local fallback. No additional independent task-planning reviewer is required for
-   this path; the preceding independent specification review and implementation's independent
-   review remain required.
-   Apply the dependency evidence/permission review above before combined approval.
-   Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
-   temporary phase/approval status belongs in the approval record, not executable task instructions.
-   Review risk selection/omission, actual evidence and gates, necessary producer/consumer
-   dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries.
-   Source carries needs; separate tasks carry only independently necessary work units.
-5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
-   obtain explicit approval of current TinySpec/source, tasks, and implementation scope,
-   stating that approval starts the coordinator next unless planning-only was requested.
-   Persist that answer against current content, then immediately proceed to handoff and
-   coordinator preflight under the continuation rule. Denial returns to review/correction,
-   not execution.
+1. **Source creation — saved assignment:** resolve `tinyspec-source`; delegate `tiny-spec` to a separate
+   fresh bounded-context source producer and invoke `tiny-spec` with request, decisions, destination and
+   preparation authority. Apply the shared stage rules, including research before consequential approach
+   decisions and SDD quality guidance for specification creation only. Inspect source and blockers.
+   No SpecKit prerequisite or standalone TinySpec approval before tasks; specification review is required.
+2. **Specification review — independent saved reviewer assignment:** resolve `tinyspec-spec-review`;
+   follow the shared specification-review contract with a fresh reviewer independent of the source producer.
+   Inspect necessary producer corrections before task generation under the same saved assignment.
+   Explicit zero findings proceeds directly to tasks, not a separate TinySpec approval.
+   Unresolved material intent gaps stop task generation.
+3. **Tasks — saved assignment:** resolve `tinyspec-tasks`; delegate a separate fresh bounded-context task
+   producer and invoke `task-generation` direct adapter with TinySpec and relevant source links.
+   Apply the shared stage rules and source/task authority. Create separate tasks; derive documentation
+   work from inspected effects/requirements, not an absent plan. Keep coherent work consecutive without
+   reordering dependencies or padding distant tasks.
+4. **Review — planner-owned parent binding:** inspect source-to-task traceability, coverage, exclusions,
+   decisions/deferrals, docs, integration/acceptance, verification item completeness, explicit/implicit
+   dependencies and feasibility. Challenge confusing/contradictory instructions, scope creep and unnecessary
+   complexity; each material finding needs the affected passage, impact and smallest sufficient correction.
+   Do not manufacture defects from stylistic preferences. Apply the shared stage rules for substantive
+   corrections and the bounded mechanical correction contract for proven-equivalent repairs. Record fixes,
+   validation and current content evidence. Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
+   temporary phase/approval status belongs in the approval record, not executable instructions. Review risk selection/omission, actual evidence and gates,
+   necessary producer/consumer dependencies, reuse/retention, production acceptance and task boundaries.
+   Source carries needs; tasks carry independently necessary outcomes. Apply the dependency evidence/permission
+   review above before combined approval. No additional independent task-planning reviewer is required.
+5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`; approve current
+   source, tasks and implementation scope under the continuation contract, then immediately proceed to handoff.
+   Denial returns to review/correction, not execution.
 
 ### Standard path
 
-Use the project's observed SpecKit stage commands, instructions, templates and
-prerequisite checks; report `AVAILABLE`/`UNAVAILABLE` with evidence. Required absent
-capability stops at the affected stage; never install, simulate slash commands in a
-shell, or substitute generic Markdown. Verify detected constitution when required:
-missing/template-only principles require owner-derived answers and the observed
-constitution capability, then verify repaired output before specification work.
-Missing repair capability, principles, or failed verification stops. Do not reopen
-valid settled principles. Verify the saved exact stage binding and independent reviewer availability before assigning their work.
+Use observed installed SpecKit stage commands/instructions/templates; report AVAILABLE/UNAVAILABLE with
+evidence. Required absent capability stops that stage; never install, simulate slash commands or substitute
+ordinary Markdown. Missing/template-only constitution principles need owner-derived answers through the
+observed constitution capability; verify repaired output. Missing repair capability, principles or failed
+verification stops. Do not reopen valid principles.
 
-1. **`spec_create` — saved assignment:** resolve `standard-spec-create` and delegate a separate fresh bounded-context
-   specification producer to follow observed specification instructions and
-   SDD reference for specification creation only using request/provenance and shared gate result.
-   Require complete relevant behavior, approach, constraints and observable acceptance in the
-   specification; unresolved material gaps return through existing gates. Missing, unusable or
-   unauthorized specification delegation stops; no parent creation/substantive correction or inline/local
-   fallback. Supply research
-   triggers/context and apply the shared research contract before consequential dependency constraints
-   are chosen; carry evidence-backed constraints/checks, not invented dependency rules.
-   Reflect settled
-   decisions. Clarify only when requested or required by the detected workflow;
-   mechanical gaps are resolved by the delegate, material choices go to the owner. Finish
-   after that ordinary clarification and parent inspection of the exact current specification:
-   do not approve or plan here.
+1. **`spec_create` — saved assignment:** resolve `standard-spec-create`; delegate a separate fresh bounded-context
+   specification producer using observed specification instructions and SDD reference for specification creation only.
+   Apply the shared stage rules, including research before consequential dependency constraints and complete
+   relevant behavior, approach, constraints and observable acceptance. Clarify only when requested or required;
+   mechanical gaps are resolved by the delegate, material choices go to the owner. Finish after that ordinary
+   clarification and parent inspection of the exact current specification: do not approve or plan here.
 2. **`spec_review` — independent saved reviewer assignment:** resolve
-   `standard-spec-review`, apply the shared specification-review contract above (this is
-   Standard's existing review, not an additional review), and verify the exact saved provider/model:effort is actually
-   permitted and callable, with the installed async delegation interface, a fresh context,
-   the reviewer’s read-only tool/profile, and source-producer and `ask_user` capabilities.
-   Package/profile names alone are insufficient. A missing, unsupported, or unavailable
-   exact binding stops only this review with the resolver’s focused owner correction; do
-   not substitute, route to another reviewer, or fall back.
+   `standard-spec-review`; follow the shared specification-review contract above with a fresh independent reviewer.
+   Verify the exact saved provider/model:effort is actually permitted and callable using the installed async
+   delegation interface, fresh context and read-only tool/profile, plus source-producer and `ask_user` capabilities.
+   Package/profile names alone are insufficient; failure stops only this review: do not substitute, route to
+   another reviewer, or fall back. Dispatch exactly that saved binding unchanged with `async: true` and bind its
+   report to the runtime invocation. Apply the shared reviewer inputs, no-write and source-comparison rules.
 
-   Dispatch exactly that saved binding unchanged, with `async: true`, and bind its report
-   to the runtime invocation. Give the fresh independent reviewer only the original user
-   request, actual owner clarifications/decisions, exact
-   current specification path/content identity, relevant context/constraints/accepted
-   decisions/memory, and [the canonical review prompt](references/spec-review.md). Do not
-   include producer rationale, transcript, or unrelated history or producer conclusions. Review definition of
-   done for observable completion aligned with user intent, using existing acceptance
-   criteria rather than requiring a new heading; include all material gaps in the same
-   ranked findings and existing question/correction flow, with no discovery cap.
-   Require findings only;
-   no writes, implementation, external action, or delegation. Parent compares the exact
-   specification before and after review and inspects the returned report; reviewer and
-   parent never substantively repair the specification.
+   Parent reports the total findings and meaningful areas, presents the five most important findings initially
+   (all if fewer), and offers to show all findings or a grouped overview. Retain the complete returned findings
+   in existing context, not a new persistent tracker. Five is a presentation batch, not a discovery or resolution
+   limit; no discovery cap. Resolve fidelity defects through the source producer, not owner questions.
+   For each unresolved material decision, parent asks one concrete `ask_user` question at
+   a time with scenario, alternatives, and consequences; discard queued questions resolved by earlier answers.
+   An unanswered or cancelled material answer stops affected planning with no inferred default.
+   Send actual answers to the originating `standard-spec-create` producer under the same producing assignment.
+   The producer updates relevant requirements/scenarios/acceptance and existing `Q: … → A: …` convention,
+   removes contradictions, validates and checkpoints; parent
+   inspects the returned change. Do not rerun ordinary clarification taxonomy or automatically rereview.
+   Continue to surface the next highest-impact remaining findings; do not stop merely because five were answered.
+   Before planning, every remaining material decision must be answered or explicitly deferred by the owner with
+   consequences and permitted planning bounds recorded. Preserve unresolved impact; never release a material
+   dependency automatically. Reviewer and parent never substantively repair the specification.
 
-   Parent reports the total findings and meaningful areas, then surfaces the five most
-   important findings initially (or all if fewer). Offer to show all findings or a grouped
-   overview on request; these views summarize findings, not additional approval gates.
-   Retain the complete returned findings in existing session/report context, not a new
-   persistent tracker. Five is a presentation batch, not a discovery or resolution limit.
-   Resolve evident fidelity defects through the shared producer-correction route, not owner
-   questions. For each unresolved material decision, parent asks one concrete `ask_user` question at
-   a time, retaining its scenario, alternatives, and consequences; discard queued
-   questions made unnecessary by earlier answers. An unanswered or cancelled material
-   answer stops affected planning with no inferred default. Send actual answers to the
-   originating `standard-spec-create` producer: resume a suitable context or dispatch a
-   fresh bounded correction with that same producing assignment. The producer updates
-   relevant requirements/scenarios/acceptance, including definition-of-done completion
-   conditions affected by the answers, and existing Clarifications/session
-   `Q: … → A: …` convention, removes contradictions, validates and checkpoints; parent
-   inspects the returned change. Do not rerun ordinary clarification taxonomy for answered
-   questions or automatically rereview. After each presentation batch, surface the next
-   highest-impact remaining findings; do not stop merely because five were answered.
-   Before planning, every remaining material decision must be answered or explicitly
-   deferred by the owner with consequences and permitted planning bounds recorded.
-   Explicit owner stops/deferrals use existing gates with the unresolved impact; they
-   never release a material dependency automatically.
-
-   With explicit zero findings, skip question interaction. After zero or inspected producer
-   incorporation, present the existing current-specification executive brief and `ask_user`
-   approval gate. Durably record that approval before `plan_create`, then immediately
-   continue to `plan_create` without a second continuation or review approval.
-3. **`plan_create` — saved assignment:** resolve `standard-plan-direct` for a direct pass or
-   `standard-plan-helper` for the helper pass. Use that resolved exact binding unchanged for the
-   entire direct/helper pass and its brief/dispatch. An unavailable or unsupported saved binding
-   stops only this stage with its focused owner correction question; no substitution, default, or
-   helper fallback may bypass it.
-   Delegate a separate fresh bounded-context plan producer. The specification is requirements
-   truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct
-   requirements input; governing instructions/contracts, memory and permission/safety still
-   apply. Missing, unusable or unauthorized plan delegation stops; no parent production/substantive repair
-   or inline/local fallback. From current approved specification, in one
-   same-session pass review/fix the specification, create one plan through the observed
-   capability, then review/fix the produced plan. Cover contracts, architecture,
-   integration, sequencing, migration/rollback, risks, docs, verification, and coherent
-   consecutive context-coherent work. Do not reorder dependencies or pad distant tasks.
-   Before consequential plan decisions, complete required shared-contract research and
-   durable guidance. For helper invocation or the direct Standard pass, the brief must
-   identify canonical research-document and necessary discovery-link destinations,
-   observed allowed changes and prohibited operations, with explicit bounded permission
-   in addition to detected SpecKit artifacts. Do not grant arbitrary documentation edits
-   or code writes; missing required evidence/authority stops the affected branch.
-   When approved work calls for `delegating-architectural-planning`, verify and invoke
-   it as the planner Standard adapter for this entire pass. Inspect its returned
-   evidence; do not create the plan again. Only when no adapter is invoked delegate
-   the entire pass to the separate fresh bounded-context producer with the resolved saved
-   assignment. Never perform it in the parent. Saved-assignment capability stops and approval
-   renewal supersede helper standalone fallbacks.
-   Any approved specification content change requires renewed specification approval
-   with a new executive brief in short bullets before leaving this stage. After renewal,
-   continue the affected stage immediately. Material choices remain gates.
-4. **`tasks_create` — saved assignment:** resolve `standard-tasks-create` and delegate a separate fresh bounded-context
-   task producer to follow observed SpecKit tasks capability under
-   `task-generation`. Specification is requirements truth; approved plan is derived sequencing
-   only. No SDD forwarding/rereading as direct requirements input; governing instructions/
-   contracts, memory and permission/safety still apply. Missing, unusable or unauthorized task
-   delegation stops; no parent task creation/substantive correction or inline/local fallback. Supply authorization to prepare tasks and already-applicable
-   approvals; final implementation approval is not a prerequisite to creation.
-   This stage is create-only: producers may draft, revise, shorten and mechanically
-   validate their own unsubmitted output within authorized scope, without supervisor
-   permission for ordinary editing. This is not independent review or permission to change
-   approved upstream requirements. After submission, defects belong to `overall_review`
-   and its correction route; independent review and final approval remain required.
-   Include documentation, acceptance, shared context and producer checks without breaking
-   prerequisite order or story acceptance boundaries.
-5. **`overall_review` — independent saved reviewer assignment:** resolve
-   `standard-overall-review` (or `standard-overall-rereview` for a fresh rereview), then follow observed analysis
-   capability; inspect source → spec → plan → tasks traceability, principles, exclusions,
-   coverage, dependencies, verification item completeness, documentation, integration and approvals.
-   Explicitly check source, specification, plan and tasks, within and across artifacts, for
-   confusing, ambiguous or contradictory instructions, scope creep, and unnecessary
-   complexity/overengineering. Report material defects with the affected passage, concrete impact
-   and smallest sufficient correction or simpler alternative; requirements coverage alone does
-   not establish clarity or proportionality. Challenge additions without a requirement, actual
-   constraint or concrete material risk as their basis; preserve necessary safety protections
-   and required acceptance. Do not manufacture findings or treat stylistic preferences as defects.
-   Review risk selection/omission, actual evidence and gates, necessary producer/consumer
-   dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries
-   in direct Standard and managed/helper plans.
-   Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
-   temporary phase/approval status belongs in the approval record, not executable task instructions.
-   Apply the dependency evidence/permission review above, including the direct Standard
-   pass and helper-managed/standalone contract coverage, before overall approval.
-   Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)
-   to proven-equivalent mechanical repairs. Delegate uncertain or substantive task-level and
-   upstream corrections to suitable originating producer
-   context or a fresh bounded correction delegate; record evidence. The independent reviewer
-   does not become the producer. No parent substantive artifact edits. Missing, unusable or unauthorized
-   correction delegation stops; no inline/local fallback. Flag only material
-   friction/complexity or genuine specification deviation with alternatives and a
-   recommendation; never apply unresolved material defaults. Task ordering, grouping,
-   file choice, batch size, naming and single-option mechanics are internally resolved,
-   not routine owner questions. Material upstream changes return to the affected gate
-   and renew affected approvals. Preserve pending questions and correction contexts.
-   Missing independent reviewer/review evidence stops. Present a bullet-list executive
-   brief including review outcome and plan-phase implications BEFORE `ask_user`; obtain
-   current overall approval for source, spec, plan, tasks and implementation scope,
-   explicitly stating the next phase. After approval, immediately proceed to handoff
-   and coordinator preflight under the continuation rule.
+   With explicit zero findings, skip question interaction. After zero or inspected correction, present the existing
+   current-specification executive brief and `ask_user` approval gate. Durably record that approval before `plan_create`,
+   then immediately continue to `plan_create` without a second continuation or review approval.
+3. **`plan_create` — saved assignment:** resolve `standard-plan-direct` or `standard-plan-helper` for the entire
+   direct/helper pass. Delegate a separate fresh bounded-context plan producer. In one same-session pass,
+   review/fix the specification, create one plan through the observed capability, then review/fix the produced plan.
+   Apply the shared stage rules and source/task authority. Cover architecture/contracts, integration, migration/
+   rollback, risks, docs, verification and coherent sequencing. Do not reorder dependencies or pad distant tasks.
+   Before consequential plan decisions, complete required shared-contract research. For helper invocation or the
+   direct Standard pass, give canonical research-document and necessary discovery-link destinations, observed
+   allowed changes and prohibited operations, with explicit bounded permission in addition to detected SpecKit
+   artifacts. Do not grant arbitrary documentation edits or code writes; missing required evidence/authority stops.
+   When the approved adapter is needed, invoke `delegating-architectural-planning` for this entire pass; inspect
+   its return, do not create the plan again. Only when no adapter is invoked delegate the whole pass directly.
+   Never perform it in the parent. Approved specification changes require renewed specification approval with a
+   new executive brief before leaving this stage; after renewal resume immediately. Material choices remain gates.
+4. **`tasks_create` — saved assignment:** resolve `standard-tasks-create`; delegate a separate fresh bounded-context
+   task producer using observed SpecKit tasks and `task-generation`. Apply the shared stage rules and source/task
+   authority, with authorization to prepare tasks: final implementation approval is not a prerequisite to creation.
+   This is create-only: producers may draft, revise, shorten and mechanically validate their unsubmitted work
+   without supervisor permission. This is not independent review or authority to change approved requirements.
+   After submission, defects follow `overall_review`; independent review and final approval remain required.
+   Include docs, acceptance, shared context and producer checks without breaking dependencies or story boundaries.
+5. **`overall_review` — independent saved reviewer assignment:** resolve `standard-overall-review` (or
+   `standard-overall-rereview` for a fresh rereview); follow observed analysis capability and inspect source → spec → plan
+   → tasks traceability, principles, exclusions, coverage, dependencies, verification item completeness, docs,
+   integration and approvals. Challenge confusing/contradictory instructions, scope creep and unnecessary complexity
+   across artifacts; report affected passage, impact and smallest sufficient correction. Do not manufacture findings
+   from style preferences or silently expand acceptance. Review risk selection/omission, actual evidence and gates,
+   necessary producer/consumer dependencies, reuse/retention, production acceptance and task boundaries in direct
+   Standard and managed/helper plans. Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
+   temporary phase/approval status belongs in the approval record. Apply the dependency evidence/permission
+   review above, including direct Standard pass and helper-managed/standalone contract coverage.
+   Apply the shared stage rules for corrections and the bounded mechanical correction contract for equivalent
+   repairs. The independent reviewer does not become the producer. Renew affected approvals for material upstream
+   changes: renew affected approvals and preserve pending questions and correction contexts. Resolve mechanics internally; never apply unresolved
+   material defaults. Missing independent reviewer/review evidence stops. Present a bullet-list executive brief
+   BEFORE `ask_user`, including plan-phase implications; obtain current overall approval for source, spec, plan,
+   tasks and implementation scope, then immediately proceed to handoff under the continuation contract.
 
 ## Approval, resume and legacy recovery
 
-Follow the linked approval/recovery contract, including denial, cancellation,
-external evidence, changes, renewed approvals and earliest-invalid-stage recovery.
-Fresh sessions must inspect approved current content/revision evidence; an `approved`
-label, chat-only answer or handoff assertion is insufficient for implementation.
-
-For old-manager work, use the legacy checkpoint mapping in that contract. Preserve
-original artifact shapes and provenance, including source embedded in old tasks and
-existing specification approvals. No forced new TinySpec, Epic creation, reclassification,
-or fabricated historical depth choice. Other documented origins keep their own gates;
-ambiguous origin stops. Never invoke a retired manager to repair its handoff.
+On interruption, drift or legacy input, read the approval/recovery contract's transition/invalidation and
+legacy checkpoint mapping. Preserve original provenance, artifact shapes, task-embedded sources and valid
+approvals; no forced TinySpec, invented historical choice or retired manager. Verify current content/revision
+evidence, not an `approved` label or handoff assertion; return to the earliest invalid gate. Ambiguous origin
+stops. Inadequate REQUIRED contracts return to the producing review/approval gate for renewed affected approval,
+not fabricated historical requirements. Reconcile active/unknown children before replacement.
 
 ## Handoff, not execution
 
-Revalidate risk rationale and any required proof against current applicability: consumers
-use applicable evidence and preserve behavior with permanent production tests; retain proof
-through all consumers/validation before safely discarding disposable material. Failed/unrun
-proof cannot release assumed reliance; routine cleanup does not become a separate task.
+Check current source/task consistency, ordering, reviews/approvals and unresolved gates. Revalidate risk rationale
+against current applicability: consumers use applicable evidence and permanent production tests; retain proof
+through all consumers/validation. Failed/unrun proof cannot release reliance; routine cleanup does not become
+a separate task. Supply in existing conventions, without a new state/handoff file:
+- Producer `planner`, selected depth (or mapped legacy origin) and source provenance.
+- Source, tasks, supporting artifacts (Standard spec/plan) and approved current content/revision evidence.
+- Reviews/checks, applicable accepted outcome constraints and source links, decisions/deferrals and blockers.
+- Combined TinySpec or both Standard approvals and Explicit approved implementation scope/authorization.
 
-Revalidate paths, source/task consistency, ordering, current review/approval evidence,
-required upstream outputs, and unresolved material gates. Provide explicit locations
-and applicable approved content/revisions for:
-
-- Producer `planner`, selected depth `TinySpec` or `Standard` (or original legacy origin
-  plus mapped planner recovery checkpoint).
-- Authoritative source, tasks, and supporting artifacts; Standard spec and plan.
-- Review and validation evidence, applicable accepted outcome constraints and source links,
-  decisions/deferrals and pending blockers.
-- TinySpec combined approval or Standard specification and overall approvals.
-- Explicit approved implementation scope/authorization and source provenance.
-
-Use established artifact/decision conventions; no mandatory new state/handoff file.
-After final approval, supply this complete handoff and automatically invoke `coordinate-implementation`
-in the same session, unless the owner explicitly requested planning-only or a separate-session
-handoff. Do not stop at a readiness summary or require a second execution request. Planner
-never executes tasks itself; the executable runner alone selects dependency-ready work and
-compatible role-safe sessions from approved exact configuration, verifies REQUIRED evidence
-and gates, and creates focused task checkpoints. The interface cannot choose models/batches. If a capability/gate blocks continuation, report the precise blocker
-and preserve the handoff rather than silently stopping. For an explicitly bounded planning-only
-request report readiness, not implementation completion or feature acceptance.
+After final approval, automatically invoke `coordinate-implementation` in the same session under the
+continuation contract; if explicitly requested planning-only or separate-session handoff, return the approved
+handoff instead. Do not stop at a readiness summary by default. A capability/gate failure returns the precise
+blocker and preserved handoff. The executable runner alone executes approved tasks, verifies REQUIRED checks/
+gates and creates focused commits; planner never executes tasks or selects implementation models/batches.
+Planning-only readiness is not implementation completion or feature acceptance.
 
 ## Maintaining this contract
 
-With Python 3 available run `python3 scripts/check-planner-workflow.py` and
-`python3 scripts/test-planner-workflow.py` from the global configuration repository.
-These are static/fixture checks, not model-obedience proof. If unavailable, report
-scripted checks `UNAVAILABLE` and inspect manually. Behavioral tests and limitations
-are documented in the repository's planner regression guide.
+Run `python3 scripts/check-planner-workflow.py` and `python3 scripts/test-planner-workflow.py` from the suite
+checkout; unavailable Python means report UNAVAILABLE and inspect manually. These are static/fixture checks,
+not model-obedience proof; see the repository's planner regression guide. In Paseo, changed global skills need
+a fresh-session handoff, not automatic reload/restart or asking the owner to run `/reload`.
 
 ## Mandatory task checkpoint
 
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Retained TinySpec/Standard source and task artifacts are bounded deliverables; preserve preselection read-only and approval gates, then checkpoint authorized retained output before handoff.
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md) to authorized
+retained artifacts/repairs. Preserve read-only preselection and approval gates; checkpoint before handoff.

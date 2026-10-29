@@ -32,6 +32,15 @@ links = load("links", "install-links.py")
 rpc = load("rpc", "planner-rpc-smoke.py")
 
 
+def replace_clause(text, clause, replacement="REMOVED"):
+    """Mutate instruction content independently of Markdown line wrapping."""
+    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+    changed, count = re.subn(pattern, lambda _: replacement, text, count=1)
+    if count != 1:
+        raise AssertionError(f"Mutation clause missing: {clause!r}")
+    return changed
+
+
 class PlanningCommitAuthorityTests(unittest.TestCase):
     """Static regression guard, not proof of runtime model compliance."""
 
@@ -49,7 +58,7 @@ class PlanningCommitAuthorityTests(unittest.TestCase):
         for clause in clauses:
             with self.subTest(removed=clause):
                 changed = dict(texts)
-                changed["planner"] = changed["planner"].replace(clause, "REMOVED", 1)
+                changed["planner"] = replace_clause(changed["planner"], clause)
                 self.assertTrue(any(
                     error.startswith("planning-commit-authority:")
                     for error in checker.check_contracts(changed)
@@ -673,8 +682,8 @@ class ProportionateValidationTests(unittest.TestCase):
     def assert_clause_required(self, key, clause, diagnostic):
         texts = checker.load_texts()
         self.assertEqual(checker.check_contracts(texts), [])
-        self.assertIn(clause, texts[key])
-        texts[key] = texts[key].replace(clause, "")
+        self.assertIn(" ".join(clause.split()), " ".join(texts[key].split()))
+        texts[key] = replace_clause(texts[key], clause, "")
         self.assertTrue(any(e.startswith(diagnostic + ":")
                             for e in checker.check_contracts(texts)))
 
@@ -938,10 +947,10 @@ class InstructionTests(unittest.TestCase):
             ("stage deletion", "", "spec-review:"),
             ("discovery cap restored", review.replace("no discovery cap", "at most five findings", 1), "spec-review:"),
             ("hidden remainder", review.replace("reports the total findings and meaningful areas", "reports only five findings", 1), "spec-review:"),
-            ("missing all/grouped views", review.replace("show all findings or a grouped\n   overview", "show only the initial batch", 1), "spec-review:"),
+            ("missing all/grouped views", replace_clause(review, "show all findings or a grouped overview", "show only the initial batch"), "spec-review:"),
             ("findings discarded", review.replace("Retain the complete returned findings", "Retain only five findings", 1), "spec-review:"),
             ("stops after five", review.replace("do not stop merely because five were answered", "stop after five answers", 1), "spec-review:"),
-            ("remaining decisions bypassed", review.replace("every remaining material decision must be answered or explicitly\n   deferred by the owner", "ignore remaining material decisions", 1), "spec-review:"),
+            ("remaining decisions bypassed", replace_clause(review, "every remaining material decision must be answered or explicitly deferred by the owner", "ignore remaining material decisions"), "spec-review:"),
             ("writable reviewer", review.replace("read-only tool/profile", "writable tool/profile", 1), "spec-review:"),
             ("wrong routing", review.replace("standard-spec-review", "standard-overall-review", 1), "spec-review:"),
             ("parent repair", review.replace("parent never substantively repair", "parent may substantively repair", 1), "spec-review:"),
@@ -1138,7 +1147,8 @@ class DependencyResearchTests(unittest.TestCase):
             ("helper", "## Preflight", "[dependency research contract](../planner/references/dependency-research.md)", "research-helper"),
             ("planner", "## Before selection:", "no dependency docs,\nsource, plan or decisions may be persisted", "research-preselection"),
             ("planner", "### TinySpec path", "before consequential approach decisions", "research-tiny-handoff"),
-            ("planner", "spec_create", "apply the shared research contract before consequential dependency constraints\n   are chosen", "research-spec"),
+            ("planner", "spec_create", "Apply the shared stage rules, including research before consequential dependency constraints", "research-spec"),
+            ("planner", "## Selected production and stage handoffs", "Supply the shared research contract before consequential source/plan", "research-review"),
             ("planner", "plan_create", "For helper invocation or the direct Standard pass", "research-plan"),
             ("planner", "plan_create", "with explicit bounded permission\n   in addition to detected SpecKit artifacts", "research-plan"),
             ("tiny", "## Dependency evidence before approach decisions", "Direct/standalone entry verifies equivalent TinySpec selection/preparation authority", "research-tiny"),
@@ -1174,8 +1184,8 @@ class DependencyResearchTests(unittest.TestCase):
             with self.subTest(diagnostic=label, removed=clause):
                 changed = dict(self.texts)
                 carrier = checker.stage(changed[key], heading) if heading in ("spec_create", "plan_create", "overall_review") else checker.section(changed[key], heading)
-                self.assertEqual(carrier.count(clause), 1)
-                changed[key] = changed[key].replace(carrier, carrier.replace(clause, "", 1), 1)
+                self.assertEqual(" ".join(carrier.split()).count(" ".join(clause.split())), 1)
+                changed[key] = changed[key].replace(carrier, replace_clause(carrier, clause, ""), 1)
                 self.assert_diagnostic(changed, label)
 
     def test_whole_research_carriers_cannot_be_replaced_by_summary(self):
@@ -1198,7 +1208,7 @@ class DependencyResearchTests(unittest.TestCase):
                 changed = dict(self.texts)
                 body = checker.stage(changed["planner"], name)
                 changed["planner"] = changed["planner"].replace(body, f"**`{name}`**\n", 1)
-                self.assertIn("Carry dependency research triggers", changed["planner"])
+                self.assertIn("Supply the shared research contract", changed["planner"])
                 self.assert_diagnostic(changed, label)
 
     def test_standard_and_helper_after_design_wording_is_rejected(self):
@@ -1283,7 +1293,7 @@ class DependencyResearchTests(unittest.TestCase):
         ):
             with self.subTest(simulated_route=key, entry=heading):
                 carrier = checker.stage(self.texts[key], heading) if heading == "plan_create" else checker.section(self.texts[key], heading)
-                self.assertIn(expected, carrier)
+                self.assertIn(" ".join(expected.split()), " ".join(carrier.split()))
         classification = checker.section(self.texts["research"], "## Classify and translate")
         for obligation in ("**Documented recommendation:**", "**Repository-derived decision:**", "**Assumption:**", "observable\nvalidation"):
             self.assertIn(obligation, classification)
@@ -1322,7 +1332,7 @@ class DependencyResearchTests(unittest.TestCase):
                 for obligation in obligations:
                     self.assertIn(obligation, carrier)
         pre = checker.section(self.texts["planner"], "## Before selection:")
-        self.assertIn("no dependency docs,\nsource, plan or decisions may be persisted", pre)
+        self.assertIn("no dependency docs, source, plan or decisions may be persisted", " ".join(pre.split()))
         self.assertIn("Carry findings in session until selection", pre)
 
 
@@ -1553,7 +1563,7 @@ class AcceptedDecisionBriefContinuityTests(unittest.TestCase):
                 changed = dict(texts)
                 body = checker.section(changed["planner"], heading)
                 changed["planner"] = changed["planner"].replace(
-                    body, body.replace(clause, "OMITTED", 1), 1)
+                    body, replace_clause(body, clause, "OMITTED"), 1)
                 self.assertTrue(any(error.startswith(diagnostic)
                                     for error in checker.check_contracts(changed)))
 
@@ -2005,7 +2015,7 @@ class DelegationAuthorityTests(unittest.TestCase):
             for clause in clauses:
                 with self.subTest(carrier=label, removed=clause):
                     body = checker.operational_carrier(texts[key], selector)
-                    self.assertIn(clause, body)
+                    self.assertIn(" ".join(clause.split()), " ".join(body.split()))
                     changed = dict(texts)
                     changed[key] = changed[key].replace(body, re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", body), 1)
                     self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
@@ -2038,7 +2048,7 @@ class DelegationAuthorityTests(unittest.TestCase):
             for clause in clauses:
                 with self.subTest(carrier=label, removed=clause):
                     body = checker.operational_carrier(texts[key], selector)
-                    self.assertIn(clause, body)
+                    self.assertIn(" ".join(clause.split()), " ".join(body.split()))
                     changed = dict(texts)
                     changed[key] = changed[key].replace(body, re.sub(r"\s+".join(re.escape(w) for w in clause.split()), "REMOVED", body), 1)
                     self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
@@ -2456,6 +2466,7 @@ class IntentSpecificationReviewTests(unittest.TestCase):
                 "original\nuser request, actual owner clarifications/decisions",
                 "Do not supply producer rationale, conclusions, or full unrelated transcripts",
                 "saved exact binding is permitted and callable",
+                "No writes, implementation, external action, or delegation",
                 "Parent evaluates", "Material decisions go to the owner",
                 "Parent inspects producer corrections",
                 "Neither path may progress beyond specification review\nwith unresolved material intent gaps",
@@ -2473,9 +2484,9 @@ class IntentSpecificationReviewTests(unittest.TestCase):
         ):
             for clause in clauses:
                 with self.subTest(key=key, clause=clause):
-                    self.assertIn(clause, texts[key])
+                    self.assertIn(" ".join(clause.split()), " ".join(texts[key].split()))
                     changed = dict(texts)
-                    changed[key] = texts[key].replace(clause, "REMOVED", 1)
+                    changed[key] = replace_clause(texts[key], clause)
                     self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
 
     def test_tinyspec_review_resolves_owner_shared_binding_and_missing_operation_stops(self):
@@ -2603,8 +2614,8 @@ class OwnerAssignmentExecutorIntakeTests(unittest.TestCase):
         self.assertTrue(any(error.startswith("executor-producer-intake:")
                             for error in checker.check_contracts(changed)))
         changed = dict(texts)
-        changed["planner"] = changed["planner"].replace(
-            "both direct TinySpec and Standard task-producer briefs", "only a summary brief", 1)
+        changed["planner"] = replace_clause(
+            changed["planner"], "both direct TinySpec and Standard task-producer briefs", "only a summary brief")
         self.assertTrue(any(error.startswith("executor-planner-handoff:")
                             for error in checker.check_contracts(changed)))
 
@@ -3213,11 +3224,11 @@ class CoordinateAcceptedDecisionBriefTests(unittest.TestCase):
         source = (ROOT / "skills/coordinate-implementation/SKILL.md").read_text()
         carriers = (
             ("## Load and Verify", "consult\n[save-adr](../save-adr/SKILL.md)'s **Consult and propagate** contract",
-             "Known supplied constraints survive unavailable\ncontract packaging; absent decision storage alone does not block unrelated work."),
+             "Known supplied constraints survive unavailable\ncontract packaging; absent decision storage alone does not block unrelated work.",
+             "carry each applicable accepted outcome, explicit\nmechanism constraint and source link into both briefs"),
             ("## Recover Context", "re-establish applicable accepted-decision authority",
              "outcomes, explicit mechanism\nconstraints and source links in the resumed worker and review briefs"),
             ("## Execute and Integrate", "task brief carries applicable accepted outcomes, explicit mechanism constraints and source links",),
-            ("## Review and Acceptance", "review scope carries applicable accepted outcomes, explicit mechanism\nconstraints and source links",),
         )
 
         def assert_carriers(text):
