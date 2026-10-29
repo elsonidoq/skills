@@ -169,6 +169,24 @@ class OwnerPairPrimitiveTests(ProjectTest):
                 store.resume('unknown')
 
 
+class EvidenceReassessmentStoreTests(ProjectTest):
+    def test_unchanged_evidence_handoff_stops_before_reviewer_dispatch(self):
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('evidence', self.base, contract={'tasks': []}, executor=EXECUTOR,
+                        authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
+            store.review_dispatch('evidence', 'review-gap', review_base=self.base, review_head=self.base)
+            store.review_outcome('evidence', 'review-gap', 'rejected', findings=[], references={
+                'base': self.base, 'head': self.base,
+                'review_summary': {'coverage': [], 'coverage_gaps': ['required evidence missing']},
+                'check_evidence_digest': 'same'})
+            with self.assertRaisesRegex(Blocked, 'unchanged handoff'):
+                store.authorize_evidence_reassessment('evidence', 'review-again', rejecting_execution_id='review-gap',
+                                                      review_base=self.base, review_head=self.base,
+                                                      diagnosis='', evidence_digest='same')
+            self.assertEqual(store.review_chain('evidence')['review_count'], 1)
+
+
 class ChainHistoryTests(ProjectTest):
     def test_reopen_retains_rejection_attempts_consumed_limits_and_immutable_checkpoint(self):
         with Authority(self.project) as owner:

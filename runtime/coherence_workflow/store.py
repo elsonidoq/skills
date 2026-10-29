@@ -722,6 +722,60 @@ class Store:
             return row is not None and tuple(row) == (state, baseline, result, saved_details)
         self._required_write('task progress for ' + task, write, completed)
 
+    def evidence_reassessment_for_rejection(self, run, rejecting_execution_id, *, review_base, review_head):
+        """Return the one private same-head evidence reassessment authorization, if any."""
+        matched = None
+        for row in self.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='evidence_reassessment' ORDER BY seq", (run,)):
+            try:
+                facts = json.loads(row['details'])
+            except (TypeError, ValueError):
+                continue
+            if (facts.get('rejecting_execution_id') == rejecting_execution_id and
+                    facts.get('review_base') == review_base and facts.get('review_head') == review_head):
+                matched = {**facts, 'state': row['state']}
+        return matched
+
+    def authorize_evidence_reassessment(self, run, execution_id, *, rejecting_execution_id, review_base,
+                                        review_head, diagnosis, evidence_digest):
+        """Retain one coordinator basis before a same-head read-only reassessment."""
+        if self.review_policy(run) != 'owner-pair-v1':
+            raise Blocked('evidence reassessment needs retained owner-pair-v1 policy')
+        if not all(isinstance(value, str) and value for value in
+                   (execution_id, rejecting_execution_id, review_base, review_head, evidence_digest)):
+            raise Blocked('evidence reassessment needs concrete execution, rejection, range, and evidence identities')
+        if not isinstance(diagnosis, str):
+            raise Blocked('evidence reassessment diagnosis must be text')
+        chain = self.review_chain(run, private=True)
+        if chain['uncertain'] or not chain['executions'] or chain['executions'][-1]['execution_id'] != rejecting_execution_id:
+            raise Blocked('evidence reassessment needs the latest settled review rejection')
+        rejection = chain['executions'][-1]
+        summary = rejection['references'].get('review_summary')
+        if (rejection['role'] != 'reviewer' or rejection['state'] != 'rejected' or rejection['findings'][-1] or
+                not isinstance(summary, dict) or not summary.get('coverage_gaps') or
+                rejection['references'].get('base') != review_base or rejection['references'].get('head') != review_head):
+            raise Blocked('evidence reassessment needs an evidence/coverage-only settled rejection at its original range')
+        prior_digest = rejection['references'].get('check_evidence_digest')
+        changed_evidence = isinstance(prior_digest, str) and prior_digest != evidence_digest
+        if not diagnosis.strip() and not changed_evidence:
+            raise Blocked('evidence reassessment needs substantive targeted diagnosis or newly applicable retained evidence; unchanged handoff cannot dispatch review')
+        existing = self.evidence_reassessment_for_rejection(run, rejecting_execution_id,
+                                                            review_base=review_base, review_head=review_head)
+        facts = {'execution_id': execution_id, 'rejecting_execution_id': rejecting_execution_id,
+                 'review_base': review_base, 'review_head': review_head, 'diagnosis': diagnosis.strip(),
+                 'evidence_digest': evidence_digest}
+        encoded = canonical(facts)
+        if existing is not None:
+            if existing != {**facts, 'state': 'authorized'}:
+                raise Blocked('evidence reassessment handoff is already retained; do not dispatch an unchanged or replacement review')
+            return facts
+        def write():
+            with self.transaction() as db:
+                self._history_insert(db, run, None, 'evidence_reassessment', 'authorized', encoded, time.time())
+        self._required_write('evidence reassessment authorization', write, lambda: bool(self.db.execute(
+            "SELECT 1 FROM execution_history WHERE run_id=? AND kind='evidence_reassessment' AND state='authorized' AND details=?",
+            (run, encoded)).fetchone()))
+        return facts
+
     def refresh_review_target_dispatch(self, run, execution_id, *, review_base, review_head):
         """Append one fresh read-only review after an unconsumed stale pair grant drifted."""
         if self.review_policy(run) != 'owner-pair-v1':
@@ -769,7 +823,8 @@ class Store:
             raise Blocked('only the first reviewer may retain explicit selected input checkpoints')
         if not isinstance(review_ordinal, int) or review_ordinal < 1 or not isinstance(fixing_round, int) or fixing_round < 0:
             raise Blocked('review execution needs positive ordinal/round values')
-        if role == 'reviewer' and fixing_round != review_ordinal - 1:
+        if role == 'reviewer' and fixing_round != review_ordinal - 1 and not (
+                fixing_round == 0 and self.review_policy(run) == 'owner-pair-v1'):
             raise Blocked('review ordinal and fixing round are inconsistent')
         if role == 'fixer' and (fixing_round < 1 or fixing_round > review_ordinal):
             raise Blocked('fixer needs a positive assigned fixing round')
@@ -785,10 +840,19 @@ class Store:
                 if (role, review_ordinal, fixing_round, trigger_execution_id, predecessor_execution_id) != ('reviewer', 1, 0, None, None):
                     raise Blocked('review chain must start with fresh Review 1; correct the assigned stage')
             else:
+                evidence = self.evidence_reassessment_for_rejection(
+                    run, last['execution_id'], review_base=review_base, review_head=review_head)
+                is_evidence_reassessment = (role == 'reviewer' and last['role'] == 'reviewer' and
+                    last['state'] == 'rejected' and evidence is not None and evidence['execution_id'] == execution_id)
                 expected_role, expected_state = ('fixer', 'rejected') if last['role'] == 'reviewer' else ('reviewer', 'approved')
                 expected_ordinal = last['review_ordinal'] + (role == 'reviewer')
                 expected_round = last['fixing_round'] + (role == 'fixer')
-                if (role != expected_role or last['state'] != expected_state or
+                if is_evidence_reassessment:
+                    if ((last.get('findings') and last['findings'][-1]) or review_ordinal != last['review_ordinal'] + 1 or
+                            fixing_round != last['fixing_round'] or trigger_execution_id != last['execution_id'] or
+                            predecessor_execution_id != last['execution_id']):
+                        raise Blocked('evidence reassessment has unsupported causal order; inspect retained handoff')
+                elif (role != expected_role or last['state'] != expected_state or
                         review_ordinal != expected_ordinal or fixing_round != expected_round or
                         trigger_execution_id != last['execution_id'] or predecessor_execution_id != last['execution_id'] or
                         review_base != last['references'].get('base') or review_head != last['references'].get('head')):

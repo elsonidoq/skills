@@ -430,6 +430,54 @@ else:
                 "SELECT kind,state,details FROM execution_history WHERE run_id='resume-run' ORDER BY seq")]
         self.assertTrue(any(row['kind'] == 'invocation' and row['state'] == 'resumed' for row in history))
 
+    def test_resume_reassesses_same_head_evidence_gap_without_fixer_or_task_replay(self):
+        contract = {'tasks': [{'id': 'done', 'description': 'synthetic'}]}
+        calls = []
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('evidence-resume', self.base, contract=contract, executor=EXECUTOR,
+                        authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []},
+                                   'review_policy': 'owner-pair-v1'}, review_base=self.base)
+            store.task('evidence-resume', 'done', 'complete', self.base, self.base)
+            store.history('evidence-resume', 'done', 'checkpoint', 'passed',
+                          {'sha': self.base, 'paths': [], 'artifacts': [], 'no_change': True})
+            store.review_dispatch('evidence-resume', 'review-gap', review_base=self.base, review_head=self.base)
+            store.review_outcome('evidence-resume', 'review-gap', 'rejected', findings=[], references={
+                'base': self.base, 'head': self.base,
+                'review_summary': {'coverage': ['source inspected'], 'coverage_gaps': ['required check evidence needs review']},
+                'check_evidence_digest': 'old-evidence'})
+            store.finish('evidence-resume', 'failed', self.base, 'coverage evidence pending')
+        self.assertEqual(cli.status(self.project, 'evidence-resume')['review_authorization']['next_stage'],
+                         'coordinator_evidence_reassessment')
+
+        class Reviewer:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                self_test.assertTrue(kwargs['read_only'])
+                calls.append(prompt)
+                self_test.assertIn('Evidence reassessment:', prompt)
+                self_test.assertIn('diagnosis ties retained check evidence to the outstanding gap', prompt)
+                return '{"approved":true,"coverage":["source inspected","required check evidence evaluated"],"coverage_gaps":[],"findings":[]}'
+
+        self_test = self
+        with Authority(self.project) as owner:
+            saved = owner.store.resume('evidence-resume')['input']
+            result = Engine(owner, 'evidence-resume', saved['contract'], saved['executor'], adapter=Reviewer,
+                            paid_scope=saved['authority']['paid_scope'], resume=True,
+                            question=lambda _prompt: 'diagnosis ties retained check evidence to the outstanding gap').invoke()
+            chain = owner.store.review_chain('evidence-resume', private=True)
+            basis = [json.loads(row['details']) for row in owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='evidence-resume' AND kind='evidence_reassessment'")]
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(len(calls), 1)
+        self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
+                         [('reviewer', 'rejected'), ('reviewer', 'approved')])
+        self.assertEqual([item['references']['head'] for item in chain['executions']], [self.base, self.base])
+        self.assertEqual(basis[0]['rejecting_execution_id'], 'review-gap')
+        observed = cli.status(self.project, 'evidence-resume')
+        self.assertNotIn('diagnosis ties retained check evidence', json.dumps(observed))
+        self.assertEqual(observed['review_authorization']['next_stage'], 'complete')
+
     def test_resume_continues_only_eligible_second_review(self):
         contract = {'tasks': [{'id': 'done', 'description': 'synthetic'}]}
         with Authority(self.project) as owner:

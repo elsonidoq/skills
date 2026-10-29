@@ -836,6 +836,10 @@ class Engine:
         return ('Retained required-check evidence (private; raw command output must not enter status/monitor projections):\n' +
                 '\n'.join('- ' + section.replace('\n', '\n  ') for section in sections))
 
+    def _review_evidence_digest(self):
+        """Identify the exact retained check evidence without exposing it to safe projections."""
+        return hashlib.sha256(self._review_check_evidence().encode()).hexdigest()
+
     def _review_attribution(self, review_base, head):
         """Describe verified run checkpoints without assigning intervening commits to a task."""
         project = self.authority.project
@@ -918,6 +922,7 @@ class Engine:
                          and item['state'] in ('approved', 'rejected') and not item['uncertain']), None)
         diff_base = review_base
         review_context = 'Initial review: examine the complete requested change and report actual passing coverage and all remaining coverage gaps.\n'
+        evidence_reassessment = None
         if previous is not None:
             prior_head = previous['references'].get('head')
             if not isinstance(prior_head, str) or not prior_head:
@@ -928,7 +933,13 @@ class Engine:
                 raise Blocked('prior reviewed head is not an ancestor of the current target; reconcile target drift before repair review') from None
             diff_base = prior_head
             prior_summary = previous['references'].get('review_summary')
+            evidence_reassessment = store.evidence_reassessment_for_rejection(
+                self.run, previous['execution_id'], review_base=review_base, review_head=head)
             review_context = (
+                ('Evidence reassessment: independently evaluate only the prior outstanding evidence/coverage gaps and conclusions affected by the retained coordinator basis below. '
+                 'Do not rereview unaffected passing work or infer unchecked original coverage. Coordinator basis: ' +
+                 canonical({'diagnosis': evidence_reassessment['diagnosis'], 'evidence_digest': evidence_reassessment['evidence_digest']}) + '\n'
+                 if evidence_reassessment is not None else '') +
                 'Repair review: independently examine the actual changes since the prior reviewed head and their affected interactions. '
                 'Confirm each addressed finding; retain unresolved findings. Carry forward previously examined, unaffected passing coverage, '
                 'rather than rereviewing the original change wholesale. Revisit any earlier conclusion invalidated by the repair, '
@@ -985,6 +996,7 @@ class Engine:
                              references={'base': review_base, 'head': head,
                                          'saved_session': getattr(reviewer, 'saved_session', None),
                                          'review_summary': {key: value[key] for key in ('coverage', 'coverage_gaps')},
+                                         'check_evidence_digest': self._review_evidence_digest(),
                                          'diff_base': diff_base,
                                          'prior_review': previous['execution_id'] if previous else None})
         review_facts.update({'approved': value['approved'], 'outcome': state,
@@ -1039,8 +1051,36 @@ class Engine:
             if last['role'] == 'reviewer':
                 if last['state'] == 'approved':
                     return complete(last, review)
-                if last['state'] != 'rejected' or review['approved'] or not review['findings']:
+                if last['state'] != 'rejected' or review['approved']:
                     raise Blocked('independent review was not an actionable rejection (commits retained); inspect findings and examine remaining coverage gaps before a new review: ' + canonical(review))
+                if not review['findings']:
+                    if policy != 'owner-pair-v1' or not review.get('coverage_gaps') or not self.resume:
+                        raise Blocked('independent review was not an actionable rejection (commits retained); inspect findings and examine remaining coverage gaps before a new review: ' + canonical(review))
+                    head = last['references'].get('head')
+                    current = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
+                    if not isinstance(head, str) or current != head:
+                        raise Blocked('evidence-only review target drifted; reconcile the original reviewed head before reassessment')
+                    evidence_digest = self._review_evidence_digest()
+                    retained = store.evidence_reassessment_for_rejection(
+                        self.run, last['execution_id'], review_base=review_base, review_head=head)
+                    if retained is None:
+                        try:
+                            diagnosis = self.question(
+                                'As coordinator, inspect the settled evidence/coverage-only review rejection and retained check evidence. '
+                                'Supply a substantive targeted diagnosis for the outstanding gaps, or leave empty only when newly applicable retained evidence changed. '
+                                'Do not request a fixer, replay task work, or invent approval. Retained review: ' + canonical({
+                                    'execution_id': last['execution_id'], 'coverage_gaps': review['coverage_gaps'],
+                                    'check_evidence_digest': last['references'].get('check_evidence_digest')}))
+                        except BaseException as exc:
+                            raise Blocked('coordinator evidence reassessment diagnosis unavailable; no reviewer dispatched: ' + str(exc)) from exc
+                        retained = store.authorize_evidence_reassessment(
+                            self.run, uuid.uuid4().hex, rejecting_execution_id=last['execution_id'], review_base=review_base,
+                            review_head=head, diagnosis=diagnosis if isinstance(diagnosis, str) else '', evidence_digest=evidence_digest)
+                    self._review(recorder=recorder, review_base=review_base, head=head,
+                                 ordinal=last['review_ordinal'] + 1, fixing_round=last['fixing_round'],
+                                 trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'],
+                                 execution_id=retained['execution_id'])
+                    continue
                 ordinal, round_ = last['review_ordinal'], last['fixing_round'] + 1
                 if policy == 'historical-two-review-one-fixer' and ordinal != 1:
                     raise Blocked('independent final review findings (commits retained): ' + canonical(review))

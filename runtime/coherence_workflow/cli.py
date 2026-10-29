@@ -113,6 +113,14 @@ def status(project, run):
                         pairs.append({'kind': item['kind'], 'state': item['state'], **{key: facts[key] for key in
                                       ('grant_id', 'rejecting_execution_id', 'review_base', 'review_head', 'original_scope',
                                        'fixer_execution_id', 'reviewer_execution_id') if key in facts}})
+                    evidence_reassessments = set()
+                    for item in db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='evidence_reassessment' AND state='authorized' ORDER BY seq", (run,)):
+                        try:
+                            rejecting = json.loads(item['details']).get('rejecting_execution_id')
+                        except (TypeError, ValueError):
+                            rejecting = None
+                        if isinstance(rejecting, str) and rejecting:
+                            evidence_reassessments.add(rejecting)
                     chain = result.get('review_chain', {})
                     executions = chain.get('executions', [])
                     next_stage = 'initial_review'
@@ -124,8 +132,14 @@ def status(project, run):
                                 next_stage = 'complete' if row['state'] == 'complete' else 'finalize_reviewed_head'
                             elif last['role'] == 'fixer' and last['state'] == 'approved':
                                 next_stage = 'assigned_fresh_reviewer'
-                            elif last['role'] == 'reviewer' and last['state'] == 'rejected' and last['findings']:
-                                if last['review_ordinal'] == 1:
+                            elif last['role'] == 'reviewer' and last['state'] == 'rejected':
+                                if not last['findings']:
+                                    summary = last['references'].get('review_summary', {})
+                                    next_stage = ('assigned_evidence_reassessment' if last['execution_id'] in evidence_reassessments else
+                                                  'coordinator_evidence_reassessment' if
+                                                  result.get('input', {}).get('review_policy') == 'owner-pair-v1' and
+                                                  isinstance(summary, dict) and summary.get('coverage_gaps') else 'blocked')
+                                elif last['review_ordinal'] == 1:
                                     next_stage = 'automatic_fixer'
                                 elif result.get('input', {}).get('review_policy') == 'owner-pair-v1':
                                     grant = next((pair for pair in reversed(pairs)
