@@ -14,6 +14,11 @@ from .metrics import interval_record
 from .store import Blocked, canonical
 
 
+def effective_saved_session(explicit, held):
+    """Match the transport's explicit saved-session precedence without mutation."""
+    return explicit if explicit is not None else held
+
+
 class TaskOutcome:
     """An explicit unsuccessful outcome and its host-returned explanation."""
     def __init__(self, status, explanation=None):
@@ -245,8 +250,7 @@ class PiAdapter:
             if not isinstance(reuse_key, str):
                 raise Blocked('saved session reuse key must be a stable runner string')
             request['reuseKey'] = reuse_key
-        if saved_session is None:
-            saved_session = self.saved_session
+        saved_session = effective_saved_session(saved_session, self.saved_session)
         if saved_session is not None:
             if not isinstance(saved_session, dict):
                 raise Blocked('saved session identity must be runner-provided')

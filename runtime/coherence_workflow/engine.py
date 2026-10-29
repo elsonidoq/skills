@@ -13,7 +13,7 @@ from .metric_artifacts import (MetricArtifactError, artifact_relative, create_ar
                                read_artifact, summarize_artifact)
 from .metrics import interval_record
 from .monitoring import Recorder, descriptor
-from .pi_adapter import PiAdapter, TaskOutcome, terminal_question
+from .pi_adapter import PiAdapter, TaskOutcome, effective_saved_session, terminal_question
 from .processes import process_identity
 from .sessions import select_session
 from .store import Blocked, canonical, git, safe_path
@@ -1221,8 +1221,13 @@ class Engine:
                                   'selected_input_checkpoints': selected_inputs(), 'correction_chain': chain}
                         if predecessor:
                             public['predecessor_invocation_id'] = predecessor
+                        explicit_session = kwargs.get('saved_session')
+                        effective_session = effective_saved_session(explicit_session, getattr(worker, 'saved_session', None))
                         facts = {'invocation_id': invocation_id, 'role': role, 'prompt': prompt, 'reuse_key': reuse_key,
-                                 'saved_session': getattr(worker, 'saved_session', None)}
+                                 'saved_session': effective_session}
+                        # Reserve before the adapter/provider boundary. PiAdapter uses the same
+                        # explicit-over-held identity precedence for its savedSession request.
+                        store.reserve_worker_dispatch(self.run, task['id'], invocation_id, effective_session)
                         store.history(self.run, task['id'], 'worker_invocation', 'started', facts)
                         recorder.emit(occurrence, 'worker', 'started', task_id=task['id'], facts=public)
                         steering = {'run_id': self.run, 'task_id': task['id'], 'invocation_id': invocation_id,
@@ -1238,6 +1243,10 @@ class Engine:
                         try:
                             result = self._prompt_worker(worker, prompt, **kwargs)
                         except BaseException as exc:
+                            actual_session = (getattr(worker, 'opened_session', None) or
+                                              getattr(worker, 'saved_session', None))
+                            if actual_session is not None:
+                                store.bind_worker_dispatch(self.run, task['id'], invocation_id, actual_session)
                             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                             details = {**facts, 'error': _safe_error(exc) or type(exc).__name__,
                                        'saved_session': getattr(worker, 'saved_session', None)}
@@ -1253,6 +1262,10 @@ class Engine:
                                                 selection=selection, continued=predecessor is not None,
                                                 expected_session_id=expected_session_id)
                             raise
+                        actual_session = (getattr(worker, 'opened_session', None) or
+                                          getattr(worker, 'saved_session', None))
+                        if actual_session is not None:
+                            store.bind_worker_dispatch(self.run, task['id'], invocation_id, actual_session)
                         store.history(self.run, task['id'], 'worker_invocation', 'returned',
                                       {**facts, 'saved_session': getattr(worker, 'saved_session', None)})
                         recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)

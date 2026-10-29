@@ -223,7 +223,14 @@ abandoned without rewriting their error/task history. No legacy execution stack 
 ## SDK transport
 
 Private `worker_invocation` history records each dispatched call's prompt, stable reuse key,
-saved-session identity and terminal outcome/cause. Explicit resume supplies that prior context,
+saved-session identity and terminal outcome/cause. Required `worker_dispatch` reservation/binding
+history separately records each distinct exact task-worker session invocation before transport and
+binds a fresh initial reservation to the session actually opened by the adapter. For each task/session,
+the initial call plus two further calls is the only worker dispatch allowance: starts/terminals and
+duplicate records count once, failures/interruption/reopen do not reset it, and a fourth is refused
+before adapter/provider invocation with inspected-recovery or owner-authorized-fresh-context guidance.
+Explicit supplied identity takes precedence over adapter-held identity exactly as `PiAdapter.prompt` does.
+This does not apply to reviewer/fixer lifecycle calls. Explicit resume supplies that prior context,
 not an unchanged original assignment. A missing terminal outcome or legacy invocation data
 cannot authorize replay. A terminal expensive failure requires inspection of the saved call/session
 and an explicit diagnosed, targeted correction through current owner input before continuation;

@@ -260,6 +260,104 @@ class Store:
         except sqlite3.IntegrityError:
             raise Blocked('run ID already exists; inspect its progress and choose a fresh run ID, never replay it') from None
 
+    def _worker_session(self, session, *, operation):
+        if not isinstance(session, dict) or not isinstance(session.get('id'), str) or not session['id']:
+            raise Blocked(operation + ' needs an exact saved task-worker session identity; inspect retained history or use an authorized fresh context')
+        if not isinstance(session.get('file'), str) or not session['file']:
+            raise Blocked(operation + ' needs an exact saved task-worker session file; inspect retained history or use an authorized fresh context')
+        return {'id': session['id'], 'file': session['file']}
+
+    def reserve_worker_dispatch(self, run, task, invocation_id, session):
+        """Durably consume one same-task/session worker allowance before provider dispatch."""
+        if not isinstance(invocation_id, str) or not invocation_id:
+            raise ValueError('worker dispatch needs an invocation ID')
+        selected = None if session is None else self._worker_session(session, operation='worker dispatch')
+        rows = self.db.execute(
+            "SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? "
+            "AND kind='worker_dispatch' ORDER BY seq", (run, task)).fetchall()
+        reservations, bindings = {}, {}
+        for row in rows:
+            try:
+                facts = json.loads(row['details'])
+                prior_id = facts['invocation_id']
+                if not isinstance(prior_id, str) or not prior_id:
+                    raise ValueError
+                if row['state'] == 'reserved':
+                    prior = facts.get('session')
+                    if prior is not None:
+                        prior = self._worker_session(prior, operation='retained worker dispatch')
+                    if prior_id in reservations:
+                        raise ValueError
+                    reservations[prior_id] = prior
+                elif row['state'] == 'bound':
+                    bound = self._worker_session(facts.get('session'), operation='retained worker dispatch')
+                    if prior_id in bindings and bindings[prior_id] != bound:
+                        raise ValueError
+                    bindings[prior_id] = bound
+                else:
+                    raise ValueError
+            except (TypeError, ValueError, KeyError, Blocked) as exc:
+                raise Blocked('worker dispatch history is missing or uncertain for task ' + task +
+                              '; inspect retained invocation history before continuation') from exc
+        if invocation_id in reservations or invocation_id in bindings:
+            raise Blocked('worker dispatch invocation is already reserved; inspect retained invocation history before continuation')
+        if session is None:
+            if reservations:
+                raise Blocked('worker dispatch lacks an exact saved task-worker session for task ' + task +
+                              '; inspect retained history before continuation')
+        else:
+            unresolved = [prior_id for prior_id, prior in reservations.items()
+                          if prior is None and prior_id not in bindings]
+            if unresolved:
+                raise Blocked('worker dispatch history has an unbound fresh session for task ' + task +
+                              '; inspect retained invocation ' + unresolved[-1] + ' before continuation')
+            used = {prior_id for prior_id, prior in reservations.items()
+                    if (bindings.get(prior_id) or prior) == selected}
+            if len(used) >= 3:
+                raise Blocked('worker dispatch allowance exhausted for task ' + task + ' session ' + selected['id'] +
+                              ': used initial plus 2 further calls; inspect retained recovery or use an owner-authorized fresh context')
+        details = canonical({'invocation_id': invocation_id, 'session': selected})
+        def write():
+            with self.transaction() as db:
+                self._history_insert(db, run, task, 'worker_dispatch', 'reserved', details, time.time())
+        def completed():
+            return bool(self.db.execute(
+                "SELECT 1 FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_dispatch' "
+                "AND state='reserved' AND details=?", (run, task, details)).fetchone())
+        self._required_write('worker dispatch reservation', write, completed)
+
+    def bind_worker_dispatch(self, run, task, invocation_id, session):
+        """Associate a pre-dispatch reservation with the session the adapter actually opened."""
+        actual = self._worker_session(session, operation='worker dispatch binding')
+        reservation = False
+        for row in self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? "
+                                   "AND kind='worker_dispatch' AND state='reserved'", (run, task)):
+            try:
+                if json.loads(row['details']).get('invocation_id') == invocation_id:
+                    reservation = True
+                    break
+            except (TypeError, ValueError):
+                raise Blocked('worker dispatch binding cannot inspect retained reservation; inspect invocation history before continuation') from None
+        if not reservation:
+            raise Blocked('worker dispatch binding lacks its retained reservation; inspect invocation history before continuation')
+        details = canonical({'invocation_id': invocation_id, 'session': actual})
+        def write():
+            with self.transaction() as db:
+                existing = db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? "
+                                      "AND kind='worker_dispatch' AND state='bound'", (run, task)).fetchall()
+                for row in existing:
+                    facts = json.loads(row['details'])
+                    if facts.get('invocation_id') == invocation_id:
+                        if row['details'] != details:
+                            raise Blocked('worker dispatch binding conflicts with retained session identity; inspect invocation history')
+                        return
+                self._history_insert(db, run, task, 'worker_dispatch', 'bound', details, time.time())
+        def completed():
+            return bool(self.db.execute(
+                "SELECT 1 FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_dispatch' "
+                "AND state='bound' AND details=?", (run, task, details)).fetchone())
+        self._required_write('worker dispatch binding', write, completed)
+
     def history(self, run, task, kind, state, details=None, *, db=None):
         """Append operation-local facts; never replace a prior failed attempt."""
         details = canonical(details or {})

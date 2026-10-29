@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 from unittest.mock import patch
@@ -25,6 +26,32 @@ _DETACHED_BRIDGE = {name: '' for name in (
 
 
 class SameRunResumeTests(ProjectTest):
+    def test_dispatch_reservation_reconciles_after_write_fault_before_single_provider_call(self):
+        calls, identity = [], {'id': 'reservation-session', 'file': '/private/reservation.jsonl'}
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"coverage":["fixture"],"coverage_gaps":[],"findings":[]}'
+                calls.append('provider')
+                return 'no-change dispatch'
+        with Authority(self.project) as owner:
+            original, faulted = owner.store._history_insert, [False]
+            def interrupted_write(*args):
+                original(*args)
+                if args[3:5] == ('worker_dispatch', 'reserved') and not faulted[0]:
+                    faulted[0] = True
+                    raise sqlite3.OperationalError('after-write fixture fault')
+            with patch.object(owner.store, '_history_insert', side_effect=interrupted_write):
+                result = Engine(owner, 'reservation-fault', {'tasks': [{'id': 'one', 'description': 'direct dispatch'}]},
+                                EXECUTOR, adapter=Adapter).invoke()
+            reservations = owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='reservation-fault' AND kind='worker_dispatch' "
+                "AND state='reserved'").fetchall()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(calls, ['provider'])
+        self.assertEqual(len(reservations), 1)
+
     def test_checkpoint_history_survives_interruption_before_task_completion(self):
         project = self.project
         contract = {'tasks': [{'id': 'tiny', 'description': 'tiny disposable edit', 'owned_paths': ['tiny.txt']}]}
@@ -62,8 +89,9 @@ class SameRunResumeTests(ProjectTest):
             'owned_paths': ['recovery.txt'], 'handoff_paths': ['recovery.txt'],
         }]})
 
+        identity = {'id': 'handoff-session', 'file': '/private/handoff.jsonl'}
         class Interrupted:
-            def __init__(self, *_args, **_kwargs): pass
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -79,7 +107,7 @@ class SameRunResumeTests(ProjectTest):
 
             class Continued:
                 calls = 0
-                def __init__(self, *_args, **_kwargs): pass
+                def __init__(self, *_args, **_kwargs): self.saved_session = identity
                 def prompt(self, _prompt, **kwargs):
                     if kwargs.get('read_only'):
                         return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -352,8 +380,9 @@ else:
             {'id': 'second', 'description': 'synthetic second', 'owned_paths': ['two.txt']},
         ]})
 
+        identity = {'id': 'cli-resume-session', 'file': '/private/cli-resume.jsonl'}
         class Interrupted:
-            def __init__(self, *_args, **_kwargs): pass
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -375,7 +404,7 @@ else:
         executor.write_text(json.dumps(EXECUTOR))
 
         class Resumed:
-            def __init__(self, *_args, **_kwargs): pass
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
             def prompt(self, _prompt, **kwargs):
                 if kwargs.get('read_only'):
                     resumed_calls.append('review')
@@ -546,7 +575,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
         self.assertEqual(predecessor_sha, result['checkpoints'][0]['sha'])
         self.assertEqual(repair_sha, git(project, 'rev-parse', repair_sha).decode().strip())
 
-    def test_resume_continues_saved_partial_task_without_adopting_unrelated_work(self):
+    def test_resume_refuses_fourth_same_session_dispatch_without_adopting_unrelated_work(self):
         project = self.project
         contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [
             {'id': 'completed', 'description': 'first synthetic task', 'owned_paths': ['one.txt']},
@@ -555,8 +584,9 @@ class UnfinishedTaskResumeTests(ProjectTest):
                  'python3', '-B', '-c', "from pathlib import Path; assert Path('ready').exists(), 'synthetic setup missing'"]]}
         ]})
 
+        identity = {'id': 'partial-resume-session', 'file': '/private/partial-resume.jsonl'}
         class Interrupted:
-            def __init__(self, *_args, **_kwargs): pass
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -589,7 +619,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
         executor.write_text(json.dumps(EXECUTOR))
 
         class Resumed:
-            def __init__(self, *_args, **_kwargs): pass
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -604,14 +634,12 @@ class UnfinishedTaskResumeTests(ProjectTest):
 
         output = io.StringIO()
         with patch.dict(os.environ, _DETACHED_BRIDGE), patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
-            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'partial-resume']), 0)
-        result = json.loads(output.getvalue())
-        self.assertEqual(result['status'], 'complete')
+            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'partial-resume']), 2)
         self.assertEqual(project.joinpath('two.txt').read_text(), 'continued\n')
         self.assertFalse((project/'web/dist/known.js').exists())
         self.assertEqual(git(project, 'show', ':other.txt'), staged)
         self.assertEqual(project.joinpath('sentinel.txt').read_text(), 'unrelated dirty bytes\n')
-        self.assertEqual(git(project, 'show', '--name-only', '--format=', 'HEAD').decode().splitlines(), ['two.txt'])
+        self.assertEqual(git(project, 'show', '--name-only', '--format=', 'HEAD').decode().splitlines(), ['one.txt'])
         with Authority(project) as owner:
             history = [(row['kind'], row['state'], json.loads(row['details'])) for row in owner.store.db.execute(
                 "SELECT kind,state,details FROM execution_history WHERE run_id='partial-resume' ORDER BY seq")]
@@ -620,9 +648,17 @@ class UnfinishedTaskResumeTests(ProjectTest):
             terminal_calls = [row['state'] for row in owner.store.db.execute(
                 "SELECT state FROM execution_history WHERE run_id='partial-resume' AND task_id='partial' "
                 "AND kind='worker_invocation' AND state IN ('returned','interrupted','failed') ORDER BY seq")]
+            task_error = owner.store.db.execute(
+                "SELECT details FROM execution_tasks WHERE run_id='partial-resume' AND task_id='partial'").fetchone()['details']
+            partial_dispatches = [json.loads(row['details']) for row in owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='partial-resume' AND task_id='partial' "
+                "AND kind='worker_dispatch' AND state='reserved' ORDER BY seq")]
         self.assertEqual(first, first_sha)
-        # Initial work, interrupted check correction, resumed work, then setup correction.
-        self.assertEqual(terminal_calls, ['returned', 'interrupted', 'returned', 'returned'])
+        # Initial work, interrupted correction, and resumed work consume the allowance;
+        # the fourth correction is refused before the adapter is invoked.
+        self.assertEqual(terminal_calls, ['returned', 'interrupted', 'returned'])
+        self.assertEqual([facts['session']['id'] for facts in partial_dispatches], [identity['id']] * 3)
+        self.assertIn('allowance exhausted for task partial session partial-resume-session', task_error)
         self.assertTrue(any(kind == 'check' and state == 'failed' and details['exit_code'] == 1
                             for kind, state, details in history))
         self.assertTrue(any(kind == 'mutation' and state == 'claimed' and details['artifacts'] == ['web/dist/known.js']
@@ -638,9 +674,10 @@ class CancelledPartialResumeTests(ProjectTest):
             'checks': [[sys.executable, '-B', '-c', "from pathlib import Path; assert Path('work.txt').read_text() == 'continued\\n'"]],
         }]})
         tool = []
+        identity = {'id': 'cancelled-partial-session', 'file': '/private/cancelled-partial.jsonl'}
 
         class Interrupted:
-            def __init__(self, *_args, **_kwargs): pass
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
             def prompt(self, _prompt, **kwargs):
                 kwargs['claim']('work.txt')
                 project.joinpath('work.txt').write_text('partial\n')
@@ -670,7 +707,7 @@ class CancelledPartialResumeTests(ProjectTest):
             saved = owner.store.resume('cancelled-partial')['input']
 
             class Continued:
-                def __init__(self, *_args, **_kwargs): pass
+                def __init__(self, *_args, **_kwargs): self.saved_session = identity
                 def prompt(self, _prompt, **kwargs):
                     if kwargs.get('read_only'):
                         return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'

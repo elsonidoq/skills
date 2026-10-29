@@ -120,7 +120,10 @@ Its task brief carries applicable accepted outcomes, explicit mechanism constrai
 those complement rather than replace task requirements or existing execution authority. Harmless
 read/argument/edit errors can be corrected in the same conversation. SDK automatic compaction
 and output continuation remain normal behavior, not fatal workflow conditions. No arbitrary workflow
-size caps, deadlines, lifetime quotas or repair budgets. Do not autonomously loop expensive failed runs.
+size caps, deadlines, lifetime quotas or repair budgets. The narrow exception is a durable per-task,
+per-exact-worker-session allowance of the initial dispatch plus two further worker calls; it includes
+check/checkpoint corrections and survives reopen, but does not apply to reviewer/fixer lifecycle calls.
+Do not autonomously loop expensive failed runs.
 
 Project check commands are optional; run specified checks and report their actual outcomes with
 no universal collection-count/receipt format. A nonzero required command retains its exact command, exit and output as a failed attempt and returns it to the live or compatible same-task worker with its ordinary corrective tools. The worker makes a reasoned safe scoped source/setup correction or reports the actual blocker; the runner reruns affected required commands and never checkpoints before they pass. This is not cross-task reuse, a post-review round, a skip, or an unchanged-command spin. A saved worker may enter the private same-run reuse registry only after idle settlement, real required passes, and its focused checkpoint; corrective prompts remain in that same task context, and failed/unsettled sessions are never candidates for another task. A failed check is not passed. At an actual edit or destructive

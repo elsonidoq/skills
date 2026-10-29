@@ -1,5 +1,6 @@
 """Offline prompt wiring checks; not proof that a provider follows instructions."""
 from coherence_workflow.engine import Engine
+from coherence_workflow.pi_adapter import effective_saved_session
 from coherence_workflow.intake import admit
 from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
@@ -45,6 +46,12 @@ class WorkerAuthorityTests(ProjectTest):
         self.assert_precedence_authority(prompt)
         self.assertLess(prompt.index('this current scoped authority takes precedence'), prompt.index(scenario))
 
+    def test_saved_session_selection_matches_adapter_explicit_precedence(self):
+        held = {'id': 'held-session', 'file': '/private/held.jsonl'}
+        explicit = {'id': 'explicit-session', 'file': '/private/explicit.jsonl'}
+        self.assertIs(effective_saved_session(None, held), held)
+        self.assertIs(effective_saved_session(explicit, held), explicit)
+
     def test_every_task_gets_authority_without_rewriting_historical_task_text(self):
         prompts = []
         historical = 'Planning draft only: implementation requires separate approval.'
@@ -80,9 +87,10 @@ class WorkerAuthorityTests(ProjectTest):
         project, prompts = self.project, []
         scenario = ('LABELLED SCENARIO ONLY: an earlier agent-authored task instruction requires renewed consent '
                     'for exact SQLite fixture setup and rerunning its check.')
+        identity = {'id': 'authority-correction-session', 'file': '/private/authority-correction.jsonl'}
 
         class Offline:
-            def __init__(self, *args, **kwargs): pass
+            def __init__(self, *args, **kwargs): self.saved_session = identity
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
