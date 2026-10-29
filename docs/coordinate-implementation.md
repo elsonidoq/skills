@@ -154,13 +154,29 @@ scope, superseding historical planning-only wording without changing requirement
 manual gates or safety/permission boundaries. Final planning review checks authorization-neutral task
 instructions; temporary approval status stays in the approval record. See [ADR-0003](decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md).
 
+Before affected worker reliance, coordinator preparation consumes final-review/handoff material risk
+findings: investigate or prepare routine prerequisites within authority, then brief workers with usable
+interfaces/findings, evidence limits and remaining gates. Each finding identifies affected tasks,
+observed evidence versus unknowns, and next investigation, mitigation or necessary permission; later
+discoveries get the same treatment while unrelated safe work continues. An unavailable capability,
+access, paid, data or external boundary names the exact affected operation and corrective action and
+blocks only affected work. No risk schema, scoring, admission checklist or parent acknowledgment is
+introduced.
+
 The receiving coordinator investigates and answers routine technical diagnosis, implementation
 choices, ordinary corrections and focused verification within approved authority. Missing technical
 evidence calls for investigation or an actionable blocker, not asking the owner to debug. Escalate
 only product decisions, consequential unresolved trade-offs, material scope/complexity/verification
 expansion, separately scoped spending, or actions outside authority. Autonomous answers never
-impersonate owner consent or bypass manual, paid or permission gates. Before continuing a failed
-expensive worker, inspect its recorded cause and invocation; never blindly retry.
+impersonate owner consent or bypass manual, paid or permission gates. Routine worker or reviewer early
+returns are diagnosis events, not completion or owner debugging: inspect the invocation, unfinished
+scope, actual checks and retained effects, prepare a targeted correction or evidence handoff, then use
+supported history/resume or same-head reassessment paths. Before continuing a failed expensive worker or
+reviewer, inspect its recorded cause and invocation; never repeat an unchanged expensive failure.
+Respect the retained initial-plus-two same-task/session allowance and compact diagnosis context;
+same-head review reassessment uses the existing retained evidence and only its supported eligibility,
+never a task replay. Unknown cause or a real permission boundary stops the affected operation with its
+exact capability/access/paid/data/external operation and corrective action.
 
 Each task runs in a fresh coding conversation. Ordinary scoped technical fixes, isolated tests/servers,
 necessary local/in-project dependency setup, and current-task artifact lifecycle need no owner question.
@@ -183,7 +199,13 @@ not consume it again. A fourth call is refused before transport with the task/se
 inspect-recovery-or-authorized-fresh-context action. It does not create fresh-context authority or cap
 reviewer/fixer lifecycle calls.
 
-The final reviewer is a fresh, read-only SDK session, not the worker context. It receives the
+The final reviewer is a fresh, read-only SDK session, not the worker context. A routine reviewer early
+return or evidence gap is a diagnosis/recovery event, not completion or an owner-debugging request:
+inspect its invocation, retained task/check evidence, scope and effects; investigate within authority;
+and use the supported targeted resume or evidence-only reassessment only when its requirements hold.
+Do not repeat an unchanged expensive failed review. Unknown cause, target drift, or an actual
+manual/paid/security/data/external gate stops only the affected continuation with the exact operation
+and corrective action; unrelated safe work continues. It receives the
 actual full committed range and diff on initial review, tasks, and the same routine-authority defaults/exclusions, with only
 read/search tools for source continuation. It explicitly reports examined/passing areas and actionable defects.
 Follow-up reviewers receive the prior outcome and actual delta from the prior reviewed head, checking repairs,

@@ -198,6 +198,49 @@ class EarlyRiskReductionTests(unittest.TestCase):
                 body = checker.section(texts[key], heading)
                 self.assertIn(" ".join(clause.split()), " ".join(body.split()))
 
+    def test_material_risk_handoff_order_and_unavailable_boundary(self):
+        """Representative carrier order, not autonomous coordinator-behavior proof."""
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, selector, clauses in checker.RISK_HANDOFF_CARRIERS:
+            body = checker.operational_carrier(texts[key], selector)
+            self.assertTrue(body, label)
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    changed = dict(texts)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
+                    changed[key] += "\n## Summary only\n" + clause
+                    self.assertTrue(any(error.startswith(label + ":")
+                                        for error in checker.check_contracts(changed)))
+
+        fixture = (HERE / "fixtures/planner/risk-walkthroughs.md").read_text()
+        review_to_brief = checker.section(fixture, "## I")
+        unavailable = checker.section(fixture, "## J")
+        order = (
+            "Final TinySpec or Standard review records",
+            "Evidence:",
+            "Next action:",
+            "before T014 worker reliance",
+            "then briefs T014",
+        )
+        positions = [review_to_brief.index(step) for step in order]
+        self.assertEqual(positions, sorted(positions))
+        for phrase in ("usable\ninterface location", "evidence limit", "remaining no-live-service gate",
+                       "later\nworker discovery", "unrelated T015 local-doc work\ncontinues"):
+            self.assertIn(" ".join(phrase.split()), " ".join(review_to_brief.split()))
+        for phrase in ("credential-vault:read", "read the staging fixture secret",
+                       "grant\n`credential-vault:read` or provide an approved local fixture",
+                       "Only T014 waits; T015 continues", "inspection of its invocation, unfinished\nscope, actual checks and retained effects",
+                       "supported history/resume\nor same-head evidence reassessment", "does not repeat\nan unchanged expensive failure",
+                       "Unknown cause, target drift, or an actual\npaid/data/external/manual boundary"):
+            self.assertIn(" ".join(phrase.split()), " ".join(unavailable.split()))
+
+        operator = (ROOT / "docs/coordinate-implementation.md").read_text()
+        for phrase in ("consumes final-review/handoff material risk", "brief workers with usable\ninterfaces/findings, evidence limits and remaining gates",
+                       "Routine worker or reviewer early\nreturns are diagnosis events", "initial-plus-two same-task/session allowance", "same-head review reassessment uses the existing retained evidence", "Do not repeat an unchanged expensive failed review"):
+            self.assertIn(" ".join(phrase.split()), " ".join(operator.split()))
+
     def test_atomic_outcome_instruction_mutations_and_walkthrough(self):
         """Focused carrier/scenario sensitivity, not a task-intake semantic validator."""
         texts = checker.load_texts()

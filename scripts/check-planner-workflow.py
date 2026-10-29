@@ -684,7 +684,7 @@ def check_contracts(texts):
         require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, heading, clauses in RISK_CARRIERS + BOUNDARY_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
-    for label, key, selector, clauses in ATOMIC_OUTCOME_CARRIERS:
+    for label, key, selector, clauses in ATOMIC_OUTCOME_CARRIERS + RISK_HANDOFF_CARRIERS:
         require(label, operational_carrier(texts.get(key, ""), selector), *clauses)
     if not texts.get("risk"):
         errors.append("risk-reference: required shared carrier missing or empty")
@@ -855,6 +855,39 @@ ATOMIC_OUTCOME_CARRIERS = (
      ("For TinySpec review, reject multi-interface milestones that need unfinished downstream work\n   for acceptance", "accept bounded slices with completed prerequisites", "ordinary established\n   wiring with its focused tests/docs", "temporary phase/approval status belongs in the approval record")),
     ("atomic-standard-review", "planner", "stage:overall_review",
      ("For Standard overall review, reject multi-interface milestones that need unfinished downstream\n   work for acceptance", "accept bounded slices with completed prerequisites", "ordinary\n   established wiring with its focused tests/docs", "temporary phase/approval status belongs in the approval record")),
+)
+
+
+# Material risk handoff uses existing review/brief carriers, not a new schema or admission gate.
+RISK_HANDOFF_CARRIERS = (
+    ("risk-task-handoff", "tasks", "## Review and handoff", (
+        "task-specific material execution risks or prerequisites", "affected\ntask", "observed evidence versus unknowns", "next investigation, mitigation, or necessary permission",
+        "coordinator must consume these findings before\naffected worker reliance", "later discoveries use the same handoff", "Do not create a risk schema",
+        "unavailable capability,\naccess, paid, data, or external boundary", "affected operation and corrective action", "unrelated safe work continues",
+    )),
+    ("risk-tiny-review-handoff", "planner", "item:4. **Review", (
+        "material task-specific execution risk or prerequisite", "affected task", "observed evidence versus unknowns",
+        "coordinator preparation before affected worker reliance", "not a risk schema", "unavailable capability/access/paid/data/external operation",
+        "corrective action", "block only affected work",
+    )),
+    ("risk-standard-review-handoff", "planner", "stage:overall_review", (
+        "material task-specific execution risk or", "affected task", "observed evidence versus unknowns",
+        "coordinator preparation before affected worker reliance", "not a risk schema", "unavailable\ncapability/access/paid/data/external operation",
+        "corrective action", "block only affected work",
+    )),
+    ("risk-coordinator-prepare", "coordinator", "## Prepare Approved Execution", (
+        "Before affected worker reliance", "consume final-review/handoff material risk findings", "investigate or\nprepare routine prerequisites within authority",
+        "brief workers with usable interfaces/findings", "evidence limits, and remaining gates", "later discoveries receive\nthe same treatment",
+        "unavailable capability, access, paid,\ndata, or external boundary", "exact affected operation and corrective action", "blocks only\nthat work",
+    )),
+    ("risk-coordinator-triage", "coordinator", "## Question triage", (
+        "routine early worker or\nreviewer return is a diagnosis event, not completion or owner debugging", "inspect its invocation,\nunfinished scope, actual checks, and retained effects",
+        "supported history/resume or same-head reassessment paths", "never blindly retry an\nunchanged expensive failure", "initial-plus-two same-task/session allowance", "compact diagnosis context", "same-head review reassessment uses the existing retained evidence", "never a task replay", "Unknown cause or a real permission boundary stops",
+    )),
+    ("risk-coordinator-review", "coordinator", "## Review and Acceptance", (
+        "routine\nreviewer early return or evidence gap as a diagnosis/recovery event", "not completion or an owner-debugging\nrequest",
+        "supported targeted resume or evidence-only reassessment path", "Do not repeat an\nunchanged expensive failed review", "stops only the affected continuation",
+    )),
 )
 
 

@@ -65,3 +65,25 @@ and keep unchanged applicable results. Retain proof until all applicable consume
 pass; then safely discard actual disposable material and retain concise command/result/limits
 in existing evidence. Routine teardown stays inside the delivery; no separate cleanup task.
 This is a symbolic reuse/disposal scenario, not a runtime result.
+
+## I — review, investigate, then brief
+
+Final TinySpec or Standard review records one material local prerequisite: **T014** needs the
+existing local `fixture-port` interface before its worker uses it. Evidence: the checked-in
+interface declaration was inspected; unknown: whether the fixture is enabled in this checkout.
+Next action: coordinator preparation checks the local fixture configuration within routine authority.
+It completes that investigation before T014 worker reliance, then briefs T014 with the usable
+interface location, observed result, evidence limit and remaining no-live-service gate. A later
+worker discovery receives the same investigate-then-brief treatment; unrelated T015 local-doc work
+continues. This is an illustrative carrier order, not autonomous coordinator behavior.
+
+## J — unavailable boundary and routine recovery
+
+If T014 instead needs `credential-vault:read` for the operation “read the staging fixture secret,”
+report that exact unavailable capability and operation; corrective action is grant
+`credential-vault:read` or provide an approved local fixture. Only T014 waits; T015 continues.
+A routine worker or reviewer early return first triggers inspection of its invocation, unfinished
+scope, actual checks and retained effects. A known correctable cause uses supported history/resume
+or same-head evidence reassessment with a targeted correction/evidence handoff; it does not repeat
+an unchanged expensive failure or seek routine consent. Unknown cause, target drift, or an actual
+paid/data/external/manual boundary stops the affected continuation with its corrective action.

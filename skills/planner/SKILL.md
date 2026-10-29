@@ -450,6 +450,12 @@ or additional approval gate; actual invalidating drift follows existing recovery
    wiring with its focused tests/docs.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries.
+   For every material task-specific execution risk or prerequisite, return the affected task, concrete
+   runtime/interface/access or predecessor need, observed evidence versus unknowns, and next
+   investigation, mitigation, or necessary permission. This concise review/handoff finding reaches
+   coordinator preparation before affected worker reliance; it is not a risk schema, score, admission
+   checklist, or universal report. Name an unavailable capability/access/paid/data/external operation
+   and its corrective action, block only affected work, and leave unrelated safe work available.
    Source carries needs; separate tasks carry only independently necessary work units.
 5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`;
    obtain explicit approval of current TinySpec/source, tasks, and implementation scope,
@@ -589,7 +595,13 @@ valid settled principles. Verify the saved exact stage binding and independent r
    and required acceptance. Do not manufacture findings or treat stylistic preferences as defects.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries
-   in direct Standard and managed/helper plans.
+   in direct Standard and managed/helper plans. For every material task-specific execution risk or
+   prerequisite, return the affected task, concrete runtime/interface/access or predecessor need,
+   observed evidence versus unknowns, and next investigation, mitigation, or necessary permission.
+   This concise review/handoff finding reaches coordinator preparation before affected worker reliance;
+   it is not a risk schema, score, admission checklist, or universal report. Name an unavailable
+   capability/access/paid/data/external operation and its corrective action, block only affected work,
+   and leave unrelated safe work available.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable task instructions.
    For Standard overall review, reject multi-interface milestones that need unfinished downstream
@@ -642,7 +654,9 @@ and applicable approved content/revisions for:
   plus mapped planner recovery checkpoint).
 - Authoritative source, tasks, and supporting artifacts; Standard spec and plan.
 - Review and validation evidence, applicable accepted outcome constraints and source links,
-  decisions/deferrals and pending blockers.
+  decisions/deferrals and pending blockers. Include any material task-specific execution-risk or
+  prerequisite finding with affected task, evidence versus unknowns, and next
+  investigation/mitigation/necessary permission so coordinator preparation can act before reliance.
 - TinySpec combined approval or Standard specification and overall approvals.
 - Explicit approved implementation scope/authorization and source provenance.
 

@@ -279,7 +279,14 @@ At final planning review, check that executable tasks are authorization-neutral 
 approval status is confined to the approval record; retain real action-specific permission gates.
 
 Review selection/omission, real-runtime evidence, applicable dependencies, proof lifetime,
-production acceptance, disproof/renewal and feasibility through both adapters/direct entry.
+production acceptance, disproof/renewal and feasibility through both adapters/direct entry. Before
+handoff, return concise task-specific material execution risks or prerequisites: name the affected
+task, concrete runtime/interface/access or predecessor need, observed evidence versus unknowns,
+and the next investigation, mitigation, or necessary permission. Do not create a risk schema,
+score, admission checklist, or universal report. The coordinator must consume these findings before
+affected worker reliance; later discoveries use the same handoff. Exact unavailable capability,
+access, paid, data, or external boundary names the affected operation and corrective action, while
+unrelated safe work continues.
 Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks
 without weakening acceptance or original gates. Return only necessary producer/consumer
 dependencies, applicable evidence/limits and blocked reliance to the existing producing review
