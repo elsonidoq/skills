@@ -223,7 +223,7 @@ abandoned without rewriting their error/task history. No legacy execution stack 
 ## SDK transport
 
 Private `worker_invocation` history records each dispatched call's prompt, stable reuse key,
-saved-session identity and terminal outcome/cause. Required `worker_dispatch` reservation/binding
+saved-session identity and terminal outcome/cause. It preserves original prompt bytes for inspection; worker continuation and coordinator diagnosis inputs copy only actionable failure/diagnosis, targeted correction, unfinished scope, relevant task/evidence/history references, and unchanged authority/acceptance constraints. Required `worker_dispatch` reservation/binding
 history separately records each distinct exact task-worker session invocation before transport and
 binds a fresh initial reservation to the session actually opened by the adapter. For each task/session,
 the initial call plus two further calls is the only worker dispatch allowance: starts/terminals and

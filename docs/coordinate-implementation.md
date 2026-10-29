@@ -168,7 +168,7 @@ Small isolated tests and local test databases are allowed for any task, using bo
 that do not risk exhausting the machine or affecting unrelated data/services. Shared defaults live in
 `_ROUTINE_AUTHORITY` in [the runner](../runtime/coherence_workflow/engine.py), included in initial,
 corrective, and resumed task prompts; edit that block rather than individual tasks. See [ADR-0004](decisions/ADR-0004-shared-routine-worker-permissions.md).
-Prompt delivery is text-contract evidence, not evidence of model obedience or a passed check. An earlier agent-authored task, recovery, or handoff demand for
+Prompt delivery is text-contract evidence, not evidence of model obedience or a passed check. Worker continuations and coordinator failure diagnosis receive the actionable failure/diagnosis, targeted correction, unfinished scope, retained task/evidence/history references, and unchanged authority/acceptance constraints—not copied prior prompt bodies; original private history remains inspectable. An earlier agent-authored task, recovery, or handoff demand for
 renewed exact-resource/setup/rerun consent does not override this current scoped authority; actual owner limits and
 manual, paid, security, data, and external-operation gates still apply. Product decisions, substantial complexity increases,
 separately scoped paid usage, and actions outside authority still ask. No global install, credential change,

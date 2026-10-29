@@ -1155,10 +1155,17 @@ class Engine:
                                     raise Blocked('terminal worker failure has no saved session; inspect the failed invocation/cause before any relaunch: '
                                                   + str(continuation.get('invocation_id', 'unknown')))
                                 correction = self.question(
-                                    'As coordinating agent, inspect this terminal worker invocation and its saved session before continuing. '
+                                    'As coordinating agent, inspect this terminal worker failure and its saved session before continuing. '
                                     'Provide the inspected diagnosis and a targeted correction justifying safe continuation '
                                     '(not an unchanged retry); do not ask the owner to debug routine technical failures; leave empty if unknown. '
-                                    'Actual invocation: ' + canonical(continuation))
+                                    'Unfinished task: ' + task['id'] + '. Preserve its existing requirements, authority, and acceptance constraints. '
+                                    'Retained history reference: ' + canonical({
+                                        'invocation_id': continuation.get('invocation_id'),
+                                        'role': continuation.get('role'),
+                                        'error': continuation.get('error'),
+                                        'diagnostic': continuation.get('diagnostic'),
+                                        'saved_session_id': (continuation.get('saved_session') or {}).get('id'),
+                                    }))
                                 if not correction.strip() or correction.strip().lower() in ('unknown', 'retry', 'yes'):
                                     raise Blocked('terminal worker cause/targeted correction remains unknown; no worker relaunched')
                                 continuation['targeted_correction'] = correction
@@ -1206,10 +1213,17 @@ class Engine:
                         nonlocal continuation
                         prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + prompt
                         if continuation is not None:
-                            prompt = ('Continue only the unfinished same-task work. Inspect the prior invocation/cause below; '
+                            prompt = ('Continue only the unfinished same-task work. Inspect the retained failure/diagnosis below; '
                                       'do not replay completed effects. Apply only the justified targeted correction; '
-                                      'unknown terminal causes are not retry permission.\nRetained invocation: '
-                                      + canonical(continuation) + '\n' + prompt)
+                                      'unknown terminal causes are not retry permission.\nRetained history reference: '
+                                      + canonical({
+                                          'invocation_id': continuation.get('invocation_id'),
+                                          'role': continuation.get('role'),
+                                          'error': continuation.get('error'),
+                                          'diagnostic': continuation.get('diagnostic'),
+                                          'targeted_correction': continuation.get('targeted_correction'),
+                                          'saved_session_id': (continuation.get('saved_session') or {}).get('id'),
+                                      }) + '\n' + prompt)
                             continuation = None
                         invocation_id = uuid.uuid4().hex
                         predecessor = last_invocation[0]

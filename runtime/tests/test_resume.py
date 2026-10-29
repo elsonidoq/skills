@@ -8,7 +8,7 @@ import subprocess
 import sys
 from unittest.mock import patch
 
-from coherence_workflow import cli
+from coherence_workflow import cli, engine
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
 from coherence_workflow.pi_adapter import PiAdapter
@@ -474,14 +474,21 @@ class UnfinishedTaskResumeTests(ProjectTest):
     def test_terminal_failure_requires_inspection_and_targeted_saved_continuation(self):
         from coherence_workflow.store import Blocked
         project = self.project
+        prior_prompt_sentinel = 'PRIOR-FULL-PROMPT-SENTINEL-resume'
         contract = {'tasks': [{'id': 'tiny', 'description': 'tiny failure fixture'}]}
         identity = {'id': 'private-session', 'file': '/private/fixture.jsonl'}
         class Failed:
             def __init__(self, *args, **kwargs): self.saved_session = identity
             def prompt(self, prompt, **kwargs): raise Blocked('terminal unknown transport cause')
         with Authority(project) as owner:
-            with self.assertRaisesRegex(Blocked, 'terminal unknown'):
-                Engine(owner, 'terminal', contract, EXECUTOR, adapter=Failed).invoke()
+            with patch.object(engine, '_IMPLEMENTATION_AUTHORITY',
+                              engine._IMPLEMENTATION_AUTHORITY + prior_prompt_sentinel):
+                with self.assertRaisesRegex(Blocked, 'terminal unknown'):
+                    Engine(owner, 'terminal', contract, EXECUTOR, adapter=Failed).invoke()
+            retained_details = owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='terminal' AND task_id='tiny' "
+                "AND kind='worker_invocation' AND state='failed'").fetchone()['details']
+            self.assertIn(prior_prompt_sentinel, retained_details)
             owner.store.resume('terminal')
             calls = []
             class Continued:
@@ -491,6 +498,8 @@ class UnfinishedTaskResumeTests(ProjectTest):
                     if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                     self_test.assertIn('terminal unknown transport cause', prompt)
                     self_test.assertIn('diagnosed fixture disconnected pipe; repaired fixture transport', prompt)
+                    self_test.assertIn('Retained history reference:', prompt)
+                    self_test.assertNotIn(prior_prompt_sentinel, prompt)
                     self_test.assertEqual(kwargs['saved_session'], identity)
                     return 'continued targeted work'
             self_test = self
@@ -508,9 +517,15 @@ class UnfinishedTaskResumeTests(ProjectTest):
             self.assertEqual(result['status'], 'complete')
             self.assertEqual(len(inspected), 1)
             self.assertIn('private-session', inspected[0])
+            self.assertIn('tiny', inspected[0])
+            self.assertIn('Preserve its existing requirements, authority, and acceptance constraints', inspected[0])
             self.assertIn('As coordinating agent, inspect', inspected[0])
             self.assertIn('do not ask the owner to debug routine technical failures', inspected[0])
             self.assertIn('leave empty if unknown', inspected[0])
+            self.assertNotIn(prior_prompt_sentinel, inspected[0])
+            self.assertEqual(owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='terminal' AND task_id='tiny' "
+                "AND kind='worker_invocation' AND state='failed'").fetchone()['details'], retained_details)
             self.assertEqual(len(calls), 2)
 
 
@@ -568,7 +583,7 @@ class UnfinishedTaskResumeTests(ProjectTest):
             owner.store.resume('scoped-repair')
             result = Engine(owner, 'scoped-repair', contract, EXECUTOR, adapter=Continued, resume=True,
                             paid_scope={'agent_providers': ['fixture'], 'apis': []},
-                            question=lambda prompt: (self.assertIn('Actual invocation:', prompt) or
+                            question=lambda prompt: (self.assertIn('Retained history reference:', prompt) or
                                                      'repair.txt diff/check/checkpoint inspected')).invoke()
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(calls, ['predecessor', 'unfinished', 'continued'])
