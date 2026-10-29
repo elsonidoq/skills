@@ -150,6 +150,23 @@ class UnifiedMemoryCloseoutTests(unittest.TestCase):
         errors = closeout_errors(CLOSEOUT_TEXT, COMPACTOR_TEXT, JEV_TEXT + "\nJev may authorize guidance")
         self.assertIn("authority: Jev may authorize guidance", errors)
 
+    def test_closeout_documents_existing_results_without_reopening_acceptance(self):
+        # Instruction coverage only, not evidence of a live closeout run.
+        boundary = CLOSEOUT_TEXT.split("## Existing completion and validation facts", 1)[1].split("\n## ", 1)[0]
+        body = " ".join(boundary.split())
+        for clause in (
+            "Consume existing session results",
+            "Do not launch or require a fresh review, rerun implementation checks, reopen implementation",
+            "or adjudicate final acceptance during closeout",
+            "this skill neither waives nor adds to them",
+            "Do not infer acceptance from worker reports or `implementation_complete` alone",
+            "Reuse existing full-range and cumulative repair-review outcomes without requiring another review",
+            "Missing evidence is `unknown` or `NOT RUN`, not a new closeout gate",
+            "do not repair them as part of closeout",
+        ):
+            self.assertIn(clause, body)
+        self.assertNotIn("Require all REQUIRED/gates and fresh current", CLOSEOUT_TEXT)
+
     def test_unrelated_closeout_has_no_memory_search_or_guidance_write(self):
         self.assertIn("Otherwise report `not needed` without searching for a memory store.", CLOSEOUT_TEXT)
         self.assertEqual(write_decision("none"), "no-write")
