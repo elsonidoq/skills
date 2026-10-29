@@ -94,9 +94,10 @@ Use planner for this requirement:
 <structured requirement or selected source path/section>
 ```
 
-Planner inspects the requirement/codebase, brainstorms unresolved material choices, and
-presents an approximate scope assessment. This phase is read-only. It always presents both
-paths and stops for your explicit choice; the recommendation does not choose for you.
+Planner inspects the requirement/codebase and assesses brainstorming needs directly in the parent
+session, without a subagent call or saved-assignment prerequisite. It discusses unresolved material
+choices and presents an approximate scope assessment. This phase is read-only. It always presents
+both paths and stops for your explicit choice; the recommendation does not choose for you.
 
 ```text
                          ┌→ TinySpec → Spec review → Tasks → Parent review → Combined approval ─┐
@@ -238,7 +239,9 @@ After changing global assets in Paseo, prepare a fresh-session handoff instead o
 - `save-adr`: canonical discovery, save, consultation and propagation for consequential
   decisions; project routing selects the actual owner and store, if any.
 - `requesting-code-review` / `receiving-code-review`: independent assessment and disposition.
-- `memory-handling`, `finish-session`: durable guidance and closeout.
+- `memory-handling`: verified project gotchas and explicitly authorized owner guidance.
+- `finish-session`: reconcile documentation and other authorized owners with existing session outcomes;
+  no fresh implementation review, rerun of implementation checks, or new acceptance gate.
 - `track-open-issue`: project-discovered GitHub unresolved-issue lifecycle, scoped writes, independent readback and configured read-only body review.
 - `import-open-issues`: default offline historical Markdown preview, conflict-aware reconciliation and separately authorized import; never an automatic migration.
 

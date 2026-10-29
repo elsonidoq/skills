@@ -307,9 +307,12 @@ def check_contracts(texts):
     require("shared-invocation", pre,
             "Invoke `planning-brainstorming` in preselection mode",
             "readiness target “informed scope assessment.”",
-            "conduct required owner dialogue yourself", "one material item at a time")
+            "conduct required owner dialogue yourself", "one material item at a time",
+            "directly in the parent session", "Do not delegate the gate or resolve a saved",
+            "With `NO_BRAINSTORM_NEEDED`, proceed directly", "without a child call")
     production = section(p, "## Selected production and stage handoffs")
     require("shared-application", production,
+            "shared rules apply to EVERY stage in both paths",
             "Apply recorded decisions through the shared mechanism inside selected bounds only.")
     require("accepted-decision-stage-brief", production,
             "Before every direct or delegated TinySpec/Standard stage",
@@ -340,7 +343,7 @@ def check_contracts(texts):
             "exact current specification path/content identity with readable content",
             "Do not supply producer rationale, conclusions, or full unrelated transcripts",
             "saved exact binding is permitted and callable", "async: true",
-            "compare source content before\nand after review", "neither\nedits nor approves",
+            "compare source content before\nand after review", "No writes, implementation, external action, or delegation", "neither\nedits nor approves",
             "Parent evaluates", "source producer under its saved producing assignment",
             "Material decisions go to the owner", "Parent inspects producer corrections",
             "Neither path may progress beyond specification review\nwith unresolved material intent gaps",
@@ -386,10 +389,8 @@ def check_contracts(texts):
             "stops only this review", "do not substitute, route to another reviewer, or fall back",
             "Dispatch exactly that saved binding unchanged", "async: true",
             "bind its report to the runtime invocation", "shared specification-review contract above",
-            "original user\n   request, actual owner clarifications/decisions", "exact\n   current specification path/content identity",
-            "Do not\n   include producer rationale, transcript, or unrelated history",
-            "no writes, implementation, external action, or delegation", "before and after review",
-            "reviewer and\n   parent never substantively repair", "one concrete `ask_user` question at\n   a time",
+            "Apply the shared reviewer inputs, no-write and source-comparison rules",
+            "Reviewer and parent never substantively repair", "one concrete `ask_user` question at\n   a time",
             "scenario, alternatives, and consequences", "discard queued", "unanswered or cancelled material",
             "no discovery cap", "reports the total findings and meaningful areas",
             "five most\n   important findings initially", "show all findings or a grouped\n   overview",
@@ -424,8 +425,14 @@ def check_contracts(texts):
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
             "one material item", "recorded owner decisions", "preselection", "read-only",
             "session history", "Only in selected-production", "owner's rationale")
+    require("brainstorm-parent-gate", section(b, "## Capability preflight"),
+            "Gate assessment runs directly in the parent session", "owner-launched model and effort",
+            "Do not delegate the gate or resolve a saved `brainstorm-assessment` binding",
+            "missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue")
+    require("brainstorm-parent-gate", section(b, "## 1. Gate assessment"),
+            "The parent assesses readiness without a subagent call")
     require("brainstorm-assignment", section(b, "## Capability preflight"),
-            "`brainstorm-assessment` or `brainstorm-application`",
+            "Only for authorized delegated decision application, resolve `brainstorm-application`",
             "[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
             "shared saved `brainstorming` assignment", "exact binding\nunchanged in the bounded brief and dispatch",
             "permitted and callable only\nat dispatch",
@@ -559,11 +566,12 @@ def check_contracts(texts):
     require("research-review", production, "persist reusable guidance during authorized production before readiness",
             "both direct/standalone consumers", "version/provenance", "proportional reuse/targeted refresh",
             "supporting spans → constraints → observable checks", "capability/permission gaps",
-            "stop affected design rather than default to model recollection", "never automatically defer or fabricate evidence")
-    require("research-tiny-handoff", tiny, "Supply the shared research contract", "bounded\n   canonical-owner/discovery writes before consequential approach decisions",
-            "Apply the dependency evidence/permission review above before combined approval")
-    require("research-spec", spec, "apply the shared research contract before consequential dependency constraints\n   are chosen",
+            "stop affected design rather than default to model recollection", "never automatically\ndefer or fabricate evidence",
+            "Supply the shared research contract before consequential source/plan", "bounded canonical-owner/discovery writes",
             "carry evidence-backed constraints/checks, not invented dependency rules")
+    require("research-tiny-handoff", tiny, "Apply the shared stage rules, including research before consequential approach\n   decisions",
+            "Apply the dependency evidence/permission review above before combined approval")
+    require("research-spec", spec, "Apply the shared stage rules, including research before consequential dependency constraints")
     require("research-plan", plan, "Before consequential plan decisions, complete required shared-contract research",
             "For helper invocation or the direct Standard pass", "canonical research-document and necessary discovery-link destinations",
             "observed allowed changes and prohibited operations, with explicit bounded permission\n   in addition to detected SpecKit artifacts",
@@ -848,13 +856,13 @@ ATOMIC_OUTCOME_CARRIERS = (
     ("atomic-direct-review", "tasks", "## Review and handoff",
      ("either adapter and direct tasking", "reject a multi-interface milestone whose interfaces must all\nremain unfinished for acceptance", "accept independently verifiable slices with completed\nprerequisites", "ordinary established cross-system wiring with its focused tests/docs")),
     ("atomic-planner", "planner", "## Proportionate validation",
-     ("each task\nmust deliver one bounded behavior or interface whose meaningful acceptance passes using\ncompleted prerequisites and its own result, without unfinished downstream implementation",
+     ("Each task must deliver one bounded behavior or interface whose meaningful acceptance passes using\ncompleted prerequisites and its own result, without unfinished downstream implementation",
       "milestones that leave several independently testable interfaces unfinished together",
       "Accept independently verifiable slices and ordinary established\ncross-system wiring when its focused tests/docs establish the final observable")),
     ("atomic-tiny-review", "planner", "item:4. **Review",
-     ("For TinySpec review, reject multi-interface milestones that need unfinished downstream work\n   for acceptance", "accept bounded slices with completed prerequisites", "ordinary established\n   wiring with its focused tests/docs", "temporary phase/approval status belongs in the approval record")),
+     ("Apply the shared task-boundary and execution-risk review above", "temporary phase/approval status belongs in the approval record")),
     ("atomic-standard-review", "planner", "stage:overall_review",
-     ("For Standard overall review, reject multi-interface milestones that need unfinished downstream\n   work for acceptance", "accept bounded slices with completed prerequisites", "ordinary\n   established wiring with its focused tests/docs", "temporary phase/approval status belongs in the approval record")),
+     ("Apply the shared task-boundary and execution-risk review above", "temporary phase/approval status belongs in the approval record")),
 )
 
 
@@ -865,15 +873,16 @@ RISK_HANDOFF_CARRIERS = (
         "coordinator must consume these findings before\naffected worker reliance", "later discoveries use the same handoff", "Do not create a risk schema",
         "unavailable capability,\naccess, paid, data, or external boundary", "affected operation and corrective action", "unrelated safe work continues",
     )),
+    ("risk-shared-review-handoff", "planner", "## Proportionate validation", (
+        "At both TinySpec review and Standard overall review", "material task-specific execution\nrisk or prerequisite", "affected task",
+        "observed evidence versus unknowns", "coordinator preparation before affected worker reliance", "not\na risk schema",
+        "unavailable\ncapability/access/paid/data/external operation", "corrective action", "block only affected work",
+    )),
     ("risk-tiny-review-handoff", "planner", "item:4. **Review", (
-        "material task-specific execution risk or prerequisite", "affected task", "observed evidence versus unknowns",
-        "coordinator preparation before affected worker reliance", "not a risk schema", "unavailable capability/access/paid/data/external operation",
-        "corrective action", "block only affected work",
+        "Apply the shared task-boundary and execution-risk review above", "risk selection/omission",
     )),
     ("risk-standard-review-handoff", "planner", "stage:overall_review", (
-        "material task-specific execution risk or", "affected task", "observed evidence versus unknowns",
-        "coordinator preparation before affected worker reliance", "not a risk schema", "unavailable\ncapability/access/paid/data/external operation",
-        "corrective action", "block only affected work",
+        "Apply the shared task-boundary and execution-risk review above", "risk selection/omission",
     )),
     ("risk-coordinator-prepare", "coordinator", "## Prepare Approved Execution", (
         "Before affected worker reliance", "consume final-review/handoff material risk findings", "investigate or\nprepare routine prerequisites within authority",
@@ -893,28 +902,29 @@ RISK_HANDOFF_CARRIERS = (
 
 # Actual producer/consumer inputs, not incidental summary keywords.
 DELEGATION_CARRIERS = (
-    ("delegate-source", "planner", "item:1. **Source creation", ("delegate `tiny-spec`", "separate fresh", "bounded-context source producer", "unauthorized source", "delegation stops", "no parent creation/substantive correction or inline/local fallback")),
-    ("delegate-tiny-tasks", "planner", "item:3. **Tasks", ("delegate a separate fresh bounded-context task", "unauthorized task delegation stops", "no parent task", "creation/substantive correction or inline/local fallback")),
-    ("delegate-tiny-correction", "planner", "item:4. **Review", ("Delegate uncertain or substantive source/task corrections", "originating context or a fresh bounded correction delegate", "no parent substantive", "upstream repair", "unauthorized correction delegation stops", "inline/local fallback")),
-    ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "unauthorized specification delegation stops", "no parent creation/substantive correction or inline/local", "mechanical gaps are resolved by the delegate")),
-    ("delegate-spec-review", "planner", "stage:spec_review", ("independent saved reviewer assignment", "standard-spec-review", "Dispatch exactly that saved binding unchanged", "async: true", "fresh independent reviewer", "no writes, implementation, external action, or delegation", "reviewer and\n   parent never substantively repair", "originating `standard-spec-create` producer", "same producing assignment", "no inferred default")),
-    ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "unauthorized plan delegation stops", "no parent production/substantive repair", "inline/local fallback", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
-    ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "unauthorized task", "delegation stops", "no parent task creation/substantive correction or inline/local fallback")),
-    ("delegate-overall-correction", "planner", "stage:overall_review", ("Delegate uncertain or substantive task-level and", "originating producer", "fresh bounded correction delegate", "independent reviewer", "does not become the producer", "No parent substantive artifact edits", "unauthorized", "correction delegation stops", "no inline/local fallback")),
+    ("delegate-source", "planner", "item:1. **Source creation", ("delegate `tiny-spec`", "separate\n   fresh", "bounded-context source producer", "Apply the shared stage rules")),
+    ("delegate-tiny-tasks", "planner", "item:3. **Tasks", ("delegate a separate fresh bounded-context task", "Apply the shared stage rules")),
+    ("delegate-tiny-correction", "planner", "item:4. **Review", ("Apply the shared stage rules for substantive", "corrections")),
+    ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "Apply the shared stage rules", "mechanical gaps are resolved by the delegate")),
+    ("delegate-spec-review", "planner", "stage:spec_review", ("independent saved reviewer assignment", "standard-spec-review", "Dispatch exactly that saved binding unchanged", "async: true", "fresh independent reviewer", "Apply the shared reviewer inputs, no-write and source-comparison rules", "Reviewer and parent never substantively repair", "originating `standard-spec-create` producer", "same producing assignment", "no inferred default")),
+    ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "Apply the shared stage rules", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
+    ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "Apply the shared stage rules")),
+    ("delegate-overall-correction", "planner", "stage:overall_review", ("Apply the shared stage rules for corrections", "independent reviewer", "does not become the producer")),
     ("delegate-recovery", "approval", "## Transition and invalidation table", ("Delegate uncertain or substantive artifact corrections", "originating producer context", "fresh bounded correction delegate", "No parent artifact authoring", "substantive task-level or upstream repair, including legacy recovery", "unauthorized delegation stops", "fallback or full transcript handoff")),
     ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors fresh artifacts or makes substantive repairs", "Delegate uncertain or substantive corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "`standard-plan-helper` saved assignment", "do not substitute or run a local pass")),
-    ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent is not delegation", "never fresh artifact authoring or substantive repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate uncertain or substantive artifact", "corrections, including task-level and upstream changes")),
+    ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent\nis not delegation", "never fresh artifact authoring or substantive repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate uncertain or substantive artifact corrections", "including task-level and upstream changes", "suitable originating context or a fresh bounded correction", "the independent reviewer never becomes the producer")),
 )
 
 AUTHORITY_CARRIERS = (
     ("quality-discovery", "planner", "## Discovery and capability boundary", ("for specification creation only, including TinySpec", "Use the SDD quality guidance to prepare source-producer briefs", "not downstream requirements", "complete relevant behavior, approach, constraints and observable", "unresolved material gaps return through existing gates")),
-    ("quality-tiny-stage", "planner", "item:1. **Source creation", ("Supply SDD quality guidance for specification creation only", "complete relevant", "behavior, approach, constraints and observable acceptance in the source", "material gaps return through existing gates")),
-    ("quality-spec-stage", "planner", "stage:spec_create", ("SDD reference for specification creation only", "complete relevant behavior, approach, constraints and observable acceptance", "unresolved material gaps return through existing gates")),
+    ("quality-tiny-stage", "planner", "item:1. **Source creation", ("Apply the shared stage rules", "SDD quality guidance for specification creation only")),
+    ("quality-spec-stage", "planner", "stage:spec_create", ("SDD reference for specification creation only", "Apply the shared stage rules", "complete\n   relevant behavior, approach, constraints and observable acceptance")),
     ("quality-tiny-producer", "tiny", "## Compact source contract", ("Read and apply the [SDD quality guidance]", "for specification creation only, including TinySpec", "missing guidance stops", "Retain complete relevant behavior, approach, constraints", "observable acceptance in this source", "gaps return through existing gates", "governing instructions/contracts, memory and permission/safety", "separate tasks remain mandatory")),
-    ("truth-plan", "planner", "stage:plan_create", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "governing instructions/contracts, memory and permission/safety")),
+    ("truth-shared", "planner", "## Selected production and stage handoffs", ("TinySpec/specification is requirements truth", "approved plan is derived\nsequencing only", "No SDD forwarding/rereading as direct requirements input downstream", "governing instructions/contracts, memory and permission/safety still apply")),
+    ("truth-plan", "planner", "stage:plan_create", ("Apply the shared stage rules and source/task authority",)),
     ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
-    ("truth-tiny-task-stage", "planner", "item:3. **Tasks", ("TinySpec is requirements truth", "no SDD forwarding/rereading", "direct requirements input", "Governing instructions/contracts, memory and permission/safety")),
-    ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Specification is requirements truth", "approved plan is derived sequencing", "No SDD forwarding/rereading as direct requirements input", "contracts, memory and permission/safety still apply")),
+    ("truth-tiny-task-stage", "planner", "item:3. **Tasks", ("Apply the shared stage rules and source/task authority",)),
+    ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Apply the shared stage rules and source/task\n   authority",)),
     ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "No SDD forwarding/rereading as direct requirements input", "Trace source", "criteria into task checks", "Governing instructions/contracts, memory and permission/safety", "create-only")),
     ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "No SDD forwarding/rereading as direct requirements", "input", "Trace source criteria into task checks", "Governing instructions/contracts, memory", "permission/safety still apply")),
     ("brief-coverage", "approval", "## Executive brief before approval", ("concrete included scope", "Every actual ordered plan stage separately", "meaningful outcome", "Every actual task ID separately", "execution order", "Never truncate beyond six, merge IDs/stages", "catch-alls or empty headings", "TinySpec has no plan; specification-only approval", "This adds no plan approval gate", "Renewals regenerate the complete brief from current artifacts", "before calling `ask_user`")),

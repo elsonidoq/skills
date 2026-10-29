@@ -20,6 +20,14 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
         self.assertIn("`BRAINSTORM_NEEDED`", self.text)
         self.assertIn("Bias toward `NO_BRAINSTORM_NEEDED`", self.text)
 
+    def test_parent_gate_needs_no_child_or_saved_assignment(self):
+        self.assertIn("Gate assessment runs directly in the parent session", self.text)
+        self.assertIn("owner-launched model and effort", self.text)
+        self.assertIn("Do not delegate the gate or resolve a saved `brainstorm-assessment` binding", self.text)
+        self.assertIn("A settled request\nneeds no child call", self.text)
+        self.assertIn("missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue", self.text)
+        self.assertIn("The parent assesses readiness without a subagent call", self.text)
+
     def test_bounded_agenda_and_owner_dialogue(self):
         self.assertIn("no more than three items", self.text)
         self.assertIn("two to four concrete alternatives", self.text)
@@ -33,7 +41,7 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
         self.assertIn("Record owner deferrals", self.text)
 
     def test_shared_saved_assignment_dispatch_and_capability_stop(self):
-        self.assertIn("`brainstorm-assessment` or `brainstorm-application`", self.text)
+        self.assertIn("Only for authorized delegated decision application, resolve `brainstorm-application`", self.text)
         self.assertIn("[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)", self.text)
         self.assertIn("shared saved `brainstorming` assignment", self.text)
         self.assertIn("exact binding\nunchanged in the bounded brief and dispatch", self.text)

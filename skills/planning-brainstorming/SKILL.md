@@ -16,10 +16,14 @@ preselection mode retain interim answers in available session history, while all
 read-only inspection of existing project evidence; in selected-production or legacy
 repair mode use established project artifacts.
 
-Before gate assessment or authorized decision application, resolve the caller's
-`brainstorm-assessment` or `brainstorm-application` operation through the planner's
+Gate assessment runs directly in the parent session with the owner-launched model and effort.
+Do not delegate the gate or resolve a saved `brainstorm-assessment` binding. A settled request
+needs no child call; missing delegation capability or a saved brainstorming assignment does not
+block parent assessment or owner dialogue.
+
+Only for authorized delegated decision application, resolve `brainstorm-application` through the planner's
 [shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments).
-Both operations use the shared saved `brainstorming` assignment. Pass its exact binding
+It uses the shared saved `brainstorming` assignment. Pass its exact binding
 unchanged in the bounded brief and dispatch; verify it is permitted and callable only
 at dispatch. A missing, malformed, unsupported, or unavailable assignment stops that
 affected operation with the contract's focused owner-correction question and no
@@ -58,8 +62,7 @@ brainstorming's design-depth labels do not replace the planner's mandatory user 
 
 Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply before raising material owner questions. Applicable accepted outcome constraints and source links inform readiness and whether an owner question is material; they do not replace current bounded-source content or existing material-question authority.
 
-Have bounded work using the shared saved `brainstorming` assignment return a first line
-that is exactly one of:
+The parent assesses readiness without a subagent call and retains exactly one gate result:
 
 - `NO_BRAINSTORM_NEEDED` — direction is settled, or remaining ambiguity is mechanical or
   answerable from the source/evidence. State why the target is ready for the next stage.

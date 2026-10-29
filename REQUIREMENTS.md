@@ -120,8 +120,9 @@ Planning roles use the canonical saved assignments in
 The selected assignment is copied unchanged into its bounded brief and dispatch. If its saved
 assignment is missing, malformed, unsupported or unavailable, stop only that operation and ask
 the owner for a correction; do not recommend, infer, substitute or use a fallback. The planner
-parent, source/task producers, plan pass, brainstorming, and independent review retain their
-separate assigned roles. Planner-owned dialogue, stage order, approvals, producer/parent boundaries,
+parent, source/task producers, plan pass, delegated brainstorming application, and independent review retain
+their separate assigned roles. Brainstorming gate assessment runs directly in the parent with no child call
+or saved-assignment prerequisite. Planner-owned dialogue, stage order, approvals, producer/parent boundaries,
 write boundaries and reviewer independence remain unchanged. See the operational
 [planner](skills/planner/SKILL.md) and
 [helper adapter](skills/delegating-architectural-planning/SKILL.md) contracts.

@@ -3,7 +3,9 @@ name: finish-session
 description: Use when closing a working session that may need documentation, unresolved-work, deployment, memory, or explicit feedback.
 ---
 
-You are closing a working session. Preserve durable knowledge without turning closeout into a repository audit.
+You are closing a working session whose implementation work has already ended. Reconcile documentation
+and other authorized owners with what actually happened; do not reopen implementation or turn closeout
+into a repository audit, test campaign or acceptance review.
 
 ## Step 0: Documentation Initialization Gate
 
@@ -162,13 +164,21 @@ children before replacement, never guess completion or blindly retry.
 
 Check that links, issue references, memory-index entries, and supersession pointers introduced or changed by this closeout resolve. Do not conduct a whole-repository link audit.
 
-## Executable acceptance boundary
+## Existing completion and validation facts
 
-Read authoritative runner status and its operating/schema owners; do not infer acceptance
-from worker reports or implementation_complete. Require all REQUIRED/gates and fresh current
-full-range independent review with resolved findings. Preserve SQL/Pi evidence, focused commits,
-custom STATE/history/gotchas and unrelated dirty work; no execution-memory closeout ledger.
-Report implementation completion and final acceptance separately with actual proof/unknowns.
+Consume existing session results and, when needed, authoritative runner status to document what
+happened. Do not launch or require a fresh review, rerun implementation checks, reopen implementation,
+or adjudicate final acceptance during closeout. Implementation's own acceptance requirements remain
+owned by its workflow; this skill neither waives nor adds to them.
+
+Report known completion, validation and acceptance outcomes accurately. Do not infer acceptance from
+worker reports or `implementation_complete` alone. Reuse existing full-range and cumulative repair-review
+outcomes without requiring another review. Missing evidence is `unknown` or `NOT RUN`, not a new closeout
+gate or permission to claim success. Report known unfinished work or unresolved findings through the
+existing issue route; do not repair them as part of closeout.
+
+Preserve SQL/Pi evidence, focused commits, custom STATE/history/gotchas and unrelated dirty work;
+no execution-memory closeout ledger.
 
 ## Step 8: Report
 

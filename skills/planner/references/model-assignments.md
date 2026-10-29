@@ -8,10 +8,15 @@ Each operation resolves either a saved `assignment` or explicit
 `"inherit": "launched-parent"`. Parent inheritance requires both the model and effort from
 the owner-launched session; it never supplies a planning default. Saved assignment records
 are shared by reference, so editing one changes every linked operation. The listed operations
-cover planner-parent, both brainstorming calls, TinySpec source/tasks, Standard spec/tasks,
+cover planner-parent, delegated brainstorming application, TinySpec source/tasks, Standard spec/tasks,
 the direct and helper plan pass, fresh overall review/rereview, and both independent
 specification reviews. `tinyspec-spec-review` and `standard-spec-review` reference the existing
 `standard-review` assignment; neither duplicates or hardcodes a portable model binding.
+
+Brainstorming gate assessment runs inline with the launched parent, without a child call or
+saved-assignment resolution. The existing `brainstorm-assessment` entry remains resolvable for
+compatibility with older callers; it is not a current gate prerequisite or dispatch instruction.
+Only delegated decision application uses the saved `brainstorming` assignment.
 
 A correction calls `resolve_correction` with its producing operation and therefore keeps that
 producer's assignment. There is no repair profile. If a retained producer context conflicts

@@ -90,7 +90,16 @@ _IMPLEMENTATION_AUTHORITY = (
 
 # Shared worker completion reporting. Keep stage ownership explicit without parsing summaries.
 _COMPLETION_REPORTING = (
-    'Continue unfinished authorized implementation, unrun worker-owned semantic/manual acceptance, and correctable failures. '
+    'Work autonomously until the assigned implementation and worker-owned acceptance are complete, within the approved '
+    'scope and safety/permission boundaries. Unfinished implementation, unrun checks, task complexity, and correctable or '
+    'intermittent test failures are reasons to continue working, not reasons to return incomplete. Inspect actual failures, '
+    'make justified scoped corrections, and run affected checks; do not stop after inspection, planning or diagnostics alone. '
+    'Do not assume an unprovided time limit. Never waive required checks, retry until green, conceal failures or claim '
+    'unverified completion. Ask only for material decisions or permissions outside your authority; when independent safe '
+    'work remains, continue it. If further authorized progress is genuinely blocked, identify the concrete blocker, the '
+    'actual failed operation and evidence, and what is needed to continue; do not invent a cause. If you must return '
+    'blocked, failed or incomplete, call report_task_outcome with the matching status and honestly report failed/unrun '
+    'acceptance. Explicit cancellation and real execution limits still apply. '
     'Finish the assigned implementation and worker-owned semantic/manual acceptance, report actual outcomes and remaining '
     'blockers, then return to the runner. The runner executes/reruns configured checks, creates the focused checkpoint, and '
     'dispatches fresh independent review; it does not own all semantic/manual acceptance or the reviewer verdict. Pending '
