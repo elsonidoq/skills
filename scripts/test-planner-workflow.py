@@ -2721,7 +2721,7 @@ class OwnerAssignmentHelperTests(unittest.TestCase):
 
 
 class OwnerAssignmentBrainstormTests(unittest.TestCase):
-    """Both brainstorming consumers use one saved choice; no owner dialogue is delegated."""
+    """Parent gate is inline; delegated decision application retains its saved choice."""
 
     @classmethod
     def setUpClass(cls):
@@ -2736,31 +2736,42 @@ class OwnerAssignmentBrainstormTests(unittest.TestCase):
         (planner / "references/model-assignments.json").write_text(json.dumps(data))
         return planner
 
-    def test_assessment_and_application_share_saved_choice_after_fixture_edit(self):
+    def test_application_uses_saved_choice_without_making_gate_depend_on_it(self):
         data = json.loads(self.config.read_text())
         skill_before = self.skill.read_bytes()
         with tempfile.TemporaryDirectory() as directory:
             planner = self.fixture(directory, data)
-            def dispatch(operation):
-                binding = self.assignments.resolve(operation, planner_skill=planner)["requested"]
-                return {"operation": operation, "brief": binding, "call": binding}
-
-            before = [dispatch("brainstorm-assessment"), dispatch("brainstorm-application")]
+            before = self.assignments.resolve("brainstorm-application", planner_skill=planner)["requested"]
             data["assignments"]["brainstorming"] = {"model": "owner/updated", "effort": "high"}
             (planner / "references/model-assignments.json").write_text(json.dumps(data))
-            after = [dispatch("brainstorm-assessment"), dispatch("brainstorm-application")]
-
-        for captured in (before, after):
-            self.assertEqual(captured[0]["brief"], captured[0]["call"])
-            self.assertEqual(captured[1]["brief"], captured[1]["call"])
-            self.assertEqual(captured[0]["brief"], captured[1]["brief"])
-        self.assertNotEqual(before[0]["brief"], after[0]["brief"])
-        self.assertEqual(after[0]["brief"], {"model": "owner/updated", "effort": "high"})
+            after = self.assignments.resolve("brainstorm-application", planner_skill=planner)["requested"]
+        self.assertNotEqual(before, after)
+        self.assertEqual(after, {"model": "owner/updated", "effort": "high"})
         self.assertEqual(self.skill.read_bytes(), skill_before)
+        preflight = checker.section(self.skill.read_text(), "## Capability preflight")
+        self.assertIn("Gate assessment runs directly in the parent session", preflight)
+        self.assertIn("missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue", preflight)
+
+    def test_parent_gate_carrier_removals_fail_even_with_summary(self):
+        texts = checker.load_texts()
+        cases = (
+            ("planner", "## Before selection:", "Do not delegate the gate or resolve a saved", "shared-invocation:"),
+            ("planner", "## Before selection:", "without a child call", "shared-invocation:"),
+            ("brainstorm", "## Capability preflight", "Gate assessment runs directly in the parent session", "brainstorm-parent-gate:"),
+            ("brainstorm", "## Capability preflight", "missing delegation capability or a saved brainstorming assignment does not block parent assessment or owner dialogue", "brainstorm-parent-gate:"),
+            ("brainstorm", "## 1. Gate assessment", "The parent assesses readiness without a subagent call", "brainstorm-parent-gate:"),
+        )
+        for key, heading, clause, diagnostic in cases:
+            with self.subTest(clause=clause):
+                body = checker.section(texts[key], heading)
+                changed = dict(texts)
+                changed[key] = texts[key].replace(body, replace_clause(body, clause), 1)
+                changed[key] += "\n## Summary only\n" + clause
+                self.assertTrue(any(error.startswith(diagnostic) for error in checker.check_contracts(changed)))
 
     def test_missing_or_invalid_choice_stops_only_affected_operation_without_candidates(self):
         cases = (
-            ("missing assessment operation", "brainstorm-assessment",
+            ("legacy caller missing assessment operation", "brainstorm-assessment",
              lambda data: data["operations"].pop("brainstorm-assessment")),
             ("missing shared choice", "brainstorm-application",
              lambda data: data["assignments"].pop("brainstorming")),

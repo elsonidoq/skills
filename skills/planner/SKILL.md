@@ -75,10 +75,11 @@ and scope actually presented. Correct a mistaken premise and affected derived co
 ## Saved planner assignments
 
 Use [model-assignments.json](references/model-assignments.json) via the
-[saved-assignment contract](references/model-assignments.md). It covers brainstorming, TinySpec
+[saved-assignment contract](references/model-assignments.md). It covers delegated decision application, TinySpec
 source/tasks, Standard spec/tasks, both specification reviews, the direct/helper plan pass and overall
 review/rereview. Pass the resolved binding unchanged in the invocation and bounded brief.
-Parent dialogue, inspection, TinySpec task review and approvals retain the owner-launched parent binding.
+Parent brainstorming assessment, dialogue, inspection, TinySpec task review and approvals retain the
+owner-launched parent binding. Gate assessment needs no delegated assignment resolution.
 Verify the exact binding is permitted and callable at dispatch; configuration is not availability evidence.
 A missing, malformed, unsupported, or unavailable binding stops only that operation with the resolver's
 focused owner correction question: do not recommend, infer, substitute or silently default.
@@ -136,11 +137,13 @@ request bounds, answers/rationale, evidence and deferrals; recover it or ask for
 Research may inform assessment, but no dependency docs, source, plan or decisions may be persisted.
 Carry findings in session until selection.
 
-Invoke `planning-brainstorming` in preselection mode with `brainstorm-assessment`, and
-`brainstorm-application` when applying recorded decisions, with each saved assignment unchanged.
-Supply inspected bounds and readiness target “informed scope assessment.” Preserve its gate result;
-conduct required owner dialogue yourself, one material item at a time. A settled request skips extended
-dialogue, not assessment. Generic brainstorming labels do not select depth or add an approval gate.
+Invoke `planning-brainstorming` in preselection mode directly in the parent session: assess the inspected
+bounds against readiness target “informed scope assessment.” Do not delegate the gate or resolve a saved
+`brainstorm-assessment` binding. With `NO_BRAINSTORM_NEEDED`, proceed directly to scope assessment and depth
+choice without a child call. With `BRAINSTORM_NEEDED`, prepare the bounded agenda and conduct required owner
+dialogue yourself, one material item at a time. A settled request skips extended dialogue, not parent assessment.
+Use the saved `brainstorm-application` assignment only when delegating application of recorded decisions to
+an authorized selected source. Generic brainstorming labels do not select depth or add an approval gate.
 
 Present approximate scope: affected subsystems, localized/cross-cutting effects, architecture/contracts/
 data, dependencies, migration, security/concurrency/deployment, verification, sequencing, uncertainty,

@@ -307,7 +307,9 @@ def check_contracts(texts):
     require("shared-invocation", pre,
             "Invoke `planning-brainstorming` in preselection mode",
             "readiness target “informed scope assessment.”",
-            "conduct required owner dialogue yourself", "one material item at a time")
+            "conduct required owner dialogue yourself", "one material item at a time",
+            "directly in the parent session", "Do not delegate the gate or resolve a saved",
+            "With `NO_BRAINSTORM_NEEDED`, proceed directly", "without a child call")
     production = section(p, "## Selected production and stage handoffs")
     require("shared-application", production,
             "shared rules apply to EVERY stage in both paths",
@@ -423,8 +425,14 @@ def check_contracts(texts):
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
             "one material item", "recorded owner decisions", "preselection", "read-only",
             "session history", "Only in selected-production", "owner's rationale")
+    require("brainstorm-parent-gate", section(b, "## Capability preflight"),
+            "Gate assessment runs directly in the parent session", "owner-launched model and effort",
+            "Do not delegate the gate or resolve a saved `brainstorm-assessment` binding",
+            "missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue")
+    require("brainstorm-parent-gate", section(b, "## 1. Gate assessment"),
+            "The parent assesses readiness without a subagent call")
     require("brainstorm-assignment", section(b, "## Capability preflight"),
-            "`brainstorm-assessment` or `brainstorm-application`",
+            "Only for authorized delegated decision application, resolve `brainstorm-application`",
             "[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
             "shared saved `brainstorming` assignment", "exact binding\nunchanged in the bounded brief and dispatch",
             "permitted and callable only\nat dispatch",
