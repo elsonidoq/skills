@@ -84,11 +84,12 @@ No live-model evaluation gate or Cerca/SSH prerequisite is introduced.
     identity; reopened storage, check/checkpoint corrections and duplicate-row controls.
     Own tests/docs and narrow coordinator no-quota exception. REQUIRED T003/V1 maps A4/A7.
 
-- [ ] T004 Project compact nonrecursive continuation and diagnosis context.
-  - **Depends**: T003
-  - Consume durable invocation/session identity; remove embedded prior full prompts from both
-    worker and coordinator diagnosis inputs while retaining actionable scope, evidence and
-    authority/acceptance. Preserve original inspectable history. REQUIRED T004/V1 maps A5/A7.
+- [ ] T004 Remove prior full-prompt embedding from continuation and diagnosis inputs.
+  - **Depends**: none
+  - Directly clean up existing worker/coordinator prompt construction using retained diagnosis,
+    targeted correction, relevant task/history references and existing scope/authority/acceptance.
+    Preserve original inspectable history; no context abstraction, summarizer, recovery mechanism
+    or counting dependency. Focused consumer sentinel assertions retain A5/A7 in REQUIRED T004/V1.
 
 - [ ] T005 Deliver retained actual check evidence to read-only independent review.
   - **Depends**: none
@@ -108,9 +109,10 @@ No live-model evaluation gate or Cerca/SSH prerequisite is introduced.
     unknown and next action. Integrate supported worker/reviewer recovery and precise unavailable
     boundaries with instruction/scenario checks and current docs. REQUIRED T007/V1–V2 map A1/A6/A7.
 
-One valid order is T001 → T002 → T003 → T004 → T005 → T006 → T007. Only named edges
-are producers: T004 consumes T003's durable identity/history; T006 consumes T005's actual
-private evidence handoff; T007 integrates completed atomicity, allowance/compact-context and
+One valid order is T001 → T002 → T003 → T004 → T005 → T006 → T007. T004 is independently
+acceptable using existing task/history data; removing copied prompts does not consume T003's
+new counting identity. T006 consumes T005's actual private evidence handoff; T007 still depends
+on T001, T003, T004 and T006 to integrate completed atomicity, allowance, prompt-copy cleanup and
 supported evidence-reassessment interfaces. No dependency on future live evaluation or
 unfinished application work. Focused ordinary tests/docs/teardown remain in their outcome.
 
