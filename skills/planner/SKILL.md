@@ -140,9 +140,13 @@ applicability and lifetime.
 
 At both TinySpec and Standard reviews, challenge proposed task boundaries using the shared
 task-generation outcome rule and
-[executor-sized outcome recipe](../task-generation/SKILL.md#executor-sized-outcomes): reject
-milestones disguised as tasks and assess compaction/drift for the configured executor/effort,
-even when an advanced author could deliver the whole milestone.
+[executor-sized outcome recipe](../task-generation/SKILL.md#executor-sized-outcomes): each task
+must deliver one bounded behavior or interface whose meaningful acceptance passes using
+completed prerequisites and its own result, without unfinished downstream implementation. Reject
+milestones that leave several independently testable interfaces unfinished together and assess
+compaction/drift for the configured executor/effort, even when an advanced author could deliver
+the whole milestone. Accept independently verifiable slices and ordinary established
+cross-system wiring when its focused tests/docs establish the final observable.
 A workflow or phase noun is not a reason to split; keep tests, evidence, review preparation
 and routine teardown with the supported delivery unless a concrete independent outcome,
 prerequisite, gate, resource or context boundary warrants separation.
@@ -441,6 +445,9 @@ or additional approval gate; actual invalidating drift follows existing recovery
    Apply the dependency evidence/permission review above before combined approval.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable task instructions.
+   For TinySpec review, reject multi-interface milestones that need unfinished downstream work
+   for acceptance; accept bounded slices with completed prerequisites and ordinary established
+   wiring with its focused tests/docs.
    Review risk selection/omission, actual evidence and gates, necessary producer/consumer
    dependencies, reuse/retention, production acceptance, disproof/renewal and task boundaries.
    Source carries needs; separate tasks carry only independently necessary work units.
@@ -585,6 +592,9 @@ valid settled principles. Verify the saved exact stage binding and independent r
    in direct Standard and managed/helper plans.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable task instructions.
+   For Standard overall review, reject multi-interface milestones that need unfinished downstream
+   work for acceptance; accept bounded slices with completed prerequisites and ordinary
+   established wiring with its focused tests/docs.
    Apply the dependency evidence/permission review above, including the direct Standard
    pass and helper-managed/standalone contract coverage, before overall approval.
    Apply the [bounded mechanical correction contract](references/approval-and-recovery.md#bounded-mechanical-corrections)

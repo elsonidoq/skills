@@ -35,13 +35,18 @@ and affected approval renewal. The hypothetical result is not an observed librar
 
 ## F — outcome boundaries and ordinary wiring
 
-A settled multi-file local change has no independent deliverable, prerequisite, gate, resource
-or material context boundary between its accepted behaviors. Keep all acceptance, focused tests,
-evidence, operative documentation and routine teardown in one coherent delivery task: no
-inventory, prototype, composition, report or hypothetical-cleanup task. A small wiring outcome
-also stays together; its existing test observes the actual value at the consumer boundary.
-A workflow noun or task-count target is not a split reason. This scenario proves no requirement
-to combine work that has a real independent boundary.
+A proposed “deliver importer, public API and browser flow” milestone leaves three independently
+testable interfaces unfinished together, so it is not independently acceptable: split it into
+bounded importer, API and browser slices. Each slice accepts with completed predecessor contracts
+and its own result, without unfinished downstream implementation. A settled multi-file local
+change has no independent deliverable, prerequisite, gate, resource or material context boundary
+between its accepted behaviors. Keep all acceptance, focused tests, evidence, operative
+documentation and routine teardown in one coherent delivery task: no inventory, prototype,
+composition, report or hypothetical-cleanup task. An ordinary established cross-system wiring
+outcome also stays together when its existing focused test observes the actual value at the
+consumer boundary and its relevant documentation remains with the change. A workflow noun or
+task-count target is not a split reason. This scenario does not require splitting legitimate
+wiring or combining work that has a real independent boundary.
 
 ## G — risky operations retain their gates
 

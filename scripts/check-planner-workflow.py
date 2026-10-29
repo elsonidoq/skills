@@ -684,6 +684,8 @@ def check_contracts(texts):
         require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, heading, clauses in RISK_CARRIERS + BOUNDARY_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
+    for label, key, selector, clauses in ATOMIC_OUTCOME_CARRIERS:
+        require(label, operational_carrier(texts.get(key, ""), selector), *clauses)
     if not texts.get("risk"):
         errors.append("risk-reference: required shared carrier missing or empty")
     for label, key, selector, clauses in DELEGATION_CARRIERS + AUTHORITY_CARRIERS:
@@ -834,6 +836,25 @@ BOUNDARY_CARRIERS = (
     ("task-review-boundaries", "tasks", "## Review and handoff",
      ("Challenge redundant task splits", "without weakening acceptance or original gates",
       "For a [PROTOTYPE] task, preserve the marker and bounded informational\nscope in the handoff and worker brief")),
+)
+
+
+# Contract carriers only: they preserve the six intake-linter rules and do not score tasks.
+ATOMIC_OUTCOME_CARRIERS = (
+    ("atomic-creator", "tasks", "### Executor-sized outcomes",
+     ("one bounded behavior or interface whose meaningful acceptance\n   passes using completed prerequisites and its own result, without unfinished downstream\n   implementation",
+      "Challenge a milestone bundle that leaves several independently testable\n   interfaces unfinished together", "ordinary cross-system wiring outcome may remain one task",
+      "focused wiring test, relevant documentation and ordinary support work establish the final\nobservable")),
+    ("atomic-direct-review", "tasks", "## Review and handoff",
+     ("either adapter and direct tasking", "reject a multi-interface milestone whose interfaces must all\nremain unfinished for acceptance", "accept independently verifiable slices with completed\nprerequisites", "ordinary established cross-system wiring with its focused tests/docs")),
+    ("atomic-planner", "planner", "## Proportionate validation",
+     ("each task\nmust deliver one bounded behavior or interface whose meaningful acceptance passes using\ncompleted prerequisites and its own result, without unfinished downstream implementation",
+      "milestones that leave several independently testable interfaces unfinished together",
+      "Accept independently verifiable slices and ordinary established\ncross-system wiring when its focused tests/docs establish the final observable")),
+    ("atomic-tiny-review", "planner", "item:4. **Review",
+     ("For TinySpec review, reject multi-interface milestones that need unfinished downstream work\n   for acceptance", "accept bounded slices with completed prerequisites", "ordinary established\n   wiring with its focused tests/docs", "temporary phase/approval status belongs in the approval record")),
+    ("atomic-standard-review", "planner", "stage:overall_review",
+     ("For Standard overall review, reject multi-interface milestones that need unfinished downstream\n   work for acceptance", "accept bounded slices with completed prerequisites", "ordinary\n   established wiring with its focused tests/docs", "temporary phase/approval status belongs in the approval record")),
 )
 
 

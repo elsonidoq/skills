@@ -148,11 +148,13 @@ During authoring and review:
    not just whether the author understands the whole milestone. Tailor boundaries and needed
    scaffolding to the selected executor/effort and observed capabilities, not a model-family
    hierarchy; unknown capability calls for explicit boundaries, not an invented model binding.
-3. Check that each task's acceptance can finish using available predecessor contracts and its
-   own result, without unfinished downstream work or future final acceptance. Put composed
-   acceptance at the first boundary where its prerequisites exist. Review both coarse bundles
-   and gratuitous splits: no universal task count or file/line/token/time ceiling; more prose
-   or reading executor configuration alone does not make a task bounded.
+3. Check that each task delivers one bounded behavior or interface whose meaningful acceptance
+   passes using completed prerequisites and its own result, without unfinished downstream
+   implementation. Challenge a milestone bundle that leaves several independently testable
+   interfaces unfinished together; split it at useful independently verifiable seams. Put
+   composed acceptance at the first boundary where its prerequisites exist. Review both coarse
+   bundles and gratuitous splits: no universal task count or file/line/token/time ceiling; more
+   prose or reading executor configuration alone does not make a task bounded.
 
 **Before:** “Deliver the read-only graph viewer: snapshot reader, privacy mapping, HTTP
 service and usable browser; verify the complete app.” This is a milestone with several
@@ -164,7 +166,8 @@ writes with actual storage. Exclude mapping, HTTP and browser work. Then deliver
 against that reader, HTTP against the public mapped contract, and browser against HTTP,
 each with its local tests/docs and concrete checks. Reader acceptance does not wait for the
 browser. Keep a simple reader fix and its regression test together; do not force this example's
-number of tasks onto other work.
+number of tasks onto other work. A bounded slice is acceptable when its completed predecessor
+contract and its own result make that slice meaningful without later unfinished work.
 
 **Supporting ownership example:** “Add the export control in `ui/export_controls.py`; own only
 that file” obviously omits the coupled capture selector
@@ -176,8 +179,11 @@ control, selector, harness, necessary final configuration/override support and a
 producer check in the same bounded UI outcome when they need changes, or by naming the real
 existing producer that supplies unchanged support as a dependency. The final observable still
 needs its smallest sufficient check; an ordinary already-observed success control needs only its
-existing focused check. This is authoring guidance, not a generic path/dependency-closure
-validator or a new task field.
+existing focused check. An ordinary cross-system wiring outcome may remain one task when it uses
+established interfaces and its focused wiring test, relevant documentation and ordinary support
+work establish the final observable; do not split it merely because it changes several files. This
+is authoring guidance,
+not a generic path/dependency-closure validator or a new task field.
 
 State shared constraints once in their authoritative context. Task entries contain
 outcome-specific scope, interfaces, acceptance and verification, not repeated specification
@@ -278,7 +284,10 @@ Challenge redundant task splits, duplicate proofs/report chains and disproportio
 without weakening acceptance or original gates. Return only necessary producer/consumer
 dependencies, applicable evidence/limits and blocked reliance to the existing producing review
 and coordinator handoff; syntax/order validation alone cannot prove consumption or appropriate
-task granularity. Apply the executor-sized outcome recipe above at this review boundary.
+task granularity. Apply the executor-sized outcome recipe above at this review boundary. In
+final review for either adapter and direct tasking, reject a multi-interface milestone whose
+interfaces must all remain unfinished for acceptance; accept independently verifiable slices with
+completed prerequisites and ordinary established cross-system wiring with its focused tests/docs.
 
 Carry work-specific checks, exclusions and genuinely material permission boundaries into
 the worker brief. Verify the dependency graph with

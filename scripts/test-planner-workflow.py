@@ -198,6 +198,45 @@ class EarlyRiskReductionTests(unittest.TestCase):
                 body = checker.section(texts[key], heading)
                 self.assertIn(" ".join(clause.split()), " ".join(body.split()))
 
+    def test_atomic_outcome_instruction_mutations_and_walkthrough(self):
+        """Focused carrier/scenario sensitivity, not a task-intake semantic validator."""
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, selector, clauses in checker.ATOMIC_OUTCOME_CARRIERS:
+            body = checker.operational_carrier(texts[key], selector)
+            self.assertTrue(body, label)
+            for clause in clauses:
+                with self.subTest(carrier=label, removed=clause):
+                    changed = dict(texts)
+                    pattern = r"\s+".join(re.escape(word) for word in clause.split())
+                    changed[key] = changed[key].replace(body, re.sub(pattern, "REMOVED", body, count=1), 1)
+                    changed[key] += "\n## Summary only\n" + clause
+                    self.assertTrue(any(error.startswith(label + ":")
+                                        for error in checker.check_contracts(changed)))
+
+        scenario = checker.section(
+            (HERE / "fixtures/planner/risk-walkthroughs.md").read_text(), "## F")
+
+        def assert_atomic_scenario(text):
+            for phrase in (
+                "three independently\ntestable interfaces unfinished together",
+                "bounded importer, API and browser slices",
+                "completed predecessor contracts\nand its own result, without unfinished downstream implementation",
+                "ordinary established cross-system wiring\noutcome also stays together",
+                "existing focused test observes the actual value at the\nconsumer boundary",
+                "relevant documentation remains with the change",
+            ):
+                self.assertIn(" ".join(phrase.split()), " ".join(text.split()))
+
+        assert_atomic_scenario(scenario)
+        for old, new in (
+            ("three independently\ntestable interfaces unfinished together", "one interface"),
+            ("completed predecessor contracts\nand its own result, without unfinished downstream implementation", "a later milestone"),
+            ("ordinary established cross-system wiring\noutcome also stays together", "wiring always splits"),
+        ):
+            with self.subTest(scenario_mutation=new), self.assertRaises(AssertionError):
+                assert_atomic_scenario(scenario.replace(old, new, 1))
+
     def test_outcome_boundaries_and_shared_proof_scenarios(self):
         # Concrete sensitivity records, not a planner, live operation, or semantic scoring layer.
         acceptance = [
