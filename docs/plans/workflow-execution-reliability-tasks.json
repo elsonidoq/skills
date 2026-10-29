@@ -1,0 +1,183 @@
+{
+  "tasks": [
+    {
+      "id": "T001",
+      "outcome": "Make bounded independent acceptance explicit for task creators and reviewers. Read the shared brief in docs/plans/workflow-execution-reliability-tasks.md. Strengthen the existing executor-sized recipe and final-review carriers, not task intake: each task must deliver one bounded behavior/interface acceptable using completed prerequisites and its own result, without unfinished downstream work. Apply explicitly to creator plus TinySpec, Standard overall review, and direct tasking; retain legitimate cross-system wiring with its tests/docs. Extend existing planner instruction/mutation/scenario fixtures to challenge a multi-interface milestone, accept independently verifiable slices, and accept ordinary established wiring. Keep the six linter rules and existing task format unchanged; do not rewrite active tasks or add semantic validators. ADR-0003 requires neutral executable instructions and temporary status only in approval records; preserve this in both review routes. Keep the new focused instruction/scenario assertions in the existing EarlyRiskReductionTests class so the selected check exercises them.",
+      "depends": [],
+      "owned_paths": [
+        "skills/task-generation/SKILL.md",
+        "skills/planner/SKILL.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "scripts/fixtures/planner/risk-walkthroughs.md"
+      ],
+      "required": [
+        {
+          "id": "T001/V1",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A6,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md",
+          "pass": "Both creator and final reviewer reject an example milestone whose separately testable interfaces remain unfinished together, and accept bounded slices with completed inputs plus a legitimate multi-file wiring outcome. Inspect both adapters/direct entry and authorization-neutral review against docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; no task-count quota, new metadata or support-only task mandate.",
+          "evidence": "Changed operative clauses and representative scenario/mutation assertions at the actual checker carriers; passing command output. These demonstrate instruction delivery/sensitivity, not actual model judgment.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate.",
+          "check": "PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/test-planner-workflow.py EarlyRiskReductionTests"
+        }
+      ]
+    },
+    {
+      "id": "T002",
+      "outcome": "Correct the registered task-outcome cue without weakening unsuccessful returns. Read the shared worker/reviewer brief in docs/plans/workflow-execution-reliability-tasks.md and source A3/A7. Edit the actual report_task_outcome registration in host.mjs and conflicting _COMPLETION_REPORTING text together: continue unfinished authorized implementation, unrun worker-owned acceptance and correctable failures; pending runner checks/checkpoint/review are not worker blockers. Genuine inability, cancellation and execution failure remain honest unsuccessful returns, never success from unmet acceptance. Preserve completed ordinary text, explicit status API, diagnostics and stop-before-checkpoint/dependent/review behavior. Update the existing SDK registration test and authority/outcome tests plus current operating/storage descriptions. Exclude continuation counting, prompt-history projection and review transitions. Initial/corrective/resumed briefs retain current launch authority (docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md) and shared _ROUTINE_AUTHORITY/exclusions (docs/decisions/ADR-0004-shared-routine-worker-permissions.md).",
+      "depends": [],
+      "owned_paths": [
+        "runtime/pi-host/host.mjs",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/tests/test_host.mjs",
+        "runtime/tests/test_worker_authority.py",
+        "runtime/tests/test_engine.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T002/V1",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A3,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md",
+          "pass": "Actual registered SDK tool description and initial/corrective/resumed completion text direct continuing correctable work; completed text still succeeds. Actual host/adapter outcome fixtures retain blocked/failed/incomplete and cancellation/execution failure diagnostics with no acceptance checkpoint or dependent/final-review dispatch. Preserve ADR-0003/0004 authority/defaults and real gates; never infer acceptance by summary keywords.",
+          "evidence": "SDK registered description/tool execution assertions plus actual transport/outcome and authority assertions, retained private diagnostics and provider-role counts. Offline only; no obedience claim.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate.",
+          "check": "node --test runtime/tests/test_host.mjs && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_worker_authority test_engine"
+        }
+      ]
+    },
+    {
+      "id": "T003",
+      "outcome": "Enforce durable initial-plus-two dispatches per exact task-worker session. Read the shared worker/reviewer brief in docs/plans/workflow-execution-reliability-tasks.md and source A4/A7. At engine invoke_worker, before _prompt_worker/adapter/provider dispatch under Authority writer lock, resolve the effective explicit selected or adapter-held saved identity consistently with PiAdapter.prompt. Reserve/count distinct dispatched invocation IDs in ordinary required history, associating fresh initial calls with the actual opened session and preserving that association for later continuation. Use existing Store transaction/_required_write reconciliation, not process-local counters or optional metrics; no new tables/schema. Initial plus at most two further calls includes REQUIRED-check/checkpoint corrective calls and process/run restart. Start/terminal rows count once; failure/interruption/reopen never resets use. Another task using a settled earlier-task session has its own initial use. Preserve existing uncertain/missing-history inspection stops. Refuse third resume before even adapter invocation, naming exact task/session, used allowance and investigated-recovery/fresh-context action; preserve bytes/checkpoints/history and never automatically create context or switch binding. Review/fixer lifecycle gets no numeric cap. Update test_resume fixtures that currently allow four same-task calls to assert the new refusal, not silently discard coverage; include direct production dispatch and adapter-held/explicit precedence controls. Keep current operating/storage docs and narrow exception in coordinator generic no-quota text consistent. Do not change SDK retries/compaction/lifecycle or tooling policy.",
+      "depends": [],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/tests/test_resume.py",
+        "runtime/tests/test_worker_authority.py",
+        "skills/coordinate-implementation/SKILL.md",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T003/V1",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A4,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md",
+          "pass": "Actual common dispatch accepts calls 1–3 and refuses 4 before adapter/provider call, after reopened Authority/Engine and through both check and checkpoint correction paths. Exact ID/file identity and explicit-versus-held selection are associated durably including fresh initial calls. Duplicate started/terminal rows count once; distinct tasks/sessions isolated; failed/interrupted/reserved calls do not reset. Persistence-after-write failure reconciles one reservation and never repeats a provider call. Missing identity/history or uncertain in-flight call retains existing stop. Refusal preserves partial bytes, task checkpoint SHAs and historical rows. ADR-0003/0004 apply to every admitted corrective/resumed brief; no fresh-session retry authority from the cap.",
+          "evidence": "Saved identity assertions, actual invocation/provider counters, ordinary history rows before/after reopen and operation-local persistence fault injection, exact preserved Git SHAs/bytes and actionable refusal. Inspect documentation versus implemented exception.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate.",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_resume test_worker_authority"
+        }
+      ]
+    },
+    {
+      "id": "T004",
+      "outcome": "Project compact nonrecursive continuation and diagnosis context. Read the shared worker/reviewer brief in docs/plans/workflow-execution-reliability-tasks.md and source A5/A7; consume T003 durable invocation/session identities and its updated resume controls rather than inventing another history counter. Replace canonical full prior-invocation embedding in worker continuation AND coordinator failure-diagnosis inputs with a bounded semantic projection: actionable error/diagnosis/targeted correction, unfinished scope, task/evidence/history references and unchanged task/authority/acceptance constraints. Do not serialize nested prompt bodies or recursive invocation chains; preserve original private history unmodified for selective inspection. Cover second/later process resumes plus check/checkpoint corrective prompts where current task constraints must remain usable. Do not impose token/character limits, summarize uncertain effects as completed, or widen permission. Current launch authority and shared routine defaults/exclusions from ADR-0003/0004 must still reach resumed and corrective consumers. Update current operating/storage context wording with focused tests; exclude session-budget and review-lifecycle redesign.",
+      "depends": [
+        "T003"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/tests/test_resume.py",
+        "runtime/tests/test_worker_authority.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T004/V1",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A5,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md",
+          "pass": "Second/later actual continuation and coordinator question contain current actionable correction, unfinished scope, task/acceptance/authority and usable history/evidence identities, with no distinctive prior full-prompt or nested-prompt sentinel. Original stored prompt bytes remain inspectable and unchanged. Check/checkpoint correction preserves task constraints, ADR-0003 authority and ADR-0004 defaults/exclusions. T003 pre-dispatch allowance and uncertain-call controls remain intact.",
+          "evidence": "Captured actual Engine worker prompts and question inputs compared with retained original history, distinguishing prior-prompt sentinels from required current context; production resume/checkpoint fixtures, not size assertions.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate.",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_resume test_worker_authority"
+        }
+      ]
+    },
+    {
+      "id": "T005",
+      "outcome": "Deliver retained actual check evidence to independent read-only review. Read the shared worker/reviewer brief in docs/plans/workflow-execution-reliability-tasks.md and source A2/A7. In Engine._review derive applicable task/repair required commands, actual retained results/output or usable private references, checkpoint/revision association and limits from existing completed-task checks and check/fixer_check/checkpoint history plus verified attribution. Reuse verification.run_checks data, not worker summaries/zero exit/clean-tree inference. Initial and follow-up read-only reviewers receive this evidence and distinguish passing execution, failed/missing required execution, inability to rerun read-only, and locally accepted versus unapproved live checks. Evidence is evaluated semantically, not blindly accepted. Keep raw output/session details private and safe status/monitor unchanged; no evidence schema or mandatory registry. Update focused review fixtures and canonical operating/storage owners; keep immediate approval and ordinary repair controls. This outcome ends at accurate review evidence handoff, independently of later findings-free recovery.",
+      "depends": [],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/tests/test_review_chain.py",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T005/V1",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A2,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md",
+          "pass": "Actual local required-check execution with distinctive output reaches initial and follow-up read-only reviewer at correct task/repair revision/checkpoint. A retained failure/missing required check stays a gap, read-only inability to rerun does not negate a valid executed pass, and no unapproved live check is invented. Reviewer sees original acceptance and real permission gates; unaffected valid cumulative coverage and ADR-0003/0004 constraints retained. Raw-output sentinel never enters safe CLI/monitor projections.",
+          "evidence": "Disposable ProjectTest Git/check execution, captured actual reviewer briefs with command/exit/output and verified checkpoint SHAs/association; safe projection negative control and normal first approval/repair.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate.",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_review_chain"
+        }
+      ]
+    },
+    {
+      "id": "T006",
+      "outcome": "Resume same-head evidence-only review without a fixer or task replay. Read the shared worker/reviewer brief in docs/plans/workflow-execution-reliability-tasks.md and source A2/A7; consume T005 private retained-evidence brief. Extend existing explicit CLI resume, Engine._finish_reviews/_review and Store dispatch/chain/history only for owner-pair-v1: latest settled reviewer rejected for evidence/coverage only with no actionable findings; coordinator supplies substantive targeted diagnosis or newly applicable evidence before a fresh independent read-only reassessment at the exact original range/head. Retain basis in existing private history and reject an unchanged handoff before expensive dispatch. Do not misuse refresh-review-target (requires changed HEAD/actionable rejection/stale grant), synthesize fixer/empty commit/repair consent, replace settled verdicts or reset chain limits. Preserve rejected attempt, task checkpoints, original range and valid unaffected cumulative coverage across restart. Reassess outstanding gaps and affected conclusions only; approval requires cumulative sufficient coverage and no blockers/gaps. New actionable findings use existing scoped repair/permission policy, unresolved evidence remains explicit. Uncertain calls/unknown effects/target drift stop for reconciliation. Keep historical no-policy lifecycle/rows unchanged; safe status next-stage projection must accurately represent this supported transition without exposing private diagnosis. Update operating/storage descriptions and coordinator Review/Interface instructions only as needed for this new supported path. No new command/service/schema or automatic retries.",
+      "depends": [
+        "T005"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/tests/test_review_chain.py",
+        "runtime/tests/test_resume.py",
+        "skills/coordinate-implementation/SKILL.md",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "required": [
+        {
+          "id": "T006/V1",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A2,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md; memory/MEMORY.md#routine-technical-decisions-and-review-scope; memory/MEMORY.md#routine-repair-authorization",
+          "pass": "Production explicit resume after settled evidence/coverage-only rejection appends exactly one fresh read-only reassessment linked to that rejecting execution; retained local check evidence is evaluated with zero implementation/fixer replay or extra commit. Reopened Authority/Engine retain original rejection, exact checkpoint SHAs, original range/head and unaffected coverage. Outstanding original coverage is never inferred passed; genuine failed/missing required check blocks approval and unapproved live check is not added. Duplicate unchanged evidence/diagnosis, uncertain/incomplete invocation, drift and historical policy dispatch no reassessment provider. Newly actionable findings follow existing causal repair authority with real gates, no invented grant.",
+          "evidence": "Real disposable Git/check execution plus scripted adapter role/counts, CLI resume path and reopened storage chain/reference assertions; compare before/after commits/rejections/coverage and safe next-stage output. Normal immediate approval and actionable repair remain controls.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate.",
+          "check": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -B -m unittest -v test_review_chain test_resume"
+        }
+      ]
+    },
+    {
+      "id": "T007",
+      "outcome": "Make material risk handoff actionable before coordinator reliance and routine recovery. Read the shared worker/reviewer brief in docs/plans/workflow-execution-reliability-tasks.md and source A1/A7 plus #34/#35 approach. Strengthen existing final task review/handoff prose (shared Task Generation and TinySpec/Standard planner carriers) to return concise material task-specific execution risks/prerequisites, affected tasks, evidence versus unknowns, and next investigation/mitigation/necessary permission. No risk schema/scoring/admission checklist. Coordinator preparation consumes findings before affected worker reliance, investigates/prepares within authority, and briefs workers with usable interfaces/findings/evidence limits and remaining gates; later discoveries get the same treatment, unrelated safe work continues. Extend coordinator Question triage and Review/Acceptance to drive routine worker AND reviewer diagnosis/recovery through supported paths, not treat a routine early return as completion/owner debugging. Consume T003/T004 allowance/context and T006 supported same-head reassessment (which consumes T005 evidence); inspect failed invocation/cause before targeted continuation and never repeat expensive unchanged failures. Exact unavailable capability/access/paid/data/external boundary names operation and corrective action. Preserve correction-only unaffected coverage and no routine parent acknowledgment. Add representative review→investigate→brief and unavailable-access fixtures in existing planner harness, inspecting actual carrier/handoff order, not isolated keywords. Update current operator instructions in lockstep. Exclude new recovery framework, repeat routine approval or broader tooling changes. Keep the new focused instruction/scenario assertions in the existing EarlyRiskReductionTests class so the selected check exercises them.",
+      "depends": [
+        "T001",
+        "T003",
+        "T004",
+        "T006"
+      ],
+      "owned_paths": [
+        "skills/task-generation/SKILL.md",
+        "skills/planner/SKILL.md",
+        "skills/coordinate-implementation/SKILL.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "scripts/fixtures/planner/risk-walkthroughs.md",
+        "docs/coordinate-implementation.md"
+      ],
+      "required": [
+        {
+          "id": "T007/V1",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A1,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md; memory/MEMORY.md#routine-technical-decisions-and-review-scope; memory/MEMORY.md#routine-repair-authorization",
+          "pass": "Representative concrete local environment/interface prerequisite appears with affected work, observed evidence/unknown and next action in final review, is investigated before reliance, then reaches worker brief as usable findings. Unavailable-access control identifies precise operation/capability/permission correction and blocks only affected work; later discovery has same owner. Inspect producer→review/handoff→coordinator preparation→brief carriers for dropped findings. Include worker and reviewer early stops: inspected routine targeted recovery uses existing resume/history, while unknown cause or real permission gate stops; no unchanged expensive retry or routine consent loop.",
+          "evidence": "Changed operative clauses, existing planner checker mutation/scenario assertions capturing event order/worker-visible content and unavailable boundary; manual comparison with delivered T003/T004/T006 interfaces. Instruction tests do not establish actual autonomous coordinator behavior.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate.",
+          "check": "PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/test-planner-workflow.py EarlyRiskReductionTests"
+        },
+        {
+          "id": "T007/V2",
+          "source": "docs/plans/workflow-execution-reliability-tinyspec.md#observable-acceptance-and-smallest-sufficient-checks (A6,A7); docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md; memory/MEMORY.md#routine-technical-decisions-and-review-scope; memory/MEMORY.md#routine-repair-authorization",
+          "pass": "Both review adapters still enforce T001 independent acceptance/neutral tasks. Applicable docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md current authority and docs/decisions/ADR-0004-shared-routine-worker-permissions.md shared _ROUTINE_AUTHORITY/exclusions reach recovered worker/reviewer briefs; actual REQUIRED/manual/paid/data/external gates, correction-only coverage and focused checkpoints remain. Current docs describe delivered evidence-only resume and two-resume exception, no removed Pi-version requirement, active task rewrites or policy expansion.",
+          "evidence": "Manual current contract/diff/link inspection against source, ADRs, memory guidance and delivered production tests; relevant runtime evidence from predecessors retained unless changed applicability requires rerun.",
+          "permission": "Routine scoped local checks/isolated Git and databases need no repeated permission (ADR-0004). Preserve actual REQUIRED/manual, paid application/API, credential/security/data, global-install, external-write/deployment/push and unrelated-byte boundaries. No live provider evaluation or new manual gate."
+        }
+      ]
+    }
+  ]
+}
