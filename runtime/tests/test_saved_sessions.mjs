@@ -4,7 +4,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {test} from 'node:test';
-import {SessionManager} from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
+import {piSdk} from '../pi-host/sdk.mjs';
+const {SessionManager} = piSdk;
 import {createWorkflowSession, promptSession, sessionObservationRecord} from '../pi-host/host.mjs';
 
 test('official SessionManager create/open retains a private identity without ambient discovery', async () => {

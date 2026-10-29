@@ -5,7 +5,8 @@ import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import bridge from '../../.pi/extensions/coordinate-implementation-bridge.js';
-import {DefaultResourceLoader, SettingsManager} from '../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js';
+import {piSdk} from '../pi-host/sdk.mjs';
+const {DefaultResourceLoader, SettingsManager} = piSdk;
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const source = path.join(repository, '.pi/extensions/coordinate-implementation-bridge.js');

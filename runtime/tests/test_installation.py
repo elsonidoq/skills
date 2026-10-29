@@ -15,7 +15,9 @@ class PackagingTests(unittest.TestCase):
         config = tomllib.loads((ROOT/'runtime/pyproject.toml').read_text())
         self.assertEqual(config['project']['dependencies'], ['PyYAML==6.0.3'])
         self.assertEqual(config['tool']['setuptools']['package-data']['coherence_workflow'], ['schemas/*.json'])
-        for path in config['tool']['setuptools']['data-files']['share/coherence-workflow/pi-host']:
+        host_files = config['tool']['setuptools']['data-files']['share/coherence-workflow/pi-host']
+        self.assertIn('pi-host/sdk-resolution.mjs', host_files)
+        for path in host_files:
             self.assertTrue((ROOT/'runtime'/path).is_file())
         self.assertEqual(config['project']['scripts']['coordinate-implementation'], 'coherence_workflow.cli:main')
 

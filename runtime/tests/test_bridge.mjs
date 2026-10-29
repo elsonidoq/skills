@@ -13,7 +13,7 @@ const bridgeModule = pathToFileURL(path.join(repository, '.pi/extensions/coordin
 
 // Exercise Pi's normal project discovery, not a direct import of the factory.
 test('Pi discovers the project bridge and registers its tools without explicit paths', async () => {
-  const {DefaultResourceLoader, SettingsManager} = await import('../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js');
+  const {piSdk: {DefaultResourceLoader, SettingsManager}} = await import('../pi-host/sdk.mjs');
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-discovery-'));
   try {
     const project = path.join(root, 'project');
@@ -39,7 +39,7 @@ test('Pi discovers the project bridge and registers its tools without explicit p
 });
 
 test('registered parent steering tool reaches the production adapter, host and real SDK queue while its question waits', {timeout: 20000}, async () => {
-  const {DefaultResourceLoader, SettingsManager} = await import('../pi-host/node_modules/@earendil-works/pi-coding-agent/dist/index.js');
+  const {piSdk: {DefaultResourceLoader, SettingsManager}} = await import('../pi-host/sdk.mjs');
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-real-steering-'));
   const messages = [];
   const abort = new AbortController();
@@ -50,7 +50,8 @@ test('registered parent steering tool reaches the production adapter, host and r
     await fs.mkdir(path.join(root, 'scripts'));
     // Only the launcher is a fixture: it exercises one production PiAdapter
     // prompt, not an implementation workflow or replacement host dispatcher.
-    const python = path.join(repository, 'runtime/.venv/bin/python');
+    const python = execFileSync(process.env.COHERENCE_PYTHON || 'python3',
+      ['-c', 'import sys; print(sys.executable)'], {encoding: 'utf8'}).trim();
     await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\ntarget={'run_id':'offline-steering','task_id':'T010','invocation_id':'exact-call','role':'task_worker'}\nadapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'off'}, question=parent_question)\nassert adapter.enable_parent_steering(target)\nassert adapter.prompt('controlled offline prompt',steering=target)=='steering complete'\nassert adapter.steering_states['direction-1']=='consumed'\nassert adapter.steering_states['direction-2']=='consumed'\n`, {mode: 0o700});
     process.env.NODE_OPTIONS = '--import=' + path.join(repository, 'runtime/tests/fixtures/steering_adapter_fixture.mjs');
     process.env.COHERENCE_HOST_PRELOAD = '1';

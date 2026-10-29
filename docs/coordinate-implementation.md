@@ -314,12 +314,24 @@ external operations or a possibly completed Git commit. Start a fresh run ID, no
 ## Setup and verification
 
 Python >=3.10 with PyYAML, local Git/SQLite, and a usable Node/Pi SDK installation are actual
-runtime dependencies. SDK 0.87.1 is tested; the dependency lock is install metadata, not exact
-SDK/Node equality admission. For source checkout execution, `runtime/pi-host/host.mjs` resolves the
-SDK from Pi's `PI_PACKAGE_DIR`, or the installed release named by
-`PI_CODING_AGENT_DIR/install/current-version` when present, otherwise the default `~/.pi/agent`, so a new Git/Paseo worktree
-does not need copied `node_modules`. An explicit isolated workflow installation instead uses its
-lockfile-resolved colocated SDK. No LangGraph, cgroup delegation, custom SDK tools or host manifests.
+runtime dependencies. The SDK dependency lock is install metadata, not exact SDK/Node equality
+admission. The shared `runtime/pi-host/sdk.mjs` loader uses an available local package first
+(including an explicit isolated installation), then Pi's `PI_PACKAGE_DIR`, then the installed
+release named by `PI_CODING_AGENT_DIR/install/current-version` or the default `~/.pi/agent`.
+A new Git/Paseo worktree does not need copied `node_modules`. An invalid explicitly selected
+package reports its actual error rather than silently switching SDKs.
+
+Package discovery uses Node's package lookup; entry and SDK-dependency loading use Node's ESM
+resolver and public package exports, not constructed `dist/` paths or nested dependency paths.
+The parent-aware resolver runs in a short-lived Node process with its required resolver flag;
+Pi/Paseo need no extra launch flags. It executes no SDK code or workflow transport, and omits
+`NODE_OPTIONS` in that resolver process so workflow preloads cannot start there. Actual SDK
+imports retain the caller's environment and their original errors. Tests use the same loader.
+Pi/Paseo updates therefore do not require a fixed installation layout; actual breaking SDK API
+changes may still need adaptation. The offline compatibility checks below cover discovery,
+public imports, sessions, tools and bridge discovery with the installed SDK, without paid
+provider calls. Re-run them after updates; no automatic update, installation, restart or live
+model probe is performed. No LangGraph, cgroup delegation, custom SDK tools or host manifests.
 Explicit optional setup remains `scripts/install-workflow.sh --prefix NEW_DIRECTORY --allow-network`
 only with separate install/network authority. Ordinary entry never calls it.
 
@@ -353,7 +365,9 @@ Focused checks in the prepared environment:
 ```sh
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests \
   .pi/workflow-validation/venv/bin/python -B -m unittest discover -v -s runtime/tests
-node --test runtime/tests/test_host.mjs
+COHERENCE_PYTHON=python3 node --test runtime/tests/test_sdk_resolution.mjs \
+  runtime/tests/test_host.mjs runtime/tests/test_bridge.mjs \
+  runtime/tests/test_global_bridge.mjs runtime/tests/test_saved_sessions.mjs
 ```
 
 These exercise real disposable Git/project/tool operations and clearly labelled offline SDK
