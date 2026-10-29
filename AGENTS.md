@@ -87,7 +87,7 @@ Owner-approved 2026-10-06. This section associates **this repository**, not unre
 projects, with its local memory and documentation owners. Preserve the global portability
 rules above for reusable skills and commands.
 
-- Required runtime: pi coding agent 0.87.x (tested 0.87.1), pinned
+- Required runtime: pi coding agent, pinned
   `npm:pi-subagents@0.73.1` and `npm:pi-ask-user@0.15.1`. Verify registered, usable
   capabilities before applicable stages; report missing requirements rather than install.
   SpecKit is required only for a project's Standard planning stages, not TinySpec;
