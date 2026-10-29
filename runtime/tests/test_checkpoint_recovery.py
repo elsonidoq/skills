@@ -22,7 +22,8 @@ class CheckpointRecoveryTests(ProjectTest):
         hook.chmod(0o755)
 
         class Worker:
-            def __init__(self, *args, **kwargs): pass
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'checkpoint-correction', 'file': str(project/'checkpoint-correction.jsonl')}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'

@@ -20,7 +20,8 @@ class RequiredCheckCorrectionTests(ProjectTest):
         (project/'sentinel.txt').write_text('dirty unrelated\n')
 
         class CorrectingWorker:
-            def __init__(self, *args, **kwargs): pass
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'check-correction', 'file': str(project/'check-correction.jsonl')}
             def prompt(self, prompt, *, claim=None, command=None, read_only=False):
                 if read_only:
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -72,7 +73,9 @@ class RequiredCheckCorrectionTests(ProjectTest):
     def test_unavailable_correction_returns_the_actual_blocker(self):
         project = self.project
         class UnavailableWorker:
-            def __init__(self, *args, **kwargs): self.calls = 0
+            def __init__(self, *args, **kwargs):
+                self.calls = 0
+                self.saved_session = {'id': 'unavailable-correction', 'file': str(project/'unavailable-correction.jsonl')}
             def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
                 if read_only:
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
