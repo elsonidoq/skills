@@ -8,8 +8,17 @@ Authorized direct-adapter task preparation/checkpoint only. Requirements truth i
 Owner selected TinySpec and granular tasks. Fresh independent source review
 `dd0be1fb-91c6-4c1a-8dc9-eef677bfe7b8` reported zero material findings;
 parent verified unchanged source. This is not task approval or implementation approval.
-Planner review and combined current-content owner approval remain pending. No behavior,
-live-agent compliance, or implementation readiness is claimed here.
+Parent planning review completed, including the narrowed T004 correction. On 2026-10-29,
+registered `ask_user` returned **“Approve and implement”** for the corrected TinySpec,
+T001–T007 and implementation scope at `3595ca8ff8355531b337fa004f873c7e001c7900`.
+Approved source SHA256: `c7eb4f39d3ad0480e66a2577831714d611d60f0f38e80b1bdaf787326e9aa323`;
+approved executable tasks SHA256: `a366615db91e977840e86c4008ad3ce057bf4dcfda21d19c0deae0d6daf17933`.
+The human task presentation is the version at that commit; this paragraph records approval
+without changing task instructions. Approval authorizes coordinator preflight and sequential
+implementation with the selected executor, focused verified checkpoints and independent final
+review. Exclusions and actual permission/manual gates remain unchanged. Independent source
+review reported zero material findings; both task graphs and whitespace checks passed.
+Implementation checks and actual behavior remain unverified until execution.
 
 ## Shared worker/reviewer brief
 
