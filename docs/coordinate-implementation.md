@@ -325,8 +325,9 @@ Package discovery uses Node's package lookup; entry and SDK-dependency loading u
 resolver and public package exports, not constructed `dist/` paths or nested dependency paths.
 The parent-aware resolver runs in a short-lived Node process with its required resolver flag;
 Pi/Paseo need no extra launch flags. It executes no SDK code or workflow transport, and omits
-`NODE_OPTIONS` in that resolver process so workflow preloads cannot start there. Actual SDK
-imports retain the caller's environment and their original errors. Tests use the same loader.
+`NODE_OPTIONS` in that resolver process so workflow preloads cannot start there. Caller
+symlink-preservation and export-condition flags are forwarded separately; executable preloads
+and loaders are not. Actual SDK imports retain the caller's environment and their original errors. Tests use the same loader.
 Pi/Paseo updates therefore do not require a fixed installation layout; actual breaking SDK API
 changes may still need adaptation. The offline compatibility checks below cover discovery,
 public imports, sessions, tools and bridge discovery with the installed SDK, without paid

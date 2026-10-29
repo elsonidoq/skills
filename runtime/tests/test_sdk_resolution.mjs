@@ -1,5 +1,6 @@
 // Offline installation-layout tests. No provider, install, or host transport.
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -112,6 +113,39 @@ test('discovery does not execute package code and preserves actual import errors
   const discovered = discoverSdk({...options, env: {PI_PACKAGE_DIR: directory}});
   await assert.rejects(import(discovered.entryURL), /actual SDK failure/);
 });
+
+for (const source of ['argv', 'environment']) {
+  test(`SDK dependency identity retains symlink and custom-condition settings from ${source}`, async t => {
+    const options = await fixture(t);
+    const sdkDir = await packageAt(path.join(options.root, 'sdk'), sdkName, 'sdk');
+    const realDependency = await packageAt(path.join(options.root, 'real-dependency'), dependency, 'default');
+    await fs.writeFile(path.join(realDependency, 'custom.mjs'), 'export const marker = "custom condition";');
+    await fs.writeFile(path.join(realDependency, 'package.json'), JSON.stringify({
+      name: dependency, type: 'module', exports: {'.': {
+        'custom condition': './custom.mjs', import: './public/entry.mjs',
+      }},
+    }));
+    const link = path.join(sdkDir, 'node_modules', dependency);
+    await fs.mkdir(path.dirname(link), {recursive: true});
+    await fs.symlink(realDependency, link);
+    await fs.writeFile(path.join(sdkDir, 'public/entry.mjs'),
+      `import * as dependency from ${JSON.stringify(dependency)}; export {dependency};`);
+    const loader = new URL('../pi-host/sdk.mjs', import.meta.url).href;
+    const script = `
+      import assert from 'node:assert/strict';
+      const {piSdk, importPiDependency} = await import(${JSON.stringify(loader)});
+      const dependency = await importPiDependency(${JSON.stringify(dependency)});
+      assert.equal(dependency.marker, 'custom condition');
+      assert.equal(dependency, piSdk.dependency, 'must share the SDK dependency instance');
+    `;
+    const args = source === 'argv' ? ['--preserve-symlinks', '--conditions=custom condition'] : [];
+    execFileSync(process.execPath, [...args, '--input-type=module', '-e', script], {
+      env: {...process.env, PI_PACKAGE_DIR: sdkDir,
+        NODE_OPTIONS: source === 'environment' ? '--preserve-symlinks --conditions="custom condition"' : ''},
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  });
+}
 
 test('missing SDK and invalid explicit selection have actionable errors', async t => {
   const options = await fixture(t);

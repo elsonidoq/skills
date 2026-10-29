@@ -8,13 +8,41 @@ import {pathToFileURL} from 'node:url';
 
 const SDK_PACKAGE = '@earendil-works/pi-coding-agent';
 
+// NODE_OPTIONS uses double-quoted strings and backslash escapes inside quotes.
+// Keep only resolution settings, not --import/--require or executable loaders.
+function resolutionOptions() {
+  const environment = [];
+  let word = '', quoted = false, escaped = false;
+  for (const char of process.env.NODE_OPTIONS || '') {
+    if (escaped) { word += char; escaped = false; }
+    else if (quoted && char === '\\') escaped = true;
+    else if (char === '"') quoted = !quoted;
+    else if (/\s/.test(char) && !quoted) {
+      if (word) environment.push(word);
+      word = '';
+    } else word += char;
+  }
+  if (word) environment.push(word);
+  const args = [...environment, ...process.execArgv];
+  const selected = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (/^--(?:no-)?(?:preserve-symlinks(?:-main)?|addons|experimental-require-module)$/.test(arg)) {
+      selected.push(arg);
+    } else if (arg === '--conditions' || arg === '-C') {
+      selected.push(arg, args[++i]);
+    } else if (arg.startsWith('--conditions=') || arg.startsWith('-C=')) selected.push(arg);
+  }
+  return selected;
+}
+
 // Node's parent-aware ESM resolver is flag-gated. Keep the flag in a short-lived
 // resolver process rather than requiring flags on Pi, Paseo, or every test.
 // Resolution honors package exports (including import-only exports), hoisting,
 // and symlinks; no package code is executed by this process.
 export function resolvePackage(specifier, parentURL) {
   return execFileSync(process.execPath, [
-    '--experimental-import-meta-resolve', '--input-type=module', '-e',
+    ...resolutionOptions(), '--experimental-import-meta-resolve', '--input-type=module', '-e',
     'process.stdout.write(import.meta.resolve(process.argv[1], process.argv[2]))',
     specifier, String(parentURL),
   ], {encoding: 'utf8', env: {...process.env, NODE_OPTIONS: ''}, stdio: ['ignore', 'pipe', 'pipe']}).trim();
