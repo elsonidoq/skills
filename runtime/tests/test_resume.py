@@ -11,7 +11,7 @@ from unittest.mock import patch
 from coherence_workflow import cli, engine
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
-from coherence_workflow.pi_adapter import PiAdapter
+from coherence_workflow.pi_adapter import PiAdapter, effective_saved_session
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
@@ -23,6 +23,124 @@ EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
 _DETACHED_BRIDGE = {name: '' for name in (
     'COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
     'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}
+
+
+class WorkerDispatchRegressionTests(ProjectTest):
+    def test_missing_reservation_history_stops_production_resume_before_adapter(self):
+        calls, identity = [], {'id': 'missing-history', 'file': '/private/missing.jsonl'}
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
+            def prompt(self, _prompt, **_kwargs):
+                calls.append('provider')
+                raise Blocked('inspected local transport failure')
+        contract = {'tasks': [{'id': 'task', 'description': 'history fixture'}]}
+        with Authority(self.project) as owner:
+            with self.assertRaisesRegex(Blocked, 'local transport failure'):
+                Engine(owner, 'missing-dispatch', contract, EXECUTOR, adapter=Adapter).invoke()
+            original = [tuple(row) for row in owner.store.db.execute(
+                "SELECT state,details FROM execution_history WHERE run_id='missing-dispatch' AND kind='worker_invocation'")]
+            # Remove only fixture reservation data in this disposable test database.
+            owner.store.db.execute("DELETE FROM execution_history WHERE run_id='missing-dispatch' AND kind='worker_dispatch'")
+        with Authority(self.project) as owner:
+            owner.store.resume('missing-dispatch')
+            with self.assertRaisesRegex(Blocked, 'dispatch history is missing'):
+                Engine(owner, 'missing-dispatch', contract, EXECUTOR, adapter=Adapter, resume=True,
+                       question=lambda _prompt: 'inspected local failure; targeted transport correction').invoke()
+            retained = [tuple(row) for row in owner.store.db.execute(
+                "SELECT state,details FROM execution_history WHERE run_id='missing-dispatch' AND kind='worker_invocation'")]
+        self.assertEqual(calls, ['provider'])
+        self.assertEqual(retained, original)
+
+    def test_fresh_binding_and_common_check_and_checkpoint_allowance_survive_reopen(self):
+        for mode in ('check', 'checkpoint'):
+            with self.subTest(mode=mode):
+                project, calls = self.project, []
+                identity = {'id': mode + '-fresh', 'file': '/private/' + mode + '.jsonl'}
+                name, run = mode + '.txt', mode + '-allowance'
+                class Adapter:
+                    def __init__(self, *_args, **_kwargs): self.saved_session = None
+                    def prompt(self, prompt, **kwargs):
+                        self.saved_session = self.opened_session = identity
+                        calls.append(prompt)
+                        kwargs['claim'](name)
+                        project.joinpath(name).write_text(str(len(calls)) + '\n')
+                        return 'corrected fixture'
+                contract = {'tasks': [{'id': 'task', 'description': 'allowance fixture', 'owned_paths': [name],
+                    'checks': [['/bin/sh', '-c', 'cat ' + name + '; exit 1']] if mode == 'check' else []}]}
+                failures = []
+                def checkpoint_failure(_focused):
+                    failures.append('checkpoint')
+                    raise Blocked('correctable fixture checkpoint ' + str(len(failures)))
+                head = git(project, 'rev-parse', 'HEAD')
+                with Authority(project) as owner:
+                    fault = patch.object(engine.FocusedGit, 'checkpoint', checkpoint_failure) if mode == 'checkpoint' else contextlib.nullcontext()
+                    with fault, self.assertRaisesRegex(Blocked, 'allowance exhausted for task task session ' + identity['id']):
+                        Engine(owner, run, contract, EXECUTOR, adapter=Adapter).invoke()
+                    rows = [json.loads(row['details']) for row in owner.store.db.execute(
+                        "SELECT details FROM execution_history WHERE run_id=? AND kind='worker_dispatch' AND state='reserved'", (run,))]
+                    bound = [json.loads(row['details']) for row in owner.store.db.execute(
+                        "SELECT details FROM execution_history WHERE run_id=? AND kind='worker_dispatch' AND state='bound'", (run,))]
+                self.assertEqual(len(calls), 3)
+                self.assertEqual([row['session'] for row in rows], [None, identity, identity])
+                self.assertEqual([row['session'] for row in bound], [identity] * 3)
+                self.assertEqual(project.joinpath(name).read_text(), '3\n')
+                self.assertEqual(git(project, 'rev-parse', 'HEAD'), head)
+                with Authority(project) as owner:
+                    owner.store.resume(run)
+                    with self.assertRaisesRegex(Blocked, 'allowance exhausted'):
+                        Engine(owner, run, contract, EXECUTOR, adapter=Adapter, resume=True).invoke()
+                self.assertEqual(len(calls), 3)
+                self.assertEqual(project.joinpath(name).read_text(), '3\n')
+                self.assertEqual(git(project, 'rev-parse', 'HEAD'), head)
+
+    def test_production_explicit_identity_precedes_adapter_held_identity(self):
+        explicit = {'id': 'explicit', 'file': '/private/explicit.jsonl'}
+        held = {'id': 'held', 'file': '/private/held.jsonl'}
+        calls = []
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = held
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"coverage":["fixture"],"coverage_gaps":[],"findings":[]}'
+                calls.append(kwargs['saved_session'])
+                self.saved_session = self.opened_session = effective_saved_session(kwargs['saved_session'], self.saved_session)
+                return 'no-change'
+        with Authority(self.project) as owner:
+            runner = Engine(owner, 'explicit-dispatch', {'tasks': [{'id': 'task', 'description': 'identity fixture'}]},
+                            EXECUTOR, adapter=Adapter)
+            runner.session_candidates = [{'id': explicit['id'], 'saved_session': explicit}]
+            with patch.object(engine, 'select_session', return_value={
+                    'session_id': explicit['id'], 'reason': 'fixture selection', 'rejected': []}):
+                self.assertEqual(runner.invoke()['status'], 'complete')
+            reserved = json.loads(owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='explicit-dispatch' AND kind='worker_dispatch' AND state='reserved'").fetchone()['details'])
+        self.assertEqual(calls, [explicit])
+        self.assertEqual(reserved['session'], explicit)
+
+    def test_distinct_reservations_not_duplicate_observations_consume_task_session_allowance(self):
+        identity = {'id': 'shared-session', 'file': '/private/shared.jsonl'}
+        other = {'id': 'other-session', 'file': '/private/other.jsonl'}
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('counts', self.base)
+            for ordinal in range(3):
+                invocation = 'call-' + str(ordinal)
+                store.reserve_worker_dispatch('counts', 'task', invocation, identity)
+                store.bind_worker_dispatch('counts', 'task', invocation, identity)
+                store.history('counts', 'task', 'worker_dispatch', 'reserved', {'invocation_id': invocation, 'session': identity})
+                for state in ('started', 'failed'):
+                    store.history('counts', 'task', 'worker_invocation', state, {'invocation_id': invocation, 'saved_session': identity})
+        with Authority(self.project) as owner:
+            store = owner.store
+            with self.assertRaisesRegex(Blocked, 'allowance exhausted'):
+                store.reserve_worker_dispatch('counts', 'task', 'fourth', identity)
+            store.reserve_worker_dispatch('counts', 'another-task', 'another-task-initial', identity)
+            with self.assertRaisesRegex(Blocked, 'invocation history is missing or uncertain'):
+                store.reserve_worker_dispatch('counts', 'another-task', 'unsettled-call', identity)
+            store.reserve_worker_dispatch('counts', 'task', 'other-session-initial', other)
+            store.reserve_worker_dispatch('counts', 'fresh-task', 'unbound-initial', None)
+            with self.assertRaisesRegex(Blocked, 'unbound fresh session'):
+                store.reserve_worker_dispatch('counts', 'fresh-task', 'unknown-continuation', identity)
 
 
 class SameRunResumeTests(ProjectTest):

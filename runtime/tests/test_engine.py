@@ -161,7 +161,8 @@ class SequentialExecutionTests(ProjectTest):
         project = self.project
         calls = []
         class OfflineFailure:
-            def __init__(self, *args, **kwargs): pass
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'failed-check', 'file': '/private/failed-check.jsonl'}
             def prompt(self, prompt, **kwargs):
                 calls.append(prompt)
                 kwargs['claim']('owned.txt')
@@ -553,7 +554,8 @@ else:
             def __init__(self, *a, **k): pass
             def prompt(self, *a, **k): raise Blocked('original worker failure')
         class ReviewFailure:
-            def __init__(self, *a, **k): pass
+            def __init__(self, *a, **k):
+                self.saved_session = {'id': 'append-review', 'file': '/private/append-review.jsonl'}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'): return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["review.txt:1 - original review failure"]}'
                 return 'worker'
@@ -565,7 +567,8 @@ else:
                 with self.assertRaisesRegex(Blocked, reason):
                     Engine(owner, run, task, EXECUTOR, adapter=adapter).invoke()
         class GitFailure:
-            def __init__(self, *a, **k): pass
+            def __init__(self, *a, **k):
+                self.saved_session = {'id': 'append-git', 'file': '/private/append-git.jsonl'}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 kwargs['claim']('git-failure.txt')

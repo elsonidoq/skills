@@ -581,7 +581,7 @@ class Engine:
         execution_id = item['execution_id']
         trigger = next((entry for entry in store.review_chain(self.run, private=True)['executions']
                         if entry['execution_id'] == item['trigger_execution_id']), None)
-        if item['fixing_round'] > 1:
+        if item['review_ordinal'] > 1:
             grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=item['trigger_execution_id'],
                 review_base=review_base, review_head=trigger['references'].get('head') if trigger else None,
                 original_scope=store.review_scope(self.run))
@@ -818,7 +818,10 @@ class Engine:
             section = [label + ': ' + association + '.', 'Required commands: ' + canonical(required) + '.']
             if not required:
                 section.append('No required command is configured for this checkpoint.')
-            for command in required:
+            for configured in required:
+                # Match the executable value retained by verification.run_checks,
+                # including its supported command/argv object forms.
+                command = configured.get('command', configured.get('argv')) if isinstance(configured, dict) else configured
                 matching = [row for row in attempts if row['details'].get('command') == command]
                 if not matching:
                     section.append('GAP: no retained execution for required command ' + canonical(command) + '.')
@@ -1076,10 +1079,13 @@ class Engine:
                         retained = store.authorize_evidence_reassessment(
                             self.run, uuid.uuid4().hex, rejecting_execution_id=last['execution_id'], review_base=review_base,
                             review_head=head, diagnosis=diagnosis if isinstance(diagnosis, str) else '', evidence_digest=evidence_digest)
-                    self._review(recorder=recorder, review_base=review_base, head=head,
+                    _, reassessed, state = self._review(recorder=recorder, review_base=review_base, head=head,
                                  ordinal=last['review_ordinal'] + 1, fixing_round=last['fixing_round'],
                                  trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'],
                                  execution_id=retained['execution_id'])
+                    if state == 'rejected' and not reassessed['findings']:
+                        raise Blocked('evidence reassessment retains coverage gaps; investigate them before another explicit resume: ' +
+                                      canonical(reassessed['coverage_gaps']))
                     continue
                 ordinal, round_ = last['review_ordinal'], last['fixing_round'] + 1
                 if policy == 'historical-two-review-one-fixer' and ordinal != 1:
@@ -1128,7 +1134,7 @@ class Engine:
                 raise Blocked('fixing round remains incomplete or failed; commits retained')
             ordinal, round_ = last['review_ordinal'] + 1, last['fixing_round']
             reviewer_id = None
-            if policy == 'owner-pair-v1' and round_ > 1:
+            if policy == 'owner-pair-v1' and last['review_ordinal'] > 1:
                 grant = next((item for item in reversed(executions) if item['role'] == 'reviewer' and
                               item['execution_id'] == last['trigger_execution_id']), None)
                 if grant is None:

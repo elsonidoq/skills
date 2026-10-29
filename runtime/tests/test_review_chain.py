@@ -4,6 +4,7 @@ import io
 import json
 from unittest.mock import patch
 
+from coherence_workflow import cli
 from coherence_workflow.cli import status
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
@@ -170,6 +171,49 @@ class OwnerPairPrimitiveTests(ProjectTest):
 
 
 class EvidenceReassessmentStoreTests(ProjectTest):
+    def test_first_repair_after_reassessment_still_requires_exact_later_rejection_grant(self):
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('evidence', self.base, contract={'tasks': []}, executor=EXECUTOR,
+                        authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
+            store.review_dispatch('evidence', 'review-1', review_base=self.base, review_head=self.base)
+            store.review_outcome('evidence', 'review-1', 'rejected', findings=[], references={
+                'base': self.base, 'head': self.base, 'review_summary': {'coverage': [], 'coverage_gaps': ['evidence']}})
+            store.authorize_evidence_reassessment('evidence', 'review-2', rejecting_execution_id='review-1',
+                review_base=self.base, review_head=self.base, diagnosis='Inspect the retained command output.', evidence_digest='checks')
+            store.review_dispatch('evidence', 'review-2', review_ordinal=2, fixing_round=0, trigger_execution_id='review-1',
+                predecessor_execution_id='review-1', review_base=self.base, review_head=self.base)
+            store.review_outcome('evidence', 'review-2', 'rejected', findings=['owned.txt:1 - fixture defect'],
+                references={'base': self.base, 'head': self.base})
+            with self.assertRaisesRegex(Blocked, 'exact retained owner grant'):
+                store.review_dispatch('evidence', 'ungranted-fixer', role='fixer', review_ordinal=2, fixing_round=1,
+                    trigger_execution_id='review-2', predecessor_execution_id='review-2', review_base=self.base, review_head=self.base)
+            self.assertEqual(store.review_chain('evidence')['fixing_round_count'], 0)
+
+    def test_later_fixing_round_reassessment_needs_no_replacement_pair_grant(self):
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('pair', self.base, authority={'review_policy': 'owner-pair-v1'})
+            OwnerPairPrimitiveTests._rejection(self, store)
+            store.authorize_owner_pair('pair', 'grant', rejecting_execution_id='review-2', review_base=self.base,
+                review_head=self.base, original_scope=store.review_scope('pair'), fixer_execution_id='fix-2', reviewer_execution_id='review-3')
+            store.reserve_owner_pair_fixer('pair', 'grant', rejecting_execution_id='review-2', review_base=self.base,
+                review_head=self.base, original_scope=store.review_scope('pair'))
+            store.review_dispatch('pair', 'fix-2', role='fixer', review_ordinal=2, fixing_round=2,
+                trigger_execution_id='review-2', predecessor_execution_id='review-2', review_base=self.base, review_head=self.base)
+            store.review_outcome('pair', 'fix-2', 'approved', findings=[], references={'base': self.base, 'head': self.base})
+            store.reserve_owner_pair_reviewer('pair', 'grant', fixer_execution_id='fix-2')
+            store.review_dispatch('pair', 'review-3', review_ordinal=3, fixing_round=2, trigger_execution_id='fix-2',
+                predecessor_execution_id='fix-2', review_base=self.base, review_head=self.base)
+            store.review_outcome('pair', 'review-3', 'rejected', findings=[], references={
+                'base': self.base, 'head': self.base, 'review_summary': {'coverage': ['source'], 'coverage_gaps': ['evidence']}})
+            store.authorize_evidence_reassessment('pair', 'review-4', rejecting_execution_id='review-3',
+                review_base=self.base, review_head=self.base, diagnosis='Map retained check output to the checkpoint.', evidence_digest='checks')
+            store.review_dispatch('pair', 'review-4', review_ordinal=4, fixing_round=2, trigger_execution_id='review-3',
+                predecessor_execution_id='review-3', review_base=self.base, review_head=self.base)
+            self.assertEqual(store.review_chain('pair')['review_count'], 4)
+            self.assertEqual(store.db.execute("SELECT COUNT(*) FROM execution_history WHERE run_id='pair' AND kind='review_pair_grant'").fetchone()[0], 1)
+
     def test_unchanged_evidence_handoff_stops_before_reviewer_dispatch(self):
         with Authority(self.project) as owner:
             store = owner.store
@@ -180,11 +224,180 @@ class EvidenceReassessmentStoreTests(ProjectTest):
                 'base': self.base, 'head': self.base,
                 'review_summary': {'coverage': [], 'coverage_gaps': ['required evidence missing']},
                 'check_evidence_digest': 'same'})
-            with self.assertRaisesRegex(Blocked, 'unchanged handoff'):
-                store.authorize_evidence_reassessment('evidence', 'review-again', rejecting_execution_id='review-gap',
-                                                      review_base=self.base, review_head=self.base,
-                                                      diagnosis='', evidence_digest='same')
+            for diagnosis in ('', '  ', 'yes', 'unknown', 'retry'):
+                with self.subTest(diagnosis=diagnosis), self.assertRaisesRegex(Blocked, 'unchanged handoff'):
+                    store.authorize_evidence_reassessment('evidence', 'review-again', rejecting_execution_id='review-gap',
+                                                          review_base=self.base, review_head=self.base,
+                                                          diagnosis=diagnosis, evidence_digest='same')
             self.assertEqual(store.review_chain('evidence')['review_count'], 1)
+
+
+class RequiredCheckEvidenceTests(ProjectTest):
+    def test_actual_failed_and_missing_execution_remain_explicit_gaps(self):
+        from coherence_workflow.verification import CheckFailure, run_checks
+        task = {'id': 'task', 'description': 'evidence control', 'checks': [
+            {'command': 'printf PRIVATE-FAILED-$(printf OUTPUT); exit 7'}]}
+        self.project.joinpath('owned.txt').write_text('fixture\n')
+        git(self.project, 'add', '--', 'owned.txt')
+        git(self.project, 'commit', '-qm', 'isolated evidence checkpoint')
+        head = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        with Authority(self.project) as owner:
+            for run in ('failed-evidence', 'missing-evidence'):
+                owner.store.start(run, self.base, contract={'tasks': [task]}, executor=EXECUTOR,
+                                  authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
+                if run == 'failed-evidence':
+                    with self.assertRaises(CheckFailure):
+                        run_checks(self.project, task, completed=lambda state, attempt:
+                                   owner.store.history(run, 'task', 'check', state, attempt))
+                # A checkpoint is not itself evidence of a required check pass.
+                owner.store.history(run, 'task', 'checkpoint', 'passed',
+                                    {'sha': head, 'parent': self.base, 'paths': ['owned.txt']})
+                evidence = Engine(owner, run, {'tasks': [task]}, EXECUTOR)._review_check_evidence()
+                self.assertIn('verified checkpoint ' + head, evidence)
+                if run == 'failed-evidence':
+                    self.assertIn('Retained failed execution:', evidence)
+                    self.assertIn('exit 7, output "PRIVATE-FAILED-OUTPUT"', evidence)
+                    self.assertIn('GAP: required command has no retained passing execution', evidence)
+                else:
+                    self.assertIn('GAP: no retained execution', evidence)
+                    self.assertNotIn('Retained passed execution', evidence)
+                self.assertNotIn('PRIVATE-FAILED-OUTPUT', json.dumps(status(self.project, run)))
+
+
+class EvidenceReassessmentRecoveryTests(ProjectTest):
+    """Real disposable task/check/checkpoint execution with offline reviewer verdicts."""
+    gap = {'approved': False, 'findings': [], 'coverage': ['source inspected'],
+           'coverage_gaps': ['associate local executed checks with the checkpoint']}
+    approved = {'approved': True, 'findings': [], 'coverage': ['source inspected', 'local checks evaluated'],
+                'coverage_gaps': []}
+    actionable = {'approved': False, 'findings': ['owned.txt:1 - fixture behavior is incorrect'],
+                  'coverage': ['source inspected'], 'coverage_gaps': []}
+    diagnosis = 'The retained local command outputs establish acceptance at the verified checkpoint; no live API is required.'
+
+    def _start(self, verdicts):
+        test = self
+        self.verdicts, self.calls = list(verdicts), []
+        self.contract = admit({'review_base': self.base, 'tasks': [{
+            'id': 'task', 'description': 'local fixture', 'owned_paths': ['owned.txt'],
+            'checks': [{'command': 'test -f owned.txt && printf PRIVATE-CHECK-$(printf COMMAND)'},
+                       {'argv': ['/bin/sh', '-c', 'test -f owned.txt && printf PRIVATE-CHECK-$(printf ARGV)']}],
+        }]})
+        class Adapter:
+            def __init__(self, *_args, **_kwargs):
+                self.saved_session = {'id': 'local-session', 'file': '/private/local.jsonl'}
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    test.calls.append(('reviewer', prompt))
+                    return json.dumps(test.verdicts.pop(0))
+                repair = 'Actionable findings:' in prompt
+                test.calls.append(('fixer' if repair else 'worker', prompt))
+                kwargs['claim']('owned.txt')
+                test.project.joinpath('owned.txt').write_text('repaired\n' if repair else 'initial\n')
+                return 'local fixture completed'
+        self.adapter = Adapter
+        with Authority(self.project) as owner:
+            with self.assertRaisesRegex(Blocked, 'coverage gaps'):
+                Engine(owner, 'evidence-real', self.contract, EXECUTOR, adapter=Adapter,
+                       paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
+            self.checkpoints = owner.store.completed_checkpoints('evidence-real')
+        self.head = git(self.project, 'rev-parse', 'HEAD')
+
+    def _resume(self, diagnosis=None):
+        with Authority(self.project) as owner:
+            saved = owner.store.resume('evidence-real')['input']
+            return Engine(owner, 'evidence-real', saved['contract'], saved['executor'], adapter=self.adapter,
+                          paid_scope=saved['authority']['paid_scope'], resume=True,
+                          question=lambda *_args, **_kwargs: diagnosis or self.diagnosis).invoke()
+
+    def test_cli_resume_delivers_real_object_command_evidence_without_replay(self):
+        self._start([self.gap])
+        self.verdicts.append(self.approved)
+        output = io.StringIO()
+        with patch.object(cli, 'PiAdapter', self.adapter), patch.object(cli, 'attached_question',
+                return_value=lambda *_args, **_kwargs: self.diagnosis), contextlib.redirect_stdout(output):
+            self.assertEqual(cli.main(['resume', '--project', str(self.project), '--run', 'evidence-real']), 0)
+        self.assertEqual(json.loads(output.getvalue())['status'], 'complete')
+        self.assertEqual([role for role, _ in self.calls], ['worker', 'reviewer', 'reviewer'])
+        for _, prompt in self.calls[1:]:
+            self.assertIn('output "PRIVATE-CHECK-COMMAND"', prompt)
+            self.assertIn('output "PRIVATE-CHECK-ARGV"', prompt)
+            self.assertNotIn('GAP: no retained execution', prompt)
+            self.assertIn('verified checkpoint ' + self.head.decode().strip(), prompt)
+        prompt = self.calls[-1][1]
+        self.assertIn('Evidence reassessment:', prompt)
+        self.assertIn('source inspected', prompt)
+        self.assertIn('Original range: ' + self.base + '..' + self.head.decode().strip(), prompt)
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), self.head)
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.completed_checkpoints('evidence-real'), self.checkpoints)
+            chain = owner.store.review_chain('evidence-real')
+        self.assertEqual([item['state'] for item in chain['executions']], ['rejected', 'approved'])
+        self.assertEqual(chain['executions'][1]['predecessor_execution_id'], chain['executions'][0]['execution_id'])
+        safe = json.dumps(status(self.project, 'evidence-real'))
+        self.assertNotIn('PRIVATE-CHECK-COMMAND', safe)
+        self.assertNotIn(self.diagnosis, safe)
+
+    def test_remaining_gaps_stop_and_duplicate_basis_cannot_dispatch_after_reopen(self):
+        self._start([self.gap])
+        self.verdicts.append(self.gap)
+        with self.assertRaisesRegex(Blocked, 'reassessment retains coverage gaps'):
+            self._resume()
+        self.assertEqual(len(self.calls), 3)
+        with self.assertRaisesRegex(Blocked, 'unchanged handoff'):
+            self._resume()
+        self.assertEqual(len(self.calls), 3)
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), self.head)
+        self.verdicts.append(self.approved)
+        self.assertEqual(self._resume(self.diagnosis + ' Investigated the remaining command association.')['status'], 'complete')
+        self.assertEqual([role for role, _ in self.calls], ['worker', 'reviewer', 'reviewer', 'reviewer'])
+
+    def test_post_repair_gap_can_be_reassessed_without_another_fixer(self):
+        self._start([self.actionable, self.gap])
+        self.verdicts.append(self.approved)
+        self.assertEqual(self._resume()['status'], 'complete')
+        with Authority(self.project) as owner:
+            chain = owner.store.review_chain('evidence-real')
+        self.assertEqual([(item['role'], item['review_ordinal'], item['fixing_round']) for item in chain['executions']],
+                         [('reviewer', 1, 0), ('fixer', 1, 1), ('reviewer', 2, 1), ('reviewer', 3, 1)])
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), self.head)
+        self.assertEqual([role for role, _ in self.calls], ['worker', 'reviewer', 'fixer', 'reviewer', 'reviewer'])
+
+    def test_new_actionable_findings_retain_exact_pair_grant_and_following_reviewer(self):
+        self._start([self.gap])
+        with Authority(self.project) as owner:
+            owner.store.authorize_routine_review_continuation('evidence-real', owner.store.review_scope('evidence-real'))
+        self.verdicts.extend([self.actionable, self.approved])
+        self.assertEqual(self._resume()['status'], 'complete')
+        with Authority(self.project) as owner:
+            chain = owner.store.review_chain('evidence-real')
+            grants = list(owner.store.db.execute("SELECT details FROM execution_history WHERE run_id='evidence-real' AND kind='review_pair_grant'"))
+        self.assertEqual([(item['role'], item['review_ordinal'], item['fixing_round']) for item in chain['executions']],
+                         [('reviewer', 1, 0), ('reviewer', 2, 0), ('fixer', 2, 1), ('reviewer', 3, 1)])
+        self.assertEqual(len(grants), 1)
+        grant = json.loads(grants[0]['details'])
+        self.assertEqual(grant['rejecting_execution_id'], chain['executions'][1]['execution_id'])
+        self.assertEqual(grant['fixer_execution_id'], chain['executions'][2]['execution_id'])
+        self.assertEqual(grant['reviewer_execution_id'], chain['executions'][3]['execution_id'])
+
+    def test_target_drift_uncertainty_and_historical_policy_dispatch_no_reassessment(self):
+        self._start([self.gap])
+        git(self.project, 'commit', '--allow-empty', '-qm', 'isolated target drift')
+        with self.assertRaisesRegex(Blocked, 'target drifted'):
+            self._resume()
+        self.assertEqual(len(self.calls), 2)
+        with Authority(self.project) as owner:
+            store = owner.store
+            for run, authority, uncertainty in [('historical-gap', {}, False),
+                                                 ('uncertain-gap', {'review_policy': 'owner-pair-v1'}, True)]:
+                store.start(run, self.base, contract={'tasks': []}, executor=EXECUTOR, authority=authority, review_base=self.base)
+                store.review_dispatch(run, 'gap', review_base=self.base, review_head=self.base)
+                store.review_outcome(run, 'gap', 'rejected', findings=[], uncertainty=uncertainty, references={
+                    'base': self.base, 'head': self.base, 'review_summary': self.gap})
+                store.finish(run, 'failed', self.base)
+                store.resume(run)
+                with self.assertRaisesRegex(Blocked, 'uncertain|not an actionable rejection'):
+                    Engine(owner, run, {'tasks': []}, EXECUTOR, adapter=self.adapter, resume=True).invoke()
+        self.assertEqual(len(self.calls), 2)
 
 
 class ChainHistoryTests(ProjectTest):

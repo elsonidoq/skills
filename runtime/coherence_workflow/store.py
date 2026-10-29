@@ -286,7 +286,7 @@ class Store:
                     prior = facts.get('session')
                     if prior is not None:
                         prior = self._worker_session(prior, operation='retained worker dispatch')
-                    if prior_id in reservations:
+                    if prior_id in reservations and reservations[prior_id] != prior:
                         raise ValueError
                     reservations[prior_id] = prior
                 elif row['state'] == 'bound':
@@ -299,6 +299,23 @@ class Store:
             except (TypeError, ValueError, KeyError, Blocked) as exc:
                 raise Blocked('worker dispatch history is missing or uncertain for task ' + task +
                               '; inspect retained invocation history before continuation') from exc
+        # Existing invocation facts cannot silently become a new initial allowance when
+        # reservation history is absent. Starts and terminals describe the same call.
+        invocation_states = {}
+        for row in self.db.execute(
+                "SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? "
+                "AND kind='worker_invocation' ORDER BY seq", (run, task)):
+            try:
+                prior_id = json.loads(row['details'])['invocation_id']
+                if prior_id not in reservations:
+                    raise ValueError
+                invocation_states[prior_id] = row['state']
+            except (TypeError, ValueError, KeyError):
+                raise Blocked('worker dispatch history is missing for task ' + task +
+                              '; inspect retained invocation history before continuation') from None
+        if any(prior_id not in reservations for prior_id in bindings):
+            raise Blocked('worker dispatch binding lacks reservation for task ' + task +
+                          '; inspect retained invocation history before continuation')
         if invocation_id in reservations or invocation_id in bindings:
             raise Blocked('worker dispatch invocation is already reserved; inspect retained invocation history before continuation')
         if session is None:
@@ -316,6 +333,10 @@ class Store:
             if len(used) >= 3:
                 raise Blocked('worker dispatch allowance exhausted for task ' + task + ' session ' + selected['id'] +
                               ': used initial plus 2 further calls; inspect retained recovery or use an owner-authorized fresh context')
+        if any(invocation_states.get(prior_id) not in ('returned', 'failed', 'interrupted')
+               for prior_id in reservations):
+            raise Blocked('worker dispatch invocation history is missing or uncertain for task ' + task +
+                          '; inspect retained calls before continuation')
         details = canonical({'invocation_id': invocation_id, 'session': selected})
         def write():
             with self.transaction() as db:
@@ -756,8 +777,17 @@ class Store:
             raise Blocked('evidence reassessment needs an evidence/coverage-only settled rejection at its original range')
         prior_digest = rejection['references'].get('check_evidence_digest')
         changed_evidence = isinstance(prior_digest, str) and prior_digest != evidence_digest
-        if not diagnosis.strip() and not changed_evidence:
+        if (not diagnosis.strip() or diagnosis.strip().lower() in ('unknown', 'retry', 'yes')) and not changed_evidence:
             raise Blocked('evidence reassessment needs substantive targeted diagnosis or newly applicable retained evidence; unchanged handoff cannot dispatch review')
+        # A later explicit resume must improve the handoff, not repeat the basis
+        # that already produced this evidence-only rejection.
+        for row in self.db.execute("SELECT details FROM execution_history WHERE run_id=? "
+                                   "AND kind='evidence_reassessment' AND state='authorized'", (run,)):
+            prior = json.loads(row['details'])
+            if (prior.get('execution_id') == rejecting_execution_id and
+                    prior.get('evidence_digest') == evidence_digest and
+                    ' '.join(prior.get('diagnosis', '').split()) == ' '.join(diagnosis.split())):
+                raise Blocked('evidence reassessment has unchanged handoff; investigate outstanding gaps before another explicit resume')
         existing = self.evidence_reassessment_for_rejection(run, rejecting_execution_id,
                                                             review_base=review_base, review_head=review_head)
         facts = {'execution_id': execution_id, 'rejecting_execution_id': rejecting_execution_id,
@@ -823,8 +853,8 @@ class Store:
             raise Blocked('only the first reviewer may retain explicit selected input checkpoints')
         if not isinstance(review_ordinal, int) or review_ordinal < 1 or not isinstance(fixing_round, int) or fixing_round < 0:
             raise Blocked('review execution needs positive ordinal/round values')
-        if role == 'reviewer' and fixing_round != review_ordinal - 1 and not (
-                fixing_round == 0 and self.review_policy(run) == 'owner-pair-v1'):
+        if (role == 'reviewer' and self.review_policy(run) == 'historical-two-review-one-fixer'
+                and fixing_round != review_ordinal - 1):
             raise Blocked('review ordinal and fixing round are inconsistent')
         if role == 'fixer' and (fixing_round < 1 or fixing_round > review_ordinal):
             raise Blocked('fixer needs a positive assigned fixing round')
@@ -859,7 +889,7 @@ class Store:
                     raise Blocked('review dispatch has unsupported causal order/range; inspect the last settled stage')
                 if role == 'fixer' and not (last.get('findings') and last['findings'][-1]):
                     raise Blocked('fixer dispatch needs an actionable settled rejection; inspect review findings')
-                if fixing_round > 1:
+                if last['review_ordinal'] > 1 and not is_evidence_reassessment:
                     rejection_id = last['execution_id'] if role == 'fixer' else last['trigger_execution_id']
                     rejection = next((item for item in prior['executions'] if item['execution_id'] == rejection_id), None)
                     grant = self.owner_pair_for_rejection(run, rejecting_execution_id=rejection_id,
