@@ -447,7 +447,7 @@ class BoundedChainTests(ProjectTest):
         contract = admit({'review_base': self.base, 'tasks': [
             {'id': 'no-change', 'description': 'synthetic no-change'},
             {'id': 'task', 'description': 'synthetic', 'depends': ['no-change'], 'owned_paths': ['owned.txt'],
-             'checks': [['/bin/sh', '-c', 'test -f owned.txt']]}
+             'checks': [['/bin/sh', '-c', 'test -f owned.txt; printf REVIEW-OUTPUT-$(printf SENTINEL)']]}
         ]})
         with Authority(project) as owner:
             result = Engine(owner, 'repaired', contract, EXECUTOR, adapter=Adapter,
@@ -479,6 +479,13 @@ class BoundedChainTests(ProjectTest):
                       ', changed paths ["owned.txt"]', review_prompts[0])
         self.assertIn('repair ' + repair['execution_id'] + ': commit ' + repair_sha + ', parent ' + repair_parent +
                       ', changed paths ["owned.txt"]', review_prompts[1])
+        for prompt in review_prompts:
+            self.assertIn('Retained required-check evidence (private', prompt)
+            self.assertIn('REVIEW-OUTPUT-SENTINEL', prompt)
+            self.assertIn('verified checkpoint', prompt)
+            self.assertIn('read-only inability to rerun does not negate a valid retained pass', prompt)
+        self.assertNotIn('REVIEW-OUTPUT-SENTINEL', json.dumps(status(project, 'repaired')))
+        self.assertNotIn('REVIEW-OUTPUT-SENTINEL', json.dumps(observations))
 
         if any(row['phase'] == 'review' and row['kind'] == 'started' and
                'selected_input_checkpoints' in json.loads(row['facts']) for row in observations):

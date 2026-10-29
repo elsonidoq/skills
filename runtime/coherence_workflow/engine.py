@@ -775,6 +775,67 @@ class Engine:
             selected.append(value)
         return selected
 
+    def _review_check_evidence(self):
+        """Give reviewers private retained check facts, never inferred completion claims."""
+        rows = []
+        for row in self.authority.store.db.execute(
+                "SELECT seq,task_id,kind,state,details FROM execution_history WHERE run_id=? "
+                "AND kind IN ('check','fixer_check','checkpoint','fixer_checkpoint') ORDER BY seq", (self.run,)):
+            try:
+                details = json.loads(row['details'])
+            except (TypeError, ValueError):
+                details = None
+            rows.append({**dict(row), 'details': details})
+        tasks = {task['id']: task for task in self.contract['tasks']}
+        checkpoints = [row for row in rows if row['kind'] in ('checkpoint', 'fixer_checkpoint')
+                       and row['state'] == 'passed' and isinstance(row['details'], dict)]
+        sections = []
+        for checkpoint in checkpoints:
+            details, is_repair = checkpoint['details'], checkpoint['kind'] == 'fixer_checkpoint'
+            execution_id = details.get('execution_id') if is_repair else None
+            if is_repair:
+                label = 'repair ' + (execution_id if isinstance(execution_id, str) and execution_id else 'unknown')
+                required = [command for task in self.contract['tasks'] for command in commands(task)]
+                attempts = [row for row in rows if row['kind'] == 'fixer_check' and row['seq'] < checkpoint['seq']
+                            and isinstance(row['details'], dict) and row['details'].get('execution_id') == execution_id]
+            else:
+                task_id = checkpoint['task_id']
+                label = 'task ' + str(task_id)
+                required = commands(tasks[task_id]) if task_id in tasks else []
+                attempts = [row for row in rows if row['kind'] == 'check' and row['task_id'] == task_id
+                            and row['seq'] < checkpoint['seq'] and isinstance(row['details'], dict)]
+            sha, parent, paths = details.get('sha'), details.get('parent'), details.get('paths')
+            verified = isinstance(sha, str) and isinstance(parent, str) and isinstance(paths, list)
+            if verified:
+                try:
+                    verified = (git(self.authority.project, 'rev-parse', sha + '^').decode().strip() == parent and
+                                sorted(filter(None, git(self.authority.project, 'diff-tree', '--no-commit-id',
+                                    '--name-only', '-r', '-z', sha).decode().split('\0'))) == sorted(paths))
+                except Blocked:
+                    verified = False
+            association = ('verified checkpoint ' + str(sha) + ' (parent ' + str(parent) + ')' if verified else
+                           'checkpoint association is missing or cannot be verified; do not infer it from HEAD')
+            section = [label + ': ' + association + '.', 'Required commands: ' + canonical(required) + '.']
+            if not required:
+                section.append('No required command is configured for this checkpoint.')
+            for command in required:
+                matching = [row for row in attempts if row['details'].get('command') == command]
+                if not matching:
+                    section.append('GAP: no retained execution for required command ' + canonical(command) + '.')
+                    continue
+                for attempt in matching:
+                    fact = attempt['details']
+                    section.append('Retained ' + attempt['state'] + ' execution: command ' + canonical(fact.get('command')) +
+                                   ', exit ' + str(fact.get('exit_code')) + ', output ' + canonical(fact.get('output')) + '.')
+                if not any(attempt['state'] == 'passed' for attempt in matching):
+                    section.append('GAP: required command has no retained passing execution; a zero exit or clean tree is not substituted.')
+            sections.append('\n'.join(section))
+        if not sections:
+            return ('Retained required-check evidence (private): no completed task/repair checkpoint has usable retained '
+                    'check evidence; do not infer execution from worker text, clean tree, or exit status outside a retained attempt.')
+        return ('Retained required-check evidence (private; raw command output must not enter status/monitor projections):\n' +
+                '\n'.join('- ' + section.replace('\n', '\n  ') for section in sections))
+
     def _review_attribution(self, review_base, head):
         """Describe verified run checkpoints without assigning intervening commits to a task."""
         project = self.authority.project
@@ -893,8 +954,10 @@ class Engine:
                 'Put only nonblocking advice in suggestions; crashes, hangs, target/credential risks, and false-unavailable observations are blockers. Never approve when blockers exist.\n'
                 + review_context +
                 'Attribution below is integration context: do not reject unrelated context solely for task-path scope, and do not certify it as task delivery. Causal integration defects affecting the requested result remain blockers and must cite the interaction/accepted basis. Report independently unrelated defects with their ownership/repair limit; do not expand fixer authority.\n'
+                'Evaluate retained check evidence semantically: distinguish actual passing execution, failed or missing required execution, and an inability to rerun because you are read-only. Do not invent a live check; a read-only inability to rerun does not negate a valid retained pass.\n'
                 'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
-                '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head),
+                '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head) +
+                '\n' + self._review_check_evidence(),
                 read_only=True)
             value = self._review_value(text, require_coverage=True)
         except BaseException as exc:
