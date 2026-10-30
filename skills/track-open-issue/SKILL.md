@@ -1,20 +1,25 @@
 ---
 name: track-open-issue
-description: Use when verified unresolved work needs recording in the project's declared issue tracker.
+description: Use when verified unresolved work needs recording in its declared issue tracker.
 ---
 
 # Track Open Issue
 
-Record a verified unresolved-work candidate in the project's declared canonical owner.
-For a project cut over to GitHub, use the explicitly configured GitHub Issues repository. Do not modify product code, tests, generated assets, deployment state, or
+Record a verified unresolved-work candidate in the declared canonical owner. Coherence-specific
+skill or workflow problems from any working project belong in the suite's declared tracker;
+application-specific problems remain in the working project's declared tracker. Include useful
+available context to help reproduce and address a Coherence problem; missing reproduction details
+alone do not block filing, and do not construct a reproducer or run an evaluation for filing.
+If the problem origin is unclear, clarify or defer it. For a target cut over to GitHub, use its
+explicitly configured GitHub Issues repository. Do not modify product code, tests, generated assets, deployment state, or
 unrelated issues. A bare `#N` or `OI-N` is not an identity: report native issues as a
 repository-qualified `HOST/OWNER/REPO#N` and URL.
 
 ## Declared owner before cutover
 
-Read project instructions and routing before selecting a tracker. Preserve the existing declared local register until approved cutover. This is not a fallback for a GitHub capability failure and does not create a parallel tracker. Do not infer cutover from an installed skill, repository remote, or unfinished migration proof.
+Read the relevant project or suite instructions and routing before selecting a tracker. Preserve the existing declared local register until approved cutover. This is not a fallback for a GitHub capability failure and does not create a parallel tracker. Do not infer cutover from an installed skill, repository remote, or unfinished migration proof.
 
-If project routing still declares an existing local register, first perform the bounded investigation below, then read it and inspect open and closed entries for the same problem/evidence before adding or narrowly updating a candidate. Retain the verified observations/cause, hypotheses, primary evidence, resumption condition, uncertainty and established identifier/format; preserve unrelated entry bytes and history. Close or reopen only with recorded problem-specific evidence and authority. Re-read before editing, stop on concurrent changes, then read back the affected entry and use the focused task checkpoint below. A missing or conflicting declared owner is deferred with the candidate/evidence/resumption and a corrective ownership action, not permission to initialize another tracker. Return after this local operation; the remote instructions below apply only to a declared GitHub owner.
+If the selected owner's routing still declares an existing local register, first perform the bounded investigation below, then read it and inspect open and closed entries for the same problem/evidence before adding or narrowly updating a candidate. Retain the verified observations/cause, hypotheses, primary evidence, resumption condition, uncertainty and established identifier/format; preserve unrelated entry bytes and history. Close or reopen only with recorded problem-specific evidence and authority. Re-read before editing, stop on concurrent changes, then read back the affected entry and use the focused task checkpoint below. A missing or conflicting declared owner is deferred with the candidate/evidence/resumption and a corrective ownership action, not permission to initialize another tracker. Return after this local operation; the remote instructions below apply only to a declared GitHub owner.
 
 ## Investigate candidate, then resolve target
 
@@ -39,7 +44,7 @@ condition. Keep credentials, tokens, personal data, and sensitive payloads out o
 investigation record and body. Preserve the intended body and the independently read-back body
 for the later separate read-only quality review; creation/readback is not that review.
 
-Resolve `HOST`, `OWNER`, and `REPO` from current project instructions/configuration, then
+Resolve `HOST`, `OWNER`, and `REPO` from the selected owner's instructions/configuration, then
 confirm the same target from verified remote evidence. Do not infer a target from a bare
 number, an `origin` name alone, or another repository's issue URL. Missing or conflicting
 target evidence requires a concise question about that target only.
