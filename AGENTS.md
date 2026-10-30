@@ -1,5 +1,9 @@
 # Global Agent Instructions
 
+## Output Style — Owner Preference
+
+**I highly prefer output in ASD-STE100.**
+
 ## Purpose
 
 This repository contains global pi configuration, commands, and skills. Keep global assets portable across
