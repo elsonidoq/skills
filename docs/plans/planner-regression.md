@@ -1,5 +1,96 @@
 # Planner Regression Guide
 
+## Issue #37 — simplest-sufficient review effectiveness (2026-10-30)
+
+Owner approved bounded direct correction and fresh-process validation after the root-cause
+analysis and revised plan in the current conversation. This supersedes no historical approval
+or acceptance requirement. The review goal is the simplest specification and delivery approach
+that achieves the user's goals; tooling, operations and verification remain supporting means.
+
+### Diagnosis and correction
+
+[Issue #37](https://github.com/elsonidoq/skills/issues/37) records the incident. The exact
+reviewed Cerca specification is at commit `01e5f93ae08e536996237a502688b3fb5e3bda11`, path
+`specs/040-qdrant-public-integration/spec.md`, SHA-256
+`6d13c40c36c4837c54db0006f4bcff26486d1bf5ca709dd43214cdc719516a03`.
+Inspection recovered the original brief, report, parent dispatch and reviewer transcript,
+run `f5e7d4f0-6fc7-4d29-802f-e1afc6af3087`. Local temporary/session paths are provenance,
+not portable retained artifacts or dependencies of future reviews.
+
+Verified: the reviewer read the canonical contract containing ambiguity and overengineering
+instructions; this was not a missing-instruction dispatch. Several tool outputs were truncated,
+including the specification at line 137, with no subsequent retrieval of its missing tail,
+yet the report claimed complete specification intake. The old browser's exact-key/relevance
+requirement was visible in source inspection, but the report missed its rejection of the new
+14-key response. The supervisor initially relied on the zero-findings result; only later
+inspection raised that transition. No deployed failure was tested.
+
+This establishes incomplete intake, a missed consumer consequence and insufficient initial
+supervisor evaluation. It does not establish the reviewer's internal reasoning or prove that
+truncation caused the already-visible compatibility miss. Coverage-confirmation dominance
+remains a hypothesis; the other three questioned passages are not established defects.
+
+The canonical specification-review prompt now operationalizes simplicity, consumer transitions,
+truncated-evidence recovery/limitations and concise evidence-supported conclusions for coverage,
+clarity and simplicity. Planner supervisor evaluation checks those conclusions. Both final
+review paths explicitly apply the same simplest-sufficient goal to source and tasks, and to the
+plan in Standard. No new stage, checklist owner, quota, report matrix or automatic review loop.
+
+### Fresh-process behavioral observations
+
+Two separate Pi 1.4.0 JSON-mode processes ran sequentially with fresh in-memory sessions,
+`--no-session --no-extensions --no-mcp --no-prompt-templates --no-skills`, explicit
+`--skill /home/dev/projects/skills/skills/planner`, `--tools read`, and
+`--provider openai-codex --model gpt-6.1-sol --thinking medium`. The absolute skill path is
+this validation invocation, not portable workflow configuration. JSON events confirmed the
+actual provider/model/effort, changed guidance reads, read-only tool calls, normal final stops,
+non-aborted settlement and exit 0. No reload/restart of the Paseo parent was needed.
+
+The briefs requested review of self-contained synthetic examples, not expected findings.
+The specification process read the changed planner and canonical prompt from disk:
+- A: old exact-15-key browser, new 14-key server and new-browser-only rollback acceptance.
+  Found the old-browser/new-server gap and recommended a bounded coexistence policy.
+- B: requested ID/total/currency CSV, but exactly two specified columns plus a mandatory
+  registry/queue/dashboard/daily-reconciliation prerequisite despite adequate synchronous helpers.
+  Found missing currency and excluded machinery; recommended removing machinery rather than adding safeguards.
+- C: all three columns through existing tenant-authorized query/download helpers, unchanged
+  listing API, defined empty/error behavior and focused route/screen checks. Returned zero findings.
+
+The final-planning process read the changed planner plus task-generation, early-risk and
+parsimony guidance. P/Q were TinySpec source/tasks; R/S were Standard spec/plan/tasks:
+- P: simple CSV source, but tasks introduced a registry/queue/dashboard and operator gate.
+  Found scope expansion and recommended removing its task/dependency rather than making it a product.
+- Q: one bounded existing-helper CSV route/screen outcome with focused checks/docs. Zero findings.
+- R: simple source, but derived plan/tasks introduced plugin framework, coordination database and
+  reconciliation-history readiness linter. Found expansion and false blocking; recommended their removal.
+- S: existing-helper plan and one bounded delivery task, focused checks/docs and simple rollback.
+  Zero findings. Neither clean case generated speculative extra tasks or weakened tenant/auth checks.
+
+Each material finding cited passages, consequences and smallest corrections. Temporary inputs/events
+are under `/tmp/issue37-review-pzc3oO/` in the originating environment, not guaranteed retained.
+Changed planner/prompt hashes during both exercises were respectively
+`b8846e562b6f6d45361f9fcc2de9a8d1ca19daad172836b0dbadb48581729df6` and
+`632acea01a0e1c3f35a6bc515be4aacea79d3041eaacf075a1ac63d655d1ef45`.
+These observations demonstrate the supplied cases, not general reliability, causal improvement
+against a baseline model run, full planning-stage orchestration or actual truncated-read recovery.
+They neither review/approve the Cerca product spec nor establish deployed behavior.
+
+### Offline checks and known baseline failure
+
+`python3 scripts/check-planner-workflow.py`: PASS. `python3 scripts/test-planner-workflow.py`:
+PASS, 175 tests (baseline 174). The added mutation test checks operative source/final-review
+carriers and evidence limitations; it is instruction sensitivity, not behavioral proof.
+`git diff --check`: PASS. A third fresh read-only Pi process independently reviewed the
+five-file patch, behavioral inputs/prompts/reports and audit extracts: zero material findings,
+verdict ready. It did not rerun tests or inspect complete event streams/original incident artifacts;
+those limits do not extend its passing coverage beyond the actual patch and supplied examples.
+
+An additional `python3 skills/task-generation/scripts/test_contract.py` observation failed with
+three stale text assertions: `without unfinished downstream work`, `milestones disguised as tasks`
+and newline-sensitive `not a generic path/dependency-closure` wording. Running the unchanged suite
+against a disposable archive of baseline `d96aa5a422d8b0116607af616a4e0504b0d7bda2` reproduced all
+three failures. No task-generation source/tests were changed or waived by this correction.
+
 ## Independent Spec Review — current owner disposition (2026-10-23)
 
 The owner explicitly removed the planned live A–D evaluation from this delivery's

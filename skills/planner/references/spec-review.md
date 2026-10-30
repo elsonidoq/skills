@@ -11,6 +11,12 @@ ranked by importance, with no numerical discovery cap. Group findings into meani
 areas when useful; exclude duplicates and trivia rather than padding the report.
 The coordinator controls presentation size, not reviewer discovery.
 
+The goal is the simplest specification that achieves the user's goals while preserving
+necessary safety and required acceptance. Tooling, operations and verification are supporting
+means, not independent products. For substantial mechanisms, prerequisites and gates, check
+their basis in a user requirement, actual constraint or concrete material risk. Recommend
+removal or simplification when that basis is absent; prefer existing mechanisms where sufficient.
+
 For each ranked finding, cite the relevant user-intent evidence (request or actual owner
 answer), the affected specification section, the concrete consequence, and a correction or
 owner question. Do not turn an evident omission/distortion into an unnecessary owner decision.
@@ -32,6 +38,23 @@ For a finding needing an owner decision, state a concrete scenario; reasonable d
 assumptions or behaviors; their consequences; and a specific question, preferably with
 meaningful alternatives. Ask only about unresolved decisions: exclude questions already answered
 by supplied context, implementation questions, and generic questions.
+
+## Apply the review to consequences
+
+Follow changed interfaces through their actual consumers, including coexistence and rollback
+when relevant. New-consumer backward compatibility does not establish that existing consumers
+can accept a new producer's output. Identify the affected behavior and smallest sufficient
+transition policy; do not invent a migration framework.
+
+Read the required source and relevant supporting evidence. If a tool response is truncated,
+retrieve the missing relevant content with smaller reads; a matching hash establishes identity,
+not complete intake. If required evidence remains unavailable, state what is unreviewed and
+which conclusions it limits rather than claiming a complete review or unqualified zero findings.
+
+Briefly explain the evidence supporting coverage, downstream clarity and simplicity conclusions,
+including when returning zero findings. A coverage table or blanket assurance alone does not
+establish all three. Keep this reasoning in the existing report, without a separate matrix,
+checklist or findings quota; preserve justified zero findings.
 
 ## Definition of done and intent alignment
 

@@ -349,6 +349,16 @@ def check_contracts(texts):
             "Neither path may progress beyond specification review\nwith unresolved material intent gaps",
             "cannot release reliance", "not a new tracker", "No automatic rereview loop",
             "additional approval gate")
+    require("review-evaluation", shared,
+            "coverage, downstream clarity and simplicity", "Inspect reported evidence limitations",
+            "targeted completion", "not an automatic second review or new gate")
+    require("simplest-review", section(p, "## Proportionate validation"),
+            "simplest sufficient specification and delivery", "achieves the user's goals",
+            "supporting means, not independent products", "TinySpec source and tasks",
+            "Standard specification, plan and tasks", "task fragmentation",
+            "removal or simplification", "do not weaken required acceptance")
+    require("tiny-simplest-review", tiny,
+            "with the shared simplest-sufficient goal")
     tiny_review = re.search(r"\*\*Specification review .*?(?=\n\d+\. \*\*Tasks)", tiny, re.S)
     require("tiny-spec-review", tiny_review.group() if tiny_review else "",
             "independent saved reviewer assignment", "tinyspec-spec-review",
@@ -370,7 +380,15 @@ def check_contracts(texts):
             "necessary derived choices", "revisitable assumptions", "**zero findings**",
             "no numerical discovery cap", "original user request and actual owner clarifications/decisions",
             "Exclude producer conclusions", "not approval", "no writes, implementation changes")
+    require("review-consequences", prompt,
+            "simplest specification that achieves the user's goals", "supporting\nmeans, not independent products",
+            "removal or simplification", "actual consumers, including coexistence and rollback",
+            "retrieve the missing relevant content with smaller reads", "not complete intake",
+            "state what is unreviewed", "evidence supporting coverage, downstream clarity and simplicity",
+            "without a separate matrix", "preserve justified zero findings")
     std = section(p, "### Standard path")
+    require("standard-simplest-review", stage(std, "overall_review"),
+            "with the shared simplest-sufficient goal")
     positions = [std.find(f"**`{s}`") for s in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review")]
     if -1 in positions or positions != sorted(positions):
         errors.append("standard-order: missing/reordered operational stages")

@@ -2571,6 +2571,48 @@ class IntentSpecificationReviewTests(unittest.TestCase):
                     changed[key] = replace_clause(texts[key], clause)
                     self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
 
+    def test_simplest_sufficient_review_and_evidence_mutations(self):
+        """Instruction-carrier sensitivity only; live exercises are documented separately."""
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for key, heading, clauses, diagnostic in (
+            ("planner", "## Proportionate validation", (
+                "simplest sufficient specification and delivery",
+                "supporting means, not independent products",
+                "TinySpec source and tasks", "Standard specification, plan and tasks",
+                "removal or simplification", "do not weaken required acceptance",
+            ), "simplest-review:"),
+            ("planner", "### Shared specification-review contract", (
+                "coverage, downstream clarity and simplicity",
+                "Inspect reported evidence limitations", "targeted completion",
+                "not an automatic second review or new gate",
+            ), "review-evaluation:"),
+            ("spec_review_prompt", "# Independent specification review", (
+                "simplest specification that achieves the user's goals",
+                "supporting\nmeans, not independent products", "removal or simplification",
+                "actual consumers, including coexistence and rollback",
+                "retrieve the missing relevant content with smaller reads",
+                "not complete intake", "state what is unreviewed",
+                "evidence supporting coverage, downstream clarity and simplicity",
+                "without a separate matrix", "preserve justified zero findings",
+            ), "review-consequences:"),
+            ("planner", "### TinySpec path", (
+                "with the shared simplest-sufficient goal",
+            ), "tiny-simplest-review:"),
+            ("planner", "### Standard path", (
+                "with the shared simplest-sufficient goal",
+            ), "standard-simplest-review:"),
+        ):
+            carrier = checker.section(texts[key], heading)
+            for clause in clauses:
+                with self.subTest(key=key, heading=heading, clause=clause):
+                    changed = dict(texts)
+                    changed[key] = texts[key].replace(carrier, replace_clause(carrier, clause), 1)
+                    # A summary outside the operational section must not mask its removal.
+                    if key == "planner":
+                        changed[key] += "\n## Inert summary\n" + clause
+                    self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
+
     def test_tinyspec_review_resolves_owner_shared_binding_and_missing_operation_stops(self):
         assignments = load("intent_assignments", "../skills/planner/scripts/model_assignments.py")
         actual = json.loads((ROOT / "skills/planner/references/model-assignments.json").read_text())

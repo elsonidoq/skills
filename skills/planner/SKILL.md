@@ -90,6 +90,14 @@ failures before replacement and stop on unknown cause, never blind-retry.
 
 ## Proportionate validation
 
+At specification and final planning review, seek the simplest sufficient specification and delivery
+approach that achieves the user's goals while preserving necessary safety and required acceptance.
+Tooling, operations and verification are supporting means, not independent products. At final review,
+apply this to TinySpec source and tasks, or Standard specification, plan and tasks: challenge avoidable
+architecture, operational subsystems, bookkeeping, task fragmentation and disproportionate checks.
+Recommend removal or simplification of additions without a requirement, actual constraint or concrete
+material risk as their basis; do not weaken required acceptance or silently change approved scope.
+
 Apply [early risk reduction](references/early-risk-reduction.md); missing packaging stops with a
 missing-install report. Select executable proof only for consequential uncertainty with inexpensive
 leverage; known bounded behavior uses permanent actual-helper tests or an earlier verified step in
@@ -275,7 +283,11 @@ Verify the saved exact binding is permitted and callable with async delegation, 
 profile. Dispatch with `async: true`, bind the report to the invocation and compare source content before
 and after review. No writes, implementation, external action, or delegation. The reviewer returns ranked
 findings or explicit zero; it neither edits nor approves.
-Parent evaluates evidence/dispositions, resolves evident defects without unnecessary owner questions,
+Parent evaluates evidence/dispositions, including whether coverage, downstream clarity and simplicity
+conclusions are supported rather than merely asserted. Inspect reported evidence limitations before
+relying on zero findings; an unchanged hash is not proof of complete intake. Request targeted completion
+of a material review gap through the existing reviewer context, not an automatic second review or new gate.
+Parent resolves evident defects without unnecessary owner questions,
 and returns corrections to the source producer under its saved producing assignment. Material decisions
 go to the owner via one focused `ask_user` at a time. Parent inspects producer corrections against intent
 and findings. Neither path may progress beyond specification review with unresolved material intent gaps.
@@ -308,7 +320,7 @@ in existing session/report context, not a new tracker. No automatic rereview loo
    validation and current content evidence. Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable instructions. Review risk selection/omission, actual evidence and gates,
    necessary producer/consumer dependencies, reuse/retention, production acceptance and task boundaries.
-   Apply the shared task-boundary and execution-risk review above.
+   Apply the shared task-boundary and execution-risk review above, with the shared simplest-sufficient goal.
    Source carries needs; tasks carry independently necessary outcomes. Apply the dependency evidence/permission
    review above before combined approval. No additional independent task-planning reviewer is required.
 5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`; approve current
@@ -383,7 +395,8 @@ verification stops. Do not reopen valid principles.
    across artifacts; report affected passage, impact and smallest sufficient correction. Do not manufacture findings
    from style preferences or silently expand acceptance. Review risk selection/omission, actual evidence and gates,
    necessary producer/consumer dependencies, reuse/retention, production acceptance and task boundaries in direct
-   Standard and managed/helper plans. Apply the shared task-boundary and execution-risk review above.
+   Standard and managed/helper plans. Apply the shared task-boundary and execution-risk review above,
+   with the shared simplest-sufficient goal.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record. Apply the dependency evidence/permission
    review above, including direct Standard pass and helper-managed/standalone contract coverage.
