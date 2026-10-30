@@ -201,9 +201,34 @@ Owner confirmed #38 and selected TinySpec → Tasks → Implement. This authoriz
 preparation and focused artifact commits, not implementation. Fresh independent source review
 `143af97f-6c86-40df-9b22-8790855e4a15` reported zero material findings; the parent inspected
 its source/report and unchanged source identity. No separate pre-task source approval is
-required. Combined content/authority approval and task review remain pending. No implementation,
-proof execution, live scenario, historical restart, acceptance or implementation-readiness claim
-is made. This section is the existing owner for subsequent parent approval persistence.
+required. Parent task review passed: source-to-task A1–A5 coverage, two independently
+verifiable outcomes, T002 → T001 dependency, scoped ownership, real gates and neutral
+instructions were inspected. Both dependency validators, actual CLI intake and scoped
+whitespace checks passed. Implementation checks are not yet run.
+
+The owner then asked: “will you add the case to reproduce, reproduce it, implement and
+then confirm it fixed it?” The parent committed to adding and retaining a small regression
+case, confirming reproduction on the previous version, implementing the fix, and running
+the same case again; non-reproduction must be reported rather than called a proven fix.
+The owner replied: “ok, I approve”. This approves the current TinySpec and T001/T002
+contracts at `50af8dbac276bf7d34e6120b9044f09fbc134273`, with that explicit before/after
+acceptance direction, and authorizes immediate coordinator preflight and sequential
+implementation using the selected executor below. The retained case belongs in the
+existing task-owned tests, not a new evaluation framework. Original scope, REQUIRED
+checks, permission boundaries, independent final review and historical-run exclusions
+remain unchanged. No implementation success, live model-obedience proof or historical-run
+recovery is claimed by this approval.
+
+Approved executable JSON SHA256:
+`ceeb2a2a59ecc480222b055c41377616ba5e56c5dc252daf15322583d74137fc`.
+Approved Markdown task contract: all content above `## Approval record` at that revision;
+this section records approval evidence, not a change to executable task instructions.
+Selected executor:
+`/home/dev/.paseo/worktrees/0zfm1a0e/lethal-hippo/.pi/workflow-executor.json`.
+Source review report is retained at `/tmp/skills-38-spec-review-report.md`, bound to the
+invocation above; runtime/session evidence, not a new maintained report. Task-specific
+prerequisites above must be consumed before affected worker reliance, including the
+fixture ignore boundary and the unverified Python dependency mismatch.
 
 Source identity: SHA256 `d963e6ab17094a78dc682d66f86614fdba43aaea5612b307ca4e05cf608d6ae8`.
 Task-production baseline: `17a1077c09fa7686f886d4387e083d7d98c6d127`.
