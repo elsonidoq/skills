@@ -1101,11 +1101,20 @@ class Engine:
                     if not isinstance(head, str) or not head:
                         raise Blocked('evidence-only review target drifted: missing reviewed head; inspect retained review before reassessment')
                     if current != head:
-                        row = store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
-                        try:
-                            facts = json.loads(row['details']) if row else None
-                        except (TypeError, ValueError):
-                            facts = None
+                        # A resume with no new artifact reports not_created, not a
+                        # new finalization attempt. It cannot erase earlier commit
+                        # facts. Any other outcome still takes precedence, including
+                        # failed, malformed or conflicting not_created records.
+                        for row in store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC", (self.run,)):
+                            try:
+                                facts = json.loads(row['details'])
+                            except (TypeError, ValueError):
+                                facts = None
+                            if row['state'] == 'not_created' and facts == {'status': 'not_created'}:
+                                continue
+                            break
+                        else:
+                            row, facts = None, None
                         path = artifact_relative(self.run)
                         mismatch = None
                         if not isinstance(facts, dict):
