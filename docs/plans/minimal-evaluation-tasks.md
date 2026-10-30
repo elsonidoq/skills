@@ -202,18 +202,30 @@ resource isolation, live routing/GitHub behavior and stochastic reliability rema
 
 ## Approval record
 
-Owner selected TinySpec and authorized retained task preparation/validation/focused checkpoint
-only. The old combined plan was not approved. Targeted independent review of the corrected
-source returned zero findings at the hash above, retaining prior passing coverage; source-only
-approval is not required. Renewed planning review and **combined current-content owner approval
-are pending**. That gate must explicitly cover corrected A1–A6 source + both task artifacts, the exact
-AGENTS/constitution operative texts, rationale, version/date handling and affected-owner check
-above. The exact operative policy proposals, rationale and version/date handling are unchanged
-by this task refresh. This proposal does not enact an amendment. Implementation (including the
-issue-skill change), evaluations-directory creation, policy mutation and real model evaluations
-remain separately unauthorized by the current
-planning-only boundary. A later implementation launch must carry its actual current scoped
-authority, not treat this historical preparation status as an independent task blocker (ADR-0003).
+Owner selected TinySpec. The earlier two-task proposal was not approved; the owner added
+Coherence-only issue reporting from any project, then explicitly narrowed that addition to
+one short reproduction-context instruction in the existing skill.
 
-Task-production verification and focused checkpoint identities are returned in the producer
-report; none of the future T001–T003 acceptance above is claimed completed here.
+After independent source review (zero findings), targeted independent correction review
+(zero findings), and parent task review, the owner answered registered `ask_user`:
+**“Approve planning-only handoff”** for the revised three-task plan. Approval covers source
+A1–A6, T001 → T002 → T003, and the exact AGENTS/constitution proposals, rationale, 4.3.0
+version/date handling and affected-owner check above. Approved content is recoverable at
+commit `29c6d61b9ac464c5cc752815c65d8e9165d3dc8f`:
+
+- Source SHA256: `2a1418c1044551bce3d46d447cfa30bb25b5759eb5ab614eb6deb7ac340c9df2`.
+- Tasks Markdown SHA256 before this approval-record update:
+  `78c68f2816192372de1b421266160fc3ff15c934f5104f383441a2443f2de643`.
+- Tasks JSON SHA256: `6ba9724dc5f4ed65554c5020bba2c391a7f26caa5656521c036c57216381bea9`.
+
+Parent verification: JSON and Markdown dependency validators passed; planning diff whitespace
+checks passed; source/task mapping, scope, ownership, exact policy preservation and evidence
+limits were inspected. This update records approval only; executable work, policy proposals,
+acceptance and dependencies remain unchanged from the approved commit.
+
+Approval finalizes a **planning-only handoff**. It does not enact the constitutional amendment
+or authorize implementation, evaluations-directory creation, skill/policy mutation, issue
+creation or live evaluation. No future T001–T003 acceptance is claimed completed. A later
+implementation launch requires actual current scoped authority and the selected executor path
+above; historical planning-only status must not independently block a later authorized launch
+(ADR-0003). No coordinator launch follows this approval.
