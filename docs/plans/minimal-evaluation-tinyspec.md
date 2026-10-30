@@ -13,15 +13,23 @@ The existing issue lifecycle remains: encounter a problem during use → fork th
 file a GitHub issue with context → later select/group issues → derive a minimal repro →
 evaluate previous behavior → fix → evaluate candidate → retain useful cases. Evaluation is
 not a prerequisite for initially filing an issue. This capability supports that later work.
+The owner's substantive correction also requires `/skill:track-open-issue` to capture
+Coherence failures from any working project with useful reproduction context. The owner
+explicitly clarified: cross-project routing applies **only to Coherence problems**;
+application-specific bugs remain in the current project's declared tracker. This supersedes
+the earlier docs-only scope, not the empty-collection or evaluation requirements.
 
 ## Settled approach and bounds
 
-Use a convention-first, documentation-only MVP. `evaluations/README.md` will be the single
-operational owner for adding and selectively running future issue-derived cases. A README-only
+Use a convention-first evaluation MVP plus one narrow existing issue-skill correction.
+`evaluations/README.md` will be the single operational owner for adding and selectively
+running future issue-derived cases. A README-only
 collection is empty even though Git cannot retain an empty directory. No new runner or skill
 is justified. Add only discovery links in README's Validation section and `docs/index.md`,
 the repository-local DoD in `AGENTS.md`, and the narrow constitutional reconciliation below.
-Do not turn these links into duplicate procedures or alter reusable global workflows.
+Also add a short instruction to `skills/track-open-issue/SKILL.md` for useful available
+Coherence reproduction context and the settled target intent below. Do not turn links into
+duplicate procedures or rewrite other reusable global workflows.
 
 A future case needs only its issue/context link, tiny relevant input, invocation prerequisites,
 and independently stated expected behavior. Plain files and prose suffice; no schema,
@@ -58,6 +66,39 @@ Keep inspectable Pi output/logs and a brief interpretation in ordinary issue/PR 
 with commands and actual results. No ledger or reporting service; no credentials or sensitive
 session payloads. Report tokens only if readily available from existing output; no new cost
 instrumentation. Select cases deliberately; never automatically run the full collection.
+
+## Small Coherence issue-context instruction
+
+The latest owner clarification requires only a **short extra instruction** in the existing
+[issue skill](../../skills/track-open-issue/SKILL.md): report Coherence-specific skill/workflow
+problems to the suite's declared tracker, from whichever project is being worked on, retaining
+relevant **available** information that helps Coherence reproduce and address the issue.
+Application-specific problems remain in the current project's declared tracker. Reuse existing
+declared-target/capability/authority mechanisms; do not hardcode this repository or machine paths
+into the reusable skill, implement routing machinery or add installed-source discovery plumbing.
+This repository declares `github.com/elsonidoq/skills` in [AGENTS](../../AGENTS.md),
+[docs routing](../index.md) and [requirements](../../REQUIREMENTS.md#github-unresolved-work-tracking).
+If problem origin or target is genuinely unclear, use the existing focused clarification/defer
+behavior, not a classifier or routine extra question.
+
+Useful available context can include intended versus observed behavior, triggering skill/stage,
+input/steps, relevant prior decisions, versions/revisions/model/effort/settings, redacted session
+excerpts/reference and actual outputs/errors. Summarize what matters, not a mandatory-field
+checklist or metadata format. Missing repro/session details must not block filing; do not build
+a reproducer, require transcript upload, run an evaluation or manufacture facts at filing.
+Preserve uncertainty and the skill's existing observations/cause/hypotheses distinction. Never
+publish secrets, personal data or sensitive application/session payloads to the suite tracker.
+Retain explicit host/read capability, scoped write authority, overlap discovery, independent
+readback, separate quality review and no persistent local fallback. Read access is not write
+consent; no automatic GitHub operation is added. Later resolution, not filing, produces useful
+evaluation cases; the new behavioral collection remains empty.
+
+The existing [focused script](../../scripts/test-track-open-issue.py) checks instruction clauses
+and simulated issue operations, not live behavior. Manual read-through plus that existing check
+is sufficient for this small wording addition; do not invent tests, fixtures or a harness solely
+for it. Packaging inspection found installer-managed source symlinks ([installer](../../scripts/install.sh),
+[link helper](../../scripts/install-links.py)); this is background evidence, not a new discovery
+requirement or implementation surface. No packaging change is justified by the narrowed request.
 
 ## Verified dependency guidance and practical invocation
 
@@ -137,8 +178,8 @@ convention/policy adjustment.
 ## Acceptance and smallest sufficient verification
 
 - **A1 — Empty, discoverable capability:** Read-only file/diff inspection shows one canonical
-  evaluation README, only necessary discovery links/local policy alignment, and zero retained
-  behavioral cases added by this change. Historical tests/evidence are preserved. Empty means
+  evaluation README, necessary discovery links/local policy alignment plus the bounded existing
+  issue-skill instruction, and zero retained behavioral cases added by this change. Historical tests/evidence are preserved. Empty means
   no evaluation results and no correctness claim, not absence of old fixtures elsewhere.
 - **A2 — Useful future-case convention:** Manual review can follow how to select an actual
   issue, add tiny input/independent expectations, choose the smallest seam, load explicit
@@ -157,10 +198,19 @@ convention/policy adjustment.
   report actual failures/unavailability without bypass. No runner, infrastructure, behavioral
   fixtures, real evaluation, global workflow rewrite or historical evidence migration is added.
   Independent review checks omissions **and unnecessary machinery**, plus ADR constraints below.
+- **A6 — Small useful issue instruction:** Manual read-through confirms a short existing-skill
+  addition preserves Coherence-only suite-tracker intent from any project, application-local
+  routing, useful available repro context, redaction and all existing remote/authority/review
+  gates. Missing details do not prevent filing; no mandatory checklist, reproducer construction,
+  routing/discovery plumbing or automatic operation is introduced. Run the existing focused
+  `python3 scripts/test-track-open-issue.py`; do not add tests solely for this wording. Static
+  checks/manual inspection prove instruction coverage only, not live routing/GitHub behavior.
 
 No executable prototype or disposable smoke is needed: the chosen deliverable documents a
-known inspected interface, introduces no helper, and deliberately has no real case yet. Static
-and manual checks validate the delivered convention only. A later actual issue supplies the
+known inspected interface, introduces no helper, and deliberately has no real case yet. The
+issue-skill change uses focused existing static contract checks and manual routing/context review;
+no live proof is authorized or needed to claim instruction coverage. Static and manual checks
+validate the convention and instruction change only. A later actual issue supplies the
 first meaningful comparison; no artificial retained regression is justified to demonstrate
 an empty collection. If a consequential undocumented CLI uncertainty arises, stop affected
 reliance and ask before a materially more complex alternative or separately authorized live
@@ -187,7 +237,10 @@ a once-per-version observation is bounded evidence, not statistical assurance.
 This source creates no implementation tasks. Fresh independent read-only intent review precedes
 separate task production, planner review and combined approval. Later task production consumes
 `/home/dev/.paseo/worktrees/0zfm1a0e/joyous-manatee/.pi/workflow-executor.json` directly; this source
-does not choose implementation models. Carry A1–A5 into task-local REQUIRED evidence/briefs,
+does not choose implementation models. Carry A1–A6 into task-local REQUIRED evidence/briefs,
 with A4's exact-amendment approval gate before policy mutation. There is no technical prototype
 producer/consumer prerequisite or hidden live-evaluation dependency. Implementation and real
-issue evaluation remain separate from this bounded source-production checkpoint.
+issue evaluation remain separate from this bounded source-production checkpoint. The old
+combined plan was not approved; this substantive correction requires affected independent source
+review and separate task refresh before renewed planner review/combined owner approval. Existing
+exact policy proposals are not approved by this correction.
