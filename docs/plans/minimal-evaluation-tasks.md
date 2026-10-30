@@ -3,7 +3,7 @@
 ## Source and execution context
 
 Direct TinySpec adapter; [source](minimal-evaluation-tinyspec.md) is requirements truth,
-SHA256 `8c0b766a6313bc530f1fc1022643dad177e59d712924aca284c36bd6158c44a3`.
+SHA256 `2a1418c1044551bce3d46d447cfa30bb25b5759eb5ab614eb6deb7ac340c9df2`.
 No Standard plan, SpecKit or downstream SDD input. The executable [task list](minimal-evaluation-tasks.json)
 carries task-local REQUIRED checks; the entries below are the concise worker/reviewer brief.
 
@@ -11,13 +11,15 @@ The producer read the selected executor at exactly
 `/home/dev/.paseo/worktrees/0zfm1a0e/joyous-manatee/.pi/workflow-executor.json`:
 worker `openai-codex/gpt-6.1-terra`, effort `medium`; reviewer
 `openai-codex/gpt-6.1-sol`, effort `medium`. Pass that path unchanged to downstream
-handoffs. The task-producer binding does not assign implementation models. Two bounded
-outcomes separate the operational convention from its approval-gated local policy consumer;
-the convention is verifiable without unfinished policy work.
+handoffs. The task-producer binding does not assign implementation models. Three bounded
+outcomes separate the convention, its approval-gated local policy consumer and the small
+existing issue-skill instruction. T001 → T002 → T003 applies the approved fixture-rule
+reconciliation before the shared instruction changes; each outcome is verifiable without
+unfinished downstream work.
 
 ## Shared worker/reviewer brief
 
-Use the source's settled bounds, invocation and A1–A5, not copied historical task policy.
+Use the corrected source's settled bounds, invocation and A1–A6, not copied historical task policy.
 The initial new collection is **README-only and empty**: no behavioral cases/results,
 including synthetic, artificial or historical imports. Preserve existing static fixtures,
 history, checks and evidence elsewhere. Evaluation begins at later issue resolution, never
@@ -27,7 +29,7 @@ statistical assurance or proof of general correctness.
 [ADR-0003](../decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md) and
 [ADR-0004](../decisions/ADR-0004-shared-routine-worker-permissions.md) remain accepted,
 with no superseding record in the [whole decision index](../decisions/index.md).
-Their operative mappings are T001/V4 and T002/V2: current scoped authority in worker briefs,
+Their operative mappings are T001/V4, T002/V2 and T003/V2: current scoped authority in worker briefs,
 neutral executable instructions, phase status only in the approval record; routine bounded
 local checks/ordinary fixes need no repeated permission. Preserve paid-scope, credentials,
 external writes/deployment/push, unrelated-data and no-blind-expensive-retry gates.
@@ -36,9 +38,11 @@ technical decisions/material product-or-scope escalation and non-notifying routi
 no gotchas are recorded. No memory/STATE writes or new ADR.
 
 No runner, smoke-helper generalization, generic judge, framework, schema, registry/validator,
-dashboard, orchestration/config layer, cost instrumentation, global skill rollout, automatic
-repetition or full-collection obligation. No installs, GitHub writes, live model calls or
-smoke runs are part of these deliveries. Human/manual documentation checks are valid evidence.
+dashboard, orchestration/config layer, cost instrumentation, cross-project rollout, automatic
+repetition or full-collection obligation. The only reusable skill change is T003's short
+instruction: no routing/discovery plumbing, classifier, mandatory repro checklist, packaging
+changes or new tests. No installs, GitHub writes, live model calls or smoke runs are part of
+these deliveries. Human/manual instruction checks are valid evidence.
 
 ## Delivery tasks
 
@@ -88,11 +92,38 @@ smoke runs are part of these deliveries. Human/manual documentation checks are v
     behavioral run, and no waiver of failing relevant existing checks/security/permissions.
     Record actual amendment date and retained ratification date.
   - **REQUIRED T002/V2 — A1/A5/ADRs/memory**: Perform the affected-owner check below; inspect the
-    complete two-task diff for exclusions and historical preservation, run the JSON's existing
+    completed T001/T002 diff for exclusions and historical preservation, run the JSON's existing
     focused static-consumer check and owned-diff check. Verify the worker brief carries current
     scoped authority, neutral instructions, autonomous bounded local checks/ordinary fixes and
     the retained external/paid/credential/data/retry gates. No repeated routine approval, new
     policy distribution mechanism or fixture retrofit. Report actual results and static limits.
+
+- [ ] T003 Add the short Coherence issue-context instruction
+  - **Depends**: T002
+  - **Owned paths**: `skills/track-open-issue/SKILL.md` only.
+  - **Outcome**: Add a short instruction in the existing skill: Coherence-specific problems
+    from any working project use the suite's declared tracker and useful available repro
+    information; application problems stay in the current project's declared tracker. Reuse
+    existing target verification/clarification and permissions, without fixed repository/path,
+    routing engineering, installed-source discovery, a classifier or mandatory fields. Missing
+    details do not block filing; no reproducer/evaluation at filing or automatic GitHub action.
+  - **REQUIRED T003/V1 — A6**: Before editing, inspect T002's applied approved clause and its
+    verification; do not bypass the current fixture mandate. Manual read-through of the full
+    skill confirms the short addition coherently qualifies current-project target wording,
+    preserves Coherence-only suite intent/application-local routing and useful available
+    context (not a checklist), redaction, uncertainty/observations/cause distinctions and
+    missing-info nonblocking behavior. Existing explicit-host/read capability, declared-target
+    verification, scoped write authority, overlap discovery, independent readback, separate
+    quality review and no persistent fallback stay intact. Unclear origin/target uses existing
+    focused clarification/defer behavior. No routing or packaging mechanism is added.
+  - **REQUIRED T003/V2 — A1/A5/ADRs/memory**: Run the JSON's unchanged focused issue check,
+    single-skill lint and owned-diff check; add no tests/fixtures for wording. Inspect the full
+    three-task diff for empty collection, unchanged exact policy scope and retained gates.
+    Carry the shared current-authority/neutral-instruction and autonomous scoped-local-check
+    brief, preserving actual external/paid/credential/data/retry boundaries. Prepare the
+    ordinary fresh-session handoff for changed reusable guidance in Paseo: verify checkout,
+    revision, current approval and loaded capabilities there; no reload, restart or install.
+    Report static/manual instruction coverage only, never live routing/GitHub proof.
 
 ## Exact operative proposals for T002
 
@@ -148,8 +179,8 @@ these owned paths do not authorize editing other contracts/templates.
 
 ## Evidence selection and limits
 
-No prototype, new tests or live smoke: this documents a known inspected CLI and introduces
-no helper or real case. Reuse [README Validation](../../README.md#validation-and-documentation),
+No prototype, new tests or live smoke: this documents a known inspected CLI and adds only
+a small instruction to an existing skill; no helper or real case. Reuse [README Validation](../../README.md#validation-and-documentation),
 [static controls](../../scripts/check-skills-lint.sh) and the source's installed Pi 1.4.0
 CLI/skills/configuration evidence. [Issue #37 observations](planner-regression.md#issue-37--simplest-sufficient-review-effectiveness-2026-10-30)
 remain historical noncausal examples, never seed cases. No new internet/dependency research
@@ -158,24 +189,31 @@ compatibility; consequential undocumented behavior blocks only that claim, not u
 
 The JSON stores deterministic commands once in executable `required[].check` fields; prose
 checks are manual semantics, not shell. T002's existing active-consumer check protects current
-routing, not evaluation correctness. No whole skill suite is warranted for these documentation
-seams; retain applicable existing checks rather than inventing new fixture machinery. Independent
-final review covers the full delivered range, omissions and unnecessary additions at the existing
-review boundary, not a third implementation task. Static/manual results establish documentation
-acceptance only; future real-case usefulness, isolation in an actual run and stochastic reliability
-remain unproven.
+routing, not evaluation correctness. T003 reuses the unchanged
+[focused issue check](../../scripts/test-track-open-issue.py) and single-skill lint; its simulated
+issue operations do not prove live behavior. The current skill has project-local target wording,
+so manually inspect the complete resulting instruction for a coherent Coherence-only exception,
+not merely an appended contradiction. T002 is the policy predecessor, not a new proof process.
+No whole skill suite is warranted for these seams; preserve existing checks, add no tests solely
+for wording. Independent final review covers the full delivered range, omissions and unnecessary
+additions at the existing review boundary, not a separate implementation task. Static/manual
+results establish documentation/instruction coverage only; future real-case usefulness, actual
+resource isolation, live routing/GitHub behavior and stochastic reliability remain unproven.
 
 ## Approval record
 
 Owner selected TinySpec and authorized retained task preparation/validation/focused checkpoint
-only. Initial source review returned zero findings with the source hash above unchanged;
-source-only approval is not required. Planning review and **combined current-content owner
-approval are pending**. That gate must explicitly cover source + both task artifacts, the exact
+only. The old combined plan was not approved. Targeted independent review of the corrected
+source returned zero findings at the hash above, retaining prior passing coverage; source-only
+approval is not required. Renewed planning review and **combined current-content owner approval
+are pending**. That gate must explicitly cover corrected A1–A6 source + both task artifacts, the exact
 AGENTS/constitution operative texts, rationale, version/date handling and affected-owner check
-above. This proposal does not enact an amendment. Implementation, evaluations-directory creation,
-policy mutation and real model evaluations remain separately unauthorized by the current
+above. The exact operative policy proposals, rationale and version/date handling are unchanged
+by this task refresh. This proposal does not enact an amendment. Implementation (including the
+issue-skill change), evaluations-directory creation, policy mutation and real model evaluations
+remain separately unauthorized by the current
 planning-only boundary. A later implementation launch must carry its actual current scoped
 authority, not treat this historical preparation status as an independent task blocker (ADR-0003).
 
 Task-production verification and focused checkpoint identities are returned in the producer
-report; none of the future T001/T002 acceptance above is claimed completed here.
+report; none of the future T001–T003 acceptance above is claimed completed here.
