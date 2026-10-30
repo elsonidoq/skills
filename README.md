@@ -250,7 +250,8 @@ After changing global assets in Paseo, prepare a fresh-session handoff instead o
 Run `scripts/check-skills-lint.sh` for deterministic suite checks. See the
 [planner regression guide](docs/plans/planner-regression.md) for trace fixtures, mutations,
 read-only RPC smoke testing, full behavioral scenarios and evidence limitations. Static tests
-are not proof of model obedience; live tests require separate authorization.
+are not proof of model obedience; live tests require separate authorization. See the
+[issue-derived evaluation convention](evaluations/README.md) for later selective comparisons.
 
 Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
 describes current behavior; one project-local memory index carries verified non-obvious

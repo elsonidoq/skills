@@ -13,6 +13,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Global repository policy and portability constraints | [AGENTS.md](../AGENTS.md) |
 | Project development principles and constitution amendments | [Project Constitution](../.specify/memory/constitution.md) |
 | A skill's operational contract | Its `skills/<name>/SKILL.md`; shared brainstorming and task semantics belong to the shared owners linked below |
+| Issue-derived evaluation convention | [Evaluations README](../evaluations/README.md) |
 | Planning depth assessment principles | [Spec-driven-development guidance](best_practices_spec_driven_development.md); planner assesses and the owner chooses |
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
 | Verified unresolved bug, risk or investigation | [GitHub Issues](https://github.com/elsonidoq/skills/issues), explicit target `github.com/elsonidoq/skills`, via `track-open-issue`; [original Markdown](open_issues.md) is history only |
