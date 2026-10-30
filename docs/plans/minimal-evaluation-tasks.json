@@ -1,0 +1,59 @@
+[
+  {
+    "id": "T001",
+    "outcome": "Deliver the README-only empty evaluation convention in evaluations/README.md and only discovery links in README.md Validation and docs/index.md. Read docs/plans/minimal-evaluation-tasks.md shared worker/reviewer brief and T001, and docs/plans/minimal-evaluation-tinyspec.md as requirements truth. Reuse its verified Pi 1.4.0 invocation, static-check and historical owners unchanged. Describe later issue-derived cases and smallest-seam once-previous/once-candidate comparisons, not evaluation at issue filing. Exclude policy mutation, case/result files, synthetic/artificial/historical imports, live model calls/smoke, installs, GitHub writes, new tests/helpers/runners/frameworks/registries/judges/configuration/cost instrumentation and global rollout. Preserve existing fixtures/history. Keep local validation and ordinary fixes inside this outcome; independent final review is the existing release boundary, not a new task.",
+    "depends": [],
+    "owned_paths": ["evaluations/README.md", "README.md", "docs/index.md"],
+    "required": [
+      {
+        "id": "T001/V1",
+        "source": "docs/plans/minimal-evaluation-tinyspec.md A1,A5",
+        "pass": "Manual complete owned-diff and collection inspection finds only evaluations/README.md in the new collection, zero behavioral cases/results, necessary resolved discovery links, no new machinery/correctness claim, and unchanged historical tests/fixtures/evidence.",
+        "evidence": "Collection listing, changed paths and manually checked link destinations; empty means no behavioral evidence."
+      },
+      {
+        "id": "T001/V2",
+        "source": "docs/plans/minimal-evaluation-tinyspec.md A2 and Verified dependency guidance and practical invocation",
+        "pass": "Manual walkthrough of the documented future issue-derived steps identifies tiny input, prerequisites, independent frozen expectations outside result output before candidate inspection, smallest meaningful seam, and one run per explicit previous/candidate revision with same model/effort/relevant environment; no case or run is created to perform this documentation review. Actual documented invocation agrees with installed applicable Pi CLI/skills/configuration docs: explicit skill loading and disabled discovery, separate fresh equivalent workspaces/outputs, every supporting resource from its own revision, shared input outside both resource trees, no answer-revealing expectations in prompts, checked settings/system additions and cross-checkout contamination limits. Explain output/completion inspection, guidance-under-test handling, credentials protection and read-only isolation not being a security sandbox; dialogs/writes/full workflows use actual suitable tools/gates, not a universal adapter.",
+        "evidence": "Reviewed README spans and installed-doc/version comparison; recheck installed guidance if Pi version changed. No live run or resource-isolation proof is claimed."
+      },
+      {
+        "id": "T001/V3",
+        "source": "docs/plans/minimal-evaluation-tinyspec.md A3",
+        "pass": "Manual read finds fail/pass improvement, fail/fail remains, pass/pass cannot reproduce, pass/fail possible regression; errors/aborts/incomplete/missing prerequisites are separate from behavioral outcomes. No forced retries or automatic whole collection; changed expectations are disclosed and old comparisons invalidated. Deterministic/human judgment and LLM only when truly needed; ordinary issue/PR commands, inspectable outputs and interpretation without sensitive payloads; token stats only readily available. Useful real cases are retained only after later issue work.",
+        "evidence": "Reviewed comparison/evidence sections, not merely exit status or simulated results."
+      },
+      {
+        "id": "T001/V4",
+        "source": "docs/plans/minimal-evaluation-tinyspec.md A5 and Constraints, deferrals and handoff; docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md; memory/MEMORY.md",
+        "pass": "Owned diff has no whitespace errors; changed links resolve and documentation matches inspected CLI rather than claiming model obedience. Worker/reviewer brief retains current scoped authority, neutral executable instructions/status only in approval records, autonomous bounded local checks/ordinary fixes and material product/scope escalation. No bypass of failures/unavailable evidence or live-model permission inferred from ADRs.",
+        "evidence": "Actual check output, link/doc inspection and operative authority/permission mapping in brief.",
+        "permission": "Routine bounded local checks/ordinary scoped fixes need no repeated approval. Preserve actual manual/constitutional gates, paid-scope, credential/security, external-write/deployment/push, unrelated-data and global-install exclusions; inspect expensive failures before any retry. No live evaluation, installs or GitHub writes.",
+        "check": "git diff --check -- evaluations/README.md README.md docs/index.md"
+      }
+    ]
+  },
+  {
+    "id": "T002",
+    "outcome": "Align repository-local DoD and the narrow constitution clause using T001's delivered operational README. Read docs/plans/minimal-evaluation-tasks.md shared brief, T002 and Exact operative proposals, and the TinySpec source A4/A5. Before policy mutation, verify the approval record contains explicit current-content owner approval for those exact AGENTS/constitution texts, rationale, proposed 4.3.0 MINOR version/date handling and affected-owner check. Add the approved AGENTS block outside managed fragments with a link to evaluations/README.md; replace only the approved Development Workflow sentence, update version/actual Last Amended date while preserving Ratified and historical notes, and record the approved concise amendment rationale/reference. Perform the affected-owner compatibility check without changing other contracts/templates. Preserve applicable existing checks/security/permissions; no mandatory new fixtures, evaluation at issue filing, full behavioral-suite obligation or silent waiver of failing relevant checks. Exclude reusable global policy rollout, new ADR/memory/STATE, live models, installs, GitHub writes and unrelated policy edits.",
+    "depends": ["T001"],
+    "owned_paths": ["AGENTS.md", ".specify/memory/constitution.md"],
+    "required": [
+      {
+        "id": "T002/V1",
+        "source": "docs/plans/minimal-evaluation-tinyspec.md A4; docs/plans/minimal-evaluation-tasks.md Exact operative proposals for T002 and Approval record",
+        "pass": "Exact operative content/rationale/version-date/affected-owner approval is established before mutation. Manual final-text comparison against approved proposals (Markdown wrapping/discovery-link markup excepted) and composed read of AGENTS + constitution + delivered evaluation README show meaningful proportionate evidence or brief impractical/expensive/low-value justification is sufficient without new-fixture ceremony, evaluation-at-filing or automatic whole behavioral collection; applicable existing checks/security/permissions remain, failing relevant existing checks cannot be skipped. Last Amended reflects actual application date, Ratified/history preserved.",
+        "evidence": "Actual current-content approval reference, compared operative spans and amendment identity/date; absent/conflicting approval stops this policy mutation, not unrelated safe work.",
+        "permission": "Explicit constitutional exact-text approval is a genuine action-specific gate; routine local review/fixes require no repeated owner approval. Source/proposal conflicts return to owner, never silently amend source."
+      },
+      {
+        "id": "T002/V2",
+        "source": "docs/plans/minimal-evaluation-tinyspec.md A1,A5 and Constraints, deferrals and handoff; docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md; docs/decisions/ADR-0004-shared-routine-worker-permissions.md; memory/MEMORY.md",
+        "pass": "Affected-owner check in the human task document records compatibility or concrete conflict; material conflict returns before scope expansion. Complete two-task diff preserves empty new collection/history/exclusions and shared contracts/templates. Existing focused static-consumer and owned-diff checks pass or honestly report failure/unavailability. Worker/reviewer brief maps current scoped authority and neutral instructions, autonomous bounded local technical checks/fixes, material scope/product escalation and actual paid/credential/external/unrelated-data/no-blind-expensive-retry gates. No fresh fixtures, global rollout or implementation/model-obedience acceptance is inferred from static checks.",
+        "evidence": "Affected-owner comparison, complete diff/link and brief inspection, actual command output and limits; fresh independent final review of delivered range through existing workflow.",
+        "permission": "ADR-0003/0004 do not grant paid/live work, installs or GitHub writes. Preserve exact-text constitutional approval and all actual safety/manual/external/data gates; ordinary scoped local checks/fixes need no repeated approval.",
+        "check": "PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/check-planner-workflow.py --active-consumers && git diff --check -- AGENTS.md .specify/memory/constitution.md"
+      }
+    ]
+  }
+]
