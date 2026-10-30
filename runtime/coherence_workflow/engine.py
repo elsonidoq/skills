@@ -8,7 +8,7 @@ import re
 import stat
 import uuid
 
-from .git_effects import FocusedGit, MetricArtifactFinalizer, path_has_preexisting_changes
+from .git_effects import FocusedGit, MetricArtifactFinalizer, _commit_result, path_has_preexisting_changes
 from .metric_artifacts import (MetricArtifactError, artifact_relative, create_artifact,
                                read_artifact, summarize_artifact)
 from .metrics import interval_record
@@ -1098,15 +1098,39 @@ class Engine:
                         raise Blocked('independent review was not an actionable rejection (commits retained); inspect findings and examine remaining coverage gaps before a new review: ' + canonical(review))
                     head = last['references'].get('head')
                     current = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-                    if not isinstance(head, str) or current != head:
-                        raise Blocked('evidence-only review target drifted; reconcile the original reviewed head before reassessment')
+                    if not isinstance(head, str) or not head:
+                        raise Blocked('evidence-only review target drifted: missing reviewed head; inspect retained review before reassessment')
+                    if current != head:
+                        row = store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
+                        try:
+                            facts = json.loads(row['details']) if row else None
+                        except (TypeError, ValueError):
+                            facts = None
+                        path = artifact_relative(self.run)
+                        mismatch = None
+                        if not isinstance(facts, dict):
+                            mismatch = 'missing or invalid finalizer facts'
+                        elif row['state'] not in ('committed', 'committed_after_reported_error') or facts.get('status') != row['state']:
+                            mismatch = 'finalizer status'
+                        else:
+                            for key, expected in (('no_change', False), ('sha', current), ('parent', head), ('path', path)):
+                                if (facts.get(key) is not False if key == 'no_change' else facts.get(key) != expected):
+                                    mismatch = key
+                                    break
+                        if mismatch:
+                            raise Blocked('evidence-only review target drifted: retained same-run metrics ' + mismatch + ' mismatch; inspect finalizer history and reconcile the reviewed target before reassessment')
+                        try:
+                            _commit_result(self.authority.project, current, head, path)
+                        except Blocked as exc:
+                            raise Blocked('evidence-only review target drifted: actual metrics commit facts mismatch; inspect the commit and reconcile the reviewed target before reassessment: ' + str(exc)) from exc
                     evidence_digest = self._review_evidence_digest()
                     retained = store.evidence_reassessment_for_rejection(
                         self.run, last['execution_id'], review_base=review_base, review_head=head)
                     if retained is None:
                         try:
                             diagnosis = self.question(
-                                'As coordinator, inspect the settled evidence/coverage-only review rejection and retained check evidence. '
+                                'As coordinator, inspect the settled evidence/coverage-only review rejection, retained worker returns and check evidence. '
+                                'Diagnose routine technical gaps autonomously and use supported explicit continuation; do not ask the owner to debug or for renewed consent solely because files changed. Preserve material scope, paid/external, security/data, manual and uncertain-authority gates. '
                                 'Supply a substantive targeted diagnosis for the outstanding gaps, or leave empty only when newly applicable retained evidence changed. '
                                 'Do not request a fixer, replay task work, or invent approval. Retained review: ' + canonical({
                                     'execution_id': last['execution_id'], 'coverage_gaps': review['coverage_gaps'],

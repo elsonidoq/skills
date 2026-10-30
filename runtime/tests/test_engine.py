@@ -213,7 +213,8 @@ class SequentialExecutionTests(ProjectTest):
                             {'id': 'B', 'description': 'B', 'depends': ['A']}]), EXECUTOR,
                             adapter=ExplicitReturn, question=lambda prompt: answers.append(prompt) or 'answered').invoke()
                 self.assertEqual(len([entry for entry in calls if not entry[1]]), 1)
-                self.assertIn('Continue unfinished authorized implementation, unrun worker-owned semantic/manual acceptance, and correctable failures', calls[0][0])
+                self.assertIn('Work autonomously until the assigned implementation and worker-owned acceptance are complete', calls[0][0])
+                self.assertIn('Unfinished implementation, unrun checks, task complexity, and correctable or intermittent test failures are reasons to continue working', calls[0][0])
                 self.assertIn('genuine inability to progress, cancellation, or execution failure prevents worker-owned acceptance', calls[0][0])
                 self.assertIn('unmet acceptance never becomes success', calls[0][0])
                 if label == 'incomplete':
@@ -338,7 +339,8 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
                             self.assertFalse(any(row['kind'] in ('fixer_checks', 'fixer_checkpoint') for row in history))
                     calls = [json.loads(line) for line in dispatches.read_text().splitlines()]
                     self.assertEqual([call['read_only'] for call in calls], [False, True, False])
-                    self.assertIn('Continue unfinished authorized implementation, unrun worker-owned semantic/manual acceptance, and correctable failures', calls[-1]['prompt'])
+                    self.assertIn('Work autonomously until the assigned implementation and worker-owned acceptance are complete', calls[-1]['prompt'])
+                    self.assertIn('Unfinished implementation, unrun checks, task complexity, and correctable or intermittent test failures are reasons to continue working', calls[-1]['prompt'])
                     self.assertIn('genuine inability to progress, cancellation, or execution failure prevents worker-owned acceptance', calls[-1]['prompt'])
                     self.assertIn('unmet acceptance never becomes success', calls[-1]['prompt'])
                     self.assertEqual((self.project / name).exists(), partial)

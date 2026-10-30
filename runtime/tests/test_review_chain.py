@@ -2,12 +2,14 @@
 import contextlib
 import io
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 from coherence_workflow import cli
 from coherence_workflow.cli import status
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
+from coherence_workflow.metric_artifacts import artifact_relative
 from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
@@ -334,11 +336,154 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
         self.head = git(self.project, 'rev-parse', 'HEAD')
 
     def _resume(self, diagnosis=None):
+        self.questions = []
+        def question(prompt, **_kwargs):
+            self.questions.append(prompt)
+            return diagnosis or self.diagnosis
         with Authority(self.project) as owner:
             saved = owner.store.resume('evidence-real')['input']
             return Engine(owner, 'evidence-real', saved['contract'], saved['executor'], adapter=self.adapter,
-                          paid_scope=saved['authority']['paid_scope'], resume=True,
-                          question=lambda *_args, **_kwargs: diagnosis or self.diagnosis).invoke()
+                          paid_scope=saved['authority']['paid_scope'], resume=True, question=question).invoke()
+
+    def test_operating_contracts_describe_exact_metrics_exception(self):
+        root = Path(__file__).resolve().parents[2]
+        guide = (root / 'docs/coordinate-implementation.md').read_text()
+        schema = (root / 'docs/coordinate-implementation-schema.md').read_text()
+        skill = (root / 'skills/coordinate-implementation/SKILL.md').read_text()
+        self.assertIn('Git must verify its single parent and exact changed path', guide)
+        self.assertIn('completion records the reviewed application SHA, not the metrics HEAD', guide)
+        self.assertIn('`committed_after_reported_error`', schema)
+        self.assertIn('actual Git must verify the single parent and exact changed path', schema)
+        self.assertIn('Mismatches stop dispatch for inspection', skill)
+        self.assertIn('private completed-task worker-reported returns', skill)
+        self.assertIn('manual/paid/security/data/external gate', skill)
+
+    def test_real_failure_metrics_commit_then_explicit_reassessment(self):
+        # Frozen fixture: one task, two passing local checks, one gap then approval.
+        self.write('.gitignore', '.coherence/workflow/\n')
+        git(self.project, 'add', '--', '.gitignore')
+        git(self.project, 'commit', '-qm', 'track metrics')
+        self.base = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        self._start([self.gap])
+        metrics_head = self.head.decode().strip()
+        with Authority(self.project) as owner:
+            rows = list(owner.store.db.execute("SELECT kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq", ('evidence-real',)))
+            metric = [json.loads(r['details']) for r in rows if r['kind'] == 'metric_artifact'][-1]
+            chain = owner.store.review_chain('evidence-real')
+        app_head = chain['executions'][0]['references']['head']
+        self.assertEqual(metric['status'], 'committed')
+        self.assertEqual(metric['path'], artifact_relative('evidence-real'))
+        self.assertEqual((metric['sha'], metric['parent'], metric['no_change']), (metrics_head, app_head, False))
+        self.assertTrue(any(r['kind'] == 'invocation' and r['state'] == 'failed' for r in rows))
+        self.assertEqual(git(self.project, 'rev-list', '--parents', '-n', '1', metrics_head).decode().split(), [metrics_head, app_head])
+        self.assertEqual(git(self.project, 'diff-tree', '--no-commit-id', '--name-only', '-r', metrics_head).decode().splitlines(), [metric['path']])
+        self.verdicts.append(self.approved)
+        result = self._resume()
+        self.assertEqual(result['sha'], app_head)
+        self.assertEqual(len(self.questions), 1)
+        for phrase in ('retained worker returns', 'do not ask the owner to debug', 'solely because files changed', 'manual and uncertain-authority gates'):
+            self.assertIn(phrase, self.questions[0])
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), metrics_head)
+        self.assertEqual([role for role, _ in self.calls], ['worker', 'reviewer', 'reviewer'])
+        for _, prompt in self.calls[1:]:
+            self.assertIn('PRIVATE-WORKER-RETURN: local fixture completed', prompt)
+            self.assertIn('result checkpoint ' + app_head, prompt)
+        self.assertIn('Original range: ' + self.base + '..' + app_head, self.calls[-1][1])
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.completed_checkpoints('evidence-real'), self.checkpoints)
+            chain = owner.store.review_chain('evidence-real')
+            run = owner.store.db.execute("SELECT state,result FROM execution_runs WHERE run_id=?", ('evidence-real',)).fetchone()
+            after = list(owner.store.db.execute("SELECT kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq", ('evidence-real',)))
+        self.assertEqual((run['state'], run['result']), ('complete', app_head))
+        self.assertEqual([item['state'] for item in chain['executions']], ['rejected', 'approved'])
+        self.assertEqual(chain['executions'][0]['references']['review_summary']['coverage'], self.gap['coverage'])
+        self.assertEqual(chain['executions'][0]['references']['review_summary']['coverage_gaps'], self.gap['coverage_gaps'])
+        self.assertEqual(chain['executions'][1]['predecessor_execution_id'], chain['executions'][0]['execution_id'])
+        self.assertEqual([(r['kind'], r['state'], r['details']) for r in after[:len(rows)]], [(r['kind'], r['state'], r['details']) for r in rows])
+        self.assertTrue(any(r['kind'] == 'check' for r in rows))
+
+    def test_metrics_finalizer_facts_must_match_and_reported_error_success_is_verified(self):
+        self.write('.gitignore', '.coherence/workflow/\n')
+        git(self.project, 'add', '--', '.gitignore')
+        git(self.project, 'commit', '-qm', 'track metrics')
+        self.base = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        self._start([self.gap])
+        self.write('other.txt', 'unrelated staged\n')
+        git(self.project, 'add', '--', 'other.txt')
+        self.write('other.txt', 'unrelated working\n')
+        staged = git(self.project, 'show', ':other.txt')
+        with Authority(self.project) as owner:
+            row = owner.store.db.execute("SELECT seq,state,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC LIMIT 1", ('evidence-real',)).fetchone()
+            seq, original = row['seq'], json.loads(row['details'])
+        cases = [None, {}, {**original, 'status': 'failed'}, {**original, 'no_change': True},
+                 {**original, 'sha': self.base}, {**original, 'parent': self.base},
+                 {**original, 'path': '.coherence/metrics/other.jsonl'},
+                 {**original, 'status': 'no_content'}]
+        with patch.object(Engine, '_finalize_metric_artifact', return_value=None):
+            for facts in cases:
+                with self.subTest(facts=facts):
+                    with Authority(self.project) as owner:
+                        owner.store.db.execute('UPDATE execution_history SET state=?, details=? WHERE seq=?',
+                                               ('committed', json.dumps(facts), seq))
+                        owner.store.db.commit()
+                    with self.assertRaisesRegex(Blocked, 'target drifted'):
+                        self._resume()
+                    self.assertEqual(len(self.calls), 2)
+            with Authority(self.project) as owner:
+                facts = {**original, 'status': 'committed_after_reported_error'}
+                owner.store.db.execute('UPDATE execution_history SET state=?, details=? WHERE seq=?',
+                                       (facts['status'], json.dumps(facts), seq))
+                owner.store.db.commit()
+            self.verdicts.append(self.approved)
+            # Keep normal successful result while suppressing only finalization in earlier failures.
+        result = self._resume()
+        self.assertEqual(result['sha'], original['parent'])
+        self.assertEqual(git(self.project, 'show', ':other.txt'), staged)
+        self.assertEqual(self.project.joinpath('other.txt').read_text(), 'unrelated working\n')
+
+    def test_actual_extra_path_metrics_commit_is_rejected_before_dispatch(self):
+        self.write('.gitignore', '.coherence/workflow/\n')
+        git(self.project, 'add', '--', '.gitignore')
+        git(self.project, 'commit', '-qm', 'track metrics')
+        self.base = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        self._start([self.gap])
+        self.write('other.txt', 'additional change\n')
+        git(self.project, 'add', '--', 'other.txt')
+        git(self.project, 'commit', '--amend', '--no-edit', '-q')
+        new_head = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        with Authority(self.project) as owner:
+            row = owner.store.db.execute("SELECT seq,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC LIMIT 1", ('evidence-real',)).fetchone()
+            facts = json.loads(row['details'])
+            facts['sha'] = new_head
+            owner.store.db.execute('UPDATE execution_history SET details=? WHERE seq=?', (json.dumps(facts), row['seq']))
+            owner.store.db.commit()
+        with self.assertRaisesRegex(Blocked, 'actual metrics commit facts mismatch'):
+            self._resume()
+        self.assertEqual(len(self.calls), 2)
+
+    def test_actual_merge_commit_is_rejected_even_with_matching_recorded_facts(self):
+        self.write('.gitignore', '.coherence/workflow/\n')
+        git(self.project, 'add', '--', '.gitignore')
+        git(self.project, 'commit', '-qm', 'track metrics')
+        self.base = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        self._start([self.gap])
+        with Authority(self.project) as owner:
+            row = owner.store.db.execute("SELECT seq,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC LIMIT 1", ('evidence-real',)).fetchone()
+            facts, seq = json.loads(row['details']), row['seq']
+        branch = git(self.project, 'branch', '--show-current').decode().strip()
+        git(self.project, 'switch', '-qc', 'other-side', facts['parent'])
+        self.write('other.txt', 'other branch\n')
+        git(self.project, 'add', '--', 'other.txt')
+        git(self.project, 'commit', '-qm', 'other branch')
+        git(self.project, 'switch', '-q', branch)
+        git(self.project, 'merge', '--no-ff', '-qm', 'workflow: metrics', 'other-side')
+        facts['sha'] = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        with Authority(self.project) as owner:
+            owner.store.db.execute('UPDATE execution_history SET details=? WHERE seq=?', (json.dumps(facts), seq))
+            owner.store.db.commit()
+        with self.assertRaisesRegex(Blocked, 'actual metrics commit facts mismatch.*parent'):
+            self._resume()
+        self.assertEqual(len(self.calls), 2)
 
     def test_cli_resume_delivers_real_object_command_evidence_without_replay(self):
         self._start([self.gap])
