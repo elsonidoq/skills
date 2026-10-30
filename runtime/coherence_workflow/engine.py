@@ -848,9 +848,37 @@ class Engine:
         return ('Retained required-check evidence (private; raw command output must not enter status/monitor projections):\n' +
                 '\n'.join('- ' + section.replace('\n', '\n  ') for section in sections))
 
+    def _review_worker_evidence(self):
+        """Return private completed-task reports, never unsuccessful invocation diagnostics."""
+        rows = {row['task_id']: row for row in self.authority.store.db.execute(
+            "SELECT task_id,state,result,details FROM execution_tasks WHERE run_id=?", (self.run,))}
+        sections, applicable = [], []
+        for task in self.contract['tasks']:
+            task_id = task['id']
+            row = rows.get(task_id)
+            if row is None or row['state'] != 'complete':
+                continue
+            try:
+                details = json.loads(row['details'])
+            except (TypeError, ValueError):
+                details = None
+            summary = details.get('summary') if isinstance(details, dict) else None
+            result = row['result']
+            label = 'task ' + str(task_id) + ', result checkpoint ' + (result if isinstance(result, str) and result else 'unavailable')
+            if isinstance(summary, str) and summary.strip() and isinstance(result, str) and result:
+                sections.append('- ' + label + ': ' + canonical(summary))
+                applicable.append([task_id, result, summary])
+            else:
+                sections.append('- ' + label + ': worker return unavailable.')
+        return ('Completed task returns (private, worker-reported; not verified check passes or Git facts):\n' +
+                ('\n'.join(sections) if sections else '- No completed task return available.')), applicable
+
     def _review_evidence_digest(self):
-        """Identify the exact retained check evidence without exposing it to safe projections."""
-        return hashlib.sha256(self._review_check_evidence().encode()).hexdigest()
+        """Keep the historical check-only digest when no usable return is available."""
+        checks = self._review_check_evidence()
+        _, returns = self._review_worker_evidence()
+        evidence = checks if not returns else checks + '\nCompleted worker returns: ' + canonical(returns)
+        return hashlib.sha256(evidence.encode()).hexdigest()
 
     def _review_attribution(self, review_base, head):
         """Describe verified run checkpoints without assigning intervening commits to a task."""
@@ -980,7 +1008,7 @@ class Engine:
                 'Evaluate retained check evidence semantically: distinguish actual passing execution, failed or missing required execution, and an inability to rerun because you are read-only. Do not invent a live check; a read-only inability to rerun does not negate a valid retained pass.\n'
                 'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
                 '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head) +
-                '\n' + self._review_check_evidence(),
+                '\n' + self._review_check_evidence() + '\n' + self._review_worker_evidence()[0],
                 read_only=True)
             value = self._review_value(text, require_coverage=True)
         except BaseException as exc:

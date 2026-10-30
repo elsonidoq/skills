@@ -233,6 +233,34 @@ class EvidenceReassessmentStoreTests(ProjectTest):
 
 
 class RequiredCheckEvidenceTests(ProjectTest):
+    def test_completed_returns_change_identity_and_unusable_history_is_unavailable(self):
+        import hashlib
+        contract = admit({'tasks': [{'id': name, 'description': 'fixture'} for name in
+                                    ('complete', 'historical', 'failed', 'incomplete')]})
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('returns', self.base, contract=contract, executor=EXECUTOR)
+            store.task('returns', 'historical', 'complete', self.base, self.base, {'summary': ''})
+            store.task('returns', 'failed', 'failed', self.base, details={'summary': 'PRIVATE-FAILED-RETURN'})
+            store.task('returns', 'incomplete', 'interrupted', self.base, details={'summary': 'PRIVATE-INCOMPLETE-RETURN'})
+            engine = Engine(owner, 'returns', contract, EXECUTOR)
+            old_digest = hashlib.sha256(engine._review_check_evidence().encode()).hexdigest()
+            self.assertEqual(engine._review_evidence_digest(), old_digest)
+            text, _ = engine._review_worker_evidence()
+            self.assertIn('task historical, result checkpoint ' + self.base + ': worker return unavailable', text)
+            self.assertNotIn('PRIVATE-FAILED-RETURN', text)
+            self.assertNotIn('PRIVATE-INCOMPLETE-RETURN', text)
+            store.db.execute("UPDATE execution_tasks SET details=? WHERE run_id=? AND task_id=?", ('{broken', 'returns', 'historical'))
+            self.assertIn('worker return unavailable', engine._review_worker_evidence()[0])
+            self.assertEqual(engine._review_evidence_digest(), old_digest)
+            store.task('returns', 'complete', 'complete', self.base, self.base, {'summary': 'first'})
+            first = engine._review_evidence_digest()
+            self.assertNotEqual(first, old_digest)
+            store.task('returns', 'complete', 'complete', self.base, self.base, {'summary': 'second'})
+            second = engine._review_evidence_digest()
+            self.assertNotEqual(first, second)
+            self.assertIn('second', engine._review_worker_evidence()[0])
+
     def test_actual_failed_and_missing_execution_remain_explicit_gaps(self):
         from coherence_workflow.verification import CheckFailure, run_checks
         task = {'id': 'task', 'description': 'evidence control', 'checks': [
@@ -252,7 +280,10 @@ class RequiredCheckEvidenceTests(ProjectTest):
                 # A checkpoint is not itself evidence of a required check pass.
                 owner.store.history(run, 'task', 'checkpoint', 'passed',
                                     {'sha': head, 'parent': self.base, 'paths': ['owned.txt']})
-                evidence = Engine(owner, run, {'tasks': [task]}, EXECUTOR)._review_check_evidence()
+                owner.store.task(run, 'task', 'complete', self.base, head, {'summary': 'Worker claims all checks passed.'})
+                engine = Engine(owner, run, {'tasks': [task]}, EXECUTOR)
+                self.assertIn('Worker claims all checks passed.', engine._review_worker_evidence()[0])
+                evidence = engine._review_check_evidence()
                 self.assertIn('verified checkpoint ' + head, evidence)
                 if run == 'failed-evidence':
                     self.assertIn('Retained failed execution:', evidence)
@@ -293,7 +324,7 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
                 test.calls.append(('fixer' if repair else 'worker', prompt))
                 kwargs['claim']('owned.txt')
                 test.project.joinpath('owned.txt').write_text('repaired\n' if repair else 'initial\n')
-                return 'local fixture completed'
+                return 'PRIVATE-WORKER-RETURN: local fixture completed'
         self.adapter = Adapter
         with Authority(self.project) as owner:
             with self.assertRaisesRegex(Blocked, 'coverage gaps'):
@@ -319,6 +350,10 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
         self.assertEqual(json.loads(output.getvalue())['status'], 'complete')
         self.assertEqual([role for role, _ in self.calls], ['worker', 'reviewer', 'reviewer'])
         for _, prompt in self.calls[1:]:
+            self.assertIn('PRIVATE-WORKER-RETURN: local fixture completed', prompt)
+            self.assertIn('worker-reported', prompt)
+            self.assertIn('task task', prompt)
+            self.assertIn('result checkpoint ' + self.head.decode().strip(), prompt)
             self.assertIn('output "PRIVATE-CHECK-COMMAND"', prompt)
             self.assertIn('output "PRIVATE-CHECK-ARGV"', prompt)
             self.assertNotIn('GAP: no retained execution', prompt)
@@ -331,10 +366,15 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             self.assertEqual(owner.store.completed_checkpoints('evidence-real'), self.checkpoints)
             chain = owner.store.review_chain('evidence-real')
+            monitor = owner.store.monitor('evidence-real')
+        self.assertNotIn('PRIVATE-WORKER-RETURN', json.dumps(monitor))
+        self.assertNotIn('PRIVATE-WORKER-RETURN', json.dumps(chain))
+        self.assertTrue(chain['executions'][0]['references'].get('check_evidence_digest'))
         self.assertEqual([item['state'] for item in chain['executions']], ['rejected', 'approved'])
         self.assertEqual(chain['executions'][1]['predecessor_execution_id'], chain['executions'][0]['execution_id'])
         safe = json.dumps(status(self.project, 'evidence-real'))
         self.assertNotIn('PRIVATE-CHECK-COMMAND', safe)
+        self.assertNotIn('PRIVATE-WORKER-RETURN', safe)
         self.assertNotIn(self.diagnosis, safe)
 
     def test_remaining_gaps_stop_and_duplicate_basis_cannot_dispatch_after_reopen(self):
