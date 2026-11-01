@@ -89,17 +89,30 @@ that supplies the desired interpretation is not this reproduction. No applicatio
 are needed or authorized for the exercise.
 
 **A2 — Fresh final review and consumption:** observe a real fresh read-only dispatch,
-its configured model/effort, bounded reviewer input and actual returned report reaching
-the parent's preapproval decision. Verify separation from producer and parent history,
-and parent disposition of material findings before approval. Exercise the historical
-#40 case at `6f68e823181ddee96db116a4e0fba3b58e477e72`: original #39 request/source/final
-tasks and historically applicable constraints only. Freeze expectations outside the
-reviewer prompt. The diagnostic reviewer must not receive this source, the #40 report,
-expected finding, later owner challenges or newer unrelated policy. The external oracle
-is the conditional source versus mandatory executable T002/A2/A3 extensions/guidance
-and T003 dependency without an established remaining basis. A useful review flags or
-resolves that uncertainty; it need not reject all new tests. A finding alone does not
-prove parent consumption. Dispatch flags alone do not prove review judgment.
+using the exact configured model/effort, separate from the task producer and parent
+conversation. Supply bounded factual requirements, decisions, final tasks and necessary
+constraints/risks, without producer conclusions or prior pass assurances. Require
+supported detection of clearly unsupported additions in a clear task case, with expected
+findings frozen outside reviewer input. Inspect the actual returned report and the
+parent's disposition before approval; unresolved material findings prevent approval.
+A finding alone does not prove parent consumption; dispatch flags alone do not prove
+review judgment. No mandatory rubric or expanded prompt/output ceremony is required.
+
+The owner revised the historical-case requirement: the conditional source versus mandatory
+T002/A2/A3 additions and T003 dependency at `6f68e823181ddee96db116a4e0fba3b58e477e72`
+warrants uncertainty, but is not an unambiguous unnecessary-work oracle. Retain that
+diagnostic as supplemental evidence and a limitation, not mandatory must-find acceptance.
+Preserve its unsuccessful observations and T002 stop; do not relabel them as passes.
+
+Reuse the adequate clear-case evidence in `/tmp/skills-39-40-fresh-eval/clear-results.md`
+and its task, frozen-expectation and returned-report artifacts. Fresh Sol/medium reviewer
+`623d5415-122e-4703-98e5-7788ca85a8ee` detected unsupported service/database/retention,
+admin/accounts, speculative plugins and duplicate release reports; parent accepted the
+findings and withheld synthetic task approval. Input was read-only with unchanged hash
+and expectations outside intake. This is a new synthetic case, not a matched comparison
+or proof that a rubric, prompt change or context isolation caused improvement. Reuse it
+without further model tests; it establishes neither causal/statistical reliability nor
+implementation approval.
 
 **A3 — Regression and evidence:** run `python3 scripts/check-planner-workflow.py` and
 `python3 scripts/test-planner-workflow.py` after affected changes; report real outcomes.
