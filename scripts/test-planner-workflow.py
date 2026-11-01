@@ -247,7 +247,7 @@ class EarlyRiskReductionTests(unittest.TestCase):
 
         operator = (ROOT / "docs/coordinate-implementation.md").read_text()
         for phrase in ("consumes final-review/handoff material risk", "brief workers with usable\ninterfaces/findings, evidence limits and remaining gates",
-                       "Routine worker or reviewer early\nreturns are diagnosis events", "initial-plus-two same-task/session allowance", "same-head review reassessment uses the existing retained evidence", "Do not repeat an unchanged expensive failed review"):
+                       "Routine worker or reviewer early\nreturns are diagnosis events", "initial-plus-two same-task/session allowance", "evidence-only review reassessment uses the existing retained evidence", "Do not repeat an unchanged expensive failed review"):
             self.assertIn(" ".join(phrase.split()), " ".join(operator.split()))
 
     def test_atomic_outcome_instruction_mutations_and_walkthrough(self):

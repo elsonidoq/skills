@@ -909,7 +909,7 @@ RISK_HANDOFF_CARRIERS = (
     )),
     ("risk-coordinator-triage", "coordinator", "## Question triage", (
         "routine early worker or\nreviewer return is a diagnosis event, not completion or owner debugging", "inspect its invocation,\nunfinished scope, actual checks, and retained effects",
-        "supported history/resume or same-head reassessment paths", "never blindly retry an\nunchanged expensive failure", "initial-plus-two same-task/session allowance", "compact diagnosis context", "same-head review reassessment uses the existing retained evidence", "never a task replay", "Unknown cause or a real permission boundary stops",
+        "supported history/resume or evidence-only reassessment paths", "never blindly retry an\nunchanged expensive failure", "initial-plus-two same-task/session allowance", "compact diagnosis context", "evidence-only review reassessment uses the existing retained evidence", "never a task replay", "Unknown cause or a real permission boundary stops",
     )),
     ("risk-coordinator-review", "coordinator", "## Review and Acceptance", (
         "routine\nreviewer early return or evidence gap as a diagnosis/recovery event", "not completion or an owner-debugging\nrequest",

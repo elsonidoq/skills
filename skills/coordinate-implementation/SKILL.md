@@ -85,6 +85,14 @@ that work. Do not add a risk schema, scoring, admission checklist, or parent ack
 
 ## Question triage
 
+Before forwarding a worker permission question, compare the actual operation, target and effects
+with current owner approval. Answer covered work using that approval, without presenting the answer
+as a new owner reply. Generic agent-authored wording requiring exact-operation approval does not
+create an owner gate. Treat necessary approved setup and capacity investigation as technical
+prerequisites, not renewed download consent; investigate or report the concrete blocker without
+deleting unknown or pre-existing bytes. Escalate the concrete unapproved effect or unresolved
+material decision, while preserving genuine manual, paid, security, data and external gates.
+
 The receiving coordinator investigates and answers routine technical diagnosis, implementation
 choices, ordinary corrections and focused verification within approved authority. Missing technical
 evidence calls for investigation or an actionable blocker, not asking the owner to debug. Escalate

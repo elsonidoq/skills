@@ -229,10 +229,12 @@ do not impose generic acceptance boilerplate or manual gates on ordinary coding.
 
 Write executable tasks as authorization-neutral work instructions. Keep temporary phase status
 such as "planning only" or "implementation awaiting approval" in the approval record, not task
-descriptions or check permissions. Preserve genuine action-specific permission boundaries and
-manual gates. Routine verification may use small isolated tests and local test databases without
-an extra owner question; keep data and execution bounded to avoid exhausting machine resources
-or affecting unrelated data/services.
+descriptions or check permissions. Do not add generic demands for separate exact-operation approval
+to work covered by the current launch; identify actual unapproved effects instead. Necessary approved
+setup and capacity investigation are technical prerequisites, not renewed download consent. Preserve
+genuine action-specific permission boundaries and manual gates. Routine verification may use small
+isolated tests and local test databases without an extra owner question; keep data and execution
+bounded to avoid exhausting machine resources or affecting unrelated data/services.
 
 ## Structured executable handoff (both adapters)
 
