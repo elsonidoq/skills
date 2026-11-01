@@ -78,8 +78,8 @@ Use [model-assignments.json](references/model-assignments.json) via the
 [saved-assignment contract](references/model-assignments.md). It covers delegated decision application, TinySpec
 source/tasks, Standard spec/tasks, both specification reviews, the direct/helper plan pass and overall
 review/rereview. Pass the resolved binding unchanged in the invocation and bounded brief.
-Parent brainstorming assessment, dialogue, inspection, TinySpec task review and approvals retain the
-owner-launched parent binding. Gate assessment needs no delegated assignment resolution.
+Parent brainstorming assessment, dialogue, inspection and approvals retain the owner-launched parent binding.
+TinySpec final task review inherits `planner-parent` in a fresh reviewer session. Gate assessment needs no delegated assignment resolution.
 Verify the exact binding is permitted and callable at dispatch; configuration is not availability evidence.
 A missing, malformed, unsupported, or unavailable binding stops only that operation with the resolver's
 focused owner correction question: do not recommend, infer, substitute or silently default.
@@ -294,6 +294,17 @@ and findings. Neither path may progress beyond specification review with unresol
 A bounded owner deferral can exclude affected work but cannot release reliance on the gap. Keep findings
 in existing session/report context, not a new tracker. No automatic rereview loop or additional approval gate.
 
+### Shared final task-review contract
+
+At the existing final review in both paths, verify usable fresh read-only delegation and dispatch an
+independent reviewer in a new context separate from both task producer and parent history; never fork
+or resume either conversation. Use the route's resolved binding unchanged. Supply the original request,
+actual owner decisions, authoritative requirements, final human and executable tasks, and necessary
+verified risks and constraints. Do not supply producer conclusions, pass assurances or approval
+trajectory; do not omit substantive facts. The reviewer returns supported findings or justified zero,
+not approval. Parent evaluates the actual report, routes substantive corrections to producers and
+resolves material findings before approval. Missing delegation or review evidence stops this stage.
+
 ### TinySpec path
 
 1. **Source creation — saved assignment:** resolve `tinyspec-source`; delegate `tiny-spec` to a separate
@@ -311,7 +322,8 @@ in existing session/report context, not a new tracker. No automatic rereview loo
    Apply the shared stage rules and source/task authority. Create separate tasks; derive documentation
    work from inspected effects/requirements, not an absent plan. Keep coherent work consecutive without
    reordering dependencies or padding distant tasks.
-4. **Review — planner-owned parent binding:** inspect source-to-task traceability, coverage, exclusions,
+4. **Review — fresh independent reviewer with planner-parent binding:** follow the shared final task-review
+   contract, inheriting `planner-parent` unchanged. Inspect source-to-task traceability, coverage, exclusions,
    decisions/deferrals, docs, integration/acceptance, verification item completeness, explicit/implicit
    dependencies and feasibility. Challenge confusing/contradictory instructions, scope creep and unnecessary
    complexity; each material finding needs the affected passage, impact and smallest sufficient correction.
@@ -322,7 +334,7 @@ in existing session/report context, not a new tracker. No automatic rereview loo
    necessary producer/consumer dependencies, reuse/retention, production acceptance and task boundaries.
    Apply the shared task-boundary and execution-risk review above, with the shared simplest-sufficient goal.
    Source carries needs; tasks carry independently necessary outcomes. Apply the dependency evidence/permission
-   review above before combined approval. No additional independent task-planning reviewer is required.
+   review above before combined approval.
 5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`; approve current
    source, tasks and implementation scope under the continuation contract, then immediately proceed to handoff.
    Denial returns to review/correction, not execution.
@@ -389,7 +401,7 @@ verification stops. Do not reopen valid principles.
    After submission, defects follow `overall_review`; independent review and final approval remain required.
    Include docs, acceptance, shared context and producer checks without breaking dependencies or story boundaries.
 5. **`overall_review` — independent saved reviewer assignment:** resolve `standard-overall-review` (or
-   `standard-overall-rereview` for a fresh rereview); follow observed analysis capability and inspect source → spec → plan
+   `standard-overall-rereview` for a fresh rereview); follow the shared final task-review contract and observed analysis capability and inspect source → spec → plan
    → tasks traceability, principles, exclusions, coverage, dependencies, verification item completeness, docs,
    integration and approvals. Challenge confusing/contradictory instructions, scope creep and unnecessary complexity
    across artifacts; report affected passage, impact and smallest sufficient correction. Do not manufacture findings

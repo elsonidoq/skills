@@ -100,19 +100,21 @@ choices and presents an approximate scope assessment. This phase is read-only. I
 both paths and stops for your explicit choice; the recommendation does not choose for you.
 
 ```text
-                         ┌→ TinySpec → Spec review → Tasks → Parent review → Combined approval ─┐
+                         ┌→ TinySpec → Spec review → Tasks → Fresh task review → Combined approval ─┐
 Request → Planner → Choose│                                                   ├→ coordinate-implementation
                          └→ SpecKit Specify → Spec review → Spec approval → Plan → Tasks ──┤
                                                                → Analyze → Final approval ─┘
 ```
 
 - **TinySpec:** compact context, scope, decisions, approach, acceptance and validation;
-  fresh independent specification review before mandatory separate tasks, then planner's
-  parent review before one combined approval. No SpecKit
+  fresh independent specification review before mandatory separate tasks, then a fresh independent
+  read-only task review before one combined approval. The parent evaluates its findings and routes
+  substantive corrections to producers. No SpecKit
   or unnecessary spec/plan/research hierarchy is required.
 - **Standard:** through planner, genuine installed SpecKit stages, separate what/how/task
   reasoning, a distinct independent specification review and current-specification approval
-  before planning, independent overall review and final approval. The later plan helper
+  before planning, fresh independent read-only overall review and final approval. The parent evaluates
+  its findings and routes substantive corrections to producers. The later plan helper
   review/fix pass is not that specification review and does not trigger it again.
 - **Both:** specification review primarily checks fidelity to the original request and actual
   owner answers; unresolved material intent gaps block downstream work. Reviewers neither edit
