@@ -1,0 +1,54 @@
+[
+  {
+    "id": "T001",
+    "outcome": "Reconcile covered worker permission questions with current owner approval. Read docs/plans/approval-and-fresh-task-review-tasks.md Shared worker/reviewer brief and Execution prerequisites and evidence limits with source A1–A3. Refine Question triage and authorization-neutral task authoring. Compare the actual operation, target and effects with current approval before forwarding a worker question; answer covered work from real approval without impersonation. Treat setup/capacity as technical prerequisites, not renewed download consent. Escalate the concrete unapproved delta or unresolved material decision. Generic agent-authored exact-operation wording creates no owner gate. Keep genuine gates. Exclude final-review dispatch changes (T002) and runtime delivery changes. Minimally align the existing checker's two obsolete same-head triage expectations with canonical evidence-only wording; inspect coupled test assertions and change only demonstrated obsolete coverage.",
+    "depends": [],
+    "owned_paths": [
+      "skills/coordinate-implementation/SKILL.md",
+      "skills/task-generation/SKILL.md",
+      "scripts/check-planner-workflow.py",
+      "scripts/test-planner-workflow.py"
+    ],
+    "required": [
+      {
+        "id": "T001/A1",
+        "description": "REQUIRED: reproduce the actual #39 conflicting task/worker-question/coordinator seam, retaining generic exact-approval language and current launch/routine authority. Observe covered snapshot/private-transfer/owned-loopback-seed work answered without renewed consent or fabricated owner reply, necessary approved local dependency setup and capacity investigation treated technically, and a separate genuinely unapproved destructive/external/spending effect escalated with its concrete delta. Exercise decisions, not application effects. A clean prompt that supplies the desired interpretation is not reproduction. Apply the shared ADR/memory constraints, including no unknown-byte deletion."
+      },
+      {
+        "id": "T001/A3",
+        "description": "REQUIRED: run both JSON-listed planner commands; preserve meaningful assertion coverage and report real outcomes against the known baseline. Inspect the exact diff for neutral task wording, intact real gates and unchanged shared engine delivery/defaults. Compare changed authoring/triage instructions with A1 observations; no new assertions without demonstrated need. A1 failure remains unresolved despite green static checks."
+      }
+    ],
+    "checks": [
+      "python3 scripts/check-planner-workflow.py",
+      "python3 scripts/test-planner-workflow.py"
+    ]
+  },
+  {
+    "id": "T002",
+    "outcome": "Make final planning-task review fresh and consume its returned findings. Read docs/plans/approval-and-fresh-task-review-tasks.md Shared worker/reviewer brief and Execution prerequisites and evidence limits with source A1–A3. Use the existing final-review stage in TinySpec and Standard to dispatch a fresh read-only independent reviewer separate from both producer and parent history; never fork/resume either conversation. Replace TinySpec parent-only/no-additional-reviewer wording, align the saved-role description in planner, and correct README's observed Parent review diagram/prose. Reuse `planner-parent` inheritance for TinySpec and saved Standard overall review, unchanged model/effort. Supply original request, owner decisions, authoritative requirements, final MD/JSON tasks and necessary verified risks/constraints, without producer conclusions/pass assurances/approval trajectory or omission of substantive facts. Parent evaluates the actual report, routes substantive corrections to producers and resolves material findings before combined approval. T001 supplies the canonical evidence-only checker baseline used by this task's focused regression check; it is not a new review/permission gate. Exclude source-review and implementation-review redesign, new assignments, SDK/runtime work and extra review stages.",
+    "depends": [
+      "T001"
+    ],
+    "owned_paths": [
+      "skills/planner/SKILL.md",
+      "README.md",
+      "scripts/check-planner-workflow.py",
+      "scripts/test-planner-workflow.py"
+    ],
+    "required": [
+      {
+        "id": "T002/A2",
+        "description": "REQUIRED: at the first usable changed seam, verify registered usable fresh read-only delegation and observe actual dispatch, configured model/effort, bounded inputs, separate context and returned report reaching the parent's preapproval disposition. Verify both route instructions; preserve each route's existing bindings and approval gates. Run the blinded historical diagnostic at `6f68e823181ddee96db116a4e0fba3b58e477e72` with original #39 request/source/final tasks and historically applicable constraints only. Freeze expectations outside the reviewer prompt: the historical source made prompt changes conditional on an evidenced gap and tests conditional on need, but executable T002/A2/A3 mandated extensions/guidance and T003 depended on T002 without an established remaining basis. Do not provide this TinySpec/current request, #40 report, expected finding, later challenges or newer unrelated policy to that diagnostic reviewer. A useful return flags or resolves the missing-basis uncertainty; no quota or blanket rejection of tests. Follow the actual return through parent disposition, not just flags or an isolated finding. The retained tools-disabled continuation cannot test delegation; explain intended context change and other material differences honestly."
+      },
+      {
+        "id": "T002/A3",
+        "description": "REQUIRED: run both JSON-listed planner commands after changes; minimally align affected final-review assertions and preserve meaningful coverage. Inspect exact owned diff and README against actual review behavior: neutral instructions, shared defaults, real gates, configured bindings, correction routing and unchanged source/implementation review freshness. Report A2 results and capability gaps without success wrappers; owner verification of the required behavioral evidence and actual parent approval decision remain necessary, not replaced by static green output or reviewer opinion."
+      }
+    ],
+    "checks": [
+      "python3 scripts/check-planner-workflow.py",
+      "python3 scripts/test-planner-workflow.py"
+    ]
+  }
+]
