@@ -164,5 +164,20 @@ Owner selected TinySpec and authorized new compact task preparation, validation 
 explicit-path checkpoints, not implementation. Fresh independent specification review
 returned zero findings; this permits task production without scope expansion. Saved
 `tinyspec-tasks` Sol/medium is unchanged. Old #39/#40 approvals are not adopted.
-Final independent task review and combined current-content owner approval remain pending.
-Substantive corrections after submission remain producer-routed.
+Fresh independent final task review `ea5fdf20-204b-4790-ba3b-0b5e85c34e47` returned zero
+findings and identified required parent participation for T002/A2. Parent inspection then
+removed an unsupported owner-verification gate and clarified existing parent assistance;
+the producer checkpointed that correction at `4ee89bac54ece7a02a90282646035e2d0ab6af2b`.
+Parent inspected the actual correction and graph checks before presenting combined approval.
+
+The owner explicitly replied “I approve” after the current-content executive brief and
+requested short problem/solution summary. This approves the TinySpec and both tasks at
+`4ee89bac54ece7a02a90282646035e2d0ab6af2b`, including T001/T002 implementation, bounded
+behavioral verification, focused checkpoints and independent final review. The cancelled
+question before that explicit reply granted no authority. Source SHA256:
+`0b5f948b24eb52372f42c2c998228ebf69065e0e689276550595990643a1bd27`; pre-record human tasks:
+`8062e03d30ae892b57491f6afeaa995ef8e5f579d67d0eea2ac109952daaa508`; executable tasks:
+`f46f8d9f8d6705ffe8ec17876c9eb1add799f9dc75151eb5468104bf3e8963eb`.
+Only this approval record changes after that identity; task contracts remain unchanged.
+Next: new coordinator run with the selected executor, not an old-run restart. Existing
+exclusions and real permission gates remain. Substantive corrections remain producer-routed.
