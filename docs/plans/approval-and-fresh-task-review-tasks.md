@@ -55,9 +55,10 @@ are not success. Reuse proof only while revision, input and environment remain a
 disproof requires correction and affected review/approval renewal, not a weakened oracle
 or retries until green. Ordinary runtime/issue evidence can hold concise sanitized results;
 no new repository evidence file or raw transcript is required. A1–A3 require actual behavioral
-and regression evidence, not an extra owner sign-off. For T002/A2, the parent performs the
-delegated observation with its existing tools; the nondelegating worker requests bounded
-coordinator assistance through the existing question path and consumes the returned evidence.
+and regression evidence, not an extra owner sign-off. For amended T002/A2, reuse the adequate
+clear-case evidence identified in source A2 without further model tests. The parent evaluates
+that evidence; the nondelegating worker uses the existing question path for bounded
+coordinator assistance and consumes the returned observations and disposition.
 
 ## Tasks
 
@@ -106,24 +107,25 @@ coordinator assistance through the existing question path and consumes the retur
     T001 supplies the canonical evidence-only checker baseline used by this task's focused
     regression check; it is not a new review/permission gate. Exclude source-review and
     implementation-review redesign, new assignments, SDK/runtime work and extra review stages.
-  - **REQUIRED T002/A2**: at the first usable changed seam, the parent verifies registered
-    usable fresh read-only delegation and performs the observation using its existing tools:
-    actual dispatch, configured model/effort, bounded inputs, separate context and returned
-    report reaching the parent's preapproval disposition. The worker requests this bounded
-    assistance through the existing question path before claiming acceptance, then consumes
-    the parent's actual observations; missing or failed evidence remains unmet.
-    Verify both route instructions; preserve each route's existing bindings and approval gates.
-    Run the blinded historical diagnostic at `6f68e823181ddee96db116a4e0fba3b58e477e72` with
-    original #39 request/source/final tasks and historically applicable constraints only.
-    Freeze expectations outside the reviewer prompt: the historical source made prompt
-    changes conditional on an evidenced gap and tests conditional on need, but executable
-    T002/A2/A3 mandated extensions/guidance and T003 depended on T002 without an established
-    remaining basis. Do not provide this TinySpec/current request, #40 report,
-    expected finding, later challenges or newer unrelated policy to that diagnostic reviewer.
-    A useful return flags or resolves the missing-basis uncertainty; no quota or blanket
-    rejection of tests. Follow the actual return through parent disposition, not just flags
-    or an isolated finding. The retained tools-disabled continuation cannot test delegation;
-    explain intended context change and other material differences honestly.
+  - **REQUIRED T002/A2**: verify actual fresh read-only dispatch at the exact configured
+    model/effort, separate from producer and parent history, with bounded factual inputs
+    excluding producer conclusions/prior pass assurances. Require supported detection of
+    clearly unjustified additions in a clear case, with expectations frozen outside reviewer
+    input, and the actual returned report reaching the parent's preapproval disposition;
+    unresolved material findings prevent approval. Verify both route instructions and retain
+    existing bindings/gates. Reuse the adequate clear-case evidence identified in amended
+    source A2 (`/tmp/skills-39-40-fresh-eval/clear-results.md` and `clear-review-report.md`),
+    including its read-only input/unchanged hash, external frozen expectations, supported
+    findings and parent withholding of synthetic task approval. No further model tests,
+    mandatory rubric, prompt/output schema or workflow are required. The parent supplies
+    this evidence through existing bounded coordination; the worker consumes it before
+    claiming acceptance. The historical conditional-versus-mandatory diagnostic is supplemental
+    and uncertain, not required must-find acceptance; retain its unsuccessful observations
+    and original T002 stop without relabeling them passed. The clear case is different
+    synthetic input, not a matched historical comparison or causal/reliability proof of a
+    rubric, prompt change or freshness. Missing/failed required evidence remains unmet;
+    dispatch flags or a finding alone cannot prove judgment and parent consumption. The
+    retained tools-disabled continuation cannot test delegation; disclose material differences.
   - **REQUIRED T002/A3**: run both JSON-listed planner commands after changes; minimally align
     affected final-review assertions and preserve meaningful coverage. Inspect exact owned
     diff and README against actual review behavior: neutral instructions, shared defaults,
@@ -142,9 +144,10 @@ need no implementation changes. T001 owns its actual coordinator-judgment exerci
 
 T002's runtime worker has no delegation tool: `runtime/pi-host/host.mjs` disables ambient
 extensions and supplies the bounded worker tool set. The parent supplies the required fresh
-read-only delegation and evaluates its actual return using existing parent tools. The worker
-uses `ask_owner` to request bounded coordinator assistance for T002/A2, identifying the
-needed observation and prepared inputs, not renewed owner consent. The existing adapter/
+read-only delegation capability and evaluates actual returned evidence using existing parent
+tools. For amended A2, reuse the adequate clear-case observation specified by the source;
+no further live model test is needed. The worker uses `ask_owner` to request bounded
+coordinator assistance with that evidence and disposition, not renewed owner consent. The existing adapter/
 attached-parent question path routes that routine request; the parent returns actual results
 and evidence through `coordinate_implementation_reply` for the pending run/request. The
 worker checks and includes that evidence against A2 before reporting acceptance. This uses
@@ -152,7 +155,8 @@ existing coordination, not worker delegation, a new service/runtime change, extr
 an automatic loop. See the [existing question interface](../coordinate-implementation.md#real-execution-and-safety).
 Verify actual delegation and question-channel availability at execution; a profile alone is
 not proof. Report the exact unavailable operation if needed; safe inspection can continue,
-but missing/failed evidence cannot pass A2. The historical revision is available. Optional `/tmp/skills-39-40-repro-v2/`,
+but missing/failed required evidence cannot pass A2. Historical observations remain
+supplemental evidence with retained failure/uncertainty, not a must-find oracle. Optional `/tmp/skills-39-40-repro-v2/`,
 `/tmp/issue40-candidate.wo1JbnGK/` and `/tmp/issue40-revised.Rc30BDcK/` exist on this host;
 validate applicability before use, never treat them as portable dependencies. No prescribed
 SDK-internal evidence recipe is needed.
@@ -181,3 +185,12 @@ question before that explicit reply granted no authority. Source SHA256:
 Only this approval record changes after that identity; task contracts remain unchanged.
 Next: new coordinator run with the selected executor, not an old-run restart. Existing
 exclusions and real permission gates remain. Substantive corrections remain producer-routed.
+
+Amendment: the owner explicitly agreed to simplify the disputed historical acceptance and
+requested the minimal #40 change. Source A2 was amended at
+`7fc8fd6af62f190cbe984c0e95f42e8029684a7a`; this task correction aligns A2 and its evidence
+reuse only. The historical oracle is supplemental/uncertain; original unsuccessful T002
+history remains unchanged. T001 checkpoint `86438716a7228b9b37d29998f6337e55cec86bdf`
+and its prerequisite remain intact. Current amended content awaits parent-owned approval;
+prior approval identities above describe prior content, not approval of this amendment.
+Required final independent implementation review and focused checkpoints remain unchanged.
