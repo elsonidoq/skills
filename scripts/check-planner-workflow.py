@@ -329,12 +329,18 @@ def check_contracts(texts):
             "Explicit approved implementation scope", "executable runner alone")
     tiny = section(p, "### TinySpec path")
     require("tiny-flow", tiny, "**Source creation — saved assignment", "**Tasks — saved assignment",
-            "**Review — planner-owned parent binding",
+            "**Review — fresh independent reviewer with planner-parent binding",
             "invoke `tiny-spec`", "invoke `task-generation` direct adapter",
-            "Create separate tasks", "No additional independent task-planning reviewer", "**Combined approval:**",
+            "Create separate tasks", "shared final task-review", "**Combined approval:**",
             "BEFORE `ask_user`", "Denial returns to review", "No SpecKit prerequisite",
             "standalone\n   TinySpec approval", "Record\n   fixes",
             "brief bullet-list executive summary", "immediately proceed to handoff")
+    final_review = section(p, "### Shared final task-review contract")
+    require("final-task-review", final_review,
+            "fresh read-only delegation", "independent reviewer in a new context",
+            "separate from both task producer and parent history", "never fork",
+            "resume either conversation", "Parent evaluates the actual report",
+            "routes substantive corrections to producers", "resolves material findings before approval")
     shared = section(p, "### Shared specification-review contract")
     require("intent-review", shared,
             "Both paths require one fresh independent read-only specification review",
@@ -369,7 +375,7 @@ def check_contracts(texts):
     tiny_order = [tiny.find(marker) for marker in (
         "**Source creation", "**Specification review", "**Tasks", "**Review", "**Combined approval")]
     if -1 in tiny_order or tiny_order != sorted(tiny_order):
-        errors.append("tiny-review-order: source → spec review → tasks → parent review → approval required")
+        errors.append("tiny-review-order: source → spec review → tasks → fresh task review → approval required")
     prompt = texts["spec_review_prompt"]
     require("intent-review-prompt", prompt,
             "TinySpec\nor Standard", "primary focus is fidelity",
@@ -435,7 +441,7 @@ def check_contracts(texts):
             "without supervisor", "not independent review", "After submission",
             "independent review and final approval remain required", "`overall_review`")
     review = stage(std, "overall_review")
-    require("review", review, "independent saved reviewer assignment", "standard-overall-review", "observed analysis",
+    require("review", review, "independent saved reviewer assignment", "standard-overall-review", "shared final task-review contract", "observed analysis",
             "never apply unresolved material defaults", "renew affected approvals",
             "BEFORE `ask_user`", "plan-phase implications", "Missing independent reviewer",
             "bullet-list executive", "immediately proceed to handoff")
