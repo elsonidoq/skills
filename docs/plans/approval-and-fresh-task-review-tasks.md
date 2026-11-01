@@ -191,6 +191,11 @@ requested the minimal #40 change. Source A2 was amended at
 `7fc8fd6af62f190cbe984c0e95f42e8029684a7a`; this task correction aligns A2 and its evidence
 reuse only. The historical oracle is supplemental/uncertain; original unsuccessful T002
 history remains unchanged. T001 checkpoint `86438716a7228b9b37d29998f6337e55cec86bdf`
-and its prerequisite remain intact. Current amended content awaits parent-owned approval;
-prior approval identities above describe prior content, not approval of this amendment.
-Required final independent implementation review and focused checkpoints remain unchanged.
+and its prerequisite remain intact. After a fresh independent amendment review
+(`003a252a-6973-412d-a787-e1a26ed7c93c`) and parent inspection, the owner answered
+“Approve and finish T002” through `ask_user`. This approves current source/tasks at
+`a19a6537427708eec472284777d4f6e7115319e1` and completion of only remaining T002
+through a scoped corrective run with the exact four known dirty paths. Preserve T001,
+the stopped run and historical failures; no mandatory rubric or further experiment.
+Only this approval record changes after that identity. Required final independent
+implementation review and focused checkpoints remain unchanged.
