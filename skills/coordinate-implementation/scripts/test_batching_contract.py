@@ -15,7 +15,7 @@ class RuntimeAuthorityTests(unittest.TestCase):
             self.assertIn(phrase,' '.join(introduction.split()))
             self.assertNotIn(phrase,' '.join(introduction.split()).replace(phrase,'REMOVED'))
         for phrase in ('never adopts or commits unknown work',
-                       'A well-formed actionable first rejection'):
+                       'the first actionable rejection gets the existing scoped repair/checkpoint'):
             self.assertIn(phrase, TEXT)
             self.assertNotIn(phrase, TEXT.replace(phrase, 'REMOVED', 1))
 

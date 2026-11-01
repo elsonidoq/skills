@@ -21,8 +21,11 @@ GUARDS = {
     'Execute and Integrate': ('It never adopts or commits unknown work',
                               'preserve pre-existing/unknown bytes', 'normal Git hooks/signing',
                               'No extra evidence-only checkpoint', 'no empty commit'),
-    'Review and Acceptance': ('fresh independent reviewer context', 'only read/search tools',
-                              'Review 2 rejection stops honestly'),
+    'Review and Acceptance': ('fresh independent read/search-only reviewer context',
+                              'the first actionable rejection gets the existing scoped repair/checkpoint',
+                              'Every later actionable rejection asks the actual owner unless the run has current explicit `authorize-routine-repairs` authority bound to its unchanged original scope',
+                              'Material scope, paid, security, data, external, uncertain, and target-drift cases remain blocked or owner-gated',
+                              'Historical runs without policy retain the old two-review/one-fixer limit'),
     'Runner-configured worker role': ('Do NOT launch this CLI', 'stage/commit or manage workflow state',
                                       'review read-only'),
 }

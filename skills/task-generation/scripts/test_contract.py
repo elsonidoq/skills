@@ -151,7 +151,7 @@ class TaskGenerationContractTests(unittest.TestCase):
         review = ' '.join(TEXT.split('## Review and handoff', 1)[1].split())
         self.assertIn('At final planning review, check that executable tasks are authorization-neutral', review)
         planner = (Path(__file__).parents[2] / 'planner' / 'SKILL.md').read_text()
-        for start, end in (('**Review — planner-owned parent binding', '**Combined approval'),
+        for start, end in (('**Review — fresh independent reviewer with planner-parent binding', '**Combined approval'),
                            ('**`overall_review`', '\n## ')):
             stage = planner.split(start, 1)[1].split(end, 1)[0]
             self.assertIn('../task-generation/SKILL.md#authorization-neutral-tasks', stage)
@@ -213,7 +213,7 @@ class TaskGenerationContractTests(unittest.TestCase):
             "consumed interfaces and earlier producer dependencies",
             "multiple unfinished concerns", "context loss, compaction and drift",
             "selected executor/effort and observed capabilities",
-            "not a model-family hierarchy", "without unfinished downstream work",
+            "not a model-family hierarchy", "without unfinished downstream implementation",
             "no universal task count or file/line/token/time ceiling",
             "ordinary tests, relevant docs and routine teardown",
             "Before:", "After:", "Reader acceptance does not wait for the browser",
@@ -225,7 +225,8 @@ class TaskGenerationContractTests(unittest.TestCase):
         review = planner.split("## Proportionate validation", 1)[1].split(
             "## Before selection", 1)[0]
         self.assertIn("../task-generation/SKILL.md#executor-sized-outcomes", review)
-        self.assertIn("milestones disguised as tasks", review)
+        self.assertIn("milestones that leave several independently testable interfaces unfinished together",
+                      " ".join(review.split()))
         self.assertIn("configured executor/effort", review)
 
     def test_ui_control_supporting_ownership_example(self):
@@ -247,7 +248,9 @@ class TaskGenerationContractTests(unittest.TestCase):
             "ordinary already-observed success control needs only its\nexisting focused check",
             "not a generic path/dependency-closure\nvalidator or a new task field",
         )
+        recipe = " ".join(recipe.split())
         for clause in clauses:
+            clause = " ".join(clause.split())
             with self.subTest(clause=clause):
                 self.assertIn(clause, recipe)
                 if recipe.count(clause) == 1:
