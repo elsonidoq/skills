@@ -17,7 +17,8 @@ run. Do not include expectations in the model prompt when they would reveal the 
 expectations change, disclose the change: old runs are not evidence against the new expectations.
 Retain useful real cases after issue work, not every incident or disposable probe.
 
-Compare once on an explicit previous revision and once on an explicit candidate revision, using
+When an improvement claim matters to a delivery decision, compare once on an explicit previous
+revision and once on an explicit candidate revision, using
 the same frozen input, expectations, model, effort and relevant environment. Record revision and
 resource identities, Pi version, prompt/input and relevant environment differences. Use separate
 fresh equivalent workspaces and outputs. Select cases deliberately; do not automatically run the
@@ -61,7 +62,18 @@ through this read-only recipe.
 
 Inspect completion, event output, errors and behavior rather than relying on exit status alone.
 An error, aborted or incomplete run, or missing prerequisite is inconclusive, not a behavioral
-pass or failure. For completed observations against the frozen expectations:
+pass or failure.
+
+Before adding work, distinguish implementation failure, a test that does not measure the intended
+behavior, and uncertainty in the expected result. Judge disputed expectations against the original
+request and actual constraints—not reviewer agreement or the desired answer. Freezing an expectation
+does not make it correct. Keep unresolved cases uncertain; change binding acceptance only through
+its existing approval gate.
+
+Add another experiment only when its possible outcomes could change a concrete delivery decision.
+Otherwise, report the narrower conclusion. Instruction delivery is not proof of correct decisions;
+detection on a different case is not evidence that a fix improved the original behavior. Use the
+comparison table only for completed, comparable observations with justified expectations:
 
 | Previous / candidate | Interpretation |
 | --- | --- |
