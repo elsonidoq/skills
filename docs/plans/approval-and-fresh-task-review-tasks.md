@@ -54,8 +54,10 @@ affected acceptance claim; fail, non-reproduction, regression, inconclusive and 
 are not success. Reuse proof only while revision, input and environment remain applicable;
 disproof requires correction and affected review/approval renewal, not a weakened oracle
 or retries until green. Ordinary runtime/issue evidence can hold concise sanitized results;
-no new repository evidence file or raw transcript is required. Owner verification of A1–A3
-remains required; neither a worker report nor static green output replaces it.
+no new repository evidence file or raw transcript is required. A1–A3 require actual behavioral
+and regression evidence, not an extra owner sign-off. For T002/A2, the parent performs the
+delegated observation with its existing tools; the nondelegating worker requests bounded
+coordinator assistance through the existing question path and consumes the returned evidence.
 
 ## Tasks
 
@@ -104,9 +106,12 @@ remains required; neither a worker report nor static green output replaces it.
     T001 supplies the canonical evidence-only checker baseline used by this task's focused
     regression check; it is not a new review/permission gate. Exclude source-review and
     implementation-review redesign, new assignments, SDK/runtime work and extra review stages.
-  - **REQUIRED T002/A2**: at the first usable changed seam, verify registered usable fresh
-    read-only delegation and observe actual dispatch, configured model/effort, bounded inputs,
-    separate context and returned report reaching the parent's preapproval disposition.
+  - **REQUIRED T002/A2**: at the first usable changed seam, the parent verifies registered
+    usable fresh read-only delegation and performs the observation using its existing tools:
+    actual dispatch, configured model/effort, bounded inputs, separate context and returned
+    report reaching the parent's preapproval disposition. The worker requests this bounded
+    assistance through the existing question path before claiming acceptance, then consumes
+    the parent's actual observations; missing or failed evidence remains unmet.
     Verify both route instructions; preserve each route's existing bindings and approval gates.
     Run the blinded historical diagnostic at `6f68e823181ddee96db116a4e0fba3b58e477e72` with
     original #39 request/source/final tasks and historically applicable constraints only.
@@ -123,9 +128,10 @@ remains required; neither a worker report nor static green output replaces it.
     affected final-review assertions and preserve meaningful coverage. Inspect exact owned
     diff and README against actual review behavior: neutral instructions, shared defaults,
     real gates, configured bindings, correction routing and unchanged source/implementation
-    review freshness. Report A2 results and capability gaps without success wrappers; owner
-    verification of the required behavioral evidence and actual parent approval decision
-    remain necessary, not replaced by static green output or reviewer opinion.
+    review freshness. Report A2 results and capability gaps without success wrappers; actual
+    behavioral evidence and the parent's preapproval disposition remain necessary, not replaced
+    by static green output or reviewer opinion. Preserve existing combined owner approval;
+    add no separate owner-verification gate.
 
 ## Execution prerequisites and evidence limits
 
@@ -134,11 +140,19 @@ and `runtime/tests/test_worker_authority.py`; inspected tests admit tasks using 
 `ProjectTest` fixture and capture initial/corrective prompts. They prove delivery only and
 need no implementation changes. T001 owns its actual coordinator-judgment exercise.
 
-T002 needs an executing parent's registered fresh read-only delegation capability. This
-producer cannot establish a future dispatch from profile/configuration alone and does not
-delegate. At execution, inspect the actual available interface and report the exact unavailable
-operation if needed; safe inspection can continue, but A2 cannot be marked passed. The
-historical revision is available. Optional `/tmp/skills-39-40-repro-v2/`,
+T002's runtime worker has no delegation tool: `runtime/pi-host/host.mjs` disables ambient
+extensions and supplies the bounded worker tool set. The parent supplies the required fresh
+read-only delegation and evaluates its actual return using existing parent tools. The worker
+uses `ask_owner` to request bounded coordinator assistance for T002/A2, identifying the
+needed observation and prepared inputs, not renewed owner consent. The existing adapter/
+attached-parent question path routes that routine request; the parent returns actual results
+and evidence through `coordinate_implementation_reply` for the pending run/request. The
+worker checks and includes that evidence against A2 before reporting acceptance. This uses
+existing coordination, not worker delegation, a new service/runtime change, extra consent or
+an automatic loop. See the [existing question interface](../coordinate-implementation.md#real-execution-and-safety).
+Verify actual delegation and question-channel availability at execution; a profile alone is
+not proof. Report the exact unavailable operation if needed; safe inspection can continue,
+but missing/failed evidence cannot pass A2. The historical revision is available. Optional `/tmp/skills-39-40-repro-v2/`,
 `/tmp/issue40-candidate.wo1JbnGK/` and `/tmp/issue40-revised.Rc30BDcK/` exist on this host;
 validate applicability before use, never treat them as portable dependencies. No prescribed
 SDK-internal evidence recipe is needed.
