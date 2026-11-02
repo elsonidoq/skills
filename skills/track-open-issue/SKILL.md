@@ -124,7 +124,10 @@ the underlying problem is resolved.
 ## Separate read-only quality review and one correction
 
 After successful issue-body readback, use a separate read-only reviewer context. Read the
-project's selected reviewer configuration; do not hardcode a provider or model. Give that
+project's selected reviewer configuration; do not hardcode a provider or model. Dispatch the suite-owned `coherence-reviewer`
+role in a fresh context, with that model/effort unchanged. Confirm its runtime source with
+the `subagent` tool `get` action. If it is not registered, report
+review incomplete rather than using a global reviewer. See [role activation](../../README.md#coherence-role-activation). Give that
 reviewer only the original user intent, primary evidence, uncertainty/next investigation, and
 the actual read-back body. Ask it to identify downstream ambiguity or conflicts, omissions,
 promoted assumptions, scope creep, and over-prescribed mechanisms or checks. It must not author

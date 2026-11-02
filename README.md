@@ -49,6 +49,27 @@ readiness, automatic retry or destructive rollback. Other missing runtime prereq
 are reported, not installed by initialization. TinySpec/direct tasking still does not
 require SpecKit; Standard retains its stage capability gates.
 
+### Coherence role activation
+
+For an explicitly selected project and authorized local write, run
+`python3 scripts/activate-coherence-roles.py PROJECT_DIRECTORY`. This links the versioned
+suite extension into that project's `.pi/extensions/`; it preserves conflicting entries and
+never copies prompts. It does not install packages or alter settings. Start a fresh trusted Pi
+session in that project and verify that the loaded `pi-subagents` capability supports runtime
+agent registration and exposes `coherence-producer` and `coherence-reviewer` as runtime roles (use the
+`subagent` tool's `get` action for each and inspect the source).
+If registration is missing or collides, correct the capability or conflict before the affected
+dispatch; never substitute a global role. Registration is process-local: activate the extension
+in each parent process that actually dispatches these stages, not automatically in children.
+Changes to suite roles take effect in a fresh session. In Paseo, prepare a fresh-session handoff;
+do not reload or restart the current session automatically.
+
+Planner passes the saved stage model and effort with the explicit producer/reviewer role;
+issue review uses the project's selected reviewer binding. Runtime-owned role prompts and tools
+are distinct from model selection. The executable coordinate-implementation runtime constructs
+its own SDK sessions and prompts with its selected executor; it does not dispatch these roles.
+Instruction delivery does not prove model compliance, and read-only shell access is not a sandbox.
+
 ### Existing-project policy refresh
 
 Installation/update alone does not refresh already-adopted project instructions. After later

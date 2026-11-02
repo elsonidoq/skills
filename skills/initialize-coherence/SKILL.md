@@ -45,6 +45,10 @@ The full-route documentation/sub-agent and asset duties below remain unchanged i
   Never state unverified code, operational or historical claims as current fact.
   Do not write credentials, tokens, personal data, or sensitive payloads.
 
+For planning/issue-review dispatch, propose the explicit [project role activation](../../README.md#coherence-role-activation)
+only within approved project-write bounds. Do not activate it automatically; a fresh dispatching
+session must verify registration before relying on these roles.
+
 ## Discovery
 
 For policy-only, confirm the existing approved association and equivalent instructions owner;
