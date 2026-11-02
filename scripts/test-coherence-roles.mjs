@@ -41,6 +41,11 @@ try {
   extension(pi); await handlers.get('session_start')();
   const discovered = discoverAgents(project, 'both');
   const merged = mergeRuntimeAgents(pi, discovered, discovered.agents, {cwd: project, scope: 'both'});
+  const producer = merged.agents.find(a => a.name === 'coherence-producer');
+  assert(producer.systemPrompt.includes('After successfully writing the report to the runtime-bound output file'));
+  assert(producer.systemPrompt.includes('Report written to the bound output path.'));
+  assert(producer.systemPrompt.includes('Do not duplicate the report in chat or end with an empty final response'));
+  assert(producer.systemPrompt.includes('If report delivery fails, report the failure instead of claiming delivery'));
   const reviewer = merged.agents.find(a => a.name === 'coherence-reviewer');
   assert.equal(reviewer.source, 'runtime');
   assert(reviewer.systemPrompt.includes('Derived obligations remain reviewable'));

@@ -68,6 +68,9 @@ Planner passes the saved stage model and effort with the explicit producer/revie
 issue review uses the project's selected reviewer binding. Runtime-owned role prompts and tools
 are distinct from model selection. The executable coordinate-implementation runtime constructs
 its own SDK sessions and prompts with its selected executor; it does not dispatch these roles.
+For file-only producer reports, keep the report in the runtime-bound file and return a short final
+acknowledgement after a successful write. File-only controls report delivery; an empty final response
+can still fail runtime completion. The acknowledgement does not establish task acceptance.
 Instruction delivery does not prove model compliance, and read-only shell access is not a sandbox.
 
 ### Existing-project policy refresh
