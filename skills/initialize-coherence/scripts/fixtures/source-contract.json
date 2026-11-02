@@ -102,9 +102,9 @@
       "evidence": "PASS: test_requirements_preserved and test_requirements_rejects_deleted_guard; all required guard phrases checked in Preflight; full focused suite 135 tests OK at T006/T007. Static evidence only, not model obedience.",
       "requires": [
         "REQUIREMENTS.md",
-        "pi 0.87.x (tested 0.87.1)",
-        "npm:pi-subagents@0.73.1",
-        "npm:pi-ask-user@0.15.1",
+        "`pi-subagents`",
+        "`pi-ask-user`",
+        "without specific version requirements",
         "Verify actual registered and usable capabilities",
         "SpecKit is required only for applicable Standard stages, not TinySpec",
         "Jev is optional for Jev triage in `finish-session-jev`, with manual routing fallback",

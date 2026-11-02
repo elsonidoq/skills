@@ -1,12 +1,13 @@
 # Coherence — Pi Skill Suite
 
 Global pi skills for deliberate feature delivery across unrelated repositories. The suite
-binds to pinned pi packages and requires adoption per project; it is not runtime-portable.
+uses pi agent capabilities and requires adoption per project; it is not runtime-portable.
 
 ## Setup
 
-See [REQUIREMENTS.md](REQUIREMENTS.md). The installer verifies pi, installs missing pinned
-packages, links suite skills and the SDD reference, and runs deterministic validation:
+See [REQUIREMENTS.md](REQUIREMENTS.md). The installer verifies pi, reports package registrations without installing or updating them,
+links suite skills and the SDD reference, and runs deterministic validation. Verify required
+registered tools are usable in the session before their applicable stages:
 
 ```bash
 scripts/install.sh

@@ -393,7 +393,7 @@ class CandidateTests(unittest.TestCase):
             self.assertTrue("no automatic reload or restart" in doc or
                             "no automatic reload or restart occurs" in doc or
                             "instead of reloading or restarting the current session" in doc)
-        for phrase in ("usable installation; no version pin", "`pi --version` and applicable registered capabilities", "report the affected missing capability; no automatic install or update", "pi-subagents@0.73.1", "pi-ask-user@0.15.1", "tinyspec/direct tasking does not require it", "manual routing", "schema owner", "missing required structure blocks readiness"):
+        for phrase in ("usable installation; no version pin", "`pi --version` and applicable registered capabilities", "report the affected missing capability; no automatic install or update", "installed delegation capability; no version pin", "installed question capability; no version pin", "tinyspec/direct tasking does not require it", "manual routing", "schema owner", "missing required structure blocks readiness"):
             self.assertIn(phrase, requirements)
 
     def test_introduced_references_and_repo_association(self):

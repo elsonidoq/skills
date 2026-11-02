@@ -89,7 +89,7 @@ background progress. Preserve STATE/custom/history/unrelated work and original g
 ## Delegation Capability
 
 Before recommending delegation, check that the runtime exposes an allowed
-delegation mechanism (the `subagent` tool from the suite's pinned `pi-subagents`
+delegation mechanism (the `subagent` tool from the suite's `pi-subagents`
 package) and an appropriate configured agent. If available, name the
 observed mechanism and agent class without inventing a model identifier. If
 unavailable, make the prompt suitable for a fresh local session and state

@@ -1,21 +1,22 @@
 # Coherence — Pi Skill Suite Requirements
 
 This repository is a pi configuration repository. It is **not runtime-portable by design**:
-it binds to specific pi packages, pins their versions, and relies on the convention that a
+it uses pi capabilities and relies on the convention that a
 project adopts the suite through `initialize-coherence` before the workflow skills run.
 
 ## Runtime
 
-| Requirement | Pin | Verified how | Missing behavior |
+| Requirement | Capability | Verified how | Missing behavior |
 |---|---|---|---|
 | pi coding agent | Usable installation; no version pin | `pi --version` and applicable registered capabilities | Report the affected missing capability; no automatic install or update |
-| pi-subagents | npm:`pi-subagents@0.73.1` | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and `pi install npm:pi-subagents@0.73.1` |
-| pi-ask-user | npm:`pi-ask-user@0.15.1` | the `ask_user` tool is registered | Where a stage permits prose interaction, ask in prose and end the turn; do not proceed past the owner-answer gate or infer an answer. A manager's explicit mandatory preflight may stop earlier. |
+| pi-subagents | installed delegation capability; no version pin | the `subagent` tool is registered and usable | `Delegation: UNAVAILABLE`; stop and report the missing capability |
+| pi-ask-user | installed question capability; no version pin | the `ask_user` tool is registered | Where a stage permits prose interaction, ask in prose and end the turn; do not proceed past the owner-answer gate or infer an answer. A manager's explicit mandatory preflight may stop earlier. |
 | SpecKit toolkit | installed in the **project** for planner's Standard path | detected integration/version inventory matches real readable, nonempty commands, templates and scripts, including permissions/references | Stop at the affected Standard stage with a capability report; TinySpec/direct tasking does not require it |
 | jev (optional) | `~/.agents/skills/jev` | `command -v jev` or the skill loads | Manual routing in `finish-session-jev` |
 
-All npm pins are exact: pi treats versioned npm specifications as pinned, and `pi update
---extensions` reconciles the checkout without moving the configured ref.
+Do not require specific installed agent-capability versions. Package registration alone is
+not proof that an interface is usable; verify the applicable tool at its operation boundary.
+Do not automatically install or update missing capabilities.
 
 Keep this table in sync with the dependency statements inside the skills. The
 `initialize-coherence` skill records the approved requirement list in the project's

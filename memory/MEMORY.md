@@ -27,4 +27,10 @@ substitute or store secrets, completed-work inventories or fabricated knowledge.
 - **Action:** Do not repeatedly ask for the same routine authorization. Use the supported run-and-scope-bound authority mechanism; preserve actual material scope, manual, paid, security, data and external-action gates. A conflicting runtime consent rule needs a scoped correction, not fabricated owner replies or silent bypass.
 - **Provenance:** Explicit owner feedback during #30 implementation: “Why do you keep asking for these authorizations? Yes I authorize them all” and “Stop asking me for authorization for routine things like that.” The owner then approved the proposed scoped policy correction and retained continuation with “Go ahead.” This records the conversational preference, not blanket permission for unrelated runs or actions.
 
+### Installed agent capability versions
+
+- **Trigger:** Specifying, installing, checking, or using required installed agent capabilities.
+- **Action:** Do not require specific versions; verify the applicable capability is usable instead.
+- **Provenance:** Owner direction on the Coherence roles runtime-version question: “remove the specific version requirement. It's the fifth time I ask for that. Do not require specific versions”.
+
 No technical project gotchas recorded yet.

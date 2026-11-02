@@ -2,7 +2,7 @@
 # Install/verify the pi skill suite: requirements first, then discoverability.
 #
 # What it does:
-#   1. Requires pi (auto-installs pinned packages if missing)
+#   1. Requires pi and reports missing agent package registrations
 #   2. Symlinks every suite skill into ~/.agents/skills (pi's standard scanned
 #      location) and the spec-driven-development guidance into ~/.agents/docs,
 #      retiring only proven suite-owned old links; foreign entries are preserved
@@ -23,9 +23,6 @@ set -uo pipefail
 SUITE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 SETTINGS="$AGENT_DIR/settings.json"
-REQ_PI="0.87"
-PKG_SUBAGENTS="npm:pi-subagents@0.73.1"
-PKG_ASKUSER="npm:pi-ask-user@0.15.1"
 SKILLS_DIR="$SUITE_DIR/skills"
 AGENTS_SKILLS="$HOME/.agents/skills"
 AGENTS_DOCS="$HOME/.agents/docs"
@@ -52,22 +49,16 @@ fatal() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 command -v pi >/dev/null 2>&1 || fatal "pi not found on PATH — install it first (see https://pi.dev/install)"
 PI_VERSION="$(pi --version 2>/dev/null)"
 info "pi $PI_VERSION"
-case "$PI_VERSION" in
-  "$REQ_PI".*|"$REQ_PI") : ;;
-  *) warn "suite pins pi 0.87.x (tested 0.87.1); found $PI_VERSION — version-specific wording may drift" ;;
-esac
 
 command -v python3 >/dev/null 2>&1 || fatal "python3 required (suite scripts and this installer use it)"
 
-# ---- 2. Pinned packages (auto-installed when missing) ----------------------
-installed_pkgs="$(pi list 2>/dev/null)"
-for pkg in "$PKG_SUBAGENTS" "$PKG_ASKUSER"; do
-  if printf '%s\n' "$installed_pkgs" | grep -Fq "$pkg"; then
-    info "package ok: $pkg"
+# ---- 2. Package registration (actual tool usability is checked in-session) --
+installed_pkgs="$(pi list 2>/dev/null)" || fatal "cannot inspect pi package registrations; check pi configuration"
+for pkg in pi-subagents pi-ask-user; do
+  if printf '%s\n' "$installed_pkgs" | grep -Eq "(^|[^[:alnum:]_-])${pkg}(@[^[:space:]]+)?([[:space:]]|$)"; then
+    info "package registration found: $pkg (verify tool usability in session)"
   else
-    info "installing $pkg"
-    pi install "$pkg" || fatal "pi install $pkg failed"
-    installed_pkgs="$(pi list 2>/dev/null)"
+    warn "package registration not found: $pkg — verify the required tool in session; no automatic installation"
   fi
 done
 

@@ -26,8 +26,8 @@ The full-route documentation/sub-agent and asset duties below remain unchanged i
   report exactly `documentation initialization blocked: sub-agent capability unavailable`
   and stop without edits. No adoption write may precede this dirty capability gate.
 - Confirm the suite runtime requirements from the discoverable global configuration
-  repository's `REQUIREMENTS.md`: pi 0.87.x (tested 0.87.1),
-  `npm:pi-subagents@0.73.1` and `npm:pi-ask-user@0.15.1`.
+  repository's `REQUIREMENTS.md`: pi and the `pi-subagents` and `pi-ask-user`
+  capabilities, without specific version requirements.
   Verify actual registered and usable capabilities, not package names alone.
   SpecKit is required only for applicable Standard stages, not TinySpec.
   Jev is optional for Jev triage in `finish-session-jev`, with manual routing fallback.

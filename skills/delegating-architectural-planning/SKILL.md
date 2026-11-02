@@ -80,7 +80,7 @@ delegated context. If it is missing or cannot be used there, report
 claim that the planning stage ran.
 
 Inspect the runtime for an allowed delegation tool (the `subagent` tool from the
-`pi-subagents` package is the suite's pinned delegation mechanism; see the global
+`pi-subagents` package is the suite's delegation mechanism; see the global
 configuration repository's `REQUIREMENTS.md`) and configured planning-capable
 agents. Never invent an agent, model, command, or configuration. For a managed
 Standard pass, the planner supplies the saved plan assignment; preserve it unchanged
