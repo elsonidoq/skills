@@ -11,6 +11,19 @@ This source preserves the incident and defines a bounded reproduction and condit
 minimal correction. Its preparation is not implementation approval. Planner owns fresh
 independent source review, separate tasks, final planning review and combined approval.
 No issue filing is a prerequisite. No issue/epic or external tracker write is included.
+Final implementation approval was cancelled; this correction authorizes source preparation only.
+
+### Required review direction
+
+Future reviewers of this work and any resulting reusable reviewer guidance must enforce the
+**simplest sufficient path**: challenge unnecessary obligations as well as omissions, compare
+with a concrete smaller sufficient alternative where applicable, and justify complexity by an
+owner requirement, actual interface constraint or concrete material risk. Preserve necessary
+safety and acceptance. This means no findings quota, forced deletion, unconditional preference
+for shortest code, or extra gate/checklist/report matrix. Subsequent tasks and reviewer briefs
+must reference this direction, not duplicate it. It is required owner direction, not evidence
+that general “be simple” wording alone remedies the incident; it must not contaminate the
+unchanged baseline or authorize a guessed behavior fix.
 
 ## Sanitized incident and provenance
 
@@ -70,11 +83,22 @@ overload as an internal cause.
 
 Use one reduced **planner-to-final-reviewer handoff** case. This is a repository-derived
 choice: both the derived task obligation and the parent's remedy-presupposing brief are
-observable, while the original role already contains necessity instructions. Exercise the
-actual revision's reviewer instructions and final-review input composition, not a mock
-reviewer or an entire indexing workflow. Start with payload method versus required outcome;
-retain a necessary isolation control. Do not force duplication or truncated reads into the
-first case. Assess them only if observed reproduction makes them decision-relevant.
+observable, while the original role already contains necessity instructions. This is a
+**STRUCTURAL REPRODUCTION ATTEMPT**, not a replay of the complete historical review. It may
+be easier than the original; a baseline pass does not disprove that incident.
+
+The changing behavior seam is the instruction body of revision-owned
+`roles/coherence-reviewer.md`, used with the frozen `evaluations/review-necessity/packet.md`
+below. The maintained `skills/planner/SKILL.md` section “Shared final task-review contract”
+establishes fresh read-only review and input boundaries; it does not require loading the full
+planner history or reconstructing a workflow. Supply the role from each explicit revision
+with equivalent invocation settings. No executable briefing transformation is selected or
+claimed: packet markdown is fixed input, not an existing composition function under test.
+A different changing seam would require affected planning review before reliance.
+
+Start with payload method versus required outcome and retain a necessary isolation control.
+Do not pad the case or force duplication/truncated reads into it. Assess those mechanisms
+only if observed reproduction makes them decision-relevant.
 
 During implementation, retain plain input and independently justified expectations under
 the existing [evaluation convention](../../evaluations/README.md). No harness, rubric engine,
@@ -87,7 +111,9 @@ alone are not availability evidence.
 
 ### Minimal case material (reviewer input, not the oracle)
 
-Create a neutral, project-independent planning packet from this sanitized content:
+Freeze `evaluations/review-necessity/packet.md` from this sanitized, project-independent
+content, with independent expectations in `expectations.md` and invocation details in
+`recipe.md` alongside it:
 
 > Owner outcome: prepare an isolated experimental index, preserving stable identities,
 > complete source payloads and old interfaces. No production compute or serving storage
@@ -141,37 +167,52 @@ current instructions. One real comparison is needed because static text assertio
 measure reviewer decisions. It cheaply determines whether a fix is justified before relying
 on one. No separate disposable prototype, inference workload or production experiment is needed.
 
-**A1 — Frozen, uncontaminated reproduction.** Retain packet, expectations and invocation
-recipe separately from outputs before baseline execution, with content identities. Use explicit
-previous revision `bad3ccc49ce491db3de990d2a4e638191176269a` of this repository, unchanged,
-and later an explicit candidate SHA. Run each once in separate fresh equivalent contexts,
-using the same `openai-codex/gpt-6.1-sol` model, medium effort, relevant tools/resources and
-input. Record Pi version, loaded revision-owned role/skill/reference identities, prompt,
-environment differences, actual invocation, exit/completion/error evidence and outputs.
-Prevent baseline intake of candidate/global guidance or oracle, including inherited project
-context and symlinked references. Do not substitute a model or install/authenticate to proceed.
-A capability/authority gap stops only the affected execution and is reported.
+**A1 — Frozen, comparable attempt.** Freeze case facts, intentional defective task/brief
+statements and independent expected outcomes before either run, outside result output.
+Only the selected revision-owned reviewer instructions may change; do not repair the
+intentional input defect or leak its answer as a candidate. Use unchanged previous revision
+`bad3ccc49ce491db3de990d2a4e638191176269a` and one explicit candidate SHA, each once in fresh
+equivalent contexts with `openai-codex/gpt-6.1-sol`, medium effort and equivalent tools/resources.
+
+Exclude oracle/answers, incident verdicts and other-revision guidance from supplied prompts
+and case resources; the candidate receives only its selected revision's reviewer instructions,
+not the expected finding or a corrected version of the defective packet. Inspect actual reads,
+inherited project context, settings and symlink targets for contamination. Read tools are not a security sandbox: theoretical access alone does not
+invalidate a run; actual oracle or cross-version intake does. No access-control machinery is
+required. Do not substitute models or install/authenticate to proceed. Report an unavailable
+capability or authority gap only against the affected execution.
+
+Comparison evidence is defined once here: record frozen packet/expectations/recipe identities,
+actual previous/candidate revisions and loaded reviewer resource, Pi version, model/effort,
+invocation and relevant environment differences, public output/reads, completion/errors and
+expectation-based verdict with supporting quotes. Keep outputs separate from inputs. Use the
+existing plain `.local/review-necessity/baseline-observation.md` in the retained project root
+as the cross-run route to the baseline evidence for T002; the candidate comparison references
+that record rather than copying its identities and prerequisites into more receipts. No new
+schema, registry or resource-custody protocol is needed.
 
 **A2 — Actual red before correction.** Inspect baseline public output and observable tool
 results against the frozen expectations. Record supported pass/fail or inconclusive with
 quoted evidence. Baseline failure is not assumed. If pass, report **not reproduced** and do
-not blindly implement a guessed correction. If incomplete/error, preserve evidence and
-report inconclusive; no retries to force red. A materially revised case/expectation requires
-renewed affected planning approval and cannot reuse old runs as proof of its new claim.
+not blindly implement a guessed correction; this does not refute the historical incident.
+If incomplete/error, preserve evidence and report inconclusive; no retries to force red.
+A materially revised case/expectation requires renewed affected planning approval and cannot reuse old runs as proof of its new claim.
 
 **A3 — Evidence-led smallest correction.** Only after a valid baseline miss, inspect the
-actual failing seam and change the smallest relevant maintained owner: reviewer instructions
-or planner-to-reviewer input composition, as evidence warrants. Keep reusable assets project-
-neutral. Do not preselect a stronger prompt, repeat an existing abstract rule, fix the input's
-intentional defect, leak the oracle or introduce a review framework. If the evidence requires
-broader scope or changed acceptance, return to planner/owner before it. Add/update focused
-permanent static checks only where they observe the changed instruction/composition seam;
-run applicable existing checks and document actual effects in their existing owner if needed.
-Static green is instruction delivery evidence, not behavioral green.
+actual failing seam and make the smallest justified correction to the selected reviewer
+instruction resource, applying the Required review direction above. Keep reusable assets
+project-neutral. Do not preselect a stronger prompt, repeat an existing abstract rule, fix the
+input's intentional defect, leak the oracle or introduce a review framework. If evidence requires
+broader scope or changed acceptance, return to planner/owner before it. Add/update static
+checks only if a concrete instruction-delivery defect is meaningfully observed, not merely
+because prose changed. Preserve relevant existing checks for the changed owner and update
+its existing documentation only as needed. Static green is instruction-delivery evidence,
+not behavioral green; the comparison measures improvement.
 
 **A4 — Candidate and honest interpretation.** Run the same frozen input/expectations once
-against the explicit candidate revision with A1 equivalence and evidence. Compare completed
-valid observations: fail/pass = observed improvement on this case; fail/fail = unresolved;
+against the explicit candidate revision using A1's fixed facts/oracle, allowed changing
+instruction seam and comparison evidence. Compare completed valid observations:
+fail/pass = observed improvement on this case; fail/fail = unresolved;
 pass/pass = not reproduced; pass/fail = possible regression. Tool errors or incomplete runs
 are inconclusive. No reruns, answer leakage, post-hoc weakening, arbitrary thresholds,
 automatic model sweep or general reliability claim from this comparison. If no justified
@@ -180,7 +221,11 @@ candidate exists after A2, explicitly mark candidate NOT RUN rather than manufac
 ## Constraints, dependencies and limits
 
 A1 must precede A2; a demonstrated valid miss is prerequisite to A3, whose explicit revision
-precedes A4. Keep the frozen case and actual evidence through comparison and independent
+precedes A4. Execution note: use two ordinary task-list launches through the existing runner,
+first T001's case preparation, then conditional T002 only after the parent inspects the baseline
+observation. The current CLI cannot pause before conditional T002; do not add generic branching
+or move implementation outside the runner. Future model execution requires combined approval.
+Keep the frozen case and actual evidence through comparison and independent
 acceptance review; retain the useful sanitized case in the existing evaluation owner, not only
 in disposable storage. No duplicate report chain or evidence-only commit sequence is needed.
 No deployment or data migration is involved; an ineffective candidate remains unaccepted,
