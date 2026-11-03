@@ -1,0 +1,23 @@
+{
+  "tasks": [
+    {
+      "id": "T001",
+      "outcome": "Deliver the permanent frozen planner-to-reviewer case and concrete invocation recipe. Read docs/plans/review-necessity-reproduction-tasks.md shared constraints, T001 and parent schedule, plus docs/plans/review-necessity-reproduction-tinyspec.md minimal case, independent expectations and A1. Retain neutral packet.md, independent expectations.md and recipe.md under evaluations/review-necessity/; update evaluations/README.md only for case discovery and its now-obsolete empty-collection statement. Freeze content identities before any baseline. Preserve source/task/parent boundaries, unknown retained-material availability and necessary isolation control. No model invocation in this worker: parent performs the baseline after this task's checkpoint and independent run review. Verify the actual installed Pi CLI/docs, supported non-inference exact-model discovery and credential readiness without authentication/refresh or secret disclosure. Recipe must specify extraction of the actual revision-owned reviewer role body as replacement system prompt and actual planner final-review input composition/references, with explicit unchanged baseline bad3ccc49ce491db3de990d2a4e638191176269a and later explicit candidate SHA. Verify resource resolution and identities locally, using equivalent fresh contexts, same packet/model/medium effort/tools, separate outputs and no inherited global/candidate guidance or oracle. Inspect user/system additions, settings and symlinks; flags that disable AGENTS discovery alone do not establish isolation. Do not create a harness, registry or generic conditional runner. Recipe must retain actual invocation, exit/error/completion evidence, public outputs and tool reads for parent semantic judgment without publishing private reasoning. If live capability/isolation cannot be established, retain the useful case and state the exact UNAVAILABLE prerequisite; never claim live readiness or authorize baseline reliance from catalogue/help evidence alone. Return kit hashes and actual checks. No baseline result is assumed.",
+      "owned_paths": [
+        "evaluations/review-necessity/packet.md",
+        "evaluations/review-necessity/expectations.md",
+        "evaluations/review-necessity/recipe.md",
+        "evaluations/README.md"
+      ],
+      "required": [
+        {
+          "id": "T001/A1",
+          "description": "Frozen, uncontaminated reproduction kit: packet faithfully represents the source's reduced case without verdict/oracle leakage; expectations independently justify conditional missing-field supplementation and necessary identity/checksum/type/provenance/isolation outcomes. Input, expectations and concrete invocation recipe have identities before baseline. Local non-inference verification checks actual flags, revision-owned role extraction, planner composition/reference loading and output separation. Evidence names actual checked resources and gaps. A live capability/authority gap is explicitly UNAVAILABLE and blocks the affected parent call, not a claimed behavioral pass/fail. No reviewer call in this task. Preserve useful sanitized case in Git. Parent A1/A2 schedule in the human tasks is REQUIRED before any correction launch."
+        }
+      ],
+      "checks": [
+        "git diff --check"
+      ]
+    }
+  ]
+}

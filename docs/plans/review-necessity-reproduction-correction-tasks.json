@@ -1,0 +1,34 @@
+{
+  "tasks": [
+    {
+      "id": "T002",
+      "outcome": "Deliver the smallest evidence-led maintained-seam correction and focused permanent instruction-delivery checks. Read docs/plans/review-necessity-reproduction-tasks.md shared constraints, T002 and parent schedule, and source docs/plans/review-necessity-reproduction-tinyspec.md A2-A4. Cross-run prerequisite: completed T001 kit/checkpoint and parent A1/A2 public output/read evidence establish a valid reproduced miss at unchanged bad3ccc49ce491db3de990d2a4e638191176269a against the frozen expectations. The parent supplies those identities/evidence before launching this list. Pass or inconclusive baseline means this list is NOT LAUNCHED, candidate NOT RUN, not a failed correction task. Inspect that actual evidence before edits; if the prerequisite is absent, stop the affected work rather than assume failure. Choose the smallest relevant maintained reviewer-instruction or planner final-review input-composition owner warranted by the observed seam; the role already has an abstract necessity rule, so do not repeat it as an unevidenced remedy or preselect stronger prompting. Keep the reusable change project-neutral, necessary protections intact and derived correction choice revisitable. Do not fix the frozen input's intentional defect, alter expectations, leak the answer or build a framework. If the evidence cannot support a bounded remedy, report unresolved; broader scope or acceptance changes return to planner/owner. Add/update focused permanent checks in existing planner checker/test owners only where they observe the changed seam; update planner-regression.md only for actual effects and limits. Run the specified existing checks. Return evidence basis, actual diff/check results, unchanged kit hashes and changed owner/resource identities; runner creates the explicit candidate checkpoint. Parent performs the one same-input candidate call after checkpoint and independent run review, using the frozen recipe. Worker does not delegate or invoke a model. Local static success establishes instruction delivery only; overall behavioral acceptance stays unverified pending parent A4 comparison and independent acceptance. Prepare a Paseo fresh-session activation handoff for any global role/skill change, not reload/restart.",
+      "owned_paths": [
+        "roles/coherence-reviewer.md",
+        "skills/planner/SKILL.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "docs/plans/planner-regression.md"
+      ],
+      "required": [
+        {
+          "id": "T002/A2",
+          "description": "Before correction, inspect the parent's valid completed baseline miss, frozen kit identities, exact unchanged revision, public output and actual reads. Quote supporting evidence for failure of the principal expectation; distinguish incomplete/error/contaminated runs from behavioral failure. A baseline pass/inconclusive cannot release this task. No reruns to force red."
+        },
+        {
+          "id": "T002/A3",
+          "description": "Smallest relevant maintained-seam correction justified by actual baseline evidence, preserving assembled-payload completeness and necessary identity/checksum/type/provenance/isolation checks, unknown retained availability and project portability. Do not require a complete starting snapshot or all historical concerns as findings. Focused permanent static checks observe the changed seam; existing relevant checks pass. Report static limits and actual effects; if no bounded correction is justified, report unresolved without manufacturing a fix."
+        },
+        {
+          "id": "T002/A4",
+          "description": "Candidate handoff retains frozen packet/oracle/recipe identities and explicit candidate checkpoint/resource identities plus actual checks/environment differences. Parent, after checkpoint and independent run review, runs the same case once with equivalent fresh context and exact selected reviewer model/medium effort per the human schedule. Parent records actual invocation, exit/errors/completion, public output and reads and applies the frozen semantic expectations: fail/pass = observed case improvement, fail/fail = unresolved, error/incomplete = inconclusive. No retry, oracle weakening or general reliability claim. This parent comparison is REQUIRED for overall behavioral acceptance, not a pre-commit worker check or a false claim that static delivery acceptance proves improvement."
+        }
+      ],
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+        "git diff --check"
+      ]
+    }
+  ]
+}
