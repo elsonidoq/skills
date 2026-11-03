@@ -51,6 +51,35 @@ class PreserveCommandTests(PreserveSourceTests):
         self.assertEqual(main_before, (self.main / "tracked").read_bytes())
         self.assertEqual(index_before, subprocess.check_output(["git", "-C", str(self.main), "diff", "--cached", "--binary"]))
 
+    def test_bidirectional_source_merges_keep_databases_local_and_preserved_history_readable(self):
+        from coherence_workflow.store import Authority, git
+
+        # Main adds the ignore convention and unrelated code. The linked worktree
+        # receives those changes without receiving main's database.
+        (self.main / ".gitignore").write_text(".coherence/workflow/\n.coherence/preserved-recordings/\n")
+        (self.main / "main-code").write_text("main change\n")
+        git(self.main, "add", ".gitignore", "main-code")
+        git(self.main, "commit", "-qm", "main source change")
+        with Authority(self.main) as owner:
+            owner.store.start("main-only", self.base)
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE execution_runs SET state='completed' WHERE run_id='kept'")
+        main_db = self.main / ".coherence/workflow/workflow.sqlite"
+        before = {path: path.read_bytes() for path in (main_db, self.db)}
+        git(self.source, "merge", "--ff-only", git(self.main, "rev-parse", "HEAD").decode().strip())
+        (self.source / "feature-code").write_text("feature change\n")
+        git(self.source, "add", "feature-code")
+        git(self.source, "commit", "-qm", "feature source change")
+        git(self.main, "merge", "--ff-only", "stopped")
+        result = self._command()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        recording = json.loads(result.stdout.removeprefix("preserved "))
+        self.assertEqual(recording["readback"], "verified")
+        self.assertEqual(Reader.preserved(self.main, recording["recording_id"]).open_snapshot()["state"], "ok")
+        self.assertEqual(before, {path: path.read_bytes() for path in before})
+        self.assertEqual((self.main / "feature-code").read_text(), "feature change\n")
+        self.assertEqual((self.source / "main-code").read_text(), "main change\n")
+
     def test_changed_source_reports_retained_mismatch_without_overwriting_prior_capture(self):
         self.assertEqual(self._command().returncode, 0)
         directory = self._published()

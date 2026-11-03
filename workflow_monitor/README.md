@@ -233,12 +233,49 @@ The reader opens short SQLite `mode=ro` snapshots for exactly one canonical Git
 worktree and does not import or invoke the workflow writer. It never copies a database,
 checkpoints WAL, signals a process, repairs recording gaps, or falls back to legacy history.
 
+## Merge source without merging runtime databases
+
+Git merges source and committed metric artifacts, not live workflow databases. Keep
+`.coherence/workflow/` and `.coherence/preserved-recordings/` ignored; ignore rules do not untrack
+existing files. Do not resolve a runtime database conflict with Git's ours/theirs or a SQLite merge.
+
+- **Linked worktree into main:** merge the source normally. If the owner wants completed monitor
+  history retained, use the preservation command below while the stopped source worktree still
+  exists. Verify its `readback: verified` result before relying on the recording. This is separate
+  from source integration and does not import resumable execution state into main.
+- **Main into a linked worktree:** merge source only. Leave both runtime databases independent;
+  there is no reverse history transfer. Main's preserved recordings remain in main.
+
+When a legacy branch tracks the database, removing it from tracking requires an authorized migration:
+stop writers, preserve the local database and any SQLite sidecars outside merge-affected paths,
+remove only Git tracking, then verify local bytes unchanged. Before an older branch receives that
+removal commit, preserve its own stopped database/sidecars first: Git may delete a clean tracked
+file during merge even when the new ignore rule covers it. After resolving source integration,
+restore that branch's own bytes to the now-ignored location and verify them before restarting.
+Do not copy main's database over the branch's database. Uncertain/live state stops this migration,
+not authorization to kill a writer or discard data. Existing tracked historical session files are
+not automatically removed by adding ignore rules.
+
+Preservation is optional unless explicitly required. These instructions authorize neither merges,
+shutdowns, database migration nor worktree deletion. Active workflow relocation is not supported by
+this command. Worktree-removal readiness remains owned by `finish-session`.
+
 ## Preserve a stopped linked worktree
 
 With the source writer stopped, invoke the separately prepared command from any directory:
 
 ```sh
 workflow-monitor-preserve --source-worktree /canonical/stopped-linked-worktree
+```
+
+If the console entry point is not installed, the same command is available from a verified
+Coherence checkout without installing packages. Set `COHERENCE_ROOT` to that checkout; it must
+contain `workflow_monitor/` and `runtime/`. With a compatible Python interpreter:
+
+```sh
+PYTHONPATH="$COHERENCE_ROOT:$COHERENCE_ROOT/runtime" python3 -B -m workflow_monitor.preserve --help
+PYTHONPATH="$COHERENCE_ROOT:$COHERENCE_ROOT/runtime" python3 -B -m workflow_monitor.preserve \
+  --source-worktree /canonical/stopped-linked-worktree
 ```
 
 The command verifies the registered distinct main, holds the source writer lock through

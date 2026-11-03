@@ -184,6 +184,17 @@ reports do not require an archive merely because they exist. Retain their still-
 existing authoritative owners, not a duplicate session summary. This distinction grants no deletion
 permission and does not waive paid-data, failure-evidence or other explicit retention requirements.
 
+## Workflow history at source integration
+
+When merging branches/worktrees, keep local workflow databases independent; Git merges source,
+not runtime state. For requested retention of completed monitor history, consult the installed
+[monitor merge and preservation guide](../../workflow_monitor/README.md#merge-source-without-merging-runtime-databases).
+It owns `workflow-monitor-preserve --source-worktree PATH`, its verified module invocation when the
+console command is absent, and legacy tracked-database precautions. Worktree into main may preserve
+history before source removal; main into worktree needs no database transfer. Do not silently archive
+history or use database conflict resolution as a substitute. No merge or migration authority follows
+from discovering the tool.
+
 ## Worktree-removal readiness, only when requested
 
 Apply this section when the owner requests worktree closeout or deletion readiness; ordinary session
