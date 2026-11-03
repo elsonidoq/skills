@@ -1,7 +1,9 @@
 # Issue-derived evaluations
 
-This collection is initially empty: it contains no behavioral cases or results and makes no
-correctness claim. Existing static checks and historical fixtures remain separate; see the
+This collection contains a retained behavioral case, but no behavioral results or correctness
+claim. See [review necessity](review-necessity/packet.md) for the packet,
+[expectations](review-necessity/expectations.md), and [recipe](review-necessity/recipe.md).
+Existing static checks and historical fixtures remain separate; see the
 [validation guide](../README.md#validation-and-documentation) and
 [planner regression guide](../docs/plans/planner-regression.md).
 
