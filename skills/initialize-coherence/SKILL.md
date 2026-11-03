@@ -297,6 +297,21 @@ and `compact-memory` can cite it. Record:
   as the conversation record and the canonical unresolved-work register via `track-open-issue`;
   its explicitly configured GitHub Issues target remains external and does not require a local
   register.
+- Worktree retention: include the following rule in approved project instructions, regardless of
+  whether worktrees are created by Paseo, another host or Git: a disposable worktree or scratch
+  directory must not hold the only copy of information or runtime assets required after work ends.
+  Route durable information when it arises: source/tests/reproducible configuration to Git, current
+  behavior/decisions/operating instructions to existing documentation, unresolved work to the declared
+  tracker, and eligible gotchas or explicit owner guidance through `memory-handling`. Required private
+  assets belong in project-approved persistent storage, never Git; document their owner and recovery
+  procedure without secrets. Do not invent a storage path or migrate existing assets during adoption.
+  Working changes may remain in the active worktree until their normal checkpoint/integration; before
+  removal verify they survive on the intended retained branch. Completed workflow history and temporary
+  evidence need no archive unless required for active recovery or explicit project retention, including
+  paid-data or failure-evidence duties. No automatic deletion, shutdown, migration or file registry.
+  Resolve and link installed `finish-session/SKILL.md` for the three removal-readiness checks. Existing
+  projects receive this rule only through an approved bounded refresh; a package update alone does not
+  update their instructions. Reconcile conflicting retention rules within that approved scope.
 - Documentation: Record documentation owners and the documentation-routing guide
   discovered here.
 

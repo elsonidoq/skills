@@ -174,6 +174,16 @@ rules above for reusable skills and commands.
   Preserve task-owned path boundaries, unrelated work, hooks/signing, old rows and actual errors.
   Current terminal input is authority when needed; no automatic install, auth refresh, reload,
   legacy restart, expensive failure retry loop or mass conversion.
+- Worktree retention: a disposable worktree or scratch directory must not hold the only copy of
+  information or runtime assets required after work ends, regardless of how the worktree was created.
+  Route durable facts when they arise to existing documentation, the declared tracker or eligible
+  project memory; source/tests/reproducible configuration belong in Git. Normal active edits remain
+  subject to task checkpoints; before removal verify required commits on the intended retained branch.
+  Required private assets need project-approved persistent storage and documented ownership/recovery,
+  never secrets in Git. Completed workflow history and temporary evidence need no archive unless
+  required for active recovery or explicit project retention. This grants no deletion, service-stop,
+  migration or push authority. Use [finish-session](skills/finish-session/SKILL.md#worktree-removal-readiness-only-when-requested)
+  for source, information and dependency checks; no file registry or routine archive.
 - Documentation: `docs/index.md` is the routing guide and root directory index;
   `docs/plans/index.md` and `docs/plans/reviews/index.md` map their direct files.
   `README.md` owns setup/workflow, `REQUIREMENTS.md` runtime requirements,

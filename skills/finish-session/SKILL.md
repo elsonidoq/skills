@@ -177,8 +177,43 @@ outcomes without requiring another review. Missing evidence is `unknown` or `NOT
 gate or permission to claim success. Report known unfinished work or unresolved findings through the
 existing issue route; do not repair them as part of closeout.
 
-Preserve SQL/Pi evidence, focused commits, custom STATE/history/gotchas and unrelated dirty work;
-no execution-memory closeout ledger.
+Preserve focused commits, custom STATE/history/gotchas and unrelated dirty work; no
+execution-memory closeout ledger. Keep SQL/Pi evidence needed for active recovery or an explicit
+project retention requirement. Completed workflow databases, transcripts, screenshots and temporary
+reports do not require an archive merely because they exist. Retain their still-required facts in
+existing authoritative owners, not a duplicate session summary. This distinction grants no deletion
+permission and does not waive paid-data, failure-evidence or other explicit retention requirements.
+
+## Worktree-removal readiness, only when requested
+
+Apply this section when the owner requests worktree closeout or deletion readiness; ordinary session
+closeout does not require a worktree audit. It applies equally to host-created worktrees, including
+Paseo, and manually created ones. Respect exclusions: if the owner excludes a worktree from inspection,
+report its readiness as not assessed rather than infer safety.
+
+Use existing session context, Git state and targeted reads of attributable or potentially unique
+untracked/ignored files. Do not recursively inspect all temporary contents or classify value from a
+name such as `.local/` alone. Check only:
+
+1. **Source retained:** verify required commits are reachable from the intended retained branch and
+   inspect outstanding tracked and relevant untracked source. A commit only on the disposable branch
+   is not sufficient; verify remote inclusion only when remote retention is required. Do not merge,
+   push or discard changes without authority.
+2. **Information retained:** route still-unique required facts through Step 3, then verify their owners
+   survive removal (including committed documentation on the retained branch or the external tracker).
+   Reuse already-recorded facts. Temporary evidence is disposable by default after completed work,
+   subject to the active-recovery and explicit-retention exceptions above. An unknown potentially
+   unique asset needs a specific ownership/retention decision, not silent disposal or blanket archival.
+3. **Dependencies independent:** check known required processes, mounts, configurations and private
+   runtime assets for dependence on this worktree. Use project-approved persistent storage; an ignored
+   directory alone is neither proof of independence nor a backup. Do not require relocation of an
+   already-independent asset merely to rename its directory.
+
+Report **ready to delete** with the retained branch and durable owners only when these checks support
+it; otherwise name the missing information or dependency, affected removal and concrete corrective
+action. Readiness is not permission to delete files, stop services, migrate data, merge or push.
+Ask only for consequential unresolved retention, ownership or permission choices. Do not add a file
+registry, routine closeout ledger, fresh test campaign or automatic archive.
 
 ## Step 8: Report
 
