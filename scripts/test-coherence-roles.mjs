@@ -1,4 +1,4 @@
-// Offline integration with the installed pi-subagents discovery and event API; no model call.
+// Offline integration with installed pi-subagents file discovery; no model calls.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -21,44 +21,68 @@ try {
   assert.throws(() => execFileSync('python3', [helper, project], {stdio: 'pipe'}));
   assert.equal(fs.readFileSync(link, 'utf8'), 'foreign');
   fs.unlinkSync(link); execFileSync('python3', [helper, project]);
+
+  // Exercise the real install.sh role-link block in an isolated home/suite.
+  const suite = path.join(temp, 'suite');
+  for (const dir of ['scripts', 'roles', 'skills', 'docs']) fs.mkdirSync(path.join(suite, dir), {recursive: true});
+  for (const script of ['install.sh', 'install-links.py']) fs.copyFileSync(path.resolve('scripts', script), path.join(suite, 'scripts', script));
+  fs.writeFileSync(path.join(suite, 'docs/best_practices_spec_driven_development.md'), 'fixture');
+  fs.writeFileSync(path.join(suite, 'scripts/check-skills-lint.sh'), '#!/bin/sh\nexit 0\n', {mode: 0o755});
+  for (const name of ['coherence-producer', 'coherence-reviewer']) fs.copyFileSync(path.resolve('roles', `${name}.md`), path.join(suite, 'roles', `${name}.md`));
+  const bin = path.join(temp, 'bin');
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, 'pi'), '#!/bin/sh\nprintf "pi-subagents pi-ask-user\\n"\n', {mode: 0o755});
+  const home = path.join(temp, 'install-home');
+  fs.mkdirSync(home);
+  const env = {...process.env, HOME: home, PI_CODING_AGENT_DIR: path.join(home, '.pi/agent'), PATH: `${bin}:${process.env.PATH}`};
+  const install = () => execFileSync('bash', [path.join(suite, 'scripts/install.sh')], {env, stdio: 'pipe'});
+  install(); install();
+  for (const name of ['coherence-producer', 'coherence-reviewer']) assert.equal(fs.readlinkSync(path.join(home, '.agents', `${name}.md`)), path.join(suite, 'roles', `${name}.md`));
+  const conflict = path.join(home, '.agents/coherence-reviewer.md');
+  fs.unlinkSync(conflict);
+  fs.writeFileSync(conflict, 'foreign');
+  assert.throws(install);
+  assert.equal(fs.readFileSync(conflict, 'utf8'), 'foreign');
+  fs.unlinkSync(conflict); fs.symlinkSync(path.join(temp, 'absent'), conflict);
+  assert.throws(install);
+  assert.equal(fs.readlinkSync(conflict), path.join(temp, 'absent'));
+
   const agentDir = path.join(temp, 'agent');
-  fs.mkdirSync(path.join(agentDir, 'agents'), {recursive: true});
-  fs.writeFileSync(path.join(agentDir, 'agents/reviewer.md'), '---\nname: reviewer\ndescription: foreign reviewer\n---\nFOREIGN GLOBAL PROMPT\n');
+  const userAgents = path.join(temp, '.agents');
+  fs.mkdirSync(agentDir);
+  fs.mkdirSync(userAgents);
+  for (const name of ['coherence-producer', 'coherence-reviewer']) {
+    fs.symlinkSync(path.resolve('roles', `${name}.md`), path.join(userAgents, `${name}.md`));
+  }
+  fs.writeFileSync(path.join(userAgents, 'reviewer.md'), '---\nname: reviewer\ndescription: foreign reviewer\n---\nFOREIGN GLOBAL PROMPT\n');
   process.env.PI_CODING_AGENT_DIR = agentDir;
   process.env.HOME = temp;
-  fs.writeFileSync(path.join(project, '.pi/settings.json'), JSON.stringify({subagents: {agentOverrides: {'coherence-reviewer': {systemPrompt: 'OVERRIDE PROMPT', tools: ['write'], model: 'test/model', thinking: 'high'}}}}));
   const {discoverAgents} = await import(pathToFileURL(path.join(root, 'src/agents/agents.js')));
-  const {mergeRuntimeAgents} = await import(pathToFileURL(path.join(root, 'src/agents/runtime-agent-registry.js')));
-  const {registerRuntimeAgentEventListener} = await import(pathToFileURL(path.join(root, 'src/agents/runtime-agent-events.js')));
-  const handlers = new Map(), listeners = new Map();
-  const pi = {on: (name, fn) => handlers.set(name, fn), registerTool() {}, events: {
-    on(name, fn) { listeners.set(name, fn); return () => listeners.delete(name); },
-    emit(name, value) { listeners.get(name)?.(value); },
-  }};
-  registerRuntimeAgentEventListener(pi);
-  const source = fs.readFileSync(link, 'utf8');
-  const {default: extension} = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
-  extension(pi); await handlers.get('session_start')();
   const discovered = discoverAgents(project, 'both');
-  const merged = mergeRuntimeAgents(pi, discovered, discovered.agents, {cwd: project, scope: 'both'});
-  const producer = merged.agents.find(a => a.name === 'coherence-producer');
+  const producer = discovered.agents.find(a => a.name === 'coherence-producer');
+  assert(producer, 'producer must be discovered without runtime registration');
+  assert.equal(producer.source, 'user');
   assert(producer.systemPrompt.includes('After successfully writing the report to the runtime-bound output file'));
   assert(producer.systemPrompt.includes('Report written to the bound output path.'));
-  assert(producer.systemPrompt.includes('Do not duplicate the report in chat or end with an empty final response'));
-  assert(producer.systemPrompt.includes('If report delivery fails, report the failure instead of claiming delivery'));
-  const reviewer = merged.agents.find(a => a.name === 'coherence-reviewer');
-  assert.equal(reviewer.source, 'runtime');
+  assert.equal(producer.defaultContext, 'fresh');
+  assert.equal(producer.acceptanceRole, 'writer');
+  assert.equal(producer.inheritSkills, true);
+  assert(producer.tools.includes('write'));
+  const reviewer = discovered.agents.find(a => a.name === 'coherence-reviewer');
+  assert(reviewer, 'reviewer must be discovered without runtime registration');
+  assert.equal(reviewer.source, 'user');
   assert(reviewer.systemPrompt.includes('Derived obligations remain reviewable'));
   assert(!reviewer.systemPrompt.includes('FOREIGN GLOBAL PROMPT'));
-  assert(!reviewer.systemPrompt.includes('OVERRIDE PROMPT'));
+  assert.equal(reviewer.defaultContext, 'fresh');
+  assert.equal(reviewer.acceptanceRole, 'read-only');
+  assert.equal(reviewer.inheritSkills, false);
   assert(!reviewer.tools.includes('write'));
-  assert.equal(reviewer.model, 'test/model');
-  assert.equal(reviewer.thinking, 'high');
-  assert(merged.agents.find(a => a.name === 'reviewer').systemPrompt.includes('FOREIGN GLOBAL PROMPT'));
-  assert.throws(() => mergeRuntimeAgents(pi, discovered, [...discovered.agents, {name: 'coherence-reviewer'}]), /collides/);
-  await handlers.get('session_shutdown')();
-  assert(!mergeRuntimeAgents(pi, discovered).agents.some(a => a.name === 'coherence-reviewer'));
-  listeners.clear();
-  await assert.rejects(handlers.get('session_start')(), /runtime agent registration unavailable/);
-  console.log('PASS: real event registration/discovery; runtime prompt and tools resist overrides, model/effort retained; collision and activation preservation');
+  assert(discovered.agents.find(a => a.name === 'reviewer').systemPrompt.includes('FOREIGN GLOBAL PROMPT'));
+
+  // Previously activated projects must not add colliding runtime registrations.
+  const source = fs.readFileSync(link, 'utf8');
+  const {default: extension} = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+  extension({on() { throw new Error('legacy extension must not register session handlers'); }, events: {emit() { throw new Error('legacy extension must not register runtime roles'); }}});
+  assert(!fs.existsSync(path.join(project, '.pi/agents')), 'no project-specific role installation required');
+  console.log('PASS: installer repeat/conflict preservation; fresh-process file discovery for both roles; preserved prompts, permissions and foreign reviewer; legacy activation cannot register duplicates');
 } finally { fs.rmSync(temp, {recursive: true, force: true}); }

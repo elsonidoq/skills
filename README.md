@@ -6,7 +6,7 @@ uses pi agent capabilities and requires adoption per project; it is not runtime-
 ## Setup
 
 See [REQUIREMENTS.md](REQUIREMENTS.md). The installer verifies pi, reports package registrations without installing or updating them,
-links suite skills and the SDD reference, and runs deterministic validation. Verify required
+links suite skills, the SDD reference and user-agent role files, and runs deterministic validation. Verify required
 registered tools are usable in the session before their applicable stages:
 
 ```bash
@@ -51,22 +51,25 @@ require SpecKit; Standard retains its stage capability gates.
 
 ### Coherence role activation
 
-For an explicitly selected project and authorized local write, run
-`python3 scripts/activate-coherence-roles.py PROJECT_DIRECTORY`. This links the versioned
-suite extension into that project's `.pi/extensions/`; it preserves conflicting entries and
-never copies prompts. It does not install packages or alter settings. Start a fresh trusted Pi
-session in that project and verify that the loaded `pi-subagents` capability supports runtime
-agent registration and exposes `coherence-producer` and `coherence-reviewer` as runtime roles (use the
-`subagent` tool's `get` action for each and inspect the source).
-If registration is missing or collides, correct the capability or conflict before the affected
-dispatch; never substitute a global role. Registration is process-local: activate the extension
-in each parent process that actually dispatches these stages, not automatically in children.
-Changes to suite roles take effect in a fresh session. In Paseo, prepare a fresh-session handoff;
-do not reload or restart the current session automatically.
+`scripts/install.sh` links `roles/coherence-producer.md` and `roles/coherence-reviewer.md`
+into `~/.agents/`. These are persistent user agents, discovered in the same way as other
+user roles. No project extension or session-start runtime registration is required.
+The installer preserves conflicting files and links; resolve reported conflicts before retrying.
+Start a fresh Pi session and use the `subagent` tool's `get` action for each role to verify
+its source, prompt and tools. Dispatch either with the normal `{ agent, task }` API.
+
+`roles/coherence-roles.js` remains a no-op compatibility entry for existing activation links;
+`python3 scripts/activate-coherence-roles.py PROJECT_DIRECTORY` is no longer needed.
+Previously copied registration extensions must also be replaced with that compatibility entry
+in explicitly authorized locations, or they can collide with the user-agent names. Do not
+mass-update unrelated projects. Already running parents retain their runtime registrations
+until session replacement. In Paseo, prepare a fresh-session handoff; do not reload or restart
+the current session automatically.
 
 Planner passes the saved stage model and effort with the explicit producer/reviewer role;
-issue review uses the project's selected reviewer binding. Runtime-owned role prompts and tools
-are distinct from model selection. The executable coordinate-implementation runtime constructs
+issue review uses the project's selected reviewer binding. Suite-owned role prompts and tools
+are distinct from model selection. These file-based agents use normal pi-subagents settings and
+override behavior; inspect the effective configuration rather than assuming runtime-role override protection. The executable coordinate-implementation runtime constructs
 its own SDK sessions and prompts with its selected executor; it does not dispatch these roles.
 For file-only producer reports, keep the report in the runtime-bound file and return a short final
 acknowledgement after a successful write. File-only controls report delivery; an empty final response

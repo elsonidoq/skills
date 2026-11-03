@@ -76,6 +76,21 @@ python3 "$SUITE_DIR/scripts/install-links.py" \
   "$SKILLS_DIR" "$SPEC_DRIVEN_GUIDANCE" "$AGENTS_SKILLS" "$AGENTS_DOCS" \
   "$AGENTS_BACKUPS" "$SETTINGS" || fatal "skill link migration blocked; conflicting entries were preserved"
 
+# Standard user-agent discovery, the same mechanism used by other user roles.
+# Preserve foreign files and dangling links rather than replacing their prompts.
+for role in coherence-producer coherence-reviewer; do
+  source="$SUITE_DIR/roles/$role.md"
+  destination="$HOME/.agents/$role.md"
+  [ -f "$source" ] || fatal "suite role missing: $source"
+  if [ -L "$destination" ] && [ "$(readlink "$destination")" = "$source" ]; then
+    continue
+  fi
+  if [ -e "$destination" ] || [ -L "$destination" ]; then
+    fatal "role installation blocked: preserved conflicting entry $destination; resolve it before installation"
+  fi
+  ln -s "$source" "$destination" || fatal "cannot link role: $destination"
+done
+
 # ---- 5. Static validation -----------------------------------------------------
 info "running suite lint"
 "$SUITE_DIR/scripts/check-skills-lint.sh" || fatal "suite lint failed"

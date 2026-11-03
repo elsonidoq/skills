@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Link suite-owned role registration into one explicitly selected project."""
+"""Link the legacy no-op extension; install.sh now installs persistent user roles."""
 import argparse
 import os
 from pathlib import Path
@@ -31,7 +31,7 @@ def main():
         link = activate(args.project)
     except (OSError, ValueError) as error:
         parser.exit(1, f'role activation blocked: {error}\n')
-    print(f'roles linked: {link}; use a fresh trusted Pi session and verify role registration')
+    print(f'compatibility extension linked: {link}; run scripts/install.sh for persistent user roles')
 
 
 if __name__ == '__main__':
