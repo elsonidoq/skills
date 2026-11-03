@@ -1,5 +1,9 @@
 # Review packet
 
+## Review scope
+
+Review the planning specification and task below, not an implementation. This packet contains all material required for this review. No repository files, code diff or implementation tests are in scope. Report supported planning defects or explain why none qualify.
+
 ## Owner outcome
 
 Prepare an isolated experimental index, preserving stable identities, complete source payloads and old interfaces. No production compute or serving storage may be used. Reuse existing input and indexing machinery; adapt only necessary seams.

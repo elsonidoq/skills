@@ -2,6 +2,16 @@
 
 This is a structural reproduction attempt, not a historical replay. The parent performs the calls after the T001 checkpoint and independent review, in the [parent schedule](../../docs/plans/review-necessity-reproduction-tasks.md#two-list-execution-and-parent-schedule). The only changing instruction is the selected revision's `roles/coherence-reviewer.md` body. The packet is the entire supplied case; do not supply this recipe, the oracle, source, incident, correction, other-revision guidance or pass assurances to the reviewer. Apply the source's [Required review direction](../../docs/plans/review-necessity-reproduction-tinyspec.md#required-review-direction) when reviewing this delivery, not as additional baseline instructions.
 
+## Owner-approved packet-only revision
+
+After two inconclusive attempts sought nonexistent implementation files, the owner explicitly requested this patch and one reviewer-subagent launch. The packet now states that only the supplied planning specification/task is in scope. Its intentional supplement obligation, source facts and independent expectations are unchanged. Earlier observations remain inconclusive and are not baseline failures for this revised case.
+
+For this revision, no file tools are needed. Both baseline and any candidate must use the same no-file-tools setup. The test-only `.pi/agents/review-necessity-packet-only.md` configuration wraps the unchanged baseline reviewer body with empty tools/extensions and no inherited project/global/skill context. It is invocation configuration, not a new reviewer policy. Verify its body against the selected revision before launch. If testing a candidate, replace only the selected revision's body and preserve the packet, oracle and invocation settings.
+
+Launch a fresh `review-necessity-packet-only` subagent with model `openai-codex/gpt-6.1-sol:medium`, the complete packet text as its task, an empty case working directory, and file-only output bound outside that directory. Supply neither this recipe nor expectations. Record effective tools and inspect observable events; do not infer absence of file access merely from configuration. Native subagent report-routing instructions are an invocation difference from the earlier CLI attempts and must remain equivalent for any candidate. Freeze the revised identities before this launch.
+
+The CLI recipe below provides an equivalent no-tools invocation when explicitly selected; do not silently switch between CLI and native subagent for a previous/candidate pair.
+
 ## Before baseline
 
 In the same retained checkout used for both coordinator launches, set `ROOT` to its absolute project root. The following uses bash, Git, Python 3 and installed Pi. Freeze the packet, expectations and recipe identities **before** baseline, and record their hashes in the observation. Preserve these files unchanged through comparison and acceptance. Inspect `pi --help` and installed settings/system additions for the current environment; `--no-context-files` does not disable global `SYSTEM.md` or `APPEND_SYSTEM.md`. Both must be absent or inspected and unchanged, with no answer or other-revision guidance. Check symlink targets, settings and any actual reads for contamination. Use the same environment and Pi version for both calls. Do not expose credentials in evidence.
@@ -19,7 +29,7 @@ The offline catalogue and non-refreshing auth check establish local readiness on
 
 ## Run once per revision
 
-Run baseline with `REV=bad3ccc49ce491db3de990d2a4e638191176269a` and `LABEL=baseline`. Run candidate only after the valid miss and T002 checkpoint/review, with `REV` set to the explicit candidate commit SHA and `LABEL=candidate`. Resolve and record the full commit SHA and extracted body hash. Each invocation creates a separate empty working directory and separate output files under the retained project root. Do not run twice to force a result. Ensure the directory does not already exist; do not overwrite existing evidence. The read-only tool is not a sandbox; actual oracle or cross-version intake invalidates the run, not theoretical access alone.
+Run baseline with `REV=bad3ccc49ce491db3de990d2a4e638191176269a` and `LABEL=baseline`. Run candidate only after the valid miss and T002 checkpoint/review, with `REV` set to the explicit candidate commit SHA and `LABEL=candidate`. Resolve and record the full commit SHA and extracted body hash. Each invocation creates a separate empty working directory and separate output files under the retained project root. Do not run twice to force a result. Ensure the directory does not already exist; do not overwrite existing evidence. No file tools are supplied in this packet-only case. Actual oracle or cross-version intake still invalidates the run.
 
 ```bash
 # Set REV and LABEL as directed above before running this block.
@@ -44,7 +54,7 @@ printf 'revision: %s\n' "$REV"
 # Command substitution removes trailing newlines only; no metadata or other role is supplied.
 (cd "$OUT/cwd" && pi --offline --mode json --no-session --no-approve \
   --no-context-files --no-extensions --no-mcp --no-prompt-templates --no-themes \
-  --no-skills --tools read --provider openai-codex --model gpt-6.1-sol --thinking medium \
+  --no-skills --no-tools --provider openai-codex --model gpt-6.1-sol --thinking medium \
   --system-prompt "$(< "$OUT/reviewer-body.md")" \
   "$(< "$ROOT/evaluations/review-necessity/packet.md")") \
   > "$OUT/events.jsonl" 2> "$OUT/errors.txt"
