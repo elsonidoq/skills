@@ -25,6 +25,9 @@ class InstallerCapabilitiesTest(unittest.TestCase):
             (suite / 'skills/example/SKILL.md').write_text('example')
             (suite / 'docs').mkdir()
             (suite / 'docs/best_practices_spec_driven_development.md').write_text('example')
+            (suite / 'roles').mkdir()
+            for role in ('coherence-producer', 'coherence-reviewer'):
+                shutil.copy(ROOT / 'roles' / f'{role}.md', suite / 'roles' / f'{role}.md')
             bindir = tmp / 'bin'
             bindir.mkdir()
             pi = bindir / 'pi'
@@ -36,6 +39,13 @@ class InstallerCapabilitiesTest(unittest.TestCase):
                 result = subprocess.run(['bash', str(suite / 'scripts/install.sh')], env={**env, 'PACKAGES': packages}, text=True, capture_output=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertNotIn('unexpected pi operation', result.stderr)
+                for role in ('coherence-producer', 'coherence-reviewer'):
+                    installed = tmp / 'home/.agents' / f'{role}.md'
+                    self.assertTrue(installed.is_symlink())
+                    self.assertEqual(installed.resolve(), suite / 'roles' / f'{role}.md')
+                self.assertIn('No project role activation is required', result.stdout)
+                self.assertIn('fresh-session handoff', result.stdout)
+                self.assertNotIn('/reload', result.stdout)
                 if packages:
                     self.assertIn('package registration found: pi-subagents', result.stdout)
                     self.assertIn('package registration found: pi-ask-user', result.stdout)

@@ -4,7 +4,8 @@
 # What it does:
 #   1. Requires pi and reports missing agent package registrations
 #   2. Symlinks every suite skill into ~/.agents/skills (pi's standard scanned
-#      location) and the spec-driven-development guidance into ~/.agents/docs,
+#      location), persistent global roles into ~/.agents/, and the
+#      spec-driven-development guidance into ~/.agents/docs,
 #      retiring only proven suite-owned old links; foreign entries are preserved
 #      and conflicts reported — no copies, the repo stays the single source of truth
 #   3. Removes the old user-settings `skills` entry for this suite (kept in
@@ -101,4 +102,6 @@ if [ "$PROBE" = 1 ]; then
   "$SUITE_DIR/scripts/probe-pi-load.sh" || fatal "pi probe failed"
 fi
 
-printf '\n==> Done. Start a new pi session (or run `/reload`) so the new skills are picked up.\n'
+printf '\n==> Done. Global roles: ~/.agents/coherence-producer.md and ~/.agents/coherence-reviewer.md.\n'
+printf '==> No project role activation is required. In a fresh Pi session, verify both roles with subagent get.\n'
+printf '==> In Paseo, prepare a fresh-session handoff; do not reload or restart the current session automatically.\n'

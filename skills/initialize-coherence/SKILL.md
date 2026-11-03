@@ -45,9 +45,11 @@ The full-route documentation/sub-agent and asset duties below remain unchanged i
   Never state unverified code, operational or historical claims as current fact.
   Do not write credentials, tokens, personal data, or sensitive payloads.
 
-For planning/issue-review dispatch, propose the explicit [project role activation](../../README.md#coherence-role-activation)
-only within approved project-write bounds. Do not activate it automatically; a fresh dispatching
-session must verify registration before relying on these roles.
+Planning/issue-review roles are global user agents installed into `~/.agents/` by the
+[suite installer](../../README.md#coherence-role-activation), not project extensions.
+Do not add project activation files or install global roles during project adoption.
+Report missing roles with the suite setup correction; the dispatching session verifies
+applicable roles with `subagent get` before relying on them.
 
 ## Discovery
 

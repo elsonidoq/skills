@@ -74,13 +74,15 @@ and scope actually presented. Correct a mistaken premise and affected derived co
 
 ## Coherence role dispatch
 
-In the dispatching Pi session, use the suite-owned runtime `coherence-producer` for
-artifact creation/correction and `coherence-reviewer` for independent reviews. Activate
-and verify them as described in [setup](../../README.md#coherence-role-activation);
-use `subagent` action `get` to confirm each required role has runtime source. Missing
-registration or a name collision stops the affected stage, never fall back to a
-global role. Keep the saved model/effort binding unchanged in each invocation. Each
-review is fresh and read-only; stage-specific brief and write bounds still apply.
+In the dispatching Pi session, use the suite-owned global user agents `coherence-producer`
+for artifact creation/correction and `coherence-reviewer` for independent reviews.
+The suite installer links their definitions into `~/.agents/`; project activation is not
+required. Verify them as described in [setup](../../README.md#coherence-role-activation):
+use `subagent` action `get` to inspect each required role's user source, effective prompt
+and tools. Missing roles, conflicting definitions or incompatible overrides stop only the
+affected stage; report the problem and correction through setup, never substitute another
+agent. Keep the saved model/effort binding unchanged in each invocation. Each review is
+fresh and read-only; stage-specific brief and write bounds still apply.
 
 ## Saved planner assignments
 
