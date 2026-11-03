@@ -53,17 +53,34 @@ result as a failing command that the runner will retry. No runtime changes are n
    performs this selected model call and semantic assessment. Record the explicit baseline,
    prompt/resource identities, actual invocation, Pi version, effective model/medium effort,
    tools, environment differences, exit/errors/completion, public output and observable reads.
-   Keep evidence in the existing session/runtime return through comparison and acceptance;
-   do not publish raw events/private reasoning or create an evidence-only commit chain.
+   Before launching the correction list, parent writes a sanitized plain baseline observation
+   to `.local/review-necessity/baseline-observation.md`, resolved from the retained project
+   checkout root used for both CLI runs. T001's recipe defines this destination; T001 does
+   not create the observation. Keep the complete public final output and actual tool-call/read
+   results needed to judge completion, inspection coverage and the miss in this record. Include
+   T001 checkpoint, frozen packet/oracle/recipe paths and SHA256 hashes, baseline revision and
+   loaded role/skill/reference paths and hashes, prompt identity, invocation, Pi version, effective
+   model/effort/tools, environment differences, exit/errors/completion evidence and semantic
+   judgment with supporting quotes. If supporting public output/read excerpts need separate
+   files, keep them under the same retained `.local/review-necessity/` directory and record
+   their relative paths and hashes; no link may depend only on `/tmp`, a child session or a
+   disposable run directory. Preserve this record and any linked files through comparison and
+   acceptance, outside Git and the tested reviewer's inputs/readable case resources. Do not
+   expose raw private reasoning or credentials, publish raw events or create an evidence-only
+   commit chain. This is ordinary plain-file handoff, not a receipt schema or registry.
    A valid completed miss of the frozen principal expectation is **reproduced**. A valid
    detection is **not reproduced**: correction list NOT LAUNCHED, candidate NOT RUN. Errors,
    contamination, incomplete inspection or incomplete completion are **inconclusive**: preserve
    evidence, correction list NOT LAUNCHED, candidate NOT RUN. No retry to force red. A changed
    case/oracle requires renewed affected planning approval, not reuse of the old run as proof.
 3. **Only on a valid miss:** parent reconciles the exact evidence and T001 checkpoint, then
-   launches the pre-reviewed correction list through the same coordinator. Supply T002 the
-   baseline public output/read evidence and frozen identities in its task context. This is a
-   technical evidence gate, not another routine consent request. T002 has no dangling JSON
+   launches the pre-reviewed correction list through the same coordinator in that retained
+   checkout. Parent first verifies `.local/review-necessity/baseline-observation.md` and its
+   linked evidence are present and readable there. T002 resolves this named file from its
+   project root, reads it and any linked public evidence, and checks identities, completion,
+   inspection validity and the supported miss before edits. No inherited parent context,
+   task-file mutation or extra runtime context option is needed. This is a technical evidence
+   gate, not another routine consent request. T002 has no dangling JSON
    dependency on a task in another run; its cross-run prerequisite is explicit in its work.
    Unexpected broader scope returns to planner/owner, never an invented generic remedy.
 4. **Parent A4 boundary:** after the T002 focused checkpoint and independent run review,
@@ -94,6 +111,12 @@ result as a failing command that the runner will retry. No runtime changes are n
     for the actual Pi interface: explicit revision-owned reviewer role body as replacement
     system prompt, revision-owned planner final-review composition and relevant linked resources,
     same frozen packet, fresh equivalent run directories and separate output destinations.
+    Define the parent-written `.local/review-necessity/baseline-observation.md` handoff in the
+    retained checkout shared by both CLI runs, with the identities and public completion/read
+    evidence specified in the parent A1/A2 boundary above. Supporting files, if needed, stay
+    in that retained directory with relative paths/hashes. Recipe defines how parent retains
+    sanitized evidence after the call; do not create or run that evidence in T001. Keep the
+    record/oracle outside the tested reviewer's inputs and case resources; no temporary-only links.
     Verify frontmatter extraction and reference resolution against both the named baseline and
     current resources without prompting a model. Identify every loaded resource by path/hash;
     keep path substitutions mechanical and equivalent. Prevent inherited project/user/candidate
@@ -116,14 +139,22 @@ result as a failing command that the runner will retry. No runtime changes are n
 - [ ] T002 Deliver an evidence-led minimal correction at the observed maintained seam.
   - **Depends**: T001
   - Cross-run prerequisite: parent A1/A2 has a valid reproduced miss on the frozen kit and
-    supplies the public evidence. A pass/inconclusive result does not launch this task.
+    writes `.local/review-necessity/baseline-observation.md` in the retained checkout before
+    launch. T002 resolves and reads this project-root-relative file and any linked retained
+    public evidence. A pass/inconclusive result does not launch this task.
   - Bounded possible owners: `roles/coherence-reviewer.md`, `skills/planner/SKILL.md`,
     their existing static checker/tests and `docs/plans/planner-regression.md`. Choose only
     the observed failing role or final-review input-composition seam, not both by default.
     Do not preselect stronger prompting or repeat the existing abstract necessity rule. The
     role already contains that rule. Do not change the frozen intentional defect or oracle.
-  - **REQUIRED T002/A2–A3:** inspect actual baseline output/reads before any correction; cite
-    the missed obligation and mechanism evidence, distinguish causal hypotheses from proof,
+  - **REQUIRED T002/A2–A3:** before any correction, read the named observation and linked
+    public output/reads; verify T001 checkpoint and frozen packet/oracle/recipe hashes against
+    retained files, unchanged baseline revision and loaded resource identities, invocation and
+    effective model/effort/tools, actual exit/error/completion and inspection-coverage evidence.
+    Judge the supported miss against the same frozen expectations, not the parent's verdict
+    alone. Missing/unreadable/mismatched evidence or an invalid/incomplete run blocks edits,
+    without a retry or invented evidence. Cite the missed obligation and mechanism evidence,
+    distinguish causal hypotheses from proof,
     and make the smallest project-neutral maintained change. If evidence cannot justify a
     bounded remedy, report unresolved; no guessed fix. Add/update a permanent focused check
     only where it observes the changed seam. Use existing planner checker/test owners; report
