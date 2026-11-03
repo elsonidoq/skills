@@ -33,4 +33,10 @@ substitute or store secrets, completed-work inventories or fabricated knowledge.
 - **Action:** Do not require specific versions; verify the applicable capability is usable instead.
 - **Provenance:** Owner direction on the Coherence roles runtime-version question: “remove the specific version requirement. It's the fifth time I ask for that. Do not require specific versions”.
 
+### Persistent Coherence role installation
+
+- **Trigger:** Installing Coherence roles or diagnosing missing `coherence-producer` / `coherence-reviewer` agents.
+- **Action:** Use the persistent user-agent files installed in `~/.agents/` by `scripts/install.sh`, then verify each role with `subagent get` in a fresh session. Do not restore the former session-start registration setup by copying extensions into project or global `.pi/extensions/`. Follow [Coherence role activation](../README.md#coherence-role-activation) for compatibility and conflict handling.
+- **Provenance:** Explicit owner report and retention request in this conversation: “it was finally fixed by installing them in ~/.agents. Save that information”. Installation links and the canonical setup documentation were verified; see commit `9a76ff75a8ca7f2f5315db329bfffc0937353369`. This records the working resolution, not an established cause for every earlier failure.
+
 No technical project gotchas recorded yet.
