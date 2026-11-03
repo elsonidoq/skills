@@ -2,9 +2,14 @@
 
 ## Approval record
 
-Task alignment and a focused checkpoint are authorized. Implementation approval was cancelled;
-no implementation or model case has run. Affected fresh final planning review and renewed combined
-owner approval remain required for both lists and the parent model calls. This is not self-approval.
+Owner approved **Approve and start** through `ask_user` on 2026-11-03 for the four source/task
+artifacts at `88d88e8b3366657b8a91c2044d830724a17ccaea`. Approval covers T001 through the existing
+coordinator, one parent baseline call, T002 only after a valid reproduced miss, one conditional
+candidate call and independent acceptance. Both launches use `.pi/workflow-executor.json`.
+Source and final task reviews returned zero material findings after simplification; dependency
+validation and actual workflow intake passed. Live capability, recipe execution and behavioral
+outcomes remain unverified. The earlier cancelled question is superseded only for this scope.
+This approval-record update does not change task instructions, source acceptance or exclusions.
 
 ## Shared context
 
