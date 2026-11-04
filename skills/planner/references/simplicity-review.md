@@ -17,6 +17,14 @@ implementation complexity, compare the proposed approach with a simpler alternat
 finding when the alternative meets the same requirements with materially less work. If it does
 not, explain which requirement it fails.
 
+Distinguish required outcomes from extra guarantees introduced by the plan. Could a simpler
+approach satisfy the requirements by reporting partial results, preserving completed work, or
+requiring explicit continuation? Explain the trade-off without weakening genuine requirements.
+
+Identify cheap feasibility checks deferred until after substantial dependent implementation.
+Recommend moving them earlier when their results could remove or materially simplify that work.
+Do not add a separate prototype or new ceremony.
+
 Use a fresh context without producer justifications, previous review verdicts, coordinator criticism
 or full transcripts. Do not load the broad correctness/production checklist. Normal runtime safety
 and applicable inherited project instructions still apply. If required evidence is unavailable,
