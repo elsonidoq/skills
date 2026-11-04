@@ -42,7 +42,12 @@ Provide a concise entry for each task ID, not just a general review:
   fidelity, safety, isolation and practical repeatability. State concrete trade-offs and unresolved
   assumptions; another possible approach alone is not a defect.
 - **Proportionality:** Are tests, setup, recovery and workflow mechanisms justified by the
-  required outcome and concrete risks? Prefer smaller sufficient checks, not weaker evidence.
+  required outcome and concrete risks? Assess the verification method separately from the
+  implementation. Do not treat “this behavior needs testing” as justification for the proposed
+  test setup. Identify what the test must prove, then compare the proposed setup with the smallest
+  credible alternative using existing capabilities. Justify any additional environment, service,
+  fixture lifecycle or workflow by evidence the simpler alternative cannot provide. If equivalence
+  is uncertain, report that uncertainty. Prefer smaller sufficient checks, not weaker evidence.
 - **Verdict:** Keep, simplify, or unresolved, with a brief evidence-based reason. Distinguish
   supported findings from hypotheses; name missing evidence for unresolved judgments.
 
