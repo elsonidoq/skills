@@ -315,7 +315,7 @@ def check_contracts(texts):
             "shared rules apply to EVERY stage in both paths",
             "Apply recorded decisions through the shared mechanism inside selected bounds only.")
     require("accepted-decision-stage-brief", production,
-            "Before every direct or delegated TinySpec/Standard stage",
+            "Before every other direct or delegated TinySpec/Standard stage",
             "each applicable accepted outcome constraint\nand source link",
             "updated handoff carrying those\napplicable accepted constraints and links",
             "fresh delegate's brief")
@@ -340,7 +340,13 @@ def check_contracts(texts):
             "fresh read-only delegation", "independent reviewer in a new context",
             "separate from both task producer and parent history", "never fork",
             "resume either conversation", "Parent evaluates the actual report",
-            "routes substantive corrections to producers", "resolves material findings before approval")
+            "corrections to producers", "resolves material findings before approval",
+            "This is the correctness review", "Do not request a simplicity verdict")
+    simplicity = section(p, "### Shared simplicity-review contract")
+    require("simplicity-review", simplicity, "In parallel with final correctness review", "same artifact snapshot",
+            "before final owner approval", "references/simplicity-review.md", "subagent get",
+            "Do not forward", "prior verdicts", "Never fork or resume", "No automatic full-review loop",
+            "If corrections invalidate correctness coverage", "recheck only the affected changes")
     shared = section(p, "### Shared specification-review contract")
     require("intent-review", shared,
             "Both paths require one fresh independent read-only specification review",
@@ -364,7 +370,7 @@ def check_contracts(texts):
             "Standard specification, plan and tasks", "task fragmentation",
             "removal or simplification", "do not weaken required acceptance")
     require("tiny-simplest-review", tiny,
-            "with the shared simplest-sufficient goal")
+            "**Simplicity review:** dispatch alongside stage 4 using the shared simplicity-review contract")
     tiny_review = re.search(r"\*\*Specification review .*?(?=\n\d+\. \*\*Tasks)", tiny, re.S)
     require("tiny-spec-review", tiny_review.group() if tiny_review else "",
             "independent saved reviewer assignment", "tinyspec-spec-review",
@@ -373,7 +379,7 @@ def check_contracts(texts):
             "Explicit zero findings", "not a separate TinySpec approval",
             "Unresolved material intent gaps stop task generation")
     tiny_order = [tiny.find(marker) for marker in (
-        "**Source creation", "**Specification review", "**Tasks", "**Review", "**Combined approval")]
+        "**Source creation", "**Specification review", "**Tasks", "**Review", "**Simplicity review", "**Combined approval")]
     if -1 in tiny_order or tiny_order != sorted(tiny_order):
         errors.append("tiny-review-order: source → spec review → tasks → fresh task review → approval required")
     prompt = texts["spec_review_prompt"]
@@ -393,9 +399,9 @@ def check_contracts(texts):
             "state what is unreviewed", "evidence supporting coverage, downstream clarity and simplicity",
             "without a separate matrix", "preserve justified zero findings")
     std = section(p, "### Standard path")
-    require("standard-simplest-review", stage(std, "overall_review"),
-            "with the shared simplest-sufficient goal")
-    positions = [std.find(f"**`{s}`") for s in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review")]
+    require("standard-simplest-review", stage(std, "simplicity_review"),
+            "dispatch alongside stage 5 using the shared simplicity-review contract")
+    positions = [std.find(f"**`{s}`") for s in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review", "simplicity_review")]
     if -1 in positions or positions != sorted(positions):
         errors.append("standard-order: missing/reordered operational stages")
     require("standard-preflight", std, "constitution", "template-only", "owner-derived",
@@ -443,8 +449,10 @@ def check_contracts(texts):
     review = stage(std, "overall_review")
     require("review", review, "independent saved reviewer assignment", "standard-overall-review", "shared final task-review contract", "observed analysis",
             "never apply unresolved material defaults", "renew affected approvals",
-            "BEFORE `ask_user`", "plan-phase implications", "Missing independent reviewer",
-            "bullet-list executive", "immediately proceed to handoff")
+            "Missing independent reviewer", "Join both review reports")
+    require("standard-final-approval", std[std.find("7. **Overall approval:"):],
+            "BEFORE `ask_user`", "plan-phase implications", "bullet-list executive",
+            "immediately proceed to handoff")
     b = texts["brainstorm"]
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
             "one material item", "recorded owner decisions", "preselection", "read-only",
@@ -863,7 +871,7 @@ BOUNDARY_CARRIERS = (
       "Test writing/running, evidence, verification, review preparation and routine teardown normally stay inside that outcome",
       "Do not split by a workflow noun or task-count quota")),
     ("planner-boundaries", "planner", "## Proportionate validation",
-     ("At both TinySpec and Standard reviews", "workflow or phase noun is not a reason to split",
+     ("During production and the simplicity review", "workflow or phase noun is not a reason to split",
       "task-generation outcome rule", "Reject duplicate proof/report chains and disproportionate checks")),
     ("task-review-boundaries", "tasks", "## Review and handoff",
      ("Challenge redundant task splits", "without weakening acceptance or original gates",
@@ -884,9 +892,9 @@ ATOMIC_OUTCOME_CARRIERS = (
       "milestones that leave several independently testable interfaces unfinished together",
       "Accept independently verifiable slices and ordinary established\ncross-system wiring when its focused tests/docs establish the final observable")),
     ("atomic-tiny-review", "planner", "item:4. **Review",
-     ("Apply the shared task-boundary and execution-risk review above", "temporary phase/approval status belongs in the approval record")),
+     ("Check independently executable outcomes and the shared execution-risk requirements above",  "temporary phase/approval status belongs in the approval record")),
     ("atomic-standard-review", "planner", "stage:overall_review",
-     ("Apply the shared task-boundary and execution-risk review above", "temporary phase/approval status belongs in the approval record")),
+     ("Check independently executable outcomes and the shared execution-risk requirements above",  "temporary phase/approval status belongs in the approval record")),
 )
 
 
@@ -903,10 +911,10 @@ RISK_HANDOFF_CARRIERS = (
         "unavailable\ncapability/access/paid/data/external operation", "corrective action", "block only affected work",
     )),
     ("risk-tiny-review-handoff", "planner", "item:4. **Review", (
-        "Apply the shared task-boundary and execution-risk review above", "risk selection/omission",
+        "shared execution-risk requirements above", "risk selection/omission",
     )),
     ("risk-standard-review-handoff", "planner", "stage:overall_review", (
-        "Apply the shared task-boundary and execution-risk review above", "risk selection/omission",
+        "shared execution-risk requirements above", "risk selection/omission",
     )),
     ("risk-coordinator-prepare", "coordinator", "## Prepare Approved Execution", (
         "Before affected worker reliance", "consume final-review/handoff material risk findings", "investigate or\nprepare routine prerequisites within authority",

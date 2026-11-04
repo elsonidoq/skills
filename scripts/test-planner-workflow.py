@@ -1066,7 +1066,7 @@ class InstructionTests(unittest.TestCase):
         """Extract instruction order, not a model execution or semantic obedience trace."""
         standard = checker.section(planner, "### Standard path")
         inventory = re.findall(r"(?m)^\d+\. \*\*`([^`]+)`", standard)
-        expected_stages = ["spec_create", "spec_review", "plan_create", "tasks_create", "overall_review"]
+        expected_stages = ["spec_create", "spec_review", "plan_create", "tasks_create", "overall_review", "simplicity_review"]
         self.assertEqual(inventory, expected_stages, "Standard operational stage inventory")
         # Locate actual action clauses inside each operational carrier. Summaries outside
         # Standard and references to a later stage cannot supply a missing action.
@@ -1089,9 +1089,14 @@ class InstructionTests(unittest.TestCase):
             "tasks_create": (("task_producer", "delegate a separate fresh bounded-context task producer"),),
             "overall_review": (
                 ("overall_inspection", "inspect source → spec → plan → tasks traceability"),
-                ("final_approval", "obtain current overall approval"),
+                ("join_reviews", "Join both review reports"),
+            ),
+            "simplicity_review": (
+                ("simplicity_inspection", "dispatch alongside stage 5 using the shared simplicity-review contract"),
             ),
         }
+        approval = standard[standard.index("7. **Overall approval:"):]
+        self.assertIn("obtain current overall approval", approval)
         observed = []
         for name in inventory:
             body = " ".join(checker.stage(standard, name).split())
@@ -2572,6 +2577,22 @@ class IntentSpecificationReviewTests(unittest.TestCase):
                     changed[key] = replace_clause(texts[key], clause)
                     self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
 
+    def test_final_review_focus_and_fresh_simplicity_inputs(self):
+        texts = checker.load_texts()
+        contract = checker.section(texts["planner"], "### Shared simplicity-review contract")
+        for clause in ("In parallel with final correctness review", "same artifact snapshot", "before final owner approval",
+                       "subagent get", "prior verdicts", "Never fork or resume",
+                       "No automatic full-review loop", "recheck only the affected changes"):
+            changed = dict(texts)
+            changed["planner"] = texts["planner"].replace(contract, replace_clause(contract, clause), 1)
+            self.assertTrue(any(e.startswith("simplicity-review:") for e in checker.check_contracts(changed)))
+        prompt = (ROOT / "skills/planner/references/simplicity-review.md").read_text()
+        self.assertIn("Is this the simplest", prompt)
+        self.assertIn("show why it", prompt)
+        self.assertIn("Do not invent findings", prompt)
+        role = (ROOT / "roles/coherence-reviewer.md").read_text()
+        self.assertIn("do not add a separate simplicity assessment to that stage", role)
+
     def test_simplest_sufficient_review_and_evidence_mutations(self):
         """Instruction-carrier sensitivity only; live exercises are documented separately."""
         texts = checker.load_texts()
@@ -2598,10 +2619,10 @@ class IntentSpecificationReviewTests(unittest.TestCase):
                 "without a separate matrix", "preserve justified zero findings",
             ), "review-consequences:"),
             ("planner", "### TinySpec path", (
-                "with the shared simplest-sufficient goal",
+                "**Simplicity review:** dispatch alongside stage 4 using the shared simplicity-review contract",
             ), "tiny-simplest-review:"),
             ("planner", "### Standard path", (
-                "with the shared simplest-sufficient goal",
+                "dispatch alongside stage 5 using the shared simplicity-review contract",
             ), "standard-simplest-review:"),
         ):
             carrier = checker.section(texts[key], heading)

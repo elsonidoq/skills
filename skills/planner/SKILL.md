@@ -91,7 +91,9 @@ Use [model-assignments.json](references/model-assignments.json) via the
 source/tasks, Standard spec/tasks, both specification reviews, the direct/helper plan pass and overall
 review/rereview. Pass the resolved binding unchanged in the invocation and bounded brief.
 Parent brainstorming assessment, dialogue, inspection and approvals retain the owner-launched parent binding.
-TinySpec final task review inherits `planner-parent` in a fresh reviewer session. Gate assessment needs no delegated assignment resolution.
+TinySpec final task review inherits `planner-parent` in a fresh reviewer session. The separate simplicity
+review reuses the selected path's final-review binding in another fresh session; no new model assignment.
+Gate assessment needs no delegated assignment resolution.
 Verify the exact binding is permitted and callable at dispatch; configuration is not availability evidence.
 A missing, malformed, unsupported, or unavailable binding stops only that operation with the resolver's
 focused owner correction question: do not recommend, infer, substitute or silently default.
@@ -102,9 +104,9 @@ failures before replacement and stop on unknown cause, never blind-retry.
 
 ## Proportionate validation
 
-At specification and final planning review, seek the simplest sufficient specification and delivery
+At specification and the separate final simplicity review, seek the simplest sufficient specification and delivery
 approach that achieves the user's goals while preserving necessary safety and required acceptance.
-Tooling, operations and verification are supporting means, not independent products. At final review,
+Tooling, operations and verification are supporting means, not independent products. At simplicity review,
 apply this to TinySpec source and tasks, or Standard specification, plan and tasks: challenge avoidable
 architecture, operational subsystems, bookkeeping, task fragmentation and disproportionate checks.
 Recommend removal or simplification of additions without a requirement, actual constraint or concrete
@@ -116,7 +118,7 @@ leverage; known bounded behavior uses permanent actual-helper tests or an earlie
 its delivery task; non-isolatable risks use real-system validation. Planning schedules proof, not
 execution without separate authority; the shared risk owner defines proof applicability and lifetime.
 
-At both TinySpec and Standard reviews, challenge proposed task boundaries using the task-generation
+During production and the simplicity review, challenge proposed task boundaries using the task-generation
 outcome rule and [executor-sized outcome recipe](../task-generation/SKILL.md#executor-sized-outcomes).
 Each task must deliver one bounded behavior or interface whose meaningful acceptance passes using
 completed prerequisites and its own result, without unfinished downstream implementation. Reject
@@ -246,12 +248,19 @@ Do not forward full transcripts or unrelated history. Re-present unanswered ques
 
 Default to direct asynchronous single-stage dispatch with the resolved saved assignment unchanged.
 Inspect the returned artifact/checkpoint before the next authorized stage. Never prewire dependent source→tasks.
+The two final reviews are independent parallel work: dispatch both against the same current artifact
+snapshot before awaiting either report. Do not send findings between reviewers or start producer corrections
+until both reports return. The parent combines supported findings and resumes the appropriate producer once
+for the combined corrections; overlapping or contradictory findings are resolved against requirements.
 A workflow needs concrete branching, parallel independent work or another earned orchestration need that
 direct delegation cannot adequately serve; a single child, convenience wrapper or stage sequence alone is
 insufficient. State the reason in the brief; retain parent inspection, stage authority, approvals and reviewer
 independence. Earned workflows do not authorize parallel implementation batches.
 
-Before every direct or delegated TinySpec/Standard stage, provide one bounded brief containing:
+The dedicated simplicity review uses only its bounded input contract below, not the production/risk
+checklist in this section. For final correctness review, supply relevant facts and requirements without
+forwarding simplicity-assessment instructions from production guidance.
+Before every other direct or delegated TinySpec/Standard stage, provide one bounded brief containing:
 - Exact saved assignment, stage authorization, allowed writes and prohibited operations.
 - Bounded source, governing instructions/principles, settled/non-obvious constraints **verbatim**,
   each applicable accepted outcome constraint and source link, applicable memory and prior-stage handoff.
@@ -314,8 +323,34 @@ or resume either conversation. Use the route's resolved binding unchanged. Suppl
 actual owner decisions, authoritative requirements, final human and executable tasks, and necessary
 verified risks and constraints. Do not supply producer conclusions, pass assurances or approval
 trajectory; do not omit substantive facts. The reviewer returns supported findings or justified zero,
-not approval. Parent evaluates the actual report, routes substantive corrections to producers and
-resolves material findings before approval. Missing delegation or review evidence stops this stage.
+not approval. Parent evaluates the actual report alongside the simplicity report, routes substantive
+corrections to producers and resolves material findings before approval. Missing delegation or review
+evidence stops approval, not the other independent review.
+This is the correctness review: assess correctness, completeness, feasibility and requirement alignment,
+not whether an otherwise valid mechanism is the simplest option. Do not request a simplicity verdict or
+forward parsimony/task-fragmentation assessment instructions. Preserve actual safety, permissions,
+acceptance and independently executable task checks. Simplicity has its own fresh review below.
+
+### Shared simplicity-review contract
+
+In parallel with final correctness review, and before final owner approval, dispatch one fresh
+read-only `coherence-reviewer` on the same artifact snapshot using [the simplicity prompt](references/simplicity-review.md).
+Use the selected path's final-review model/effort binding unchanged. Verify the effective role prompt,
+tools and fresh context through `subagent get`; use the stage-specific focus, not the correctness brief.
+Normal runtime safety and inherited project instructions still apply; do not claim an empty system prompt.
+Supply only the original request/authoritative requirements, actual owner clarifications, current
+specification and human/executable tasks (plus Standard plan), applicable project constraints, accepted
+decisions and relevant memory. Provide readable exact paths and relevant code access. Do not forward
+producer rationale, prior verdicts, coordinator criticism, full transcripts or the broad review checklist.
+Never fork or resume the parent, producer or correctness-review session for this first simplicity pass.
+
+The reviewer returns supported findings or justified zero, not edits or approval. After both reports return,
+parent checks findings against original requirements, combines supported substantive corrections for the
+appropriate producer, and explains rejected findings with evidence. Agent-added constraints remain challengeable even when labeled REQUIRED; genuine
+requirements, safety and manual/permission gates remain binding. Resolve material findings before approval.
+If corrections invalidate correctness coverage, recheck only the affected changes and interactions through
+the existing correction route. No automatic full-review loop, finding quota or additional owner gate.
+Missing review capability/evidence stops this stage with the concrete corrective action.
 
 ### TinySpec path
 
@@ -334,20 +369,23 @@ resolves material findings before approval. Missing delegation or review evidenc
    Apply the shared stage rules and source/task authority. Create separate tasks; derive documentation
    work from inspected effects/requirements, not an absent plan. Keep coherent work consecutive without
    reordering dependencies or padding distant tasks.
-4. **Review — fresh independent reviewer with planner-parent binding:** follow the shared final task-review
-   contract, inheriting `planner-parent` unchanged. Inspect source-to-task traceability, coverage, exclusions,
+4. **Review — fresh independent reviewer with planner-parent binding:** dispatch with stage 5 in parallel
+   under the shared final task-review contract, inheriting `planner-parent` unchanged. Inspect source-to-task traceability, coverage, exclusions,
    decisions/deferrals, docs, integration/acceptance, verification item completeness, explicit/implicit
-   dependencies and feasibility. Challenge confusing/contradictory instructions, scope creep and unnecessary
-   complexity; each material finding needs the affected passage, impact and smallest sufficient correction.
+   dependencies and feasibility. Report contradictory or incomplete requirements and invalid instructions;
+   each material finding needs the affected passage, impact and correction.
    Do not manufacture defects from stylistic preferences. Apply the shared stage rules for substantive
    corrections and the bounded mechanical correction contract for proven-equivalent repairs. Record fixes,
    validation and current content evidence. Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record, not executable instructions. Review risk selection/omission, actual evidence and gates,
    necessary producer/consumer dependencies, reuse/retention, production acceptance and task boundaries.
-   Apply the shared task-boundary and execution-risk review above, with the shared simplest-sufficient goal.
+   Check independently executable outcomes and the shared execution-risk requirements above.
    Source carries needs; tasks carry independently necessary outcomes. Apply the dependency evidence/permission
    review above before combined approval.
-5. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`; approve current
+5. **Simplicity review:** dispatch alongside stage 4 using the shared simplicity-review contract on the
+   same source and tasks. Wait for both reports before producer corrections; resolve supported findings
+   before combined approval.
+6. **Combined approval:** present a brief bullet-list executive summary BEFORE `ask_user`; approve current
    source, tasks and implementation scope under the continuation contract, then immediately proceed to handoff.
    Denial returns to review/correction, not execution.
 
@@ -412,22 +450,27 @@ verification stops. Do not reopen valid principles.
    without supervisor permission. This is not independent review or authority to change approved requirements.
    After submission, defects follow `overall_review`; independent review and final approval remain required.
    Include docs, acceptance, shared context and producer checks without breaking dependencies or story boundaries.
-5. **`overall_review` — independent saved reviewer assignment:** resolve `standard-overall-review` (or
+5. **`overall_review` — independent saved reviewer assignment:** dispatch with stage 6 in parallel.
+   Resolve `standard-overall-review` (or
    `standard-overall-rereview` for a fresh rereview); follow the shared final task-review contract and observed analysis capability and inspect source → spec → plan
    → tasks traceability, principles, exclusions, coverage, dependencies, verification item completeness, docs,
-   integration and approvals. Challenge confusing/contradictory instructions, scope creep and unnecessary complexity
-   across artifacts; report affected passage, impact and smallest sufficient correction. Do not manufacture findings
-   from style preferences or silently expand acceptance. Review risk selection/omission, actual evidence and gates,
+   integration and approvals. Report contradictory or incomplete requirements and invalid instructions
+   across artifacts with affected passage, impact and correction. Do not silently expand acceptance. Review risk selection/omission, actual evidence and gates,
    necessary producer/consumer dependencies, reuse/retention, production acceptance and task boundaries in direct
-   Standard and managed/helper plans. Apply the shared task-boundary and execution-risk review above,
-   with the shared simplest-sufficient goal.
+   Standard and managed/helper plans. Check independently executable outcomes and the shared execution-risk
+   requirements above.
    Check [authorization-neutral tasks](../task-generation/SKILL.md#authorization-neutral-tasks):
    temporary phase/approval status belongs in the approval record. Apply the dependency evidence/permission
    review above, including direct Standard pass and helper-managed/standalone contract coverage.
    Apply the shared stage rules for corrections and the bounded mechanical correction contract for equivalent
    repairs. The independent reviewer does not become the producer. Renew affected approvals for material upstream
    changes: renew affected approvals and preserve pending questions and correction contexts. Resolve mechanics internally; never apply unresolved
-   material defaults. Missing independent reviewer/review evidence stops. Present a bullet-list executive brief
+   material defaults. Missing independent reviewer/review evidence stops approval. Join both review reports
+   before producer corrections, not directly to approval.
+6. **`simplicity_review`:** dispatch alongside stage 5 using the shared simplicity-review contract on the
+   same specification, plan and tasks. Wait for both reports before producer corrections; resolve supported
+   findings before overall approval.
+7. **Overall approval:** present a bullet-list executive brief
    BEFORE `ask_user`, including plan-phase implications; obtain current overall approval for source, spec, plan,
    tasks and implementation scope, then immediately proceed to handoff under the continuation contract.
 
