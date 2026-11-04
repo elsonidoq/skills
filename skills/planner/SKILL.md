@@ -338,9 +338,14 @@ read-only `coherence-reviewer` on the same artifact snapshot using [the simplici
 Use the selected path's final-review model/effort binding unchanged. Verify the effective role prompt,
 tools and fresh context through `subagent get`; use the stage-specific focus, not the correctness brief.
 Normal runtime safety and inherited project instructions still apply; do not claim an empty system prompt.
-Supply only the original request/authoritative requirements, actual owner clarifications, current
-specification and human/executable tasks (plus Standard plan), applicable project constraints, accepted
-decisions and relevant memory. Provide readable exact paths and relevant code access. Do not forward
+Begin the brief with a concise executive bullet list describing the owner's intent: what the owner
+wants, why, and the essential scope boundaries. Use as many bullets as needed to preserve that intent,
+without a fixed count. Ground it only in the original request and actual owner clarifications, not the
+proposed implementation. State the review goal: ensure the tasks achieve that intent in the simplest sufficient
+way. The summary adds no requirements and does not replace the authoritative sources.
+Alongside that summary, supply only the original request/authoritative requirements, actual owner
+clarifications, current specification and human/executable tasks (plus Standard plan), applicable project
+constraints, accepted decisions and relevant memory. Provide readable exact paths and relevant code access. Do not forward
 producer rationale, prior verdicts, coordinator criticism, full transcripts or the broad review checklist.
 Never fork or resume the parent, producer or correctness-review session for this first simplicity pass.
 

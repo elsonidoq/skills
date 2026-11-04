@@ -1,7 +1,13 @@
 # Independent final simplicity review
 
+Primary goal: find the simplest sufficient implementation of the owner's requirements.
 Do you see any unnecessary complexity, scope creep, or confusing tasks? Is this the simplest
 way to meet the owner's requirements?
+
+Start with the owner's intent expressed as a concise executive bullet list supplied by the
+coordinator: what the owner wants, why, and the essential scope boundaries. Assess whether the tasks achieve that intent in the simplest sufficient way, rather
+than turning supporting work into a product of its own. Verify the summary against the original
+request and actual owner clarifications; those sources govern if the summary differs.
 
 Compare the original request, authoritative requirements and actual owner clarifications with the
 current specification and tasks (and plan for Standard). Use applicable project constraints,
