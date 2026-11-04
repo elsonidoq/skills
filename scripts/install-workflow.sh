@@ -26,7 +26,7 @@ check_link() {
 }
 if [ "$#" -eq 4 ]; then
   check_link "$BIN" "$PREFIX/bin/coordinate-implementation"
-  check_link "$EXTENSION" "$ROOT/.pi/extensions/coordinate-implementation-bridge.js"
+  check_link "$EXTENSION" "$ROOT/runtime/pi-extensions/coordinate-implementation-bridge.js"
 fi
 python3 -m venv "$PREFIX"
 "$PREFIX/bin/python" -m pip install --require-hashes -r "$ROOT/runtime/requirements.lock"
@@ -37,10 +37,10 @@ npm ci --prefix "$HOST" --cache "$PREFIX/npm-cache" --ignore-scripts
 printf 'Isolated workflow ready: %s/bin/coordinate-implementation\n' "$PREFIX"
 if [ "$#" -eq 4 ]; then
   check_link "$BIN" "$PREFIX/bin/coordinate-implementation"
-  check_link "$EXTENSION" "$ROOT/.pi/extensions/coordinate-implementation-bridge.js"
+  check_link "$EXTENSION" "$ROOT/runtime/pi-extensions/coordinate-implementation-bridge.js"
   mkdir -p "$(dirname "$BIN")" "$(dirname "$EXTENSION")"
   [ -L "$BIN" ] || ln -s "$PREFIX/bin/coordinate-implementation" "$BIN"
-  [ -L "$EXTENSION" ] || ln -s "$ROOT/.pi/extensions/coordinate-implementation-bridge.js" "$EXTENSION"
+  [ -L "$EXTENSION" ] || ln -s "$ROOT/runtime/pi-extensions/coordinate-implementation-bridge.js" "$EXTENSION"
   printf 'Global command: %s\nGlobal Pi bridge: %s\nKeep this suite checkout. Ensure ~/.local/bin is on PATH; use a fresh Pi/Paseo session.\n' "$BIN" "$EXTENSION"
 else
   printf 'Use explicit --project, --tasks and --executor; no global activation.\n'

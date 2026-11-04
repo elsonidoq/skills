@@ -208,8 +208,11 @@ session, parent receipt or proof-of-effect database is required. Installed entry
 `coordinate-implementation`; optional explicit isolated setup is separate install/network authority,
 never ordinary-use provisioning or auth refresh. Explicit cross-repository activation uses
 `scripts/install-workflow.sh --prefix "$HOME/.local/share/coherence-workflow" --allow-network --global`.
-It links the command and Pi bridge globally; retain this suite checkout, put `~/.local/bin` on PATH,
-and start a fresh Pi/Paseo session. Project tasks, executor selection and permissions remain local.
+It links the command and Pi bridge globally; the bridge source is in `runtime/pi-extensions/`, not
+project auto-discovery, so new worktrees do not load a duplicate. Retain this suite checkout, put
+`~/.local/bin` on PATH, and start a fresh Pi/Paseo session. Existing bridge links need the
+[source-path update](docs/coordinate-implementation.md#setup-and-verification), not a runtime reinstall.
+Project tasks, executor selection and permissions remain local.
 Read actual `--help` and the
 [operating guide](docs/coordinate-implementation.md) / [storage owner](docs/coordinate-implementation-schema.md).
 

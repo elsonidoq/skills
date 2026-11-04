@@ -9,16 +9,17 @@ import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const repository = fileURLToPath(new URL('../../', import.meta.url));
-const bridgeModule = pathToFileURL(path.join(repository, '.pi/extensions/coordinate-implementation-bridge.js')).href;
+const bridgeModule = pathToFileURL(path.join(repository, 'runtime/pi-extensions/coordinate-implementation-bridge.js')).href;
 
-// Exercise Pi's normal project discovery, not a direct import of the factory.
-test('Pi discovers the project bridge and registers its tools without explicit paths', async () => {
+// Exercise Pi's normal global discovery, not a direct import of the factory.
+test('Pi discovers the global bridge and registers its tools without explicit paths', async () => {
   const {piSdk: {DefaultResourceLoader, SettingsManager}} = await import('../pi-host/sdk.mjs');
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-discovery-'));
   try {
     const project = path.join(root, 'project');
-    await fs.mkdir(path.join(project, '.pi'), {recursive: true});
-    await fs.symlink(path.join(repository, '.pi/extensions'), path.join(project, '.pi/extensions'));
+    await fs.mkdir(project, {recursive: true});
+    await fs.mkdir(path.join(root, 'agent/extensions'), {recursive: true});
+    await fs.symlink(new URL(bridgeModule), path.join(root, 'agent/extensions/coordinate-implementation-bridge.js'));
     const loader = new DefaultResourceLoader({
       cwd: project, agentDir: path.join(root, 'agent'),
       settingsManager: SettingsManager.inMemory(),
@@ -29,7 +30,7 @@ test('Pi discovers the project bridge and registers its tools without explicit p
     assert.deepEqual(loaded.errors, []);
     const bridge = loaded.extensions.find(extension =>
       extension.tools.has('coordinate_implementation_start'));
-    assert.ok(bridge, 'normal project discovery must register the bridge start tool');
+    assert.ok(bridge, 'normal global discovery must register the bridge start tool');
     assert.ok(bridge.tools.has('coordinate_implementation_reply'));
     assert.ok(bridge.tools.has('coordinate_implementation_owner_reply'));
     assert.ok(bridge.tools.has('coordinate_implementation_steer'));
@@ -45,8 +46,8 @@ test('registered parent steering tool reaches the production adapter, host and r
   const abort = new AbortController();
   const previous = {...process.env};
   try {
-    await fs.mkdir(path.join(root, '.pi'), {recursive: true});
-    await fs.symlink(path.join(repository, '.pi/extensions'), path.join(root, '.pi/extensions'));
+    await fs.mkdir(path.join(root, 'parent-agent/extensions'), {recursive: true});
+    await fs.symlink(new URL(bridgeModule), path.join(root, 'parent-agent/extensions/coordinate-implementation-bridge.js'));
     await fs.mkdir(path.join(root, 'scripts'));
     // Only the launcher is a fixture: it exercises one production PiAdapter
     // prompt, not an implementation workflow or replacement host dispatcher.
@@ -63,7 +64,7 @@ test('registered parent steering tool reaches the production adapter, host and r
     const loaded = loader.getExtensions();
     assert.deepEqual(loaded.errors, []);
     const extension = loaded.extensions.find(item => item.tools.has('coordinate_implementation_steer'));
-    assert.ok(extension, 'normal project discovery registered the actual steering tool');
+    assert.ok(extension, 'normal global discovery registered the actual steering tool');
     const wakeups = [];
     loaded.runtime.sendMessage = (message, options) => {
       messages.push(message);

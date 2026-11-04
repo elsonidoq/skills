@@ -248,7 +248,7 @@ non-sensitive operation/channel diagnostic and interactive or explicit inspected
 it does not fabricate an answer. Actual parent-channel connection loss or an empty reply likewise
 identifies the question/readiness operation and directs reconnection through the parent-session
 bridge followed by explicit inspected resume, never automatic retry. These errors preserve partial
-work and do not establish recovery success. A loaded project parent-session bridge may instead
+work and do not establish recovery success. A loaded global parent-session bridge may instead
 launch this same command with its private socket environment;
 it wakes that parent with the exact pending question (including the paid-scope decision when needed) and returns only its correlated reply to the
 waiting worker. A marked owner-only continuation decision instead carries the rejecting execution, original reviewed base/head, original scope, and one-repair/fresh-review/no-repeat effect. The bridge requires registered `ask_user`, tells the parent to call it, and accepts the actual nonempty owner answer only through `coordinate_implementation_owner_reply`; routine `coordinate_implementation_reply` cannot answer it. This is transport routing, not cryptographic proof of human identity, and neither question nor answer is retained in SQLite or public projections. Missing `ask_user`, cancellation, an empty answer, or an unavailable/uncorrelated reply stops with the concrete bridge diagnostic. A callback that cannot accept the owner-only marker/context also stops; it is never retried through routine triage. Routine technical questions remain coordinator-triaged and autonomous. Before attached execution, the runner checks the existing socket's authenticated
@@ -259,12 +259,12 @@ connection failures retain partial work and report the error. No model probe or 
 It retains neither questions nor answers in SQLite. Parent-session shutdown or the
 launch tool's cancellation signal terminates only its owned runner through that runner's normal
 SIGTERM path and waits for it before bridge cleanup. The bridge is optional: direct terminal
-invocation remains unchanged. The project entry is
-`.pi/extensions/coordinate-implementation-bridge.js`; Pi auto-discovers `.js`/`.ts`, not `.mjs`.
-Noninteractive Pi (including RPC) skips project extensions without project trust. Use explicit
-one-run `pi --approve` or an owner-approved saved decision for the exact checkout; never change
-global trust defaults or trust parent directories just to load this bridge. A prompt cannot load
-tools that startup skipped. In Paseo, use a fresh session and verify checkout, revision, current approval, loaded capabilities, and all four bridge tools
+invocation remains unchanged. The source is
+`runtime/pi-extensions/coordinate-implementation-bridge.js`, outside Pi's project auto-discovery.
+Global activation links this source into the user's Pi extensions directory, so worktrees do not
+register a second copy. The global bridge does not require project-extension trust. Other project
+resources still follow Pi's normal trust rules; never change global trust defaults or trust parent
+directories just to load tools. A prompt cannot load tools that startup skipped. In Paseo, use a fresh session and verify checkout, revision, current approval, loaded capabilities, and all four bridge tools
 (`coordinate_implementation_start`, `coordinate_implementation_reply`, `coordinate_implementation_owner_reply`, and `coordinate_implementation_steer`) are available before launch;
 do not reload or restart the current session automatically. After merging, start in the main
 checkout and verify its own trust decision and tool availability: trust is path-specific, not
@@ -348,8 +348,15 @@ at `~/.local/bin/coordinate-implementation` and the suite bridge at
 Existing foreign prefixes or link destinations are preserved and reported. Keep this suite checkout:
 the bridge and globally linked skills refer to its current files, while the installed runner is a
 snapshot and needs an explicit new-prefix installation to update. Ensure `~/.local/bin` is on PATH.
-Pi canonicalizes matching global/project symlink resources, so the same bridge loads once in the
-suite checkout as well as unrelated repos. New repos need no copied launcher or bridge, but still
+The bridge source stays outside `.pi/extensions/`, so the suite checkout, new Git worktrees and
+unrelated repositories load only the global entry. Do not copy it into project extension directories.
+For an existing installation, inspect the global bridge link and repoint only the verified suite-owned
+link to `runtime/pi-extensions/coordinate-implementation-bridge.js` in the retained suite checkout;
+no runtime reinstall or download is needed for this source-path change. Foreign entries must be
+preserved and resolved explicitly. Existing worktrees on older revisions still contain the old project
+extension: bring this fix into those worktrees before starting a fresh session there. Merely changing
+the global link does not remove their duplicate registration.
+New repos need no copied launcher or bridge, but still
 supply their own task file and explicit executor JSON; no model, permissions, adoption policy,
 authentication or old run data is copied. Use a fresh Pi/Paseo session and verify checkout, revision, current approval, loaded capabilities, and all four bridge tools;
 never automatically reload/restart the current session. Attached runs need a long-lived parent:

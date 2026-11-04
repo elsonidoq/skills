@@ -37,6 +37,37 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual(command.read_text(), 'foreign command\n')
             self.assertFalse(prefix.exists(), 'conflicts must stop before downloads or installation')
 
+    def test_global_install_links_bridge_outside_project_discovery(self):
+        with tempfile.TemporaryDirectory(prefix='coherence-global-bridge-') as directory:
+            home = Path(directory)
+            bin_dir = home / 'test-bin'
+            bin_dir.mkdir()
+            # Stub only provisioning commands: run the real link installation,
+            # with no downloads, package installs or changes to the user's home.
+            python = bin_dir / 'python3'
+            python.write_text('''#!/bin/sh
+mkdir -p "$3/bin"
+printf '#!/bin/sh\\nif [ "$1" = -c ]; then printf "%%s\\\\n" "$TEST_HOST"; fi\\n' > "$3/bin/python"
+chmod +x "$3/bin/python"
+''')
+            python.chmod(0o700)
+            npm = bin_dir / 'npm'
+            npm.write_text('#!/bin/sh\nexit 0\n')
+            npm.chmod(0o700)
+            prefix = home / 'runtime'
+            agent = home / 'agent'
+            result = subprocess.run([str(ROOT/'scripts/install-workflow.sh'), '--prefix', str(prefix),
+                                     '--allow-network', '--global'],
+                                    env=dict(os.environ, HOME=str(home), PI_CODING_AGENT_DIR=str(agent),
+                                             PATH=str(bin_dir) + os.pathsep + os.environ['PATH'],
+                                             TEST_HOST=str(home/'host')),
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            bridge = agent / 'extensions/coordinate-implementation-bridge.js'
+            self.assertEqual(bridge.readlink(), ROOT/'runtime/pi-extensions/coordinate-implementation-bridge.js')
+            self.assertTrue(bridge.is_file())
+            self.assertFalse((ROOT/'.pi/extensions/coordinate-implementation-bridge.js').exists())
+
     def test_actual_entry_help_from_unrelated_directory(self):
         with tempfile.TemporaryDirectory(prefix='coherence-simplification-03-help-') as directory:
             result = subprocess.run([str(ROOT/'scripts/coordinate-implementation'), '--help'], cwd=directory,

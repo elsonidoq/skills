@@ -4,28 +4,33 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
-import bridge from '../../.pi/extensions/coordinate-implementation-bridge.js';
+import bridge from '../pi-extensions/coordinate-implementation-bridge.js';
 import {piSdk} from '../pi-host/sdk.mjs';
 const {DefaultResourceLoader, SettingsManager} = piSdk;
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const source = path.join(repository, '.pi/extensions/coordinate-implementation-bridge.js');
+const source = path.join(repository, 'runtime/pi-extensions/coordinate-implementation-bridge.js');
 
-test('global and checkout links load the bridge only once', async () => {
+test('global bridge loads once in the suite checkout and an independent worktree copy', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'global-bridge-discovery-'));
   try {
     const agent = path.join(root, 'agent'), cwd = path.join(root, 'project');
-    for (const dir of [path.join(agent, 'extensions'), path.join(cwd, '.pi/extensions')]) {
-      await fs.mkdir(dir, {recursive: true});
-      await fs.symlink(source, path.join(dir, 'coordinate-implementation-bridge.js'));
+    await fs.mkdir(path.join(agent, 'extensions'), {recursive: true});
+    await fs.symlink(source, path.join(agent, 'extensions/coordinate-implementation-bridge.js'));
+    // Git worktrees contain separate files, not symlinks to the original checkout.
+    await fs.mkdir(path.join(cwd, '.pi'), {recursive: true});
+    await fs.cp(path.join(repository, '.pi/extensions'), path.join(cwd, '.pi/extensions'), {recursive: true});
+    for (const project of [repository, cwd]) {
+      const loader = new DefaultResourceLoader({cwd: project, agentDir: agent,
+        settingsManager: SettingsManager.inMemory({defaultProjectTrust: 'always'}),
+        noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true});
+      await loader.reload();
+      const loaded = loader.getExtensions();
+      assert.deepEqual(loaded.errors, [], `extension startup errors in ${project}`);
+      for (const name of ['start', 'steer', 'reply', 'owner_reply']) {
+        assert.equal(loaded.extensions.filter(item => item.tools.has(`coordinate_implementation_${name}`)).length, 1);
+      }
     }
-    const loader = new DefaultResourceLoader({cwd, agentDir: agent,
-      settingsManager: SettingsManager.inMemory({defaultProjectTrust: 'always'}),
-      noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true});
-    await loader.reload();
-    const loaded = loader.getExtensions();
-    assert.deepEqual(loaded.errors, []);
-    assert.equal(loaded.extensions.filter(item => item.tools.has('coordinate_implementation_start')).length, 1);
   } finally { await fs.rm(root, {recursive: true, force: true}); }
 });
 

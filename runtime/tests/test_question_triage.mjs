@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import bridge from '../../.pi/extensions/coordinate-implementation-bridge.js';
+import bridge from '../pi-extensions/coordinate-implementation-bridge.js';
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
