@@ -33,8 +33,14 @@ requiring explicit continuation? Explain the trade-off without weakening genuine
 Provide a concise entry for each task ID, not just a general review:
 
 - **Contribution:** How does this task support the executive goal or a genuine requirement?
-- **Simplicity:** Can the same outcome be delivered with less machinery? State the concrete
-  alternative and trade-off when applicable; another possible approach alone is not a defect.
+- **Simplicity:** Start from the owner's intent and binding requirements, not the proposed
+  mechanism. Describe the smallest credible implementation and verification approach that would
+  satisfy them, using existing capabilities where sufficient. Compare the proposed task against
+  that baseline. Flag additional machinery when the simpler approach meets the same requirements
+  with materially less work; otherwise explain the necessary benefit the extra machinery provides.
+  Compare against a sufficient alternative, not an obviously inadequate one. Preserve evidence
+  fidelity, safety, isolation and practical repeatability. State concrete trade-offs and unresolved
+  assumptions; another possible approach alone is not a defect.
 - **Proportionality:** Are tests, setup, recovery and workflow mechanisms justified by the
   required outcome and concrete risks? Prefer smaller sufficient checks, not weaker evidence.
 - **Verdict:** Keep, simplify, or unresolved, with a brief evidence-based reason. Distinguish
