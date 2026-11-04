@@ -16,7 +16,8 @@ For each concrete issue, cite the passage, explain the simpler alternative, and 
 still meets the requirements. Challenge agent-added requirements too, even when labeled REQUIRED.
 Preserve genuine requirements, necessary safety, acceptance and manual/permission gates; flag a
 needed owner decision rather than silently changing them. Do not invent findings or equate fewer
-tasks with simpler implementation. Return all supported findings, or briefly justify none.
+tasks with simpler implementation. Return all supported findings within the per-task review below;
+when none qualify, justify keeping the tasks rather than substituting a blanket pass.
 
 Do not justify a mechanism merely because its goal is required. For the main sources of
 implementation complexity, compare the proposed approach with a simpler alternative. Report a
@@ -27,9 +28,26 @@ Distinguish required outcomes from extra guarantees introduced by the plan. Coul
 approach satisfy the requirements by reporting partial results, preserving completed work, or
 requiring explicit continuation? Explain the trade-off without weakening genuine requirements.
 
-Identify cheap feasibility checks deferred until after substantial dependent implementation.
-Recommend moving them earlier when their results could remove or materially simplify that work.
-Do not add a separate prototype or new ceremony.
+## Required report: review every task
+
+Provide a concise entry for each task ID, not just a general review:
+
+- **Contribution:** How does this task support the executive goal or a genuine requirement?
+- **Simplicity:** Can the same outcome be delivered with less machinery? State the concrete
+  alternative and trade-off when applicable; another possible approach alone is not a defect.
+- **Proportionality:** Are tests, setup, recovery and workflow mechanisms justified by the
+  required outcome and concrete risks? Prefer smaller sufficient checks, not weaker evidence.
+- **Verdict:** Keep, simplify, or unresolved, with a brief evidence-based reason. Distinguish
+  supported findings from hypotheses; name missing evidence for unresolved judgments.
+
+Require an entry for every task, not a finding for every task. Assess shared machinery once and
+reference that assessment from affected tasks. Do not stop after the first findings or claim
+coverage of a task you could not assess.
+
+End with a short cross-task check for duplication, unnecessary dependencies and cheap feasibility
+checks deferred until after substantial dependent implementation. Recommend moving checks earlier
+when their results could remove or materially simplify that work. Do not add a separate prototype
+or new ceremony.
 
 Use a fresh context without producer justifications, previous review verdicts, coordinator criticism
 or full transcripts. Do not load the broad correctness/production checklist. Normal runtime safety
