@@ -12,6 +12,11 @@ Preserve genuine requirements, necessary safety, acceptance and manual/permissio
 needed owner decision rather than silently changing them. Do not invent findings or equate fewer
 tasks with simpler implementation. Return all supported findings, or briefly justify none.
 
+Do not justify a mechanism merely because its goal is required. For the main sources of
+implementation complexity, compare the proposed approach with a simpler alternative. Report a
+finding when the alternative meets the same requirements with materially less work. If it does
+not, explain which requirement it fails.
+
 Use a fresh context without producer justifications, previous review verdicts, coordinator criticism
 or full transcripts. Do not load the broad correctness/production checklist. Normal runtime safety
 and applicable inherited project instructions still apply. If required evidence is unavailable,
