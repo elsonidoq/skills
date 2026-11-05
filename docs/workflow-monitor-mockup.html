@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflow monitor — proposed visual reference</title>
+<style id="monitor-visual-styles">
+/* COPY BOUNDARY: proposed monitor presentation. Keep the existing ReactFlow/ELK engine. */
+:root { font-family: system-ui, sans-serif; color: #172033; background: #f3f6fa; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+main { display: grid; grid-template-columns: 14rem minmax(0, 1fr); min-height: 100vh; }
+aside { padding: 1rem; border-right: 1px solid #c7d2e0; background: #fff; }
+h1 { font-size: 1.3rem; margin: 0 0 1rem; }
+h2 { font-size: 1rem; margin: .5rem 0; }
+h3 { font-size: 1rem; margin: .5rem 0; }
+p { line-height: 1.5; }
+.status { color: #45576d; font-size: .85rem; }
+.project-list, .run-list { display: grid; gap: .45rem; }
+.project-list { margin-bottom: 1rem; }
+button, input { font: inherit; }
+button { text-align: left; padding: .65rem; border: 1px solid #9aabc0; background: #fff; border-radius: .25rem; cursor: pointer; color: inherit; }
+button.selected { background: #dcecff; border-color: #1769aa; font-weight: 700; }
+button:focus-visible, summary:focus-visible, input:focus-visible, .graph:focus-visible { outline: 3px solid #172033; outline-offset: 3px; }
+.run-list button { min-width: 0; overflow-wrap: anywhere; }
+.run-list strong, .run-list small { display: block; }
+.run-list small { margin-top: .2rem; color: #45576d; font-weight: 400; }
+.run-filter { display: block; font-size: .85rem; margin: .5rem 0; }
+.run-filter input { display: block; width: 100%; margin-top: .3rem; padding: .4rem; border: 1px solid #9aabc0; border-radius: .25rem; }
+.worktree-path { margin-top: .8rem; font-size: .8rem; overflow-wrap: anywhere; }
+summary { cursor: pointer; }
+.viewer { padding: .75rem; min-width: 0; }
+.viewer > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .5rem; }
+.viewer > header h2, .viewer > header p { margin: 0; }
+.legend { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; margin-bottom: .4rem; }
+.legend span { font-size: .75rem; border: 1px solid; border-radius: 1rem; padding: .2rem .5rem; }
+.legend-note { font-size: .75rem; color: #45576d; margin: 0 0 .65rem; }
+.execution-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+.execution-view.has-selection { grid-template-columns: minmax(0, 1fr) 18rem; }
+.graph { position: relative; height: calc(100vh - 13rem); min-height: 30rem; border: 1px solid #b8c5d5; background-color: #fff; background-image: radial-gradient(#c7d2e0 .7px, transparent .7px); background-size: 16px 16px; }
+.selection-details { max-height: calc(100vh - 13rem); overflow: auto; padding: .8rem; border: 1px solid #b8c5d5; background: #fff; overflow-wrap: anywhere; }
+.selection-details header { display: flex; justify-content: space-between; align-items: center; }
+.selection-details header button { padding: .3rem .5rem; font-size: .8rem; }
+.selection-details p, .selection-details details { font-size: .85rem; }
+.selection-details details { margin-top: .8rem; }
+.execution-node { width: 208px; min-height: 90px; border: 2px solid; border-radius: .4rem; padding: .6rem; font-size: .85rem; line-height: 1.3; text-align: center; }
+.execution-node strong { display: block; font-weight: 600; }
+.execution-node small { display: block; margin-top: .3rem; font-size: .75rem; }
+/* Exactly four color categories. Exceptional statuses retain their own text. */
+.pending { background: #e5e7eb !important; border-color: #6b7280 !important; }
+.running { background: #dcecff !important; border-color: #1769aa !important; }
+.success { background: #dcf5e4 !important; border-color: #247342 !important; }
+.failed { background: #ffe5e5 !important; border-color: #ad3030 !important; }
+.execution-node.selected { outline: 3px solid #172033; outline-offset: 3px; font-weight: 400; }
+/* All semantic edge classes use this same path style; retain their data for Details. */
+.monitor-edge, .react-flow__edge-path { fill: none; stroke: #64748b; stroke-width: 2; stroke-dasharray: none; }
+.recorded-evidence { margin-top: .6rem; font-size: .85rem; }
+.recorded-evidence p { margin: .5rem 0; }
+@media (max-width: 1000px) {
+  .execution-view.has-selection { grid-template-columns: minmax(0, 1fr); }
+  .selection-details { max-height: 22rem; }
+}
+@media (max-width: 700px) {
+  main { grid-template-columns: minmax(0, 1fr); }
+  aside { border-right: 0; border-bottom: 1px solid #c7d2e0; }
+  h1 { margin-bottom: .65rem; }
+  .project-list, .run-list { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+  .graph { height: 34rem; }
+}
+/* END COPY BOUNDARY */
+</style>
+<style id="mockup-only-styles">
+/* Demo only: sample notice, fixed fixture positions, scrolling/zoom, SVG hit targets.
+   Do not replace production measured layout, ReactFlow controls, pan/zoom or routing. */
+.proposal { padding: .5rem .75rem; border-bottom: 1px solid #b8c5d5; background: #fff; font-size: .8rem; }
+.proposal a { color: #1769aa; }
+.graph { overflow: auto; }
+.graph-space { position: relative; margin: auto; }
+.graph-stage { position: absolute; width: 760px; height: 560px; transform-origin: top left; }
+.graph-stage svg { position: absolute; inset: 0; width: 760px; height: 560px; }
+.graph-stage .execution-node { position: absolute; }
+.edge-hit { fill: none; stroke: transparent; stroke-width: 16; cursor: pointer; }
+.edge-hit:focus { outline: none; stroke: #64748b; stroke-opacity: .18; }
+.graph-tools { display: flex; gap: .25rem; margin-top: .4rem; align-items: center; }
+.graph-tools button { padding: .2rem .5rem; font-size: .8rem; }
+.graph-tools .status { margin-left: .3rem; font-size: .75rem; }
+.empty { padding: 1rem; }
+</style>
+</head>
+<body>
+<div class="proposal"><strong>PROPOSED · NOT APPROVED</strong> — All projects, paths, tasks, relations and results below are synthetic sample data, not recorded evidence. <a href="../workflow_monitor/README.md#visual-reference-and-ui-change-rule">Reference and approval rule</a></div>
+<main>
+  <aside aria-label="Recorded runs">
+    <h1>Workflow monitor</h1>
+    <h2>Projects</h2>
+    <div class="project-list">
+      <button class="selected" data-project="sample-tools" aria-pressed="true">sample-tools</button>
+      <button data-project="sample-docs" aria-pressed="false">sample-docs</button>
+    </div>
+    <h2>Runs</h2>
+    <label class="run-filter">Filter runs<input id="filter" placeholder="Worktree or run" type="search"></label>
+    <div class="run-list" id="runs"></div>
+    <p id="filter-note" class="status" hidden></p>
+    <details class="worktree-path" id="path-details"><summary>Worktree path</summary><p id="worktree-path"></p></details>
+  </aside>
+  <section class="viewer">
+    <header><h2 id="run-heading"></h2><p class="status" id="run-status"></p></header>
+    <div class="legend" aria-label="Four node color categories">
+      <span class="pending">Not started</span><span class="running">Running</span><span class="failed">Failed</span><span class="success">Completed</span>
+    </div>
+    <p class="legend-note">Other states use Failed color; read the node text. Completed calls are not work acceptance.</p>
+    <div class="execution-view" id="execution-view">
+      <div>
+        <div class="graph" id="graph" role="region" aria-label="Sample workflow graph" tabindex="0">
+          <div class="graph-space" id="graph-space"><div class="graph-stage" id="stage"></div></div>
+          <p class="empty" id="empty" hidden></p>
+        </div>
+        <div class="graph-tools" id="graph-tools">
+          <button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-in" aria-label="Zoom in">+</button><button id="fit">Fit</button>
+          <span class="status">Select a node or edge · scroll to pan this sample</span>
+        </div>
+      </div>
+      <section class="selection-details" id="selection-details" aria-label="Selected execution details" hidden>
+        <header><h2>Details</h2><button id="close-details">Close</button></header>
+        <div id="selection-content" aria-live="polite"></div>
+      </section>
+    </div>
+    <details class="recorded-evidence" id="evidence">
+      <summary>Recorded evidence · sample only</summary>
+      <p id="evidence-summary"></p>
+      <p>Read state: sample, not connected. Last successful read and last recorded activity: unavailable. Recorded runner: unknown; presence does not prove progress.</p>
+      <details><summary>Loaded history</summary><p>No event history is loaded by this mockup. Production history, coverage, metrics, checks and checkpoint facts remain available here or in selection Details.</p></details>
+    </details>
+  </section>
+</main>
+<script>
+/* DEMO DATA AND INTERACTION ONLY. These are not API DTOs or a new status inference layer. */
+const runs = [
+  { id: 'current', worktree: 'navigation-clarity', qualifier: 'Run 2', when: 'Today, 10:40', source: 'linked', path: '/sample/projects/sample-tools/worktrees/navigation-clarity', state: 'Recorded running · sample', summary: 'Full-range acceptance: not established. No final independent review intent is supplied in this sample. The failed initial call and its later running correction remain separate.' },
+  { id: 'earlier', worktree: 'navigation-clarity', qualifier: 'Run 1', when: 'Yesterday, 16:20', source: 'linked', path: '/sample/projects/sample-tools/worktrees/navigation-clarity', state: 'Stopped · sample', summary: 'Full-range acceptance: not established. The reviewer returned with changes requested. The corrective call was interrupted; an explicit stopping step remains visible.' },
+  { id: 'legacy', worktree: 'sample-tools', qualifier: '', when: 'Earlier recording', source: 'main', path: null, state: 'Incomplete recording · sample', summary: 'Plan unavailable in this older sample recording. Do not infer task slots or rebuild task descriptions from current files.' }
+];
+// Node dimensions and fixture coordinates are illustrative. Production must measure content.
+const fixtures = {
+  current: {
+    nodes: [
+      { id:'t1', x:24, y:24, title:'Task 1 · Read project inventory', role:'Worker', state:'Returned · acceptance not established', color:'success', work:'Read the registered project inventory without modifying its stores.' },
+      { id:'t3', x:276, y:24, title:'Task 3 · Match run sources', role:'Worker', state:'Failed · transport error', color:'failed', work:'Match each listed run to its retained recording source.' },
+      { id:'t4', x:528, y:24, title:'Task 4 · Confirm path display', role:'Planned worker', state:'Waiting for input · not started', color:'failed', work:'Confirm which worktree path information can be shown.', blocker:'A task-scoped question is outstanding. Waiting is not running.' },
+      { id:'t2', x:24, y:158, title:'Task 2 · Label projects', role:'Worker', state:'Returned · acceptance not established', color:'success', work:'Use the registered main directory name as the project label.' },
+      { id:'fix', x:276, y:158, title:'Task 3 · Corrective worker 1', role:'Corrective worker', state:'Running · recorded, not live proof', color:'running', work:'Match each listed run to its retained recording source.' },
+      { id:'t6', x:528, y:158, title:'Task 6 · Show worktree path', role:'Planned worker', state:'Blocked · Task 4 needs input', color:'failed', work:'Show the available worktree path in a compact disclosure.', blocker:'Task 4 needs input.' },
+      { id:'t5', x:24, y:292, title:'Task 5 · Check project labels', role:'Planned worker', state:'Not started', color:'pending', work:'Check that project labels remain readable in the run selector.' },
+      { id:'t7', x:276, y:426, title:'Task 7 · Description unavailable', role:'Planned worker', state:'Blocked · prerequisite incomplete', color:'failed', work:null, blocker:'Task 6 has not completed.' }
+    ],
+    edges: [
+      ['t1','t2','Declared prerequisite and recorded input','M128 114 V158'],
+      ['t3','fix','Recorded correction predecessor','M380 114 V158'],
+      ['t4','t6','Declared prerequisite; not proof of execution','M632 114 V158'],
+      ['t2','t5','Declared prerequisite; not proof of execution','M128 248 V292'],
+      ['t5','t7','Declared prerequisite; not proof of execution','M128 382 V404 H380 V426'],
+      ['t6','t7','Declared prerequisite; not proof of execution','M632 248 V404 H380 V426']
+    ]
+  },
+  earlier: {
+    nodes: [
+      { id:'a', x:24, y:24, title:'Task 1 · Read project inventory', role:'Worker', state:'Returned · acceptance not established', color:'success', work:'Read the registered project inventory without modifying its stores.' },
+      { id:'b', x:528, y:24, title:'Task 2 · Label projects', role:'Worker', state:'Returned · acceptance not established', color:'success', work:'Use the registered main directory name as the project label.' },
+      { id:'review', x:276, y:158, title:'Review 1 · Independent reviewer', role:'Reviewer', state:'Returned · changes requested', color:'success', work:null, acceptance:'Approved: false. Findings: 1. Full-range acceptance: not established.', blocker:'The reviewer requested changes.' },
+      { id:'repair', x:276, y:292, title:'Task 2 · Corrective worker 1', role:'Corrective worker', state:'Interrupted · outcome unknown', color:'failed', work:'Use the registered main directory name as the project label.' },
+      { id:'stop', x:276, y:426, title:'Execution stopped', role:'Stopping step', state:'Failed · correction interrupted', color:'failed', work:null }
+    ],
+    edges: [
+      ['a','review','Recorded review input','M128 114 V136 H380 V158'],
+      ['b','review','Recorded review input','M632 114 V136 H380 V158'],
+      ['review','repair','Recorded correction trigger','M380 248 V292'],
+      ['repair','stop','Recorded stopping support','M380 382 V426']
+    ]
+  },
+  legacy: { nodes:[], edges:[] }
+};
+let project = 'sample-tools', run = runs[0], selected = null, zoom = 1;
+const $ = id => document.getElementById(id);
+const text = (tag, value) => { const element = document.createElement(tag); element.textContent = value; return element; };
+function showRuns() {
+  const filter = $('filter').value.toLowerCase();
+  const available = project === 'sample-tools' ? runs : [];
+  $('runs').replaceChildren();
+  for (const item of available.filter(item => `${item.worktree} ${item.qualifier} ${item.source}`.toLowerCase().includes(filter))) {
+    const button = document.createElement('button');
+    button.className = item === run ? 'selected' : '';
+    button.setAttribute('aria-pressed', String(item === run));
+    button.append(text('strong', item.worktree), text('small', [item.qualifier, item.when, item.source].filter(Boolean).join(' · ')));
+    button.onclick = () => { run = item; showRuns(); render(); };
+    $('runs').append(button);
+  }
+  const outside = run && !`${run.worktree} ${run.qualifier} ${run.source}`.toLowerCase().includes(filter);
+  $('filter-note').hidden = !!$('runs').children.length && !outside;
+  $('filter-note').textContent = !available.length ? 'No recorded runs.' : !$('runs').children.length ? 'No runs match. The selection is unchanged.' : 'The selected run is outside this filter.';
+}
+function closeDetails() {
+  selected = null;
+  $('selection-details').hidden = true;
+  $('execution-view').classList.remove('has-selection');
+  document.querySelectorAll('.execution-node.selected').forEach(node => node.classList.remove('selected'));
+}
+function disclose(summary, body) {
+  const details = document.createElement('details'); details.append(text('summary', summary), text('p', body)); return details;
+}
+function showDetails(node, edge) {
+  selected = node?.id ?? null;
+  const content = $('selection-content'); content.replaceChildren();
+  if (node) {
+    content.append(text('h3', node.title), text('p', `${node.role} · ${node.state}`));
+    if (node.role.includes('worker') || node.role === 'Worker') content.append(text('p', node.work ?? 'Task description unavailable: this recording did not retain task work text.'));
+    if (node.blocker) content.append(text('p', node.blocker));
+    content.append(text('p', node.acceptance ?? 'Acceptance: not established. A returned call does not prove task completion or accepted work.'));
+    content.append(disclose('Checks and acceptance', node.acceptance ?? 'Checks and focused checkpoint evidence: unavailable in this sample. Do not infer a successful checkpoint from a returned worker.'));
+    content.append(disclose('Metrics', 'This call: unavailable. Task total: unavailable. Overall run: unavailable. Session totals are not call spend.'));
+    content.append(disclose('Recorded history', 'Synthetic state only. No recorded events are loaded by this mockup.'));
+  } else {
+    const nodes = fixtures[run.id].nodes;
+    content.append(text('h3', 'Relationship'), text('p', `${nodes.find(n => n.id === edge[0]).title} → ${nodes.find(n => n.id === edge[1]).title}`), text('p', edge[2]));
+    content.append(text('p', 'One visual edge style. The relation meaning is retained here; declared prerequisites do not prove execution.'));
+  }
+  $('selection-details').hidden = false; $('execution-view').classList.add('has-selection');
+  document.querySelectorAll('.execution-node').forEach(element => element.classList.toggle('selected', element.dataset.id === selected));
+  requestAnimationFrame(fit);
+}
+function render() {
+  closeDetails(); $('stage').replaceChildren(); $('path-details').open = false;
+  $('path-details').hidden = !run;
+  $('run-heading').textContent = run ? `${run.worktree}${run.qualifier ? ` · ${run.qualifier}` : ''}` : project;
+  $('run-status').textContent = run?.state ?? 'No recorded runs · sample';
+  $('worktree-path').textContent = run?.path ?? 'Worktree path unavailable in this recording.';
+  $('evidence-summary').textContent = run?.summary ?? 'No run selected.';
+  $('evidence').open = false;
+  const fixture = run ? fixtures[run.id] : { nodes:[], edges:[] };
+  $('empty').hidden = !!fixture.nodes.length;
+  $('empty').textContent = run ? 'Planned graph unavailable: this older recording has no supported task description. No tasks or calls are invented.' : 'No recorded runs for this sample project.';
+  $('graph-tools').hidden = !fixture.nodes.length; $('graph-space').hidden = !fixture.nodes.length;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  for (const edge of fixture.edges) {
+    const path = document.createElementNS(svg.namespaceURI, 'path'); path.setAttribute('d', edge[3]); path.setAttribute('class', 'monitor-edge'); svg.append(path);
+    const hit = path.cloneNode(); hit.setAttribute('class','edge-hit'); hit.setAttribute('tabindex','0'); hit.setAttribute('role','button'); hit.setAttribute('aria-label', `${edge[0]} to ${edge[1]}: ${edge[2]}`);
+    hit.onclick = () => showDetails(null, edge); hit.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showDetails(null, edge); } }; svg.append(hit);
+  }
+  $('stage').append(svg);
+  for (const node of fixture.nodes) {
+    const button = document.createElement('button'); button.className = `execution-node ${node.color}`; button.dataset.id = node.id;
+    button.style.left = `${node.x}px`; button.style.top = `${node.y}px`; button.append(text('strong',node.title), text('small',node.state));
+    button.onclick = () => showDetails(node); $('stage').append(button);
+  }
+  requestAnimationFrame(fit);
+}
+function scale(value) {
+  zoom = value; $('stage').style.transform = `scale(${zoom})`;
+  $('graph-space').style.width = `${760 * zoom}px`; $('graph-space').style.height = `${560 * zoom}px`;
+}
+function fit() {
+  // Never fit below readable sample text size. Small screens scroll instead of clipping.
+  scale(Math.max(.85, Math.min(1, ($('graph').clientWidth - 24) / 760, ($('graph').clientHeight - 24) / 560)));
+}
+$('close-details').onclick = () => { const node = document.querySelector(`.execution-node[data-id="${selected}"]`); closeDetails(); fit(); node?.focus(); };
+$('filter').oninput = showRuns;
+$('fit').onclick = fit; $('zoom-in').onclick = () => scale(Math.min(1.5, zoom + .15)); $('zoom-out').onclick = () => scale(Math.max(.85, zoom - .15));
+window.addEventListener('resize', fit);
+for (const button of document.querySelectorAll('[data-project]')) button.onclick = () => {
+  project = button.dataset.project; run = project === 'sample-tools' ? runs[0] : null; $('filter').value = '';
+  document.querySelectorAll('[data-project]').forEach(item => { item.classList.toggle('selected', item === button); item.setAttribute('aria-pressed', String(item === button)); });
+  showRuns(); render();
+};
+showRuns(); render();
+</script>
+</body>
+</html>

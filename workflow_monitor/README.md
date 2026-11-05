@@ -4,6 +4,108 @@
 workflow snapshots. It imports no workflow writer, never creates or migrates a store,
 and has no execution or control routes.
 
+## Visual reference and UI change rule
+
+The [workflow monitor mockup](../docs/workflow-monitor-mockup.html) is the durable,
+authoritative **visual reference** for monitor UI changes. Its current design is
+**proposed, not owner-approved**. It is not the current application, an implementation
+specification, or evidence of recorded work. All displayed projects, paths, tasks,
+relations and results are synthetic. Current application behavior is documented below.
+
+Owner direction for **all future monitor UI changes**: **modify this mockup first,
+obtain explicit owner approval, then modify the monitor UI**. Copy the approved
+markup structure and styling mechanically; do not independently reinterpret the
+approved design in application code. Approval of a visual reference does not itself
+authorize recording, API, privacy or runtime changes. This rule is monitor-specific;
+it adds no global workflow policy. Provenance: the owner's minimal-change monitor
+mockup request, including the explicit mockup-first approval and copy requirement.
+
+Open `docs/workflow-monitor-mockup.html` directly in a local browser (`file://`); no
+build, server, installation or monitor connection is needed. The initial view shows
+eight sample nodes, branches and a join with all four colors. Select a task for its
+short work description; Task 7 demonstrates unavailable retained text. Select an edge
+for its relation meaning. Select **navigation-clarity · Run 1** for a returned reviewer
+that requested changes, an interrupted corrective call and a stopping step. Expand
+**Worktree path** for the full selectable sample path; the main-worktree sample shows
+an unavailable path/plan. Select **sample-docs** for an empty project. Filter, project/run
+selection, zoom, Fit, disclosures and Close work locally; they do not call APIs.
+
+### Proposed visual changes and copy boundaries
+
+- Keep the current system font, pale page, white panels, rounded nodes and top-to-bottom
+  graph. Reduce the run rail from 17rem to 14rem. Replace repeated run metadata with
+  one compact heading. The graph gets the full viewer width until a selection opens
+  the 18rem Details panel; Close returns that space. Below 1000px Details stays below
+  the graph; below 700px navigation stacks as in the current UI.
+- Lead each run with its Git worktree name. Use a compact run qualifier only when
+  the same worktree has multiple runs, plus readable start context. Full paths belong
+  in a keyboard-accessible disclosure, not truncated hover-only labels. Opaque refs
+  must remain routing identities, not principal display labels. A future qualifier
+  must be stable across filtering, paging and polling; the sample labels are not a
+  production numbering algorithm.
+- Use exactly four node color categories: **Not started**, **Running**, **Failed**,
+  **Completed**. Waiting, blocked, interrupted, unknown and other exceptional states
+  use the **same Failed color**, with their actual status stated in node text. Waiting
+  never becomes Running. Green returned calls remain distinct from task checkpoint
+  completion and successful acceptance. The rejected reviewer sample stays green
+  with **Returned · changes requested**; neither its color nor worker return asserts
+  acceptance. Preserve existing semantic evidence and its qualifications.
+- Use one solid edge style for all relations. Keep every meaningful node, attempt,
+  stop and relation; keep edge meaning in selected Details. This is a display change,
+  not permission to prune topology or change recorded relation semantics.
+- Keep the title/short retained task description, state, blocker and acceptance
+  qualification visible in selection Details. Put metrics, checks and history in
+  existing-style disclosures. Keep read errors, stale/unavailable warnings and
+  material acceptance qualifications visible when applicable; the sample's neutral
+  read metadata is collapsed, not an instruction to hide warnings.
+
+The mockup's `style#monitor-visual-styles` is the proposed style source for
+`web/src/style.css`; the marked copy boundary covers the shell, navigation, legend,
+nodes, single edge style and Details. Use its HTML class structure in `web/src/main.tsx`.
+Map the same four classes from existing semantic states in `web/src/graph.ts`; do not
+replace semantic values with color names. Replace conflicting old node/edge styles
+rather than layering a second palette over them. The same edge stroke also applies
+to selected edges; selection Details carry their meaning.
+
+Do **not** copy `style#mockup-only-styles`, synthetic fixtures, fixed coordinates,
+scroll/zoom helpers or local navigation handlers into production. Retain ReactFlow,
+measured DOM dimensions, ELK layout, stable identities, viewport preservation,
+selection/fetch guards, history paging and opaque routing. The mockup refits on
+selection only to keep its fixed fixture visible; production selection must preserve
+the user's viewport. Its 208px node width is a presentation starting width, not a
+fixed layout box that can clip longer real text. Production layout still measures
+content. Retain the existing ReactFlow controls; the demo controls only approximate
+those interactions. The proposal banner is reference-only, not application chrome.
+
+### Data gaps for later planning
+
+- Current `Run`/`Recording` DTOs in `web/src/main.tsx`, `projects.py` and `public.py`
+  expose `main`/`linked`/`preserved`, opaque references and a generic `Recorded run`
+  label, not a display worktree name/path. The HTTP contract below deliberately
+  excludes absolute paths. Worktree-first identity/path disclosure needs a separately
+  approved, bounded display-data/privacy change; paths must not become API selectors.
+  Preserved or removed worktree identity and stable duplicate-run disambiguation need
+  explicit handling. This mockup does not weaken the current boundary.
+- Supported descriptor version 3 retains `label` and explicit `outcome`/`description`
+  as `work_description`. Generic/ID-only labels currently become `Recorded task` in
+  `graph.ts:taskTitle`; the helper does not use `work_description`. Later work can
+  display a short faithful excerpt of retained text with full text in Details. No
+  model summary or new detail system is needed. Missing text must remain unavailable;
+  never fetch current task files to invent historical text. Older descriptors may
+  lack the whole supported plan, not just a title.
+- Green in the current graph means a returned call, not accepted work. Keep task
+  progress/checkpoints, reviewer verdict and full-range acceptance separate when
+  mapping the four display colors. Do not infer new success from the simplified legend.
+
+The [accepted decision index](../docs/decisions/index.md) was consulted. Applicable
+[ADR-0003](../docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md)
+keeps current scoped authority separate from historical approvals;
+[ADR-0004](../docs/decisions/ADR-0004-shared-routine-worker-permissions.md) permits
+bounded local checks without expanding product scope. Neither approves this design.
+Older readability proposals retain their history; they do not authorize a redesign
+or override the owner's current four-color, single-edge-style mockup direction.
+Owner visual approval and later scoped planning/implementation approval remain pending.
+
 ## Project discovery
 
 The multi-project inventory is read-only. It validates an expanded projects root as a
