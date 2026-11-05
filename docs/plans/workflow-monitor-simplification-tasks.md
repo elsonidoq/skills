@@ -48,12 +48,14 @@ the configured sequential executor also avoids overlapping writes to shared UI/t
   Executable instructions are authorization-neutral. Returned execution is not a successful
   check, checkpoint, accepted task or accepted review. T003/T006 explicitly preserve this.
 - [ADR-0004](../decisions/ADR-0004-shared-routine-worker-permissions.md): bounded isolated
-  fixtures/local checks and ordinary scoped corrections need no repeated permission.
+  fixtures/local checks, ordinary scoped corrections and necessary isolated/in-project
+  dependency setup during authorized implementation need no repeated permission. Use existing
+  lockfiles and documented paths; do not add automatic startup installation machinery.
   Preserve material scope/product, manual, security/data/credential, paid and external-action
-  gates. No global installs, credential refresh, service changes, deployment, push, real-data
-  preservation/removal or unrelated deletion. Missing prepared tools are reported, not
-  automatically installed or downloaded. Inspect failed expensive calls before a targeted
-  retry; never blindly relaunch.
+  gates. No global installs, credential/auth changes, uncontrolled resource expansion,
+  service changes, deployment, push, real-data preservation/removal or unrelated deletion.
+  Browser downloads and other separately scoped external effects retain their actual gates.
+  Inspect failed expensive calls before a targeted retry; never blindly relaunch.
 - Apply the [task checkpoint contract](../../skills/memory-handling/references/task-commit-contract.md):
   executable workers do not stage/commit; the runner verifies and checkpoints explicit owned
   paths before later mutation. Preserve unrelated bytes and all applicable actual checks.
@@ -132,12 +134,17 @@ Observed during authoring: Python 3.12.3, Node v24.21.0 and npm 11.19.0 respond 
 queries. `/usr/bin/google-chrome` resolves to an executable local Chrome; no browser was
 launched. **The selected checkout lacks `workflow_monitor/.venv/bin/python` and
 `workflow_monitor/web/node_modules`.** Python tests/build/browser checks were not run.
-Before T001 relies on Python evidence, provide a prepared isolated environment matching
+Before T001 relies on Python evidence, use or prepare the isolated environment matching
 `workflow_monitor/requirements.lock` at the documented path and verify imports. Before
-T002–T006 rely on web evidence, provide the existing prepared locked web tools and verify
-local Chrome launch. Coordinate any preparation outside current scope; do not silently
-substitute interpreters, edit configs or install/download tools. Capability failure names the
-operation and correction; it is not a pass or a new startup ceremony.
+T002–T006 rely on web evidence, use or prepare the locked web tools at the documented path
+and verify local Chrome launch. Authorized implementation may perform this ordinary bounded
+isolated/in-project setup under ADR-0004 without a separate setup task, handoff or renewed
+owner permission. Do not silently substitute interpreters or edit configs. Report unavailable
+setup and the precise correction only when it genuinely falls outside existing authority;
+retain separately scoped browser-download/external-effect gates. This is not automatic
+startup installation. The task-authoring/review stage remains no-install; source-stage
+no-install wording does not remove later routine implementation authority. Capability failure
+is not a pass or a new startup ceremony.
 
 `test_graph.spec.ts` imports actual graph/layout helpers. Execution/navigation/multiproject
 suites use the existing disposable `execution_fixture.py`, actual production HTTP and built
