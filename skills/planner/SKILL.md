@@ -353,6 +353,12 @@ The reviewer returns supported findings or justified zero, not edits or approval
 parent checks findings against original requirements, combines supported substantive corrections for the
 appropriate producer, and explains rejected findings with evidence. Agent-added constraints remain challengeable even when labeled REQUIRED; genuine
 requirements, safety and manual/permission gates remain binding. Resolve material findings before approval.
+Before presenting approval, the parent summarizes the planned task specifications in one sentence and
+explicitly answers: “Does the current plan induce scope creep or over complexities?” Assess the tasks
+and both reports, not just their verdicts: a required outcome does not justify every proposed mechanism.
+Check that simplicity comparisons use a genuinely sufficient smaller alternative, and distinguish supported
+defects from optional improvements or flexibility already present. Resolve concrete review gaps through
+targeted follow-up in the existing reviewer context, not another mandatory review stage.
 If corrections invalidate correctness coverage, recheck only the affected changes and interactions through
 the existing correction route. No automatic full-review loop, finding quota or additional owner gate.
 Missing review capability/evidence stops this stage with the concrete corrective action.

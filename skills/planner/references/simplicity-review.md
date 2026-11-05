@@ -1,7 +1,9 @@
 # Independent final simplicity review
 
 Primary goal: find the simplest sufficient implementation of the owner's requirements.
-Do you see any unnecessary complexity, scope creep, or confusing tasks? Is this the simplest
+Summarize the planned task specifications in one sentence, then explicitly answer:
+“Does the current plan induce scope creep or over complexities?”
+Do you see any unnecessary complexity or confusing tasks? Is this the simplest
 way to meet the owner's requirements?
 
 Start with the owner's intent expressed as a concise executive bullet list supplied by the
@@ -20,7 +22,10 @@ tasks with simpler implementation. Return all supported findings within the per-
 when none qualify, justify keeping the tasks rather than substituting a blanket pass.
 
 Do not justify a mechanism merely because its goal is required. For the main sources of
-implementation complexity, compare the proposed approach with a simpler alternative. Report a
+implementation complexity, compare the proposed approach with a simpler alternative. Distinguish
+necessary diagnostic evidence from a permanent diagnostic interface: consider calling the actual helper
+through a bounded probe when that satisfies the same need. Do not claim duplicate interfaces or rigid
+architecture when the tasks explicitly share an interface or permit alternatives. Report a
 finding when the alternative meets the same requirements with materially less work. If it does
 not, explain which requirement it fails.
 
