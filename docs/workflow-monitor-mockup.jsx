@@ -49,10 +49,11 @@ function SampleGraph({ fixture }) {
 const graphRoot = createRoot(document.getElementById('graph'));
 
 /* DEMO DATA AND INTERACTION ONLY. These are not API DTOs or a new status inference layer. */
+// label is the retained original run_id, not a human-name field or qualified route ID.
 const runs = [
-  { id: 'current', name: 'Navigation clarity', worktree: 'curvy-skunk', qualifier: 'Run 2', when: 'Today, 10:40', source: 'linked', state: 'Recorded running · sample', summary: 'Full-range acceptance: not established. No final independent review intent is supplied in this sample. The failed initial call and its later running correction remain separate.' },
-  { id: 'earlier', name: 'Navigation clarity', worktree: 'curvy-skunk', qualifier: 'Run 1', when: 'Yesterday, 16:20', source: 'linked', state: 'Stopped · sample', summary: 'Full-range acceptance: not established. The reviewer returned with changes requested. The corrective call was interrupted; an explicit stopping step remains visible.' },
-  { id: 'legacy', name: null, worktree: 'sample-tools', qualifier: '', when: 'Earlier recording', source: 'main', state: 'Incomplete recording · sample', summary: 'Plan unavailable in this older sample recording. Do not infer task slots or rebuild task descriptions from current files.' }
+  { id: 'current', label: 'review-convergence-20261024', worktree: 'curvy-skunk', qualifier: 'Run 2', when: 'Today, 10:40', source: 'linked', state: 'Recorded running · sample', summary: 'Full-range acceptance: not established. No final independent review intent is supplied in this sample. The failed initial call and its later running correction remain separate.' },
+  { id: 'earlier', label: 'review-convergence-20261023', worktree: 'curvy-skunk', qualifier: 'Run 1', when: 'Yesterday, 16:20', source: 'linked', state: 'Stopped · sample', summary: 'Full-range acceptance: not established. The reviewer returned with changes requested. The corrective call was interrupted; an explicit stopping step remains visible.' },
+  { id: 'legacy', label: '7b2e4a4cf7cb4a659d268cb12e93a407', worktree: null, qualifier: '', when: 'Earlier recording', source: 'preserved', state: 'Incomplete recording · sample', summary: 'Plan unavailable in this older sample recording. Do not infer task slots or rebuild task descriptions from current files.' }
 ];
 // Node dimensions and fixture coordinates are illustrative. Production must measure content.
 const fixtures = {
@@ -60,10 +61,10 @@ const fixtures = {
     nodes: [
       { id:'t1', x:24, y:24, title:'Task 1 · Read project inventory', role:'Worker', state:'Returned · acceptance not established', color:'success', work:'Read the registered project inventory without modifying its stores.' },
       { id:'t3', x:276, y:24, title:'Task 3 · Match run sources', role:'Worker', state:'Failed · transport error', color:'failed', work:'Match each listed run to its retained recording source.' },
-      { id:'t4', x:528, y:24, title:'Task 4 · Confirm run labels', role:'Planned worker', state:'Waiting for input · not started', color:'failed', work:'Confirm the run name and worktree folder label.', blocker:'A task-scoped question is outstanding. Waiting is not running.' },
+      { id:'t4', x:528, y:24, title:'Task 4 · Confirm run labels', role:'Planned worker', state:'Waiting for input · not started', color:'failed', work:'Confirm the original run identifier and worktree folder label.', blocker:'A task-scoped question is outstanding. Waiting is not running.' },
       { id:'t2', x:24, y:158, title:'Task 2 · Label projects', role:'Worker', state:'Returned · acceptance not established', color:'success', work:'Use the registered main directory name as the project label.' },
       { id:'fix', x:276, y:158, title:'Task 3 · Corrective worker 1', role:'Corrective worker', state:'Running · recorded, not live proof', color:'running', work:'Match each listed run to its retained recording source.' },
-      { id:'t6', x:528, y:158, title:'Task 6 · Show worktree name', role:'Planned worker', state:'Blocked · Task 4 needs input', color:'failed', work:'Show only the final worktree folder name beside the run name.', blocker:'Task 4 needs input.' },
+      { id:'t6', x:528, y:158, title:'Task 6 · Show worktree name', role:'Planned worker', state:'Blocked · Task 4 needs input', color:'failed', work:'Show only the final worktree folder name beside the original run identifier.', blocker:'Task 4 needs input.' },
       { id:'t5', x:24, y:292, title:'Task 5 · Check project labels', role:'Planned worker', state:'Not started', color:'pending', work:'Check that project labels remain readable in the run selector.' },
       { id:'t7', x:276, y:426, title:'Task 7 · Description unavailable', role:'Planned worker', state:'Blocked · prerequisite incomplete', color:'failed', work:null, blocker:'Task 6 has not completed.' }
     ],
@@ -96,7 +97,7 @@ const fixtures = {
 let project = 'sample-tools', run = runs[0], selected = null;
 const $ = id => document.getElementById(id);
 const text = (tag, value) => { const element = document.createElement(tag); element.textContent = value; return element; };
-const runLabel = item => `${item.name ?? 'Run name unavailable'} · ${item.worktree}`;
+const runLabel = item => `${item.label} · ${item.worktree ?? 'Worktree name unavailable'}`;
 function showRuns() {
   const filter = $('filter').value.toLowerCase();
   const available = project === 'sample-tools' ? runs : [];

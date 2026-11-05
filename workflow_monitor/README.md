@@ -9,7 +9,7 @@ and has no execution or control routes.
 The [workflow monitor mockup](../docs/workflow-monitor-mockup.html) is the durable,
 authoritative **visual reference** for monitor UI changes. Its current design is
 **proposed, not owner-approved**. It is not the current application, an implementation
-specification, or evidence of recorded work. All displayed projects, run names,
+specification, or evidence of recorded work. All displayed projects, run identifiers,
 worktree names, tasks, relations and results are synthetic. Current application
 behavior is documented below.
 
@@ -25,9 +25,10 @@ Open `docs/workflow-monitor-mockup.html` directly in a local browser (`file://`)
 build, server, installation or monitor connection is needed. The initial view shows
 eight sample nodes, branches and a join with all four colors. Select a task for its
 short work description; Task 7 demonstrates unavailable retained text. Select an edge
-for its relation meaning. Select **Navigation clarity · curvy-skunk**, **Run 1**, for
-a returned reviewer that requested changes, an interrupted corrective call and a
-stopping step. The main-worktree sample shows an unavailable run name/plan. Select
+for its relation meaning. Select **review-convergence-20261023 · curvy-skunk**,
+**Run 1**, for a returned reviewer that requested changes, an interrupted corrective
+call and a stopping step. The older preserved sample keeps its generated original
+run identifier, with **Worktree name unavailable** and an unavailable plan. Select
 **sample-docs** for an empty project. Filter, project/run
 selection, drag-to-pan, node dragging, zoom, Fit, disclosures and Close work locally;
 they do not call APIs. The graph uses the same ReactFlow engine as the monitor, bundled
@@ -40,14 +41,19 @@ in the HTML for offline viewing.
   one compact heading. The graph gets the full viewer width until a selection opens
   the 18rem Details panel; Close returns that space. Below 1000px Details stays below
   the graph; below 700px navigation stacks as in the current UI.
-- Show **run name + final worktree folder name**, for example the synthetic
-  **Navigation clarity · curvy-skunk**. Owner clarification: "name plus worktree
-  last folder name (e.g. this worktree would be curvy-skunk)". Do not show full
-  absolute paths, including in disclosures or tooltips. Use a compact qualifier
-  when runs share a worktree, plus readable start context. Opaque refs remain routing
-  identities, not principal display labels. Keep qualifiers stable across filtering,
-  paging and polling; the sample labels are not a production numbering algorithm.
-  Missing run names stay explicitly unavailable; no naming subsystem or new persisted
+- Show **original run identifier + final worktree folder name**, for example the
+  synthetic **review-convergence-20261024 · curvy-skunk**. The owner's later explicit
+  **Show existing identifier + folder** answer resolves the earlier name ambiguity:
+  use retained raw `run_id`, including generated IDs, not a separate human name or
+  the recording-qualified routing ID. Do not show full absolute paths, including in
+  disclosures or tooltips. Keep readable start context and existing compact qualifiers
+  secondary; qualifier stability must not depend on filtering, paging or list position.
+  The sample qualifiers are not a production numbering algorithm. Wrap identifiers,
+  never clip or replace a retained generated ID with unavailable-name text. The heading
+  uses `min-width: 0` and `overflow-wrap: anywhere` to retain long IDs on narrow screens;
+  the rail already uses wrapping. Missing
+  source basenames say **Worktree name unavailable**, including preserved recordings
+  or a reader without a verified live binding. No naming subsystem or new persisted
   data is proposed.
 - Use exactly four node color categories: **Not started**, **Running**, **Failed**,
   **Completed**. Waiting, blocked, interrupted, unknown and other exceptional states
@@ -123,24 +129,27 @@ edit the generated engine blocks by hand or copy them into the production applic
 production continues to import its existing packages. Source maps and private build
 paths are not retained. This does not grant owner approval of the design.
 
-### Data gaps for later planning
+### Existing data and later implementation boundaries
 
 - Current `Run`/`Recording` DTOs expose `main`/`linked`/`preserved`, opaque refs and
-  the generic `Recorded run` label (`public.py:minimize`), not a distinct run-name or
-  worktree-basename field. `runtime/coherence_workflow/cli.py:main` accepts `--run`
-  as the run ID; absent that option, it generates `uuid.uuid4().hex`. The retained
-  version-3 descriptor (`monitoring.py:_descriptor`) has no run-name field.
-  `app.py:_qualify_public` prefixes `display_id` with the recording hash. A supplied
-  run ID may be meaningful, but it is not guaranteed human-readable name evidence.
-  Later planning must settle the existing-data source/fallback; do not invent names,
-  decode opaque refs as names, or add name persistence from this mockup.
+  the generic `Recorded run` label (`public.py:minimize`). The owner-selected display
+  source is the existing original raw `run_id`, whether meaningful or generated.
+  `runtime/coherence_workflow/cli.py:main` accepts `--run` or generates `uuid.uuid4().hex`.
+  The proposed alignment uses that raw ID as the existing public `label`, before
+  `app.py:_qualify_public` adds the recording hash to the separate `display_id`.
+  Keep opaque refs and qualified routing IDs unchanged; do not parse them to invent
+  labels. Descriptor version 3 has no separate run-name field and needs none for this
+  choice. An old plan can lack task descriptions while its run ID remains available.
+  This resolves the display-source question without new persistence; application
+  mapping is still unimplemented by this mockup.
 - Live `projects.py:Recording.worktree` already holds the registered worktree path
   internally, from which only its final folder name is needed for display. The current
   DTO does not expose that basename. Preserved recordings bind `worktree` to the main
   storage worktree; their `recording.json` retains opaque `recording_id`/`origin_id`,
   not the original worktree name (`recordings.py:PreservedBinding`). Do not label the
-  storage folder as the original source worktree. Report unavailable source names
-  honestly. Keep the no-absolute-path HTTP boundary and opaque API selectors unchanged;
+  storage folder as the original source worktree. Use **Worktree name unavailable**
+  for preserved recordings or a reader without a verified live binding. Keep the
+  no-absolute-path HTTP boundary and opaque API selectors unchanged;
   no absolute-path exception is needed or proposed.
 - Supported descriptor version 3 retains `label` and explicit `outcome`/`description`
   as `work_description`. Generic/ID-only labels currently become `Recorded task` in
