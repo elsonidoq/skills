@@ -9,8 +9,9 @@ and has no execution or control routes.
 The [workflow monitor mockup](../docs/workflow-monitor-mockup.html) is the durable,
 authoritative **visual reference** for monitor UI changes. Its current design is
 **proposed, not owner-approved**. It is not the current application, an implementation
-specification, or evidence of recorded work. All displayed projects, paths, tasks,
-relations and results are synthetic. Current application behavior is documented below.
+specification, or evidence of recorded work. All displayed projects, run names,
+worktree names, tasks, relations and results are synthetic. Current application
+behavior is documented below.
 
 Owner direction for **all future monitor UI changes**: **modify this mockup first,
 obtain explicit owner approval, then modify the monitor UI**. Copy the approved
@@ -24,11 +25,13 @@ Open `docs/workflow-monitor-mockup.html` directly in a local browser (`file://`)
 build, server, installation or monitor connection is needed. The initial view shows
 eight sample nodes, branches and a join with all four colors. Select a task for its
 short work description; Task 7 demonstrates unavailable retained text. Select an edge
-for its relation meaning. Select **navigation-clarity · Run 1** for a returned reviewer
-that requested changes, an interrupted corrective call and a stopping step. Expand
-**Worktree path** for the full selectable sample path; the main-worktree sample shows
-an unavailable path/plan. Select **sample-docs** for an empty project. Filter, project/run
-selection, zoom, Fit, disclosures and Close work locally; they do not call APIs.
+for its relation meaning. Select **Navigation clarity · curvy-skunk**, **Run 1**, for
+a returned reviewer that requested changes, an interrupted corrective call and a
+stopping step. The main-worktree sample shows an unavailable run name/plan. Select
+**sample-docs** for an empty project. Filter, project/run
+selection, drag-to-pan, node dragging, zoom, Fit, disclosures and Close work locally;
+they do not call APIs. The graph uses the same ReactFlow engine as the monitor, bundled
+in the HTML for offline viewing.
 
 ### Proposed visual changes and copy boundaries
 
@@ -37,12 +40,15 @@ selection, zoom, Fit, disclosures and Close work locally; they do not call APIs.
   one compact heading. The graph gets the full viewer width until a selection opens
   the 18rem Details panel; Close returns that space. Below 1000px Details stays below
   the graph; below 700px navigation stacks as in the current UI.
-- Lead each run with its Git worktree name. Use a compact run qualifier only when
-  the same worktree has multiple runs, plus readable start context. Full paths belong
-  in a keyboard-accessible disclosure, not truncated hover-only labels. Opaque refs
-  must remain routing identities, not principal display labels. A future qualifier
-  must be stable across filtering, paging and polling; the sample labels are not a
-  production numbering algorithm.
+- Show **run name + final worktree folder name**, for example the synthetic
+  **Navigation clarity · curvy-skunk**. Owner clarification: "name plus worktree
+  last folder name (e.g. this worktree would be curvy-skunk)". Do not show full
+  absolute paths, including in disclosures or tooltips. Use a compact qualifier
+  when runs share a worktree, plus readable start context. Opaque refs remain routing
+  identities, not principal display labels. Keep qualifiers stable across filtering,
+  paging and polling; the sample labels are not a production numbering algorithm.
+  Missing run names stay explicitly unavailable; no naming subsystem or new persisted
+  data is proposed.
 - Use exactly four node color categories: **Not started**, **Running**, **Failed**,
   **Completed**. Waiting, blocked, interrupted, unknown and other exceptional states
   use the **same Failed color**, with their actual status stated in node text. Waiting
@@ -67,25 +73,75 @@ replace semantic values with color names. Replace conflicting old node/edge styl
 rather than layering a second palette over them. The same edge stroke also applies
 to selected edges; selection Details carry their meaning.
 
-Do **not** copy `style#mockup-only-styles`, synthetic fixtures, fixed coordinates,
-scroll/zoom helpers or local navigation handlers into production. Retain ReactFlow,
-measured DOM dimensions, ELK layout, stable identities, viewport preservation,
-selection/fetch guards, history paging and opaque routing. The mockup refits on
-selection only to keep its fixed fixture visible; production selection must preserve
-the user's viewport. Its 208px node width is a presentation starting width, not a
-fixed layout box that can clip longer real text. Production layout still measures
-content. Retain the existing ReactFlow controls; the demo controls only approximate
-those interactions. The proposal banner is reference-only, not application chrome.
+Do **not** copy `style#mockup-only-styles`, synthetic fixtures, initial fixture
+coordinates or local navigation handlers into production. Retain measured DOM
+sizes, ELK layout, stable identities, viewport preservation, selection/fetch guards,
+history paging and opaque routing. The 208px node width is a presentation starting
+width, not a fixed clipping box. Production layout still measures content. The
+proposal banner is reference-only, not application chrome.
+
+**Preserved interaction boundary:** the readable
+[mockup source](../docs/workflow-monitor-mockup.jsx) uses the actual ReactFlow engine,
+not a pointer/scrollbar imitation. Its `SampleGraph` copies the current monitor's
+controlled `viewport`, `onMove` updates, `onNodeDragStop` position retention, node/edge
+selection, `minZoom={.15}`, `Background` and `Controls`. Keep those interactions in
+future UI changes: dragging empty graph space pans; dragging a node moves that node
+and its attached edges, with the engine's normal edge-of-viewport auto-pan preserved.
+Selection/Close does not refit the graph or reset moved nodes. Opening Details can
+narrow the visible canvas; use drag-to-pan or explicit Fit to see off-canvas nodes.
+Initial fitting and the explicit Fit control remain available.
+
+Inspection of the prepared locked ReactFlow defaults confirms `panOnDrag=true`,
+`nodesDraggable=true`, scroll/pinch/double-click zoom enabled, and `panOnScroll=false`.
+The application does not override them. The mockup retains these defaults, including
+the existing Controls interaction toggle; do not remove graph or node dragging based
+on this reference. The old scrollbar-only mockup behavior is replaced, not approved
+as a production alternative. Fixture positions replace only the data/layout input;
+this mockup does not exercise production ELK layout, polling or status-refresh logic.
+
+### Rebuild the offline reference
+
+The HTML contains generated ReactFlow CSS/JavaScript and bundled dependency license
+notices. Edit its marked visual CSS/HTML and the readable
+[`workflow-monitor-mockup.jsx`](../docs/workflow-monitor-mockup.jsx), then regenerate
+with the small documentation-only
+[`workflow-monitor-mockup-build.mjs`](../docs/workflow-monitor-mockup-build.mjs):
+
+```sh
+node docs/workflow-monitor-mockup-build.mjs
+# Or use an already-prepared monitor dependency directory; no installation:
+node docs/workflow-monitor-mockup-build.mjs /path/to/prepared/monitor/node_modules
+```
+
+The default uses `workflow_monitor/web/node_modules`. The builder uses esbuild from
+the existing monitor toolchain and checks bundled package versions against
+`workflow_monitor/web/package-lock.json`; it adds no dependency manifest or application
+build step. Missing/mismatched prepared dependencies require a prepared matching
+location, not automatic installation. Commit the regenerated HTML with source changes.
+No external directory, server or network is needed to view the resulting HTML. Do not
+edit the generated engine blocks by hand or copy them into the production application;
+production continues to import its existing packages. Source maps and private build
+paths are not retained. This does not grant owner approval of the design.
 
 ### Data gaps for later planning
 
-- Current `Run`/`Recording` DTOs in `web/src/main.tsx`, `projects.py` and `public.py`
-  expose `main`/`linked`/`preserved`, opaque references and a generic `Recorded run`
-  label, not a display worktree name/path. The HTTP contract below deliberately
-  excludes absolute paths. Worktree-first identity/path disclosure needs a separately
-  approved, bounded display-data/privacy change; paths must not become API selectors.
-  Preserved or removed worktree identity and stable duplicate-run disambiguation need
-  explicit handling. This mockup does not weaken the current boundary.
+- Current `Run`/`Recording` DTOs expose `main`/`linked`/`preserved`, opaque refs and
+  the generic `Recorded run` label (`public.py:minimize`), not a distinct run-name or
+  worktree-basename field. `runtime/coherence_workflow/cli.py:main` accepts `--run`
+  as the run ID; absent that option, it generates `uuid.uuid4().hex`. The retained
+  version-3 descriptor (`monitoring.py:_descriptor`) has no run-name field.
+  `app.py:_qualify_public` prefixes `display_id` with the recording hash. A supplied
+  run ID may be meaningful, but it is not guaranteed human-readable name evidence.
+  Later planning must settle the existing-data source/fallback; do not invent names,
+  decode opaque refs as names, or add name persistence from this mockup.
+- Live `projects.py:Recording.worktree` already holds the registered worktree path
+  internally, from which only its final folder name is needed for display. The current
+  DTO does not expose that basename. Preserved recordings bind `worktree` to the main
+  storage worktree; their `recording.json` retains opaque `recording_id`/`origin_id`,
+  not the original worktree name (`recordings.py:PreservedBinding`). Do not label the
+  storage folder as the original source worktree. Report unavailable source names
+  honestly. Keep the no-absolute-path HTTP boundary and opaque API selectors unchanged;
+  no absolute-path exception is needed or proposed.
 - Supported descriptor version 3 retains `label` and explicit `outcome`/`description`
   as `work_description`. Generic/ID-only labels currently become `Recorded task` in
   `graph.ts:taskTitle`; the helper does not use `work_description`. Later work can
