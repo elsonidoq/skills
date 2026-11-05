@@ -1,0 +1,273 @@
+{
+  "tasks": [
+    {
+      "id": "T001",
+      "outcome": "Expose safe original run labels and live worktree basenames without changing routes",
+      "depends": [],
+      "description": "Read docs/plans/workflow-monitor-simplification-tasks.md#shared-worker-brief and the linked TinySpec in full before work. Use public.py:minimize to populate existing label from the safe original retained run_id before qualification, including generated UUIDs. In app.py single-reader snapshot/list and _qualify_public/project dispatch, add nullable display-only worktree_name at the verified binding seam. Consume projects.py:Recording.worktree.name only for live main/linked bindings; preserved worktree points to MAIN STORAGE, so its original basename is unavailable. No verified live binding also means unavailable. Keep cached safe reads/list/snapshot consistent; never infer a source path from refs. Change projects.py only if that real binding seam needs a small display accessor; preserve inventory/read-only binding behavior. Extend existing public/project/HTTP/preserved-reader tests with actual helpers and closed API readback. Do not change recording formats, runtime descriptors, persistence or history. Update only the README existing-data/API description affected by this outcome.",
+      "owned_paths": [
+        "workflow_monitor/public.py",
+        "workflow_monitor/app.py",
+        "workflow_monitor/projects.py",
+        "workflow_monitor/tests/test_public.py",
+        "workflow_monitor/tests/test_projects.py",
+        "workflow_monitor/tests/test_http.py",
+        "workflow_monitor/tests/test_recordings.py",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T001/A1",
+          "description": "REQUIRED — Actual minimize and list/snapshot HTTP assertions show safe meaningful and generated raw identifiers unchanged in label, separately unchanged recording-prefixed display_id and opaque refs; duplicate raw IDs across main/linked/preserved recordings retain exact distinct routes. Test live basenames including spaces, preserved and no-binding null fallback, unsafe/missing display values and safe cached reads. Assert no absolute worktree/admin/storage path or arbitrary private field reaches DTOs. Keep existing privacy/security/read-only checks. Evidence: focused test cases and representative sanitized DTO assertions, not a raw private dump."
+        }
+      ],
+      "checks": [
+        [
+          "workflow_monitor/.venv/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "workflow_monitor.tests.test_public",
+          "workflow_monitor.tests.test_projects",
+          "workflow_monitor.tests.test_recordings",
+          "workflow_monitor.tests.test_http"
+        ]
+      ]
+    },
+    {
+      "id": "T002",
+      "outcome": "Use faithful retained task titles and complete inert work text",
+      "depends": [],
+      "description": "Read docs/plans/workflow-monitor-simplification-tasks.md#shared-worker-brief and the linked TinySpec in full before work. Improve graph.ts:taskTitle in place: retain meaningful labels, including prose starting Task; blank/generic/number-only/ID-only labels fall back to a whitespace-collapsed leading retained work_description excerpt using existing 80-character/ellipsis behavior, else Description unavailable. In main.tsx task/call Details and history, show the complete original retained text inertly, with an explicit blank/missing-text fallback; a meaningful label is not full work text. Keep source-order Task N, roles and correction/review ordinals. Do not reconstruct old plans/current files or generate summaries. Extend graph helper tests and the existing execution fixture/browser assertions. The graph fixture task factory still supplies obsolete summary: align affected fixtures to work_description, without inventing missing production descriptions. test_graph uses Playwright to import production helpers; tsconfig includes src only, so run the helper suite as well as build to admit fixture changes. No shell/palette redesign in this task.",
+      "owned_paths": [
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/web/tests/execution_fixture.py",
+        "workflow_monitor/web/tests/test_chain.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T002/A2",
+          "description": "REQUIRED — Actual taskTitle/graphFor assertions cover meaningful/generic/number-only/ID/blank labels, prose beginning Task, retained whitespace, long text/ellipsis, missing text and stable source-order/corrective titles. Production browser Details/history show full original retained text, no HTML execution, explicit unavailable text, and no invented old-plan tasks. Use existing malicious-looking retained text fixture; keep its bytes intact in full Details. Evidence: helper assertions plus real production HTTP/browser text and no-element assertions."
+        }
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test",
+          "--",
+          "tests/test_graph.spec.ts",
+          "tests/test_execution.spec.ts",
+          "tests/test_chain.spec.ts"
+        ]
+      ]
+    },
+    {
+      "id": "T003",
+      "outcome": "Project semantic execution states to exactly four existing color classes",
+      "depends": [
+        "T002"
+      ],
+      "description": "Read docs/plans/workflow-monitor-simplification-tasks.md#shared-worker-brief and the linked TinySpec in full before work. Change only graph.ts presentation projection, not semantic status()/DTO evidence, reconciliation, identities or relation construction. Planned/pending without impediment maps pending; qualified recorded running maps running; returned execution maps success; failed and ALL exceptional/unknown/waiting/blocked/interrupted/ambiguous states map failed. Audit planned slots with progress failed/unknown/waiting annotations as well as actual calls/reviews/stops. An unexecuted slot cannot turn green from a checkpoint. Pending text says Not started, preserving run stopped where known. Retain actual state/qualification in node text; a red waiting node must not say Failed, and a returned rejecting reviewer remains green with visible Returned · changes requested. Preserve recorded-not-liveness running qualification. Update superseded palette expectations in test_graph/test_execution now, retaining semantic assertions; existing failed CSS already provides the target red. Leave one-edge CSS and four-chip shell to T005. Keep README execution/progress semantics accurate.",
+      "owned_paths": [
+        "workflow_monitor/web/src/graph.ts",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T003/A3",
+          "description": "REQUIRED — Actual graphFor tests exercise pending, running, returned, failed, waiting, blocked, unknown/ambiguous, interrupted and stopped cases, including pre-worker waiting and rejected returned review. Compare node IDs, edge endpoints/type/classification/relation data with representative unchanged topology expectations; only presentation changes. Production computed node styles show only pending/running/failed/success palettes while text preserves actual exceptional status, rejection and independent acceptance. Existing edge distinctions still pass here; their one-style replacement is T005. Evidence: helper matrix/topology assertions and production computed node styles."
+        }
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test",
+          "--",
+          "tests/test_graph.spec.ts",
+          "tests/test_execution.spec.ts"
+        ]
+      ]
+    },
+    {
+      "id": "T004",
+      "outcome": "Display and filter original identifier plus folder using stable separate route identities",
+      "depends": [
+        "T001"
+      ],
+      "description": "Read docs/plans/workflow-monitor-simplification-tasks.md#shared-worker-brief and the linked TinySpec in full before work. Consume T001 label/worktree_name in main.tsx Run type and one shared rail/heading formatter. Render original run identifier · registered last folder, with Worktree name unavailable for null metadata. Generated identifiers remain visible. Keep source/readable start as secondary text and a deterministic collision-safe compact qualifier derived from existing qualified identity, independent of filtered position, paging, other rows presence or inventory change. Do not persist or infer names. Apply the approved mockup run-list strong/small and heading structure mechanically for this slice without changing CSS yet. Filter displayed identifier/folder/start/qualifier text plus existing display_id substring, locally. Preserve selected-outside/no-match/empty/unavailable behavior, exact opaque API and qualified URL selection, ordering, 60-second polling, history and Back/Forward. Update navigation/multiproject selectors and necessary execution_fixture.py cases, including generated IDs and live folders with spaces; preserve the harness actual CLI readback/private-exclusion checks. No graph layout, palette or evidence-disclosure rewrite.",
+      "owned_paths": [
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/tests/test_navigation.spec.ts",
+        "workflow_monitor/web/tests/test_multiproject.spec.ts",
+        "workflow_monitor/web/tests/execution_fixture.py",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T004/A1",
+          "description": "REQUIRED — Production HTTP/browser rail and heading agree for meaningful/generated identifiers, main/linked/preserved and unavailable basename. No path appears in text/tooltips. Same raw IDs across recordings stay selectable by unchanged qualified routes. Qualifiers remain unchanged across filtering, polls and inventory changes, with deterministic collision handling. Empty/no-match/outside-filter/unavailable/unknown URL and Back/Forward remain honest without selection theft. Evidence: navigation and multiproject fixture assertions using real API rows, not mockup navigation."
+        }
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test",
+          "--",
+          "tests/test_navigation.spec.ts",
+          "tests/test_multiproject.spec.ts"
+        ]
+      ]
+    },
+    {
+      "id": "T005",
+      "outcome": "Mechanically copy the approved visual shell while preserving measured graph interaction",
+      "depends": [
+        "T002",
+        "T003",
+        "T004"
+      ],
+      "description": "Read docs/plans/workflow-monitor-simplification-tasks.md#shared-worker-brief and the linked TinySpec in full before work. Copy only the approved mockup style#monitor-visual-styles content into style.css and applicable HTML/class structure into main.tsx. Replace conflicting old styles, including every old edge/selected-edge override, rather than layer a palette. Retain existing ReactFlow imports and measured ELK DOWN layout, not generated engine/data/coordinates/adapter. Deliver 14rem rail, compact heading, four exact legend chips/note, full graph width with Details initially closed, has-selection 18rem panel, Close and responsive stacking. Do not move evidence into disclosures until T006; preserve existing evidence visibility during this outcome. Keep smoothstep and all semantic edge metadata/Details while giving every edge one solid stroke/width/dash even selected/focused. Use 208px as starting presentation width; remove the old 180px sizing conflict at both main.tsx fallback and any necessary layout.ts boundary without clipping measured content. Preserve memoized node identity, viewport onMove and dragged-position retention, pan/drag/normal edge auto-pan, zoom defaults, Controls toggle, minZoom .15, Background, initial fit/explicit Fit, polling/paging and stale fetch/layout guards. Extend existing chain/production browser fixtures and update obsolete selectors/style expectations in the coupled suites; test_chain currently supplies summary, not work_description, so keep its DTO faithful to T002. Update only matching README current presentation/interaction guidance. Any unforeseen styling adjustment must return to mockup and owner, not be improvised in this task.",
+      "owned_paths": [
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/src/style.css",
+        "workflow_monitor/web/src/layout.ts",
+        "workflow_monitor/web/tests/test_graph.spec.ts",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/web/tests/test_chain.spec.ts",
+        "workflow_monitor/web/tests/test_navigation.spec.ts",
+        "workflow_monitor/web/tests/test_multiproject.spec.ts",
+        "workflow_monitor/web/tests/test_observation.spec.ts",
+        "workflow_monitor/web/tests/test_history.spec.ts",
+        "workflow_monitor/web/tests/test_lineage.spec.ts",
+        "workflow_monitor/web/tests/execution_fixture.py",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T005/A3",
+          "description": "REQUIRED — Computed browser styles confirm exactly four palettes and one identical solid edge style normal/selected/focused; semantic declared/recorded/mixed relation Details, rejection/checkpoints and node/edge topology remain intact. Update old three-edge-style expectations, never remove semantic checks."
+        },
+        {
+          "id": "T005/A4",
+          "description": "REQUIRED — Inspect exact CSS copy and shell/class parity against the owner-approved reference. Record only necessary real-data/warning/control bindings as differences. In production browser fixtures verify wide and stacked layouts, initial closed Details and Close restoring width, wrapping long labels, measured bounds and visible branch/join/reviewer/fixer/stop connectors. Drag background and node, observe attached edges and normal auto-pan; exercise scroll/pinch/double-click zoom, Controls toggle and Fit. Selection/Close, status-only poll and viewport-only movement retain viewport, moved positions and connectors. Test genuine size/topology change plus stale old-run fetch/layout rejection through existing guards. Evidence: copied-block comparison, browser geometry/interaction assertions and bounded wide/stacked screenshots; fixture coordinates alone cannot pass. The final owner same-Mac acceptance is performed after T006, not inferred here."
+        }
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test",
+          "--",
+          "tests/test_graph.spec.ts",
+          "tests/test_execution.spec.ts",
+          "tests/test_navigation.spec.ts",
+          "tests/test_multiproject.spec.ts",
+          "tests/test_observation.spec.ts",
+          "tests/test_chain.spec.ts",
+          "tests/test_history.spec.ts",
+          "tests/test_lineage.spec.ts"
+        ]
+      ]
+    },
+    {
+      "id": "T006",
+      "outcome": "Disclose secondary evidence without hiding material warnings or acceptance",
+      "depends": [
+        "T005"
+      ],
+      "description": "Read docs/plans/workflow-monitor-simplification-tasks.md#shared-worker-brief and the linked TinySpec in full before work. Within the copied structure, lead Details with short title, role/actual state, full retained text, blocker, safe findings and material acceptance qualification. Use existing-style Metrics, Checks and acceptance, Recorded history and Recorded evidence disclosures; retain all safe contents, not raw payloads. Keep This call/Task total/Overall run, separate session context, coverage, unloaded counts and both paging controls. Stale/read/unavailable/partial-plan warnings and material rejection/full-range qualifications must remain visible with disclosures closed; neutral read timestamps may collapse. Update existing tests to explicitly open necessary disclosures instead of weakening assertions. In test_execution and test_multiproject keep actual helper/API-to-browser metrics and rejection readback; in observation/history/lineage fixtures verify closed-warning visibility, selected/correction paging and acceptance beyond first page. Keep the existing no-control/privacy assertions. Update README current navigation/details/evidence descriptions and remove only superseded palette/chrome descriptions; preserve technical and mockup-first guidance. Perform composed A1–A5 browser acceptance using all completed prerequisites. Request the existing owner same-Mac interactive visual/interaction acceptance on this final build; report its actual disposition and leave acceptance pending if unavailable. Do not launch or alter a persistent monitor service for that gate.",
+      "owned_paths": [
+        "workflow_monitor/web/src/main.tsx",
+        "workflow_monitor/web/tests/test_execution.spec.ts",
+        "workflow_monitor/web/tests/test_multiproject.spec.ts",
+        "workflow_monitor/web/tests/test_navigation.spec.ts",
+        "workflow_monitor/web/tests/test_observation.spec.ts",
+        "workflow_monitor/web/tests/test_history.spec.ts",
+        "workflow_monitor/web/tests/test_lineage.spec.ts",
+        "workflow_monitor/web/tests/test_chain.spec.ts",
+        "workflow_monitor/web/tests/execution_fixture.py",
+        "workflow_monitor/README.md"
+      ],
+      "required": [
+        {
+          "id": "T006/A5",
+          "description": "REQUIRED — Browser opens all disclosures and pages selected/correction histories; This call/Task total/Overall run, session context separation, checks/checkpoints/reviews, full-range qualifications, coverage and unloaded counts remain available. Inject failed/stale read through existing fixture and confirm visible warning plus retained safe graph with disclosures closed. Missing/partial plan and rejection remain visible; no arbitrary identity/payload dump. Check acceptance beyond page one using existing booleans/answered-paged production cases. Build/type and affected existing tests pass. Evidence: production assertions for visible closed-state qualifications and disclosed full evidence, including paging."
+        },
+        {
+          "id": "T006/A1-A4",
+          "description": "REQUIRED — Reconfirm composed production rail/heading/routes, inert full work text, four palettes/one edge style and measured selection/Close/poll interaction after disclosure markup changes. Record browser evidence and binding-only visual differences, distinct from mockup checks."
+        },
+        {
+          "id": "T006/A4-manual",
+          "description": "REQUIRED — Owner same-Mac interactive final visual/interaction acceptance of the resulting production build, separately from automated browser evidence and earlier mockup approval. Obtain the actual owner disposition through the existing manual channel after the result exists. Unavailable or unrun means pending, not accepted; worker return/checkpoint alone is not acceptance."
+        }
+      ],
+      "checks": [
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "--prefix",
+          "workflow_monitor/web",
+          "test",
+          "--",
+          "tests/test_graph.spec.ts",
+          "tests/test_execution.spec.ts",
+          "tests/test_navigation.spec.ts",
+          "tests/test_multiproject.spec.ts",
+          "tests/test_observation.spec.ts",
+          "tests/test_chain.spec.ts",
+          "tests/test_history.spec.ts",
+          "tests/test_lineage.spec.ts"
+        ]
+      ]
+    }
+  ]
+}
