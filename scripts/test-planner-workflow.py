@@ -2577,6 +2577,31 @@ class IntentSpecificationReviewTests(unittest.TestCase):
                     changed[key] = replace_clause(texts[key], clause)
                     self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
 
+    def test_coordinator_analysis_before_independent_review_dispatch(self):
+        """Static instruction coverage, not proof of model obedience."""
+        texts = checker.load_texts()
+        contract = checker.section(texts["planner"], "### Shared final task-review contract")
+        clauses = (
+            "1. Write both bounded reviewer handoff instructions",
+            "2. Before launching either reviewer", "independently inspect that snapshot",
+            "Does the current plan induce scope creep or over complexities?",
+            "Do not defer this judgment to the reviewers",
+            "3. Launch both fresh independent read-only reviewers",
+            "Keep the coordinator's analysis out of both handoffs",
+            "4. After both reports return, assess all three analyses together",
+            "resume its existing context when useful", "launch a fresh correction",
+            "Do not launch a fixer when there are no supported corrections",
+        )
+        self.assertEqual(checker.check_contracts(texts), [])
+        positions = [contract.index(clause) for clause in clauses if clause[0].isdigit()]
+        self.assertEqual(positions, sorted(positions))
+        for clause in clauses:
+            with self.subTest(clause=clause):
+                changed = dict(texts)
+                changed["planner"] = texts["planner"].replace(contract, replace_clause(contract, clause), 1)
+                self.assertTrue(any(e.startswith("coordinator-review-sequence:")
+                                    for e in checker.check_contracts(changed)))
+
     def test_final_review_focus_and_fresh_simplicity_inputs(self):
         texts = checker.load_texts()
         contract = checker.section(texts["planner"], "### Shared simplicity-review contract")

@@ -250,8 +250,9 @@ Default to direct asynchronous single-stage dispatch with the resolved saved ass
 Inspect the returned artifact/checkpoint before the next authorized stage. Never prewire dependent source→tasks.
 The two final reviews are independent parallel work: dispatch both against the same current artifact
 snapshot before awaiting either report. Do not send findings between reviewers or start producer corrections
-until both reports return. The parent combines supported findings and resumes the appropriate producer once
-for the combined corrections; overlapping or contradictory findings are resolved against requirements.
+until both reports return. The parent combines its own pre-dispatch analysis with both review reports and resumes the appropriate
+producer once for supported corrections, or launches a fresh bounded correction producer when the
+originating context is unsuitable; resolve overlapping or contradictory findings against requirements.
 A workflow needs concrete branching, parallel independent work or another earned orchestration need that
 direct delegation cannot adequately serve; a single child, convenience wrapper or stage sequence alone is
 insufficient. State the reason in the brief; retain parent inspection, stage authority, approvals and reviewer
@@ -317,13 +318,26 @@ in existing session/report context, not a new tracker. No automatic rereview loo
 
 ### Shared final task-review contract
 
-At the existing final review in both paths, verify usable fresh read-only delegation and dispatch an
-independent reviewer in a new context separate from both task producer and parent history; never fork
+At the existing final review in both paths, the coordinator must follow this order:
+1. Write both bounded reviewer handoff instructions: correctness and simplicity, using their respective
+   input contracts and the same current artifact snapshot.
+2. Before launching either reviewer, independently inspect that snapshot and explicitly answer in the
+   session: **Does the current plan induce scope creep or over complexities?** State concrete findings
+   and their basis, or justify why none were found. Do not defer this judgment to the reviewers.
+3. Launch both fresh independent read-only reviewers with the prepared handoffs before awaiting either
+   report. Keep the coordinator's analysis out of both handoffs to preserve reviewer independence.
+4. After both reports return, assess all three analyses together: the coordinator's own analysis,
+   correctness review and simplicity review. Route supported corrections in one bounded brief to the
+   appropriate producer: resume its existing context when useful, otherwise launch a fresh correction
+   subagent. Do not launch a fixer when there are no supported corrections.
+
+Verify usable fresh read-only delegation and dispatch an independent reviewer in a new context
+separate from both task producer and parent history for correctness; never fork
 or resume either conversation. Use the route's resolved binding unchanged. Supply the original request,
 actual owner decisions, authoritative requirements, final human and executable tasks, and necessary
 verified risks and constraints. Do not supply producer conclusions, pass assurances or approval
 trajectory; do not omit substantive facts. The reviewer returns supported findings or justified zero,
-not approval. Parent evaluates the actual report alongside the simplicity report, routes substantive
+not approval. Parent evaluates the actual report alongside its pre-dispatch analysis and the simplicity report, routes substantive
 corrections to producers and resolves material findings before approval. Missing delegation or review
 evidence stops approval, not the other independent review.
 This is the correctness review: assess correctness, completeness, feasibility and requirement alignment,
@@ -350,8 +364,8 @@ producer rationale, prior verdicts, coordinator criticism, full transcripts or t
 Never fork or resume the parent, producer or correctness-review session for this first simplicity pass.
 
 The reviewer returns supported findings or justified zero, not edits or approval. After both reports return,
-parent checks findings against original requirements, combines supported substantive corrections for the
-appropriate producer, and explains rejected findings with evidence. Agent-added constraints remain challengeable even when labeled REQUIRED; genuine
+parent checks all three analyses against original requirements, combines supported substantive corrections for the
+appropriate producer under the sequence above, and explains rejected findings with evidence. Agent-added constraints remain challengeable even when labeled REQUIRED; genuine
 requirements, safety and manual/permission gates remain binding. Resolve material findings before approval.
 If corrections invalidate correctness coverage, recheck only the affected changes and interactions through
 the existing correction route. No automatic full-review loop, finding quota or additional owner gate.
