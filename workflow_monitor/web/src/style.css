@@ -1,33 +1,64 @@
-:root { font-family: system-ui, sans-serif; color: #172033; background: #f3f6fa; } * { box-sizing: border-box; } body { margin: 0; } main { display: grid; grid-template-columns: 17rem 1fr; min-height: 100vh; } aside { padding: 1rem; border-right: 1px solid #c7d2e0; background: #fff; } h1 { font-size: 1.3rem; } h2 { font-size: 1rem; margin: .5rem 0; } .status { color: #45576d; font-size: .85rem; } .project-list, .run-list { display: grid; gap: .45rem; }
-.project-list { margin-bottom: 1rem; } button { text-align: left; padding: .65rem; border: 1px solid #9aabc0; background: #fff; border-radius: .25rem; cursor: pointer; } button.selected { background: #dcecff; border-color: #1769aa; font-weight: 700; } .viewer { padding: 1rem; min-width: 0; } .viewer > header p { margin-top: 0; color: #45576d; } .legend { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .5rem; } .legend span { font-size: .75rem; border: 1px solid #b8c5d5; border-radius: 1rem; padding: .2rem .5rem; background: #fff; } .graph { border: 1px solid #b8c5d5; background: #fff; } .details { margin-top: 1rem; padding: .75rem; background: #fff; border: 1px solid #b8c5d5; } @media (max-width: 700px) { main { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid #c7d2e0; } .run-list { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); } }
-.execution-view { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); gap: .75rem; }
-.graph { height: 64vh; min-height: 24rem; }
-.selection-details { height: 64vh; min-height: 24rem; overflow: auto; padding: .8rem; border: 2px solid #486783; background: #fff; overflow-wrap: anywhere; }
-.selection-details h3 { margin-top: .2rem; }
-.selection-details p { font-size: .85rem; }
-.execution-node { width: 180px; min-height: 70px; box-sizing: border-box; border: 2px solid #64748b; border-radius: .4rem; padding: .6rem; background: #eef2f6; }
-.execution-node small { display: block; margin-top: .3rem; font-size: .7rem; }
+/* COPY BOUNDARY: proposed monitor presentation. Keep the existing ReactFlow/ELK engine. */
+:root { font-family: system-ui, sans-serif; color: #172033; background: #f3f6fa; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+main { display: grid; grid-template-columns: 14rem minmax(0, 1fr); min-height: 100vh; }
+aside { padding: 1rem; border-right: 1px solid #c7d2e0; background: #fff; }
+h1 { font-size: 1.3rem; margin: 0 0 1rem; }
+h2 { font-size: 1rem; margin: .5rem 0; }
+h3 { font-size: 1rem; margin: .5rem 0; }
+p { line-height: 1.5; }
+.status { color: #45576d; font-size: .85rem; }
+.project-list, .run-list { display: grid; gap: .45rem; }
+.project-list { margin-bottom: 1rem; }
+button, input { font: inherit; }
+button { text-align: left; padding: .65rem; border: 1px solid #9aabc0; background: #fff; border-radius: .25rem; cursor: pointer; color: inherit; }
+button.selected { background: #dcecff; border-color: #1769aa; font-weight: 700; }
+button:focus-visible, summary:focus-visible, input:focus-visible, .graph:focus-visible { outline: 3px solid #172033; outline-offset: 3px; }
+.run-list button { min-width: 0; overflow-wrap: anywhere; }
+.run-list strong, .run-list small { display: block; }
+.run-list small { margin-top: .2rem; color: #45576d; font-weight: 400; }
+.run-filter { display: block; font-size: .85rem; margin: .5rem 0; }
+.run-filter input { display: block; width: 100%; margin-top: .3rem; padding: .4rem; border: 1px solid #9aabc0; border-radius: .25rem; }
+summary { cursor: pointer; }
+.viewer { padding: .75rem; min-width: 0; }
+.viewer > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .5rem; }
+.viewer > header h2, .viewer > header p { margin: 0; }
+.viewer > header h2 { min-width: 0; overflow-wrap: anywhere; }
+.legend { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; margin-bottom: .4rem; }
+.legend span { font-size: .75rem; border: 1px solid; border-radius: 1rem; padding: .2rem .5rem; }
+.legend-note { font-size: .75rem; color: #45576d; margin: 0 0 .65rem; }
+.execution-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+.execution-view.has-selection { grid-template-columns: minmax(0, 1fr) 18rem; }
+.graph { position: relative; height: calc(100vh - 13rem); min-height: 30rem; border: 1px solid #b8c5d5; background: #fff; }
+.selection-details { max-height: calc(100vh - 13rem); overflow: auto; padding: .8rem; border: 1px solid #b8c5d5; background: #fff; overflow-wrap: anywhere; }
+.selection-details header { display: flex; justify-content: space-between; align-items: center; }
+.selection-details header button { padding: .3rem .5rem; font-size: .8rem; }
+.selection-details p, .selection-details details { font-size: .85rem; }
+.selection-details details { margin-top: .8rem; }
+.execution-node { width: 208px; min-height: 90px; border: 2px solid; border-radius: .4rem; padding: .6rem; font-size: .85rem; line-height: 1.3; text-align: center; }
+.execution-node strong { display: block; font-weight: 600; }
+.execution-node small { display: block; margin-top: .3rem; font-size: .75rem; }
+/* Exactly four color categories. Exceptional statuses retain their own text. */
 .pending { background: #e5e7eb !important; border-color: #6b7280 !important; }
 .running { background: #dcecff !important; border-color: #1769aa !important; }
 .success { background: #dcf5e4 !important; border-color: #247342 !important; }
 .failed { background: #ffe5e5 !important; border-color: #ad3030 !important; }
-.waiting { background: #fff0c2 !important; border-color: #9a6900 !important; }
-.neutral { background: #eef2f6 !important; border-color: #64748b !important; }
-.plan { background: #e9e4ff !important; border-color: #5f4bb6 !important; }
-.acceptance { background: #e7f1ff !important; border-color: #1769aa !important; }
-.unavailable { background: #fff0c2 !important; border-color: #9a6900 !important; }
-.progress-completed { background: #dcecff; }
-.progress-failed, .progress-blocked { background: #ffe5e5; }
-.progress-running { background: #fff0c2; }
-.execution-node.selected { outline: 3px solid #1769aa; outline-offset: 3px; box-shadow: 0 0 0 6px #dcecff; }
-.declared-edge .react-flow__edge-path { stroke: #5f4bb6; stroke-dasharray: 6 4; stroke-width: 2; }
-.recorded-edge .react-flow__edge-path { stroke: #1769aa; stroke-dasharray: none; stroke-width: 2; }
-.mixed-edge .react-flow__edge-path { stroke: #28756b; stroke-dasharray: 8 3 2 3; stroke-width: 3; }
-.attachment-edge .react-flow__edge-path { stroke: #1769aa; }
-.sequence-edge .react-flow__edge-path { stroke: #64748b; }
-.correction-edge .react-flow__edge-path { stroke: #9a6900; stroke-dasharray: 2 3; }
-.chain-edge .react-flow__edge-path { stroke: #1769aa; stroke-width: 2; }
-.chain-node { border-width: 3px; }
-.react-flow__edge.selected .react-flow__edge-path { stroke: #1769aa; stroke-width: 3; }
-.details { overflow-wrap: anywhere; }
-@media (max-width: 1000px) { .execution-view { grid-template-columns: 1fr; } .selection-details { height: 15rem; min-height: 0; } }
+.execution-node.selected { outline: 3px solid #172033; outline-offset: 3px; font-weight: 400; }
+/* All semantic edge classes use this same path style; retain their data for Details. */
+.react-flow__edge-path { fill: none; stroke: #64748b !important; stroke-width: 2; stroke-dasharray: none; }
+.recorded-evidence { margin-top: .6rem; font-size: .85rem; }
+.recorded-evidence p { margin: .5rem 0; }
+@media (max-width: 1000px) {
+  .execution-view.has-selection { grid-template-columns: minmax(0, 1fr); }
+  .selection-details { max-height: 22rem; }
+}
+@media (max-width: 700px) {
+  main { grid-template-columns: minmax(0, 1fr); }
+  aside { border-right: 0; border-bottom: 1px solid #c7d2e0; }
+  h1 { margin-bottom: .65rem; }
+  .project-list, .run-list { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+  .graph { height: 34rem; }
+}
+/* END COPY BOUNDARY */
