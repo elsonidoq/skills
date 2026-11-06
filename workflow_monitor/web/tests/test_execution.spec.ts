@@ -237,9 +237,16 @@ test('production zoom and node edge auto-pan remain interactive', async ({ page 
   previous = await viewport.getAttribute('style')
   await page.keyboard.down('Control'); await page.mouse.wheel(0, -100); await page.keyboard.up('Control')
   await expect(viewport).not.toHaveAttribute('style', previous!)
-  previous = await viewport.getAttribute('style')
-  await page.mouse.dblclick(box.x + box.width / 2, box.y + 40)
-  await expect(viewport).not.toHaveAttribute('style', previous!)
+  // Zoom moves nodes under fixed screen coordinates. Target verified empty
+  // pane space, not the top-center point that can now hit a nopan node.
+  const background = { x: 20, y: 20 }
+  expect(await pane.evaluate((element, point) => {
+    const bounds = element.getBoundingClientRect()
+    return document.elementFromPoint(bounds.x + point.x, bounds.y + point.y) === element
+  }, background)).toBe(true)
+  const scaleBeforeDoubleClick = await viewport.evaluate(element => new DOMMatrix(getComputedStyle(element).transform).a)
+  await pane.dblclick({ position: background })
+  await expect.poll(() => viewport.evaluate(element => new DOMMatrix(getComputedStyle(element).transform).a)).toBeGreaterThan(scaleBeforeDoubleClick)
   await page.locator('.react-flow__controls-fitview').click()
   const node = page.locator('.react-flow__node').first()
   const nodeBox = (await node.boundingBox())!
