@@ -130,7 +130,7 @@ function App() {
     const contentKey = JSON.stringify(graph.nodes.map(node => [node.id, node.data.label, node.data.status]))
     const contentChanged = measurementContent.current !== contentKey
     measurementContent.current = contentKey
-    const layoutKey = JSON.stringify({ topology: graph.topology, sizes: graph.nodes.map(node => [node.id, measurements.current[node.id] ?? { width: 180, height: 70 }]) })
+    const layoutKey = JSON.stringify({ topology: graph.topology, sizes: graph.nodes.map(node => [node.id, measurements.current[node.id] ?? { width: 208, height: 90 }]) })
     const refreshNodes = () => setNodes(current => current.map(node => {
       const fresh = graph.nodes.find(item => item.id === node.id)
       return fresh ? { ...node, data: fresh.data, className: fresh.className } : node
@@ -146,7 +146,7 @@ function App() {
     const generation = ++layoutGeneration.current
     let active = true
     void layoutNodes(
-      graph.nodes.map(node => ({ id: node.id, size: measurements.current[node.id] ?? { width: 180, height: 70 } })),
+      graph.nodes.map(node => ({ id: node.id, size: measurements.current[node.id] ?? { width: 208, height: 90 } })),
       graph.edges.map(edge => ({ source: edge.source, target: edge.target }))
     ).then(layout => {
       if (!active || generation !== layoutGeneration.current) return
@@ -275,31 +275,23 @@ function App() {
     <p aria-label="Selected project">Selected project: {projects.find(project => project.ref === selectedProject)?.label ?? 'unknown'}</p>
     <p aria-label="Selected source">Source: {selectedRunInfo?.source ?? 'unknown'}</p>
     {selectedRunInfo && <p className="status">{runDisplay(selectedRunInfo).secondary}</p>}
-    <p>Pan and zoom the graph. Select a node or edge for its brief details.</p>
     </header>
-    <div className="legend" aria-label="Status legend">
-    <span className="pending">Grey: planned or pending</span>
-    <span className="running">Blue: recorded running</span>
-    <span className="success">Green: execution returned (a reviewer may still reject)</span>
-    <span className="failed">Red: execution failure / stopping step</span>
-    <span className="waiting">Amber: evidence-backed waiting or blocked</span>
-    <span className="neutral">Neutral: qualified unknown or incomplete</span>
-    <span className="plan">Full-snapshot plan progress is not execution outcome or acceptance</span>
-    <span className="acceptance">Acceptance is in Details; skipped/cancelled unsupported</span>
-    <span>Relations: purple dashed = declared plan; blue solid = recorded execution; teal dash-dot = both. Select an edge for details.</span>
-    {snapshot && selectedRunInfo?.plan_availability !== 'complete' && <span className="unavailable">Complete graph unavailable</span>}
+    <div className="legend" aria-label="Four node color categories">
+    <span className="pending">Not started</span><span className="running">Running</span><span className="failed">Failed</span><span className="success">Completed</span>
     </div>
-    <div className="execution-view">
-    <div className="graph" aria-label="Workflow graph">
+    <p className="legend-note">Other states use Failed color; read the node text. Completed calls are not work acceptance.</p>
+    {snapshot && selectedRunInfo?.plan_availability !== 'complete' && <p>Complete graph unavailable</p>}
+    <div className={`execution-view${selected ? ' has-selection' : ''}`}>
+    <div><div className="graph" aria-label="Workflow graph">
     <ReactFlow<Node, Edge> nodes={renderedNodes} edges={edges.map(edge => ({ ...edge, selected: selected?.kind === 'edge' && selected.id === edge.id }))} onInit={instance => { flow.current = instance }} minZoom={.15} viewport={viewport} onMove={(_, next) => setViewport(next)} onNodeDragStop={(_, node) => { positions.current[node.id] = node.position; setNodes(current => current.map(item => item.id === node.id ? { ...item, position: node.position } : item)) }} onNodeClick={(_, node) => setSelected({ kind: 'node', id: node.id })} onEdgeClick={(_, edge) => setSelected({ kind: 'edge', id: edge.id })}>
     <Background />
     <Controls />
     </ReactFlow>
+    </div><p className="status">Drag background to pan · drag nodes to move · scroll to zoom</p></div>
+    <section className="selection-details" aria-label="Selected execution details" hidden={!selected}>
+    <header><h2>Details</h2><button onClick={() => setSelected(null)}>Close</button></header><div aria-live="polite">{details}</div></section>
     </div>
-    <section className="selection-details" aria-label="Selected execution details" aria-live="polite">
-    <h2>Details</h2>{details ?? <p>Select a graph node or edge.</p>}</section>
-    </div>
-    <section className="details">
+    <section className="recorded-evidence">
     <h2>Recorded evidence</h2>
     <p aria-label="Lineage acceptance">{acceptanceText}</p>
     <p aria-label="Read freshness">{freshnessText}</p>
