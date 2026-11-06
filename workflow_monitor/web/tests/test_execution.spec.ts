@@ -280,13 +280,22 @@ test('production zoom and node edge auto-pan remain interactive', async ({ page 
   await expect.poll(() => viewport.evaluate(element => new DOMMatrix(getComputedStyle(element).transform).a)).toBeGreaterThan(scaleBeforeDoubleClick)
   await page.locator('.react-flow__controls-fitview').click()
   const node = page.locator('.react-flow__node').first()
-  const nodeBox = (await node.boundingBox())!
-  await page.mouse.move(nodeBox.x + nodeBox.width / 2, nodeBox.y + nodeBox.height / 2)
+  // Fit is queued and double-click zoom animates. Locator hover waits for a
+  // stable, hit-tested node; a raw boundingBox can sample it mid-transition.
+  await node.hover()
   await page.mouse.down()
-  await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2, { steps: 10 })
-  const atEdge = await viewport.getAttribute('style')
-  await expect(viewport).not.toHaveAttribute('style', atEdge!, { timeout: 3000 })
-  await page.mouse.up()
+  try {
+    const nodeBox = (await node.boundingBox())!
+    await page.mouse.move(nodeBox.x + nodeBox.width / 2 + 10, nodeBox.y + nodeBox.height / 2, { steps: 2 })
+    await expect(node).toHaveClass(/\bdragging\b/)
+    const dragBox = (await pane.boundingBox())!
+    await page.mouse.move(dragBox.x + dragBox.width - 4, dragBox.y + dragBox.height / 2, { steps: 10 })
+    const atEdge = await viewport.getAttribute('style')
+    await expect(viewport).not.toHaveAttribute('style', atEdge!, { timeout: 3000 })
+    await expect(node).toHaveClass(/\bdragging\b/)
+  } finally {
+    await page.mouse.up()
+  }
 })
 
 test('compaction inclusion uncertainty is honest and never changes totals', async ({ page }) => {
