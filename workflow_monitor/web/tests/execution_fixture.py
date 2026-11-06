@@ -80,7 +80,7 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
                        'checks': [['/bin/sh', '-c', 'test "$(cat correction.txt)" = fixed']]}]}),
             {'provider': 'fixture', 'model': 'offline', 'effort': 'medium', 'reviewer': {'provider': 'fixture', 'model': 'offline', 'effort': 'medium'}}, adapter=CorrectionAdapter,
             question=lambda _: 'fixture correction', paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
-        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'metrics-excluded', 'merged-edge', 'relation-styles', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '...'):
+        for run in ('stopping', 'before-agent', 'waiting', 'success', 'metrics-reused', 'metrics-continued', 'metrics-unknown', 'metrics-partial', 'metrics-composed', 'metrics-excluded', 'merged-edge', 'relation-styles', 'review-dispatched', 'review-started', 'review-waiting', 'review-returned', 'review-conflict', 'answered-paged', 'booleans-true', 'booleans-false', 'manual-waiting', 'manual-answered', 'manual-delivery', 'manual-stopped', 'slash/%? #東京', 'actual(run)', '0123456789abcdef0123456789abcdef', '...'):
             owner.store.start(run, base)
             recorder = Recorder(owner.store, run)
             recorder.register(descriptor({'tasks': [{'id': 'edge', 'description': 'Prepare usable input'}],

@@ -10,7 +10,7 @@ type Acceptance = { state: string; base: string | null; head: string | null }
 type AcceptanceItem = { occurrence_ref: string; state: string; ordinal?: number | null; exit_code?: number | null; baseline?: string | null; head?: string | null; no_change?: boolean | null; approved?: boolean | null; finding_count?: number | null; base?: string | null }
 type AcceptanceSummary = { checks: AcceptanceItem[]; checkpoints: AcceptanceItem[]; reviews: AcceptanceItem[]; full_range: Acceptance }
 type RunnerState = { state: 'live' | 'stopped' | 'unknown'; reason: string | null }
-type Run = { ref: string; display_id: string; source?: 'main' | 'linked' | 'preserved'; label: string; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance; acceptance_summary?: AcceptanceSummary }
+type Run = { ref: string; display_id: string; source?: 'main' | 'linked' | 'preserved'; label: string; worktree_name?: string | null; started_at: number | null; completeness: string; plan_availability?: string; runner_state?: RunnerState; review_acceptance?: Acceptance; acceptance_summary?: AcceptanceSummary }
 type Recording = { ref: string; label: 'main' | 'linked' | 'preserved'; state: string }
 type Project = { ref: string; label: string; recordings: Recording[] }
 type Runs = { runs: Run[]; unavailable_recordings?: Array<{ ref: string; label: Recording['label'] }> }
@@ -43,6 +43,24 @@ function ordered(runs: Run[]) {
     if (leftTime === null && rightTime !== null) return 1
     return left.display_id < right.display_id ? -1 : left.display_id > right.display_id ? 1 : 0
   })
+}
+function runDisplay(run: Run) {
+  const label = typeof run.label === 'string' && run.label.trim() ? run.label : 'Run identifier unavailable'
+  const folder = typeof run.worktree_name === 'string' && run.worktree_name.trim() ? run.worktree_name : 'Worktree name unavailable'
+  // The fixed recording prefix plus the displayed raw ID is injective. If the
+  // label is unavailable or differs from the raw ID, retain the full identity.
+  const prefix = run.display_id.slice(0, 24)
+  const qualifier = /^[a-f0-9]{24}-$/.test(run.display_id.slice(0, 25)) && run.display_id.slice(25) === label ? prefix : Array.from(new TextEncoder().encode(run.display_id), byte => byte.toString(16).padStart(2, '0')).join('')
+  const date = typeof run.started_at === 'number' && Number.isFinite(run.started_at) ? new Date(run.started_at * 1000) : null
+  const start = date && !Number.isNaN(date.valueOf()) ? date.toLocaleString() : 'Start unavailable'
+  return { name: `${label} · ${folder}`, qualifier, secondary: `${run.source ?? 'unknown source'} · ${start}` }
+}
+function Qualifier({ value }: { value: string }) {
+  return <>{value.match(/.{1,16}/g)?.map((part, index) => <span key={index}>{index > 0 && <wbr />}{part}</span>)}</>
+}
+function matchesRun(run: Run, filter: string) {
+  const display = runDisplay(run)
+  return [display.name, display.qualifier, display.secondary, run.display_id].some(text => text.toLocaleLowerCase().includes(filter.toLocaleLowerCase()))
 }
 async function getJson<T>(path: string): Promise<T> { const response = await fetch(path, { headers }); if (!response.ok) throw new Error(response.status === 409 ? 'The snapshot changed; refreshing history.' : 'The monitor snapshot is unavailable.'); return response.json() as Promise<T> }
 const metricLabels: Record<string, string> = { input: 'Input tokens', output: 'Output tokens', cache_read: 'Cached input tokens', cache_write: 'Cached output tokens', total_tokens: 'Total tokens', estimated_usd: 'Cost', total: 'Total tokens', cacheRead: 'Cached input tokens', cacheWrite: 'Cached output tokens', totalTokens: 'Total tokens', cacheWrite1h: 'Cached output tokens (one hour)', reasoning: 'Reasoning tokens', context_window: 'Context window', effective_reserve: 'Reserved context', occupancy: 'Context in use', effective_headroom: 'Available context', compaction_enabled: 'Compaction enabled', compaction_applicable: 'Compaction applicable' }
@@ -89,7 +107,7 @@ function App() {
     if (displayId === null && available.length) { displayId = available[0].display_id; window.history.replaceState(null, '', routeFor(project.ref, displayId)) }
     if (displayId === null) { clearRun(); setSelectedRun(null); setMessage(unavailable.length ? 'Recorded monitor data is unavailable.' : 'No recorded runs are available.'); return }
     const run = available.find(candidate => candidate.display_id === displayId)
-    if (!run) { clearRun(); setSelectedRun(null); setMessage(`Run ${displayId} is unavailable.`); return }
+    if (!run) { clearRun(); setSelectedRun(null); setMessage('The selected run is unavailable.'); return }
     setSelectedRun(current => { if (current !== run.ref) clearRun(); return run.ref })
   }
   useEffect(() => { let active = true; void (async () => { try { const data = await getJson<{ projects: Project[] }>('/api/monitor/v1/projects'); if (!active) return; setProjects(data.projects); const address = routeAddress(); const project = address ? data.projects.find(item => item.ref === address.projectRef) : data.projects[0]; if (!project) { applyLocation([], data.projects); return } const listed = await getJson<Runs>(projectPath(project.ref, '')); const runs = ordered(listed.runs); const unavailable = listed.unavailable_recordings ?? []; if (!active) return; runsRef.current = runs; setRuns(runs); setUnavailableRecordings(unavailable); applyLocation(runs, data.projects, unavailable) } catch (error) { if (active) setMessage(error instanceof Error ? error.message : 'The monitor snapshot is unavailable.') } })(); return () => { active = false } }, [])
@@ -247,16 +265,16 @@ function App() {
     <div className="project-list">{projects.map(project => <button key={project.ref} className={project.ref === selectedProject ? 'selected' : ''} onClick={() => { if (project.ref === selectedProject) return; window.history.pushState(null, '', `/projects/${encodeURIComponent(project.ref)}/runs`); window.location.reload() }}>{project.label} · {project.recordings.map(recording => recording.label).join(', ') || 'no recordings'}</button>)}</div>
     <h2>Runs</h2>
     <label className="run-filter">Filter runs <input value={filter} onChange={event => setFilter(event.target.value)} placeholder="Filter runs" /></label>
-    <div className="run-list">{runs.filter(run => run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())).map((run, index) => <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun || !selectedProject) return; window.history.pushState(null, '', routeFor(selectedProject, run.display_id)); applyLocation(runsRef.current) }}>Run {index + 1} · {run.label} · {run.source ?? 'unknown source'} · {run.completeness}</button>)}</div>
-    {filter && !runs.some(run => run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p>No runs match this filter.</p>}
-    {filter && selectedRun && !runs.some(run => run.ref === selectedRun && run.display_id.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p>The selected run is outside this filter.</p>}
+    <div className="run-list">{runs.filter(run => matchesRun(run, filter)).map(run => { const display = runDisplay(run); return <button key={run.ref} className={run.ref === selectedRun ? 'selected' : ''} onClick={() => { if (run.ref === selectedRun || !selectedProject) return; window.history.pushState(null, '', routeFor(selectedProject, run.display_id)); applyLocation(runsRef.current) }}><strong>{display.name} · <Qualifier value={display.qualifier} /></strong><small>{display.secondary}</small></button> })}</div>
+    {filter && !runs.some(run => matchesRun(run, filter)) && <p>No runs match this filter.</p>}
+    {filter && selectedRun && !runs.some(run => run.ref === selectedRun && matchesRun(run, filter)) && <p>The selected run is outside this filter.</p>}
     </aside>
     <section className="viewer">
     <header>
-    <h2>Selected run graph</h2>
+    <h2 aria-label="Selected run">{selectedRunInfo ? <>{runDisplay(selectedRunInfo).name} · <Qualifier value={runDisplay(selectedRunInfo).qualifier} /></> : 'Selected run unavailable'}</h2>
     <p aria-label="Selected project">Selected project: {projects.find(project => project.ref === selectedProject)?.label ?? 'unknown'}</p>
     <p aria-label="Selected source">Source: {selectedRunInfo?.source ?? 'unknown'}</p>
-    <p aria-label="Selected run">Selected run: {selectedRunInfo ? `Run ${runs.findIndex(run => run.ref === selectedRunInfo.ref) + 1} — ${selectedRunInfo.label}` : 'unknown'}</p>
+    {selectedRunInfo && <p className="status">{runDisplay(selectedRunInfo).secondary}</p>}
     <p>Pan and zoom the graph. Select a node or edge for its brief details.</p>
     </header>
     <div className="legend" aria-label="Status legend">

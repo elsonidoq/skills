@@ -7,7 +7,7 @@ let fixture: ChildProcess
 let output = ''
 let project: { ref: string; recordings: Array<{ ref: string; label: string }> }
 let projects: Array<{ ref: string; label: string }>
-let runs: Array<{ ref: string; display_id: string; source: string }>
+let runs: Array<{ ref: string; display_id: string; source: string; label: string; worktree_name: string | null }>
 const headers = { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' }
 const api = (suffix = '') => `http://127.0.0.1:4174/api/monitor/v1/projects/${project.ref}/runs${suffix}`
 const run = (source: string, id: string) => runs.find(item => item.source === source && item.display_id.slice(25) === id)!
@@ -58,8 +58,16 @@ test('actual CLI capture survives fixture source removal through ordinary projec
     await page.locator('.run-list button').click()
     await expect(page).toHaveURL(address(source, id))
     await expect(page.getByLabel('Selected source')).toHaveText(`Source: ${source}`)
+    const row = run(source, id)
+    const heading = `${id} · ${row.worktree_name ?? 'Worktree name unavailable'} · ${row.display_id.slice(0, 24)}`
+    await expect(page.locator('.run-list strong')).toHaveText(heading)
+    await expect(page.getByLabel('Selected run')).toHaveText(heading)
     await page.getByLabel('Filter runs').fill('')
   }
+  expect(run('linked', 'success').worktree_name).toBe('still registered linked worktree')
+  expect(run('main', 'success').worktree_name).toBe('fixture')
+  expect(run('preserved', 'success').worktree_name).toBeNull()
+  await select('main', '0123456789abcdef0123456789abcdef')
   await select('linked', 'success')
   await page.locator('.react-flow__node').first().click()
   await expect(page.getByLabel('Selected execution details')).toContainText('Total tokens: 12')
@@ -104,6 +112,34 @@ test('actual CLI capture survives fixture source removal through ordinary projec
   await expect(page.getByLabel('Selected source')).toHaveText('Source: preserved')
   await page.goForward()
   await expect(page.getByLabel('Selected project', { exact: true })).toContainText('second-project')
+})
+
+test('qualifiers remain stable across filtering, polling and inventory changes', async ({ page }) => {
+  await page.clock.install()
+  let omitOthers = false
+  await page.route(`**/api/monitor/v1/projects/${project.ref}/runs`, async route => {
+    const response = await route.fetch({ headers: { ...route.request().headers(), 'sec-fetch-site': 'same-origin' } })
+    const data = await response.json()
+    await route.fulfill({ json: { ...data, runs: omitOthers ? data.runs.filter((item: { ref: string }) => item.ref === run('main', 'success').ref) : data.runs } })
+  })
+  await page.goto(address('main', 'success'))
+  const heading = page.getByLabel('Selected run')
+  await expect(heading).toContainText('success · fixture')
+  const text = await heading.textContent()
+  const qualifier = run('main', 'success').display_id.slice(0, 24)
+  await page.getByLabel('Filter runs').fill(qualifier)
+  await expect(page.locator('.run-list strong').filter({ hasText: text! })).toHaveCount(1)
+  await page.getByLabel('Filter runs').fill('still registered linked worktree')
+  await expect(page.getByText('The selected run is outside this filter.')).toBeVisible()
+  await expect(heading).toHaveText(text!)
+  omitOthers = true
+  await page.getByLabel('Filter runs').fill('')
+  await page.clock.fastForward(60_001)
+  await expect(page.locator('.run-list button')).toHaveCount(1)
+  await expect(heading).toHaveText(text!)
+  await expect(page.locator('.run-list strong')).toHaveText(text!)
+  expect(await page.locator('body').innerText()).not.toContain('/tmp/')
+  expect(await page.locator('[title]').evaluateAll(elements => elements.map(element => element.getAttribute('title')).join(' '))).not.toContain('/tmp/')
 })
 
 test('recording switch invalidates delayed snapshot and same-run poll retains drag viewport and selection', async ({ page }) => {
